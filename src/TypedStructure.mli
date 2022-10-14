@@ -9,6 +9,11 @@ type typed_variable_scope =
     | Global
     | Local
 
+type typed_assignment_scope =
+    | Ass_discrete_global
+    | Ass_discrete_local
+    | Ass_clock
+
 type typed_sequence_type =
     | Typed_array
     | Typed_list
@@ -97,7 +102,7 @@ type typed_loop_dir =
 
 type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
-    | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_variable_scope
+    | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_assignment_scope
     | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
@@ -109,7 +114,6 @@ type typed_fun_definition = {
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
     body : typed_seq_code_bloc; (* body *)
-    side_effect : bool;
 }
 
 val label_of_typed_sequence_type : typed_sequence_type -> string

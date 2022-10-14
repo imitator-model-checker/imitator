@@ -130,13 +130,17 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
 			(* Gather in the convex predicate *)
 			print_message Verbose_total ("          Gathering variables in convex predicate");
-			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (function
-                | Leaf_variable variable_name ->
-                    all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
+                | Leaf_variable leaf_variable ->
+                    (match leaf_variable with
+                    | Leaf_global_variable variable_name ->
+                        all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    | Leaf_local_variable (variable_name, _, id) ->
+                        all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                    )
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                | Leaf_constant _
-                | Leaf_update_variable _ -> ()
+                | Leaf_constant _ -> ()
 			) location.invariant;
 
 			(* Gather in transitions *)
@@ -144,13 +148,17 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
-				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (function
-                    | Leaf_variable variable_name ->
-                        all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
+                    | Leaf_variable leaf_variable ->
+                        (match leaf_variable with
+                        | Leaf_global_variable variable_name ->
+                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        | Leaf_local_variable (variable_name, _, id) ->
+                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                        )
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                    | Leaf_constant _
-                    | Leaf_update_variable _ -> ()
+                    | Leaf_constant _ -> ()
                 ) convex_predicate;
 
 				(* Gather in the updates *)
@@ -159,19 +167,23 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
 				List.iter (fun update_expression ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-					ParsingStructureUtilities.iterate_parsed_update (function
-                        | Leaf_variable variable_name ->
-                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+					ParsingStructureUtilities.iterate_parsed_update (fun _ _ -> ()) (fun _ -> function
+                        | Leaf_variable leaf_variable ->
+                            (match leaf_variable with
+                            | Leaf_global_variable variable_name ->
+                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                            | Leaf_local_variable (variable_name, _, id) ->
+                                all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
+                            )
                         | Leaf_fun function_name ->
                             all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_constant _
-                        | Leaf_update_variable _ -> ()
+                        | Leaf_constant _ -> ()
 					) update_expression;
 
                 ) updates;
 
                 (* Only for seq updates *)
-                let seq_updates, _ = update_section in
+                let seq_updates, _, _ = update_section in
 
                 (* In seq update an assigned variable is considered as used (even if not used in any guard / invariant) *)
                 (* For example r := <anything>, r is considered as used *)
@@ -179,15 +191,34 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                 (* eg: r := stack_pop(s) *)
 				List.iter (fun update_expression ->
 					ParsingStructureUtilities.iterate_parsed_update
-					    (function
+					    (fun _ -> function
+					        | Leaf_update_variable (Leaf_global_variable variable_name)
+					        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        )
+					    (fun _ -> function
                             | Leaf_variable _
                             | Leaf_constant _
                             | Leaf_fun _ -> ()
-					        | Leaf_update_variable variable_name ->
-                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
                     update_expression;
                 ) seq_updates;
+
+                let _, _, mixin_updates = update_section in
+
+                ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
+                    (fun _ -> function
+                        | Leaf_update_variable (Leaf_global_variable variable_name)
+                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                    )
+                    (fun _ -> function
+                        | Leaf_fun function_name -> all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
+                        | Leaf_variable _
+                        | Leaf_constant _ -> ()
+                    )
+                    mixin_updates
+                ;
 
             ) location.transitions;
         ) locations;
@@ -196,7 +227,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
     RelationSet.to_seq !all_relations |> List.of_seq
 
-(**)
+(* All declared components found in the parsed model *)
 let declared_components_of_model parsed_model =
 
     (* Get all declared variables in model *)
@@ -208,31 +239,30 @@ let declared_components_of_model parsed_model =
         |> List.flatten
     in
 
-    (* Get all declared function in model *)
+    (* Get all declared functions in model *)
     let all_declared_functions_in_model =
         List.map (fun (fun_def : parsed_fun_definition) -> Fun_ref fun_def.name) parsed_model.fun_definitions
     in
 
-    (* Get all declared local variables in a given function definition *)
-    let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
-        ParsingStructureUtilities.fold_parsed_function_definition
-            (@) (* operator concat list *)
-            [] (* base *)
-            (function Leaf_decl_variable (variable_name, _, id) -> [Local_variable_ref (variable_name, fun_def.name, id)])
-            (function _ -> [])
-            fun_def
-    in
-
-    (* Get all declared parameters in a given function definition *)
-    let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
-        List.fold_left (fun acc (variable_name, _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
-    in
-
+    (* Get all declared local variables in model *)
     let all_declared_local_variables_in_model =
+
+        (* Get all declared local variables in a given function definition *)
+        let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
+            let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
+            List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables
+        in
+
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
 
+    (* Get all declared formal parameters in model *)
     let all_declared_params_in_model =
+
+        (* Get all declared parameters in a given function definition *)
+        let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
+            List.fold_left (fun acc (variable_name, _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
+        in
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
 
@@ -241,6 +271,37 @@ let declared_components_of_model parsed_model =
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 let dependency_graph ?(no_var_autoremove=false) parsed_model =
+
+    (* TODO benjamin REFACTOR, can REDUCE now ! !!! *)
+    (*
+    let function_relations (fun_def : parsed_fun_definition) =
+        (* Ref to function *)
+        let fun_ref = Fun_ref fun_def.name in
+        (* Get parameter names *)
+        let parameter_names = List.map first_of_tuple fun_def.parameters in
+        let param_refs = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (fun_ref, Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
+
+        let used_refs = ParsingStructureUtilities.fold_parsed_seq_code_bloc
+            (@)
+            []
+            (fun _ -> function
+                | Leaf_update_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
+                | Leaf_update_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
+            )
+            (fun _ -> function
+                | Leaf_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
+                | Leaf_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
+                | Leaf_fun function_name -> [Fun_ref function_name]
+                | Leaf_constant _ -> []
+            )
+            fun_def.body
+        in
+
+        let relations = List.map (fun used_ref -> fun_ref, used_ref) used_refs in
+        relations
+
+    in
+    *)
 
     (* Function that return all component relations of a given function definition *)
     let function_relations fun_def =
@@ -360,7 +421,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
                         (* Get variables / functions used in the indexed expression of the variable *)
                         let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression index_expr) in
-                        (* Get functions used in the local init expression of the variable *)
+                        (* Get functions  used in the indexed expression of the variable *)
                         let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression index_expr) in
 
                         let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
@@ -481,6 +542,8 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         (* Get all component relations of current function body *)
         function_relations_in_parsed_seq_code_bloc_rec local_variables fun_def.body
     in
+
+
     (* Get variables and functions used by automatons *)
     let automatons_relations =
         all_components_used_in_automatons parsed_model
@@ -523,6 +586,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         | (Local_variable_ref _ as a, (Local_variable_ref _ as b)) -> a <> b
         | _ -> true
     ) all_model_relations in
+
     (* Return dependency graph of the model *)
     declared_components_of_model parsed_model, all_model_relations_without_variable_autoref
 
@@ -671,142 +735,3 @@ let string_of_dependency_graph (components, component_relations) =
     let str_component_relations = OCamlUtilities.string_of_list_of_string_with_sep "; " str_relations_list in
     (* Dependency graph as dot format *)
     "digraph dependency_graph {" ^ str_components ^ ";" ^ str_component_relations ^ "}"
-
-(* Utils function for traversing a parsed_fun_definition *)
-let traverse_function operator f base (fun_def : parsed_fun_definition) =
-    (* Add parameters as local variables *)
-    let parameter_refs = List.map (fun (param_name, _) -> Param_ref (param_name, fun_def.name)) fun_def.parameters in
-    let local_variable_components = List.fold_right ComponentSet.add parameter_refs ComponentSet.empty in
-
-    (* TODO benjamin see if can replace by general function *)
-    (* Function that traverse function body expression *)
-    let rec traverse_parsed_seq_code_bloc local_variable_components = function
-        | Parsed_local_decl (variable_name, _, _, next_expr, id) as expr ->
-            (* Add the new declared local variable to set *)
-            let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-            let new_local_variable_components = ComponentSet.add local_variable_ref local_variable_components in
-
-            operator
-                (f new_local_variable_components expr)
-                (traverse_parsed_seq_code_bloc new_local_variable_components next_expr)
-
-        | Parsed_for_loop (variable_name, _, _, _, inner_bloc, next_expr, id) as expr ->
-            (* Add the new declared local variable to set *)
-            let local_variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-            let local_variable_components_inner_bloc = ComponentSet.add local_variable_ref local_variable_components in
-
-            operator
-                (operator
-                    (f local_variable_components expr)
-                    (traverse_parsed_seq_code_bloc local_variable_components_inner_bloc inner_bloc)
-                )
-                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
-
-        | Parsed_while_loop (_, inner_bloc, next_expr) as expr ->
-            operator
-                (operator
-                    (f local_variable_components expr)
-                    (traverse_parsed_seq_code_bloc local_variable_components inner_bloc)
-                )
-                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
-
-        | Parsed_if (_, then_bloc, else_bloc_opt, next_expr) as expr ->
-            (f local_variable_components expr)
-            |> operator (traverse_parsed_seq_code_bloc local_variable_components then_bloc)
-            |> (match else_bloc_opt with Some else_bloc -> operator (traverse_parsed_seq_code_bloc local_variable_components else_bloc) | None -> operator base)
-            |> operator (traverse_parsed_seq_code_bloc local_variable_components next_expr)
-
-        | Parsed_assignment (_, next_expr) as expr ->
-            operator
-                (f local_variable_components expr)
-                (traverse_parsed_seq_code_bloc local_variable_components next_expr)
-
-        | Parsed_return_expr _ as expr ->
-            f local_variable_components expr
-        | Parsed_bloc_void -> base
-    in
-    traverse_parsed_seq_code_bloc local_variable_components fun_def.body
-
-
-(* TODO benjamin REFACT look at this function, very ugly *)
-(* Get all variables (local and global) at the left side of an assignment in a function body implementation *)
-let left_variables_of_assignments_in (fun_def : parsed_fun_definition) =
-
-    (* Create set of assigned variables *)
-    let components_ref = ref ComponentSet.empty in
-
-    (* Function that get assigned variable in function body expression *)
-    let left_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
-        | Parsed_for_loop _
-        | Parsed_while_loop _
-        | Parsed_if _
-        | Parsed_local_decl _ -> ()
-
-        | Parsed_assignment ((parsed_update_type, _), next_expr) ->
-
-            let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
-            (match variable_name_opt with
-            | Some variable_name ->
-                (* Check existence of any local variable / parameter that may shadow global variable of the same name *)
-                let local_variable_component_opt = ComponentSet.find_first_opt (function
-                    | Param_ref (v, _)
-                    | Local_variable_ref (v, _, _) -> variable_name = v
-                    | _ -> false
-                ) local_variable_components
-                in
-
-                let component =
-                    match local_variable_component_opt with
-                    (* If any local variable shadow a global variable, get it's reference *)
-                    | Some local_variable_component -> local_variable_component
-                    (* Else it's possibly an update of a global variable (or an nonexistent variable) *)
-                    | None -> Global_variable_ref variable_name
-                in
-                components_ref := ComponentSet.add component !components_ref
-
-            | None -> ()
-            );
-        | Parsed_return_expr _
-        | Parsed_bloc_void -> ()
-    in
-    traverse_function bin_unit left_variables_of_assignments_in_parsed_seq_code_bloc () fun_def;
-    !components_ref
-
-let variable_ref_of local_variable_components variable_name =
-    (* Check existence of any local variable / parameter that may shadow global variable of the same name *)
-    let local_variable_component_opt = ComponentSet.find_first_opt (function
-        | Param_ref (v, _)
-        | Local_variable_ref (v, _, _) -> variable_name = v
-        | _ -> false
-    ) local_variable_components
-    in
-
-    match local_variable_component_opt with
-    (* If any local variable shadow a global variable, get it's reference *)
-    | Some local_variable_component -> local_variable_component
-    (* Else it's possibly an update of a global variable (or an nonexistent variable) *)
-    | None -> Global_variable_ref variable_name
-
-(* TODO benjamin REFACT look at this function, very ugly *)
-(* Get all variables (local and global) at the right side of an assignment in a function body implementation *)
-let right_variables_of_assignments_in (fun_def : parsed_fun_definition) =
-
-    (* Create set of assigned variables *)
-    let component_refs = ref ComponentSet.empty in
-
-    (* Function that get assigned variable in function body expression *)
-    let right_variables_of_assignments_in_parsed_seq_code_bloc local_variable_components = function
-        | Parsed_local_decl (_, _, expr, _, _)
-        | Parsed_assignment ((_, expr), _) ->
-            let variable_names = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
-            let variable_refs = List.map (variable_ref_of local_variable_components) variable_names in
-            component_refs := List.fold_left (Fun.flip ComponentSet.add) !component_refs variable_refs
-
-        | Parsed_for_loop _
-        | Parsed_while_loop _
-        | Parsed_return_expr _
-        | Parsed_if _
-        | Parsed_bloc_void -> ()
-    in
-    traverse_function bin_unit right_variables_of_assignments_in_parsed_seq_code_bloc () fun_def;
-    !component_refs

@@ -5,11 +5,13 @@ open AbstractModel
 open AbstractProperty
 open AbstractValue
 open DiscreteExpressions
+open LinearConstraint
 open Exceptions
 
 type variable_table = AbstractValue.abstract_value VariableMap.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -23,6 +25,8 @@ type eval_context = {
     discrete_setter : discrete_setter;
     (* Current local variables *)
     local_variables : variable_table;
+    (**)
+    updated_clocks : clock_updates_history
 }
 
 (* Result returned on delayed update *)
@@ -33,7 +37,7 @@ type delayed_update_result =
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = VariableMap.empty }
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = VariableMap.empty; updated_clocks = Hashtbl.create 0; }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
@@ -88,6 +92,34 @@ let try_eval_local_variable variable_name = function
     | Some eval_context -> VariableMap.find variable_name eval_context.local_variables
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
+
+(* Replace discrete variable by their current value in a linear expression that update a clock *)
+let rewrite_clock_update variable_names eval_context (* linear_expr *) =
+    let rec rewrite_clock_update_rec = function
+        | IR_Var variable_index ->
+            (* Check if the variable is a clock previously updated *)
+            if Hashtbl.mem eval_context.updated_clocks variable_index then (
+                (* If yes, we replace variable by the linear expression that updated the clock *)
+                Hashtbl.find eval_context.updated_clocks variable_index
+            )
+            else (
+                try (
+                    (* If no, it's a discrete variable and we replace variable by the current computed value of discrete value *)
+                    let value = numconst_value (eval_context.discrete_valuation variable_index) in
+                    IR_Coef value
+                ) with _ -> (
+                    IR_Var variable_index
+                )
+            )
+        | IR_Coef _ as ir_coef -> ir_coef
+        | IR_Plus (l_linear_term, r_linear_term) ->
+            LinearConstraint.add_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
+        | IR_Minus (l_linear_term, r_linear_term) ->
+            LinearConstraint.sub_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
+        | IR_Times (coef, linear_term) ->
+            IR_Times (coef, rewrite_clock_update_rec linear_term)
+    in
+    rewrite_clock_update_rec (* linear_expr *)
 
 (* Evaluate an expression *)
 let rec eval_global_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -402,7 +434,7 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         queue_value (try_eval_variable variable_index eval_context_opt)
 
     | Queue_local_variable variable_name ->
-                (* Variable should exist as it was checked before *)
+        (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_name eval_context_opt in
         queue_value discrete_value
 
@@ -452,8 +484,97 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
             (* Get element at index *)
             List.nth values int_index
 
+(* Eval sequential code bloc *)
+and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc =
 
+    let rec eval_seq_code_bloc_rec eval_context = function
+        | Local_decl (variable_name, _, expr, next_expr) ->
+            let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
+            (* Add new variable to eval context *)
+            let new_eval_context = {eval_context with local_variables = VariableMap.add variable_name value eval_context.local_variables } in
 
+            eval_seq_code_bloc_rec new_eval_context next_expr
+
+        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+            let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
+            let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
+
+            let execute_inner_bloc i =
+                let abs_value = AbstractValue.of_int (Int32.of_int i) in
+                let loop_eval_context = {eval_context with local_variables = VariableMap.add variable_name abs_value eval_context.local_variables } in
+                (* Don't get any value as it was evaluated as void expression *)
+                let _ = eval_seq_code_bloc_rec loop_eval_context inner_bloc in ()
+            in
+
+            let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
+
+            (match loop_dir with
+            | Loop_up ->
+                for i = i32_from_value to i32_to_value do
+                    execute_inner_bloc i;
+                done
+            | Loop_down ->
+                for i = i32_from_value downto i32_to_value do
+                    execute_inner_bloc i;
+                done
+            );
+
+            eval_seq_code_bloc_rec eval_context next_expr
+
+        | While_loop (condition_expr, inner_bloc, next_expr) ->
+
+            while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
+                (* Don't get any value as it was evaluated as void expression *)
+                eval_seq_code_bloc_rec eval_context inner_bloc;
+            done;
+
+            eval_seq_code_bloc_rec eval_context next_expr
+
+        | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+
+            (* Evaluation condition *)
+            let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
+
+            (* Execute then or else bloc (if defined) *)
+            if condition_evaluated then (
+                let _ = eval_seq_code_bloc_rec eval_context then_bloc in ()
+            ) else (
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    let _ = eval_seq_code_bloc_rec eval_context else_bloc in ()
+                | None -> ()
+            );
+
+            eval_seq_code_bloc_rec eval_context next_expr
+
+        | Assignment (normal_update, next_expr) ->
+            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
+            eval_seq_code_bloc_rec eval_context next_expr
+
+        | Local_assignment (local_update, next_expr) ->
+            let new_eval_context = direct_local_update_with_context variable_names functions_table_opt eval_context local_update in
+            eval_seq_code_bloc_rec new_eval_context next_expr
+
+        | Clock_assignment ((clock_index, linear_expr), next_expr) ->
+            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
+            (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
+            Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+
+            (match variable_names with
+            | Some variable_names ->
+            let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
+            let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
+            ImitatorUtilities.print_standard_message (variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`")
+            | _ -> ()
+            );
+            eval_seq_code_bloc_rec eval_context next_expr
+
+        | Return_expr expr ->
+            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
+
+        | Bloc_void -> Abstract_void_value
+    in
+    eval_seq_code_bloc_rec eval_context seq_code_bloc
 
 and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args =
 
@@ -473,80 +594,6 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
         | None -> None
     in
 
-    (* Eval function body *)
-    let rec eval_seq_code_bloc_with_context eval_context = function
-        | Local_decl (variable_name, _, expr, next_expr) ->
-            let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
-            (* Add new variable to eval context *)
-            let new_eval_context = {eval_context with local_variables = VariableMap.add variable_name value eval_context.local_variables } in
-
-            eval_seq_code_bloc_with_context new_eval_context next_expr
-
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
-            let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
-            let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
-
-            let execute_inner_bloc i =
-                let abs_value = AbstractValue.of_int (Int32.of_int i) in
-                let loop_eval_context = {eval_context with local_variables = VariableMap.add variable_name abs_value eval_context.local_variables } in
-                (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc_with_context loop_eval_context inner_bloc in ()
-            in
-
-            let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
-
-            (match loop_dir with
-            | Loop_up ->
-                for i = i32_from_value to i32_to_value do
-                    execute_inner_bloc i;
-                done
-            | Loop_down ->
-                for i = i32_from_value downto i32_to_value do
-                    execute_inner_bloc i;
-                done
-            );
-
-            eval_seq_code_bloc_with_context eval_context next_expr
-
-        | While_loop (condition_expr, inner_bloc, next_expr) ->
-
-            while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
-                (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc_with_context eval_context inner_bloc in ()
-            done;
-
-            eval_seq_code_bloc_with_context eval_context next_expr
-
-        | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-
-            (* Evaluation condition *)
-            let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
-
-            (* Execute then or else bloc (if defined) *)
-            if condition_evaluated then (
-                let _ = eval_seq_code_bloc_with_context eval_context then_bloc in ()
-            ) else (
-                match else_bloc_opt with
-                | Some else_bloc ->
-                    let _ = eval_seq_code_bloc_with_context eval_context else_bloc in ()
-                | None -> ()
-            );
-
-            eval_seq_code_bloc_with_context eval_context next_expr
-
-        | Assignment (normal_update, next_expr) ->
-            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
-            eval_seq_code_bloc_with_context eval_context next_expr
-
-        | Local_assignment (local_update, next_expr) ->
-            let new_eval_context = direct_local_update_with_context variable_names functions_table_opt eval_context local_update in
-            eval_seq_code_bloc_with_context new_eval_context next_expr
-
-        | Return_expr expr ->
-            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
-        | Bloc_void -> Abstract_void_value
-    in
-
     (* Eval function *)
     let eval_fun_type_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
@@ -555,7 +602,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
             builtin_f str_fun_call arg_values
 
-        | Fun_user f ->
+        | Fun_user seq_code_bloc ->
             let eval_context =
                 match eval_context_opt with
                 | Some eval_context -> eval_context
@@ -566,7 +613,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
-            eval_seq_code_bloc_with_context eval_context f
+            eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc
 
     in
     eval_fun_type_with_context new_eval_context_opt fun_def.body
@@ -775,6 +822,7 @@ let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor
 
 let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 let delayed_update variable_names functions_table_opt discrete_access = delayed_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
+let eval_seq_code_bloc variable_names functions_table_opt discrete_access = eval_seq_code_bloc_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt functions_table_opt expr = try Some (try_eval_constant_global_expression functions_table_opt expr) with _ -> None

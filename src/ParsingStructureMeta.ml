@@ -23,27 +23,63 @@ open Exceptions
 
 (** Utils **)
 
+(* Get variable name from a variable access *)
+(* ex : my_var[0][0] -> my_var *)
+let rec variable_name_of_parsed_scalar_or_index_update_type = function
+    | Parsed_scalar_update variable_name -> variable_name
+    | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
+
+(* Get variable name if any *)
+let rec variable_name_of_parsed_update_type_opt = function
+    | Parsed_variable_update parsed_scalar_or_index_update_type ->
+        Some (variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type)
+    | Parsed_void_update -> None
+
+let variable_name_of_parsed_update_type parsed_update_type =
+    let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
+    match variable_name_opt with
+    | Some variable_name -> variable_name
+    | None -> raise (InternalError "Unable to get variable name of an update.")
+
+(* Gather all updates of update section (pre-updates, updates and post-updates) *)
+let updates_of_update_section update_section =
+    let seq_updates, updates, _ = update_section in
+    seq_updates @ updates
+
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
 (* If the expression is more complex, return None *)
 let discrete_boolean_expression_constant_value_opt = function
     | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant (Bool_value v)))) -> Some v
     | _ -> None
 
+(* Tree leaf functions *)
+
 (* Check if leaf is a constant *)
-let is_constant variable_infos = function
-    | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
+let is_constant variable_infos local_variables = function
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _))-> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
-    | Leaf_fun _
-    | Leaf_update_variable _ -> false
+    (* TODO benjamin IMPROVE not always true, a function can be constant *)
+    | Leaf_fun _ -> false
 
 (* Check if leaf has side effects *)
-let has_side_effects variable_infos = function
+let has_side_effects variable_infos local_variables = function
     | Leaf_fun function_name ->
         let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
         function_metadata.side_effect
     | Leaf_variable _
-    | Leaf_constant _
-    | Leaf_update_variable _ -> false
+    | Leaf_constant _ -> false
+
+let has_side_effects_on_update variable_infos local_variables = function
+        | Leaf_update_variable (Leaf_global_variable variable_name)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+        (* TODO benjamin IMPORTANT below false is a wrong value,
+           I just set this value because this function is used in context of continuous update
+           If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
+        (* TODO benjamin IMPORTANT This function tends to disapear when removing old updates *)
+        false
+        (* Side effect only occurs if the updated variable is global *)
+(*        not (VariableMap.mem variable_name local_variables)*)
 
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
@@ -54,16 +90,13 @@ let is_linear_constant variable_infos = function
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
-let is_variable_defined_with_callback variable_infos local_variables_opt variable_not_defined_callback_opt = function
-    | Leaf_variable variable_name ->
+let is_variable_defined_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
-        let is_defined_local =
-            match local_variables_opt with
-            | Some local_variables -> StringSet.mem variable_name local_variables
-            | None -> false
-        in
+        let is_defined_local = VariableMap.mem variable_name local_variables in
 
         let is_defined = is_defined_global || is_defined_local in
 
@@ -76,15 +109,14 @@ let is_variable_defined_with_callback variable_infos local_variables_opt variabl
         is_defined
     | Leaf_fun _ -> true
     | Leaf_constant _ -> true
-    | Leaf_update_variable variable_name ->
+
+let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
+        | Leaf_update_variable (Leaf_global_variable variable_name)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
-        let is_defined_local =
-            match local_variables_opt with
-            | Some local_variables -> StringSet.mem variable_name local_variables
-            | None -> false
-        in
+        let is_defined_local = VariableMap.mem variable_name local_variables in
 
         let is_defined = is_defined_global || is_defined_local in
 
@@ -96,7 +128,22 @@ let is_variable_defined_with_callback variable_infos local_variables_opt variabl
 
         is_defined
 
-let is_variable_defined variable_infos local_variables_opt = is_variable_defined_with_callback variable_infos local_variables_opt None
+let is_variable_defined variable_infos = is_variable_defined_with_callback variable_infos None
+
+let is_function_defined_with_callback variable_infos function_not_defined_callback_opt local_variables = function
+    | Leaf_fun function_name ->
+
+        let is_defined = Hashtbl.mem variable_infos.functions function_name in
+
+        if not is_defined then (
+            match function_not_defined_callback_opt with
+            | Some function_not_defined_callback -> function_not_defined_callback function_name
+            | None -> ()
+        );
+
+        is_defined
+    | Leaf_variable _ -> true
+    | Leaf_constant _ -> true
 
 (* Check if linear expression leaf is a variable that is defined *)
 let is_variable_defined_in_linear_expression variable_infos callback_fail = function
@@ -141,8 +188,9 @@ let is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_info u
         )
 
 (* Check if leaf is only a discrete variable *)
-let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
-    | Leaf_variable variable_name ->
+let is_only_discrete variable_infos clock_or_param_found_callback_opt local_variables = function
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
         let var_type = var_type_of_variable_or_constant variable_infos variable_name in
         (match var_type with
         | Var_type_clock
@@ -157,7 +205,6 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     | Leaf_constant _
     (* As long as function can only return discrete and can't manipulate clocks and parameters *)
     | Leaf_fun _ -> true
-    | Leaf_update_variable _ -> true
 
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
@@ -193,71 +240,9 @@ let has_side_effect_parsed_discrete_boolean_expression variable_infos = exists_i
 (* Check if a parsed discrete arithmetic expression has side effects *)
 let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exists_in_parsed_discrete_arithmetic_expression (has_side_effects variable_infos)
 (* Check if a parsed normal update has side effects *)
-let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects variable_infos)
+let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects_on_update variable_infos) (has_side_effects variable_infos)
 (* Check if a parsed state predicate has side effects *)
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
-
-
-(* TODO benjamin generalize with ParsingStructureUtilities *)
-let has_side_effect_parsed_seq_code_bloc variable_infos =
-
-    let rec has_side_effect_parsed_seq_code_bloc_rec local_variables = function
-        | Parsed_local_decl (variable_name, variable_type, expr, next_expr, _) ->
-            (* Add local variable to hashtable *)
-            let new_local_variables = VariableMap.add variable_name variable_type local_variables in
-
-            (* Type check and infer init expression of the local variable declaration *)
-            let is_init_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos expr in
-            (* Type check and infer the next expression of the function body *)
-            let is_next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec new_local_variables next_expr in
-
-            is_init_expr_has_side_effects || is_next_expr_has_side_effects
-
-        | Parsed_assignment (((parsed_update_type, expr) as normal_update), next_expr) ->
-
-            let has_side_effects = has_side_effect_parsed_normal_update variable_infos normal_update in
-            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
-            true
-
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
-            (* Add local variable for loop to hashtable *)
-            let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
-
-            let is_from_expr_has_side_effects = has_side_effect_parsed_discrete_arithmetic_expression variable_infos from_expr in
-            let is_to_expr_has_side_effects = has_side_effect_parsed_discrete_arithmetic_expression variable_infos to_expr in
-            let inner_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
-            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
-            true
-
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
-
-            let is_condition_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos condition_expr in
-            let inner_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables inner_bloc in
-            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
-            true
-
-        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
-
-            let is_condition_expr_has_side_effects = has_side_effect_parsed_boolean_expression variable_infos condition_expr in
-            let then_bloc_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables then_bloc in
-
-            let else_bloc_has_side_effects =
-                match else_bloc_opt with
-                | Some else_bloc ->
-                    has_side_effect_parsed_seq_code_bloc_rec local_variables else_bloc
-                | None ->
-                    false
-            in
-
-            let next_expr_has_side_effects = has_side_effect_parsed_seq_code_bloc_rec local_variables next_expr in
-            true
-
-        | Parsed_return_expr expr ->
-            has_side_effect_parsed_boolean_expression variable_infos expr
-
-        | Parsed_bloc_void -> false
-    in
-    has_side_effect_parsed_seq_code_bloc_rec VariableMap.empty
 
 (* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function
@@ -337,115 +322,61 @@ and is_linear_parsed_factor variable_infos = function
     | Parsed_function_call _ -> false
 
 let all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos None) expr
+    for_all_in_parsed_boolean_expression (is_variable_defined variable_infos) expr
 
 (* Check that all variables in a parsed boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
+    for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
 
 (* Check that all variables in a parsed discrete boolean expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_boolean_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos None callback) expr
+    for_all_in_parsed_discrete_boolean_expression (is_variable_defined_with_callback variable_infos callback) expr
 
 (* Check that all variables in a parsed discrete arithmetic expression are effectively be defined *)
 let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_infos callback expr =
-    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos None callback) expr
+    for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos callback) expr
 
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback expr =
-    for_all_in_parsed_normal_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) expr
+    for_all_in_parsed_normal_update
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback)
+        expr
 
 (* Check that all variables in a parsed update are effectively be defined *)
 let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback expr =
-    for_all_in_parsed_update (is_variable_defined_with_callback variable_infos None undefined_variable_callback) expr
+    for_all_in_parsed_update
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback)
+        expr
+
+(* Check that all variables in a parsed sequential code bloc are effectively be defined *)
+let all_variables_defined_in_parsed_seq_code_bloc variable_infos undefined_variable_callback seq_code_bloc =
+    ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback)
+        seq_code_bloc
+
+(* Check that all functions called in a parsed sequential code bloc are effectively be defined *)
+let all_functions_defined_in_parsed_seq_code_bloc variable_infos undefined_function_callback seq_code_bloc =
+    ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
+        (fun _ _ -> true)
+        (is_function_defined_with_callback variable_infos undefined_function_callback)
+        seq_code_bloc
 
 (* Check that all variables in a parsed fun declaration are effectively be defined *)
 let all_variables_defined_in_parsed_fun_def variable_infos undefined_variable_callback (fun_def : parsed_fun_definition) =
+    ParsingStructureUtilities.for_all_in_parsed_fun_def
+        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback)
+        fun_def
 
-    (* Add parameters as local variables *)
-    let parameter_names = List.map first_of_tuple fun_def.parameters in
-    let local_variables = List.fold_right StringSet.add parameter_names StringSet.empty in
-
-    (* Overwrite function `all_variables_defined_in_parsed_boolean_expression` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_boolean_expression local_variables (* expr *) =
-        for_all_in_parsed_boolean_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
-    in
-
-    (* Overwrite function `all_variables_defined_in_parsed_discrete_arithmetic_expression` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables (* expr *) =
-        for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback) (* expr *)
-    in
-
-    (* Overwrite function `all_variables_defined_in_parsed_normal_update` adding a parameter for taking into account local variables set *)
-    let all_variables_defined_in_parsed_normal_update local_variables (* expr *) =
-        let leaf_fun = is_variable_defined_with_callback variable_infos (Some local_variables) undefined_variable_callback in
-        for_all_in_parsed_normal_update leaf_fun (* expr *)
-    in
-
-    (* TODO benjamin REFACTOR replace by a general function in ParsingStructureUtilities *)
-    (* Check if all variables defined in user function body using local variables set *)
-    let rec all_variables_defined_in_parsed_seq_code_bloc_rec local_variables = function
-        | Parsed_local_decl (variable_name, _, init_expr, next_expr, _) ->
-            let all_variables_defined_in_init_expr = all_variables_defined_in_parsed_boolean_expression local_variables init_expr in
-            (* Add the new declared local variable to set *)
-            let local_variables = StringSet.add variable_name local_variables in
-            all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr && all_variables_defined_in_init_expr
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            (* Check if variables defined in normal update *)
-            let all_variables_defined_in_normal_update = all_variables_defined_in_parsed_normal_update local_variables normal_update in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_normal_update && all_variables_defined_in_next_expr
-
-        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, _) ->
-            (* Check if variables defined in from expr *)
-            let all_variables_defined_in_from_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables from_expr in
-            (* Check if variables defined in to expr *)
-            let all_variables_defined_in_to_expr = all_variables_defined_in_parsed_discrete_arithmetic_expression local_variables to_expr in
-            (* Add the new declared local variable to set *)
-            let local_variables_of_loop = StringSet.add variable_name local_variables in
-            (* Check if variables defined in inner expressions *)
-            let all_variables_defined_in_inner_bloc = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_bloc in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_inner_bloc && all_variables_defined_in_from_expr && all_variables_defined_in_to_expr && all_variables_defined_in_next_expr
-
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
-            (* Check if variables defined in from expr *)
-            let all_variables_defined_in_condition_expr = all_variables_defined_in_parsed_boolean_expression local_variables condition_expr in
-            (* Check if variables defined in inner expressions *)
-            let all_variables_defined_in_inner_bloc = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables inner_bloc in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_condition_expr && all_variables_defined_in_inner_bloc && all_variables_defined_in_next_expr
-
-        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-            (* Check if variables defined in from expr *)
-            let all_variables_defined_in_condition_expr = all_variables_defined_in_parsed_boolean_expression local_variables condition_expr in
-            (* Check if variables defined in then expressions *)
-            let all_variables_defined_in_then_bloc = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables then_bloc in
-            (* Check if variables defined in else expressions *)
-            let all_variables_defined_in_else_bloc =
-                match else_bloc_opt with
-                | Some else_bloc ->
-                    all_variables_defined_in_parsed_seq_code_bloc_rec local_variables else_bloc
-                | None ->
-                    true
-            in
-            (* Check if variables defined in next expressions *)
-            let all_variables_defined_in_next_expr = all_variables_defined_in_parsed_seq_code_bloc_rec local_variables next_expr in
-            (* Is all defined ? *)
-            all_variables_defined_in_condition_expr && all_variables_defined_in_then_bloc && all_variables_defined_in_else_bloc && all_variables_defined_in_next_expr
-
-        | Parsed_return_expr expr ->
-            all_variables_defined_in_parsed_boolean_expression local_variables expr
-        | Parsed_bloc_void -> true
-    in
-    all_variables_defined_in_parsed_seq_code_bloc_rec local_variables fun_def.body
+(* Check that all functions called in a parsed fun declaration are effectively be defined *)
+let all_functions_defined_in_parsed_fun_def variable_infos undefined_function_callback (fun_def : parsed_fun_definition) =
+    ParsingStructureUtilities.for_all_in_parsed_fun_def
+        (fun _ _ -> true)
+        (is_function_defined_with_callback variable_infos undefined_function_callback)
+        fun_def
 
 (* Check that all variables in a linear expression are effectively be defined *)
 let all_variables_defined_in_linear_expression variable_infos callback_fail expr =
@@ -459,7 +390,7 @@ let all_variables_defined_in_linear_constraint variable_infos callback_fail expr
 (* Check that all variables in a non-linear constraint are effectively be defined *)
 let all_variables_defined_in_nonlinear_constraint variable_infos callback expr =
     for_all_in_parsed_nonlinear_constraint
-        (is_variable_defined_with_callback variable_infos None callback)
+        (is_variable_defined_with_callback variable_infos callback)
         expr
 
 (* Check that all variables in a non-linear convex predicate (non-linear constraint list) are effectively be defined *)
@@ -472,10 +403,10 @@ let all_variables_defined_in_nonlinear_convex_predicate variable_infos callback 
     non_linear_convex_predicate
 
 (* Check that all variables in a state predicate are effectively be defined *)
-let all_variable_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
+let all_variables_defined_in_parsed_state_predicate parsing_infos variable_infos undefined_variable_callback_opt undefined_automaton_callback_opt undefined_loc_callback_opt expr =
     for_all_in_parsed_state_predicate
         (is_automaton_defined_in_parsed_state_predicate_with_callbacks parsing_infos undefined_automaton_callback_opt undefined_loc_callback_opt)
-        (is_variable_defined_with_callback variable_infos None undefined_variable_callback_opt)
+        (is_variable_defined_with_callback variable_infos undefined_variable_callback_opt)
         expr
 
 (* Check that there is only discrete variables in a parsed boolean expression *)
@@ -505,19 +436,18 @@ let add_variable_of_linear_expression variables_used_ref = function
     | Leaf_true_linear_constraint -> ()
 
 (* Gather all variable names used in a discrete boolean expression *)
-let add_variable_of_discrete_boolean_expression variables_used_ref = function
+let add_variable_of_discrete_boolean_expression variables_used_ref local_variables = function
     | Leaf_constant _
-    | Leaf_fun _
-    | Leaf_update_variable _ -> ()
-    | Leaf_variable variable_name ->
+    | Leaf_fun _ -> ()
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _)) ->
         (* Add the variable name to the set and update the reference *)
         variables_used_ref := StringSet.add variable_name !variables_used_ref
 
 (* Gather all function names used in a discrete boolean expression *)
-let add_function_of_discrete_boolean_expression function_used_ref = function
+let add_function_of_discrete_boolean_expression function_used_ref local_variables = function
     | Leaf_constant _
-    | Leaf_variable _
-    | Leaf_update_variable _ -> ()
+    | Leaf_variable _ -> ()
     | Leaf_fun function_name ->
         (* Add the variable name to the set and update the reference *)
         function_used_ref := StringSet.add function_name !function_used_ref
@@ -562,16 +492,19 @@ let get_functions_in_nonlinear_constraint_with_accumulator = get_functions_in_pa
 (* Gather all variable names used in an update in a given accumulator *)
 let get_variables_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
+        (fun _ _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all function names used in an update in a given accumulator *)
 let get_functions_in_parsed_update_with_accumulator variables_used_ref =
     iterate_parsed_update
+        (fun _ _ -> ())
         (add_function_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all variable names used in a normal update in a given accumulator *)
 let get_variables_in_parsed_normal_update_with_accumulator variables_used_ref =
     iterate_parsed_normal_update
+        (fun _ _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
 (* Gather all variable names used in a parsed simple predicate in a given accumulator *)
@@ -655,28 +588,64 @@ let get_functions_in_nonlinear_convex_predicate convex_predicate =
 let get_variables_in_parsed_simple_predicate =
     wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
 
+(**)
 let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
 
-(* Get variable name from a variable access *)
-(* ex : my_var[0][0] -> my_var *)
-let rec variable_name_of_parsed_scalar_or_index_update_type = function
-    | Parsed_scalar_update variable_name -> variable_name
-    | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
+let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *) =
 
-(* Get variable name if any *)
-let rec variable_name_of_parsed_update_type_opt = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        Some (variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type)
-    | Parsed_void_update -> None
+    let left_right_member_of_assignments local_variables = function
+        | Traversed_parsed_for_loop (_, _, _, _, inner_result, next_result)
+        | Traversed_parsed_while_loop (_, inner_result, next_result) -> inner_result @ next_result
+        | Traversed_parsed_if (_, then_result, else_result_opt, next_result) ->
+            then_result @ (match else_result_opt with Some else_result -> else_result | None -> []) @ next_result
+        | Traversed_parsed_local_decl (_, _, _, next_result) -> next_result
 
-let variable_name_of_parsed_update_type parsed_update_type =
-    let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
-    match variable_name_opt with
-    | Some variable_name -> variable_name
-    | None -> raise (InternalError "Unable to get variable name of an update.")
+        | Traversed_parsed_assignment ((parsed_update_type, expr), next_result) ->
 
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-let updates_of_update_section update_section =
-    let seq_updates, updates = update_section in
-    seq_updates @ updates
+            let right_variable_names = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
+
+            let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
+            let left_variable_name =
+                match variable_name_opt with
+                | Some variable_name -> variable_name
+                | None -> ""
+            in
+
+            [left_variable_name, right_variable_names] @ next_result
+        | Traversed_parsed_return_expr _
+        | Traversed_parsed_bloc_void -> []
+    in
+    ParsingStructureUtilities.traverse_parsed_seq_code_bloc left_right_member_of_assignments (* seq_code_bloc *)
+
+(* Get local variables of a parsed function definition *)
+let local_variables_of_parsed_fun_def (fun_def : parsed_fun_definition) =
+    ParsingStructureUtilities.fold_parsed_fun_def
+        (@)
+        []
+        ~decl_callback:(Some (fun (variable_name, discrete_type, id) -> [variable_name, discrete_type, id]))
+        (fun _ _ -> [])
+        (fun _ _ -> [])
+        fun_def
+    (*
+    (* Concat all local variables found when traversing the function body *)
+    let duplicate_local_variables = ParsingStructureUtilities.fold_parsed_fun_def
+        (@) (* concat operator *)
+        [] (* base *)
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
+        (fun local_variables _ -> local_variables |> VariableMap.to_seq |> List.of_seq)
+        fun_def
+    in
+    (* Remap tuples and remove duplicates *)
+    List.map (fun (a, (b, c)) -> a, b, c) duplicate_local_variables |> OCamlUtilities.list_only_once
+    *)
+
+(* Get local variables of a parsed sequential code bloc *)
+let local_variables_of_parsed_seq_code_bloc seq_code_bloc =
+    ParsingStructureUtilities.fold_parsed_seq_code_bloc
+        (@)
+        []
+        ~decl_callback:(Some (fun (variable_name, discrete_type, id) -> [variable_name, discrete_type, id]))
+        (fun _ _ -> [])
+        (fun _ _ -> [])
+        seq_code_bloc

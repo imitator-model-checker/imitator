@@ -48,7 +48,12 @@ exception EmptyConstraint
 type variable = int
 type coef = NumConst.t
 
-
+type internal_linear_term =
+	| IR_Var of variable
+	| IR_Coef of coef
+	| IR_Plus of internal_linear_term * internal_linear_term
+	| IR_Minus of internal_linear_term * internal_linear_term
+	| IR_Times of coef * internal_linear_term
 
 (************************************************************)
 (** {2 Valuations} *)
@@ -72,7 +77,7 @@ type d_valuation = (variable -> coef)
 (* type linear_term *)
 type p_linear_term
 type px_linear_term
-type pxd_linear_term
+type pxd_linear_term = internal_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

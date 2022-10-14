@@ -1,10 +1,12 @@
 open CustomModules
 open DiscreteExpressions
+open LinearConstraint
 open Automaton
 
 type variable_table = AbstractValue.abstract_value VariableMap.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -18,6 +20,8 @@ type eval_context = {
     discrete_setter : discrete_setter;
     (* Current local variables *)
     local_variables : variable_table;
+    (**)
+    updated_clocks : clock_updates_history
 }
 
 (* Result returned on delayed update *)
@@ -30,6 +34,8 @@ val delayed_update : variable_name_table option -> functions_table option -> dis
 val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
 val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
+val eval_seq_code_bloc : variable_name_table option -> functions_table option -> discrete_access -> seq_code_bloc -> AbstractValue.abstract_value
+val eval_seq_code_bloc_with_context : variable_name_table option -> functions_table option -> eval_context -> seq_code_bloc -> AbstractValue.abstract_value
 
 (* Check if a nonlinear constraint is satisfied *)
 val check_nonlinear_constraint : variable_name_table option -> functions_table option -> discrete_access -> nonlinear_constraint -> bool

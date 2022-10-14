@@ -251,7 +251,20 @@ let check_normal_update variable_infos automaton_name normal_update =
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
     (* Get (maybe) an updated variable in normal update *)
-    let updated_variable_name_opt = (ParsingStructureUtilities.fold_parsed_normal_update (@) [] (function Leaf_update_variable variable_name -> [variable_name] | _ -> []) normal_update |> List.filter (fun x -> x <> "") |> List.nth_opt) 0 in
+    let updated_variable_name_opt = (
+        ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
+            VariableMap.empty
+            (@)
+            []
+            (fun _ -> function
+                | Leaf_update_variable (Leaf_global_variable variable_name)
+                | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) -> [variable_name]
+            )
+            (fun _ _ -> []) normal_update
+            |> List.filter (fun x -> x <> "")
+            |> List.nth_opt
+        ) 0
+    in
 
     let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
 
@@ -1387,6 +1400,43 @@ let convert_updates variable_infos updates_type updates : updates =
     (** updates abstract model *)
     { converted_updates with conditional = conditional_updates_values }
 
+(* Get clock updates from a bloc of sequential code *)
+let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
+
+    (* Search for clock assignment in sequential code bloc *)
+    let rec clock_assignment_in_seq_code_bloc = function
+        | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
+
+            (* Get the update variable name *)
+            let variable_name = ParsingStructureMeta.variable_name_of_parsed_update_type parsed_update_type in
+            (* Get type of the variable *)
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+
+            (* Get next clock assignments *)
+            let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
+
+            (match var_type_opt with
+            | Some Var_type_clock -> (Parsed_scalar_update variable_name, expr) :: next_clock_assignments
+            | _ -> next_clock_assignments
+            )
+        | Parsed_local_decl (_, _, _, next_expr, _)
+        | Parsed_for_loop (_, _, _, _, _, next_expr, _)
+        | Parsed_while_loop (_, _, next_expr)
+        | Parsed_if (_, _, _, next_expr) ->
+            clock_assignment_in_seq_code_bloc next_expr
+        | Parsed_return_expr _
+        | Parsed_bloc_void -> []
+    in
+
+    (* TODO benjamin REFACTOR here can refactor because is_only_resets use parsed_update_type, ...  *)
+    let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
+    let parsed_updates = List.map (fun (scalar_or_index_update_type, expr) -> Parsed_variable_update scalar_or_index_update_type, expr) parsed_clock_updates in
+	(* Flag to check if there are clock resets only to 0 *)
+    let only_resets = is_only_resets variable_infos parsed_updates in
+
+    (* Convert continuous updates *)
+    to_abstract_clock_update variable_infos only_resets parsed_clock_updates
+
 
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
@@ -1418,6 +1468,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	action		= -1;
 	seq_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	new_updates = No_update, Bloc_void;
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1448,8 +1499,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              let seq_updates, updates = update_section in
+              let seq_updates, updates, seq_code_bloc_update = update_section in
 
+                (* TODO benjamin IMPLEMENT have to delete some instruction ? in seq_code_bloc_update for removed variable ? *)
               let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
 
@@ -1477,6 +1529,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
+              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)
@@ -1511,6 +1564,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 					action  = action_index;
 					seq_updates = converted_seq_updates;
 					updates = converted_updates;
+					new_updates = converted_new_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)
@@ -2144,7 +2198,7 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 
 let check_parsed_state_predicate parsing_infos expr =
     let variable_infos = parsing_infos.variable_infos in
-    ParsingStructureMeta.all_variable_in_parsed_state_predicate
+    ParsingStructureMeta.all_variables_defined_in_parsed_state_predicate
         parsing_infos
         variable_infos
         (* Undefined variable name callback, triggered if an undefined variable is found *)
@@ -3518,8 +3572,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 
     (* Get metadata of these functions *)
-    let metadata_of_parsed_function_definition = Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table in
-    let user_functions_metadata = List.map metadata_of_parsed_function_definition used_function_definitions in
+    let user_functions_metadata = List.map (Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table) used_function_definitions in
     (* Concat builtin & user functions *)
     let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions_metadata in
     (* Create function table that associate function name to function metadata *)

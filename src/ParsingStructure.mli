@@ -171,18 +171,18 @@ type update =
 	| Normal of normal_update (** Updates without conditions *)
 	| Condition of condition_update (** Updates with conditions *)
 
+type parsed_loop_dir =
+    | Parsed_for_loop_up
+    | Parsed_for_loop_down
+
 (* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
-type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *)
+type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
 
 (****************************************************************)
 (** Bloc of sequential code *)
 (****************************************************************)
 
-type parsed_loop_dir =
-    | Parsed_for_loop_up
-    | Parsed_for_loop_down
-
-type parsed_seq_code_bloc =
+and parsed_seq_code_bloc =
     | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_seq_code_bloc * int (* id *)
     | Parsed_assignment of normal_update * parsed_seq_code_bloc
     | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc (* inner bloc *) * parsed_seq_code_bloc (* next *) * int (* id *)
@@ -509,6 +509,7 @@ type variable_infos = {
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
+	(* TODO benjamin REFACTOR rename to fun_meta *)
 	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
 }
 

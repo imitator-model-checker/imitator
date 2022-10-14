@@ -80,6 +80,7 @@ rule token = parse
   | "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
   | "seq"            { CT_SEQ }
+  | "mix"            { CT_MIX }
   | "begin"          { CT_BEGIN }
   | "in"             { CT_IN }
 	| "else"           { CT_ELSE }

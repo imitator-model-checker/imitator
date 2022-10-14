@@ -75,6 +75,7 @@ let unzip l = List.fold_left
   CT_INSIDE
   CT_DO
   CT_SEQ
+  CT_MIX
   CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
@@ -509,9 +510,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { ([], []), NoSync }
+	| { ([], [], Parsed_bloc_void), NoSync }
 	| updates { $1, NoSync }
-	| syn_label { ([], []), (Sync $1) }
+	| syn_label { ([], [], Parsed_bloc_void), (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -523,13 +524,18 @@ updates:
 ;
 
 seq_then_updates:
-  | CT_SEQ update_seq_nonempty_list then_updates { $2, $3 }
-  | update_list { [], $1 }
+  | CT_SEQ update_seq_nonempty_list then_updates mixin_updates { $2, $3, $4 }
+  | update_list { [], $1, Parsed_bloc_void }
 ;
 
 then_updates:
   | CT_THEN update_nonempty_list end_opt { $2 }
   | { [] }
+;
+
+mixin_updates:
+  | CT_MIX seq_code_bloc end_opt { $2 }
+  | { Parsed_bloc_void }
 ;
 
 /************************************************************/

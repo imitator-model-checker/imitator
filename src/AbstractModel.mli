@@ -73,13 +73,6 @@ type clock_updates =
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
 	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
-
-
-
-
-
-
-
 (** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
 type discrete_guard = DiscreteExpressions.nonlinear_constraint
@@ -108,6 +101,7 @@ type updates = {
   discrete   : DiscreteExpressions.discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
+
 (** Conditional updates *)
 and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
 
@@ -117,6 +111,7 @@ type transition = {
     action : action_index;
     seq_updates : updates;
     updates : updates;
+    new_updates : clock_updates * DiscreteExpressions.seq_code_bloc;
     target : location_index;
 }
 
@@ -125,7 +120,7 @@ type transition_index = int
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
-
+(* TODO benjamin REFACTOR rename to fun_def *)
 type fun_definition = {
     name : variable_name;
     parameter_names : variable_name list;
