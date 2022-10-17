@@ -355,27 +355,15 @@ let discrete_constraint_of_global_location (global_location : DiscreteState.glob
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values
 
-(*------------------------------------------------------------*)
-(* Get all invariants of model's automatas *)
-(* Note : use of Input.get_model *)
-(*------------------------------------------------------------*)
-let get_model_invariants (location : DiscreteState.global_location) =
-    (* Retrieve the model *)
-	let model = Input.get_model() in
-
-	List.map (fun automaton_index ->
-		(* Get the current location *)
-		let location_index = DiscreteState.get_location location automaton_index in
-		(* Compute the invariant *)
-		model.invariants automaton_index location_index
-	) model.automata
 
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
 let compute_plain_continuous_invariant (location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
     (* construct invariant *)
-	let invariants = get_model_invariants location in
+	let invariants : AbstractModel.invariant list = AbstractModelUtilities.get_model_invariants model location in
 	let _ (* discrete_invariants *), continuous_invariants = split_guards_into_discrete_and_continuous invariants in
 	(* Perform the intersection *)
 	LinearConstraint.pxd_intersection continuous_invariants
@@ -1683,7 +1671,7 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 	let initial_constraint = model.initial_constraint in
 
 	(* Get model invariants for the target location *)
-	let initial_invariants = get_model_invariants initial_location in
+	let initial_invariants = AbstractModelUtilities.get_model_invariants model initial_location in
 	(* Check if the discrete invariants are all satisfied *)
 	let is_discrete_initial_invariants_satisfied = is_discrete_guards_satisfied initial_location initial_invariants in
 
@@ -1817,8 +1805,10 @@ let post_from_one_state_via_one_transition (source_location : DiscreteState.glob
 	(* Else: the discrete part of guards is satisfied *)
 	)else(
 
+		(* Retrieve the model *)
+		let model = Input.get_model() in
 	    (* Get model invariants for the target location *)
-	    let target_invariants = get_model_invariants target_location in
+	    let target_invariants = AbstractModelUtilities.get_model_invariants model target_location in
 	    (* Check if the discrete invariants are all satisfied *)
         let is_discrete_target_invariants_satisfied = is_discrete_guards_satisfied target_location target_invariants in
 
