@@ -403,7 +403,7 @@ let compute_valuated_invariant (location : DiscreteState.global_location) : Line
 	LinearConstraint.pxd_hide_discrete_and_collapse current_constraint
 
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Get the list of clocks concerned by an AbstractModel.clock_updates *)
 (*------------------------------------------------------------*)
 let get_clocks_in_update (update : AbstractModel.clock_updates) : Automaton.clock_index list = match update with
@@ -417,7 +417,7 @@ let get_clocks_in_update (update : AbstractModel.clock_updates) : Automaton.cloc
 		let clocks, _ = List.split updates in clocks
 
 let get_clocks_in_updates (updates : AbstractModel.clock_updates list) : Automaton.clock_index list =
-	list_only_once (List.fold_left (fun current_list clock_update -> List.rev_append current_list (get_clocks_in_update clock_update) ) [] updates)
+	list_only_once (List.fold_left (fun current_list clock_update -> List.rev_append current_list (get_clocks_in_update clock_update) ) [] updates)*)
 
 
 
