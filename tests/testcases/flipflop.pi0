@@ -36,7 +36,7 @@
 
 (* IJFCS [ACEF09] *)
 property := #synth IM(
-	& tHI    = 24
+(*	& tHI    = 24
 	& tLO    = 15
 	& tSetup = 10
 	& tHold  = 17
@@ -44,9 +44,9 @@ property := #synth IM(
 	& dG1_u  = 7
 	& dG2_l  = 5
 	& dG2_u  = 6
-	& dG3_l  = 8
+	& dG3_l  = 8*)
 	& dG3_u  = 10
-	& dG4_l  = 3
+(*	& dG4_l  = 3*)
 	& dG4_u  = 7
 );
 
