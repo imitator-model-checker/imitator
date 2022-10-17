@@ -208,7 +208,7 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	
 		(* The state is kept only if pi-compatible *)
 		pi0compatible
-	(*** END WARNING/BADPROG: what preceedes is almost entirely copy/paste from AlgoEFsynth.ml ***)
+	(*** END WARNING/BADPROG: what precedes is almost entirely copy/paste from AlgoEFsynth.ml ***)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
