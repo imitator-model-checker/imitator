@@ -64,9 +64,6 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
 		super#initialize_variables;
 		
 		bad_state_found <- false;
@@ -84,9 +81,6 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(** Process a pi-compatible state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_pi0_compatible_state (state : state) =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		
 		let to_be_added = 
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if State.match_state_predicate model.is_accepting state_predicate state then(
@@ -166,9 +160,6 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
 	(*** TODO: factorize ***)
 	method add_a_new_state source_state_index combined_transition new_state =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 		(* Test pi0-compatibility *)
 		let pi0compatible = self#check_pi0compatibility new_state.px_constraint in
 
@@ -227,8 +218,6 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	method try_termination_at_initial_state : Result.imitator_result option =
 		(* Retrieve the initial state *)
 		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
 
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
@@ -297,8 +286,6 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 		LinearConstraint.p_intersection_assign good_constraint [negated_constraint];
 
 		if verbose_mode_greater Verbose_low then(
-			(* Retrieve the model *)
-			let model = Input.get_model () in
 			self#print_algo_message_newline Verbose_low ("Kgood now equal to:");
 			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names good_constraint);
 		);

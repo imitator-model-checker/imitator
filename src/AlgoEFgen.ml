@@ -188,8 +188,6 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 	method try_termination_at_initial_state : Result.imitator_result option =
 		(* Retrieve the initial state *)
 		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
 
 

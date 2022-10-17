@@ -3091,8 +3091,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_initial_state_or_abort : state =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 

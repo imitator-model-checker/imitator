@@ -84,9 +84,6 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint loop_starting_point_state_index scc loop_px_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 (*		(* Compute the SCC (after the transitions were updated, of course) *)
 		self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int loop_starting_point_state_index) ^ "…");
 		let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in*)
@@ -222,9 +219,6 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."

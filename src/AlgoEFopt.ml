@@ -71,7 +71,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	(*------------------------------------------------------------*)
 	
 	val parameters_to_hide =
-			OCamlUtilities.list_remove_first_occurence parameter_index (Input.get_model ()).parameters
+			OCamlUtilities.list_remove_first_occurence parameter_index model.parameters
 	
 
 	(*------------------------------------------------------------*)

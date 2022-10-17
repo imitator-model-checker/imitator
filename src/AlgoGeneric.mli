@@ -35,9 +35,6 @@ class virtual algoGeneric : AbstractModel.abstract_model ->
 		(* Shortcuts *)
 		(*------------------------------------------------------------*)
 		
-		(* Retrieve the model *)
-		val model : AbstractModel.abstract_model
-		
 		(* Retrieve the input options *)
 		val options : Options.imitator_options
 		

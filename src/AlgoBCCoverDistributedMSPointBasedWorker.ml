@@ -83,8 +83,6 @@ class virtual algoBCCoverDistributedMSPointBasedWorker (model : AbstractModel.ab
 
 
 
-(* 		let model = Input.get_model() in *)
-
 		(*** TODO: disable generation of graphics and files in any case ***)
 
 		(* Flag tracking termination request from the master *)

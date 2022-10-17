@@ -73,9 +73,6 @@ class virtual algoBCCoverDistributedSubdomainStatic (model : AbstractModel.abstr
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			(* Retrive the model *)
-			let model = Input.get_model() in
-			
 			self#print_algo_message Verbose_low ("I computed the following " ^ (string_of_int (List.length subdomains)) ^ " subdomain" ^ (s_of_int (List.length subdomains)) ^ ".");
 			
 			List.iteri (fun i subdomain ->
@@ -126,7 +123,7 @@ class virtual algoBCCoverDistributedSubdomainStatic (model : AbstractModel.abstr
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low("Own static subdomain: " ^ (ModelPrinter.string_of_v0 (Input.get_model()) subdomain));
+			self#print_algo_message Verbose_low("Own static subdomain: " ^ (ModelPrinter.string_of_v0 model subdomain));
 		);
 		
 		(* Create an instance of the sequential cartography *)

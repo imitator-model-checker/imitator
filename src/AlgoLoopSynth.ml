@@ -202,9 +202,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter synthesized_constraint *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_loop_constraint current_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 		
@@ -268,9 +265,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 			self#print_algo_message Verbose_standard "Found an accepting cycle.";
 			
 			if verbose_mode_greater Verbose_low then(
-				(* Retrieve the model *)
-				let model = Input.get_model () in
-				
 				let global_location : Location.global_location = (StateSpace.get_state state_space state_index).global_location in
 				
 				self#print_algo_message Verbose_low ("Cycling along a SCC of length " ^ (string_of_int (List.length scc)) ^ " through location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location) ^ "");
@@ -286,9 +280,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 				let last_state : state_index = OCamlUtilities.list_last scc in
 				
 				if verbose_mode_greater Verbose_low then(
-					(* Retrieve the model *)
-					let model = Input.get_model () in
-					
 					let global_location : Location.global_location = (StateSpace.get_state state_space last_state).global_location in
 					
 					self#print_algo_message Verbose_low ("Reconstructing the run until state `" ^ (string_of_int last_state) ^ "` of location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location) ^ "");
@@ -308,9 +299,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	(* Actions to perform when found a loop, after updating the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint_after_state_space_update loop_starting_point_state_index loop_px_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 		(* Compute the SCC (after the transitions were updated, of course) *)
 		if verbose_mode_greater Verbose_low then(
 			let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in
@@ -348,9 +336,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."

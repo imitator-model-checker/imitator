@@ -136,7 +136,6 @@ class algoBCShuffle (model : AbstractModel.abstract_model) (v0 : HyperRectangle.
 		if verbose_mode_greater Verbose_total then(
 			(*** BEGIN DEBUG ***)
 			(* Print all pi0 *)
-			let model = Input.get_model() in
 			for pi0_index = 0 to Array.length all_points - 1 do
 				print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
 				print_message Verbose_standard (ModelPrinter.string_of_pval model all_points.(pi0_index));
@@ -182,7 +181,6 @@ class algoBCShuffle (model : AbstractModel.abstract_model) (v0 : HyperRectangle.
 		if verbose_mode_greater Verbose_high then(
 			(*** BEGIN DEBUG ***)
 			(* Print all pi0 *)
-			let model = Input.get_model() in
 			for pi0_index = 0 to Array.length all_points - 1 do
 				print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
 				print_message Verbose_standard (ModelPrinter.string_of_pval model all_points.(pi0_index));

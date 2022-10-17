@@ -56,9 +56,6 @@ class algoEF (model : AbstractModel.abstract_model) (state_predicate : AbstractP
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."

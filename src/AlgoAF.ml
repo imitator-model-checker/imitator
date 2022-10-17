@@ -57,8 +57,6 @@ class algoAFsynth (model : AbstractModel.abstract_model) =
 	(*** NOTE/TODO: technically, clocks should be non-negative, but parameters should just be conform to the initial p_constraint ***)
 	
 	val all_clocks_and_parameters_nonnegative : LinearConstraint.px_linear_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		(* Find clocks and parameters *)
 		let clocks_and_parameters = list_union model.clocks model.parameters in
 		(* Constrain non-negative *)
@@ -66,8 +64,6 @@ class algoAFsynth (model : AbstractModel.abstract_model) =
 
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is often used in the algorithm) *)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 	
 	(* Counters *)

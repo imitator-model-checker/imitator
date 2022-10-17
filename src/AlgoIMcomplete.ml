@@ -72,10 +72,6 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(* side effect: add the negation of the p_constraint to all computed states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method check_pi0compatibility (constr : LinearConstraint.px_linear_constraint) : bool =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = self#get_reference_pval in
 		
