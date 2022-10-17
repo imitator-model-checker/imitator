@@ -260,10 +260,10 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (* Main semantic functions *)
 (************************************************************)
 
-(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
+(*(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
 let evaluate_d_linear_constraint_in_location location =
 	(* Directly call the build-in function *)
-	LinearConstraint.d_is_pi0_compatible (DiscreteState.get_discrete_rational_value location)
+	LinearConstraint.d_is_pi0_compatible (DiscreteState.get_discrete_rational_value location)*)
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
