@@ -23,3 +23,6 @@ val is_global_location_urgent : AbstractModel.abstract_model -> DiscreteState.gl
 (*------------------------------------------------------------*)
 val get_model_invariants : AbstractModel.abstract_model -> DiscreteState.global_location -> AbstractModel.invariant list
 
+
+(** Split guards into two list, one of discrete guards and other of continuous guards *)
+val split_guards_into_discrete_and_continuous : AbstractModel.invariant list -> (AbstractModel.discrete_guard list * AbstractModel.continuous_guard list)

@@ -11,7 +11,9 @@
  *
  ************************************************************)
 
+open AbstractModel
 open DiscreteState
+open Exceptions
 
 
 (************************************************************)
@@ -43,3 +45,19 @@ let get_model_invariants (model : AbstractModel.abstract_model) (location : Disc
 		(* Compute the invariant *)
 		model.invariants automaton_index location_index
 	) model.automata
+
+
+(** Split guards into two list, one of discrete guards and other of continuous guards *)
+let split_guards_into_discrete_and_continuous =
+    List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
+		match guard with
+		(* True guard: unchanged *)
+		| True_guard -> current_discrete_guards, current_continuous_guards
+		(* False guard: should have been tested before! *)
+		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
+		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
+		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
+		| Discrete_continuous_guard discrete_continuous_guard ->
+			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
+	) ([], [])
+

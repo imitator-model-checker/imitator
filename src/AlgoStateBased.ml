@@ -323,19 +323,6 @@ let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = funct
 (*        (* no -> False ! *)*)
 (*        | _ -> False_guard*)
 
-(** Split guards into two list, one of discrete guards and other of continuous guards *)
-let split_guards_into_discrete_and_continuous =
-    List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
-		match guard with
-		(* True guard: unchanged *)
-		| True_guard -> current_discrete_guards, current_continuous_guards
-		(* False guard: should have been tested before! *)
-		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
-		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
-		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
-		| Discrete_continuous_guard discrete_continuous_guard ->
-			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
-	) ([], [])
 
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
@@ -364,7 +351,7 @@ let compute_plain_continuous_invariant (location : DiscreteState.global_location
 	let model = Input.get_model() in
     (* construct invariant *)
 	let invariants : AbstractModel.invariant list = AbstractModelUtilities.get_model_invariants model location in
-	let _ (* discrete_invariants *), continuous_invariants = split_guards_into_discrete_and_continuous invariants in
+	let _ (* discrete_invariants *), continuous_invariants = AbstractModelUtilities.split_guards_into_discrete_and_continuous invariants in
 	(* Perform the intersection *)
 	LinearConstraint.pxd_intersection continuous_invariants
 
@@ -1327,7 +1314,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	DiscreteState.update_location_with [] updated_discrete_pairs location;
 
 	(* Split guards between discrete and continuous *)
-	let discrete_guards, continuous_guards = split_guards_into_discrete_and_continuous guards in
+	let discrete_guards, continuous_guards = AbstractModelUtilities.split_guards_into_discrete_and_continuous guards in
 
 	(* Return the new location, the guards, unit updates, and the clock updates (if any!) *)
 	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
