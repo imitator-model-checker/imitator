@@ -67,7 +67,7 @@ let string_of_time_direction = function
 (************************************************************)
 
 (*** TODO: move to a future proper class for costs ***)
-
+(***
 (* Instantiated costs (no need to compute them for each location) *)
 let instantiated_costs = ref (Array.make 0 (Array.make 0 NumConst.zero)) (*Array.make (Hashtbl.length index_of_automata) (Array.make 0 (NumConst.zero))*)
 
@@ -99,7 +99,7 @@ let instantiate_costs pi0 =
 	(* Set the global array *)
 	instantiated_costs := costs;
 	()
-
+***)
 
 
 
