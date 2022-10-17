@@ -338,8 +338,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (model : AbstractModel.
 		bc_option <- Some bc;
 
 		if verbose_mode_greater Verbose_medium then(
-			(* Retrieve the model *)
-			let model = Input.get_model() in
 			self#print_algo_message Verbose_medium ("Set subdomain:");
 			self#print_algo_message Verbose_medium (ModelPrinter.string_of_v0 model subdomain);
 		);
