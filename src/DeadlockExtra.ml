@@ -107,6 +107,6 @@ let dl_weakest_precondition state_space s1_index transition s2_index =
   
 
     let updates = dl_get_clock_updates state_space transition in
-    let guard = get_guard state_space s1_index transition s2_index in
+    let guard = get_guard state_space s1_index transition in
  
     dl_predecessor state_space s1_index z1 guard updates z2 transition

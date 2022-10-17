@@ -29,6 +29,7 @@ open AbstractModel
 open AbstractAlgorithm
 
 
+
 (************************************************************)
 (** Nature of a state space according to some property *)
 (************************************************************)
@@ -152,6 +153,7 @@ module StateIndexSet = Set.Make(State)
 
 
 
+
 (************************************************************)
 (** State space structure *)
 (************************************************************)
@@ -187,8 +189,48 @@ type state_space = {
 }
 
 
+
+
+(************************************************************)
+(** SCC detection *)
+(************************************************************)
+
 (** An SCC is just a list of states *)
 type scc = state_index list
+
+(*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
+	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
+	- the other SCCs are discarded
+***)
+
+(* Data structure: node with index / lowlink / onStack *)
+type tarjan_node = {
+	(* Additional field used to record the real state_index in the state space *)
+	state_index	: state_index;
+	mutable index		: state_index option;
+	mutable lowlink		: state_index option;
+	mutable onStack		: bool;
+}
+
+
+
+(************************************************************)
+(** Local exceptions *)
+(************************************************************)
+exception Found_cycle
+
+(** Get the combined_transition between a state_index and its successor. Raise Not_found if no such transition exists. If several combined transitions exist, only the first one is retrieved. *)
+(* local exception *)
+exception Found_transition of combined_transition
+
+(* Exception raised when the SCC is found *)
+exception Found_scc of scc
+
+(* Old state found *)
+exception Found_old of state_index
+(* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
+exception Found_new of state_index
+
 
 
 (************************************************************)
@@ -233,16 +275,514 @@ let data_recorder_merging = create_data_recorder_and_register "StateSpace.mergin
 (* Counters for experiments of merging-in-pta *)
 let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip tests" Algorithm_counter Verbose_experiments
 
-(************************************************************)
-(** Local exception *)
-(************************************************************)
-exception Found_cycle
-
 
 (************************************************************)
 (** Debug string function *)
 (************************************************************)
 let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
+
+
+(**************************************************************)
+(* Class-independent functions on combined transitions *)
+(**************************************************************)
+
+(** Get the (unique) action associated with a combined_transition (if entry undefined in the hashtable, then []) *)
+let get_action_from_combined_transition (combined_transition : combined_transition) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
+	let action_index =
+	try (
+		(* Get the first transition *)
+		let first_transition_index = List.nth combined_transition 0 in
+		(* Get the actual transition *)
+		let transition = model.transitions_description first_transition_index in
+		(* Get the action index *)
+		transition.action
+	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: `" ^ msg ^ "`."))
+	in
+	action_index
+
+
+(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
+(*** TODO: allow for all resets ***)
+let get_resets state_index combined_transition state_index' =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+
+	(* For all transitions involved in the combined transition *)
+	let resets = List.fold_left (fun current_resets transition_index ->
+		(* Get the actual transition *)
+		let transition = model.transitions_description transition_index in
+
+		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
+		match transition.updates.clock with
+			(* No update at all *)
+			| No_update -> current_resets
+			(* Reset to 0 only *)
+			| Resets clock_resets -> List.rev_append clock_resets current_resets
+			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
+	) [] combined_transition
+	in
+
+	(* Keep each clock once *)
+	list_only_once resets
+
+
+(**************************************************************)
+(* Class definition *)
+(**************************************************************)
+class stateSpace (guessed_nb_transitions : int) =
+
+	(* Create initial state space *)
+	let initial_state_space =
+	(* Create a Hashtbl : state_index -> (location_index, linear_constraint) for the reachable states *)
+	let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+	(* Create a hashtable : location -> location_index for the locations *)
+	let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+	(* Create a DynArray : location_index -> location for the locations *)
+	let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
+	(* Create an empty lookup table : hash -> state_index *)
+	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+	(* Create a hashtable for the state space *)
+	let transitions_table = Hashtbl.create guessed_nb_transitions in
+
+	print_message Verbose_high ("Creating empty state space with an initial guessed number of " ^ (string_of_int Constants.guessed_nb_states_for_hashtable) ^ " state" ^ (s_of_int Constants.guessed_nb_states_for_hashtable) ^ " and " ^ (string_of_int guessed_nb_transitions) ^ " transition" ^ (s_of_int guessed_nb_transitions) ^ ".");
+
+	(* Create the state space *)
+	{
+		nb_generated_states   = ref 0;
+		all_states            = states;
+		initial               = None;
+		index_of_locations    = index_of_locations;
+		locations             = locations;
+		states_for_comparison = states_for_comparison;
+		transitions_table     = transitions_table;
+		next_state_index      = ref 0;
+	}
+	in
+	(*------------------------------------------------------------*)
+	object (self)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	val mutable state_space = initial_state_space
+
+
+	(************************************************************)
+	(* Simple get methods *)
+	(************************************************************)
+	(** Return the number of generated states (not necessarily present in the state space) *)
+	method get_nb_gen_states : int = !(state_space.nb_generated_states)
+
+	(** Return the number of transitions in a state space *)
+	method nb_transitions : int =
+		(* Statistics *)
+		counter_nb_transitions#increment;
+		counter_nb_transitions#start;
+
+		let result =
+			Hashtbl.fold (fun _ current_transitions current_nb ->
+				current_nb + (List.length current_transitions)
+			) state_space.transitions_table 0
+		in
+
+		(* Statistics *)
+		counter_nb_transitions#stop;
+
+		result
+
+	(* Return the global_location corresponding to a location_index *)
+	method get_location location_index =
+		(* Statistics *)
+		counter_get_location#increment;
+		counter_get_location#start;
+
+		let result =
+			DynArray.get state_space.locations location_index
+		in
+
+		(* Statistics *)
+		counter_get_location#stop;
+
+		result
+
+
+	(** Return the state of a state_index *)
+	method get_state state_index =
+		(* Statistics *)
+		counter_get_state#increment;
+		counter_get_state#start;
+
+		(* Find the state *)
+		let state =
+			(* Exception just in case *)
+			try (
+				Hashtbl.find state_space.all_states state_index
+			) with Not_found -> raise (InternalError ("State of index `" ^ (string_of_int state_index) ^ "` was not found in state_space (in function: get_state)."))
+		in
+
+		(* Find the pair (location_index, constraint) *)
+		let location_index, linear_constraint = state.global_location_index, state.px_constraint in
+
+		(* Find the location *)
+		let global_location = self#get_location location_index in
+
+		(* Statistics *)
+		counter_get_state#stop;
+
+		(* Return the state *)
+		{ global_location = global_location; px_constraint = linear_constraint; }
+
+
+	(** Return the global_location_index of a state_index *)
+	method get_global_location_index state_index =
+		(* Statistics *)
+		counter_get_state#increment;
+		counter_get_state#start;
+
+		(* Find the location_index *)
+		let location_index =
+			(* Exception just in case *)
+			try (
+				(Hashtbl.find state_space.all_states state_index).global_location_index
+			) with Not_found -> raise (InternalError ("State of index `" ^ (string_of_int state_index) ^ "` was not found in state_space (in function: StateSpace.get_global_location_index)."))
+		in
+
+		(* Statistics *)
+		counter_get_state#stop;
+
+		(* Return the location_index *)
+		location_index
+
+	(** return the list of states with the same location *)
+	method get_comparable_states state_index =
+			let location_index = self#get_global_location_index state_index in
+			Hashtbl.find_all state_space.states_for_comparison location_index
+
+
+	(** Return the index of the initial state, or raise Not_found if not defined *)
+	method get_initial_state_index =
+		match state_space.initial with
+		| Some state_index -> state_index
+		| None -> raise Not_found
+
+
+
+	(** Return the table of transitions *)
+	method get_transitions_table =
+
+		(* Statistics *)
+		counter_get_transitions#increment;
+		counter_get_transitions#start;
+
+		let result =
+			state_space.transitions_table
+		in
+
+		(* Statistics *)
+		counter_get_transitions#stop;
+
+		result
+
+
+	(** Compte and return the list of pairs (combined transition, index successor of a state) (if entry undefined in the hashtable, then []) *)
+	method get_successors_with_combined_transitions (state_index : state_index) : (combined_transition * state_index) list =
+		(* Get all successors with their combined transition *)
+		hashtbl_get_or_default state_space.transitions_table state_index []
+
+
+	(** Compte and return the list of index successors of a state (if entry undefined in the hashtable, then []) *)
+	method get_successors state_index =
+		(* Statistics *)
+		counter_get_successors#increment;
+		counter_get_successors#start;
+
+		(*** NOTE: we get all pairs "transition , target", then we keep the second elements, i.e., the target state indexes ***)
+		let _ , target_state_indices = List.split (self#get_successors_with_combined_transitions state_index) in
+
+		(* We eliminate duplicates *)
+		let result = list_only_once target_state_indices in
+
+		(* Statistics *)
+		counter_get_successors#stop;
+
+		result
+
+
+	(** Get all combined transitions from a state_index *)
+	method get_transitions_of_state state_index =
+		(* Print some information *)
+		print_message Verbose_total ("Entering StateSpace.get_transitions_of_state");
+
+		let transitions_and_targets = self#get_successors_with_combined_transitions state_index in
+
+		let result , _ = List.split transitions_and_targets in
+
+		(* The end *)
+		result
+
+
+
+
+	method get_combined_transition_between_states (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
+		(* Get all successors of source_state_index *)
+		let successors = self#get_successors_with_combined_transitions source_state_index in
+
+		try(
+			(* Iterate *)
+
+			List.iter (fun (combined_transition, state_index) -> if state_index = target_state_index then raise (Found_transition combined_transition)) successors;
+
+			(* If not found *)
+			raise Not_found
+		) with Found_transition combined_transition -> combined_transition
+
+
+
+	(************************************************************)
+	(* Methods computing things from the state space without modifications *)
+	(************************************************************)
+
+	(*------------------------------------------------------------*)
+	(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
+	(*------------------------------------------------------------*)
+	method compute_predecessors_with_combined_transitions : predecessors_table =
+
+		(* Statistics *)
+		counter_compute_predecessors_with_combined_transitions#increment;
+		counter_compute_predecessors_with_combined_transitions#start;
+
+		(* Print some information *)
+		print_message Verbose_total "Computing predecessors…";
+
+		(* Get the highest id of the state space *)
+		(*** NOTE: we get the highest id and not the length of the Hashtbl due to the fact that states may be merged/removed by bidirectional inclusion ***)
+		let highest_id = !(state_space.next_state_index) - 1 in
+
+		(* Print some information *)
+		print_message Verbose_total ("Creating an array of length " ^ (string_of_int (highest_id + 1)) ^ "");
+
+		(* Create an array for predecessors: state_index -> (state_index, action_index) list *)
+		let predecessors = Array.make (highest_id + 1) [] in
+
+		(* Iterate on all states in the state space *)
+		Hashtbl.iter(fun source_state_index _ ->
+			(* Print some information *)
+			print_message Verbose_total ("Retrieving successors of state #" ^ (string_of_int source_state_index));
+
+			(* Get all successors of this state *)
+			let successors = hashtbl_get_or_default state_space.transitions_table source_state_index [] in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Successors of state #" ^ (string_of_int source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) successors)));
+			);
+
+			(* Iterate on pairs (combined_transition * 'target_state_index') *)
+			List.iter (fun (combined_transition, target_state_index) ->
+
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Adding #" ^ (string_of_int source_state_index) ^ " to the predecessors of #" ^ (string_of_int target_state_index) ^ "");
+				);
+
+				(* Add to the predecessor array *)
+				Array.set predecessors target_state_index (
+					(* Add the new element *)
+					(combined_transition , source_state_index)
+					(* to *)
+					::
+					(* the former list *)
+					predecessors.(target_state_index)
+					)
+				;
+
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Predecessors of #" ^ (string_of_int target_state_index) ^ " now: " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) predecessors.(target_state_index))));
+				);
+
+			) successors;
+
+
+		) state_space.all_states;
+
+		(* Statistics *)
+		counter_compute_predecessors_with_combined_transitions#stop;
+
+		(* Return structure *)
+		predecessors
+
+
+	(** Return the list of all state indexes *)
+	method all_state_indexes = hashtbl_get_all_keys state_space.all_states
+
+	(** Test if state index is in the current statespace *)
+	method test_state_index state_index = Hashtbl.mem state_space.all_states state_index
+
+
+	(*** WARNING: big memory, here! Why not perform intersection on the fly? *)
+
+	(** Return the list of all constraints on the parameters associated to the states of a state space *)
+	method all_p_constraints =
+		Hashtbl.fold
+			(fun _ state current_list ->
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
+				p_constraint :: current_list)
+			state_space.all_states []
+
+
+
+	(** Iterate over the reahable states *)
+	method iterate_on_states f =
+		Hashtbl.iter f state_space.all_states
+
+
+	(*(** Compute the intersection of all parameter constraints, DESTRUCTIVE!!! *)
+	(** HERE PROBLEM IF ONE WANTS TO COMPUTE THE states FILE AFTER **)
+	let compute_k0_destructive program state_space =
+		let k0 = LinearConstraint.true_constraint () in
+		iterate_on_states (fun _ (_, constr) ->
+			LinearConstraint.hide_assign program.clocks_and_discrete constr;
+			LinearConstraint.px_intersection_assign k0 [constr];
+
+		) state_space;
+		k0*)
+
+	(** find all "last" states on finite or infinite runs *)
+	(* Uses a depth first search on the reachability state_space. The *)
+	(* prefix of the current DFS path is kept during the search *)
+	(* in order to detect cycles. *)
+	method last_states =
+		(* list to keep the resulting last states *)
+		let last_states = ref [] in
+		(* Table to keep all states already visited during DFS *)
+		let dfs_table = ref StateIndexSet.empty in
+
+		(* functional version for lookup *)
+		let already_seen node = StateIndexSet.mem node !dfs_table in
+
+		(* function to find all last states *)
+		let rec cycle_detect node prefix =
+			(* get all successors of current node *)
+			let succs = self#get_successors node in
+			if succs = [] then
+				(* no successors -> last node on finite path *)
+				last_states := node :: !last_states
+			else (
+				(* insert node in DFS table *)
+				dfs_table := StateIndexSet.add node !dfs_table;
+				(* go on with successors *)
+				List.iter (fun succ ->
+					(* successor in current path prefix (or self-cycle)? *)
+					if succ = node || StateIndexSet.mem succ prefix then
+						(* found cycle *)
+						last_states := succ :: !last_states
+					else if not (already_seen succ) then
+						(* go on recursively on newly found node *)
+						cycle_detect succ (StateIndexSet.add node prefix)
+				) succs;
+			) in
+
+		(* start cycle detection with initial state *)
+		cycle_detect 0 StateIndexSet.empty;
+
+		(* return collected last states *)
+		!last_states
+
+
+	(*exception Satisfied
+
+	(** Checks if a state exists that satisfies a given predicate *)
+	let exists_state p state_space =
+			try (
+				iter (fun s ->
+					if p s then raise Satisfied
+				) state_space;
+				false
+			) with Satisfied -> true
+
+	(** Checks if all states satisfy a given predicate *)
+	let forall_state p state_space =
+			try (
+				iter (fun s ->
+					if not (p s) then raise Satisfied
+				) state_space;
+				true
+			) with Satisfied -> false	*)
+
+
+
+	(*(** Check if bad states are reachable *)
+	let is_bad program state_space =
+		(* get bad state pairs from program *)
+		let bad_states = program.bad in
+		(* if no bad state specified, then must be good *)
+		if bad_states = [] then false else (
+			let is_bad_state = fun (location, _) ->
+				List.for_all (fun (aut_index, loc_index) ->
+					loc_index = DiscreteState.get_location location aut_index
+				) bad_states in
+			exists_state is_bad_state state_space
+		) *)
+
+
+	(*------------------------------------------------------------*)
+	(** Access to guard *)
+	(*------------------------------------------------------------*)
+
+	method get_guard (model : AbstractModel.abstract_model) state_index combined_transition =
+		(* Retrieve source and target locations *)
+		let (location : DiscreteState.global_location) = (self#get_state state_index).global_location in
+
+		(* For all transitions involved in the combined transition *)
+		let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.fold_left (fun current_list_of_guards transition_index ->
+			(* Get the actual transition *)
+			let transition : AbstractModel.transition = model.transitions_description transition_index in
+
+			(* Add the actual guard to the list *)
+			match transition.guard with
+				| True_guard -> current_list_of_guards
+				(*** NOTE: we could optimize the case of False (because no need to go further); BUT the number of transitions is usually small and, most importantly, it is unlikely a guard is false in the model ***)
+				| False_guard -> (LinearConstraint.pxd_false_constraint()) :: current_list_of_guards
+				| Discrete_guard discrete_guard -> current_list_of_guards
+				| Continuous_guard continuous_guard -> continuous_guard :: current_list_of_guards
+				| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard :: current_list_of_guards
+
+		) [] combined_transition
+		in
+
+		(* Replace with true if empty list *)
+		let continuous_guards = if continuous_guards = [] then [LinearConstraint.pxd_true_constraint()] else continuous_guards in
+
+		(*** NOTE (ÉA, 2019/05/30): Not sure what I did there??? ***)
+		(* Compute constraint for assigning a (constant) value to discrete variables *)
+		print_message Verbose_high ("Computing constraint for discrete variables");
+		let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value location discrete_index)) model.discrete in
+
+		(* Only use rational discrete values for preparing constraint, this behavior was checked with Etienne A. *)
+		let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
+		let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
+
+		(* Constraint of the form D_i = d_i *)
+		let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values in
+
+		(* Create the constraint guard ^ D_i = d_i *)
+		LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
 
 
 (************************************************************)
@@ -452,26 +992,6 @@ let get_transitions_of_state state_space state_index =
 	result
 
 
-(** Get the (unique) action associated with a combined_transition (if entry undefined in the hashtable, then []) *)
-let get_action_from_combined_transition (combined_transition : combined_transition) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
-	let action_index =
-	try (
-		(* Get the first transition *)
-		let first_transition_index = List.nth combined_transition 0 in
-		(* Get the actual transition *)
-		let transition = model.transitions_description first_transition_index in
-		(* Get the action index *)
-		transition.action
-	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: `" ^ msg ^ "`."))
-	in
-	action_index
-
-(** Get the combined_transition between a state_index and its successor. Raise Not_found if no such transition exists. If several combined transitions exist, only the first one is retrieved. *)
-(* local exception *)
-exception Found_transition of combined_transition
 
 let get_combined_transition_between_states (state_space : state_space) (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
 	(* Get all successors of source_state_index *)
@@ -709,7 +1229,7 @@ let is_bad program state_space =
 (** Access to guard and resets *)
 (*------------------------------------------------------------*)
 
-let get_guard state_space state_index combined_transition state_index' =
+let get_guard state_space state_index combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
@@ -752,53 +1272,11 @@ let get_guard state_space state_index combined_transition state_index' =
 	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
 
 
-(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
-(*** TODO: allow for all resets ***)
-let get_resets state_space state_index combined_transition state_index' =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
-	(* For all transitions involved in the combined transition *)
-	let resets = List.fold_left (fun current_resets transition_index ->
-		(* Get the actual transition *)
-		let transition = model.transitions_description transition_index in
-
-		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		match transition.updates.clock with
-			(* No update at all *)
-			| No_update -> current_resets
-			(* Reset to 0 only *)
-			| Resets clock_resets -> List.rev_append clock_resets current_resets
-			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
-	) [] combined_transition
-	in
-
-	(* Keep each clock once *)
-	list_only_once resets
 
 
 (************************************************************)
 (** SCC detection *)
 (************************************************************)
-
-(*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
-	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
-	- the other SCCs are discarded
-***)
-
-(* Data structure: node with index / lowlink / onStack *)
-type tarjan_node = {
-	(* Additional field used to record the real state_index in the state space *)
-	state_index	: state_index;
-	mutable index		: state_index option;
-	mutable lowlink		: state_index option;
-	mutable onStack		: bool;
-}
-
-(* Exception raised when the SCC is found *)
-exception Found_scc of scc
-
 
 (* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space source_state_index' reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 (*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
@@ -1182,11 +1660,6 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
-(* Old state found *)
-exception Found_old of state_index
-(* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
-exception Found_new of state_index
-
 (** Increment the number of generated states (even though not member of the state space) *)
 let increment_nb_gen_states state_space =
 	state_space.nb_generated_states := !(state_space.nb_generated_states) + 1

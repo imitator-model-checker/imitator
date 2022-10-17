@@ -269,10 +269,10 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (*------------------------------------------------------------*)
 (* Get the (full) guard associated with a transition *)
 (*------------------------------------------------------------*)
-val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
+val get_guard : state_space -> state_index -> combined_transition -> LinearConstraint.pxd_linear_constraint
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
-val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
+val get_resets : state_index -> combined_transition -> state_index -> Automaton.clock_index list
 
 
 (*------------------------------------------------------------*)

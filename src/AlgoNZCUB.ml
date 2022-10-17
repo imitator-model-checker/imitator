@@ -132,7 +132,8 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 			(* Compute the set of clocks that must be reset *)
 			let transitions_with_resets_and_b = List.map (fun (source_index, combined_transition, target_index ) -> 
 				(* Compute resets *)
-				let resets = StateSpace.get_resets state_space source_index combined_transition target_index in
+				(*** WARNING: StateSpace.get_resets only works for selected (normal) resets ***)
+				let resets = StateSpace.get_resets source_index combined_transition target_index in
 				
 				(* Find the 'b' (which is that of the target) *)
 				(*** NOTE: quite expensive, but much much less than computing resets (or any polyhedra operation) so we don't optimize here ***)
