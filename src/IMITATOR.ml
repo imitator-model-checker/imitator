@@ -1003,13 +1003,14 @@ match options#imitator_mode with
 				myalgo
 
 			(** Cover the whole cartography using learning-based abstractions *)
+			(*** NOTE: this part is kept on purpose despite being odd (actual code followed by a `raise` NotImplemented), so that at least the AlgoBCCoverLearning module is compiled and kept up-to-date with new global code modifications. ***)
 			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
-				raise (NotImplemented("Learning_cartography is temporarily disabled"))
-				;
 				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning model state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
-				myalgo
+(* 				myalgo *)
+				(*** NOTE: we use #name to avoid a warning (unused variable) ***)
+				raise (NotImplemented("Learning_cartography " ^ myalgo#algorithm_name ^ " is (temporarily?) disabled"))
 
 			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
