@@ -313,7 +313,7 @@ let string_of_discrete model =
                 let discrete_type = model.type_of_variables discrete_index in
 				(* Get the initial value *)
 				let initial_global_location  = model.initial_location in
-				let initial_value = Location.get_discrete_value initial_global_location discrete_index in
+				let initial_value = DiscreteState.get_discrete_value initial_global_location discrete_index in
 
                 let str_initial_value = string_of_value initial_value in
                 let str_type = string_of_var_type discrete_type in
@@ -949,7 +949,7 @@ let string_of_locations model actions_and_nb_automata automaton_index =
 let string_of_initial_location model automaton_index =
 	(* Get initial location *)
 	let initial_global_location  = model.initial_location in
-	let initial_location = Location.get_location initial_global_location automaton_index in
+	let initial_location = DiscreteState.get_location initial_global_location automaton_index in
 	"<init ref=\"" ^ (id_of_location model automaton_index initial_location) ^ "\"/>"
 
 (* Convert an automaton into a string *)

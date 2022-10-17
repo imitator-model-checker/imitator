@@ -80,7 +80,7 @@ let decentralized_initial_loc model initial_global_location =
 	List.iter (fun automaton_index -> 
 		print_message Verbose_low ("Automaton: " ^ (model.automata_names automaton_index) );
 		let temp = ref [||] in
-		let location_index = Location.get_location initial_global_location automaton_index in
+		let location_index = DiscreteState.get_location initial_global_location automaton_index in
 		print_message Verbose_low ("\n");
 		print_message Verbose_low (" Initial location name: " ^ (model.location_names automaton_index location_index) ) ;
 		let invariant1 = model.invariants automaton_index location_index in
@@ -170,8 +170,8 @@ let init_state_list model initial_loc_array =
 		
 		let former_initial_location = model.initial_location in
   		let initial_PTA_locations = !initial_locations_list in
-  		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
-  		let global_init_location = Location.make_location initial_PTA_locations discrete_values in
+  		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
+  		let global_init_location = DiscreteState.make_location initial_PTA_locations discrete_values in
   		
   		global_init_location_constr := ((global_init_location, (LinearConstraint.pxd_hide_discrete_and_collapse !init_constr)))::(!global_init_location_constr);
 	

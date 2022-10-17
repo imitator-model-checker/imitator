@@ -2122,7 +2122,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 		(* ALERT BUG!!!: GETTING THE FIRST LOCATION AS THE INITIAL LOCATION CAN BE WRONG IF THIS LOCATION IS NOT DECLARED AS THE FIRST IN .IMI FILE *)
-		init_loc := model.location_names automaton_index (Location.get_location model.initial_location automaton_index);
+		init_loc := model.location_names automaton_index (DiscreteState.get_location model.initial_location automaton_index);
 		print_message Verbose_low (" Initial location: " ^ !init_loc);
 		(* init_loc := model.location_names automaton_index model.initial_location; *)
 
@@ -3376,9 +3376,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) model.automata in
 
 		(* Second get the discrete values from the former initial location *)	
-		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
+		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
 
-		Location.make_location initial_PTA_locations discrete_values
+		DiscreteState.make_location initial_PTA_locations discrete_values
 	in
 
 

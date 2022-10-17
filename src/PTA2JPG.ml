@@ -257,7 +257,7 @@ let string_of_automaton model automaton_index =
 
 	(* Finding the initial location *)
 	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 
 	let t1 = "\n init" ^ (string_of_int automaton_index) ^ "[shape=none, label=\"" ^ (model.automata_names automaton_index) ^ "\"];" in
 	let t2 = "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";" in

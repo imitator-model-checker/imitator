@@ -166,7 +166,7 @@ let string_of_synclabs model automaton_index =
 (* Convert the initially of an automaton into a string *)
 let string_of_initially model automaton_index =
 	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 	"initially "
 	^ (model.location_names automaton_index initial_location)
 	^ ";"
@@ -395,7 +395,7 @@ let string_of_initial_state () =
 	let initial_automata = List.map
 	(fun automaton_index ->
 		(* Finding the initial location for this automaton *)
-		let initial_location = Location.get_location inital_global_location automaton_index in
+		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
@@ -410,7 +410,7 @@ let string_of_initial_state () =
 	let initial_discrete = List.map
 	(fun discrete_index ->
 		(* Finding the initial value for this discrete *)
-		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+		let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
 		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete

@@ -730,7 +730,7 @@ let get_flow
 (*	(stopwatches     : Automaton.automaton_index -> Automaton.location_index -> Automaton.clock_index list)
 	(flow            : Automaton.automaton_index -> Automaton.location_index -> (Automaton.clock_index * NumConst.t) list)*)
 	(model           : AbstractModel.abstract_model)
-	(global_location : Location.global_location)
+	(global_location : DiscreteState.global_location)
 	(variable_index  : Automaton.variable_index)
 	:
 	NumConst.t
@@ -738,7 +738,7 @@ let get_flow
 	(* First try to iterate over stopwatches *)
 	if List.exists (fun automaton_index ->
 		(* Get location index *)
-		let location_index = Location.get_location global_location automaton_index in
+		let location_index = DiscreteState.get_location global_location automaton_index in
 		(* Get list of stopped clocks *)
 		let stopwatches = model.stopwatches automaton_index location_index in
 		(* Check for membership *)
@@ -751,7 +751,7 @@ let get_flow
 	try(
 		List.iter (fun automaton_index ->
 			(* Get location index *)
-			let location_index = Location.get_location global_location automaton_index in
+			let location_index = DiscreteState.get_location global_location automaton_index in
 			(* Get list of flows *)
 			let flows = model.flow automaton_index location_index in
 			(* Check for membership *)
@@ -807,7 +807,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
 				| DiscreteType.Var_type_discrete _ ->
-					Location.get_discrete_value initial_state.global_location variable_index
+					DiscreteState.get_discrete_value initial_state.global_location variable_index
 				| DiscreteType.Var_type_clock ->
 				    let rational_value = initial_state.px_valuation variable_index in
 				    Abstract_scalar_value (Abstract_number_value (Abstract_rat_value rational_value))
@@ -858,7 +858,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 					| DiscreteType.Var_type_discrete _ ->
 					
 						(* Get the discrete value *)
-						let value = Location.get_discrete_value step_target.global_location variable_index in
+						let value = DiscreteState.get_discrete_value step_target.global_location variable_index in
 						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
@@ -1090,7 +1090,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
 				| Var_type_discrete ->
-					Location.get_discrete_value concrete_run.initial_state.global_location variable_index
+					DiscreteState.get_discrete_value concrete_run.initial_state.global_location variable_index
 				| Var_type_clock ->
 					concrete_run.initial_state.px_valuation variable_index
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
@@ -1137,7 +1137,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 					| Var_type_discrete ->
 					
 						(* Get the discrete value *)
-						let value = Location.get_discrete_value step.target.global_location variable_index in
+						let value = DiscreteState.get_discrete_value step.target.global_location variable_index in
 						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
@@ -1638,7 +1638,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
 					(* Print a structure of the form "automaton_name : location_name" *)
-					let loc_index = Location.get_location global_location aut_index in
+					let loc_index = DiscreteState.get_location global_location aut_index in
 					let automaton_name = model.automata_names aut_index in
 					let location_name = model.location_names aut_index loc_index in
 					automaton_name ^ " : " ^ location_name
@@ -1648,14 +1648,14 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					if model.nb_discrete > 0 then (
 						"|" ^ (string_of_list_of_string_with_sep "|" (
 							List.map (fun discrete_index -> 
-	(* 						let loc_index = Location.get_location global_location aut_index in *)
+	(* 						let loc_index = DiscreteState.get_location global_location aut_index in *)
 								"v("
 								(* Variable name *)
 								^ (model.variable_names discrete_index)
 								(* Equal *)
 								^ ")="
 								(* Variable value *)
-								^ (AbstractValue.string_of_value (Location.get_discrete_value global_location discrete_index))
+								^ (AbstractValue.string_of_value (DiscreteState.get_discrete_value global_location discrete_index))
 							) model.discrete
 						))
 					) else ""

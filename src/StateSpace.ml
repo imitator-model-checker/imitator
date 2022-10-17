@@ -169,10 +169,10 @@ type state_space = {
 	mutable initial : state_index option;
 
 	(** A hashtable location -> location_index *)
-	index_of_locations : (Location.global_location, location_index) Hashtbl.t;
+	index_of_locations : (DiscreteState.global_location, location_index) Hashtbl.t;
 
 	(** A DynArray location_index -> location *)
-	locations : Location.global_location DynArray.t;
+	locations : DiscreteState.global_location DynArray.t;
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
         (* modified by Jaco van de Pol: use global_location_index as key, rather than hash code of global_location *)
@@ -699,7 +699,7 @@ let is_bad program state_space =
 	if bad_states = [] then false else (
 		let is_bad_state = fun (location, _) ->
 			List.for_all (fun (aut_index, loc_index) ->
-				loc_index = Location.get_location location aut_index
+				loc_index = DiscreteState.get_location location aut_index
 			) bad_states in
 		exists_state is_bad_state state_space
 	) *)
@@ -714,7 +714,7 @@ let get_guard state_space state_index combined_transition state_index' =
 	let model = Input.get_model () in
 
 	(* Retrieve source and target locations *)
-	let (location : Location.global_location) = (get_state state_space state_index).global_location in
+	let (location : DiscreteState.global_location) = (get_state state_space state_index).global_location in
 
 	(* For all transitions involved in the combined transition *)
 	let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.fold_left (fun current_list_of_guards transition_index ->
@@ -739,7 +739,7 @@ let get_guard state_space state_index combined_transition state_index' =
 	(*** NOTE (ÉA, 2019/05/30): Not sure what I did there??? ***)
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value location discrete_index)) model.discrete in
 
 	(* Only use rational discrete values for preparing constraint, this behavior was checked with Etienne A. *)
 	let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
@@ -1196,7 +1196,7 @@ let increment_nb_gen_states state_space =
 let states_compare (constraint_comparison_function : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint -> bool) (comparison_name : string) (state1 : state) (state2 : state) : bool =
 	let (loc1, constr1) = state1.global_location, state1.px_constraint in
 	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (Location.location_equal loc1 loc2) then false else (
+	if not (DiscreteState.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare " ^ comparison_name ^ " between two constraints.");
 
@@ -1573,7 +1573,7 @@ let length_skip_sequence = ref 0
 let skip_factor = ref 1
 let step : sequence_type ref = ref Fail
 (* TODO DYLAN add options skip_factor: initial value (for now 1) and exp_factor (for now 2) *)
-let sequences_table : (Location.global_location, (sequence_type * int)) Hashtbl.t = Hashtbl.create 0
+let sequences_table : (DiscreteState.global_location, (sequence_type * int)) Hashtbl.t = Hashtbl.create 0
 
 (* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 let merge state_space queue =
@@ -1582,7 +1582,7 @@ let merge state_space queue =
 	tcounter_merge#start;
 
     (* Check if the are_mergeable test needs to be perform according to the merge options *)
-    let perform_test (global_location : Location.global_location) =
+    let perform_test (global_location : DiscreteState.global_location) =
         match options#merge_jump_algorithm with
         | Merge_jump_none -> true
         | Merge_jump_static (n1, n2) -> (* n1 and n2 don't change *)
@@ -1651,7 +1651,7 @@ let merge state_space queue =
               else raise (InternalError "perform_test for Merge_exponentialbackoff");
     in
 
-    let add_merging_step (test_result : merging_result) (global_location : Location.global_location) =
+    let add_merging_step (test_result : merging_result) (global_location : DiscreteState.global_location) =
         match options#merge_jump_algorithm with
             | Merge_jump_none -> ()
             | Merge_jump_static (n1, n2) ->
@@ -1678,7 +1678,7 @@ let merge state_space queue =
 
     (* Check if two states can be merged *)
     (*** NOTE: with side-effects! ***)
-    let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) (global_location : Location.global_location) : bool =
+    let are_mergeable (c : LinearConstraint.px_linear_constraint) (c' : LinearConstraint.px_linear_constraint) (global_location : DiscreteState.global_location) : bool =
         if perform_test global_location then
             begin
             (* Statistics *)
@@ -1735,7 +1735,7 @@ let merge state_space queue =
                 | [] -> [] (* here, we are really done *)
                 | m :: tail_mc -> begin
                     let sj,c' = m in
-                    let global_location : Location.global_location = state.global_location in
+                    let global_location : DiscreteState.global_location = state.global_location in
                     if are_mergeable c c' global_location then begin
                         (* Statistics *)
                         nb_merged#increment;
@@ -1936,7 +1936,7 @@ let get_statistics_states state_space =
 (************************************************************)
 (** compute a hash code for a state, depending only on the location *)
 let location_hash_code (state : state) =
-	Location.hash_code state.global_location
+	DiscreteState.hash_code state.global_location
 
 (** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
 let merge_states_ulrich state_space merger_state_index merged =

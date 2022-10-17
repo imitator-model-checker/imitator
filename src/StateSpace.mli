@@ -178,7 +178,7 @@ val nb_transitions : state_space -> int
 (*------------------------------------------------------------*)
 (** Return the global_location corresponding to a location_index *)
 (*------------------------------------------------------------*)
-val get_location : state_space -> Location.global_location_index -> Location.global_location
+val get_location : state_space -> DiscreteState.global_location_index -> DiscreteState.global_location
 
 (*------------------------------------------------------------*)
 (** Return the state of a state_index *)
@@ -193,7 +193,7 @@ val get_comparable_states : state_space -> state_index -> state_index list
 (*------------------------------------------------------------*)
 (** Return the global_location_index of a state_index *)
 (*------------------------------------------------------------*)
-val get_global_location_index : state_space -> state_index -> Location.global_location_index
+val get_global_location_index : state_space -> state_index -> DiscreteState.global_location_index
 
 (*------------------------------------------------------------*)
 (** Return the index of the initial state, or raise Not_found if not defined *)

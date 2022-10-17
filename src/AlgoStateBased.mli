@@ -71,7 +71,7 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
 (*------------------------------------------------------------*)
-val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
+val compute_valuated_invariant : DiscreteState.global_location -> LinearConstraint.px_linear_constraint
 
 
 
@@ -81,7 +81,7 @@ val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (A
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
 (*------------------------------------------------------------*)
-(* val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list) *)
+(* val compute_stopwatches : DiscreteState.global_location -> (Automaton.clock_index list * Automaton.clock_index list) *)
 
 
 (*------------------------------------------------------------------*)
@@ -92,7 +92,7 @@ val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (A
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates : DiscreteExpressionEvaluator.variable_name_table option -> DiscreteExpressionEvaluator.functions_table option -> Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
+val get_updates : DiscreteExpressionEvaluator.variable_name_table option -> DiscreteExpressionEvaluator.functions_table option -> DiscreteState.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
 
 
 
@@ -104,7 +104,7 @@ val get_updates : DiscreteExpressionEvaluator.variable_name_table option -> Disc
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-(*val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)*)
+(*val get_updates_in_combined_transition : DiscreteState.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)*)
 
 
 (*------------------------------------------------------------------*)
@@ -114,27 +114,27 @@ val get_updates : DiscreteExpressionEvaluator.variable_name_table option -> Disc
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+val compute_new_location_guards_updates : DiscreteState.global_location -> StateSpace.combined_transition -> (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
 
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-(* val apply_time_elapsing : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit *)
+(* val apply_time_elapsing : DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit *)
 
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
+val apply_time_past : DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
 (* Exported JvdP *)
-val discrete_constraint_of_global_location: Location.global_location -> LinearConstraint.pxd_linear_constraint
+val discrete_constraint_of_global_location: DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-val apply_time_elapsing_to_concrete_valuation : Location.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
+val apply_time_elapsing_to_concrete_valuation : DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
 
 
 

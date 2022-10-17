@@ -805,7 +805,7 @@ let string_of_discrete model =
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 
-				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+				let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
 
 				let str_initial_value = string_of_value initial_value in
 
@@ -1008,7 +1008,7 @@ let string_of_locations model actions_and_nb_automata automaton_index =
 (* Convert the initial location of an automaton *)
 let string_of_initial_location model automaton_index =
 	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 	"\"" ^ (model.location_names automaton_index initial_location) ^ "\""
 
 let string_of_clock_updates model = function

@@ -33,19 +33,19 @@ type state_index = int
 
 (** Concrete state: location and px-valuation *)
 type concrete_state = {
-	global_location: Location.global_location;
+	global_location: DiscreteState.global_location;
 	px_valuation   : (Automaton.variable_index -> NumConst.t);
 }
 
 (** State: location and constraint *)
 type state = {
-	global_location: Location.global_location;
+	global_location: DiscreteState.global_location;
 	px_constraint  : LinearConstraint.px_linear_constraint;
 }
 
 (** Abstract state: abstract location (index) and concrete constraint *)
 type abstract_state = {
-	global_location_index: Location.global_location_index;
+	global_location_index: DiscreteState.global_location_index;
 	px_constraint        : LinearConstraint.px_linear_constraint;
 }
 
@@ -59,7 +59,7 @@ type abstract_state = {
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the locations *)
-	let locations = Location.get_locations state.global_location in
+	let locations = DiscreteState.get_locations state.global_location in
 	let result = ref false in
 	(* Check whether a local location is accepting *)
 	
@@ -73,12 +73,12 @@ type abstract_state = {
 	
 let match_state_predicate state_predicate state =
 	(* Call dedicated function *)
-	Location.match_state_predicate state_predicate state.global_location*)
+	DiscreteState.match_state_predicate state_predicate state.global_location*)
 
 
 (* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let match_state_predicate (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
-    let discrete_access = Location.discrete_access_of_location state.global_location in
+    let discrete_access = DiscreteState.discrete_access_of_location state.global_location in
     let model = Input.get_model () in
 	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) discrete_access locations_acceptance_condition state.global_location state_predicate
 

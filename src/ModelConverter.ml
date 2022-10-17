@@ -1607,7 +1607,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		) initial_locations in
 
 	(* Construct the initial location *)
-	let initial_location = Location.make_location locations init_discrete_pairs in
+	let initial_location = DiscreteState.make_location locations init_discrete_pairs in
 
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
@@ -1643,7 +1643,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 	let initial_constraint : LinearConstraint.px_linear_constraint =
 
 		(* Create pairs of (index , value) for discrete variables *)
-		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
+		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
         (* Get only rational discrete for constraint encoding *)
         let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
@@ -3986,7 +3986,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let min_discrete_index = first_discrete_index in
 	let max_discrete_index = nb_variables - 1 in
-	Location.initialize nb_automata min_discrete_index max_discrete_index;
+	DiscreteState.initialize nb_automata min_discrete_index max_discrete_index;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

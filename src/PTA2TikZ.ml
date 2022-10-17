@@ -198,7 +198,7 @@ let string_of_location model automaton_index location_index =
 (* 	\node[location, fill=cpale2] (Q0) {\coulloc{l0}}; *)
 
 	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
+	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 
 	let location_name = model.location_names automaton_index location_index in
 	let invariant = model.invariants automaton_index location_index in

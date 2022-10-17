@@ -26,19 +26,19 @@ type state_index = int
 
 (** Concrete state: location and px-valuation *)
 type concrete_state = {
-	global_location: Location.global_location;
+	global_location: DiscreteState.global_location;
 	px_valuation   : (Automaton.variable_index -> NumConst.t);
 }
 
 (** State: location and constraint *)
 type state = {
-	global_location: Location.global_location;
+	global_location: DiscreteState.global_location;
 	px_constraint  : LinearConstraint.px_linear_constraint;
 }
 
 (** Abstract state: abstract location (index) and concrete constraint *)
 type abstract_state = {
-	global_location_index: Location.global_location_index;
+	global_location_index: DiscreteState.global_location_index;
 	px_constraint        : LinearConstraint.px_linear_constraint;
 }
 

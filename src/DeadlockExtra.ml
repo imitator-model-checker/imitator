@@ -33,11 +33,11 @@ let dl_instantiate_discrete_after_seq state_space state_index constr transition 
 	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
 
     (* Copy location where we perform the destructive sequential updates*)
-    let location = Location.copy_location glob_location in
+    let location = DiscreteState.copy_location glob_location in
     let model = Input.get_model() in 
 
     (* Get functions that enable reading / writing global variables at a given location *)
-    let discrete_access = Location.discrete_access_of_location location in
+    let discrete_access = DiscreteState.discrete_access_of_location location in
     (* Make all sequential update first ! *)
 	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)

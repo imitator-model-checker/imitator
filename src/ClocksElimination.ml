@@ -404,7 +404,7 @@ let dynamic_clock_elimination target_location current_constraint =
   (* Compute the useless clocks *)
   let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
       (* Retrieve target location for this automaton *)
-      let location_index = Location.get_location target_location automaton_index in
+      let location_index = DiscreteState.get_location target_location automaton_index in
       (* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
       List.rev_append current_list_of_clocks (compute_clocks_to_eliminate automaton_index location_index)
     ) [] model.automata in

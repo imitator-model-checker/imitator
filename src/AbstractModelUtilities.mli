@@ -15,4 +15,4 @@
 (* Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
 
-val is_global_location_urgent : AbstractModel.abstract_model -> Location.global_location -> bool
+val is_global_location_urgent : AbstractModel.abstract_model -> DiscreteState.global_location -> bool

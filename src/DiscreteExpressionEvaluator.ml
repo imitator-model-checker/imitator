@@ -1,6 +1,6 @@
 open CustomModules
 open Automaton
-open Location
+open DiscreteState
 open AbstractModel
 open AbstractProperty
 open AbstractValue

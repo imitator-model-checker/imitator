@@ -263,11 +263,11 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
 let evaluate_d_linear_constraint_in_location location =
 	(* Directly call the build-in function *)
-	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_rational_value location)
+	LinearConstraint.d_is_pi0_compatible (DiscreteState.get_discrete_rational_value location)
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location location =
-    let discrete_access = Location.discrete_access_of_location location in
+    let discrete_access = DiscreteState.discrete_access_of_location location in
     let model = Input.get_model () in
     DiscreteExpressionEvaluator.check_nonlinear_constraint (Some model.variable_names) (Some model.functions_table) discrete_access
 
@@ -340,11 +340,11 @@ let split_guards_into_discrete_and_continuous =
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
-let discrete_constraint_of_global_location (global_location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+let discrete_constraint_of_global_location (global_location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value global_location discrete_index)) model.discrete in
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value global_location discrete_index)) model.discrete in
 
     (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
     (* Get only rational discrete for constraint encoding *)
@@ -359,13 +359,13 @@ let discrete_constraint_of_global_location (global_location : Location.global_lo
 (* Get all invariants of model's automatas *)
 (* Note : use of Input.get_model *)
 (*------------------------------------------------------------*)
-let get_model_invariants (location : Location.global_location) =
+let get_model_invariants (location : DiscreteState.global_location) =
     (* Retrieve the model *)
 	let model = Input.get_model() in
 
 	List.map (fun automaton_index ->
 		(* Get the current location *)
-		let location_index = Location.get_location location automaton_index in
+		let location_index = DiscreteState.get_location location automaton_index in
 		(* Compute the invariant *)
 		model.invariants automaton_index location_index
 	) model.automata
@@ -373,7 +373,7 @@ let get_model_invariants (location : Location.global_location) =
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
-let compute_plain_continuous_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+let compute_plain_continuous_invariant (location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
     (* construct invariant *)
 	let invariants = get_model_invariants location in
 	let _ (* discrete_invariants *), continuous_invariants = split_guards_into_discrete_and_continuous invariants in
@@ -389,7 +389,7 @@ let compute_invariant location =
 (* 	let model = Input.get_model() in *)
 
 	(* Strip off discrete for caching scheme  *)
-	let locations = Location.get_locations location in
+	let locations = DiscreteState.get_locations location in
 	(* check in cache *)
 	let entry = Cache.find inv_cache locations in
 	match entry with
@@ -406,7 +406,7 @@ let compute_invariant location =
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
 (*------------------------------------------------------------*)
-let compute_valuated_invariant (location : Location.global_location) : LinearConstraint.px_linear_constraint =
+let compute_valuated_invariant (location : DiscreteState.global_location) : LinearConstraint.px_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -781,7 +781,7 @@ let apply_updates_assign_backward = apply_updates_assign_gen Backward
 (*------------------------------------------------------------*)
 (*
 (*** NOTE: disabled by ÉA (2022/03/02) as we need flows, not just stopwatches ***)
-let compute_stopwatches (location : Location.global_location) : (Automaton.clock_index list * Automaton.clock_index list) =
+let compute_stopwatches (location : DiscreteState.global_location) : (Automaton.clock_index list * Automaton.clock_index list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -793,7 +793,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 		(* Update hash table *)
 		List.iter (fun automaton_index ->
 			(* Get the current location *)
-			let location_index = Location.get_location location automaton_index in
+			let location_index = DiscreteState.get_location location automaton_index in
 			(* Get the list of stopped clocks *)
 			let stopped = model.stopwatches automaton_index location_index in
 			(* If list non null: we have stopwatches here *)
@@ -877,7 +877,7 @@ let time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = r
 
 
 (*** WARNING: bad prog! Duplicate function with 2 different types ***)
-let pxd_compute_time_polyhedron (direction : time_direction) (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+let pxd_compute_time_polyhedron (direction : time_direction) (location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
 	(* Get the model *)
 	let model = Input.get_model() in
 
@@ -921,7 +921,7 @@ let pxd_compute_time_polyhedron (direction : time_direction) (location : Locatio
 	time_polyhedron
 
 (*** WARNING: bad prog! Duplicate function with 2 different types ***)
-let px_compute_time_polyhedron (direction : time_direction) (location : Location.global_location) : LinearConstraint.px_linear_constraint =
+let px_compute_time_polyhedron (direction : time_direction) (location : DiscreteState.global_location) : LinearConstraint.px_linear_constraint =
 	(* Get the model *)
 	let model = Input.get_model() in
 
@@ -966,7 +966,7 @@ let px_compute_time_polyhedron (direction : time_direction) (location : Location
 
 
 
-let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
+let apply_time_shift (direction : time_direction) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
 	(* Get the model *)
 	let model = Input.get_model() in
 
@@ -1032,7 +1032,7 @@ let apply_time_past = apply_time_shift Backward
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing_to_concrete_valuation (location : Location.global_location) (time_elapsing : NumConst.t) (px_valuation : LinearConstraint.px_valuation) =
+let apply_time_elapsing_to_concrete_valuation (location : DiscreteState.global_location) (time_elapsing : NumConst.t) (px_valuation : LinearConstraint.px_valuation) =
 	(* Get the model *)
 	let model = Input.get_model() in
 
@@ -1080,7 +1080,7 @@ let compute_possible_actions source_location =
 	(* Fill it with all the possible actions per location *)
 	for automaton_index = 0 to model.nb_automata - 1 do
 		(* Get the current location for automaton_index *)
-		let location_index = Location.get_location source_location automaton_index in
+		let location_index = DiscreteState.get_location source_location automaton_index in
 		(* Print some information *)
 		print_message Verbose_total ("Considering automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
 		(* Get the possible actions for this location *)
@@ -1113,7 +1113,7 @@ let compute_possible_actions source_location =
 		let action_possible =
 			List.fold_left (fun still_possible automaton_index ->
 				still_possible
-				&& (List.mem action_index (model.actions_per_location automaton_index (Location.get_location source_location automaton_index)))
+				&& (List.mem action_index (model.actions_per_location automaton_index (DiscreteState.get_location source_location automaton_index)))
 			) possible automata_for_this_action in
 		(* Print some information *)
 		if not action_possible && (verbose_mode_greater Verbose_total) then (
@@ -1157,11 +1157,11 @@ let merge_clock_updates first_update second_update : clock_updates =
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
-let get_updates variable_names_opt functions_table_opt (source_location : Location.global_location) (updates : AbstractModel.updates) =
+let get_updates variable_names_opt functions_table_opt (source_location : DiscreteState.global_location) (updates : AbstractModel.updates) =
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let discrete_access = Location.discrete_access_of_location source_location in
+		let discrete_access = DiscreteState.discrete_access_of_location source_location in
 		let filter_updates = if (eval_boolean_expression variable_names_opt functions_table_opt (Some discrete_access) boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
@@ -1178,7 +1178,7 @@ let get_updates variable_names_opt functions_table_opt (source_location : Locati
 (** Collecting the updates by evaluating the conditions, if there is any *)
 (* Note seems obsolete *)
 (*
-let get_updates_in_combined_transition (source_location : Location.global_location) (combined_transition : StateSpace.combined_transition) =
+let get_updates_in_combined_transition (source_location : DiscreteState.global_location) (combined_transition : StateSpace.combined_transition) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1201,7 +1201,7 @@ let get_updates_in_combined_transition (source_location : Location.global_locati
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
+let compute_new_location_guards_updates (source_location: DiscreteState.global_location) (combined_transition : StateSpace.combined_transition) : (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1211,11 +1211,11 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
     in
 
 	(* Make a copy of the location *)
-	let location = Location.copy_location source_location in
+	let location = DiscreteState.copy_location source_location in
 	(* Create a temporary table for discrete values *)
 	let updated_discrete = Hashtbl.create model.nb_discrete in
     (* Get functions that enable reading / writing global variables at a given location *)
-    let discrete_access = Location.discrete_access_of_location location in
+    let discrete_access = DiscreteState.discrete_access_of_location location in
 
 	(* Check if we actually have updates *)
 	let has_updates = ref false in
@@ -1308,7 +1308,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
         ) delayed_update_results;
 
         (* Update the global location *)
-        Location.update_location_with [automaton_index, target_index] [] location;
+        DiscreteState.update_location_with [automaton_index, target_index] [] location;
 
         (* Update the update flag *)
         begin
@@ -1336,7 +1336,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	let updated_discrete_pairs = updated_discrete |> Hashtbl.to_seq |> List.of_seq in
 
 	(* Update the global location *)
-	Location.update_location_with [] updated_discrete_pairs location;
+	DiscreteState.update_location_with [] updated_discrete_pairs location;
 
 	(* Split guards between discrete and continuous *)
 	let discrete_guards, continuous_guards = split_guards_into_discrete_and_continuous guards in
@@ -1357,7 +1357,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 (* clock_updates   : updated clock variables                  *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : Location.global_location) (target_location : Location.global_location) guards clock_updates =
+let compute_new_constraint (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : DiscreteState.global_location) (target_location : DiscreteState.global_location) guards clock_updates =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -1587,7 +1587,7 @@ let compute_transitions location constr action_index automata involved_automata_
 			(* Tabulate the real index *)
 			involved_automata_indices.(!current_index) <- automaton_index;
 			(* Get the current location for this automaton *)
-			let location_index = Location.get_location location automaton_index in
+			let location_index = DiscreteState.get_location location automaton_index in
 			(* Get transitions for this automaton *)
 			let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 
@@ -1796,7 +1796,7 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 (* returns Some state, or None if the constraint is unsatisfiable    *)
 (*------------------------------------------------------------*)
 
-let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
+let post_from_one_state_via_one_transition (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
 	(* Compute the new location for the current combination of transitions *)
 	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
@@ -1905,7 +1905,7 @@ let nth_transition_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n :
 
 (* `continuous_predecessor location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
 let continuous_predecessors
-	(location_n			: Location.global_location)
+	(location_n			: DiscreteState.global_location)
 	(initial_z_n		: LinearConstraint.px_linear_constraint)
 	(z_n				: LinearConstraint.px_linear_constraint)
 	(z_n_post			: LinearConstraint.px_linear_constraint)
@@ -1960,7 +1960,7 @@ let discrete_predecessors
 	let model = Input.get_model() in
 
 	(* Get location and constraint*)
-	let location_n_minus_1 : Location.global_location					= state_n_minus_1.global_location in
+	let location_n_minus_1 : DiscreteState.global_location					= state_n_minus_1.global_location in
 	let z_n_minus_1			: LinearConstraint.px_linear_constraint		= state_n_minus_1.px_constraint in
 
 	(*** BADPROG: multiple computations! ***)
@@ -2031,7 +2031,7 @@ let compute_admissible_valuations_after_transition
 	=
 
 	(* Get location and constraint at n-1 and n *)
-	let location_n_minus_1	: Location.global_location					= state_n_minus_1.global_location in
+	let location_n_minus_1	: DiscreteState.global_location					= state_n_minus_1.global_location in
 	let z_n_minus_1			: LinearConstraint.px_linear_constraint		= state_n_minus_1.px_constraint in
 	let z_n					: LinearConstraint.px_linear_constraint		= state_n.px_constraint in
 
@@ -2226,7 +2226,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let location_n_plus_1 = target_state.global_location in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
-		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_n_plus_1));
+		print_message Verbose_medium ("Location n+1: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display location_n_plus_1));
 	);
 
 	(* Get the constraint at n+1 *)
@@ -2386,7 +2386,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
 
 		(* Get the location and zone for state_n *)
-		let location_n	: Location.global_location				= state_n.global_location in
+		let location_n	: DiscreteState.global_location				= state_n.global_location in
 		let z_n			: LinearConstraint.px_linear_constraint	= state_n.px_constraint in
 
 
@@ -2470,7 +2470,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			| DiscreteType.Var_type_clock
 			| DiscreteType.Var_type_parameter -> valuation_n variable_index
 			(* Here we should have only rational discrete value, so we don't make any check as they were made before *)
-			| DiscreteType.Var_type_discrete _ -> Location.get_discrete_rational_value location_n variable_index
+			| DiscreteType.Var_type_discrete _ -> DiscreteState.get_discrete_rational_value location_n variable_index
 		in
 
 		(* Add the valuation to the list, and replace n+1 with n *)
@@ -3253,7 +3253,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from "
-				^ (if Location.is_accepting model.is_accepting source_state.global_location then "accepting " else "")
+				^ (if DiscreteState.is_accepting model.is_accepting source_state.global_location then "accepting " else "")
 				^ "state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
@@ -3386,7 +3386,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Create the combined transition *)
 				let combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
 					(* Get the current location for this automaton *)
-					let location_index = Location.get_location source_location real_automaton_index in
+					let location_index = DiscreteState.get_location source_location real_automaton_index in
 					(* Find the transitions for this automaton *)
 					let transitions = model.transitions real_automaton_index location_index action_index in
 					(* Get the index of the examined transition for this automaton *)
@@ -3528,7 +3528,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(* The debug_offset variable is used for pretty-printing; it represents the offset between the actual position in the original list of symbolic steps, and the sublist provided here in symbolic_steps *)
 	(*** NOTE: the starting valuation is already known to be impossible, therefore any concrete run corresponding to the symbolic run will do ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private impossible_concrete_steps_of_symbolic_steps (start_global_location : Location.global_location) (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) (target_state_index : state_index) : impossible_concrete_step list =
+	method private impossible_concrete_steps_of_symbolic_steps (start_global_location : DiscreteState.global_location) (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) (target_state_index : state_index) : impossible_concrete_step list =
 		(* Arbitrarily choose 1 *)
 		let chosen_time_elapsing = NumConst.one in
 
@@ -3563,16 +3563,16 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* Get the next location *)
 			(*** NOTE: super bad prog! we iterate on the list, and we use `nth` to get the next element :'( ***)
 			let next_state_index = if !current_position < List.length symbolic_steps - 1 then (List.nth symbolic_steps (!current_position + 1)).source else target_state_index in
-			let next_location : Location.global_location = (StateSpace.get_state state_space next_state_index).global_location in
+			let next_location : DiscreteState.global_location = (StateSpace.get_state state_space next_state_index).global_location in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				(* Get the current location *)
-				let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+				let current_location : DiscreteState.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
 				print_message Verbose_high ("Building concrete (but impossible) transition between source location " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
-				print_message Verbose_high (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location);
+				print_message Verbose_high (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display current_location);
 				print_message Verbose_high ("  and target location " ^ (string_of_int (!current_position + debug_offset + 1)) ^ ":");
-				print_message Verbose_high (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display next_location);
+				print_message Verbose_high (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display next_location);
 			);
 
 			(* Return the impossible_concrete_step *)
@@ -3598,8 +3598,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			if verbose_mode_greater Verbose_medium then(
 				if verbose_mode_greater Verbose_total then(
 					(* Get the current location *)
-					let current_location : Location.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
-					print_message Verbose_total ("Current location: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display current_location) ^ "");
+					let current_location : DiscreteState.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+					print_message Verbose_total ("Current location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display current_location) ^ "");
 					print_message Verbose_total ("Time elapsing: " ^ (NumConst.string_of_numconst chosen_time_elapsing) ^ "");
 				);
 				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " after time elapsing:");
@@ -3772,7 +3772,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
-					print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
+					print_message Verbose_total ("(Location = " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location_i) ^ ")");
 					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
 				);
 
@@ -3915,7 +3915,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let state_i : State.state = StateSpace.get_state state_space state_index_i in
 			let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive state_i.px_constraint in
 			(* Get the location at position i *)
-			let global_location_i : Location.global_location = state_i.global_location in
+			let global_location_i : DiscreteState.global_location = state_i.global_location in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
@@ -3985,13 +3985,13 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					(* Get location i *)
-					let location_i : Location.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+					let location_i : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i).global_location in
 
 					(* Get location i+1 *)
 					let state_index_i_plus_1 : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
-					let location_i_plus_1 : Location.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
+					let location_i_plus_1 : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
 
-					print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i) ^ "` and `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i_plus_1) ^ "`:");
+					print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display location_i) ^ "` and `" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display location_i_plus_1) ^ "`:");
 				);
 
 				(* Print some information *)
@@ -4004,7 +4004,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				let concrete_x_valuation = LinearConstraint.x_nnconvex_exhibit_point difference in
 
 				(* Get the last location *)
-				let last_global_location : Location.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+				let last_global_location : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i).global_location in
 
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
@@ -4022,7 +4022,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
-					print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
+					print_message Verbose_total ("(Location = " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location_i) ^ ")");
 					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i_after_time_elapsing);
 				);
 
@@ -4545,7 +4545,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 						let state = StateSpace.get_state state_space state_index2 in
 						let loc2, constr2 = state.global_location, state.px_constraint in
-						if (Location.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
+						if (DiscreteState.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
 						then  raise (FoundLargerZone);
 					) rank_hashtable;
 					false;
@@ -4562,7 +4562,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				let state = StateSpace.get_state state_space state_index2 in
 				let loc2, constr2 = state.global_location, state.px_constraint in
 				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
-				if (Location.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
+				if (DiscreteState.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
 				then  (state_index2)::smaller_state_index
 				else smaller_state_index;
 			) rank_hashtable [];

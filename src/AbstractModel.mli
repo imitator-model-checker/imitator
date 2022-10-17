@@ -277,7 +277,7 @@ type abstract_model = {
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;
 	(* Initial location of the model *)
-	initial_location : Location.global_location;
+	initial_location : DiscreteState.global_location;
 	(* Initial constraint of the model *)
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)

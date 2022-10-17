@@ -31,11 +31,11 @@ open StateSpace
 (*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)
 
 (*------------------------------------------------------------*)
-(* Compute a hashtable clock => flow in a Location.global_location *)
+(* Compute a hashtable clock => flow in a DiscreteState.global_location *)
 (* Also returns a Boolean being true iff there is any non-1 flow *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_gen (location : Location.global_location) : (((Automaton.clock_index, NumConst.t) Hashtbl.t) * bool) =
+let compute_flows_gen (location : DiscreteState.global_location) : (((Automaton.clock_index, NumConst.t) Hashtbl.t) * bool) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -48,7 +48,7 @@ let compute_flows_gen (location : Location.global_location) : (((Automaton.clock
 	(* Update hash table *)
 	List.iter (fun automaton_index ->
 		(* Get the current location *)
-		let location_index = Location.get_location location automaton_index in
+		let location_index = DiscreteState.get_location location automaton_index in
 		
 		(* 1. Manage the list of stopped clocks *)
 		let stopped = model.stopwatches automaton_index location_index in
@@ -93,11 +93,11 @@ let compute_flows_gen (location : Location.global_location) : (((Automaton.clock
 
 
 (*------------------------------------------------------------*)
-(* Compute the list of clocks with their flow in a Location.global_location *)
+(* Compute the list of clocks with their flow in a DiscreteState.global_location *)
 (* Returns a list of pairs (clock_index, flow)                *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_list (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+let compute_flows_list (location : DiscreteState.global_location) : ((Automaton.clock_index * NumConst.t) list) =
 	(* Call generic function *)
 	let flows_hashtable, non_1_flow = compute_flows_gen location in
 
@@ -123,11 +123,11 @@ let compute_flows_list (location : Location.global_location) : ((Automaton.clock
 
 
 (*------------------------------------------------------------*)
-(* Compute the functional flow function in a Location.global_location *)
+(* Compute the functional flow function in a DiscreteState.global_location *)
 (* Returns a function clock_index -> flow                     *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_fun (location : Location.global_location) : (Automaton.clock_index -> NumConst.t) =
+let compute_flows_fun (location : DiscreteState.global_location) : (Automaton.clock_index -> NumConst.t) =
 	(* Call generic function *)
 	let flows_hashtable, non_1_flow = compute_flows_gen location in
 
@@ -893,7 +893,7 @@ let string_of_new_initial_locations ?indent_level:(i=1) model =
 	let initial_automata = List.map
 	(fun automaton_index ->
 		(* Finding the initial location for this automaton *)
-		let initial_location = Location.get_location inital_global_location automaton_index in
+		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		let tabulations = string_n_times i "\t" in
 		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] := " ^ (model.location_names automaton_index initial_location)
@@ -905,7 +905,7 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 	let initial_discrete = List.map
 	(fun discrete_index ->
 		(* Finding the initial value for this discrete *)
-		let initial_value = Location.get_discrete_value model.initial_location discrete_index in
+		let initial_value = DiscreteState.get_discrete_value model.initial_location discrete_index in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
 		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
@@ -941,7 +941,7 @@ let string_of_old_initial_state model =
 	let initial_automata = List.map
 	(fun automaton_index ->
 		(* Finding the initial location for this automaton *)
-		let initial_location = Location.get_location inital_global_location automaton_index in
+		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
@@ -956,7 +956,7 @@ let string_of_old_initial_state model =
 	let initial_discrete = List.map
 	(fun discrete_index ->
 		(* Finding the initial value for this discrete *)
-		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
+		let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
 		(* '& var = val' *)
 		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
@@ -1308,7 +1308,7 @@ let string_of_state model (state : state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
+	"" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then DiscreteState.Float_display else DiscreteState.Exact_display) state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
 
 
 (* Convert a concrete state (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
@@ -1318,13 +1318,13 @@ let string_of_concrete_state model (state : State.concrete_state) =
 
 	""
 	(* Convert location *)
-	^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location)
+	^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then DiscreteState.Float_display else DiscreteState.Exact_display) state.global_location)
 	(* Convert variables valuations *)
 	^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation)
 	(* Convert rates *)
 	^ " flows["
 	^ (
-		let global_location : Location.global_location = state.global_location in
+		let global_location : DiscreteState.global_location = state.global_location in
 		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
@@ -1334,11 +1334,11 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	^ "]"
 
 (* Convert a global location into JSON-style string (locations, NO discrete variables valuations) *)
-let json_of_global_location model (global_location : Location.global_location) =
+let json_of_global_location model (global_location : DiscreteState.global_location) =
 	string_of_list_of_string_with_sep ", " (
 		List.map (fun automaton_index ->
 			(* Retrieve location for `automaton_index` *)
-			let location_index = Location.get_location global_location automaton_index in
+			let location_index = DiscreteState.get_location global_location automaton_index in
 			
 			(* Get names *)
 			let automaton_name = model.automata_names automaton_index in
@@ -1350,11 +1350,11 @@ let json_of_global_location model (global_location : Location.global_location) =
 	)
 
 (* Convert the values of the discrete variables in a global location into JSON-style string *)
-let json_of_discrete_values model (global_location : Location.global_location) =
+let json_of_discrete_values model (global_location : DiscreteState.global_location) =
 	string_of_list_of_string_with_sep ", " (
 		List.map (fun discrete_index ->
 			(* Retrieve valuation for `discrete_index` *)
-			let variable_value = Location.get_discrete_value global_location discrete_index in
+			let variable_value = DiscreteState.get_discrete_value global_location discrete_index in
 			
 			(* Convert to strings *)
 			let variable_name = model.variable_names discrete_index in
@@ -1393,7 +1393,7 @@ let json_of_concrete_state model (state : State.concrete_state) =
 	(* Convert rates *)
 	^ "\n\t\t\t\t" ^ (json_of_string "flows") ^ ": {"
 	^ (
-		let global_location : Location.global_location = state.global_location in
+		let global_location : DiscreteState.global_location = state.global_location in
 		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
