@@ -1279,10 +1279,10 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	let mix_clock_updates = List.map (fun transition_index ->
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
-		let _, transition = automaton_and_transition_of_transition_index transition_index in
+(*		let _, transition = automaton_and_transition_of_transition_index transition_index in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-(* 		let clock_updates, _ = transition.new_updates in *)
+ 		let clock_updates, _ = transition.new_updates in *)
 
         (* Map rewritten clock updates to clock updates list *)
 		let clock_updates = eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq in
