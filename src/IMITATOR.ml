@@ -1006,9 +1006,10 @@ match options#imitator_mode with
 			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
 				raise (NotImplemented("Learning_cartography is temporarily disabled"))
-(*				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				;
+				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning model state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
-				myalgo*)
+				myalgo
 
 			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
@@ -1092,7 +1093,7 @@ match options#imitator_mode with
 				); (* end export *)
 
 				(* Call the NZ emptiness check *)
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist model in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist cub_model in myalgo
 			*)
 
 			(*** NOTE: only one distribution mode so far ***)

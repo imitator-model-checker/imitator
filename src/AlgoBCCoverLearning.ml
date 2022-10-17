@@ -54,8 +54,8 @@ type learning_result =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (step : NumConst.t) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit algoBCCover v0 step algo_instance_function tiles_manager_type as super
+class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit algoBCCover model v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -261,11 +261,11 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicat
 		(* Select the right algorithm according to the analysis type *)
 		let algo_instance = match analysis_type with
 			(* If counter-exemple: run EF on the parametric trace *)
-			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
+			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEF.algoEF new_model state_predicate in myalgo
 			
 			(* If abstraction: run PRP on this abstraction *)
 			(*** NOTE: the current valuation (current_point) is already set in Input ***)
-			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP current_point state_predicate in myalgo
+			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP new_model current_point state_predicate in myalgo
 		in
 		current_algo_instance <- algo_instance;
 		
