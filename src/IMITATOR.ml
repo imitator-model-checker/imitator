@@ -941,7 +941,7 @@ match options#imitator_mode with
 					); (* end export *)
 
 					(* Call the NZ emptiness check *)
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB model in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB cub_model in myalgo
 
 
 				(** Method assuming the PTA is already a CUB-PTA *)
