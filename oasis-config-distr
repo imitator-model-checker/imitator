@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2021/01/29
+#  Last modified:  2022/10/17
 ###############################################################
 
 OASISFormat: 0.3
@@ -44,29 +44,29 @@ Test tes1
   Command: echo "\n********** TEST 1 **********\n"; \
       ./bin/patator tests/testcases/flipflop.imi -mode statespace -depth-limit 5
 
-Test test2
-  Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop.pi0 -draw-statespace normal -states-description -statistics
+#Test test2
+#  Command: echo "\n********** TEST 2 **********\n"; \
+#      ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop.pi0 -draw-statespace normal -states-description -statistics
 
-Test test3
-  Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart
+#Test test3
+#  Command: echo "\n********** TEST 3 **********\n"; \
+#      ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart
 
-Test test4
-  Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/patator tests/testcases/JLR-TACAS13.imi tests/testcases/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
+#Test test4
+#  Command: echo "\n********** TEST 4 **********\n"; \
+#      ./bin/patator tests/testcases/JLR-TACAS13.imi tests/testcases/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
 
-Test test5
-  Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart -distributed sequential -verbose standard
+#Test test5
+#  Command: echo "\n********** TEST 5 **********\n"; \
+#      mpiexec -n 4 ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart -distributed sequential -verbose standard
 
-Test test6
-  Command: echo "\n********** TEST 6 **********\n"; \
-      mpiexec -n 4 ./bin/patator tests/testcases/testBC-grid-plain.imi tests/testcases/testBC-grid3x3-cover.imiprop -draw-cart -distributed dynamic -verbose low
+#Test test6
+#  Command: echo "\n********** TEST 6 **********\n"; \
+#      mpiexec -n 4 ./bin/patator tests/testcases/testBC-grid-plain.imi tests/testcases/testBC-grid3x3-cover.imiprop -draw-cart -distributed dynamic -verbose low
 
-Test test7
-  Command: echo "\n********** TEST 7 **********\n"; \
-      mpiexec -n 4 ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart -distributed dynamic -verbose mute
+#Test test7
+#  Command: echo "\n********** TEST 7 **********\n"; \
+#      mpiexec -n 4 ./bin/patator tests/testcases/flipflop.imi tests/testcases/flipflop-cover.imiprop -draw-cart -distributed dynamic -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
