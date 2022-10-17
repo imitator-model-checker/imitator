@@ -105,29 +105,6 @@ let instantiate_costs pi0 =
 
 
 
-(************************************************************)
-(* Functions related to locations *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check whether at least one local location is urgent *)
-(*------------------------------------------------------------*)
-
-(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed…) ***)
-
-let is_location_urgent location =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
-	(* Subfunction checking that one location is urgent in a given automaton *)
-	let is_local_location_urgent automaton_index =
-		(* Retrieve location *)
-		let location_index = Location.get_location location automaton_index in
-		(* Check if urgent *)
-		model.is_urgent automaton_index location_index
-	in
-	List.exists is_local_location_urgent model.automata
-
 
 
 (************************************************************)
@@ -994,7 +971,7 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 	let model = Input.get_model() in
 
 	(* If urgent: no time elapsing *)
-	if is_location_urgent location then (
+	if AbstractModelUtilities.is_global_location_urgent model location then (
 		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
 		()
 	(* If not urgent: apply time elapsing *)
@@ -1060,7 +1037,7 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 	let model = Input.get_model() in
 
 	(* If urgent location: nothing to change, i.e., copy *)
-	if is_location_urgent location then(
+	if AbstractModelUtilities.is_global_location_urgent model location then(
 		print_message Verbose_medium ("Urgent location: do not apply time elapsing");
 		px_valuation
 	)
