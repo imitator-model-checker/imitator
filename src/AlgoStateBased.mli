@@ -207,7 +207,7 @@ end;;
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
-class virtual algoStateBased :
+class virtual algoStateBased : AbstractModel.abstract_model ->
 	object inherit algoGeneric
 
 		(************************************************************)

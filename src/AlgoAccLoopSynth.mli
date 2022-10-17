@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAccLoopSynth : AbstractProperty.state_predicate ->
+class algoAccLoopSynth : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
 	object inherit algoLoopSynth
 		(************************************************************)
 		(* Class variables *)

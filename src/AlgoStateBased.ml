@@ -2774,8 +2774,8 @@ end;;
 (************************************************************)
 (************************************************************)
 
-class virtual algoStateBased =
-	object (self) inherit algoGeneric as super
+class virtual algoStateBased (model : AbstractModel.abstract_model) =
+	object (self) inherit algoGeneric model as super
 
 	(************************************************************)
 	(* Class variables *)

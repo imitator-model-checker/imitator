@@ -44,8 +44,8 @@ let debug_string_of_state state_index =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoDeadlockFree =
-	object (self) inherit algoPostStar as super
+class algoDeadlockFree (model : AbstractModel.abstract_model) =
+	object (self) inherit algoPostStar model as super
 	
 	(************************************************************)
 	(* Class variables *)

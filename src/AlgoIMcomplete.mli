@@ -22,7 +22,7 @@ open AlgoIMK
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMcomplete : PVal.pval ->
+class algoIMcomplete : AbstractModel.abstract_model -> PVal.pval ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

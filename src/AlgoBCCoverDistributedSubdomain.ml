@@ -177,8 +177,8 @@ let sliptLongestDimensionSubdomain (s : HyperRectangle.hyper_rectangle) =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomain (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributed.algoBCCoverDistributed v0 step algo_instance_function tiles_manager_type as super
+class virtual algoBCCoverDistributedSubdomain (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributed.algoBCCoverDistributed model v0 step algo_instance_function tiles_manager_type as super
 	
 	
 	(************************************************************)

@@ -33,8 +33,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 step algo_instance_function tiles_manager_type as super
+class virtual algoBCCoverDistributedSubdomainStatic (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain model v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -131,7 +131,7 @@ class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_r
 		
 		(* Create an instance of the sequential cartography *)
 		(*** NOTE: in static distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
-		let bc_instance = new AlgoBCCover.algoBCCover subdomain step algo_instance_function tiles_manager_type in
+		let bc_instance = new AlgoBCCover.algoBCCover model subdomain step algo_instance_function tiles_manager_type in
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Running cartography on own static subdomain…");

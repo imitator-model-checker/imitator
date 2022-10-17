@@ -33,8 +33,8 @@ open LinearConstraint
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFmax (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (self) inherit algoEFopt state_predicate parameter_index as super
+class algoEFmax (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+	object (self) inherit algoEFopt model state_predicate parameter_index as super
 	
 	(************************************************************)
 	(* Class variables *)

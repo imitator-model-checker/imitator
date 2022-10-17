@@ -22,7 +22,7 @@ open AlgoIMK
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIM : PVal.pval ->
+class algoIM : AbstractModel.abstract_model -> PVal.pval ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

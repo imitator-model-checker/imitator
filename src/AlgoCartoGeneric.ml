@@ -215,8 +215,8 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoGeneric as super
+class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoGeneric model as super
 	
 	
 	(************************************************************)
@@ -250,7 +250,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK dummy_pval in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) (Input.get_model()) dummy_pval in myalgo
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)

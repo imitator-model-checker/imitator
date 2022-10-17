@@ -21,7 +21,7 @@ open ImitatorUtilities
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
-class virtual algoGeneric :
+class virtual algoGeneric : AbstractModel.abstract_model ->
 	object
 
 		(************************************************************)

@@ -22,7 +22,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoNZCUBdist :
+class algoNZCUBdist : AbstractModel.abstract_model ->
 	object inherit algoNZCUB
 		(************************************************************)
 		(* Class variables *)

@@ -52,8 +52,8 @@ exception NewSubdomainAssigned of HyperRectangle.hyper_rectangle
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedSubdomainDynamicCollaborator (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 step algo_instance_function tiles_manager_type as super
+class algoBCCoverDistributedSubdomainDynamicCollaborator (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain model v0 step algo_instance_function tiles_manager_type as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -98,7 +98,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (v0 : HyperRectangle.hy
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: in dynamic distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
 	method private new_bc_instance current_domain =
-		let bc_instance = new AlgoBCCover.algoBCCover current_domain step algo_instance_function tiles_manager_type in
+		let bc_instance = new AlgoBCCover.algoBCCover model current_domain step algo_instance_function tiles_manager_type in
 
 		(* Initialize *)
 		bc_instance#initialize_cartography;

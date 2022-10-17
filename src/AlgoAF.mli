@@ -21,7 +21,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAFsynth :
+class algoAFsynth : AbstractModel.abstract_model ->
 	object inherit algoPostStar
 		(************************************************************)
 		(* Class variables *)

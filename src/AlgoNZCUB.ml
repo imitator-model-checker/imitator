@@ -32,8 +32,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNZCUB =
-	object (self) inherit algoLoopSynth as super
+class algoNZCUB (model : AbstractModel.abstract_model) =
+	object (self) inherit algoLoopSynth model as super
 	
 	(************************************************************)
 	(* Class variables *)

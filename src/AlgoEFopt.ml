@@ -34,8 +34,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (self) inherit algoStateBased as super
+class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+	object (self) inherit algoStateBased model as super
 	
 	(************************************************************)
 	(* Class variables *)

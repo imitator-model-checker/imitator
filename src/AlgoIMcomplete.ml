@@ -33,8 +33,8 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMcomplete (pval : PVal.pval) =
-	object (self) inherit algoIMK pval as super
+class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
+	object (self) inherit algoIMK model pval as super
 	
 	(************************************************************)
 	(* Class variables *)

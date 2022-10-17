@@ -44,7 +44,7 @@ let debug_string_of_state state_index =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAFsynth =
+class algoAFsynth (model : AbstractModel.abstract_model) =
 	object (self) inherit algoPostStar as super
 	
 	(************************************************************)

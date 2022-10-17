@@ -36,8 +36,8 @@ open AlgoBCCover
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedMSRandomSeqMaster (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster v0 step algo_instance_function tiles_manager_type as super
+class algoBCCoverDistributedMSRandomSeqMaster (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster model v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -61,7 +61,7 @@ class algoBCCoverDistributedMSRandomSeqMaster (v0 : HyperRectangle.hyper_rectang
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Creating BC instance…");
 		
-		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq v0 step max_tries algo_instance_function tiles_manager_type in
+		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq model v0 step max_tries algo_instance_function tiles_manager_type in
 		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = algo_bcrandomseq in
 		myalgo
 		

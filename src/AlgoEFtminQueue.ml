@@ -43,8 +43,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased as super
+class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoStateBased model as super
 	
 	(************************************************************)
 	(* Class variables *)

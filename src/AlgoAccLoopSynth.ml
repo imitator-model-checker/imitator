@@ -31,8 +31,8 @@ open AlgoLoopSynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoLoopSynth as super
+class algoAccLoopSynth (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoLoopSynth model as super
 	
 	(************************************************************)
 	(* Class variables *)

@@ -20,7 +20,7 @@ open AlgoPostStar
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoDeadlockFree :
+class algoDeadlockFree : AbstractModel.abstract_model ->
 	object inherit algoPostStar
 		(************************************************************)
 		(* Class variables *)

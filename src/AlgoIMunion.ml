@@ -34,8 +34,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMunion (pval : PVal.pval) =
-	object (self) inherit algoIMK pval as super
+class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
+	object (self) inherit algoIMK model pval as super
 	
 	(************************************************************)
 	(* Class variables *)

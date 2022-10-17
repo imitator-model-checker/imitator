@@ -34,8 +34,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM (pval : PVal.pval) =
-	object (self) inherit algoIMK pval as super
+class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
+	object (self) inherit algoIMK model pval as super
 	
 	(************************************************************)
 	(* Class variables *)

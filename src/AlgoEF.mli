@@ -22,7 +22,7 @@ open AlgoEFgen
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEF : AbstractProperty.state_predicate ->
+class algoEF : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
 	object inherit algoEFgen
 		(************************************************************)
 		(* Class variables *)

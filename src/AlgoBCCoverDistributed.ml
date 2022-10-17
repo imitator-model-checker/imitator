@@ -39,8 +39,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributed (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit algoGeneric as super
+class virtual algoBCCoverDistributed (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit algoGeneric model as super
 
 
 	(************************************************************)
@@ -50,7 +50,7 @@ class virtual algoBCCoverDistributed (v0 : HyperRectangle.hyper_rectangle) (step
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK dummy_pval in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) (Input.get_model()) dummy_pval in myalgo
 	
 
 	(************************************************************)

@@ -36,8 +36,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFgen (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased as super
+class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoStateBased model as super
 	
 	(************************************************************)
 	(* Class variables *)

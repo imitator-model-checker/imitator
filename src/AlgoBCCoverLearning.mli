@@ -23,7 +23,7 @@ open AlgoBCCover
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverLearning : AbstractProperty.state_predicate -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class algoBCCoverLearning : AbstractModel.abstract_model -> AbstractProperty.state_predicate -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit algoBCCover
 		(************************************************************)
 		(* Class variables *)

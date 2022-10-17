@@ -34,8 +34,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoIMK pval as super
+class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoIMK model pval as super
 	
 	(************************************************************)
 	(* Class variables *)

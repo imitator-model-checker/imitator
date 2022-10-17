@@ -62,7 +62,7 @@ val print_warnings_limit_for : Result.bc_algorithm_termination -> unit
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
+class virtual algoCartoGeneric : AbstractModel.abstract_model -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)

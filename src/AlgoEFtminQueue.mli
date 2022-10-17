@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFtminQueue : AbstractProperty.state_predicate ->
+class algoEFtminQueue : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 
 		(************************************************************)

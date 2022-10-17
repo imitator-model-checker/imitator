@@ -31,8 +31,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPostStar =
-	object (self) inherit algoStateBased as super
+class algoPostStar (model : AbstractModel.abstract_model) =
+	object (self) inherit algoStateBased model as super
 	
 	
 	(************************************************************)

@@ -36,8 +36,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoValid =
-	object (self) inherit algoStateBased as super
+class algoValid (model : AbstractModel.abstract_model) =
+	object (self) inherit algoStateBased model as super
 	
 	(************************************************************)
 	(* Class variables *)

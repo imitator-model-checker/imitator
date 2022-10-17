@@ -677,7 +677,7 @@ match options#imitator_mode with
 	| State_space_computation ->
 
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
-		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in
+		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar model in
 
 		(*** NOTE: duplicate code with what follows ***)
 
@@ -750,7 +750,7 @@ match options#imitator_mode with
 
 			(* Validity *)
 			| Valid ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoValid.algoValid in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoValid.algoValid model in myalgo
 
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL *)
@@ -760,7 +760,7 @@ match options#imitator_mode with
 			(************************************************************)
 			| EF state_predicate ->
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model state_predicate in myalgo
 
 
 			(************************************************************)
@@ -773,7 +773,7 @@ match options#imitator_mode with
 					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
 				);
 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot model state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
@@ -783,7 +783,7 @@ match options#imitator_mode with
 			(* Reachability with minimization of a parameter valuation *)
 			(************************************************************)
 			| EFpmin (state_predicate , parameter_index) ->
-				let efopt_algo = new AlgoEFmin.algoEFmin state_predicate parameter_index in
+				let efopt_algo = new AlgoEFmin.algoEFmin model state_predicate parameter_index in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
@@ -794,7 +794,7 @@ match options#imitator_mode with
 			(* Reachability with maximization of a parameter valuation *)
 			(************************************************************)
 			| EFpmax (state_predicate , parameter_index) ->
-				let efopt_algo = new AlgoEFmax.algoEFmax state_predicate parameter_index  in
+				let efopt_algo = new AlgoEFmax.algoEFmax model state_predicate parameter_index  in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
@@ -805,7 +805,7 @@ match options#imitator_mode with
 			(* Reachability with minimal-time *)
 			(************************************************************)
 			| EFtmin state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFtminQueue.algoEFtminQueue state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFtminQueue.algoEFtminQueue model state_predicate in myalgo
 
 
 
@@ -822,8 +822,8 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
 				match options#cycle_algorithm with
-					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
-					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth model state_predicate in myalgo
+					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS model state_predicate in myalgo
 				in myalgo
 
 
@@ -832,7 +832,7 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
 				match options#cycle_algorithm with
-					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoGeneralizedAccLoopSynth.algoGeneralizedAccLoopSynth state_predicate_list in myalgo
+					| AbstractAlgorithm.BFS  -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoGeneralizedAccLoopSynth.algoGeneralizedAccLoopSynth model state_predicate_list in myalgo
 					| AbstractAlgorithm.NDFS -> raise (NotImplemented "Cycle_through_generalized + NDFS is not implemented")
 				in myalgo
 
@@ -880,7 +880,7 @@ match options#imitator_mode with
 					LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
 
 					(* Call the NZ emptiness check *)
-					let nz_algo = new AlgoNZCUB.algoNZCUB in
+					let nz_algo = new AlgoNZCUB.algoNZCUB model in
 
 					(* Force under-approximation if not universally CUB *)
 					if not is_universally_cub then(
@@ -941,13 +941,13 @@ match options#imitator_mode with
 					); (* end export *)
 
 					(* Call the NZ emptiness check *)
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB model in myalgo
 
 
 				(** Method assuming the PTA is already a CUB-PTA *)
 				| NZ_already ->
 					(* Just call the NZ emptiness check *)
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB model in myalgo
 
 				in algo
 
@@ -961,7 +961,7 @@ match options#imitator_mode with
 			(* Parametric deadlock checking *)
 			(************************************************************)
 			| Deadlock_Freeness ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree model in myalgo
 
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
@@ -973,23 +973,23 @@ match options#imitator_mode with
 
 			(* Inverse method with complete, non-convex result *)
 			| IM pval ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete pval in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete model pval in myalgo
 
 			(* Non-complete, non-deterministic inverse method with convex result *)
 			| ConvexIM pval ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM pval in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM model pval in myalgo
 
 			(* Parametric reachability preservation *)
 			| PRP (state_predicate, pval) ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP pval state_predicate in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP model pval state_predicate in myalgo
 
 			(* Variant IMK of the Inverse method *)
 			| IMK pval ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK pval in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK model pval in myalgo
 
 			(* Variant IMunion of the Inverse method *)
 			| IMunion pval ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion pval in myalgo
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion model pval in myalgo
 
 
 		(*------------------------------------------------------------*)
@@ -998,7 +998,7 @@ match options#imitator_mode with
 
 			(* Cartography *)
 			| Cover_cartography (hyper_rectangle, step) when options#distribution_mode = Non_distributed ->
-				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCCover.algoBCCover model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1012,7 +1012,7 @@ match options#imitator_mode with
 
 			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
-				let bc_algo = new AlgoBCShuffle.algoBCShuffle hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCShuffle.algoBCShuffle model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1022,19 +1022,19 @@ match options#imitator_mode with
 
 			(** Randomly pick up values for a given number of iterations *)
 			| Random_cartography (hyper_rectangle, max_tries, step) ->
-				let bc_algo = new AlgoBCRandom.algoBCRandom hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCRandom.algoBCRandom model hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
 			(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 			| RandomSeq_cartography (hyper_rectangle, max_tries, step) ->
-				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq model hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
 			(* Parametric reachability preservation *)
 			| PRPC (state_predicate, hyper_rectangle, step) ->
-				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP pval state_predicate in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				let bc_algo = new AlgoBCCover.algoBCCover model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP model pval state_predicate in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1092,7 +1092,7 @@ match options#imitator_mode with
 				); (* end export *)
 
 				(* Call the NZ emptiness check *)
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist model in myalgo
 			*)
 
 			(*** NOTE: only one distribution mode so far ***)
@@ -1103,22 +1103,22 @@ match options#imitator_mode with
 				| Distributed_ms_sequential ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 				(** Distributed mode: Master worker with sequential pi0 shuffled *)
 				| Distributed_ms_shuffle ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1126,11 +1126,11 @@ match options#imitator_mode with
 				| Distributed_ms_random nb_tries ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster hyper_rectangle step nb_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster model hyper_rectangle step nb_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1138,11 +1138,11 @@ match options#imitator_mode with
 				| Distributed_ms_subpart ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1150,11 +1150,11 @@ match options#imitator_mode with
 				| Distributed_static ->
 					(* Branch between collaborator and coordinator *)
 					if DistributedUtilities.is_coordinator() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 

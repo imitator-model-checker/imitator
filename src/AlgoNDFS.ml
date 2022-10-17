@@ -114,8 +114,8 @@ let printpendingqueue (colour : string) (thequeue : (State.state_index * int) li
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased as super
+class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoStateBased model as super
 
 	(************************************************************)
 	(* Class variables *)

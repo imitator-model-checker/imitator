@@ -54,7 +54,7 @@ type learning_result =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (step : NumConst.t) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (step : NumConst.t) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
 	object (self) inherit algoBCCover v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
