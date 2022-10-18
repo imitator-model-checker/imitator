@@ -245,16 +245,6 @@ val all_p_constraints : state_space -> LinearConstraint.p_linear_constraint list
 (** Returns the intersection of all parameter constraints, thereby destroying all constraints *)
 (* val compute_k0_destructive : abstract_model -> state_space -> LinearConstraint.linear_constraint *)
 
-(*------------------------------------------------------------*)
-(** Check if two states are equal *)
-(*------------------------------------------------------------*)
-val states_equal: state -> state -> bool
-
-(*(** Test if a state exists satisfying predicate s *)
-val exists_state: (state -> bool) -> state_space -> bool
-
-(** test if all states satisfy predicate s *)
-val forall_state: (state -> bool) -> state_space -> bool*)
 
 (*------------------------------------------------------------*)
 (** Find all "last" states on finite or infinite runs *)

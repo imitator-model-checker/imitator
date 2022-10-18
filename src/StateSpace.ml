@@ -143,13 +143,13 @@ type symbolic_run = {
 (************************************************************)
 
 (* state struct for constructing set type *)
-module State = struct
-	type t = state_index
+module StateStruct = struct
+	type t = State.state_index
 	let compare = compare
 end
 
 (* set of states for efficient lookup *)
-module StateIndexSet = Set.Make(State)
+module StateIndexSet = Set.Make(StateStruct)
 
 
 
@@ -164,11 +164,11 @@ type state_space = {
 	nb_generated_states : int ref;
 
 	(** An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
-	mutable all_states : (state_index, abstract_state) Hashtbl.t;
+	mutable all_states : (State.state_index, abstract_state) Hashtbl.t;
 
 	(** The id of the initial state *)
 	(*** NOTE: mutable due to the fact that the initial state can be merged with another state *)
-	mutable initial : state_index option;
+	mutable initial : State.state_index option;
 
 	(** A hashtable location -> location_index *)
 	index_of_locations : (DiscreteState.global_location, location_index) Hashtbl.t;
@@ -178,14 +178,14 @@ type state_space = {
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
         (* modified by Jaco van de Pol: use global_location_index as key, rather than hash code of global_location *)
-	mutable states_for_comparison : (location_index, state_index) Hashtbl.t;
+	mutable states_for_comparison : (location_index, State.state_index) Hashtbl.t;
 	(*2.12 diff here*)
 
 	(** A HashTable state_index -> list of (combined_transition * 'target_state_index') *)
-	mutable transitions_table : (state_index , (combined_transition * state_index) list) Hashtbl.t;
+	mutable transitions_table : (State.state_index , (combined_transition * State.state_index) list) Hashtbl.t;
 
 	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
-	next_state_index : state_index ref;
+	next_state_index : State.state_index ref;
 }
 
 
@@ -196,7 +196,7 @@ type state_space = {
 (************************************************************)
 
 (** An SCC is just a list of states *)
-type scc = state_index list
+type scc = State.state_index list
 
 (*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
 	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
@@ -206,10 +206,10 @@ type scc = state_index list
 (* Data structure: node with index / lowlink / onStack *)
 type tarjan_node = {
 	(* Additional field used to record the real state_index in the state space *)
-	state_index	: state_index;
-	mutable index		: state_index option;
-	mutable lowlink		: state_index option;
-	mutable onStack		: bool;
+	state_index     : State.state_index;
+	mutable index   : State.state_index option;
+	mutable lowlink : State.state_index option;
+	mutable onStack : bool;
 }
 
 
@@ -227,9 +227,9 @@ exception Found_transition of combined_transition
 exception Found_scc of scc
 
 (* Old state found *)
-exception Found_old of state_index
+exception Found_old of State.state_index
 (* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
-exception Found_new of state_index
+exception Found_new of State.state_index
 
 
 
@@ -239,7 +239,6 @@ exception Found_new of state_index
 (*let nb_state_comparisons = ref 0
 let nb_constraint_comparisons = ref 0*)
 let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
-let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
 
 (* Numbers of new states that were in fact included into an old state *)
 let statespace_dcounter_nb_states_included = create_discrete_counter_and_register "number of new states <= old" States_counter Verbose_standard
@@ -279,7 +278,7 @@ let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip t
 (************************************************************)
 (** Debug string function *)
 (************************************************************)
-let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
+let string_of_state_index (state_index : State.state_index) = "s_" ^ (string_of_int state_index)
 
 
 (**************************************************************)
@@ -306,7 +305,7 @@ let get_action_from_combined_transition (combined_transition : combined_transiti
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 (*** TODO: allow for all resets ***)
-let get_resets state_index combined_transition state_index' =
+let get_resets (state_index : State.state_index) combined_transition (state_index' : State.state_index) =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
@@ -2081,53 +2080,6 @@ let increment_nb_gen_states state_space =
 	state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
-(** Compare two states (generic version) *)
-let states_compare (constraint_comparison_function : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint -> bool) (comparison_name : string) (state1 : state) (state2 : state) : bool =
-	let (loc1, constr1) = state1.global_location, state1.px_constraint in
-	let (loc2, constr2) = state2.global_location, state2.px_constraint in
-	if not (DiscreteState.location_equal loc1 loc2) then false else (
-		(* Statistics *)
-		print_message Verbose_high ("About to compare " ^ comparison_name ^ " between two constraints.");
-
-		(* Statistics *)
-		statespace_dcounter_nb_constraint_comparisons#increment;
-
-		if verbose_mode_greater Verbose_high then(
-			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
-			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
-		);
-
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-
-		let constr1, constr2 =
-		(* Specific option to remove the global time clock *)
-		if options#no_global_time_in_comparison then(
-			match model.global_time_clock with
-			(* Nothing to do *)
-			| None -> constr1, constr2
-			(* Nothing to do *)
-			| Some global_time_clock ->
-				(* Remove the global time clock in both constraints *)
-				(*** NOTE: expensive! ***)
-				LinearConstraint.px_hide [global_time_clock] constr1
-				,
-				LinearConstraint.px_hide [global_time_clock] constr2
-		)else(
-			(* Check with standard constraints *)
-			constr1, constr2
-		) in
-
-		(* Perform the actual comparison *)
-		constraint_comparison_function constr1 constr2
-	)
-
-(** Concrete implementations *)
-let states_equal   = states_compare LinearConstraint.px_is_equal "equality"
-let state_included = states_compare LinearConstraint.px_is_leq   "inclusion"
 
 
 let new_location_index state_space location =
@@ -2160,7 +2112,7 @@ let insert_state state_space location_index (new_state : state) =
 	Hashtbl.iter (fun state_index _ ->
 (* 		print_string "."; *)
 		let state = get_state state_space state_index in
-		if states_equal state new_state then(
+		if State.state_equals state new_state then(
 			raise (InternalError "Trying to add a state that is present");
 		);
 	) state_space.all_states;*)
@@ -2229,7 +2181,7 @@ let add_state_dyn program state_space new_state constr =
 
 
 (** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
-let replace_constraint state_space state_index px_linear_constraint =
+let replace_constraint state_space (state_index : State.state_index) px_linear_constraint =
 	(* Copy to avoid side-effects *)
 	let linear_constraint_copy = LinearConstraint.px_copy px_linear_constraint in
 	try (
@@ -2276,11 +2228,29 @@ let add_state state_space state_comparison (new_state : state) =
 				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " state comparison" ^ (s_of_int nb_comparisons) ^ ".");
 			);
 
+			(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
+			(* Retrieve the input options *)
+			let options = Input.get_options () in
+			let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
+				(* Retrieve the model *)
+				let model = Input.get_model() in
+				match model.global_time_clock with
+				(* Nothing to do *)
+				| None -> []
+				(* Nothing to do *)
+				| Some global_time_clock -> [global_time_clock]
+			)else(
+				(* Nothing to remove *)
+				[]
+			)
+			in
+
 			(* Iterate on each state *)
-			List.iter (fun state_index ->
+			List.iter (fun (state_index : State.state_index) ->
 				let state = get_state state_space state_index in
 
 				print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
+
 
 				(* Branch depending on the check function used for state comparison *)
 				match state_comparison with
@@ -2291,12 +2261,12 @@ let add_state state_space state_comparison (new_state : state) =
 					(* Equality: check for equality *)
 					| Equality_check ->
 						statespace_dcounter_nb_state_comparisons#increment;
-						if states_equal new_state state then raise (Found_old state_index)
+						if State.state_equals new_state state clocks_to_remove_in_comparisons then raise (Found_old state_index)
 
 					(* Inclusion: check for new <= old *)
 					| Inclusion_check ->
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included new_state state then(
+						if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
 							(* Statistics *)
 							statespace_dcounter_nb_states_included#increment;
 							raise (Found_old state_index)
@@ -2305,12 +2275,12 @@ let add_state state_space state_comparison (new_state : state) =
 					(* Inclusion: check for new >= old *)
 					| Including_check ->
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included state new_state then(
+						if State.state_included_in state new_state clocks_to_remove_in_comparisons then(
 							(* Statistics *)
 							statespace_dcounter_nb_states_including#increment;
 
 							(* Check if equality, i.e., reverse direction *)
-							if state_included new_state state then(
+							if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
 								(* Print some information *)
 								print_message Verbose_medium ("Found an old state = the new state");
 
@@ -2334,7 +2304,7 @@ let add_state state_space state_comparison (new_state : state) =
 					| Double_inclusion_check ->
 						(* First check: new <= old *)
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included new_state state then(
+						if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
 							(* Statistics *)
 							statespace_dcounter_nb_states_included#increment;
 							raise (Found_old state_index)
@@ -2342,7 +2312,7 @@ let add_state state_space state_comparison (new_state : state) =
 						(* Second check: old <= new *)
 						else(
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included state new_state then (
+						if State.state_included_in state new_state clocks_to_remove_in_comparisons then (
 							(* Print some information *)
 							print_message Verbose_medium ("Found an old state < the new state");
 

@@ -24,6 +24,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Automaton
 open AbstractModel
+open Statistics
 
 
 (************************************************************)
@@ -48,6 +49,64 @@ type abstract_state = {
 	global_location_index: DiscreteState.global_location_index;
 	px_constraint        : LinearConstraint.px_linear_constraint;
 }
+
+
+(************************************************************)
+(** Statistics *)
+(************************************************************)
+let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
+
+
+(************************************************************)
+(** State comparison functions *)
+(************************************************************)
+
+(** Compare two states (generic version).
+  * Arguments:
+  * constraint_comparison_function
+  * comparison_name
+  * state1
+  * state2
+  * clocks_to_remove: some variables to remove before performing the comparison between states (typically used to remove the `global_time_clock` before comparing two states)
+  *)
+let states_compare (constraint_comparison_function : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint -> bool) (comparison_name : string) (state1 : state) (state2 : state) (clocks_to_remove : Automaton.clock_index list) : bool =
+	let (loc1, constr1) = state1.global_location, state1.px_constraint in
+	let (loc2, constr2) = state2.global_location, state2.px_constraint in
+	if not (DiscreteState.location_equal loc1 loc2) then false else (
+		(* Statistics *)
+		print_message Verbose_high ("About to compare " ^ comparison_name ^ " between two constraints.");
+
+		(* Statistics *)
+		statespace_dcounter_nb_constraint_comparisons#increment;
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+
+
+		let constr1, constr2 =
+		match clocks_to_remove with
+			(* Nothing to do *)
+			| [] -> constr1, constr2
+			(* Nothing to do *)
+			| _ ->
+				(* Remove the clock_to_remove in both constraints *)
+				(*** NOTE: expensive! ***)
+				LinearConstraint.px_hide clocks_to_remove constr1
+				,
+				LinearConstraint.px_hide clocks_to_remove constr2
+		in
+
+		(* Perform the actual comparison *)
+		constraint_comparison_function constr1 constr2
+	) (* if distinct discrete locations *)
+
+
+
+(** Concrete implementations *)
+let state_equals      = states_compare LinearConstraint.px_is_equal "equality"
+let state_included_in = states_compare LinearConstraint.px_is_leq   "inclusion"
 
 
 (************************************************************)

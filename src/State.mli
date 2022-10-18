@@ -45,6 +45,19 @@ type abstract_state = {
 
 
 (************************************************************)
+(** State comparison functions *)
+(************************************************************)
+
+(** Compare two states. Arguments:
+  * state1
+  * state2
+  * clocks_to_remove: some variables to remove before performing the comparison between states (typically used to remove the `global_time_clock` before comparing two states)
+  *)
+val state_equals      : state -> state -> Automaton.clock_index list -> bool
+val state_included_in : state -> state -> Automaton.clock_index list -> bool
+
+
+(************************************************************)
 (** Interrogation on one state *)
 (************************************************************)
 
