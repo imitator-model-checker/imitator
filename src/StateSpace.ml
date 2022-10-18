@@ -367,16 +367,37 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(************************************************************)
+	(************************************************************)
 	(* Class variables *)
+	(************************************************************)
 	(************************************************************)
 	val mutable state_space = initial_state_space
 
 
 	(************************************************************)
+	(************************************************************)
 	(* Simple get methods *)
+	(************************************************************)
 	(************************************************************)
 	(** Return the number of generated states (not necessarily present in the state space) *)
 	method get_nb_gen_states : int = !(state_space.nb_generated_states)
+
+	(** Return the number of states in a state space *)
+	method nb_states : int =
+
+		(* Statistics *)
+		counter_nb_states#increment;
+		counter_nb_states#start;
+
+		let result =
+			Hashtbl.length state_space.all_states
+		in
+
+		(* Statistics *)
+		counter_nb_states#stop;
+
+		result
+
 
 	(** Return the number of transitions in a state space *)
 	method nb_transitions : int =
@@ -544,7 +565,9 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(************************************************************)
+	(************************************************************)
 	(* Methods computing things from the state space without modifications *)
+	(************************************************************)
 	(************************************************************)
 
 	(*------------------------------------------------------------*)
@@ -773,6 +796,394 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		(* Create the constraint guard ^ D_i = d_i *)
 		LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
+
+
+
+
+	(*------------------------------------------------------------*)
+	(** SCC detection *)
+	(*------------------------------------------------------------*)
+
+	(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): `reconstruct_scc state_space source_state_index` reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+	(*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
+	method reconstruct_scc source_state_index : scc option =
+		(* Print some information *)
+		print_message Verbose_high ("Entering reconstruct_scc " ^ (string_of_state_index source_state_index) ^ "…");
+
+		(* Variables used for Tarjan *)
+		let current_index = ref 0 in
+
+		(* Hashtable state_index -> tarjan_node *)
+		let tarjan_nodes = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+
+		(* tarjan_node stack *)
+		let stack = Stack.create () in
+
+		(* Get the tarjan_node associated with a state_index; create it if not found in the Hashtable *)
+		let tarjan_node_of_state_index state_index =
+			(* If present in the hashtable already *)
+			if Hashtbl.mem tarjan_nodes state_index then(
+				Hashtbl.find tarjan_nodes state_index
+			)else(
+				(* Create an empty node *)
+				let tarjan_node = {
+					state_index = state_index;
+					index		= None;
+					lowlink		= None;
+					onStack		= false;
+				} in
+				(* Add it *)
+				Hashtbl.add tarjan_nodes state_index tarjan_node;
+				(* Return it *)
+				tarjan_node
+			)
+		in
+
+		(* Get the index field from a tarjan_node; raise InternalError if index = None *)
+		let get_index tarjan_node =
+			match tarjan_node.index with
+				| Some ll -> ll
+				| _ -> raise (InternalError "v.index should not be undefined at that point")
+		in
+
+		(* Get the lowlink field from a tarjan_node; raise InternalError if lowlink = None *)
+		let get_lowlink tarjan_node =
+			match tarjan_node.lowlink with
+				| Some ll -> ll
+				| _ -> raise (InternalError "v.lowlink should not be undefined at that point")
+		in
+
+
+		(* Define a main local, recursive function *)
+		let rec strongconnect state_index =
+			(* Print some information *)
+			print_message Verbose_high ("  Entering strongconnect " ^ (string_of_state_index state_index) ^ "…");
+
+			(* Get the associated tarjan node *)
+			let v = tarjan_node_of_state_index state_index in
+			(* Set the depth index for v to the smallest unused index *)
+			(*v.index := index*)
+			v.index <- Some !current_index;
+
+			(*v.lowlink := index*)
+			v.lowlink <- Some !current_index;
+
+			(*index := index + 1*)
+			incr current_index;
+
+			(* S.push(v) *)
+			Stack.push v stack;
+
+			(* Print some information *)
+			print_message Verbose_high ("  Push " ^ (string_of_state_index state_index) ^ "");
+
+			(* v.onStack := true *)
+			v.onStack <- true;
+
+			(* Print some information *)
+			print_message Verbose_high ("  Considering successors of " ^ (string_of_state_index state_index) ^ "…");
+
+			(* Consider successors of v *)
+			(* for each (v, w) in E do *)
+			let successors = self#get_successors state_index in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors));
+			);
+
+			List.iter (fun successor_index ->
+				(* Print some information *)
+				print_message Verbose_high ("    Considering successor " ^ (string_of_state_index successor_index) ^ "");
+
+				let w = tarjan_node_of_state_index successor_index in
+				(* if (w.index is undefined) then *)
+				if w.index = None then (
+				(* // Successor w has not yet been visited; recurse on it
+					strongconnect(w) *)
+					strongconnect successor_index;
+
+					(* v.lowlink  := min(v.lowlink, w.lowlink) *)
+
+					let vlowlink = get_lowlink v in
+					let wlowlink = get_lowlink w in
+
+					(* Print some information *)
+					print_message Verbose_high ("    " ^ (string_of_state_index v.state_index) ^ ".lowlink  := min(" ^ (string_of_state_index v.state_index) ^ ".lowlink, " ^ (string_of_state_index w.state_index) ^ ".lowlink) = min(" ^ (string_of_int vlowlink) ^ ", " ^ (string_of_int wlowlink) ^ ")");
+
+					if wlowlink < vlowlink then(
+						v.lowlink <- Some wlowlink;
+					);
+				(* else if (w.onStack) then *)
+				) else if w.onStack then (
+					(* // Successor w is in stack S and hence in the current SCC
+					v.lowlink  := min(v.lowlink, w.index) *)
+					let vlowlink = get_lowlink v in
+					let windex = get_index w in
+					if windex < vlowlink then v.lowlink <- Some windex;
+				(* end if *)
+				);
+			(* end for *)
+			) successors;
+
+			(* // If v is a root node, pop the stack and generate an SCC *)
+			(* if (v.lowlink = v.index) then *)
+			let vlowlink = get_lowlink v in
+			let vindex = get_index v in
+
+			if vlowlink = vindex then (
+				(* Print some information *)
+				print_message Verbose_high ("  Root node! Start SCC");
+
+				(* start a new strongly connected component *)
+				let scc : scc ref = ref [] in
+
+				(* repeat *)
+				let found_v = ref false in
+				while not !found_v do
+					(* w := S.pop() *)
+					let w = Stack.pop stack in
+
+					(* Print some information *)
+					print_message Verbose_high ("  Pop " ^ (string_of_state_index w.state_index) ^ "");
+
+					(* w.onStack := false *)
+					w.onStack <- false;
+
+					(* add w to current strongly connected component *)
+					scc := w.state_index :: !scc;
+
+					if w = v then found_v := true
+				(* while (w <> v) *)
+				done;
+
+				(* output the current strongly connected component *)
+				(* In fact, we differ from the traditional Tarjan here: if the original source_state_index belongs to the scc, we are done; otherwise we keep working and this scc is discarded *)
+				if List.mem source_state_index !scc then(
+
+					(* In addition, the SCC must not be reduced to a singleton without a loop *)
+					if List.length !scc > 1 then(
+						print_message Verbose_high ("  Found SCC of size > 1 containing " ^ (string_of_state_index source_state_index) ^ "!");
+
+						raise (Found_scc !scc)
+					)else(
+						(* If reduced to a state: must contain a self-loop, i.e., source_state_index must belong to its successors *)
+						let successors = self#get_successors source_state_index in
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("  Successors of " ^ (string_of_state_index source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors)) );
+						);
+
+						let found_scc = List.mem source_state_index successors in
+
+						if found_scc then(
+							(* Print some information *)
+							print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ "!");
+
+							raise (Found_scc !scc)
+						)else(
+							(* Print some information *)
+							print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ " but without a loop: discard.");
+						);
+					);
+				)else(
+					(* Print some information *)
+					print_message Verbose_high ("  SCC NOT containing " ^ (string_of_state_index source_state_index) ^ ": discard.");
+				);
+			(* end if *)
+			);
+
+			(* Print some information *)
+			print_message Verbose_high ("  Exiting strongconnect " ^ (string_of_state_index state_index) ^ ".");
+
+			(* end local function strongconnect *)
+			()
+
+
+		in
+
+		(* Call strongconnect from the desired starting node *)
+		let scc =
+		try
+			strongconnect source_state_index;
+
+			(* If an exception was not raised, we reach this point *)
+			print_message Verbose_high ("SCC not found in strongconnect!");
+			None
+		with
+			(* if an exception was raised while looking for the SCC: we found the SCC! *)
+			Found_scc scc -> (
+				(* Return the scc *)
+				Some scc
+			)
+		in
+		(* Return SCC *)
+		scc
+
+
+	(*------------------------------------------------------------*)
+	(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, combined_transition, state_index) *)
+	(*------------------------------------------------------------*)
+	method find_transitions_in (scc : scc) : (state_index * combined_transition * state_index) list =
+		List.fold_left (fun current_list state_index ->
+			(* Compute the successors of state_index *)
+			let successors = self#get_successors_with_combined_transitions state_index in
+
+			(* Filter only those who belong to the scc *)
+			let successors_in_scc = List.filter (fun (_, state_index) -> List.mem state_index scc) successors in
+
+			(* Convert into triple (state_index, combined_transition, state_index) *)
+			let triples = List.map (fun (combined_transition , target_state_index) -> (state_index, combined_transition, target_state_index) ) successors_in_scc in
+
+			(* Add them to the current list *)
+			List.rev_append triples current_list
+		) [] scc
+
+
+	(************************************************************)
+	(** Backward run-computation *)
+	(************************************************************)
+
+
+	(*------------------------------------------------------------*)
+	(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states (a "lasso") for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
+	(*------------------------------------------------------------*)
+
+	method backward_symbolic_run (target_state_index : state_index) (lasso : state_index list) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
+		(* First manage the predecessors_table *)
+		let predecessors_table = match predecessors_table_option with
+			(* If given: keep it *)
+			| Some predecessors_table -> predecessors_table
+			(* Otherwise: recompute *)
+			| None -> self#compute_predecessors_with_combined_transitions
+		in
+
+		(*------------------------------------------------------------*)
+		(** Table to color/mark states *)
+		(*------------------------------------------------------------*)
+		let colortable_create init_nb : ('a, bool) Hashtbl.t = Hashtbl.create init_nb in
+
+		let mark colortable element =
+			Hashtbl.replace colortable element true
+		in
+
+		(*let unmark colortable element =
+			Hashtbl.replace colortable element false
+		in *)
+
+		let is_marked colortable element : bool =
+			(*** NOTE: split the test in case OCaml does not evaluate the way we think it does ***)
+			if not (Hashtbl.mem colortable element) then false
+			else Hashtbl.find colortable element
+		in
+
+		(*------------------------------------------------------------*)
+
+		(* Create a table to remember whether a state is marked or not *)
+		(*** NOTE: use the number of states in the state space as default init ***)
+		let colortable = colortable_create (self#nb_states) in
+
+		(* Function to sort the predecessors made of a pair of a combined_transition and a state_index *)
+		let sort_predecessors = List.sort (fun (_, a) (_, b) -> compare a b) in
+
+		(*------------------------------------------------------------*)
+		(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)
+		let rec backward_symbolic_run_rec (current_state_index : state_index) : (symbolic_step list) option =
+			(* If target is reached: return *)
+			if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
+
+			(* If the state is marked, give up *)
+			else if is_marked colortable current_state_index then None
+
+			(* Else process this state *)
+			else(
+				(* Mark it! *)
+				mark colortable current_state_index;
+
+				(* Get the predecessors *)
+				let predecessors = predecessors_table.(current_state_index) in
+
+				(* Heuristics: test the predecessors by increasing state_index (intuitively, a smaller state_index may be closer to the initial state, hence should be tried first) *)
+				let sorted_predecessors = sort_predecessors predecessors in
+
+				(* Iterate on the predecessors *)
+				let symbolic_steps : (symbolic_step list) option = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
+					(* If predecessor is marked: skip and go to next predecessor *)
+					if is_marked colortable predecessor_index then current_steps
+
+					(* If unmarked: call recursively *)
+					else
+					let recursive_result = backward_symbolic_run_rec predecessor_index in
+					match recursive_result with
+						(* If no result in this direction: skip and go to next predecessor *)
+						| None -> current_steps
+						(* Otherwise: return the result and add the symbolic_step *)
+						| Some symbolic_steps -> Some ({source = predecessor_index ; transition = combined_transition } :: symbolic_steps)
+
+				) None sorted_predecessors in
+
+				match symbolic_steps with
+					(* If no steps found after iterating, we are in a deadlock *)
+					| None -> None
+					(* Otherwise return (do NOT add current state, as it was added above) *)
+					| Some symbolic_steps -> Some symbolic_steps
+			)
+
+		in
+		(*------------------------------------------------------------*)
+
+		(* If a lasso is provided, first reconstruct the final symbolic steps for the lasso *)
+		let (final_symbolic_steps , target_state_index_for_backward_reconstruction) = match lasso with
+			(* No lasso *)
+			| [] ->
+				[] , target_state_index
+
+			(* A non-empty lasso *)
+			| first_state_of_the_lasso :: rest_of_the_lasso ->
+
+				(*** BADPROG: mix imperative and functional programming… ***)
+				let current_state_index : state_index ref = ref first_state_of_the_lasso in
+
+				(* Convert each state of the lasso (except the last one) into a pair (state, combined_transition) *)
+				let final_symbolic_steps : symbolic_step list =
+				(* Iterate on the successor of each state of the lasso except the first one *)
+				List.map (fun (current_successor : state_index) : symbolic_step ->
+					(* Retrieve the transition (state, successor) *)
+					let combined_transition : combined_transition = self#get_combined_transition_between_states !current_state_index current_successor in
+
+					(* Compute *)
+					let symbolic_step : symbolic_step=
+						{source = !current_state_index ; transition = combined_transition }
+					in
+
+					(* Update current index for next step *)
+					current_state_index := current_successor;
+
+					(* Replace with the previously computed symbolic_step *)
+					symbolic_step
+				) rest_of_the_lasso
+				in
+
+				(*** NOTE: the last state of the lasso is actually the current value of !current_state_index ***)
+				final_symbolic_steps, !current_state_index
+		in
+
+		(* Call the recursive procedure and reverse the result *)
+		match backward_symbolic_run_rec target_state_index_for_backward_reconstruction with
+
+		(* Oops! *)
+		(*** NOTE: what if the lasso is non-empty in this situation?! ***)
+		| None -> raise Not_found
+
+		| Some symbolic_steps ->
+			(* Construct the structure symbolic_run *)
+			{
+				(* Reverse because states were added in reversed order *)
+				symbolic_steps = OCamlUtilities.list_append ( List.rev symbolic_steps) final_symbolic_steps;
+				(* Add final state *)
+				final_state = target_state_index;
+			}
 
 
 
@@ -1519,22 +1930,6 @@ let find_transitions_in state_space (scc : scc) : (state_index * combined_transi
 (** Backward run-computation *)
 (************************************************************)
 
-(*------------------------------------------------------------*)
-(** Table to color/mark states *)
-(*------------------------------------------------------------*)
-let colortable_create init_nb : ('a, bool) Hashtbl.t = Hashtbl.create init_nb
-
-let mark colortable element =
-	Hashtbl.replace colortable element true
-
-let unmark colortable element =
-	Hashtbl.replace colortable element false
-
-let is_marked colortable element : bool =
-	(*** NOTE: split the test in case OCaml does not evaluate the way we think it does ***)
-	if not (Hashtbl.mem colortable element) then false
-	else Hashtbl.find colortable element
-
 
 (*------------------------------------------------------------*)
 (** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; optionally one can pass a list of states (a "lasso") for which we already know the succession of state indices. the final (target) state is not included. Raise Not_found if run not found. *)
@@ -1548,6 +1943,27 @@ let backward_symbolic_run state_space (target_state_index : state_index) (lasso 
 		(* Otherwise: recompute *)
 		| None -> compute_predecessors_with_combined_transitions state_space
 	in
+
+	(*------------------------------------------------------------*)
+	(** Table to color/mark states *)
+	(*------------------------------------------------------------*)
+	let colortable_create init_nb : ('a, bool) Hashtbl.t = Hashtbl.create init_nb in
+
+	let mark colortable element =
+		Hashtbl.replace colortable element true
+	in
+
+	(*let unmark colortable element =
+		Hashtbl.replace colortable element false
+	in *)
+
+	let is_marked colortable element : bool =
+		(*** NOTE: split the test in case OCaml does not evaluate the way we think it does ***)
+		if not (Hashtbl.mem colortable element) then false
+		else Hashtbl.find colortable element
+	in
+
+	(*------------------------------------------------------------*)
 
 	(* Create a table to remember whether a state is marked or not *)
 	(*** NOTE: use the number of states in the state space as default init ***)
