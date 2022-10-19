@@ -133,7 +133,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 			let transitions_with_resets_and_b = List.map (fun (source_index, combined_transition, target_index ) -> 
 				(* Compute resets *)
 				(*** WARNING: StateSpace.get_resets only works for selected (normal) resets ***)
-				let resets = StateSpace.get_resets source_index combined_transition target_index in
+				let resets = StateSpace.get_resets model source_index combined_transition target_index in
 				
 				(* Find the 'b' (which is that of the target) *)
 				(*** NOTE: quite expensive, but much much less than computing resets (or any polyhedra operation) so we don't optimize here ***)
@@ -148,7 +148,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 			if verbose_mode_greater Verbose_high then(
 				self#print_algo_message Verbose_high ("All transitions with flags: \n " ^ (string_of_list_of_string_with_sep "\n -- \n" (List.map (fun (source_index, combined_transition, b, resets , target_index) ->
 					(StateSpace.string_of_state_index source_index)
-					^ " --" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition))
+					^ " --" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition))
 					^ "," ^ (string_of_bool b)
 					^ ",[" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names resets)) ^ "]"
 					^ "--> " 

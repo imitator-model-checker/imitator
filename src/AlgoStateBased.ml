@@ -1278,7 +1278,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
         List.iter (function
             | Delayed_update_recorded -> ()
             | Delayed_update_already_updated discrete_index ->
-                let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+                let action_index = StateSpace.get_action_from_combined_transition model combined_transition in
                 print_warning ("The discrete variable '" ^ model.variable_names discrete_index ^ "' is updated several times with different values for the same synchronized action '" ^ model.action_names action_index ^ "'. The behavior of the system is now unspecified.")
         ) delayed_update_results;
 
@@ -3488,7 +3488,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
 			 in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "`: ");
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "`: ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
 
@@ -3558,7 +3558,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* First let time elapse: arbitrarily take one *)
 				time			= chosen_time_elapsing;
 				(* Then take a discrete transition: keep the action *)
-				action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
+				action			= StateSpace.get_action_from_combined_transition model symbolic_step.transition;
 				(* Then reach the target state (before time elapsing in the target location) *)
 				target			= {
 					global_location= next_location;
@@ -4077,7 +4077,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 						(* Time elapsing equal to the impossible valuation exhibited earlier *)
 						time			= time_elapsed_i;
 						(* Then take a discrete transition: keep the action *)
-						action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
+						action			= StateSpace.get_action_from_combined_transition model transition_i_plus_one;
 						(* Then reach the target state *)
 						target			= {
 							global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;

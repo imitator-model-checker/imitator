@@ -168,7 +168,7 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 			(* Means state was not compatible *)
 			if not pi0compatible then(
 				if verbose_mode_greater Verbose_high then
-					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
 

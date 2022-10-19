@@ -313,9 +313,7 @@ let string_of_statespace_nature = function
 (**************************************************************)
 
 (** Get the (unique) action associated with a combined_transition (if entry undefined in the hashtable, then []) *)
-let get_action_from_combined_transition (combined_transition : combined_transition) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
+let get_action_from_combined_transition (model : AbstractModel.abstract_model) (combined_transition : combined_transition) =
 	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
 	let action_index =
 	try (
@@ -332,10 +330,7 @@ let get_action_from_combined_transition (combined_transition : combined_transiti
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 (*** TODO: allow for all resets ***)
-let get_resets (state_index : State.state_index) combined_transition (state_index' : State.state_index) =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
+let get_resets (model : AbstractModel.abstract_model) (state_index : State.state_index) combined_transition (state_index' : State.state_index) =
 	(* For all transitions involved in the combined transition *)
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
@@ -598,7 +593,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(** Get all combined transitions from a state_index *)
-	method get_transitions_of_state state_index =
+	method private get_transitions_of_state state_index =
 		(* Print some information *)
 		print_message Verbose_total ("Entering StateSpace.get_transitions_of_state");
 
@@ -612,7 +607,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 
-	method get_combined_transition_between_states (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
+	method private get_combined_transition_between_states (source_state_index : state_index) (target_state_index : state_index) : combined_transition =
 		(* Get all successors of source_state_index *)
 		let successors = self#get_successors_with_combined_transitions source_state_index in
 
@@ -1324,7 +1319,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
-	method new_location_index location =
+	method private new_location_index location =
 		let new_index = try (
 			Hashtbl.find state_space.index_of_locations location
 		) with Not_found -> (
@@ -1344,7 +1339,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		new_index
 
 	(** Perform the insertion of a new state in a state space *)
-	method insert_state location_index (new_state : state) =
+	method private insert_state location_index (new_state : state) =
 		(* Compute the new state index *)
 		let new_state_index = !(state_space.next_state_index) in
 		(* Retrieve the location and the constraint *)
@@ -1377,7 +1372,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
-	method replace_constraint (state_index : State.state_index) px_linear_constraint =
+	method private replace_constraint (state_index : State.state_index) px_linear_constraint =
 		(* Copy to avoid side-effects *)
 		let linear_constraint_copy = LinearConstraint.px_copy px_linear_constraint in
 		try (
@@ -1627,7 +1622,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 
 	(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
-	method merge_states_ulrich merger_state_index merged : unit =
+	method private merge_states_ulrich merger_state_index merged : unit =
 		(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *)
 		print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 

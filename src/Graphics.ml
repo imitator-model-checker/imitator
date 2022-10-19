@@ -1325,7 +1325,7 @@ let dot_colors = [
 (* Convert a graph to a dot file *)
 let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	(* Retrieve the model *)
-	let model = Input.get_model () in
+	let model : AbstractModel.abstract_model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1528,7 +1528,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
-					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+					let action_index = StateSpace.get_action_from_combined_transition model combined_transition in
 					
 					(*** HACK! ***)
 					let is_nosync action_name =
@@ -1581,7 +1581,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
-					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+					let action_index = StateSpace.get_action_from_combined_transition model combined_transition in
 					
 					(*** HACK! ***)
 					let is_nosync action_name =

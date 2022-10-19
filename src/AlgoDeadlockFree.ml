@@ -114,7 +114,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
+				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
 			let precondition = DeadlockExtra.dl_weakest_precondition state_space state_index combined_transition state_index' in
@@ -278,7 +278,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 				let successors = StateSpace.get_successors_with_combined_transitions state_space state_index in
 				(* Print each of them *)
 				List.iter (fun (combined_transition, state_index') -> 
-					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ ")");
+					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ ")");
 				) successors;
 			) all_state_indexes;
 
@@ -291,7 +291,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 				let predecessors = Array.get predecessors_table state_index in
 				(* Print each of them *)
 				List.iter (fun (combined_transition, state_index') -> 
-					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ ")");
+					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ ")");
 				) predecessors;
 			) all_state_indexes;
 		); (* end if verbose_mode >= high *)
