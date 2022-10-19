@@ -23,19 +23,18 @@ open AbstractAlgorithm
 
 
 (************************************************************)
+(************************************************************)
 (** Type definitions *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Combined transition *)
 (************************************************************)
 
 (** A combined transition is a list of transitions (one for each automaton involved) *)
 type combined_transition = AbstractModel.transition_index list
 
-
-(************************************************************)
-(** Functions independent from state space *)
-(************************************************************)
-
-(** Get the (unique) action associated with a combined_transition *)
-val get_action_from_combined_transition : combined_transition -> action_index
 
 
 (************************************************************)
@@ -146,6 +145,21 @@ type state_space
 
 (** An SCC is just a list of states *)
 type scc = state_index list
+
+
+
+(************************************************************)
+(************************************************************)
+(** Class-independent functions *)
+(************************************************************)
+(************************************************************)
+
+(**************************************************************)
+(* Class-independent functions on combined transitions *)
+(**************************************************************)
+
+(** Get the (unique) action associated with a combined_transition *)
+val get_action_from_combined_transition : combined_transition -> action_index
 
 
 (************************************************************)
