@@ -100,7 +100,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 		self#reset_minicache;
 
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 		
 		begin
 		match addition_result with
@@ -155,7 +155,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 				scc_search#increment;
 				scc_search#start;
 
-				let scc_option = StateSpace.reconstruct_scc state_space source_state_index in
+				let scc_option = state_space#reconstruct_scc source_state_index in
 				
 				(* Statistics *)
 				scc_search#stop;
@@ -265,7 +265,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 			self#print_algo_message Verbose_standard "Found an accepting cycle.";
 			
 			if verbose_mode_greater Verbose_low then(
-				let global_location : DiscreteState.global_location = (StateSpace.get_state state_space state_index).global_location in
+				let global_location : DiscreteState.global_location = (state_space#get_state state_index).global_location in
 				
 				self#print_algo_message Verbose_low ("Cycling along a SCC of length " ^ (string_of_int (List.length scc)) ^ " through location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location) ^ "");
 			);
@@ -280,7 +280,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 				let last_state : state_index = OCamlUtilities.list_last scc in
 				
 				if verbose_mode_greater Verbose_low then(
-					let global_location : DiscreteState.global_location = (StateSpace.get_state state_space last_state).global_location in
+					let global_location : DiscreteState.global_location = (state_space#get_state last_state).global_location in
 					
 					self#print_algo_message Verbose_low ("Reconstructing the run until state `" ^ (string_of_int last_state) ^ "` of location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location) ^ "");
 				);

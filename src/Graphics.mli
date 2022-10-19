@@ -46,4 +46,4 @@ val dot : string -> string -> string -> (string option)
 
 
 (** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
-val draw_statespace_if_requested : StateSpace.state_space -> string -> string -> unit
+val draw_statespace_if_requested : StateSpace.stateSpace -> string -> string -> unit

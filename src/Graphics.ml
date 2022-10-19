@@ -1323,15 +1323,15 @@ let dot_colors = [
 ]
 
 (* Convert a graph to a dot file *)
-let dot_of_statespace state_space algorithm_name (*~fancy*) =
+let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : string) (*~fancy*) =
 	(* Retrieve the model *)
 	let model : AbstractModel.abstract_model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
 	(* Retrieve info from the graph *)
-	let transitions = StateSpace.get_transitions_table state_space in
-	let initial_state_index = get_initial_state_index state_space in
+	let transitions = state_space#get_transitions_table in
+	let initial_state_index = state_space#get_initial_state_index in
 	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
@@ -1425,8 +1425,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
 		)*)
 		^ "\n *"
-		^ "\n * " ^ (string_of_int (nb_states state_space)) ^ " states and "
-			^ (string_of_int (StateSpace.nb_transitions state_space)) ^ " transitions"
+		^ "\n * " ^ (string_of_int (state_space#nb_states)) ^ " states and "
+			^ (string_of_int (state_space#nb_transitions)) ^ " transitions"
 		^ "\n *" 
 		^ "\n * " ^ Constants.program_name ^ " terminated " ^ (after_seconds ())
 		^ "\n************************************************************/"
@@ -1437,7 +1437,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes…";
 
 	(* Retrieve the states *)
-	let state_indexes = StateSpace.all_state_indexes state_space in
+	let state_indexes = state_space#all_state_indexes in
 	
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
@@ -1456,7 +1456,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		(let string_states = ref "" in
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
-			let state = StateSpace.get_state state_space state_index in
+			let state = state_space#get_state state_index in
 			let global_location, linear_constraint = state.global_location, state.px_constraint in
 
 			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
@@ -1616,14 +1616,14 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		(*** NOTE: here again, we (might) lose a little efficiency to rather order by increasing state id ***)
 		^ (List.fold_left (fun current_string state_index ->
 			(* Get the actual state *)
-			let state = StateSpace.get_state state_space state_index in
+			let state = state_space#get_state state_index in
 			let global_location, linear_constraint = state.global_location, state.px_constraint in
 			
 (*			(* Get the location *)
 			let global_location = get_location state_space location_index in*)
 			
 			(* Get the location index *)
-			let location_index = StateSpace.get_global_location_index state_space state_index in
+			let location_index = state_space#get_global_location_index state_index in
 			
 			(* Check whether is target *)
 			let is_target = is_target_state state in
@@ -1806,7 +1806,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	
 
 (** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
-let draw_statespace_if_requested state_space algorithm_name radical : unit =
+let draw_statespace_if_requested (state_space : StateSpace.stateSpace) algorithm_name radical : unit =
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -1816,7 +1816,7 @@ let draw_statespace_if_requested state_space algorithm_name radical : unit =
 	(* Do not write if no dot AND no log *)
 	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
 		(* Preliminary check: the state space shall not be empty *)
-		if (StateSpace.nb_states state_space) = 0 then (
+		if (state_space#nb_states) = 0 then (
 			print_warning "State space is empty: not drawing";
 		)else(
 

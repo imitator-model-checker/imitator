@@ -491,7 +491,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(** Return the state of a state_index *)
-	method get_state state_index =
+	method get_state state_index : State.state =
 		(* Statistics *)
 		counter_get_state#increment;
 		counter_get_state#start;

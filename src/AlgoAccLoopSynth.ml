@@ -54,7 +54,7 @@ class algoAccLoopSynth (model : AbstractModel.abstract_model) (state_predicate :
 	method is_accepting scc =
 		(* Accepting if at least one state in the SCC matches the state predicate *)
 		List.exists (fun state_index -> 
-			State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space state_index)
+			State.match_state_predicate model.is_accepting state_predicate (state_space#get_state state_index)
 		) scc
 
 

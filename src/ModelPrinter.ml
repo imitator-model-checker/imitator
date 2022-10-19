@@ -1427,11 +1427,11 @@ let debug_string_of_combined_transition model combined_transition = string_of_li
 )
 
 (** Convert a symbolic run to a string (for debug-purpose) *)
-let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
+let debug_string_of_symbolic_run model (state_space : StateSpace.stateSpace) (symbolic_run : StateSpace.symbolic_run) =
 	(* Iterate *)
 	let steps_string = string_of_list_of_string_with_sep "\n" (List.map (fun (symbolic_step : StateSpace.symbolic_step)  ->
 		(* Get actual state *)
-		let state = StateSpace.get_state state_space symbolic_step.source in
+		let state = state_space#get_state symbolic_step.source in
 	
 		  (" " ^ (string_of_state model state))
 		^ ("\n | ")
@@ -1441,7 +1441,7 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 	) symbolic_run.symbolic_steps) in
 	
 	(* Get the state *)
-	let target_state = StateSpace.get_state state_space symbolic_run.final_state in
+	let target_state = state_space#get_state symbolic_run.final_state in
 	
 	(* Add target and return *)
 	steps_string ^ (" " ^ (string_of_state model target_state))

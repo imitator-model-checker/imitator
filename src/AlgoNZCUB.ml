@@ -91,7 +91,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 		(* Print it *)
 		if verbose_mode_greater Verbose_medium then(
 			let verbose_string_of_state_index state_index =
-				let state = StateSpace.get_state state_space state_index in
+				let state = state_space#get_state state_index in
 				"\n\ts_" ^ (string_of_int state_index) ^ "{" ^ (ModelPrinter.string_of_state model state) ^ "}"
 			in
 			self#print_algo_message Verbose_medium ("\nSCC: [" ^ (string_of_list_of_string_with_sep "\n\t- " (List.map verbose_string_of_state_index scc)) ^ "\n]");
@@ -105,7 +105,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 		
 		(* Compute the "b" variable in [WSWLSDYL14] *)
 		let states_and_b = List.map (fun state_index ->
-			let state_constraint = (StateSpace.get_state state_space state_index).px_constraint in
+			let state_constraint = (state_space#get_state state_index).px_constraint in
 			
 			(* b is true if time can elapse if the reset_clock is non-necessarily 0 *)
 			let b = not (LinearConstraint.px_is_zero_in reset_clock state_constraint) in
@@ -127,7 +127,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 		)else(
 
 			(* Find transitions in the scc *)
-			let all_transitions = StateSpace.find_transitions_in state_space scc in
+			let all_transitions = state_space#find_transitions_in scc in
 			
 			(* Compute the set of clocks that must be reset *)
 			let transitions_with_resets_and_b = List.map (fun (source_index, combined_transition, target_index ) -> 
@@ -164,7 +164,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 				(* 1. We check whether the clock is not unbounded in one of the locations *)
 				if List.exists (fun state_index ->
 					(* Let us find the location *)
-					let global_location = (StateSpace.get_state state_space state_index).global_location in
+					let global_location = (state_space#get_state state_index).global_location in
 					
 					(* Construct the invariant *)
 					let invariant = AlgoStateBased.compute_valuated_invariant global_location in

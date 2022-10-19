@@ -422,7 +422,7 @@ class algoNZCUBdist (model : AbstractModel.abstract_model) =
 				result				= !final_good_or_bad_constraint;
 				
 				(* Explored state space *)
-				state_space			= StateSpace.make 0; (*** NOTE: dummy value! ***)
+				state_space			= new StateSpace.stateSpace 0; (*** NOTE: dummy value! ***)
 				
 				(* Total computation time of the algorithm *)
 				computation_time	= time_from start_time;
@@ -484,7 +484,7 @@ class algoNZCUBdist (model : AbstractModel.abstract_model) =
 					let guessed_nb_transitions = guessed_nb_states * !nb_actions in 
 					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 					(* Create the state space *)
-					state_space <- StateSpace.make guessed_nb_transitions;
+					state_space <- new StateSpace.stateSpace guessed_nb_transitions;
 
 					(* Check if the initial state should be kept according to the algorithm *)
 					(* let initial_state_added = self#process_initial_state init_state in *)

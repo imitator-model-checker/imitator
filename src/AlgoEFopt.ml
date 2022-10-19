@@ -466,7 +466,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 		(* Only process if we have to *)
 		if keep_processing then(
 			(* Try to add the new state to the state space *)
-			let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+			let addition_result = state_space#add_state options#comparison_operator new_state in
 			
 			begin
 			match addition_result with

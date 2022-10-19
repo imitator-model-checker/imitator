@@ -79,7 +79,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		self#print_algo_message_newline Verbose_low ("found a state with no successor");
 		
 		(* Get the state *)
-		let px_constraint = (StateSpace.get_state state_space state_index).px_constraint in
+		let px_constraint = (state_space#get_state state_index).px_constraint in
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
@@ -96,7 +96,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		self#print_algo_message_newline Verbose_low ("found a state in a loop");
 		
 		(* Get the state *)
-		let px_constraint = (StateSpace.get_state state_space state_index).px_constraint in
+		let px_constraint = (state_space#get_state state_index).px_constraint in
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
@@ -114,8 +114,8 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 
 		(*** NOTE: code copied from AlgoIMK ***)
 		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
-		let initial_state_index = StateSpace.get_initial_state_index state_space in
-		let initial_state = StateSpace.get_state state_space initial_state_index in
+		let initial_state_index = state_space#get_initial_state_index in
+		let initial_state = state_space#get_state initial_state_index in
 		(* Retrieve the constraint of the initial state *)
 		let px_constraint = initial_state.px_constraint in
 		

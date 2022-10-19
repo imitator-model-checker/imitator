@@ -106,7 +106,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
 		
 		(* Get the location and the constraint of s *)
-		let state : state = StateSpace.get_state state_space state_index in
+		let state : state = state_space#get_state state_index in
 		let s_location, s_constraint = state.global_location, state.px_constraint in
 		
 		(* For all state s' in the successors of s *)
@@ -200,7 +200,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		(* For all state s in post^n *)
 		List.iter (fun state_index ->
 			(* Retrieve all successors of this state with their action *)
-			let succs_of_s = StateSpace.get_successors_with_combined_transitions state_space state_index in
+			let succs_of_s = state_space#get_successors_with_combined_transitions state_index in
 			
 			let p_bad_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			
@@ -261,10 +261,10 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		self#print_algo_message_newline Verbose_low "Retrieving successors…";
 
 		(* Retrieve predecessors *)
-		let predecessors_table = StateSpace.compute_predecessors_with_combined_transitions state_space in
+		let predecessors_table = state_space#compute_predecessors_with_combined_transitions in
 		
 		(* Retrieve all state indexes *)
-		let all_state_indexes = StateSpace.all_state_indexes state_space in
+		let all_state_indexes = state_space#all_state_indexes in
 		
 		(*------------------------------------------------------------*)
 		(* Print successors and predecessors *)
@@ -275,7 +275,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 			List.iter (fun state_index ->
 				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
 				(* Retrieve successors *)
-				let successors = StateSpace.get_successors_with_combined_transitions state_space state_index in
+				let successors = state_space#get_successors_with_combined_transitions state_index in
 				(* Print each of them *)
 				List.iter (fun (combined_transition, state_index') -> 
 					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ ")");
@@ -342,7 +342,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 				if not (disabled#mem state_index) then(
 					
 					(* Retrieve the state constraint *)
-					let s_constraint = (StateSpace.get_state state_space state_index).px_constraint in
+					let s_constraint = (state_space#get_state state_index).px_constraint in
 					
 					(* Project onto the parameters *)
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
@@ -399,7 +399,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 
 			List.iter (fun state_index ->
 				(* Find its successors *)
-				let successors = StateSpace.get_successors_with_combined_transitions state_space state_index in
+				let successors = state_space#get_successors_with_combined_transitions state_index in
 				(* Remove the disabled successors *)
 				let not_disabled_successors = List.filter (fun (_, state_index) -> not (List.mem state_index disabled_list)) successors in
 				
@@ -419,7 +419,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 				if not (newly_marked#mem state_index) then(
 					
 					(* Retrieve the state constraint *)
-					let s_constraint = (StateSpace.get_state state_space state_index).px_constraint in
+					let s_constraint = (state_space#get_state state_index).px_constraint in
 					(* Project onto the parameters *)
 					(*** TO OPTIMIZE: this projection was (maybe) already computed earlier; use a cache??? ***)
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in

@@ -306,7 +306,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 
 	(* Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
-        let source_state = StateSpace.get_state state_space state_index in
+        let source_state = state_space#get_state state_index in
         let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
@@ -315,7 +315,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 		
 	(* Obtain the maximum time from a state index *)
 	method private state_index_to_max_time state_index =
-        let source_state = StateSpace.get_state state_space state_index in
+        let source_state = state_space#get_state state_index in
         let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
@@ -326,7 +326,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 	(* Helper method to print state information *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private print_state_info state_index =
-        let source_state = StateSpace.get_state state_space state_index in
+        let source_state = state_space#get_state state_index in
         let source_constraint = source_state.px_constraint in
         print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
         print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
@@ -487,9 +487,9 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 			    match options#merge_algorithm with
                     | Merge_reconstruct
                     | Merge_onthefly    ->
-                        StateSpace.merge state_space list_pq;
+                        state_space#merge list_pq;
                     | Merge_212 ->
-                        let eaten_states = StateSpace.merge212 state_space list_pq in
+                        let eaten_states = state_space#merge212 list_pq in
                         list_diff list_pq eaten_states;
                     | Merge_none ->
                         list_pq
@@ -620,7 +620,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 			)
             else (
                 (* Check if this is the target location *)
-                let state = StateSpace.get_state state_space source_id in
+                let state = state_space#get_state source_id in
                 let source_location, source_constraint = state.global_location, state.px_constraint in
                 if self#is_target_state state then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
@@ -718,7 +718,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                                 (* Only add states if the time to reach does not exceed the minimum time *)
                                 if suc_time <= !best_time_bound then (
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
-                                    let suc_state = StateSpace.get_state state_space suc_id in
+                                    let suc_state = state_space#get_state suc_id in
                                     if self#is_target_state suc_state then (
 										
 										if (options#merge_algorithm <> Merge_none) && (options#merge_EFsynthminpq_heuristic = Merge_EFsynthminpq_targetseen) then can_merge := true;
@@ -854,7 +854,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 		
 		begin
 		match addition_result with

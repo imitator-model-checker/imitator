@@ -2043,7 +2043,7 @@ let compute_admissible_valuations_after_transition
 
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
-let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
+let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -2182,7 +2182,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 	(* Get the final state *)
 	let target_state_index = symbolic_run.final_state in
-	let target_state = StateSpace.get_state state_space target_state_index in
+	let target_state = state_space#get_state target_state_index in
 
 	(* Reminder: symbolic_run contains n steps, followed by a final state (called n+1 in the following) *)
 
@@ -2238,7 +2238,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 		let symbolic_step_n : StateSpace.symbolic_step 				= List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
 		let transition_n_n_plus_1 : StateSpace.combined_transition	= symbolic_step_n.transition in
-		let state_n			: State.state							= StateSpace.get_state state_space symbolic_step_n.source in
+		let state_n			: State.state							= state_space#get_state symbolic_step_n.source in
 
 		(* Call dedicated function *)
 		let admissible_initial_valuations : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n transition_n_n_plus_1 target_state in
@@ -2360,7 +2360,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 
 		(* Get state n *)
-		let state_n : State.state = StateSpace.get_state state_space symbolic_step_n.source in
+		let state_n : State.state = state_space#get_state symbolic_step_n.source in
 
 		(* Get the location and zone for state_n *)
 		let location_n	: DiscreteState.global_location				= state_n.global_location in
@@ -2393,7 +2393,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 			let symbolic_step_n_minus_1	: StateSpace.symbolic_step 			= List.nth symbolic_run.symbolic_steps (n - 1) in
 			let transition_n_minus_1_n	: StateSpace.combined_transition	= symbolic_step_n_minus_1.transition in
-			let state_n_minus_1			: State.state						= StateSpace.get_state state_space symbolic_step_n_minus_1.source in
+			let state_n_minus_1			: State.state						= state_space#get_state symbolic_step_n_minus_1.source in
 
 			(* Call dedicated function *)
 			let admissible_initial_valuations_at_n : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n_minus_1 transition_n_minus_1_n state_n in
@@ -2490,7 +2490,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Build the initial state of the run *)
 	let run_initial_state : State.concrete_state = {
 		(* The global location is that of the symbolic initial state *)
-		global_location = (StateSpace.get_state state_space initial_state_index).global_location;
+		global_location = (state_space#get_state initial_state_index).global_location;
 		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
 		px_valuation =
 			(* Case empty list: take from final state *)
@@ -2550,7 +2550,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 (************************************************************)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a concrete run *)
 (************************************************************)
-let reconstruct_counterexample state_space (target_state_index : State.state_index) : StateSpace.concrete_run =
+let reconstruct_counterexample (state_space : StateSpace.stateSpace) (target_state_index : State.state_index) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -2558,16 +2558,16 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
 
 	(* First build the predecessors table *)
-	let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
+	let predecessors = state_space#compute_predecessors_with_combined_transitions in
 
 	(* Print some information *)
 	print_message Verbose_medium "Predecessor table built";
 
 	(* Also retrieve the initial state *)
-	let initial_state_index = StateSpace.get_initial_state_index state_space in
+	let initial_state_index = state_space#get_initial_state_index in
 
 	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
-	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
+	let symbolic_run : StateSpace.symbolic_run = state_space#backward_symbolic_run target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then (
@@ -2578,7 +2578,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	);
 
 	(* Get the final state *)
-	let target_state = StateSpace.get_state state_space target_state_index in
+	let target_state = state_space#get_state target_state_index in
 
 	(* Exhibit a concrete clock+parameter valuation in the final state *)
 	let concrete_target_px_valuation : LinearConstraint.px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
@@ -2736,7 +2736,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(************************************************************)
 
 	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
-	val mutable state_space = StateSpace.make 0
+	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
 	(* Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
@@ -3219,14 +3219,14 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		counter_post_from_one_state#start;
 
 		(* Source location: static *)
-		let source_location = (StateSpace.get_state state_space source_state_index).global_location in
+		let source_location = (state_space#get_state source_state_index).global_location in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
-		let recompute_source_constraint () = (StateSpace.get_state state_space source_state_index).px_constraint in
+		let recompute_source_constraint () = (state_space#get_state source_state_index).px_constraint in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			let source_state = StateSpace.get_state state_space source_state_index in
+			let source_state = state_space#get_state source_state_index in
 			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from "
@@ -3418,7 +3418,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Iterate on the states *)
 				List.iter (fun successor ->
 					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
-					StateSpace.increment_nb_gen_states state_space;
+					state_space#increment_nb_gen_states;
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
@@ -3473,7 +3473,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 (*  		print_message Verbose_total ("About to update the state space…");  *)
 
 		(* Update state space *)
-		StateSpace.add_transition state_space (source_state_index, combined_transition, target_state_index);
+		state_space#add_transition (source_state_index, combined_transition, target_state_index);
 
 		(* Print some information *)
 (*  		print_message Verbose_total ("State space updated");  *)
@@ -3481,7 +3481,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
  		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
 			(* Retrieve the target state *)
-			let new_target_state = StateSpace.get_state state_space target_state_index in
+			let new_target_state = state_space#get_state target_state_index in
 
 			let beginning_message = match addition_result with
 				| StateSpace.New_state _ -> "NEW STATE"
@@ -3540,12 +3540,12 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* Get the next location *)
 			(*** NOTE: super bad prog! we iterate on the list, and we use `nth` to get the next element :'( ***)
 			let next_state_index = if !current_position < List.length symbolic_steps - 1 then (List.nth symbolic_steps (!current_position + 1)).source else target_state_index in
-			let next_location : DiscreteState.global_location = (StateSpace.get_state state_space next_state_index).global_location in
+			let next_location : DiscreteState.global_location = (state_space#get_state next_state_index).global_location in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
 				(* Get the current location *)
-				let current_location : DiscreteState.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+				let current_location : DiscreteState.global_location = (state_space#get_state symbolic_step.source).global_location in
 				print_message Verbose_high ("Building concrete (but impossible) transition between source location " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
 				print_message Verbose_high (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display current_location);
 				print_message Verbose_high ("  and target location " ^ (string_of_int (!current_position + debug_offset + 1)) ^ ":");
@@ -3575,7 +3575,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			if verbose_mode_greater Verbose_medium then(
 				if verbose_mode_greater Verbose_total then(
 					(* Get the current location *)
-					let current_location : DiscreteState.global_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+					let current_location : DiscreteState.global_location = (state_space#get_state symbolic_step.source).global_location in
 					print_message Verbose_total ("Current location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display current_location) ^ "");
 					print_message Verbose_total ("Time elapsing: " ^ (NumConst.string_of_numconst chosen_time_elapsing) ^ "");
 				);
@@ -3683,7 +3683,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* Get the state index at position i *)
 			let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 			(* Get the p-constraint at position i *)
-			let state_i : State.state = StateSpace.get_state state_space state_index_i in
+			let state_i : State.state = state_space#get_state state_index_i in
 			let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_i.px_constraint in
 			(* Get the location at position i *)
 			let global_location_i = state_i.global_location in
@@ -3728,7 +3728,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Intersect with the px-constraint to then obtain px-valuation *)
 
 				(* Get the px-constraint *)
-				let pxconstraint_i = (StateSpace.get_state state_space (nth_state_index_of_symbolic_run symbolic_run !i)).px_constraint in
+				let pxconstraint_i = (state_space#get_state (nth_state_index_of_symbolic_run symbolic_run !i)).px_constraint in
 				(* Convert the p-valuation to a constraint *)
 				let concrete_p_valuation_constraint = LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , concrete_p_valuation parameter_index) model.parameters ) in
 				(* Convert to px-dimensions *)
@@ -3889,7 +3889,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let state_index_i : state_index = nth_state_index_of_symbolic_run symbolic_run !i in
 
 			(* Get the x-constraint at position i *)
-			let state_i : State.state = StateSpace.get_state state_space state_index_i in
+			let state_i : State.state = state_space#get_state state_index_i in
 			let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive state_i.px_constraint in
 			(* Get the location at position i *)
 			let global_location_i : DiscreteState.global_location = state_i.global_location in
@@ -3962,11 +3962,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					(* Get location i *)
-					let location_i : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+					let location_i : DiscreteState.global_location = (state_space#get_state state_index_i).global_location in
 
 					(* Get location i+1 *)
 					let state_index_i_plus_1 : state_index = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
-					let location_i_plus_1 : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
+					let location_i_plus_1 : DiscreteState.global_location = (state_space#get_state state_index_i_plus_1).global_location in
 
 					print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display location_i) ^ "` and `" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display location_i_plus_1) ^ "`:");
 				);
@@ -3981,7 +3981,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				let concrete_x_valuation = LinearConstraint.x_nnconvex_exhibit_point difference in
 
 				(* Get the last location *)
-				let last_global_location : DiscreteState.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+				let last_global_location : DiscreteState.global_location = (state_space#get_state state_index_i).global_location in
 
 				(* Construct the px-valuation *)
 				(*** NOTE: technically (internally), the concrete_x_valuation already contains the parameter valuations! but for type soundness, we pretend to take parameters from pval ***)
@@ -4080,7 +4080,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 						action			= StateSpace.get_action_from_combined_transition model transition_i_plus_one;
 						(* Then reach the target state *)
 						target			= {
-							global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
+							global_location= (state_space#get_state state_i_plus_one).global_location;
 							px_valuation   = concrete_px_valuation_i_after_time_elapsing;
 						}
 					}
@@ -4169,7 +4169,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(* Part 0: predecessors *)
 		(*------------------------------------------------------------*)
 		(* First build the predecessors table *)
-		let predecessors : StateSpace.predecessors_table = StateSpace.compute_predecessors_with_combined_transitions state_space in
+		let predecessors : StateSpace.predecessors_table = state_space#compute_predecessors_with_combined_transitions in
 
 		(* Print some information *)
 		print_message Verbose_medium "Predecessor table built";
@@ -4179,10 +4179,10 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(* Part 0b: preprocessing *)
 		(*------------------------------------------------------------*)
 		(* Retrieve the initial state *)
-		let initial_state_index = StateSpace.get_initial_state_index state_space in
+		let initial_state_index = state_space#get_initial_state_index in
 
 		(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
-		let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
+		let symbolic_run : StateSpace.symbolic_run = state_space#backward_symbolic_run target_state_index [] (* temporary *) initial_state_index (Some predecessors) in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then (
@@ -4193,7 +4193,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		);
 
 		(* Get the final state *)
-		let target_state : State.state = StateSpace.get_state state_space target_state_index in
+		let target_state : State.state = state_space#get_state target_state_index in
 
 
 
@@ -4293,7 +4293,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		begin
 		match options#states_limit with
 			| None -> ()
-			| Some limit -> if StateSpace.nb_states state_space > limit then(
+			| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
 				raise (BFS_Limit_detected States_limit_reached)
 			)
@@ -4337,7 +4337,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		begin
 		match options#states_limit with
 			| None -> ()
-			| Some limit -> if StateSpace.nb_states state_space > limit then(
+			| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
 				raise (BFS_Limit_detected States_limit_reached)
 			)
@@ -4447,14 +4447,14 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		let rank_hashtable = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 
 
-		let initial_rank state_index state_space =
+		let initial_rank state_index (state_space : StateSpace.stateSpace) =
 			print_message Verbose_low ("Access Initial Ranking!");
 			if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 			);
 			(* popped state information *)
 			(* location: static , constraint*)
-			let state = StateSpace.get_state state_space state_index in
+			let state = state_space#get_state state_index in
 			let constr = state.px_constraint in
 
 			if verbose_mode_greater Verbose_low then(
@@ -4508,7 +4508,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* Print some information *)
 			print_message Verbose_total ("Entering checkLargerVisitedLocation(" ^ (string_of_int state_index1) ^ ")…");
 
-			let state = StateSpace.get_state state_space state_index1 in
+			let state = state_space#get_state state_index1 in
 			let loc1, constr1 = state.global_location, state.px_constraint in
 
 			(* Print some information *)
@@ -4520,7 +4520,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 						(* Print some information *)
 						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
 
-						let state = StateSpace.get_state state_space state_index2 in
+						let state = state_space#get_state state_index2 in
 						let loc2, constr2 = state.global_location, state.px_constraint in
 						if (DiscreteState.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
 						then  raise (FoundLargerZone);
@@ -4532,11 +4532,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 
 		let getSmallerVisitedLocations state_index1 rank_hashtable =
-			let state = StateSpace.get_state state_space state_index1 in
+			let state = state_space#get_state state_index1 in
 			let loc1, constr1 = state.global_location, state.px_constraint in
 
 			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index ->
-				let state = StateSpace.get_state state_space state_index2 in
+				let state = state_space#get_state state_index2 in
 				let loc2, constr2 = state.global_location, state.px_constraint in
 				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
 				if (DiscreteState.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
@@ -4647,7 +4647,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 				 	let successor = List.nth !successors !elem in
 
-				 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+				 	let nextSuccessors = (state_space#get_successors successor) in
 				 	List.iter (fun successor2 ->
 
 				 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 ) (* && (successor2 <> state_index) *)
@@ -4841,9 +4841,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
 							| Int r ->
 
-										let state = StateSpace.get_state state_space state_index in
+										let state = state_space#get_state state_index in
 										let loc1, constr1 = state.global_location, state.px_constraint in
-										let state = StateSpace.get_state state_space x in
+										let state = state_space#get_state x in
 										let loc2, constr2 = state.global_location, state.px_constraint in
 										(
 										if not (LinearConstraint.px_is_leq constr2 constr1)
@@ -5065,7 +5065,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
                 				()
             	| Merge_212 ->
             	    let new_states_after_merging = queue in
-                    let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+                    let eaten_states = state_space#merge212 !new_states_after_merging in
                     new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 
                     (match options#exploration_order with
@@ -5077,9 +5077,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := StateSpace.merge state_space !queue;
+                    queue := state_space#merge !queue;
                     (match options#exploration_order with
-                        | Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+                        | Exploration_queue_BFS_RS -> hashtbl_filter (state_space#test_state_index) rank_hashtable
                         | _ -> ();
                     )
             end;
@@ -5144,8 +5144,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 
 		print_message Verbose_standard (
-			let nb_states = StateSpace.nb_states state_space in
-			let nb_transitions = StateSpace.nb_transitions state_space in
+			let nb_states = state_space#nb_states in
+			let nb_transitions = state_space#nb_transitions in
 			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
 			"\n" ^ fixpoint_str ^ (*" at a depth of "
 			^ (string_of_int bfs_current_depth) ^ ""
@@ -5274,9 +5274,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+                new_states_after_merging := state_space#merge !new_states_after_merging;
             | Merge_212 ->
-                let eaten_states = StateSpace.merge212 state_space !new_states_after_merging in
+                let eaten_states = state_space#merge212 !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;
             | Merge_none ->
                 ()
@@ -5298,7 +5298,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* If acyclic option: empty the list of already reached states for comparison with former states *)
 			if options#acyclic then(
 				print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
-				StateSpace.empty_states_for_comparison state_space;
+				state_space#empty_states_for_comparison;
 			);
 
 	(**********************************************************************************************************************)
@@ -5429,8 +5429,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 
 		print_message Verbose_standard (
-			let nb_states = StateSpace.nb_states state_space in
-			let nb_transitions = StateSpace.nb_transitions state_space in
+			let nb_states = state_space#nb_states in
+			let nb_transitions = state_space#nb_transitions in
 			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
 			"\n" ^ fixpoint_str ^ " at a depth of "
 			^ (string_of_int bfs_current_depth) ^ ""
@@ -5494,7 +5494,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
 		(* Create the state space *)
-		state_space <- StateSpace.make guessed_nb_transitions;
+		state_space <- new StateSpace.stateSpace guessed_nb_transitions;
 
 		(* Check whether the algorithm should immediately terminate because of an unsatisfiable initial state *)
 		let termination_at_initial_state : Result.imitator_result option = self#try_termination_at_initial_state in
@@ -5529,14 +5529,14 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		)else( *)
 
 			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match StateSpace.add_state state_space AbstractAlgorithm.No_check init_state with
+			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check init_state with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
 				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
 			in
 
 			(* Increment the number of computed states *)
-			StateSpace.increment_nb_gen_states state_space;
+			state_space#increment_nb_gen_states;
 
 			(* Call generic method handling BFS *)
 			begin

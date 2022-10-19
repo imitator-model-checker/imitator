@@ -300,17 +300,17 @@ let model_statistics () =
 
 
 (* Return a string made of some statistics for the state space *)
-let statespace_statistics state_space total_time =
+let statespace_statistics (state_space : StateSpace.stateSpace) total_time =
 	(* Speed: number of states computed and still in the state space *)
-	let nb_states = StateSpace.nb_states state_space in
+	let nb_states = state_space#nb_states in
 	let states_per_second = (float_of_int nb_states) /. total_time in
 	
 	(* Speed: number of states computed, even if not kept (because merged, deleted…) *)
-	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
+	let nb_gen_states = state_space#get_nb_gen_states in
 	let gen_states_per_second = (float_of_int nb_gen_states) /. total_time in
 	
 	    "Number of states                        : " ^ (string_of_int nb_states)
-	^ "\nNumber of transitions                   : " ^ (string_of_int (StateSpace.nb_transitions state_space))
+	^ "\nNumber of transitions                   : " ^ (string_of_int (state_space#nb_transitions))
 	^ "\nNumber of computed states               : " ^ (string_of_int nb_gen_states)
 	^ "\nTotal computation time                  : " ^ (string_of_seconds total_time)
 	^ "\nStates/second in state space            : " ^ (round1_float states_per_second) ^ " (" ^ (string_of_int nb_states) ^ "/" ^ (string_of_seconds total_time) ^ ")"
@@ -894,7 +894,7 @@ let print_state_space_statistics total_time state_space =
 		print_message Verbose_standard "Statistics: Graph";
 		print_message Verbose_standard "------------------------------------------------------------";*)
 (* 		print_message Verbose_standard (StateSpace.get_statistics ()); *)
-		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
+		print_message Verbose_standard (state_space#get_statistics_states);
 		
 	)
 

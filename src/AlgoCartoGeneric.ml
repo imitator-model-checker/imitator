@@ -27,6 +27,7 @@ open AbstractProperty
 open Result
 open AlgoGeneric
 open State
+open StateSpace
 
 
 
@@ -97,8 +98,8 @@ exception Stop_loop of more_points
 let abstract_point_based_result_of_single_synthesis_result (single_synthesis_result : single_synthesis_result) reference_val : abstract_point_based_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
-		nb_states		= StateSpace.nb_states single_synthesis_result.state_space;
-		nb_transitions	= StateSpace.nb_transitions single_synthesis_result.state_space;
+		nb_states		= (single_synthesis_result.state_space)#nb_states;
+		nb_transitions	= (single_synthesis_result.state_space)#nb_transitions;
 (* 		depth		 	= single_synthesis_result.state_space; *)
 	}
 	in
@@ -137,8 +138,8 @@ let abstract_point_based_result_of_single_synthesis_result (single_synthesis_res
 let abstract_point_based_result_of_point_based_result (point_based_result : point_based_result) reference_val : abstract_point_based_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
-		nb_states		= StateSpace.nb_states point_based_result.state_space;
-		nb_transitions	= StateSpace.nb_transitions point_based_result.state_space;
+		nb_states		= (point_based_result.state_space)#nb_states;
+		nb_transitions	= (point_based_result.state_space)#nb_transitions;
 (* 		depth		 	= point_based_result.state_space; *)
 	}
 	in

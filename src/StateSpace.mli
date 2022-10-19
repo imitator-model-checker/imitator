@@ -215,7 +215,7 @@ class stateSpace : int ->
 		(*------------------------------------------------------------*)
 		(** Return the state of a state_index *)
 		(*------------------------------------------------------------*)
-		method get_state : state_index -> state
+		method get_state : state_index -> State.state
 
 		(*------------------------------------------------------------*)
 		(** return the list of states with the same location (modulo hash collisions) *)

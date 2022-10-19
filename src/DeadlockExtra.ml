@@ -17,20 +17,21 @@ type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) 
 open LinearConstraint
 open StateSpace
 open DiscreteExpressionEvaluator
+open State
 
 let dl_instantiate_discrete_gen discrete constr = 
     pxd_intersection_assign discrete [constr];
     pxd_hide_discrete_and_collapse discrete
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
-let dl_instantiate_discrete state_space state_index constr = 
-	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
+let dl_instantiate_discrete (state_space : StateSpace.stateSpace) state_index constr =
+	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     let discrete = AlgoStateBased.discrete_constraint_of_global_location glob_location in
     dl_instantiate_discrete_gen discrete constr
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
-let dl_instantiate_discrete_after_seq state_space state_index constr transition = 
-	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
+let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) state_index constr transition =
+	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
 
     (* Copy location where we perform the destructive sequential updates*)
     let location = DiscreteState.copy_location glob_location in
@@ -56,7 +57,7 @@ let dl_instantiate_discrete_after_seq state_space state_index constr transition 
 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
-let dl_inverse_update state_space state_index z updates transition = 
+let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z updates transition =
 (*     let model = Input.get_model () in (* only for printing *) *)
     let constr = px_copy z in
     let constr_pxd = pxd_of_px_constraint constr in
@@ -67,8 +68,8 @@ let dl_inverse_update state_space state_index z updates transition =
     constr_px
 
 (* Apply past time operator *)
-let dl_inverse_time state_space state_index z =
-	let glob_location = get_location state_space (get_global_location_index state_space state_index) in
+let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
+	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     AlgoStateBased.apply_time_past glob_location z
 
 
@@ -85,7 +86,7 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
 
-let dl_get_clock_updates state_space combined_transition =
+let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
@@ -101,12 +102,15 @@ let dl_get_clock_updates state_space combined_transition =
     (* TODO: check for inconsistent updates? *)
 	OCamlUtilities.list_only_once updates
 
-let dl_weakest_precondition state_space s1_index transition s2_index =
-    let z1 = (get_state state_space s1_index).px_constraint in
-    let z2 = (get_state state_space s2_index).px_constraint in
+let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index transition s2_index =
+    let z1 = (state_space#get_state s1_index).px_constraint in
+    let z2 = (state_space#get_state s2_index).px_constraint in
   
+  (* Retrieve the model *)
+	let model = Input.get_model () in
+
 
     let updates = dl_get_clock_updates state_space transition in
-    let guard = get_guard state_space s1_index transition in
+    let guard = state_space#get_guard model s1_index transition in
  
     dl_predecessor state_space s1_index z1 guard updates z2 transition

@@ -255,7 +255,7 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 		self#reset_minicache;
 		
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in

@@ -163,7 +163,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	begin
 	match options#states_limit with
 		| None -> ()
-		| Some limit -> if StateSpace.nb_states state_space > limit then(
+		| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
 			raise (DFS_Limit_detected States_limit_reached)
 		)
@@ -201,7 +201,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	method private find_or_compute_pzone (thestate : State.state_index) : LinearConstraint.p_linear_constraint =
 		try Hashtbl.find pzone_table thestate
 		with Not_found -> (
-			let astate : State.state = StateSpace.get_state state_space thestate in
+			let astate : State.state = state_space#get_state thestate in
 			let linear_aconstr : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
 			Hashtbl.add pzone_table thestate linear_aconstr;
 			linear_aconstr
@@ -254,9 +254,9 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	(* Check inclusion of zone *)
 	(***************************)
 	method private smaller_zone (state_index1 : State.state_index) (state_index2 : State.state_index) : bool =
-		let state1	: State.state = StateSpace.get_state state_space state_index1 in
+		let state1	: State.state = state_space#get_state state_index1 in
 		let constr1	: LinearConstraint.px_linear_constraint = state1.px_constraint in
-		let state2	: State.state = StateSpace.get_state state_space state_index2 in
+		let state2	: State.state = state_space#get_state state_index2 in
 		let constr2	: LinearConstraint.px_linear_constraint = state2.px_constraint in
 		LinearConstraint.px_is_leq constr1 constr2
 
@@ -308,7 +308,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		if verbose_mode_greater Verbose_low then (
 			print_message Verbose_medium
 				(ModelPrinter.string_of_state model
-					(StateSpace.get_state state_space astate));
+					(state_space#get_state astate));
 			self#print_projection Verbose_low astate);
 		
 		(*** NOTE: here some factoring (ÉA) using the `termination_function` ***)
@@ -388,7 +388,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
                     match q with
                     | [] -> ([],[]);
                     | s::q' -> let (a,b) = requ q' in
-                            if (State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space s))
+                            if (State.match_state_predicate model.is_accepting state_predicate (state_space#get_state s))
                             then (s::a,b)
                             else (a,s::b)
             in
@@ -427,7 +427,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
         let before s t = (* TODO: avoid hash-table lookups for every comparison *)
             match options#pending_order with
             | Pending_none -> true
-            | Pending_accept -> State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space s)
+            | Pending_accept -> State.match_state_predicate model.is_accepting state_predicate (state_space#get_state s)
             | Pending_param -> (self#smaller_parameter_projection t s)
             | Pending_zone -> (self#smaller_zone t s)
         in
@@ -446,12 +446,12 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high "Compare (big?) state:";
 				print_message Verbose_high (ModelPrinter.string_of_state model
-							(StateSpace.get_state state_space bigstate_index));
+							(state_space#get_state bigstate_index));
 				print_message Verbose_high "with (small?) state:";
 				print_message Verbose_high (ModelPrinter.string_of_state model
-							(StateSpace.get_state state_space smallstate_index)));
-			let bigstate_constr = (StateSpace.get_state state_space bigstate_index).px_constraint in
-			let smallstate_constr = (StateSpace.get_state state_space smallstate_index).px_constraint in
+							(state_space#get_state smallstate_index)));
+			let bigstate_constr = (state_space#get_state bigstate_index).px_constraint in
+			let smallstate_constr = (state_space#get_state smallstate_index).px_constraint in
 			(LinearConstraint.px_is_leq smallstate_constr bigstate_constr)
 		in
 
@@ -459,7 +459,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			(* Does an element of the set subsume smallstate? *)
 			if table_test setbig smallstate then true (* quick pre-check *)
                 (* we traverse all states with the same location modulo hash collision *)
-                else let similar_states = StateSpace.get_comparable_states state_space smallstate
+                else let similar_states = state_space#get_comparable_states smallstate
                 		and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
 					in begin
 						if verbose_mode_greater Verbose_high then(
@@ -472,7 +472,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			(* Does bigstate subsume some element of the set? *)
 			if table_test setsmall bigstate then true (* quick pre-check *)
 				(* we traverse all states with the same location modulo hash collision *)
-				else let similar_states = StateSpace.get_comparable_states state_space bigstate
+				else let similar_states = state_space#get_comparable_states bigstate
 						and check_sub smallstate = (table_test setsmall smallstate) && (subsumes bigstate smallstate)
 					in begin
 						if verbose_mode_greater Verbose_high then(
@@ -485,7 +485,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			(* Does an element of the set subsume smallstate and is in the same layer? *)
 			if table_test setbig smallstate then true (* quick pre-check *)
 				(* we traverse all states with the same location modulo hash collision *)
-				else let similar_states = StateSpace.get_comparable_states state_space smallstate
+				else let similar_states = state_space#get_comparable_states smallstate
 						and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
 							&& (self#same_parameter_projection bigstate smallstate)
 					in begin
@@ -500,8 +500,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		(***********************************)
 		let withLookahead astate thesuccessors =
 			if not options#no_lookahead then (
-				if (State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state
-						state_space astate)) then (
+				if (State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate)) then (
 					(* accepting state: find cyan successor *)
 					try ((List.find (fun suc_id ->
 						(table_test cyan suc_id)) thesuccessors),
@@ -511,7 +510,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					(* Not accepting state: find accepting cyan
 						successor *)
 					try ((List.find (fun suc_id ->
-						(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space suc_id)) &&
+						(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state suc_id)) &&
 						(table_test cyan suc_id)) thesuccessors),
 							true)
 					with Not_found -> init_state_index, false
@@ -528,7 +527,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		(* Function for generating successors only when needed *)
 		(*******************************************************)
 		let find_or_compute_successors thestate =
-			let successors = hashtbl_get_or_default (StateSpace.get_transitions_table state_space) thestate [] in
+			let successors = hashtbl_get_or_default (state_space#get_transitions_table) thestate [] in
 			if successors = [] then (let _ = self#post_from_one_state thestate in ())
 			else ()
 		in
@@ -542,7 +541,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			(* if the green colour is not used (option no_green),
 				then the state is necessarily marked blue *)
 			if not (table_test blue thestate) then (
-				let successors = StateSpace.get_successors state_space thestate
+				let successors = state_space#get_successors thestate
 					and is_green astate = table_test green astate
 					and is_pending_not_blue astate =
 						(in_queue astate pending) &&
@@ -613,13 +612,13 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			print_highlighted_message Shell_bold Verbose_medium("Executing rundfs at depth "
 				^ (string_of_int thestate_depth)
 				^ " with "
-				^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space thestate)
+				^ (if State.match_state_predicate model.is_accepting state_predicate (state_space#get_state thestate)
 					then "accepting " else "")
 				^ "state "
 				^ (StateSpace.string_of_state_index thestate)
 				^ ":\n"
 				^ (ModelPrinter.string_of_state model
-					(StateSpace.get_state state_space thestate)));
+					(state_space#get_state thestate)));
 			let depth_ok = match options#depth_limit with
 				| None -> if the_depth_step = -1 then true
 										else if (current_depth  >= thestate_depth) then true
@@ -634,17 +633,17 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			if (depth_ok && enterdfs thestate) then (
 				if (thestate_depth > max_depth_reached) then max_depth_reached <- thestate_depth;
 				predfs thestate;
-				let successors = reorderqueue (StateSpace.get_successors state_space thestate) in
+				let successors = reorderqueue (state_space#get_successors thestate) in
 				let rec process_sucs suclist = match suclist with
 					| [] -> ();
 					| suc_id::body ->
 						if verbose_mode_greater Verbose_medium then(
 							print_message Verbose_medium("Handling "
-								^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space suc_id)
+								^ (if State.match_state_predicate model.is_accepting state_predicate (state_space#get_state suc_id)
 									then "accepting " else "")
 								^ "successor "
 								^ (ModelPrinter.string_of_state model
-									(StateSpace.get_state state_space suc_id))));
+									(state_space#get_state suc_id))));
 						if (filterdfs thestate suc_id (thestate_depth + 1)) then (
 							if (testaltdfs thestate suc_id) then (alternativedfs suc_id thestate_depth)
 							else
@@ -756,7 +755,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 						if verbose_mode_greater Verbose_low then(
 							print_message Verbose_medium
 								(ModelPrinter.string_of_state model
-									(StateSpace.get_state state_space astate));
+									(state_space#get_state astate));
 							self#print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
@@ -786,7 +785,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
+								(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate : State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -805,7 +804,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								if verbose_mode_greater Verbose_low then (
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
+											(state_space#get_state astate));
 									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
@@ -865,7 +864,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 						if verbose_mode_greater Verbose_low then (
 							print_message Verbose_medium
 								(ModelPrinter.string_of_state model
-									(StateSpace.get_state state_space astate));
+									(state_space#get_state astate));
 							self#print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
@@ -896,7 +895,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
+								(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate: State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -915,7 +914,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								if verbose_mode_greater Verbose_low then (
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
+											(state_space#get_state astate));
 									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
@@ -989,7 +988,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								if verbose_mode_greater Verbose_low then (
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
+											(state_space#get_state astate));
 									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
@@ -1020,7 +1019,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
+										(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
 									(* set up the dfs red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
@@ -1039,7 +1038,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 										if verbose_mode_greater Verbose_low then (
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
-													(StateSpace.get_state state_space astate));
+													(state_space#get_state astate));
 											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
@@ -1116,7 +1115,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								if verbose_mode_greater Verbose_low then (
 									print_message Verbose_medium
 										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
+											(state_space#get_state astate));
 									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
@@ -1148,7 +1147,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red DFS only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space astate))) then (
+										(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
 									(* set up the DFS red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
@@ -1167,7 +1166,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 										if verbose_mode_greater Verbose_low then (
 											print_message Verbose_medium
 												(ModelPrinter.string_of_state model
-													(StateSpace.get_state state_space astate));
+													(state_space#get_state astate));
 											self#print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
@@ -1260,7 +1259,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 
 		begin
 		match addition_result with
@@ -1310,7 +1309,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	(** Print stats *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private print_stats : unit =
-		let nb_states = StateSpace.nb_states state_space in
+		let nb_states = state_space#nb_states in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
 		if the_depth_step <> -1 then

@@ -78,7 +78,7 @@ class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		
 		(* Iterate on all states *)
 (* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
-		StateSpace.iterate_on_states (fun state_index abstract_state ->
+		state_space#iterate_on_states (fun state_index abstract_state ->
 			(* Retrieve the px-constraint *)
 			let px_linear_constraint = abstract_state.px_constraint in
 			(* Project onto the parameters *)
@@ -88,7 +88,7 @@ class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 			(*** TODO: check if only one intersection with the list of all projections gathered would be more efficient ??? ***)
 			
 			LinearConstraint.p_intersection_assign p_constraint [projection];
-		) state_space;
+		);
 		
 	
 		self#print_algo_message_newline Verbose_standard (

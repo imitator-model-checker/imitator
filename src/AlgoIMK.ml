@@ -259,7 +259,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 			end;*)
 			
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 		
 		begin
 		match addition_result with
@@ -354,7 +354,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		
 		self#print_algo_message_newline Verbose_medium ("Updating all the previous states.\n");
 		
-		StateSpace.add_p_constraint_to_states state_space negated_constraint;
+		state_space#add_p_constraint_to_states negated_constraint;
 		()
 				
 	
@@ -379,8 +379,8 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	
 		(* IMK: return only the current constraint, viz., the constraint of the first state *)
 		(*** NOTE: better not use just "0" as the initial state may have been merged with another state ***)
-		let initial_state_index = StateSpace.get_initial_state_index state_space in
-		let initial_state = StateSpace.get_state state_space initial_state_index in
+		let initial_state_index = state_space#get_initial_state_index in
+		let initial_state = state_space#get_state initial_state_index in
 		(* Retrieve the constraint of the initial state *)
 		let px_constraint = initial_state.px_constraint in
 		

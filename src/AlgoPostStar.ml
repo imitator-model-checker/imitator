@@ -69,7 +69,7 @@ class algoPostStar (model : AbstractModel.abstract_model) =
 	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator new_state in
 		
 		(* Print some information *)
 		print_message Verbose_total ("New state addition attempt successfully performed.");

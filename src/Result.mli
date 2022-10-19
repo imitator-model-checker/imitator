@@ -153,7 +153,7 @@ type bc_coverage =
 
 type state_space_computation_result = {
 	(* Explored state space *)
-	state_space			: StateSpace.state_space;
+	state_space			: StateSpace.stateSpace;
 	
 	(* Nature of the state space *)
 	statespace_nature	: StateSpace.statespace_nature;
@@ -176,7 +176,7 @@ type single_synthesis_result = {
 	constraint_description: string;
 	
 	(* Explored state space *)
-	state_space			: StateSpace.state_space;
+	state_space			: StateSpace.stateSpace;
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
@@ -195,7 +195,7 @@ type point_based_result = {
 	result				: good_or_bad_constraint;
 	
 	(* Explored state space *)
-	state_space			: StateSpace.state_space;
+	state_space			: StateSpace.stateSpace;
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
 (* 	nb_random_selections: int; *)
@@ -331,7 +331,7 @@ type runs_exhibition_result = {
 	runs				: valuation_and_concrete_run list;
 	
 	(* Explored state space *)
-	state_space			: StateSpace.state_space;
+	state_space			: StateSpace.stateSpace;
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;

@@ -167,12 +167,12 @@ val create_initial_state : bool -> State.state
 (*------------------------------------------------------------*)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (*------------------------------------------------------------*)
-val concrete_run_of_symbolic_run : StateSpace.state_space -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run
+val concrete_run_of_symbolic_run : StateSpace.stateSpace -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run
 
 (*------------------------------------------------------------*)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)
 (*------------------------------------------------------------*)
-val reconstruct_counterexample : StateSpace.state_space -> state_index -> StateSpace.concrete_run
+val reconstruct_counterexample : StateSpace.stateSpace -> state_index -> StateSpace.concrete_run
 
 (*
 (************************************************************)
@@ -215,7 +215,7 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		(************************************************************)
 
 		(*** TODO: make private (while accessible to subclasses ***)
-		val mutable state_space : StateSpace.state_space
+		val mutable state_space : StateSpace.stateSpace
 
 		(* Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature
