@@ -185,6 +185,10 @@ val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
+(* Create a set of inequalities of the form `var=0` for a set of variables *)
+val pxd_make_linear_inequalities_eq_0 : variable list -> pxd_linear_inequality list
+val px_make_linear_inequalities_eq_0  : variable list -> px_linear_inequality  list
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
@@ -260,6 +264,8 @@ type d_linear_constraint
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint
 
+(** Direction when applying time-elapsing *)
+type time_direction = Time_forward | Time_backward
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Initialization} *)
@@ -310,6 +316,20 @@ val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_t
 val p_constraint_of_nonnegative_variables : variable list -> p_linear_constraint
 val px_constraint_of_nonnegative_variables : variable list -> px_linear_constraint
 val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constraint
+
+
+(*------------------------------------------------------------*)
+(* Make a polyhedron for computing the time elapsing for (parametric) timed automata with only standard clocks, i.e., without stopwatches nor flows. That is, generates inequalities `x=1` for elapsing variables (or `x=-1` for time past), and `x=0` for others *)
+(*------------------------------------------------------------*)
+val pxd_make_polyhedron_time_past_pta     : variable list -> variable list -> pxd_linear_constraint
+val pxd_make_polyhedron_time_elapsing_pta : variable list -> variable list -> pxd_linear_constraint
+
+
+(*------------------------------------------------------------*)
+(* Make a polyhedron for computing the time elapsing from a list of pairs (variable, rate), and a list of constant variables (generating inequalities `x=0`) *)
+(*------------------------------------------------------------*)
+val px_make_time_polyhedron_from_flows_and_constants  : time_direction -> (variable * NumConst.t) list -> variable list -> px_linear_constraint
+val pxd_make_time_polyhedron_from_flows_and_constants : time_direction -> (variable * NumConst.t) list -> variable list -> pxd_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

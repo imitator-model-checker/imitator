@@ -324,7 +324,8 @@ type d_linear_constraint = linear_constraint
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
-
+(** Direction when applying time-elapsing *)
+type time_direction = Time_forward | Time_backward
 
 
 (************************************************************)
@@ -1260,6 +1261,21 @@ let make_px_linear_inequality	= make_linear_inequality
 let make_pxd_linear_inequality	= make_linear_inequality
 
 
+(* Create an inequality `var=0` *)
+let make_linear_inequality_eq_0 (variable : variable) : linear_inequality =
+	(* Create a linear term *)
+	let linear_term = make_linear_term [(NumConst.one, variable)] NumConst.zero in
+	(* Create the inequality *)
+	make_linear_inequality linear_term Op_eq
+
+(* Create a set of inequalities of the form `var=0` for a set of variables *)
+let make_linear_inequalities_eq_0 (variables : variable list) : linear_inequality list =
+	List.map make_linear_inequality_eq_0 variables
+
+let pxd_make_linear_inequalities_eq_0 = make_linear_inequalities_eq_0
+let px_make_linear_inequalities_eq_0 = make_linear_inequalities_eq_0
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
@@ -1723,7 +1739,7 @@ let make nb_dimensions inequalities =
   poly
 
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let make_p_constraint inequalities = make !p_dim inequalities
 let make_px_constraint inequalities = make !px_dim inequalities
 let make_pxd_constraint inequalities = make !pxd_dim inequalities
@@ -1745,7 +1761,7 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 
 
 
-(*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument to be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
 let x_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
 let px_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
@@ -1766,13 +1782,13 @@ let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op :
 	(* Create the constraint with the operator *)
 	make nb_dimensions [make_linear_inequality lt op]
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let px_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock_and_parameters !px_dim x
 let pxd_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock_and_parameters !pxd_dim x
 
 
 (** Create a constraint bounding all variables in the list to non-negative *)
-let constraint_of_nonnegative_variables nb_dimensions variables = 
+let constraint_of_nonnegative_variables (nb_dimensions : int) variables =
 	(* First check that the variables are compatible with the dimensions *)
 	List.iter (fun variable -> if variable >= nb_dimensions then raise (InternalError ("In function LinearConstraint.constraint_of_nonnegative_variables, trying to create a variable of dimension " ^ (string_of_int variable) ^ " for a polyhedron in " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ ".") )) variables;
 	
@@ -1787,12 +1803,50 @@ let constraint_of_nonnegative_variables nb_dimensions variables =
 	in
 	make nb_dimensions inequalities
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !p_dim v
 let px_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !px_dim v
 let pxd_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !pxd_dim v
 
+(*------------------------------------------------------------*)
+(* Make a polyhedron for computing the time elapsing from a list of pairs (variable, rate), and a list of constant variables (generating inequalities `x=0`) *)
+(*------------------------------------------------------------*)
+let make_time_polyhedron_from_flows_and_constants (nb_dimensions : int) (direction : time_direction) (flows : (variable * NumConst.t) list) (constant_variables : variable list) : linear_constraint =
+	(* Create the inequalities `clock_id = flow_value` *)
+	let inequalities_flows = List.map (fun (clock_id, flow_value) ->
+		(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
+		let negated_flow_value = match direction with
+		| Time_forward	-> NumConst.neg flow_value
+		| Time_backward	-> flow_value
+		in
+		let linear_term = make_linear_term [(NumConst.one, clock_id)] negated_flow_value in
+		(* Create the inequality *)
+		make_linear_inequality linear_term Op_eq
+	) flows in
 
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = make_linear_inequalities_eq_0 constant_variables in
+
+	(* Convert both sets of inequalities to a constraint *)
+	make nb_dimensions (List.rev_append inequalities_flows inequalities_constant)
+
+(*** NOTE: must provide an argument so be sure the function is dynamically called; otherwise statically !pxd_dim is 0 ***)
+let pxd_make_time_polyhedron_from_flows_and_constants d = make_time_polyhedron_from_flows_and_constants !pxd_dim d
+let px_make_time_polyhedron_from_flows_and_constants  d = make_time_polyhedron_from_flows_and_constants !px_dim  d
+
+
+(*------------------------------------------------------------*)
+(* Make a polyhedron for computing the time elapsing for (parametric) timed automata with only standard clocks, i.e., without stopwatches nor flows. That is, generates inequalities `x=1` for elapsing variables (or `x=-1` if Time_backward), and `x=0` for others *)
+(*------------------------------------------------------------*)
+let make_polyhedron_time_shift_pta (nb_dimensions : int) (time_direction : time_direction) (variables_elapse : variable list) (variables_constant : variable list) : linear_constraint =
+	(* Convert clocks into `(var,1)` pairs *)
+	let flows = List.map (fun variable -> (variable, NumConst.one)) variables_elapse in
+	(* Call generic function *)
+	make_time_polyhedron_from_flows_and_constants nb_dimensions time_direction flows variables_constant
+
+(*** NOTE: must provide an argument so be sure the function is dynamically called; otherwise statically !pxd_dim is 0 ***)
+let pxd_make_polyhedron_time_elapsing_pta v = make_polyhedron_time_shift_pta !pxd_dim Time_forward v
+let pxd_make_polyhedron_time_past_pta     v = make_polyhedron_time_shift_pta !pxd_dim Time_backward v
 
 
 
@@ -2238,7 +2292,7 @@ let intersection nb_dimensions linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_intersection l = intersection !p_dim l
 let px_intersection l = intersection !px_dim l
 let pxd_intersection l = intersection !pxd_dim l
@@ -2348,7 +2402,7 @@ let hide_assign nb_dimensions variables linear_constraint =
 	)
 
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_hide_assign v l = hide_assign !p_dim v l
 let px_hide_assign v l = hide_assign !px_dim v l
 let pxd_hide_assign v l = hide_assign !pxd_dim v l
@@ -2362,7 +2416,7 @@ let hide nb_dimensions variables linear_constraint =
 	hide_assign nb_dimensions variables poly;
 	poly
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_hide v l = hide !p_dim v l
 let px_hide v l = hide !px_dim v l
 let pxd_hide v l = hide !pxd_dim v l
@@ -2593,7 +2647,7 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 (** Time elapsing function *)
 let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 (* let pxd_time_elapse_assign c = time_elapse_assign !pxd_dim c *)
 
 
@@ -2629,7 +2683,7 @@ let time_past_assign nb_dimensions variables_elapse variables_constant linear_co
 	intersection_assign nb_dimensions linear_constraint [(make nb_dimensions inequalities_nonnegative)]
 	
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let px_time_past_assign c = time_past_assign !px_dim c
 let pxd_time_past_assign c = time_past_assign !pxd_dim c
 
@@ -2876,7 +2930,7 @@ let exhibit_point nb_dimensions linear_constraint =
 	(* Return functional view *)
 	(fun variable -> valuations.(variable))
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_exhibit_point l = exhibit_point !p_dim l
 let px_exhibit_point l = exhibit_point !px_dim l
 let pxd_exhibit_point l = exhibit_point !pxd_dim l
@@ -2960,7 +3014,7 @@ let is_zero_in nb_dimensions v c =
 	(* Check *)
 	px_is_equal v_l_zero c
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let px_is_zero_in v c = is_zero_in !px_dim v c
 let pxd_is_zero_in v c = is_zero_in !pxd_dim v c
 
@@ -4088,7 +4142,7 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	(* The end *)
 	()
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_intersection_assign c = nnconvex_intersection_assign !p_dim c
 let px_nnconvex_intersection_assign c = nnconvex_intersection_assign !px_dim c
 
@@ -4114,7 +4168,7 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	()
 
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_p_union_assign c =
 	print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_p_union_assign`");
 	nnconvex_union_assign !p_dim c
@@ -4425,7 +4479,7 @@ let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
 	(fun variable -> valuations.(variable))
 
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !p_dim l
 let px_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
 (*** WARNING: in the current version, it is absolutely necessary that the p-valuations in the internal representation of the x_nnconvex_constraint are reduced to a point here ***)
