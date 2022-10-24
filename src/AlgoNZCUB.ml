@@ -167,7 +167,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 					let global_location = (state_space#get_state state_index).global_location in
 					
 					(* Construct the invariant *)
-					let invariant = AlgoStateBased.compute_valuated_invariant global_location in
+					let invariant = State.compute_valuated_invariant model global_location in
 					
 					(* Check if not unbounded, i.e., bounded, i.e., upper bound is not undefined *)
 					let is_bounded = (LinearConstraint.clock_upper_bound_in clock_index invariant <> None) in

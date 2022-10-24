@@ -377,7 +377,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 		
 		(* Check the state_predicate *)
 
-		State.match_state_predicate model.is_accepting state_predicate state
+		State.match_state_predicate model model.is_accepting state_predicate state
    
 
 

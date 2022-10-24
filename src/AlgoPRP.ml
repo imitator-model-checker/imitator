@@ -83,7 +83,7 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	method private process_pi0_compatible_state (state : state) =
 		let to_be_added = 
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate model.is_accepting state_predicate state then(
+			if State.match_state_predicate model model.is_accepting state_predicate state then(
 			
 				(* Project onto the parameters *)
 				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in

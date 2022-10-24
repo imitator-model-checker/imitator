@@ -68,11 +68,6 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 
 
 
-(*------------------------------------------------------------*)
-(* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
-(*------------------------------------------------------------*)
-val compute_valuated_invariant : DiscreteState.global_location -> LinearConstraint.px_linear_constraint
-
 
 
 val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (AbstractModel.clock_updates list) -> unit
@@ -127,9 +122,6 @@ val compute_new_location_guards_updates : DiscreteState.global_location -> State
 (*------------------------------------------------------------*)
 val apply_time_past : DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
-
-(* Exported JvdP *)
-val discrete_constraint_of_global_location: DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)

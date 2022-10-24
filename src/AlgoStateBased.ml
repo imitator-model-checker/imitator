@@ -102,55 +102,12 @@ let instantiate_costs pi0 =
 
 
 
-
-
-
-
-(************************************************************)
-(* Cache *)
-(************************************************************)
-
-(* hash function for locations *)
-let loc_hash locations =
-	Array.fold_left (fun h l ->
-		7919 * h + l
-	) 0 locations
-
-
-(*(* hash function for clock updates *)
-let upd_hash clock_update =
-	List.fold_left (fun h v ->
-		7919 * h + v
-	) 0 clock_update*)
-
-
-
-(*** TODO: move to the class! (otherwise, if several algorithms in the row, cache will not be reinitialized… ***)
-
-
-(* Cache for computed invariants *)
-let inv_cache = Cache.make loc_hash 200
-
-(*(* Cache for clock updates *)
-let upd_cache = Cache.make upd_hash 100*)
-
-
 (************************************************************)
 (** Statistics *)
 (************************************************************)
 
 
 (*** NOTE: defined OUTSIDE the class, as many instances of this class can be created (for BC), and we want a single counter *)
-
-
-
-(*(* Print statistics for cache usage *)
-let print_stats _ =
-	print_message Verbose_standard "invariant cache:";
-	Cache.print_stats inv_cache(*;
- 	print_message Verbose_standard "clock update cache:"; *)
-(* 	Cache.print_stats upd_cache *)*)
-
 
 (* Number of constraints checked unsatisfiable while looking for the actions (discrete guard unsatisfiable) *)
 let counter_nb_early_unsatisfiable_discrete = create_discrete_counter_and_register "early unsat states (local discrete guard)" States_counter Verbose_experiments
@@ -261,147 +218,7 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (* Main semantic functions *)
 (************************************************************)
 
-(*(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
-let evaluate_d_linear_constraint_in_location location =
-	(* Directly call the build-in function *)
-	LinearConstraint.d_is_pi0_compatible (DiscreteState.get_discrete_rational_value location)*)
 
-(** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
-let evaluate_d_nonlinear_constraint_in_location location =
-    let discrete_access = DiscreteState.discrete_access_of_location location in
-    let model = Input.get_model () in
-    DiscreteExpressionEvaluator.check_nonlinear_constraint (Some model.variable_names) (Some model.functions_table) discrete_access
-
-(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
-let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
-	match guard with
-	| True_guard -> true
-	| False_guard -> false
-	| Discrete_guard discrete_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_guard
-	| Continuous_guard _ -> true
-	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_continuous_guard.discrete_guard
-
-(** Check whether the discrete part of a guards are satisfied by the discrete values in a location *)
-let is_discrete_guards_satisfied location =
-    List.for_all (is_discrete_guard_satisfied location)
-
-(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
-let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function
-	(* True: trivially satisfiable because we assume the original constraint was satisfiable *)
-	| True_guard -> true
-
-	(* False: trivially unsatisfiable *)
-	| False_guard -> false
-
-	(* Discrete guard: trivially satisfiable because no continuous part, and we assume the original constraint was satisfiable *)
-	| Discrete_guard _ -> true
-
-	(* Continuous guard: we have to intersect and check satisfiability *)
-	| Continuous_guard continuous_guard ->
-		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; continuous_guard])
-
-	(* Discrete + continuous guard: we have to intersect and check satisfiability *)
-	| Discrete_continuous_guard discrete_continuous_guard ->
-		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
-
-(*(*------------------------------------------------------------*)*)
-(*(* Compute the intersection of guards *)*)
-(*(*------------------------------------------------------------*)*)
-(*let intersection_of_guards location guards =*)
-(*    (* Partition of discrete guards and continuous guards *)*)
-(*    let discrete_guards, continuous_guards = List.partition (fun guard -> match guard with | Discrete_guard _ -> true | _ -> false) guards in*)
-(*    match discrete_guards, continuous_guards with*)
-(*        (* is_discrete_guard_satisfied ? and then (thanks to short-circuit evaluation *)*)
-(*        (* is_constraint_and_continuous_guard_satisfiable ? *)*)
-(*        | dg, cg when*)
-(*            (List.for_all (fun guard -> is_discrete_guard_satisfied location guard) dg) ->*)
-
-(*                let pxd_linear_constraints = List.map(fun guard -> Continuous_guard guard) continuous_guards in*)
-(*                (* if yes, compute intersection of continuous part *)*)
-(*                (* Perform the intersection *)*)
-(*                LinearConstraint.pxd_intersection pxd_linear_constraints*)
-
-(*        (* no -> False ! *)*)
-(*        | _ -> False_guard*)
-
-
-(*------------------------------------------------------------*)
-(* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
-(*------------------------------------------------------------*)
-let discrete_constraint_of_global_location (global_location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value global_location discrete_index)) model.discrete in
-
-    (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
-    (* Get only rational discrete for constraint encoding *)
-    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
-    (* map to num const *)
-    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
-
-	(* Constraint of the form D_i = d_i *)
-	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values
-
-
-(*------------------------------------------------------------*)
-(* Compute the invariant associated to a location   *)
-(*------------------------------------------------------------*)
-let compute_plain_continuous_invariant (location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-    (* construct invariant *)
-	let invariants : AbstractModel.invariant list = AbstractModelUtilities.get_model_invariants model location in
-	let _ (* discrete_invariants *), continuous_invariants = AbstractModelUtilities.split_guards_into_discrete_and_continuous invariants in
-	(* Perform the intersection *)
-	LinearConstraint.pxd_intersection continuous_invariants
-
-(*------------------------------------------------------------*)
-(* Compute the invariant I_l associated to a location  *)
-(* including renaming and time elapse. Uses cache.  *)
-(*------------------------------------------------------------*)
-let compute_invariant location =
-	(* Retrieve the model *)
-(* 	let model = Input.get_model() in *)
-
-	(* Strip off discrete for caching scheme  *)
-	let locations = DiscreteState.get_locations location in
-	(* check in cache *)
-	let entry = Cache.find inv_cache locations in
-	match entry with
-		| Some inv -> inv
-		| None -> (
-			(* Build plain invariant I_l(X) *)
-			let invariant = compute_plain_continuous_invariant location in
-			(* Store in cache *)
-			Cache.store inv_cache locations invariant;
-			invariant
-		)
-
-
-(*------------------------------------------------------------*)
-(* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
-(*------------------------------------------------------------*)
-let compute_valuated_invariant (location : DiscreteState.global_location) : LinearConstraint.px_linear_constraint =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
-	(* Compute the invariant with the discrete variables *)
-	let invariant = compute_plain_continuous_invariant location in
-
-	(* Valuate the discrete variables *)
-	let discrete_constraint = discrete_constraint_of_global_location location in
-
-	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-	print_message Verbose_high ("Performing intersection of I_l(X) and D_i = d_i");
-	let current_constraint = LinearConstraint.pxd_intersection [invariant ; discrete_constraint ] in
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
-
-	(* Eliminate the discrete variables *)
-	print_message Verbose_high ("Hide discrete");
-	LinearConstraint.pxd_hide_discrete_and_collapse current_constraint
 
 
 (*(*------------------------------------------------------------*)
@@ -1288,7 +1105,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 			(* Compute the invariant in the source location I_l(X) *)
 			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
 			print_message Verbose_total ("\nComputing invariant I_l(X)");
-			let invariant = compute_invariant orig_location in
+			let invariant = State.compute_invariant model orig_location in
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -1344,7 +1161,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 
 		(* Compute the invariant in the target location I_l'(X) *)
 		print_message Verbose_total ("\nComputing invariant I_l'(X)");
-		let invariant = compute_invariant target_location in
+		let invariant = State.compute_invariant model target_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -1371,7 +1188,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 
 
 		(* Compute the equalities for the discrete variables in target location *)
-		let discrete_constraint_target = discrete_constraint_of_global_location target_location in
+		let discrete_constraint_target = State.discrete_constraint_of_global_location model target_location in
 
 		(* Perform the intersection *)
 		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_l'(X) ");
@@ -1491,7 +1308,7 @@ let compute_transitions location constr action_index automata involved_automata_
 				let guard = trans.guard in
 
 				(* First check whether the discrete part is possible *)
-				let discrete_part_possible = is_discrete_guard_satisfied location guard in
+				let discrete_part_possible = State.is_discrete_guard_satisfied model location guard in
 
 				if not discrete_part_possible then(
 					(* Statistics *)
@@ -1501,7 +1318,7 @@ let compute_transitions location constr action_index automata involved_automata_
 				)else(
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
 				(*** TODO: check if this test is really worth it ***)
-					let is_possible = is_constraint_and_continuous_guard_satisfiable constr guard in
+					let is_possible = State.is_constraint_and_continuous_guard_satisfiable constr guard in
 					if not is_possible then (
 						(* Statistics *)
 						counter_nb_early_unsatisfiable#increment;
@@ -1579,7 +1396,7 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 	(* Get model invariants for the target location *)
 	let initial_invariants = AbstractModelUtilities.get_model_invariants model initial_location in
 	(* Check if the discrete invariants are all satisfied *)
-	let is_discrete_initial_invariants_satisfied = is_discrete_guards_satisfied initial_location initial_invariants in
+	let is_discrete_initial_invariants_satisfied = State.is_discrete_guards_satisfied model initial_location initial_invariants in
 
 	(* Initial invariant is not satisfied, we raise an exception! (unless otherwise specified) *)
 	if not (is_discrete_initial_invariants_satisfied) then(
@@ -1603,14 +1420,14 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 		(* Compute the invariants I_l0(X) for the initial locations *)
 		print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
 		(* Create the invariant *)
-		let invariant = compute_plain_continuous_invariant initial_location in
+		let invariant = State.compute_plain_continuous_invariant model initial_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
 
 		(* Compute constraint for assigning a (constant) value to discrete variables *)
 		print_message Verbose_high ("Computing constraint for discrete variables");
-		let discrete_constraint = discrete_constraint_of_global_location initial_location in
+		let discrete_constraint = State.discrete_constraint_of_global_location model initial_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
@@ -1692,6 +1509,9 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 
 let post_from_one_state_via_one_transition (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
 	(* Compute the new location for the current combination of transitions *)
 	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
@@ -1699,7 +1519,7 @@ let post_from_one_state_via_one_transition (source_location : DiscreteState.glob
 	tcounter_compute_location_guards_discrete#stop;
 
 	(* Check if the discrete guards are satisfied *)
-	if not (List.for_all (evaluate_d_nonlinear_constraint_in_location source_location) discrete_guards) then(
+	if not (List.for_all (State.evaluate_d_nonlinear_constraint_in_location model source_location) discrete_guards) then(
 		(* Statistics *)
 		counter_nb_unsatisfiable_discrete#increment;
 		(* Print some information *)
@@ -1711,12 +1531,10 @@ let post_from_one_state_via_one_transition (source_location : DiscreteState.glob
 	(* Else: the discrete part of guards is satisfied *)
 	)else(
 
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 	    (* Get model invariants for the target location *)
 	    let target_invariants = AbstractModelUtilities.get_model_invariants model target_location in
 	    (* Check if the discrete invariants are all satisfied *)
-        let is_discrete_target_invariants_satisfied = is_discrete_guards_satisfied target_location target_invariants in
+        let is_discrete_target_invariants_satisfied = State.is_discrete_guards_satisfied model target_location target_invariants in
 
         (* Check if the discrete invariants are satisfied *)
         if not (is_discrete_target_invariants_satisfied) then(
@@ -2889,7 +2707,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				| PRPC (state_predicate , _, _)
 				->
 					(* Check whether the current state matches the state predicate *)
-					if State.match_state_predicate model.is_accepting state_predicate state then(
+					if State.match_state_predicate model model.is_accepting state_predicate state then(
 						statespace_nature <- StateSpace.Bad;
 					);
 
@@ -3153,7 +2971,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		let has_successors = ref false in
 
 		(* Create a constraint D_i = d_i for the discrete variables *)
-		let discrete_constr : LinearConstraint.pxd_linear_constraint = discrete_constraint_of_global_location source_location in
+		let discrete_constr : LinearConstraint.pxd_linear_constraint = State.discrete_constraint_of_global_location model source_location in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
@@ -3807,7 +3625,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), _ = compute_new_location_guards_updates global_location_i combined_transition_i in
 
 			(* Create a constraint D_i = d_i for the discrete variables *)
-			let pxd_discrete_constraint : LinearConstraint.pxd_linear_constraint = discrete_constraint_of_global_location global_location_i in
+			let pxd_discrete_constraint : LinearConstraint.pxd_linear_constraint = State.discrete_constraint_of_global_location model global_location_i in
 
 			(* Create a pxd_linear_constraint P_i = p_i for the parameter valuation *)
 			let concrete_pxd_valuation_constraint = LinearConstraint.pxd_of_p_constraint (LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , functional_pval_positive parameter_index) model.parameters )) in

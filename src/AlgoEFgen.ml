@@ -89,7 +89,7 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 		
 		let to_be_added =
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate model.is_accepting state_predicate state then(
+			if State.match_state_predicate model model.is_accepting state_predicate state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(

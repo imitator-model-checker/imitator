@@ -65,7 +65,42 @@ val state_included_in : state -> state -> Automaton.clock_index list -> bool
 (* val match_state_predicate : AbstractProperty.state_predicate -> state -> bool *)
 
 (* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : (Automaton.automaton_index -> Automaton.location_index -> bool) -> AbstractProperty.state_predicate -> state -> bool
+val match_state_predicate : AbstractModel.abstract_model -> (Automaton.automaton_index -> Automaton.location_index -> bool) -> AbstractProperty.state_predicate -> state -> bool
+
+
+(************************************************************)
+(** Constraints satisfaction *)
+(*************************************************************)
+
+(** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
+val evaluate_d_nonlinear_constraint_in_location : AbstractModel.abstract_model -> DiscreteState.global_location -> AbstractModel.discrete_guard -> bool
+
+(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
+val is_discrete_guard_satisfied : AbstractModel.abstract_model -> DiscreteState.global_location -> AbstractModel.guard -> bool
+
+(** Check whether the discrete part of a guards are satisfied by the discrete values in a location *)
+val is_discrete_guards_satisfied : AbstractModel.abstract_model -> DiscreteState.global_location -> AbstractModel.guard list -> bool
+
+(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
+val is_constraint_and_continuous_guard_satisfiable : LinearConstraint.pxd_linear_constraint -> AbstractModel.guard -> bool
+
+(************************************************************)
+(** Computation of invariants *)
+(*************************************************************)
+
+(** Create a PXD constraint of the form D_i = d_i for the discrete variables *)
+val discrete_constraint_of_global_location : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
+
+
+(** Compute the invariant associated to a location   *)
+val compute_plain_continuous_invariant : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
+
+(** Compute the invariant I_l associated to a location, including renaming and time elapse. Uses cache.  *)
+val compute_invariant : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
+
+(** Compute the invariant associated to a location and valuate the value of the discrete variables   *)
+val compute_valuated_invariant : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.px_linear_constraint
+
 
 
 (************************************************************)

@@ -25,8 +25,9 @@ let dl_instantiate_discrete_gen discrete constr =
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
 let dl_instantiate_discrete (state_space : StateSpace.stateSpace) state_index constr =
+    let model = Input.get_model() in
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
-    let discrete = AlgoStateBased.discrete_constraint_of_global_location glob_location in
+    let discrete = State.discrete_constraint_of_global_location model glob_location in
     dl_instantiate_discrete_gen discrete constr
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
@@ -51,7 +52,7 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
         List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);
 	) transition;
 
-    let discrete = AlgoStateBased.discrete_constraint_of_global_location location in
+    let discrete = State.discrete_constraint_of_global_location model location in
 
     dl_instantiate_discrete_gen discrete constr
 

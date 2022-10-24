@@ -1379,7 +1379,7 @@ let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : st
 			(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
 			List.exists (fun state_predicate ->
 				(* Check whether the current state matches ths state predicate *)
-				State.match_state_predicate model.is_accepting state_predicate state
+				State.match_state_predicate model model.is_accepting state_predicate state
 			) state_predicate_list
 		)else(
 			(* No property: no target state *)

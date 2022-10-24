@@ -388,7 +388,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
                     match q with
                     | [] -> ([],[]);
                     | s::q' -> let (a,b) = requ q' in
-                            if (State.match_state_predicate model.is_accepting state_predicate (state_space#get_state s))
+                            if (State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state s))
                             then (s::a,b)
                             else (a,s::b)
             in
@@ -427,7 +427,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
         let before s t = (* TODO: avoid hash-table lookups for every comparison *)
             match options#pending_order with
             | Pending_none -> true
-            | Pending_accept -> State.match_state_predicate model.is_accepting state_predicate (state_space#get_state s)
+            | Pending_accept -> State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state s)
             | Pending_param -> (self#smaller_parameter_projection t s)
             | Pending_zone -> (self#smaller_zone t s)
         in
@@ -500,7 +500,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		(***********************************)
 		let withLookahead astate thesuccessors =
 			if not options#no_lookahead then (
-				if (State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate)) then (
+				if (State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state astate)) then (
 					(* accepting state: find cyan successor *)
 					try ((List.find (fun suc_id ->
 						(table_test cyan suc_id)) thesuccessors),
@@ -510,7 +510,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					(* Not accepting state: find accepting cyan
 						successor *)
 					try ((List.find (fun suc_id ->
-						(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state suc_id)) &&
+						(State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state suc_id)) &&
 						(table_test cyan suc_id)) thesuccessors),
 							true)
 					with Not_found -> init_state_index, false
@@ -612,7 +612,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 			print_highlighted_message Shell_bold Verbose_medium("Executing rundfs at depth "
 				^ (string_of_int thestate_depth)
 				^ " with "
-				^ (if State.match_state_predicate model.is_accepting state_predicate (state_space#get_state thestate)
+				^ (if State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state thestate)
 					then "accepting " else "")
 				^ "state "
 				^ (StateSpace.string_of_state_index thestate)
@@ -639,7 +639,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					| suc_id::body ->
 						if verbose_mode_greater Verbose_medium then(
 							print_message Verbose_medium("Handling "
-								^ (if State.match_state_predicate model.is_accepting state_predicate (state_space#get_state suc_id)
+								^ (if State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state suc_id)
 									then "accepting " else "")
 								^ "successor "
 								^ (ModelPrinter.string_of_state model
@@ -785,7 +785,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
+								(State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate : State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -895,7 +895,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 					let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
+								(State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate: State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -1019,7 +1019,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
+										(State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state astate))) then (
 									(* set up the dfs red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
@@ -1147,7 +1147,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red DFS only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.match_state_predicate model.is_accepting state_predicate (state_space#get_state astate))) then (
+										(State.match_state_predicate model model.is_accepting state_predicate (state_space#get_state astate))) then (
 									(* set up the DFS red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
