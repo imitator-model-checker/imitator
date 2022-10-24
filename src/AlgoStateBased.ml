@@ -203,10 +203,12 @@ let counter_nplus1 = create_hybrid_counter_and_register "StateBased.computation 
 let counter_gcmajor = create_hybrid_counter_and_register "StateBased.gcmajor" States_counter Verbose_experiments
 
 
-
+(*
 (************************************************************)
 (* Syntactic functions (i.e. on the automaton structure) *)
 (************************************************************)
+
+(*** NOTE/TODO: could be moved to a *discrete* state module; but NOT *the* DiscreteState, as there is a dependency with AbstractModel :-/ ***)
 
 (** Compute the predecessors of a location in an automaton via SOME given action or via any (NONE) *)
 let predecessors_of_location_gen (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) (action_index_option : Automaton.action_index option) : (Automaton.location_index list) =
@@ -252,7 +254,7 @@ let predecessors_of_location (automaton_index : Automaton.automaton_index) (loca
 
 (** Compute the predecessors of a location in an automaton via a given action *)
 let predecessors_of_location_via_action (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) (action_index : Automaton.action_index) : (Automaton.location_index list) =
-	predecessors_of_location_gen automaton_index location_index (Some action_index)
+	predecessors_of_location_gen automaton_index location_index (Some action_index)*)
 
 
 (************************************************************)
