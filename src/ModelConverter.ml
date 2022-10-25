@@ -1401,24 +1401,40 @@ let convert_updates variable_infos updates_type updates : updates =
     { converted_updates with conditional = conditional_updates_values }
 
 (* Get clock updates from a bloc of sequential code *)
-let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
+let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
 
-    (* Search for clock assignment in sequential code bloc *)
     let rec clock_assignment_in_seq_code_bloc = function
         | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
-
-            (* Get the update variable name *)
-            let variable_name = ParsingStructureMeta.variable_name_of_parsed_update_type parsed_update_type in
-            (* Get type of the variable *)
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
 
             (* Get next clock assignments *)
             let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
 
-            (match var_type_opt with
-            | Some Var_type_clock -> (Parsed_scalar_update variable_name, expr) :: next_clock_assignments
-            | _ -> next_clock_assignments
-            )
+            (* Get the update variable name *)
+            let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
+
+            (* Get all function calls in the assignment expression *)
+            let function_calls = ParsingStructureMeta.get_functions_in_parsed_boolean_expression expr in
+            let function_calls_list = OCamlUtilities.string_set_to_list function_calls in
+            (* Get all clock assignments in called functions recursively *)
+            let function_clock_assignments = List.fold_left (fun acc function_name ->
+                let fun_def = Hashtbl.find user_function_definitions_table function_name in
+                clock_assignment_in_seq_code_bloc fun_def.body @ acc
+            ) [] function_calls_list
+            in
+
+            let found_clock_assignments =
+                match variable_name_opt with
+                | Some variable_name ->
+                    (* Get type of the variable *)
+                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                    (match var_type_opt with
+                    | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
+                    | _ -> []
+                    )
+                | None -> []
+            in
+            function_clock_assignments @ found_clock_assignments @ next_clock_assignments
+
         | Parsed_local_decl (_, _, _, next_expr, _)
         | Parsed_for_loop (_, _, _, _, _, next_expr, _)
         | Parsed_while_loop (_, _, next_expr)
@@ -1447,7 +1463,7 @@ let clock_updates_of_seq_code_bloc variable_infos seq_code_bloc =
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions (useful_parsing_model_information : useful_parsing_model_information) transitions
+let convert_transitions nb_transitions nb_actions (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
   (* Extract values from model parsing info *)
@@ -1529,7 +1545,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
-              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
+              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)
@@ -3766,7 +3782,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information user_function_definitions_table transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

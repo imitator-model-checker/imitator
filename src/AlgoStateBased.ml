@@ -967,20 +967,29 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	let mix_clock_updates = List.map (fun transition_index ->
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
-(*		let _, transition = automaton_and_transition_of_transition_index transition_index in
-
-		(** Collecting the updates by evaluating the conditions, if there is any *)
- 		let clock_updates, _ = transition.new_updates in *)
+		let _, transition = automaton_and_transition_of_transition_index transition_index in
+ 		let clock_updates, _ = transition.new_updates in
 
         (* Map rewritten clock updates to clock updates list *)
-		let clock_updates = eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq in
-		let clock_updates = Updates clock_updates in
-
-
+ 		let rewritten_clock_updates =
+            match clock_updates with
+            | No_update ->
+                (* TODO benjamin CLEAN clean print message *)
+                ImitatorUtilities.print_standard_message ("no updates");
+                No_update
+            | Resets _ as resets ->
+                (* TODO benjamin CLEAN clean print message *)
+                ImitatorUtilities.print_standard_message ("only resets");
+                resets
+            | Updates _ ->
+                (* TODO benjamin CLEAN clean print message *)
+                ImitatorUtilities.print_standard_message ("not only resets");
+                Updates (eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq)
+        in
 
         (* Update the update flag *)
         begin
-        match clock_updates with
+        match rewritten_clock_updates with
             (* Some updates? *)
             | Resets (_ :: _)
             | Updates (_ :: _) -> has_updates := true
@@ -991,7 +1000,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
         end;
 
         (* Keep the updates  *)
-        clock_updates
+        rewritten_clock_updates
 
 	) combined_transition
 	in
