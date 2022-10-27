@@ -2180,7 +2180,9 @@ let linear_term_of_linear_expression variable_infos linear_expression =
     let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
     linear_term_of_array array_of_coef constant
 
+(* TODO benjamin CLEAN UP *)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+(*
 let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 
     let index_of_variables = variable_infos.index_of_variables in
@@ -2193,21 +2195,21 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 
 	let rec update_coef_array_in_typed_update_arithmetic_expression mult_factor = function
 		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_plus) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term *)
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+            (* Update coefficients in the arithmetic expression *)
+            update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+            (* Update coefficients in the term *)
+            update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
 		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_minus) ->
-		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-		(* Update coefficients in the term: multiply by -1 for negation *)
-		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-		| Typed_term (parsed_update_term, _) ->
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+            (* Update coefficients in the arithmetic expression *)
+            update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+            (* Update coefficients in the term: multiply by -1 for negation *)
+            update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
+            | Typed_term (parsed_update_term, _) ->
+            update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
 
 	and update_coef_array_in_parsed_update_term mult_factor = function
 		(* Multiplication is only allowed with a constant multiplier *)
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) as top_term ->
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) as outer_term ->
 
             (* Convert to abstract tree *)
             let converted_term = rational_arithmetic_expression_of_typed_term variable_infos parsed_update_term in
@@ -2229,17 +2231,19 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
             | Some numconst_valued_term, Some _ ->
                 update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
             (* v1 * v2 with v1 and v2 variables *)
-            | None, None -> raise (
-                InternalError (
-                    "`update_coef_array_in_parsed_update_term` fail, because expression `"
-                    ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) top_term
-                    ^ "` isn't linear. Linearity should be checked before."
-                ))
+            | None, None ->
+                raise (
+                    InvalidExpression (
+                        "Unable to convert expression `"
+                        ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term
+                        ^ "` to a linear expression. Expression linearity should be checked before."
+                    )
+                )
             )
 
 
 
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) as top_term ->
+		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) as outer_term ->
 
             (* Convert to abstract tree *)
             let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
@@ -2250,12 +2254,14 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
             (match numconst_valued_factor_opt with
             | Some numconst_valued_factor ->
                 update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
-            | None -> raise (
-                InternalError (
-                    "`update_coef_array_in_parsed_update_term` fail, because expression `"
-                    ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) top_term
-                    ^ "` isn't linear. Linearity should be checked before."
-                ))
+            | None ->
+                raise (
+                    InvalidExpression (
+                        "Unable to convert expression `"
+                        ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term
+                        ^ "` to a linear expression. Expression linearity should be checked before."
+                    )
+                )
             )
 
 		| Typed_factor (parsed_update_factor, _) ->
@@ -2289,7 +2295,13 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 		| Typed_expr (parsed_update_arithmetic_expression, _) ->
             update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 		| factor ->
-            raise (InternalError ("`update_coef_array_in_parsed_update_factor` fail because expression using `" ^ label_of_typed_factor_constructor factor ^ "` isn't linear. Linearity should be checked before."))
+            raise (
+                InvalidExpression (
+                    "Unable to convert expression `"
+                    ^ string_of_typed_discrete_factor variable_infos (Var_type_discrete_number Var_type_discrete_rat) factor
+                    ^ "` to a linear expression. Expression linearity should be checked before."
+                )
+            )
 	in
 
 	(* Call the recursive function updating the coefficients *)
@@ -2297,28 +2309,168 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 
 	(* Create the linear term *)
 	linear_term_of_array array_of_coef !constant
+*)
 
-let linear_term_of_typed_discrete_boolean_expression variable_infos = function
-    | Typed_arithmetic_expr (expr, _) ->
+
+(* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
+let linear_term_of_typed_arithmetic_expression variable_infos expr =
+
+    (* Get message when conversion fail *)
+    let unable_to_convert_error_msg str_expr =
+        "Unable to convert expression `"
+        ^ str_expr
+        ^ "` to a linear expression. Expression linearity should be checked before."
+    in
+
+    (* Reduce a list of weighted variables (variables with coef) and constants by adding them *)
+    (* For all examples consider this linear expression : 1 - 2 + 3x - 2 + y - 2x *)
+    let reduce_sum list =
+        (* Separate constants and variables with coefs (ex: split into [1;-2;-2] and [(3,x);(1,y);(-2, x)]) *)
+        let constants, weighted_variables = OCamlUtilities.partition_map (function Constant k -> My_left k | Variable (coef, name) -> My_right (name, coef)) list in
+        (* Compute value of the constant by adding constants together *)
+        (* ex: [1;-2;-2] = -3 *)
+        let constants_sum = List.fold_left NumConst.add NumConst.zero constants in
+        (* Group variable by name, ex: [(x, [3;-2]); (y, [1])] *)
+        let wv_grouped_by_variable_name = OCamlUtilities.group_by_and_map (fun (variable_name, coef) -> variable_name) (fun (variable_name, coef) -> coef) weighted_variables in
+        (* Compute for each variable the coef by adding them together (ex: for [(x, [3;-2]); (y, [1])] we obtain [(x, 1); (y, 1)] ) *)
+        let weighted_variables_without_duplicates = List.map (fun (variable_name, coefs) -> variable_name, List.fold_left NumConst.add NumConst.zero coefs) wv_grouped_by_variable_name in
+        (* Return *)
+        weighted_variables_without_duplicates, constants_sum
+    in
+
+    let rec linear_coefs_of_typed_arithmetic_expression = function
+        | Typed_sum_diff (expr, term, _, sum_diff) ->
+
+            let expr_coefs = linear_coefs_of_typed_arithmetic_expression expr in
+            let term_coefs = linear_coefs_of_typed_term term in
+
+            (* Change sign of right expression *)
+            let new_term_coefs =
+                match sum_diff with
+                | Typed_minus ->
+                    (match term_coefs with
+                    | Variable (c, v) :: t -> Variable (NumConst.neg c, v) :: t
+                    | Constant c :: t -> Constant (NumConst.neg c) :: t
+                    | [] -> []
+                    )
+                | _ -> term_coefs
+            in
+
+            expr_coefs @ new_term_coefs
+
+        | Typed_term (term, _) ->
+            linear_coefs_of_typed_term term
+
+    and linear_coefs_of_typed_term = function
+        | Typed_product_quotient (term, factor, _, product_quotient) as outer_term ->
+
+            let term_coefs = linear_coefs_of_typed_term term in
+            let factor_coefs = linear_coefs_of_typed_factor factor in
+
+            (* Eventually prepare string representation of expression for the message when conversion fail *)
+            let str_outer_term_lazy = lazy (string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term) in
+
+            let result =
+            (match product_quotient with
+            | Typed_mul ->
+
+                let combination = OCamlUtilities.list_combination_2 term_coefs factor_coefs in
+                let coefs_list = List.map (fun (a, b) -> match a, b with
+                    | Constant c1, Constant c2 -> Constant (NumConst.mul c1 c2)
+                    | Constant c1, Variable (c2, v)
+                    | Variable (c1, v), Constant c2 -> Variable (NumConst.mul c1 c2, v)
+                    | Variable _, Variable _ -> raise (InvalidExpression (unable_to_convert_error_msg (Lazy.force str_outer_term_lazy)))
+                ) combination
+                in
+
+                let variables, constants_sum = reduce_sum coefs_list in
+                (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
+
+            | Typed_div ->
+                let combination = OCamlUtilities.list_combination_2 term_coefs factor_coefs in
+                let coefs_list = List.map (fun (a, b) -> match a, b with
+                    | Constant c1, Constant c2 -> Constant (NumConst.div c1 c2)
+                    | Variable (c1, v), Constant c2 ->
+                        let inverse_c = NumConst.div NumConst.one c2 in
+                        Variable (NumConst.mul c1 inverse_c, v)
+                    | Constant _, Variable _
+                    | Variable _, Variable _ -> raise (InvalidExpression (unable_to_convert_error_msg (Lazy.force str_outer_term_lazy)))
+                ) combination
+                in
+                let variables, constants_sum = reduce_sum coefs_list in
+                (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
+
+            )
+            in
+            result
+
+        | Typed_factor (factor, _) ->
+            linear_coefs_of_typed_factor factor
+
+    and linear_coefs_of_typed_factor = function
+        | Typed_variable (variable_name, _, scope) ->
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+            (match variable_kind with
+            | Constant_kind value -> [Constant (AbstractValue.numconst_value value)]
+            | Variable_kind _ -> [Variable (NumConst.one, variable_name)]
+            )
+
+        | Typed_constant (value, _) ->
+            let numconst_value = ParsedValue.to_numconst_value value in
+            [Constant numconst_value]
+
+		| Typed_unary_min (factor, _) ->
+			let factors = linear_coefs_of_typed_factor factor in
+
+            List.map (function
+                | Constant c -> Constant (NumConst.neg c)
+                | Variable (c, v) -> Variable (NumConst.neg c, v)
+            ) factors
+
+	    | Typed_expr (expr, _) ->
+	        let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
+	        (* Reduce sums of variables and constants *)
+	        let variables, constants_sum = reduce_sum coefs_list in
+	        (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
+
+        | factor ->
+            raise (InvalidExpression (
+                unable_to_convert_error_msg (string_of_typed_discrete_factor variable_infos (Var_type_discrete_number Var_type_discrete_rat) factor)
+            ))
+    in
+
+    let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
+
+    (* Reduce expression by computing coef for each variables and constant term *)
+    let weighted_variables_without_duplicates, constants_sum = reduce_sum coefs_list in
+
+    (* Create linear term as sum of linear terms *)
+    let linear_term = List.fold_right (fun (variable_name, coef) acc ->
+        (* Get index of variable *)
+        let variable_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+        (* Map to IR_Var or IR_Times *)
+        let lt = if NumConst.equal coef NumConst.one then LinearConstraint.IR_Var variable_index else LinearConstraint.IR_Times (coef, LinearConstraint.IR_Var variable_index) in
+        (* Append sum linear term *)
+        LinearConstraint.IR_Plus (lt, acc)
+
+    ) weighted_variables_without_duplicates (LinearConstraint.IR_Coef constants_sum) (* Add constant term to the end of the expression *)
+    in
+    linear_term
+
+(* Convert typed boolean expression to a linear term, if possible, and reduce it *)
+let linear_term_of_typed_boolean_expression variable_infos = function
+    | Typed_discrete_bool_expr (Typed_arithmetic_expr (expr, _), _) ->
         linear_term_of_typed_arithmetic_expression variable_infos expr
     | expr ->
         raise (
             InvalidExpression (
-                "Impossible to convert Boolean expression \""
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
+                "Unable to convert expression `"
+                ^ string_of_typed_boolean_expression variable_infos expr
+                ^ "` to a linear expression. Expression linearity should be checked before."
             )
         )
 
-let linear_term_of_typed_boolean_expression variable_infos = function
-    | Typed_discrete_bool_expr (expr, _) ->
-        linear_term_of_typed_discrete_boolean_expression variable_infos expr
-    | _ ->
-        raise (
-            InvalidExpression (
-                "Impossible to convert boolean expression \""
-                ^ "\" to a linear expression, but it should was already type checked, maybe type check has failed."
-            )
-        )
+
 
 
 let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
@@ -2397,14 +2549,14 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
     | Typed_bloc_void ->
         Bloc_void
 
-let fun_definition_of_typed_fun_definition variable_infos (typed_fun_definition : typed_fun_definition) : fun_definition =
+let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed_fun_definition) : fun_definition =
     (* Search metadata of function to convert *)
-    let meta = Hashtbl.find variable_infos.functions typed_fun_definition.name in
+    let meta = Hashtbl.find variable_infos.functions typed_fun_def.name in
     {
-        name = typed_fun_definition.name;
-        parameter_names = typed_fun_definition.parameters;
-        signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_definition.signature;
-        body = Fun_user (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_fun_definition.body);
+        name = typed_fun_def.name;
+        parameter_names = typed_fun_def.parameters;
+        signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_def.signature;
+        body = Fun_user (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_fun_def.body);
         side_effect = meta.side_effect
     }
 

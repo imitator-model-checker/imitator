@@ -110,6 +110,7 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 
 (** Get combination of two list **)
 val list_combination : 'a list -> 'a list -> ('a * 'a) list
+val list_combination_2 : 'a list -> 'a list -> ('a * 'a) list
 
 (* Check if predicate is true for all arrangement of list *)
 val for_all_in_arrangement : ('a -> 'a -> bool) -> 'a list -> bool

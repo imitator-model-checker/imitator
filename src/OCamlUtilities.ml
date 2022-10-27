@@ -248,6 +248,18 @@ let list_combination l1 l2 =
     done;
     !l
 
+let list_combination_2 l1 l2 =
+    let acc = [] in
+    let l = ref acc in
+    for i = 0 to (List.length l1) - 1 do
+        for j = 0 to (List.length l2) - 1 do
+            let e1 = List.nth l1 i in
+            let e2 = List.nth l2 j in
+            l := (e1, e2)::!l;
+        done;
+    done;
+    !l
+
 (** Select the sublist of a list from position i to position j *)
 let sublist minb maxb l =
 	if minb < 0 || maxb >= (List.length l) || minb > maxb then(

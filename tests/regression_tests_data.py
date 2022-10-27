@@ -2169,7 +2169,7 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
+	when True do {x := x + 1/2*p + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -8016,7 +8016,7 @@ True
 						"PTA": "pta",
 						"guard": " x = 1",
 						"updates": {
-							"y": "-1*x + y"
+							"y": "y + -1*x"
 						}
 					}
 					}
@@ -8036,8 +8036,8 @@ True
 					"global_time": "7/2"
 				},
 				"flows": {
-					"x": "1", 
-					"y": "1", 
+					"x": "1",
+					"y": "1",
 					"global_time": "1"
 				}
 			}
