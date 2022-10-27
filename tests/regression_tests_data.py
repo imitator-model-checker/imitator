@@ -2820,6 +2820,30 @@ when  y + 7 > 2*x
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
+		## Test since               : 2022/10/27
+		## Last modified            : 2022/10/27
+		## Test for IMITATOR version: 3.3
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'tags': 'parsing, arithmetic, linear',
+		'purpose'    : 'Test linear expression reduction is correct',
+		'input_files': ['linear_expressions/linear-expression-reduction.imi'],
+		'options'    : '-imi2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
+x1 := 6*x + 10*y + -53, x2 := 6*x + 10*y + -53, x3 := y + 5*x + 5, x4 := x + -1, x5 := -6, x6 := 2*x + 11, x7 := -3*x + 23*y + 35, x8 := 12*x + 24, x9 := -12*y + 2*x + 4*z + 41
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
 		## Test since               : 2021/10/20
 		## Last modified            : 2021/10/20
 		## Test for IMITATOR version: 3.0
