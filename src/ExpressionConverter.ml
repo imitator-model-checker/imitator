@@ -2311,6 +2311,9 @@ let linear_term_of_typed_arithmetic_expression variable_infos pdae =
 	linear_term_of_array array_of_coef !constant
 *)
 
+type linear_term_element =
+    | Lt_var of NumConst.t * variable_name * typed_variable_scope
+    | Lt_cons of NumConst.t
 
 (* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
 let linear_term_of_typed_arithmetic_expression variable_infos expr =
@@ -2324,7 +2327,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
     (* Reduce a list of weighted variables (variables with coef) and constants by adding them *)
     (* For all examples consider this linear expression : 1 - 2 + 3x - 2 + y - 2x *)
-    let reduce_sum list =
+    let reduce_terms_list list =
         (* Separate constants and variables with coefs (ex: split into [1;-2;-2] and [(3,x);(1,y);(-2, x)]) *)
         let constants, weighted_variables = OCamlUtilities.partition_map (function Constant k -> My_left k | Variable (coef, name) -> My_right (name, coef)) list in
         (* Compute value of the constant by adding constants together *)
@@ -2383,7 +2386,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 ) combination
                 in
 
-                let variables, constants_sum = reduce_sum coefs_list in
+                let variables, constants_sum = reduce_terms_list coefs_list in
                 (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
 
             | Typed_div ->
@@ -2397,7 +2400,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                     | Variable _, Variable _ -> raise (InvalidExpression (unable_to_convert_error_msg (Lazy.force str_outer_term_lazy)))
                 ) combination
                 in
-                let variables, constants_sum = reduce_sum coefs_list in
+                let variables, constants_sum = reduce_terms_list coefs_list in
                 (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
 
             )
@@ -2409,10 +2412,15 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
     and linear_coefs_of_typed_factor = function
         | Typed_variable (variable_name, _, scope) ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
-            (match variable_kind with
-            | Constant_kind value -> [Constant (AbstractValue.numconst_value value)]
-            | Variable_kind _ -> [Variable (NumConst.one, variable_name)]
+
+            (match scope with
+            | Local -> [Variable (NumConst.one, variable_name)]
+            | Global ->
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+                (match variable_kind with
+                | Constant_kind value -> [Constant (AbstractValue.numconst_value value)]
+                | Variable_kind _ -> [Variable (NumConst.one, variable_name)]
+                )
             )
 
         | Typed_constant (value, _) ->
@@ -2430,7 +2438,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
 	    | Typed_expr (expr, _) ->
 	        let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
 	        (* Reduce sums of variables and constants *)
-	        let variables, constants_sum = reduce_sum coefs_list in
+	        let variables, constants_sum = reduce_terms_list coefs_list in
 	        (List.map (fun (variable_name, coef) -> Variable (coef, variable_name)) variables) @ [Constant (constants_sum)]
 
         | factor ->
@@ -2442,12 +2450,14 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
     let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
 
     (* Reduce expression by computing coef for each variables and constant term *)
-    let weighted_variables_without_duplicates, constants_sum = reduce_sum coefs_list in
+    let weighted_variables_without_duplicates, constants_sum = reduce_terms_list coefs_list in
 
     (* Create linear term as sum of linear terms *)
     let linear_term = List.fold_right (fun (variable_name, coef) acc ->
         (* Get index of variable *)
+        ImitatorUtilities.print_standard_message ("try get index");
         let variable_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+        ImitatorUtilities.print_standard_message ("get index.");
         (* Map to IR_Var or IR_Times *)
         let lt = if NumConst.equal coef NumConst.one then LinearConstraint.IR_Var variable_index else LinearConstraint.IR_Times (coef, LinearConstraint.IR_Var variable_index) in
         (* Append sum linear term *)

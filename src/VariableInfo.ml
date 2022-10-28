@@ -36,6 +36,9 @@ let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.va
 (* Get variable index given a variable name *)
 let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
 
+(* Get variable index given a variable name or None if variable was not found *)
+let [@inline] index_of_variable_name_opt variable_infos = Hashtbl.find_opt variable_infos.index_of_variables
+
 (* Get constant value given a constant name *)
 let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
 

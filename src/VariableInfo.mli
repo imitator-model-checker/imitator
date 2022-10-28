@@ -26,6 +26,7 @@ type variable_kind =
 
 val variable_name_of_index : variable_infos -> variable_index -> variable_name
 val index_of_variable_name : variable_infos -> variable_name -> variable_index
+val index_of_variable_name_opt : variable_infos -> variable_name -> variable_index option
 val value_of_constant_name : variable_infos -> variable_name -> AbstractValue.abstract_value
 
 val is_variable_is_defined : variable_infos -> variable_name -> bool

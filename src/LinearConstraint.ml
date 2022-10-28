@@ -244,6 +244,7 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 (************************************************************)
 
 type variable = int
+type variable_name = string
 type coef = NumConst.t
 
 (*type linear_term = Linexpr0.t*)
@@ -255,6 +256,7 @@ type coef = NumConst.t
 (*** Internal construction by Ulrich Kuehne (around 2010) ***)
 type internal_linear_term =
 	| IR_Var of variable
+    | IR_Local_var of variable_name
 	| IR_Coef of coef
 	| IR_Plus of internal_linear_term * internal_linear_term
 	| IR_Minus of internal_linear_term * internal_linear_term
