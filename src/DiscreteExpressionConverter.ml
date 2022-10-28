@@ -401,7 +401,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
         discrete = [];
-        functions = Hashtbl.create 0;
+        fun_meta = Hashtbl.create 0;
     }
     in
 
@@ -542,4 +542,5 @@ let convert_seq_code_bloc variable_infos seq_code_bloc =
 
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
+    (* Convert *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

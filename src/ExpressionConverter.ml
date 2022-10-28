@@ -1210,7 +1210,7 @@ type discrete_index = int
 
 
 let user_function_meta variable_infos function_name =
-    let fun_meta_opt = Hashtbl.find_opt variable_infos.functions function_name in
+    let fun_meta_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in
     match fun_meta_opt with
     | Some fun_meta -> fun_meta
     | None -> raise (UndefinedFunction function_name)
@@ -2574,7 +2574,7 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed_fun_definition) : fun_definition =
     (* Search metadata of function to convert *)
-    let meta = Hashtbl.find variable_infos.functions typed_fun_def.name in
+    let meta = Hashtbl.find variable_infos.fun_meta typed_fun_def.name in
     {
         name = typed_fun_def.name;
         parameter_names = typed_fun_def.parameters;

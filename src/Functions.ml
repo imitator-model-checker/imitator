@@ -480,7 +480,7 @@ let metadata_of_parsed_function_definition builtin_functions_metadata_table user
 
 (* Get function meta given it's name, raise an error if the function doesn't exists *)
 let function_metadata_by_name (variable_infos : variable_infos) function_name =
-    let fun_definition_opt = Hashtbl.find_opt variable_infos.functions function_name in
+    let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in
     match fun_definition_opt with
     | Some fun_definition -> fun_definition
     | None ->

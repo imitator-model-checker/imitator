@@ -499,18 +499,16 @@ type parsed_property = {
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
-type constants_table = (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t
 
 type variable_infos = {
-	constants : constants_table;
+	constants : (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t;
 	variables : variable_name array;
     variable_names : variable_name list;
 	index_of_variables : (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
-	(* TODO benjamin REFACTOR rename to fun_meta *)
-	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
+	fun_meta : (Automaton.variable_name, function_metadata) Hashtbl.t;
 }
 
 type useful_parsing_model_information = {

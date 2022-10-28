@@ -133,7 +133,7 @@ let is_variable_defined variable_infos = is_variable_defined_with_callback varia
 let is_function_defined_with_callback variable_infos function_not_defined_callback_opt local_variables = function
     | Leaf_fun function_name ->
 
-        let is_defined = Hashtbl.mem variable_infos.functions function_name in
+        let is_defined = Hashtbl.mem variable_infos.fun_meta function_name in
 
         if not is_defined then (
             match function_not_defined_callback_opt with
