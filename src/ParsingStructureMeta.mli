@@ -49,11 +49,12 @@ val has_side_effect_parsed_normal_update : variable_infos -> normal_update -> bo
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
 
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
+(*
 val is_linear_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 val is_linear_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 val is_linear_parsed_term : variable_infos -> parsed_discrete_term -> bool
 val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
-
+*)
 
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> variable_callback -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression_without_callback : variable_infos -> parsed_boolean_expression -> bool

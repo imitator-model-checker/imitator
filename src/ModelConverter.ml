@@ -1333,6 +1333,7 @@ let split_to_clock_discrete_updates variable_infos updates =
     let is_clock_update (parsed_update_type, update_expr) =
         match parsed_update_type with
         | Parsed_variable_update (Parsed_scalar_update variable_name)
+        (* TODO benjamin REFAC replace by call to VariableInfos module *)
         when variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock ->
             (* Retrieve variable type *)
             My_left (Parsed_scalar_update variable_name, update_expr)
