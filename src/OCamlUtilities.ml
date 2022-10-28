@@ -67,6 +67,12 @@ let second_of_tuple (_, x) = x
 let apply_tuple f (a, b) = f a b
 (* Map first element of tuple *)
 let map_first_of_tuple f (x, y) = f x, y
+(* Get first element of triplet *)
+let first_of_triplet (x, _, _) = x
+(* Get second element of triplet *)
+let second_of_triplet (_, x, _) = x
+(* Get third element of triplet *)
+let third_of_triplet (_, _, x) = x
 
 (************************************************************)
 (** Useful functions on lists *)

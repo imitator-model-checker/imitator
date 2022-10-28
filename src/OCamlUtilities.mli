@@ -55,6 +55,14 @@ val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
 (* Map first element of tuple *)
 val map_first_of_tuple : ('a -> 'c) -> 'a * 'b -> 'c * 'b
 
+(* Get first element of triplet *)
+val first_of_triplet : 'a * 'b * 'c -> 'a
+(* Get second element of triplet *)
+val second_of_triplet : 'a * 'b * 'c -> 'b
+(* Get third element of triplet *)
+val third_of_triplet : 'a * 'b * 'c -> 'c
+
+
 (************************************************************)
 (** Useful functions on lists *)
 (************************************************************)

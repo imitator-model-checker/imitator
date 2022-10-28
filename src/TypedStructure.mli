@@ -2,6 +2,7 @@ open ParsingStructure
 open ImitatorUtilities
 open OCamlUtilities
 open DiscreteType
+open CustomModules
 
 type inner_type = var_type_discrete
 
@@ -127,3 +128,14 @@ val string_of_typed_discrete_factor : variable_infos -> var_type_discrete -> typ
 val string_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> string
 
 val string_of_typed_state_predicate : variable_infos -> typed_state_predicate -> string
+
+type 'a traversed_typed_seq_code_bloc =
+    | Traversed_typed_local_decl of variable_name * DiscreteType.var_type_discrete * typed_boolean_expression (* init expr *) * 'a
+    | Traversed_typed_assignment of typed_normal_update * 'a
+    | Traversed_typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * 'a * 'a
+    | Traversed_typed_while_loop of typed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
+    | Traversed_typed_if of typed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
+    | Traversed_typed_return_expr of typed_boolean_expression
+    | Traversed_typed_bloc_void
+
+val traverse_typed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_typed_seq_code_bloc -> 'a) -> typed_seq_code_bloc -> 'a

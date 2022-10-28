@@ -1546,7 +1546,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
-              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
+              let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)

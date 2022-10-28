@@ -952,7 +952,7 @@ let rec string_of_linear_term (names : (variable -> string)) (linear_term : inte
 		| IR_Coef c -> string_of_coef c
 		
 		| IR_Var v -> names v
-		
+		| IR_Local_var v -> v
 		(* Some simplification *)
 		| IR_Plus (lterm, IR_Coef z)
 		| IR_Minus (lterm, IR_Coef z)
