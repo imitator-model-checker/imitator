@@ -50,3 +50,6 @@ val variable_kind_of_variable_name_opt : variable_infos -> variable_name -> vari
 
 (* Check if variable is a discrete variable given it's name *)
 val is_discrete_variable : variable_infos -> variable_name -> bool
+
+(* Get function metadata given it's name *)
+val function_metadata_by_name : variable_infos -> variable_name -> function_metadata

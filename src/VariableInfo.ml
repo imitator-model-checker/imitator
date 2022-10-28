@@ -148,4 +148,11 @@ let is_discrete_variable variable_infos variable_name =
         DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
     | Constant_defined -> false
     | _ ->
-        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
+        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+
+(* Get function meta given it's name, raise an error if the function doesn't exists *)
+let function_metadata_by_name variable_infos function_name =
+    let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in
+    match fun_definition_opt with
+    | Some fun_definition -> fun_definition
+    | None -> raise (UndefinedFunction function_name)

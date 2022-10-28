@@ -65,7 +65,7 @@ let is_constant variable_infos local_variables = function
 (* Check if leaf has side effects *)
 let has_side_effects variable_infos local_variables = function
     | Leaf_fun function_name ->
-        let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
+        let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
         function_metadata.side_effect
     | Leaf_variable _
     | Leaf_constant _ -> false
@@ -87,6 +87,7 @@ let is_linear_constant variable_infos = function
     | Leaf_linear_constant _
     | Leaf_false_linear_constraint
     | Leaf_true_linear_constraint -> true
+
 
 (* Check if leaf is a variable that is defined *)
 (* A given callback is executed if it's not a defined variable *)
@@ -653,3 +654,38 @@ let local_variables_of_parsed_seq_code_bloc seq_code_bloc =
         (fun _ _ -> [])
         (fun _ _ -> [])
         seq_code_bloc
+
+(* Infer whether a user function is subject to side effects *)
+let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
+
+    (* Check if a tree leaf has side effect *)
+    let is_leaf_has_side_effects local_variables = function
+        | Leaf_fun function_name ->
+            (* Is call found is a call to a builtin function ? *)
+            if Hashtbl.mem builtin_functions_metadata_table function_name then (
+                let function_metadata = Hashtbl.find builtin_functions_metadata_table function_name in
+                function_metadata.side_effect
+            )
+            (* Is call found is a call to a user function ? *)
+            else if Hashtbl.mem user_function_definitions_table function_name then (
+                let found_function_def = Hashtbl.find user_function_definitions_table function_name in
+                is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table found_function_def
+            )
+            else
+                raise (UndefinedFunction function_name);
+        | _ -> false
+    in
+
+    let is_seq_code_bloc_leaf_has_side_effects local_variables = function
+        (* TODO benjamin IMPLEMENT *)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _))
+        | Leaf_update_variable (Leaf_global_variable variable_name) ->
+            (* Side effect occurs only when update a global variable *)
+            not (VariableMap.mem variable_name local_variables)
+
+    in
+
+    ParsingStructureUtilities.exists_in_parsed_function_definition
+        is_seq_code_bloc_leaf_has_side_effects (* Check if leaf of sequential code bloc has side effect *)
+        is_leaf_has_side_effects (* Check if leaf has side effect *)
+        fun_def

@@ -1206,6 +1206,7 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 (* Convert updates *)
 (*------------------------------------------------------------*)
 
+(* TODO benjamin CLEAN UPDATES *)
 (** Checks if a update is a normal update *)
 let is_normal_update = function
   | Normal _ -> true
@@ -1223,7 +1224,7 @@ let get_conditional_update_value = function
 
 
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
   let not_removed_variable (parsed_update_type, _) =
@@ -1243,7 +1244,7 @@ let filter_updates removed_variable_names updates =
         Condition (bool, filtered_if, filtered_else)::acc
     ) [] updates
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
@@ -1289,6 +1290,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     (** abstract clock updates *)
     clock_updates
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Check if there is only resets in an update list *)
 let is_only_resets variable_infos updates =
     List.for_all (fun (update_type, update) ->
@@ -1310,6 +1312,7 @@ let is_only_resets variable_infos updates =
 
     ) updates
 
+(* TODO benjamin CLEAN UPDATES *)
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
 
@@ -1346,7 +1349,7 @@ let split_to_clock_discrete_updates variable_infos updates =
 (*    List.partition is_clock_update updates*)
     OCamlUtilities.partition_map is_clock_update updates
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates variable_infos updates_type updates_list =
 
@@ -1376,7 +1379,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
 		conditional = [];
 	}
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** convert normal and conditional updates *)
 let convert_updates variable_infos updates_type updates : updates =
 
@@ -1401,6 +1404,7 @@ let convert_updates variable_infos updates_type updates : updates =
     (** updates abstract model *)
     { converted_updates with conditional = conditional_updates_values }
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Get clock updates from a bloc of sequential code *)
 let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
 

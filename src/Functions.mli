@@ -22,10 +22,6 @@ open ParsedValue
 (* Abstract modules *)
 open FunctionSig
 
-(* Shortcuts to hash table types *)
-type functions_meta_table = (string, function_metadata) Hashtbl.t
-type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
-
 (* Get builtin functions meta *)
 val builtin_functions_metadata : function_metadata list
 (* Get builtin function metadata as a table *)
@@ -40,10 +36,9 @@ val builtin_function_bodies_table : (string, AbstractModel.fun_definition) Hasht
 (*val fun_def_without_unused_local_vars : (string * int) list -> parsed_fun_definition -> parsed_fun_definition*)
 
 (* Compute metadata of a user function definition *)
-val metadata_of_parsed_function_definition : functions_meta_table -> parsed_functions_table-> parsed_fun_definition -> function_metadata
+val metadata_of_parsed_function_definition : functions_meta_table -> parsed_functions_table -> parsed_fun_definition -> function_metadata
 
-(* Get function metadata given it's name *)
-val function_metadata_by_name : variable_infos -> variable_name -> function_metadata
+
 (* Get arity of a function given it's name *)
 val arity_of_function : variable_infos -> string -> int
 

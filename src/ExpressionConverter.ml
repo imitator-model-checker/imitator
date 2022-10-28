@@ -425,7 +425,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* Get function name *)
         let function_name = ParsingStructureUtilities.function_name_of_parsed_factor name_factor in
         (* Get function metadata *)
-        let function_metadata = Functions.function_metadata_by_name variable_infos function_name in
+        let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
         (* Get function arity *)
         let arity = Functions.arity_of_function variable_infos function_name in
         let arguments_number = List.length argument_expressions in
@@ -2515,7 +2515,7 @@ let clock_update_of_typed_seq_code_bloc variable_infos seq_code_bloc =
                 let clock_index = VariableInfo.index_of_variable_name variable_infos variable_name in
                 (* Convert to update expression to a linear term *)
                 (clock_index, linear_term_of_typed_boolean_expression variable_infos expr) :: next_result
-            | _ -> []
+            | _ -> next_result
             )
 
         | Traversed_typed_return_expr _
@@ -2528,8 +2528,9 @@ let clock_update_of_typed_seq_code_bloc variable_infos seq_code_bloc =
 
     (* Differentiate between different kinds of clock updates *)
     (* Case 1: no update *)
-    if converted_clock_updates = [] then
+    if converted_clock_updates = [] then (
         No_update
+    )
     else (
         (* TODO benjamin IMPLEMENT only reset ! *)
         (*

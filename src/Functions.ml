@@ -35,41 +35,6 @@ open FunctionSig
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-(* TODO benjamin REFACTOR move to ParsingMeta *)
-(* Infer whether a user function is subject to side effects *)
-let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
-
-    (* Check if a tree leaf has side effect *)
-    let is_leaf_has_side_effects local_variables = function
-        | Leaf_fun function_name ->
-            (* Is call found is a call to a builtin function ? *)
-            if Hashtbl.mem builtin_functions_metadata_table function_name then (
-                let function_metadata = Hashtbl.find builtin_functions_metadata_table function_name in
-                function_metadata.side_effect
-            )
-            (* Is call found is a call to a user function ? *)
-            else if Hashtbl.mem user_function_definitions_table function_name then (
-                let found_function_def = Hashtbl.find user_function_definitions_table function_name in
-                is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table found_function_def
-            )
-            else
-                raise (UndefinedFunction function_name);
-        | _ -> false
-    in
-
-    let is_seq_code_bloc_leaf_has_side_effects local_variables = function
-        (* TODO benjamin IMPLEMENT *)
-        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _))
-        | Leaf_update_variable (Leaf_global_variable variable_name) ->
-            (* Side effect occurs only when update a global variable *)
-            not (VariableMap.mem variable_name local_variables)
-
-    in
-
-    ParsingStructureUtilities.exists_in_parsed_function_definition
-        is_seq_code_bloc_leaf_has_side_effects (* Check if leaf of sequential code bloc has side effect *)
-        is_leaf_has_side_effects (* Check if leaf has side effect *)
-        fun_def
 
 (* binary(l) -> l -> binary(l) *)
 let shift_signature =
@@ -475,18 +440,10 @@ let metadata_of_parsed_function_definition builtin_functions_metadata_table user
         name = fun_def.name;
         parameter_names = List.map first_of_tuple fun_def.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature signature;
-        side_effect = is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
+        side_effect = ParsingStructureMeta.is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
     }
-
-(* Get function meta given it's name, raise an error if the function doesn't exists *)
-let function_metadata_by_name (variable_infos : variable_infos) function_name =
-    let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in
-    match fun_definition_opt with
-    | Some fun_definition -> fun_definition
-    | None ->
-        raise (UndefinedFunction function_name)
 
 (* Get arity of a function given it's name *)
 let arity_of_function variable_infos function_name =
-    let function_metadata = function_metadata_by_name variable_infos function_name in
+    let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
     (List.length (function_metadata.signature_constraint)) - 1
