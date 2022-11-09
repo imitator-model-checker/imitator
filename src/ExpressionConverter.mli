@@ -46,6 +46,7 @@ val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed
 
 val update_type_of_typed_update_type : variable_infos -> typed_update_type -> DiscreteExpressions.update_type
 val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> seq_code_bloc
+val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc -> AbstractModel.clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> fun_definition
 
 end

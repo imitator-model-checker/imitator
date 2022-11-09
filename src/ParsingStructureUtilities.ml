@@ -35,7 +35,7 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_leaf
+    | Leaf_update_variable of variable_leaf * parsed_boolean_expression
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -140,28 +140,6 @@ and fold_parsed_discrete_factor_with_local_variables local_variables operator ba
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
-and fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-    | Parsed_scalar_update variable_name ->
-
-	    let local_variable_opt = VariableMap.find_opt variable_name local_variables in
-
-	    let variable_leaf =
-            match local_variable_opt with
-            | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
-            | None -> Leaf_global_variable variable_name
-	    in
-
-        seq_code_bloc_leaf_fun local_variables (Leaf_update_variable variable_leaf)
-    | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
-        operator
-            (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
-            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
-
-and fold_parsed_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type
-    | Parsed_void_update -> base
-
 and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* seq_code_bloc *) =
     let rec fold_parsed_seq_code_bloc_rec local_variables = function
         | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
@@ -225,6 +203,31 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
     fold_parsed_seq_code_bloc_rec local_variables (* seq_code_bloc *)
 
 and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (update_type, expr) =
+
+    let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
+        | Parsed_scalar_update variable_name ->
+
+            let local_variable_opt = VariableMap.find_opt variable_name local_variables in
+
+            let variable_leaf =
+                match local_variable_opt with
+                | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
+                | None -> Leaf_global_variable variable_name
+            in
+
+            seq_code_bloc_leaf_fun local_variables (Leaf_update_variable (variable_leaf, expr))
+
+        | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
+            operator
+                (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
+                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
+
+    and fold_parsed_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
+        | Parsed_variable_update parsed_scalar_or_index_update_type ->
+            fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type
+        | Parsed_void_update -> base
+    in
+
     operator
         (fold_parsed_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun update_type)
         (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)

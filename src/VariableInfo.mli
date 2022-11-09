@@ -26,6 +26,7 @@ type variable_kind =
 
 val variable_name_of_index : variable_infos -> variable_index -> variable_name
 val index_of_variable_name : variable_infos -> variable_name -> variable_index
+val index_of_variable_name_opt : variable_infos -> variable_name -> variable_index option
 val value_of_constant_name : variable_infos -> variable_name -> AbstractValue.abstract_value
 
 val is_variable_is_defined : variable_infos -> variable_name -> bool
@@ -49,3 +50,10 @@ val variable_kind_of_variable_name_opt : variable_infos -> variable_name -> vari
 
 (* Check if variable is a discrete variable given it's name *)
 val is_discrete_variable : variable_infos -> variable_name -> bool
+
+(* Check if variable is a clock *)
+val is_clock : variable_infos -> variable_name -> bool
+
+
+(* Get function metadata given it's name *)
+val function_metadata_by_name : variable_infos -> variable_name -> function_metadata

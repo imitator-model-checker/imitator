@@ -141,7 +141,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
     let is_assignments_are_allowed =
         (* Check for variables (local and global) at the left and right side of an assignment *)
         let left_right_variable_names = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
-        let left_variable_names = List.map first_of_tuple left_right_variable_names in
+        let left_variable_names = List.map first_of_triplet left_right_variable_names in
 
         (* Check that no constants are updated *)
         let assigned_constant_names = List.filter_map (fun variable_name ->
@@ -160,7 +160,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_variable_names in
 
         (* Check that no variable (clocks, discrete) was updated by a param *)
-        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names) ->
+        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_params =
                 List.filter_map (fun right_variable_name ->
@@ -176,7 +176,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) [] left_right_variable_names in
 
         (* Get only discrete variable names *)
-        let left_discrete_variable_names = List.filter (fun (variable_name, _) ->
+        let left_discrete_variable_names = List.filter (fun (variable_name, _, _) ->
             let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
             match var_type_opt with
             | None
@@ -185,7 +185,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_right_variable_names in
 
         (* Check that no discrete variable was updated by a clock *)
-        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_name, right_variable_names) ->
+        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_clocks =
                 List.filter_map (fun right_variable_name ->
@@ -200,6 +200,18 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
         ) [] left_discrete_variable_names in
 
+        (* Check that clock update is a linear expression *)
+        let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_name, _, expr) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+            match var_type_opt with
+            | Some Var_type_clock ->
+                let is_linear = ParsingStructureMeta.is_linear_parsed_boolean_expression variable_infos expr in
+                if not is_linear then
+                    Some (variable_name, ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr)
+                else
+                    None
+            | _ -> None
+        ) left_right_variable_names in
 
         (* Is any constant modifications found in user function ? *)
         let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
@@ -207,8 +219,10 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         let has_assigned_param_modifications = List.length assigned_param_names > 0 in
         (* Is any variable (clock, discrete) is updated by a parameter ? *)
         let has_variable_updated_with_params = List.length variable_names_updated_by_params > 0 in
-        (* Is any discrete is updated by a clock ? *)
+        (* Is any discrete was updated by a clock ? *)
         let has_discrete_updated_with_clocks = List.length discrete_variable_names_updated_by_clocks > 0 in
+        (* Is any clock was updated by non linear expression ? *)
+        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in
 
         (* Print errors *)
 
@@ -258,8 +272,18 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) discrete_variable_names_updated_by_clocks;
 
+        List.iter (fun (clock_name, str_expr) ->
+            print_error (
+                "Clock `"
+                ^ clock_name
+                ^ "` was updated with a non-linear expression `"
+                ^ str_expr
+                ^ "`. A linear expression is expected for clock update."
+            );
+        ) assigned_clocks_with_non_linear_expr;
+
         (* Return is assignment is allowed *)
-        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks )
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_clock_updated_with_non_linear)
     in
 
     (* TODO benjamin REFACTOR check that in type checking, not here *)
@@ -401,7 +425,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
         discrete = [];
-        functions = Hashtbl.create 0;
+        fun_meta = Hashtbl.create 0;
     }
     in
 
@@ -496,12 +520,14 @@ let convert_guard variable_infos guard_convex_predicate =
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a parsed update to update for abstract model *)
 let convert_update variable_infos updates_type parsed_update_type expr =
     let typed_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos updates_type parsed_update_type expr in
     ExpressionConverter.Convert.update_type_of_typed_update_type variable_infos typed_update_type,
     ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a parsed continuous update to continuous update for abstract model *)
 let convert_continuous_update variable_infos parsed_scalar_or_index_update_type expr =
     let parsed_update_type = Parsed_variable_update parsed_scalar_or_index_update_type in
@@ -509,6 +535,7 @@ let convert_continuous_update variable_infos parsed_scalar_or_index_update_type 
     ExpressionConverter.Convert.update_type_of_typed_update_type variable_infos typed_update_type,
     ExpressionConverter.Convert.linear_term_of_typed_boolean_expression variable_infos typed_expr
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a parsed boolean expression to boolean expression for abstract model *)
 let convert_conditional variable_infos expr =
     (* Check *)
@@ -532,7 +559,7 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
     ExpressionConverter.Convert.fun_definition_of_typed_fun_definition variable_infos typed_fun_definition
 
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
-let convert_seq_code_bloc variable_infos seq_code_bloc =
+let convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
     (* Some checks *)
     let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
 
@@ -540,6 +567,13 @@ let convert_seq_code_bloc variable_infos seq_code_bloc =
     if not well_formed_user_function then
         raise InvalidModel;
 
+    (* Check whether there is only resets in seq code bloc ? (check recursively in called functions) *)
+    let is_only_resets = ParsingStructureMeta.is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table seq_code_bloc in
+
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
+
+    (* Convert clock updates to linear terms *)
+    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
+    (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

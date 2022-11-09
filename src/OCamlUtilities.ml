@@ -67,6 +67,12 @@ let second_of_tuple (_, x) = x
 let apply_tuple f (a, b) = f a b
 (* Map first element of tuple *)
 let map_first_of_tuple f (x, y) = f x, y
+(* Get first element of triplet *)
+let first_of_triplet (x, _, _) = x
+(* Get second element of triplet *)
+let second_of_triplet (_, x, _) = x
+(* Get third element of triplet *)
+let third_of_triplet (_, _, x) = x
 
 (************************************************************)
 (** Useful functions on lists *)
@@ -244,6 +250,18 @@ let list_combination l1 l2 =
             let e2 = List.nth l2 j in
             if e1 <> e2 then
                 l := (e1, e2)::!l;
+        done;
+    done;
+    !l
+
+let list_combination_2 l1 l2 =
+    let acc = [] in
+    let l = ref acc in
+    for i = 0 to (List.length l1) - 1 do
+        for j = 0 to (List.length l2) - 1 do
+            let e1 = List.nth l1 i in
+            let e2 = List.nth l2 j in
+            l := (e1, e2)::!l;
         done;
     done;
     !l

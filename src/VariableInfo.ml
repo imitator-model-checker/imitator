@@ -36,6 +36,9 @@ let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.va
 (* Get variable index given a variable name *)
 let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
 
+(* Get variable index given a variable name or None if variable was not found *)
+let [@inline] index_of_variable_name_opt variable_infos = Hashtbl.find_opt variable_infos.index_of_variables
+
 (* Get constant value given a constant name *)
 let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
 
@@ -145,4 +148,14 @@ let is_discrete_variable variable_infos variable_name =
         DiscreteType.is_discrete_type (variable_infos.type_of_variables variable_index)
     | Constant_defined -> false
     | _ ->
-        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
+        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+
+(* Check if variable is a clock *)
+let [@inline] is_clock variable_infos variable_name = var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
+
+(* Get function meta given it's name, raise an error if the function doesn't exists *)
+let function_metadata_by_name variable_infos function_name =
+    let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in
+    match fun_definition_opt with
+    | Some fun_definition -> fun_definition
+    | None -> raise (UndefinedFunction function_name)

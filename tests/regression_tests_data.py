@@ -2169,7 +2169,7 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
+	when True do {x := x + 1/2*p + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -2808,6 +2808,30 @@ END CONSTRAINT
 			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
 when  y + 7 > 2*x
 & x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2022/10/27
+		## Last modified            : 2022/10/27
+		## Test for IMITATOR version: 3.3
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'tags': 'parsing, arithmetic, linear',
+		'purpose'    : 'Test linear expression reduction is correct',
+		'input_files': ['linear_expressions/linear-expression-reduction.imi'],
+		'options'    : '-imi2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
+x1 := 6*x + 10*y + -53, x2 := 6*x + 10*y + -53, x3 := y + 5*x + 5, x4 := x + -1, x5 := -6, x6 := 2*x + 11, x7 := -3*x + 23*y + 35, x8 := 12*x + 24, x9 := -12*y + 2*x + 4*z + 41
 		"""
 			 } # end result file
 			,
@@ -8016,7 +8040,7 @@ True
 						"PTA": "pta",
 						"guard": " x = 1",
 						"updates": {
-							"y": "-1*x + y"
+							"y": "y + -1*x"
 						}
 					}
 					}
@@ -8036,8 +8060,8 @@ True
 					"global_time": "7/2"
 				},
 				"flows": {
-					"x": "1", 
-					"y": "1", 
+					"x": "1",
+					"y": "1",
 					"global_time": "1"
 				}
 			}

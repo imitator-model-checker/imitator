@@ -111,6 +111,10 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
                     IR_Var variable_index
                 )
             )
+        | IR_Local_var variable_name ->
+            let value = numconst_value (VariableMap.find variable_name eval_context.local_variables) in
+            IR_Coef value
+
         | IR_Coef _ as ir_coef -> ir_coef
         | IR_Plus (l_linear_term, r_linear_term) ->
             LinearConstraint.add_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)

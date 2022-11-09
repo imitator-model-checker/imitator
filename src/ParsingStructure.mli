@@ -211,7 +211,12 @@ type parsed_fun_definition = {
     body : parsed_seq_code_bloc; (* body *)
 }
 
+(* Parsed function definition list *)
 type parsed_fun_definition_list = parsed_fun_definition list
+
+(* Shortcuts to hash table types *)
+type functions_meta_table = (string, function_metadata) Hashtbl.t
+type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
 (* A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
@@ -509,8 +514,7 @@ type variable_infos = {
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
-	(* TODO benjamin REFACTOR rename to fun_meta *)
-	functions : (Automaton.variable_name, function_metadata) Hashtbl.t
+	fun_meta : (Automaton.variable_name, function_metadata) Hashtbl.t;
 }
 
 type useful_parsing_model_information = {

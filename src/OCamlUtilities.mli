@@ -55,6 +55,14 @@ val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
 (* Map first element of tuple *)
 val map_first_of_tuple : ('a -> 'c) -> 'a * 'b -> 'c * 'b
 
+(* Get first element of triplet *)
+val first_of_triplet : 'a * 'b * 'c -> 'a
+(* Get second element of triplet *)
+val second_of_triplet : 'a * 'b * 'c -> 'b
+(* Get third element of triplet *)
+val third_of_triplet : 'a * 'b * 'c -> 'c
+
+
 (************************************************************)
 (** Useful functions on lists *)
 (************************************************************)
@@ -110,6 +118,7 @@ val list_set_nth : int -> 'a -> 'a list -> 'a list
 
 (** Get combination of two list **)
 val list_combination : 'a list -> 'a list -> ('a * 'a) list
+val list_combination_2 : 'a list -> 'a list -> ('a * 'a) list
 
 (* Check if predicate is true for all arrangement of list *)
 val for_all_in_arrangement : ('a -> 'a -> bool) -> 'a list -> bool

@@ -32,7 +32,7 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_leaf
+    | Leaf_update_variable of variable_leaf * parsed_boolean_expression
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =

@@ -257,8 +257,8 @@ let check_normal_update variable_infos automaton_name normal_update =
             (@)
             []
             (fun _ -> function
-                | Leaf_update_variable (Leaf_global_variable variable_name)
-                | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) -> [variable_name]
+                | Leaf_update_variable (Leaf_global_variable variable_name, _)
+                | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) -> [variable_name]
             )
             (fun _ _ -> []) normal_update
             |> List.filter (fun x -> x <> "")
@@ -1206,6 +1206,7 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 (* Convert updates *)
 (*------------------------------------------------------------*)
 
+(* TODO benjamin CLEAN UPDATES *)
 (** Checks if a update is a normal update *)
 let is_normal_update = function
   | Normal _ -> true
@@ -1223,7 +1224,7 @@ let get_conditional_update_value = function
 
 
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
   let not_removed_variable (parsed_update_type, _) =
@@ -1243,7 +1244,7 @@ let filter_updates removed_variable_names updates =
         Condition (bool, filtered_if, filtered_else)::acc
     ) [] updates
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
 
@@ -1289,6 +1290,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
     (** abstract clock updates *)
     clock_updates
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Check if there is only resets in an update list *)
 let is_only_resets variable_infos updates =
     List.for_all (fun (update_type, update) ->
@@ -1310,6 +1312,7 @@ let is_only_resets variable_infos updates =
 
     ) updates
 
+(* TODO benjamin CLEAN UPDATES *)
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
 
@@ -1333,6 +1336,7 @@ let split_to_clock_discrete_updates variable_infos updates =
     let is_clock_update (parsed_update_type, update_expr) =
         match parsed_update_type with
         | Parsed_variable_update (Parsed_scalar_update variable_name)
+        (* TODO benjamin REFAC replace by call to VariableInfos module *)
         when variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock ->
             (* Retrieve variable type *)
             My_left (Parsed_scalar_update variable_name, update_expr)
@@ -1345,7 +1349,7 @@ let split_to_clock_discrete_updates variable_infos updates =
 (*    List.partition is_clock_update updates*)
     OCamlUtilities.partition_map is_clock_update updates
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates variable_infos updates_type updates_list =
 
@@ -1375,7 +1379,7 @@ let convert_normal_updates variable_infos updates_type updates_list =
 		conditional = [];
 	}
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** convert normal and conditional updates *)
 let convert_updates variable_infos updates_type updates : updates =
 
@@ -1400,6 +1404,7 @@ let convert_updates variable_infos updates_type updates : updates =
     (** updates abstract model *)
     { converted_updates with conditional = conditional_updates_values }
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Get clock updates from a bloc of sequential code *)
 let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
 
@@ -1545,7 +1550,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* translate parsed updates into their abstract model *)
               let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
               let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
-              let converted_new_updates = clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update, DiscreteExpressionConverter.convert_seq_code_bloc variable_infos seq_code_bloc_update in
+              let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
               (* Convert the updates *)
@@ -3044,7 +3049,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
         discrete = [];
-        functions = Hashtbl.create 0;
+        fun_meta = Hashtbl.create 0;
         type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
     }
     in
@@ -3625,7 +3630,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variables					= variables;
         variable_names				= variable_names;
         removed_variable_names		= removed_variable_names;
-        functions                   = functions_metadata_table;
+        fun_meta                   = functions_metadata_table;
     }
     in
 
