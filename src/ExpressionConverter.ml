@@ -1198,7 +1198,7 @@ val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typ
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val update_type_of_typed_update_type : variable_infos -> typed_update_type -> DiscreteExpressions.update_type
 val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> DiscreteExpressions.seq_code_bloc
-val clock_update_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> AbstractModel.clock_updates
+val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc -> AbstractModel.clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct
@@ -2497,7 +2497,7 @@ let linear_term_of_typed_boolean_expression variable_infos = function
         )
 
 
-let clock_update_of_typed_seq_code_bloc variable_infos seq_code_bloc =
+let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_bloc =
 
     let clock_update_of_typed_seq_code_bloc_rec local_variables = function
         | Traversed_typed_for_loop (_, _, _, _, inner_result, next_result)
@@ -2522,9 +2522,8 @@ let clock_update_of_typed_seq_code_bloc variable_infos seq_code_bloc =
         | Traversed_typed_bloc_void -> []
 
     in
-    let converted_clock_updates = TypedStructure.traverse_typed_seq_code_bloc clock_update_of_typed_seq_code_bloc_rec seq_code_bloc in
 
-    (* TODO benjamin IMPLEMENT recursively found Update, Reset, No_update ! *)
+    let converted_clock_updates = TypedStructure.traverse_typed_seq_code_bloc clock_update_of_typed_seq_code_bloc_rec seq_code_bloc in
 
     (* Differentiate between different kinds of clock updates *)
     (* Case 1: no update *)
@@ -2532,15 +2531,12 @@ let clock_update_of_typed_seq_code_bloc variable_infos seq_code_bloc =
         No_update
     )
     else (
-        (* TODO benjamin IMPLEMENT only reset ! *)
-        (*
         (* Case 2: resets only *)
-        if only_resets then (
+        if is_only_resets then (
             (* Keep only the clock ids, not the linear terms *)
             let clocks_to_reset, _ = List.split converted_clock_updates in
             Resets (List.rev clocks_to_reset)
         ) else
-        *)
             (* Case 3: complex with linear terms *)
             Updates (List.rev converted_clock_updates)
     )

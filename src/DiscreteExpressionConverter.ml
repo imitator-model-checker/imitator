@@ -559,7 +559,7 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
     ExpressionConverter.Convert.fun_definition_of_typed_fun_definition variable_infos typed_fun_definition
 
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
-let convert_seq_code_bloc variable_infos seq_code_bloc =
+let convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
     (* Some checks *)
     let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
 
@@ -567,10 +567,13 @@ let convert_seq_code_bloc variable_infos seq_code_bloc =
     if not well_formed_user_function then
         raise InvalidModel;
 
+    (* Check whether there is only resets in seq code bloc ? (check recursively in called functions) *)
+    let is_only_resets = ParsingStructureMeta.is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table seq_code_bloc in
+
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
     (* Convert clock updates to linear terms *)
-    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc,
+    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
     (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

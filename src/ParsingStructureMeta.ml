@@ -71,8 +71,8 @@ let has_side_effects variable_infos local_variables = function
     | Leaf_constant _ -> false
 
 let has_side_effects_on_update variable_infos local_variables = function
-        | Leaf_update_variable (Leaf_global_variable variable_name)
-        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+        | Leaf_update_variable (Leaf_global_variable variable_name, _)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
         (* TODO benjamin IMPORTANT below false is a wrong value,
            I just set this value because this function is used in context of continuous update
            If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
@@ -112,8 +112,8 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
     | Leaf_constant _ -> true
 
 let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt local_variables = function
-        | Leaf_update_variable (Leaf_global_variable variable_name)
-        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+        | Leaf_update_variable (Leaf_global_variable variable_name, _)
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
@@ -512,6 +512,10 @@ let get_variables_in_parsed_normal_update_with_accumulator variables_used_ref =
         (fun _ _ -> ())
         (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all function names used in a parsed sequential code bloc in a given accumulator *)
+let get_functions_in_parsed_seq_code_bloc_with_accumulator function_used_ref =
+    iterate_in_parsed_seq_code_bloc (fun _ _ -> ()) (add_function_of_discrete_boolean_expression function_used_ref)
+
 (* Gather all variable names used in a parsed simple predicate in a given accumulator *)
 let get_variables_in_parsed_simple_predicate_with_accumulator variables_used_ref =
     iterate_in_parsed_simple_predicate
@@ -558,6 +562,10 @@ let get_variables_in_parsed_update =
 let get_variables_in_parsed_normal_update =
     wrap_accumulator get_variables_in_parsed_normal_update_with_accumulator
 
+(* Gather all function names used in a parsed sequential code bloc *)
+let get_functions_in_parsed_seq_code_bloc =
+    wrap_accumulator get_functions_in_parsed_seq_code_bloc_with_accumulator
+
 (* Gather all variable names used in a linear expression *)
 let get_variables_in_linear_expression =
     wrap_accumulator get_variables_in_linear_expression_with_accumulator
@@ -593,10 +601,12 @@ let get_functions_in_nonlinear_convex_predicate convex_predicate =
 let get_variables_in_parsed_simple_predicate =
     wrap_accumulator get_variables_in_parsed_simple_predicate_with_accumulator
 
+
 (**)
 let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
 
+(* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
 let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *) =
 
     let left_right_member_of_assignments local_variables = function
@@ -622,6 +632,47 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *)
         | Traversed_parsed_bloc_void -> []
     in
     ParsingStructureUtilities.traverse_parsed_seq_code_bloc left_right_member_of_assignments (* seq_code_bloc *)
+
+(* Check whether clock updates found in parsed sequential code bloc are only resets *)
+let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
+    ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
+        (fun _ -> function
+            (* If found clock update and assigned value is not zero so there is not only resets *)
+            | Leaf_update_variable (Leaf_global_variable variable_name, update_expr) ->
+
+                let is_clock = VariableInfo.is_clock variable_infos variable_name in
+                let is_reset_value =
+                    match update_expr with
+                    | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) when ParsedValue.is_zero value -> true
+                    | _ -> false
+                in
+
+                not is_clock || is_clock && is_reset_value
+            | _ -> true
+        )
+        (fun _ _ -> true) (* seq_code_bloc *)
+
+(* Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)
+let rec is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table seq_code_bloc =
+
+    (* Function that check if a function body contains only reset (recursively through function calls) *)
+    let is_only_resets_in_called_function function_name =
+        (* Is a call to a user function ? *)
+        if Hashtbl.mem user_function_definitions_table function_name then (
+            let found_function_def = Hashtbl.find user_function_definitions_table function_name in
+            is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table found_function_def.body
+        )
+        else
+            true
+    in
+
+    (* Search for called functions in sequential code bloc *)
+    let called_functions = get_functions_in_parsed_seq_code_bloc seq_code_bloc in
+    let called_functions_list = OCamlUtilities.string_set_to_list called_functions in
+    (* Check if there is only resets in called functions *)
+    let is_only_resets_in_called_functions = List.map is_only_resets_in_called_function called_functions_list in
+    (* Check if only reset in current code bloc and called functions *)
+    (is_only_resets_in_parsed_seq_code_bloc variable_infos seq_code_bloc) && (List.fold_left (&&) true is_only_resets_in_called_functions)
 
 (* Get local variables of a parsed function definition *)
 let local_variables_of_parsed_fun_def (fun_def : parsed_fun_definition) =
@@ -678,8 +729,8 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
 
     let is_seq_code_bloc_leaf_has_side_effects local_variables = function
         (* TODO benjamin IMPLEMENT *)
-        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _))
-        | Leaf_update_variable (Leaf_global_variable variable_name) ->
+        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _)
+        | Leaf_update_variable (Leaf_global_variable variable_name, _) ->
             (* Side effect occurs only when update a global variable *)
             not (VariableMap.mem variable_name local_variables)
 

@@ -150,6 +150,9 @@ let is_discrete_variable variable_infos variable_name =
     | _ ->
         raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
 
+(* Check if variable is a clock *)
+let [@inline] is_clock variable_infos variable_name = var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
+
 (* Get function meta given it's name, raise an error if the function doesn't exists *)
 let function_metadata_by_name variable_infos function_name =
     let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in

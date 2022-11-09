@@ -192,8 +192,8 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 				List.iter (fun update_expression ->
 					ParsingStructureUtilities.iterate_parsed_update
 					    (fun _ -> function
-					        | Leaf_update_variable (Leaf_global_variable variable_name)
-					        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+					        | Leaf_update_variable (Leaf_global_variable variable_name, _)
+					        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
                                 all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                         )
 					    (fun _ -> function
@@ -208,8 +208,8 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
                 ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
                     (fun _ -> function
-                        | Leaf_update_variable (Leaf_global_variable variable_name)
-                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _)) ->
+                        | Leaf_update_variable (Leaf_global_variable variable_name, _)
+                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                     )
                     (fun _ -> function

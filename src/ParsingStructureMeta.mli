@@ -110,7 +110,12 @@ val get_functions_in_nonlinear_convex_predicate : nonlinear_constraint list -> S
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
+(* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
 val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> (variable_name * variable_name list * parsed_boolean_expression) list
+(* Check whether clock updates found in parsed sequential code bloc are only resets *)
+val is_only_resets_in_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> bool
+(* Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)
+val is_only_resets_in_parsed_seq_code_bloc_deep : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc -> bool
 (* Get local variables of a parsed function definition *)
 val local_variables_of_parsed_fun_def : parsed_fun_definition -> (variable_name * var_type_discrete * int) list
 (* Get local variables of a parsed sequential code bloc *)
