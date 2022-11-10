@@ -946,7 +946,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 
     (* Create context *)
     let discrete_valuation, discrete_setter = discrete_access in
-    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = VariableMap.empty; updated_clocks = Hashtbl.create 0; }in
+    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; }in
 
 	(* Make mix update first ! *)
 	List.iter (fun transition_index ->
