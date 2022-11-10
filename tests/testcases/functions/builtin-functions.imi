@@ -55,7 +55,7 @@ automaton P
   loc s0: invariant True
   when True
   do {
-    seq
+    mix
 
     (* rationals *)
 

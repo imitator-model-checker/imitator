@@ -1,0 +1,19 @@
+(************************************************************)
+ automaton pta3
+(************************************************************)
+synclabs : a;
+loc l1: invariant True
+	when
+    & True
+  do {
+    mix
+        stack_push(2, s);
+        top3 := stack_top(s);
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)

@@ -4230,7 +4230,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let (_, updates_if, updates_else) = conditional_update in
 			is_updates_complex updates_if || is_updates_complex updates_else
 		in
-		is_updates_complex transition.updates
+		let is_mix_updates_complex (clock_update, _) = is_clock_update_complex clock_update in
+		is_updates_complex transition.updates || is_mix_updates_complex transition.new_updates
 	in
 	
 	let has_complex_updates : bool = 

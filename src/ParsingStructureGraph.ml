@@ -213,8 +213,12 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
                     )
                     (fun _ -> function
-                        | Leaf_fun function_name -> all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_variable _
+                        | Leaf_fun function_name ->
+                            all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
+                        | Leaf_variable (Leaf_global_variable variable_name) ->
+                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        | Leaf_variable (Leaf_local_variable (variable_name, _, id)) ->
+                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, "", id)) !all_relations
                         | Leaf_constant _ -> ()
                     )
                     mixin_updates
