@@ -1,6 +1,14 @@
 # Releases
 
 *******************************************************
+## release 3.4 (2022-11-14)
+
+### Syntax improvement
+* Remove backward-compatibility on assignment syntax, now we only accept `:=` operator
+* Both `;` and ',' instruction separators accepted
+
+
+*******************************************************
 ## release 3.3 (2022-07-21) Cheese Caramel au beurre salé
 
 ### Syntax improvement

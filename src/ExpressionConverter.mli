@@ -11,7 +11,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_boolean
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
+val check_update : variable_infos -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)

@@ -1351,7 +1351,7 @@ let split_to_clock_discrete_updates variable_infos updates =
 
 (* TODO benjamin CLEAN UPDATES *)
 (** Translate a normal parsed update into its abstract model *)
-let convert_normal_updates variable_infos updates_type updates_list =
+let convert_normal_updates variable_infos updates_list =
 
 	(* Flag to check if there are clock resets only to 0 *)
     let only_resets = is_only_resets variable_infos updates_list in
@@ -1359,16 +1359,8 @@ let convert_normal_updates variable_infos updates_type updates_list =
 	(** Split clocks and discrete updates *)
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
-    (* Check that pre and post updates not updating clocks ! It's only for discrete variables *)
-    (match updates_type with
-    | Parsed_seq_updates when List.length parsed_clock_updates > 0 ->
-        print_error "`seq` bloc is reserved for sequential updates on discrete variables. This bloc cannot be used for updating clock(s).";
-        raise InvalidModel
-    | _ -> ()
-    );
-
     (* Convert discrete updates *)
-    let converted_discrete_updates = List.map (fun (parsed_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos updates_type parsed_update_type expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (parsed_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos parsed_update_type expr) parsed_discrete_updates in
     (* Convert continuous updates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -1381,13 +1373,13 @@ let convert_normal_updates variable_infos updates_type updates_list =
 
 (* TODO benjamin CLEAN UPDATES *)
 (** convert normal and conditional updates *)
-let convert_updates variable_infos updates_type updates : updates =
+let convert_updates variable_infos updates : updates =
 
     (** split normal and conditional updates *)
     let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
     (** convert normal parsed updates *)
-    let converted_updates = convert_normal_updates variable_infos updates_type (List.map get_normal_update_value normal_updates) in
+    let converted_updates = convert_normal_updates variable_infos (List.map get_normal_update_value normal_updates) in
 
     (** convert normal parsed updates inside conditional updates *)
     let conditional_updates_values : conditional_update list = List.map (fun u ->
@@ -1395,8 +1387,8 @@ let convert_updates variable_infos updates_type updates : updates =
 
         let convert_boolean_expr = DiscreteExpressionConverter.convert_conditional variable_infos boolean_value in
 
-        let convert_if_updates = convert_normal_updates variable_infos updates_type if_updates in
-        let convert_else_updates = convert_normal_updates variable_infos updates_type  else_updates in
+        let convert_if_updates = convert_normal_updates variable_infos if_updates in
+        let convert_else_updates = convert_normal_updates variable_infos else_updates in
 
         (convert_boolean_expr, convert_if_updates, convert_else_updates)
     ) conditional_updates in
@@ -1487,7 +1479,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
-	seq_updates	= { clock = No_update; discrete = [] ; conditional = []};
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
 	new_updates = No_update, Bloc_void;
 	target		= -1;
@@ -1520,10 +1511,9 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              let seq_updates, updates, seq_code_bloc_update = update_section in
+              let updates, seq_code_bloc_update = update_section in
 
                 (* TODO benjamin IMPLEMENT have to delete some instruction ? in seq_code_bloc_update for removed variable ? *)
-              let filtered_seq_updates = filter_updates removed_variable_names seq_updates in
               let filtered_updates = filter_updates removed_variable_names updates in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
@@ -1548,8 +1538,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_seq_updates = convert_updates variable_infos Parsed_seq_updates filtered_seq_updates in
-              let converted_updates = convert_updates variable_infos Parsed_std_updates filtered_updates in
+              let converted_updates = convert_updates variable_infos filtered_updates in
               let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update in
 
               (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
@@ -1583,7 +1572,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               transitions_description.(!transition_index) <- {
 					guard   = converted_guard;
 					action  = action_index;
-					seq_updates = converted_seq_updates;
 					updates = converted_updates;
 					new_updates = converted_new_updates;
 					target  = target_location_index;

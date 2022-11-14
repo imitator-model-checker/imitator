@@ -22,7 +22,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_boolean
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_update_type * typed_boolean_expression
+val check_update : variable_infos -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_update_type * typed_boolean_expression
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -1057,7 +1057,7 @@ let check_guard variable_infos =
 
 (* TODO benjamin CLEAN UPDATES *)
 (* Type check an update *)
-let check_update variable_infos update_types parsed_update_type expr =
+let check_update variable_infos parsed_update_type expr =
 
     (* Get assigned variable name *)
     let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
@@ -1083,14 +1083,6 @@ let check_update variable_infos update_types parsed_update_type expr =
     let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_normal_update variable_infos (parsed_update_type, expr) in
 
     let typed_update_type, l_value_type = type_check_parsed_update_type None variable_infos parsed_update_type in
-
-    (* Check that continuous / discrete not sequential updates doesn't contain side effects *)
-    if update_types = Parsed_std_updates && has_side_effects then
-        raise (TypeError (
-            "`then` update bloc contain one or more expression with side effects `"
-            ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
-            ^ "`. Expression with side effects are only allowed in `seq` bloc."
-        ));
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (is_void_update || DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (

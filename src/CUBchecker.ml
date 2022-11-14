@@ -3176,7 +3176,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
-			seq_updates = {clock = No_update; discrete=[]; conditional=[]};
 			updates		= {
 				clock      = Resets clock_updates; (** Clock updates *)
 				discrete   = discrete_update; (** List of discrete updates *)

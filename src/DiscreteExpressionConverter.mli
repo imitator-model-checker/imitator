@@ -21,7 +21,7 @@ val convert_discrete_constant : constants_table -> variable_name * ParsingStruct
 (* Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
 val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.guard
 (* Convert a parsed update to update for abstract model *)
-val convert_update : variable_infos -> updates_type -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.update_type * DiscreteExpressions.global_expression
+val convert_update : variable_infos -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.update_type * DiscreteExpressions.global_expression
 (* Convert a parsed continuous update to continuous update for abstract model *)
 val convert_continuous_update : variable_infos -> parsed_scalar_or_index_update_type -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.update_type * LinearConstraint.pxd_linear_term
 (* Convert a parsed boolean expression to boolean expression for abstract model *)

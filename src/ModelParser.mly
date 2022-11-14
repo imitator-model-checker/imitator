@@ -510,9 +510,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { ([], [], Parsed_bloc_void), NoSync }
+	| { ([], Parsed_bloc_void), NoSync }
 	| updates { $1, NoSync }
-	| syn_label { ([], [], Parsed_bloc_void), (Sync $1) }
+	| syn_label { ([], Parsed_bloc_void), (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -520,23 +520,12 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE seq_then_updates RBRACE { $3 }
+  | CT_DO LBRACE mix_updates RBRACE { $3 }
 ;
 
-seq_then_updates:
-  | CT_SEQ update_seq_nonempty_list then_updates mixin_updates { $2, $3, $4 }
-  | CT_MIX seq_code_bloc end_opt { [], [], $2 }
-  | update_list { [], $1, Parsed_bloc_void }
-;
-
-then_updates:
-  | CT_THEN update_nonempty_list end_opt { $2 }
-  | { [] }
-;
-
-mixin_updates:
-  | CT_MIX seq_code_bloc end_opt { $2 }
-  | { Parsed_bloc_void }
+mix_updates:
+  | CT_MIX seq_code_bloc end_opt { [], $2 }
+  | update_list { $1, Parsed_bloc_void }
 ;
 
 /************************************************************/

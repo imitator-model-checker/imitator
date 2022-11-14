@@ -156,11 +156,6 @@ type parsed_update_type =
     | Parsed_variable_update of parsed_scalar_or_index_update_type
     | Parsed_void_update
 
-(* Type of the batch of updates *)
-type updates_type =
-    | Parsed_seq_updates (* Sequential updates `seq` *)
-    | Parsed_std_updates (* Standard updates `then` *)
-
 (** basic updating *)
 type normal_update = parsed_update_type * parsed_boolean_expression
 (** conditional updating *)
@@ -175,8 +170,8 @@ type parsed_loop_dir =
     | Parsed_for_loop_up
     | Parsed_for_loop_down
 
-(* Three type of updates (pre-updates, updates, post-updates) grouped in section *)
-type update_section = update list (* pre-updates sequential *) * update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
+(* Two types of updates (old updates, mix updates) grouped in section *)
+type update_section = update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
 
 (****************************************************************)
 (** Bloc of sequential code *)

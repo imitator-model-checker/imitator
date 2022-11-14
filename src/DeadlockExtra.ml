@@ -46,10 +46,10 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 		(* Access the transition and get the components *)
 		let transitions_description = model.transitions_description transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for seq updates *), discrete_seq_updates = AlgoStateBased.get_updates (Some model.variable_names) (Some model.functions_table) glob_location transitions_description.seq_updates in
+        let _ (* no clock update for seq updates *), discrete_updates = AlgoStateBased.get_updates (Some model.variable_names) (Some model.functions_table) glob_location transitions_description.updates in
 
         (* Make `seq` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_seq_updates);
+        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_updates);
 	) transition;
 
     let discrete = State.discrete_constraint_of_global_location model location in

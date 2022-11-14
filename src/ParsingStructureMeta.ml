@@ -43,8 +43,8 @@ let variable_name_of_parsed_update_type parsed_update_type =
 
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 let updates_of_update_section update_section =
-    let seq_updates, updates, _ = update_section in
-    seq_updates @ updates
+    let updates, _ = update_section in
+    updates
 
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
 (* If the expression is more complex, return None *)

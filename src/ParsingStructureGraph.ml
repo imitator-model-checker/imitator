@@ -182,29 +182,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
                 ) updates;
 
-                (* Only for seq updates *)
-                let seq_updates, _, _ = update_section in
-
-                (* In seq update an assigned variable is considered as used (even if not used in any guard / invariant) *)
-                (* For example r := <anything>, r is considered as used *)
-                (* We make this choice for sake of simplicity, because seq updates can contains side effect functions that should be executed *)
-                (* eg: r := stack_pop(s) *)
-				List.iter (fun update_expression ->
-					ParsingStructureUtilities.iterate_parsed_update
-					    (fun _ -> function
-					        | Leaf_update_variable (Leaf_global_variable variable_name, _)
-					        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
-                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                        )
-					    (fun _ -> function
-                            | Leaf_variable _
-                            | Leaf_constant _
-                            | Leaf_fun _ -> ()
-                        )
-                    update_expression;
-                ) seq_updates;
-
-                let _, _, mixin_updates = update_section in
+                let _, mixin_updates = update_section in
 
                 ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
                     (fun _ -> function

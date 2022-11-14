@@ -1143,11 +1143,9 @@ let string_of_updates model automaton_index action_index clock_updates discrete_
 (* Convert a transition of a location into a string *)
 let string_of_transition model actions_and_nb_automata action_index automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
-	let all_updates = seq_updates @ discrete_updates in
 	let guard = string_of_guard model actions_and_nb_automata model.variable_names transition.guard in
-	let assignments = string_of_updates model automaton_index transition.action clock_updates all_updates transition in
+	let assignments = string_of_updates model automaton_index transition.action clock_updates discrete_updates transition in
 	(* Header *)
 
     let action_name = model.action_names action_index in

@@ -836,9 +836,7 @@ let string_of_sync model automaton_index action_index =
 (** TODO: Add conditions to the translation *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
-	let all_updates = seq_updates @ discrete_updates in
 
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
@@ -871,7 +869,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates all_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates discrete_updates)
 	)
 
 	(* Footer *)

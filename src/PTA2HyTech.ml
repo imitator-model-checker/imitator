@@ -267,9 +267,7 @@ let string_of_discrete_updates model updates =
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
-	let seq_updates = transition.seq_updates.discrete in
 	let discrete_updates = transition.updates.discrete in
-	let all_updates = seq_updates @ discrete_updates in
 	let conditional_updates = transition.updates.conditional in
 
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
@@ -288,7 +286,7 @@ let string_of_transition model automaton_index transition =
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model all_updates)
+	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
 
 	(* Convert the sync *)
