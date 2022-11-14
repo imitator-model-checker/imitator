@@ -5105,46 +5105,10 @@ P: lend, s = stack([0]), i = 2, j = 0
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'compound-updates-order-statespace.states' , 'content' : """
-pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
-& x >= 2
-& x = 2 + z
-& x + 4 = y
-& x = w
-& x = v
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-        ## Test version             : 1
-        ## Test since               : 2022/07/18
-        ## Last modified            : 2022/07/18
-        ## Test for IMITATOR version: 3.3
-        'author': 'lbinria',
-        'purpose'    : 'Toy model to test the discrete/continuous updates',
-        'input_files': ['updates/compound-updates-toy.imi'],
-		'tags': 'behavior, update',
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			{'file': 'compound-updates-toy-statespace.states' , 'content' : """
-  INITIAL
-  STATE 0:
-  pta1: l1, pta2: l1, pta3: l1, i = 0, r3 = 0, r2 = 0, r1 = 0, s = stack() ==>
-& x = 0
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 1:
-  pta1: lend, pta2: lend, pta3: lend, i = 2, r3 = 1, r2 = 1, r1 = 1, s = stack([1, 0]) ==>
-& x >= 2
+pta1: lend, pta2: lend, pta3: lend, r1 = 0, r2 = 2, r3 = 3, top1 = 0, top2 = 1, top3 = 2, s = stack([2, 1, 0]) ==>
+& x >= 6
+& x = 1 + y
+& x = 1 + z
 		"""
 			} # end result file
 			,
@@ -15596,7 +15560,7 @@ END CONSTRAINT
 		# Test since               : 2022
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Updated Deadlock Test 6',
+		'purpose'    : '"Updated Deadlock Test 6"',
 		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [

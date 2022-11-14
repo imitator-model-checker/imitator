@@ -3,7 +3,7 @@ open DiscreteExpressions
 open LinearConstraint
 open Automaton
 
-type variable_table = AbstractValue.abstract_value VariableMap.t
+type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
@@ -19,7 +19,7 @@ type eval_context = {
     (* Setter of global variables at the context (current location) *)
     discrete_setter : discrete_setter;
     (* Current local variables *)
-    local_variables : variable_table;
+    local_variables : variable_table list;
     (**)
     updated_clocks : clock_updates_history
 }

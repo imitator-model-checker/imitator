@@ -59,8 +59,8 @@ automaton P
   when True
 
   do {
-    seq
-      i := f1() + f2() + f3() + f4() + f5(0)
+    mix
+      i := f1() + f2() + f3() + f4() + f5(0);
   }
   goto lend;
 

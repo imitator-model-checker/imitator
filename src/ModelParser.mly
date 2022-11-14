@@ -525,6 +525,7 @@ updates:
 
 seq_then_updates:
   | CT_SEQ update_seq_nonempty_list then_updates mixin_updates { $2, $3, $4 }
+  | CT_MIX seq_code_bloc end_opt { [], [], $2 }
   | update_list { [], $1, Parsed_bloc_void }
 ;
 

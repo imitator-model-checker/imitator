@@ -33,10 +33,10 @@ loc l1: invariant True
 	when
     & True
   do {
-    seq
+    mix
       stack_push(2, s);
       stack_push(3, s);
-      result := pow(stack_pop(s) (* 3 *), stack_pop(s) (* 2 *)) (* should give pow(3, 2) = 9 *)
+      result := pow(stack_pop(s) (* 3 *), stack_pop(s) (* 2 *)); (* should give pow(3, 2) = 9 *)
   }
   goto lend;
 
