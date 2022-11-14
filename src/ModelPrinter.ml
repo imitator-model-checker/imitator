@@ -372,6 +372,9 @@ let string_of_seq_code_bloc model (* level *) (* expr *) =
         | Assignment (discrete_update, next_expr) ->
             tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
             ^ string_of_seq_code_bloc_rec level next_expr
+        | Instruction (expr, next_expr) ->
+            tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
+            ^ string_of_seq_code_bloc_rec level next_expr
         | Local_assignment (discrete_local_update, next_expr) ->
             tabs ^ DiscreteExpressions.string_of_discrete_local_update model.variable_names discrete_local_update ^ ";\n"
             ^ string_of_seq_code_bloc_rec level next_expr

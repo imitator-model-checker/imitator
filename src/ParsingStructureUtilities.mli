@@ -65,6 +65,7 @@ type 'a variable_declaration_callback = (variable_name * var_type_discrete * int
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
     | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_instruction of parsed_boolean_expression * 'a
     | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
     | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
     | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)

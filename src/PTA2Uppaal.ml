@@ -509,6 +509,10 @@ let string_of_fun_definitions model =
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
                 ^ string_of_next_expr next_expr
 
+            | Instruction (expr, next_expr) ->
+                DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
+                ^ string_of_next_expr next_expr
+
             | Return_expr expr ->
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
             | Bloc_void -> ""

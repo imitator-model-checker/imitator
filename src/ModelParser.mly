@@ -277,8 +277,10 @@ fun_parameter_nonempty_list:
 seq_code_bloc:
   /* local declaration */
   | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
-  /* instruction */
+  /* assignment */
   | update_without_deprecated SEMICOLON seq_code_bloc_or_return { Parsed_assignment ($1, $3) }
+  /* instruction without return */
+  | boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_instruction ($1, $3) }
   /* for loop */
   | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc_or_return { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
@@ -585,13 +587,11 @@ update:
 	}
 
 	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
-  | boolean_expression { (Parsed_void_update, $1) }
 ;
 
 /** Normal updates without deprecated (avoid parsing errors on function)*/
 update_without_deprecated:
 	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
-  | boolean_expression { (Parsed_void_update, $1) }
 ;
 
 /** List containing only normal updates.

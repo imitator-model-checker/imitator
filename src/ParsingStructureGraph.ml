@@ -444,6 +444,25 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 relations @ next_declaration_relations
 
+            | Parsed_instruction (expr, next_expr) ->
+
+                (* Get variables used in update expression *)
+                let variables_used = get_variables_in_parsed_boolean_expression expr in
+                let functions_used = get_functions_in_parsed_boolean_expression expr in
+
+                let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
+
+                let fun_use_fun_relations = StringSet.fold (fun used_function_name acc ->
+                    (fun_ref, Fun_ref used_function_name) :: acc
+                ) functions_used []
+                in
+                let relations = fun_use_variables_relations @ fun_use_fun_relations in
+
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
+                (* Concat current relations with next relations *)
+                relations @ next_declaration_relations
+
             | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
                 (* Create local variable ref representing a unique variable ref *)
                 let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in

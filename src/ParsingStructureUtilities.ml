@@ -194,6 +194,11 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
                 (fold_parsed_normal_update_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
                 (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
+        | Parsed_instruction (expr, next_expr) ->
+            operator
+                (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
+                (fold_parsed_seq_code_bloc_rec local_variables next_expr)
+
         | Parsed_return_expr expr ->
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
@@ -340,6 +345,7 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
     | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_instruction of parsed_boolean_expression * 'a
     | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
     | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
     | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
@@ -401,6 +407,11 @@ let traverse_parsed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
         | Parsed_assignment (normal_update, next_expr) ->
             let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
             let traversed_element = Traversed_parsed_assignment (normal_update, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_instruction (expr, next_expr) ->
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+            let traversed_element = Traversed_parsed_instruction (expr, next_result) in
             traverse_fun local_variables traversed_element
 
         | Parsed_return_expr (expr) ->
@@ -673,6 +684,10 @@ and string_of_parsed_seq_code_bloc variable_infos = function
 
         | Parsed_assignment (normal_update, next_expr) ->
             string_of_parsed_normal_update variable_infos normal_update
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
+        | Parsed_instruction (expr, next_expr) ->
+            string_of_parsed_boolean_expression variable_infos expr
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->

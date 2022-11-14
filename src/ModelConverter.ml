@@ -1432,6 +1432,7 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
             in
             function_clock_assignments @ found_clock_assignments @ next_clock_assignments
 
+        | Parsed_instruction (_, next_expr)
         | Parsed_local_decl (_, _, _, next_expr, _)
         | Parsed_for_loop (_, _, _, _, _, next_expr, _)
         | Parsed_while_loop (_, _, next_expr)

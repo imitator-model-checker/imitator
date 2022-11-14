@@ -628,6 +628,8 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *)
             in
 
             [left_variable_name, right_variable_names, expr] @ next_result
+
+        | Traversed_parsed_instruction (_, next_result) -> next_result
         | Traversed_parsed_return_expr _
         | Traversed_parsed_bloc_void -> []
     in

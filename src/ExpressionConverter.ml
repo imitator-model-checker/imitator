@@ -690,6 +690,14 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt =
 
         Typed_assignment ((typed_update_type, typed_expr), typed_next_expr, scope), next_expr_discrete_type
 
+    | Parsed_instruction (expr, next_expr) ->
+        (* Resolve typed expression *)
+        let typed_expr, expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None expr in
+        (* Resolve typed next expr *)
+        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+
+        Typed_instruction (typed_expr, typed_next_expr), next_expr_discrete_type
+
     | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
         (* Add local variable for loop to hashtable *)
         let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
@@ -2509,7 +2517,7 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
                 (clock_index, linear_term_of_typed_boolean_expression variable_infos expr) :: next_result
             | _ -> next_result
             )
-
+        | Traversed_typed_instruction (_, next_result) -> next_result
         | Traversed_typed_return_expr _
         | Traversed_typed_bloc_void -> []
 
@@ -2600,6 +2608,12 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
                 linear_term_of_typed_boolean_expression variable_infos typed_expr),
                 seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
             )
+        )
+
+    | Typed_instruction (typed_expr, typed_next_expr) ->
+        Instruction (
+            global_expression_of_typed_boolean_expression variable_infos typed_expr,
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
         )
 
     | Typed_return_expr typed_expr ->

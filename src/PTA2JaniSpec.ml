@@ -693,7 +693,13 @@ let string_of_custom_user_functions model =
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
-            | Assignment (discrete_update, next_expr) ->
+            | Assignment (_, next_expr)
+            | Local_assignment (_, next_expr)
+            | Clock_assignment (_, next_expr) ->
+                print_warning ("Assignment found in function `" ^ fun_def.name ^ "`. Assignment are not supported by Jani and will not be translated.");
+                string_of_next_expr next_expr
+
+            | Instruction (expr, next_expr) ->
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
