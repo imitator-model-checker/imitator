@@ -205,8 +205,8 @@ and expression_access_type =
 (* Bloc of sequential code *)
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
-    | Assignment of (update_type * global_expression) * seq_code_bloc
-    | Local_assignment of (scalar_or_index_local_update_type * global_expression) * seq_code_bloc
+    | Assignment of (scalar_or_index_update_type * global_expression) * seq_code_bloc
+    | Local_assignment of (scalar_or_index_update_type * global_expression) * seq_code_bloc
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term) * seq_code_bloc
     | Instruction of global_expression * seq_code_bloc
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
@@ -216,24 +216,11 @@ and seq_code_bloc =
     | Bloc_void
 
 (* Update type *)
-and scalar_or_index_local_update_type =
-    (* Variable update, ie: x := 1 *)
-    | Scalar_local_update of variable_name
-    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
-    | Indexed_local_update of scalar_or_index_local_update_type * int_arithmetic_expression
-
-(* Update type *)
 and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
     | Scalar_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
-
-and update_type =
-    (* Expression with assignment *)
-    | Variable_update of scalar_or_index_update_type
-    (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
-    | Void_update
 
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
@@ -282,8 +269,7 @@ type nonlinear_constraint = discrete_boolean_expression list
 
 (** update: variable_index := linear_term *)
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = update_type * global_expression
-type discrete_local_update = scalar_or_index_local_update_type * global_expression
+type discrete_update = scalar_or_index_update_type * global_expression
 
 (** Check linearity of a discrete expression **)
 
@@ -867,36 +853,17 @@ let string_of_stack_expression = customized_string_of_stack_expression Constants
 let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
 let string_of_expression_access = customized_string_of_expression_access Constants.global_default_string
 
-let rec string_of_scalar_or_index_update_type variable_names = function
-    | Scalar_update discrete_index ->
-        variable_names discrete_index
+(* Customized string representation of a variable update *)
+let rec customized_string_of_scalar_or_index_update_type customized_string variable_names = function
+    | Scalar_update variable_index -> variable_names variable_index
     | Indexed_update (scalar_or_index_update_type, index_expr) ->
-        string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
-        ^ "["
-        ^ string_of_int_arithmetic_expression variable_names index_expr
-        ^ "]"
+        customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type ^ "[" ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr ^ "]"
 
-let string_of_update_type variable_names = function
-    | Variable_update scalar_or_index_update_type ->
-        string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
-    | Void_update -> ""
+(* String representation of a variable update *)
+let string_of_scalar_or_index_update_type = customized_string_of_scalar_or_index_update_type Constants.global_default_string
 
-let rec string_of_scalar_or_index_local_update_type variable_names = function
-    | Scalar_local_update variable_name -> variable_name
-    | Indexed_local_update (scalar_or_index_local_update_type, index_expr) ->
-        string_of_scalar_or_index_local_update_type variable_names scalar_or_index_local_update_type
-        ^ "["
-        ^ string_of_int_arithmetic_expression variable_names index_expr
-        ^ "]"
-
-let string_of_discrete_update variable_names (update_type, expr) =
-    let str_left_member = string_of_update_type variable_names update_type in
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "")
-    ^ string_of_global_expression variable_names expr
-
-let string_of_discrete_local_update variable_names (local_update_type, expr) =
-    let str_left_member = string_of_scalar_or_index_local_update_type variable_names local_update_type in
+let string_of_discrete_update variable_names (scalar_or_index_update_type, expr) =
+    let str_left_member = string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type in
     str_left_member
     ^ (if str_left_member <> "" then " := " else "")
     ^ string_of_global_expression variable_names expr

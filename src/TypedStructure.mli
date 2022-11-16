@@ -65,11 +65,7 @@ type typed_scalar_or_index_update_type =
     | Typed_scalar_update of variable_name
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
-type typed_update_type =
-    | Typed_variable_update of typed_scalar_or_index_update_type
-    | Typed_void_update
-
-type typed_normal_update = typed_update_type * typed_boolean_expression
+type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name

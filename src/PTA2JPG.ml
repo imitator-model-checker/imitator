@@ -72,7 +72,7 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model discrete_updates =
-	ModelPrinter.string_of_discrete_updates ~sep:"\\n" model discrete_updates
+	ModelPrinter.string_of_discrete_updates ~sep:"\\n" model.variable_names discrete_updates
 
 (** Converts a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =

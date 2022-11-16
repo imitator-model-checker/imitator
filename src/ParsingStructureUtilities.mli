@@ -192,7 +192,6 @@ val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> s
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
 val string_of_parsed_clock_update : variable_infos -> parsed_scalar_or_index_update_type * parsed_boolean_expression -> string
-val string_of_parsed_update_type : variable_infos -> parsed_update_type -> string
 val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string
 
 (* Parsed linear constraint to string *)

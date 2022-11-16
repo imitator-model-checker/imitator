@@ -369,15 +369,15 @@ let string_of_seq_code_bloc model (* level *) (* expr *) =
             ^ tabs ^ "end\n\n"
             ^ string_of_seq_code_bloc_rec level next_expr
 
-        | Assignment (discrete_update, next_expr) ->
+        | Assignment (discrete_update, next_expr)
+        | Local_assignment (discrete_update, next_expr) ->
             tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
             ^ string_of_seq_code_bloc_rec level next_expr
+
         | Instruction (expr, next_expr) ->
             tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
             ^ string_of_seq_code_bloc_rec level next_expr
-        | Local_assignment (discrete_local_update, next_expr) ->
-            tabs ^ DiscreteExpressions.string_of_discrete_local_update model.variable_names discrete_local_update ^ ";\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+
         | Clock_assignment ((clock_index, linear_expr), next_expr) ->
             let clock_name = model.variable_names clock_index in
             tabs
@@ -570,27 +570,16 @@ let json_of_clock_updates model clock_updates =
 	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)) ^ "" in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* String representation of a variable update *)
-let rec string_of_scalar_or_index_update_type model = function
-	| Scalar_update (variable_index) ->
-		model.variable_names variable_index
-	| Indexed_update (scalar_or_index_update_type, index_expr) ->
-		string_of_scalar_or_index_update_type model scalar_or_index_update_type
-		^ "[" ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names index_expr  ^ "]"
+(* TODO benjamin CLEAN use model or model.variable_names *)
+let customized_string_of_scalar_or_index_update_type customized_string model scalar_or_index_update_type =
+    DiscreteExpressions.customized_string_of_scalar_or_index_update_type customized_string model.variable_names scalar_or_index_update_type
 
-(* String representation of an update *)
-let string_of_update_type model = function
-    | Variable_update scalar_or_index_update_type ->
-        string_of_scalar_or_index_update_type model scalar_or_index_update_type
-    | Void_update -> ""
+(* TODO benjamin CLEAN use model or model.variable_names *)
+let string_of_scalar_or_index_update_type model scalar_or_index_update_type =
+    DiscreteExpressions.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type
 
-let string_of_discrete_update model (update_type, expr) =
-    (* Convert the variable name *)
-    let variable_name = string_of_update_type model update_type in
-    variable_name
-    ^ (if variable_name <> "" then " := " else "")
-    (* Convert the arithmetic_expression *)
-    ^ DiscreteExpressions.string_of_global_expression model.variable_names expr
+(* TODO benjamin CLEAN use model or model.variable_names *)
+let string_of_discrete_update model discrete_update = DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
@@ -598,12 +587,11 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (parsed_update_type, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (scalar_or_index_update_type, expr) ->
 		(* Convert the variable name *)
-		"" ^ (json_of_string (string_of_update_type model parsed_update_type)) ^ ""
+		(json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type))
 		^ ": "
-		(* Convert the arithmetic_expression *)
-		^ "" ^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names arithmetic_expression)) ^ ""
+		^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names expr))
 	) updates)
 
 (** Return if there is no clock updates *)
@@ -861,18 +849,17 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
 
-
-let rec customized_string_of_parsed_scalar_or_index_update_type customized_string model = function
+(* TODO benjamin CLEAN comments *)
+(* Customized string representation of a variable update *)
+(*
+let rec customized_string_of_scalar_or_index_update_type customized_string model = function
     | Scalar_update variable_index -> model.variable_names variable_index
     | Indexed_update (scalar_or_index_update_type, index_expr) ->
-        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
+        customized_string_of_scalar_or_index_update_type customized_string model scalar_or_index_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
 
-let customized_string_of_parsed_update_type customized_string model = function
-    | Variable_update scalar_or_index_update_type ->
-        customized_string_of_parsed_scalar_or_index_update_type customized_string model scalar_or_index_update_type
-    | Void_update -> ""
-
-let string_of_parsed_update_type = customized_string_of_parsed_update_type Constants.global_default_string
+(* String representation of a variable update *)
+let string_of_scalar_or_index_update_type = customized_string_of_scalar_or_index_update_type Constants.global_default_string
+*)
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =

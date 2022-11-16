@@ -207,7 +207,7 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
     in
     fold_parsed_seq_code_bloc_rec local_variables (* seq_code_bloc *)
 
-and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (update_type, expr) =
+and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
         | Parsed_scalar_update variable_name ->
@@ -226,15 +226,9 @@ and fold_parsed_normal_update_with_local_variables local_variables operator base
             operator
                 (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
                 (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
-
-    and fold_parsed_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-        | Parsed_variable_update parsed_scalar_or_index_update_type ->
-            fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type
-        | Parsed_void_update -> base
     in
-
     operator
-        (fold_parsed_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun update_type)
+        (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
         (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
@@ -731,8 +725,8 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             "return " ^ string_of_parsed_boolean_expression variable_infos expr
         | Parsed_bloc_void -> ""
 
-and string_of_parsed_normal_update variable_infos (update_type, expr) =
-    let str_left_member = string_of_parsed_update_type variable_infos update_type in
+and string_of_parsed_normal_update variable_infos (parsed_scalar_or_index_update_type, expr) =
+    let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
     let str_right_member = string_of_parsed_boolean_expression variable_infos expr in
     string_of_assignment str_left_member str_right_member
 
@@ -763,12 +757,6 @@ and string_of_parsed_scalar_or_index_update_type variable_infos = function
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
         string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
-
-(* Get variable name if any *)
-and string_of_parsed_update_type variable_infos = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
-    | Parsed_void_update -> ""
 
 let string_of_parsed_fun_def variable_infos fun_def =
     (* Format each parameters to string *)

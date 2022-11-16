@@ -101,8 +101,8 @@ val string_of_conditional_updates_template : AbstractModel.abstract_model -> con
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
 
-val customized_string_of_parsed_update_type : Constants.customized_string -> AbstractModel.abstract_model -> update_type -> string
-val string_of_parsed_update_type : AbstractModel.abstract_model -> update_type -> string
+val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> AbstractModel.abstract_model -> scalar_or_index_update_type -> string
+val string_of_scalar_or_index_update_type : AbstractModel.abstract_model -> scalar_or_index_update_type -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)

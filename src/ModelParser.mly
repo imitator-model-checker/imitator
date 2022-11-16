@@ -562,9 +562,9 @@ update_seq_nonempty_list:
 /************************************************************/
 
 /* Variable or variable access */
-parsed_update_type:
+parsed_scalar_or_index_update_type:
   | NAME { Parsed_scalar_update $1 }
-  | parsed_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+  | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -572,26 +572,26 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ boolean_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $4)
+		(Parsed_scalar_update $1, $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $4)
+		(Parsed_scalar_update $1, $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ boolean_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $3)
+		(Parsed_scalar_update $1, $3)
 	}
 
-	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
+	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
 ;
 
 /** Normal updates without deprecated (avoid parsing errors on function)*/
 update_without_deprecated:
-	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
+	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
 ;
 
 /** List containing only normal updates.

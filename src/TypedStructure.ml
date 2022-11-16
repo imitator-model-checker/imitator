@@ -66,11 +66,7 @@ type typed_scalar_or_index_update_type =
     | Typed_scalar_update of variable_name
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
-type typed_update_type =
-    | Typed_variable_update of typed_scalar_or_index_update_type
-    | Typed_void_update
-
-type typed_normal_update = typed_update_type * typed_boolean_expression
+type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -270,11 +266,6 @@ let rec string_of_typed_scalar_or_index_update_type variable_infos = function
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
         ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr ^ "]"
 
-let string_of_typed_update_type variable_infos = function
-    | Typed_variable_update typed_scalar_or_index_update_type ->
-        string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
-    | Typed_void_update -> ""
-
 let rec string_of_typed_seq_code_bloc variable_infos = function
     | Typed_local_decl (variable_name, discrete_type, expr, next_expr) ->
         ParsingStructureUtilities.string_of_let_in
@@ -319,8 +310,8 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ " end\n\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_assignment ((typed_update_type, update_expr), next_expr, _) ->
-        let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
+    | Typed_assignment ((typed_scalar_or_index_update_type, update_expr), next_expr, _) ->
+        let str_left_member = string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
         ParsingStructureUtilities.string_of_assignment str_left_member str_right_member
         ^ ";\n"

@@ -11,7 +11,7 @@ val check_constant_expression : variable_infos -> variable_name * parsed_boolean
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
 (* Check that an update is well typed *)
-val check_update : variable_infos -> parsed_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
+val check_update : variable_infos -> parsed_scalar_or_index_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
 (* Check that a condition is well typed *)
 val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
@@ -44,7 +44,7 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolea
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
-val update_type_of_typed_update_type : variable_infos -> typed_update_type -> DiscreteExpressions.update_type
+val scalar_or_index_update_type_of_typed_scalar_or_index_update_type : variable_infos -> typed_scalar_or_index_update_type -> DiscreteExpressions.scalar_or_index_update_type
 val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> seq_code_bloc
 val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc -> AbstractModel.clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> fun_definition

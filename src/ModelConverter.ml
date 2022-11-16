@@ -1227,12 +1227,9 @@ let get_conditional_update_value = function
 (* TODO benjamin CLEAN UPDATES *)
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filter_updates removed_variable_names updates =
-  let not_removed_variable (parsed_update_type, _) =
-    let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
-    match variable_name_opt with
-    | Some variable_name ->
-        not (List.mem variable_name removed_variable_names)
-    | None -> true
+  let not_removed_variable (parsed_scalar_or_index_update_type, _) =
+    let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+    not (List.mem variable_name removed_variable_names)
   in
   List.fold_left (fun acc u ->
       match u with
@@ -1293,7 +1290,7 @@ let to_abstract_clock_update variable_infos only_resets updates_list =
 (* TODO benjamin CLEAN UPDATES *)
 (* Check if there is only resets in an update list *)
 let is_only_resets variable_infos updates =
-    List.for_all (fun (update_type, update) ->
+    List.for_all (fun (parsed_scalar_or_index_update_type, update) ->
         (* An expression to zero *)
         let is_update_to_zero =
             match update with
@@ -1302,8 +1299,8 @@ let is_only_resets variable_infos updates =
         in
         (* Check if it's a clock *)
         let is_clock =
-            match update_type with
-            | Parsed_variable_update (Parsed_scalar_update variable_name) ->
+            match parsed_scalar_or_index_update_type with
+            | Parsed_scalar_update variable_name ->
                 VariableInfo.var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
             | _ -> false
         in
@@ -1316,33 +1313,17 @@ let is_only_resets variable_infos updates =
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates variable_infos updates =
 
-    (*
     (** Function that check if a normal update is a clock update *)
-    let is_clock_update (parsed_update_type, _) =
-
-        (* Get updated variable name *)
-        let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
-
-        match variable_name_opt with
-        | Some variable_name ->
-            (* Retrieve variable type *)
-            variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock
-        (* Unit update, so it's not a clock *)
-        | None -> false
-    in
-    *)
-
-    (** Function that check if a normal update is a clock update *)
-    let is_clock_update (parsed_update_type, update_expr) =
-        match parsed_update_type with
-        | Parsed_variable_update (Parsed_scalar_update variable_name)
+    let is_clock_update (parsed_scalar_or_index_update_type, update_expr) =
+        match parsed_scalar_or_index_update_type with
+        | Parsed_scalar_update variable_name
         (* TODO benjamin REFAC replace by call to VariableInfos module *)
         when variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock ->
             (* Retrieve variable type *)
             My_left (Parsed_scalar_update variable_name, update_expr)
 
         | _ ->
-            My_right (parsed_update_type, update_expr)
+            My_right (parsed_scalar_or_index_update_type, update_expr)
     in
 
 
@@ -1360,7 +1341,7 @@ let convert_normal_updates variable_infos updates_list =
 	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates variable_infos updates_list in
 
     (* Convert discrete updates *)
-    let converted_discrete_updates = List.map (fun (parsed_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos parsed_update_type expr) parsed_discrete_updates in
+    let converted_discrete_updates = List.map (fun (parsed_scalar_or_index_update_type, expr) -> DiscreteExpressionConverter.convert_update variable_infos parsed_scalar_or_index_update_type expr) parsed_discrete_updates in
     (* Convert continuous updates *)
     let converted_clock_updates = to_abstract_clock_update variable_infos only_resets parsed_clock_updates in
 
@@ -1401,13 +1382,13 @@ let convert_updates variable_infos updates : updates =
 let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
 
     let rec clock_assignment_in_seq_code_bloc = function
-        | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
+        | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
 
             (* Get next clock assignments *)
             let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
 
             (* Get the update variable name *)
-            let variable_name_opt = ParsingStructureMeta.variable_name_of_parsed_update_type_opt parsed_update_type in
+            let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
             (* Get all function calls in the assignment expression *)
             let function_calls = ParsingStructureMeta.get_functions_in_parsed_boolean_expression expr in
@@ -1420,15 +1401,11 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
             in
 
             let found_clock_assignments =
-                match variable_name_opt with
-                | Some variable_name ->
-                    (* Get type of the variable *)
-                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
-                    (match var_type_opt with
-                    | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
-                    | _ -> []
-                    )
-                | None -> []
+                (* Get type of the variable *)
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                match var_type_opt with
+                | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
+                | _ -> []
             in
             function_clock_assignments @ found_clock_assignments @ next_clock_assignments
 
@@ -1442,11 +1419,9 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
         | Parsed_bloc_void -> []
     in
 
-    (* TODO benjamin REFACTOR here can refactor because is_only_resets use parsed_update_type, ...  *)
     let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
-    let parsed_updates = List.map (fun (scalar_or_index_update_type, expr) -> Parsed_variable_update scalar_or_index_update_type, expr) parsed_clock_updates in
 	(* Flag to check if there are clock resets only to 0 *)
-    let only_resets = is_only_resets variable_infos parsed_updates in
+    let only_resets = is_only_resets variable_infos parsed_clock_updates in
 
     (* Convert continuous updates *)
     to_abstract_clock_update variable_infos only_resets parsed_clock_updates

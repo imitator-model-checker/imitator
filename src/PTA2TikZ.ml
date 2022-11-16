@@ -115,10 +115,10 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (parsed_update_type, global_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (scalar_or_index_update_type, global_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable access to string *)
-			^ ModelPrinter.string_of_parsed_update_type model parsed_update_type
+			^ ModelPrinter.string_of_scalar_or_index_update_type model scalar_or_index_update_type
 			^ ":="
 			(* Convert the arithmetic_expression *)
 			^ ModelPrinter.string_of_global_expression variable_names_with_style global_expression

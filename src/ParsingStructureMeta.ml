@@ -29,18 +29,6 @@ let rec variable_name_of_parsed_scalar_or_index_update_type = function
     | Parsed_scalar_update variable_name -> variable_name
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
-(* Get variable name if any *)
-let rec variable_name_of_parsed_update_type_opt = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        Some (variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type)
-    | Parsed_void_update -> None
-
-let variable_name_of_parsed_update_type parsed_update_type =
-    let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
-    match variable_name_opt with
-    | Some variable_name -> variable_name
-    | None -> raise (InternalError "Unable to get variable name of an update.")
-
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)
 let updates_of_update_section update_section =
     let updates, _ = update_section in
@@ -616,16 +604,10 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *)
             then_result @ (match else_result_opt with Some else_result -> else_result | None -> []) @ next_result
         | Traversed_parsed_local_decl (_, _, _, next_result) -> next_result
 
-        | Traversed_parsed_assignment ((parsed_update_type, expr), next_result) ->
+        | Traversed_parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_result) ->
 
             let right_variable_names = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
-
-            let variable_name_opt = variable_name_of_parsed_update_type_opt parsed_update_type in
-            let left_variable_name =
-                match variable_name_opt with
-                | Some variable_name -> variable_name
-                | None -> ""
-            in
+            let left_variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
             [left_variable_name, right_variable_names, expr] @ next_result
 

@@ -151,13 +151,8 @@ type parsed_scalar_or_index_update_type =
     | Parsed_scalar_update of variable_name
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
 
-(* Update type, void update is an instruction, variable update is update of a variable *)
-type parsed_update_type =
-    | Parsed_variable_update of parsed_scalar_or_index_update_type
-    | Parsed_void_update
-
 (** basic updating *)
-type normal_update = parsed_update_type * parsed_boolean_expression
+type normal_update = parsed_scalar_or_index_update_type * parsed_boolean_expression
 (** conditional updating *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 

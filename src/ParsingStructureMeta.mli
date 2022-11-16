@@ -21,8 +21,6 @@ open DiscreteType
 
 (** Utils **)
 
-val variable_name_of_parsed_update_type_opt : parsed_update_type -> variable_name option
-val variable_name_of_parsed_update_type : parsed_update_type -> variable_name
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 
 (* Gather all updates of update section (pre-updates, updates and post-updates) *)

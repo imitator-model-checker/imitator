@@ -728,9 +728,9 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (parsed_update_type, global_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (scalar_or_index_update_type, global_expression) ->
         (* Convert the variable access to string *)
-		let variable_name = ModelPrinter.string_of_parsed_update_type model parsed_update_type in
+		let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model scalar_or_index_update_type in
 		variable_name
 		^ (if variable_name <> "" then uppaal_assignment else "")
 		(* Convert the arithmetic_expression *)
