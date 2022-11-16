@@ -62,25 +62,25 @@ let string_of_sync model action_index =
 
 
 (** Convert clock updates into a string *)
-let string_of_clock_updates model clock_updates =
+let string_of_clock_updates variable_names clock_updates =
 	let sep = "\\n" in
-	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
-	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
+	let wrap_reset variable_index =  (variable_names variable_index) ^ " := 0" in
+	let wrap_expr variable_index linear_term = (variable_names variable_index)
 			^ " := "
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
-	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+			^ (LinearConstraint.string_of_pxd_linear_term variable_names linear_term) in
+	ModelPrinter.string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
 (* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates model discrete_updates =
-	ModelPrinter.string_of_discrete_updates ~sep:"\\n" model discrete_updates
+let string_of_discrete_updates variable_names discrete_updates =
+	ModelPrinter.string_of_discrete_updates ~sep:"\\n" variable_names discrete_updates
 
 (** Converts a list of conditional updates into a string *)
-let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then\\n" in
+let string_of_conditional_updates variable_names conditional_updates =
+	let wrap_if boolean_expr  = "if (" ^ (ModelPrinter.string_of_boolean_expression variable_names boolean_expr) ^  ") then\\n" in
 	let wrap_else = "\\nelse\\n" in
 	let wrap_end = "\\nend" in
 	let sep = "\\n" in
-	ModelPrinter.string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
+	ModelPrinter.string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index source_location transition =
@@ -119,14 +119,14 @@ let string_of_transition model automaton_index source_location transition =
 	(* Sync *)
 	^ (string_of_sync model transition.action)
 	(* Clock updates *)
-	^ (string_of_clock_updates model transition.updates.clock)
+	^ (string_of_clock_updates model.variable_names transition.updates.clock)
 	(* Add a \n in case of both clocks and discrete *)
 	^ (if first_separator then "\\n" else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model transition.updates.discrete)
+	^ (string_of_discrete_updates model.variable_names transition.updates.discrete)
 	(* Add a \n in case of both discrete and conditional updates *)
 	^ (if second_separator then "\\n" else "")
-	^ (string_of_conditional_updates model transition.updates.conditional)
+	^ (string_of_conditional_updates model.variable_names transition.updates.conditional)
 	^ "\"];"
 
 

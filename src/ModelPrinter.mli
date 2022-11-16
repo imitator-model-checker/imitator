@@ -77,17 +77,14 @@ val separator_comma : updates -> bool * bool
 (* Convert the function definitions into a string *)
 val string_of_fun_definitions : AbstractModel.abstract_model -> string
 
-(** Convert the discrete update into a string *)
-val string_of_discrete_update : AbstractModel.abstract_model -> discrete_update -> string
-
 (** Convert the discrete updates into a string *)
-val string_of_discrete_updates : ?sep:string -> AbstractModel.abstract_model -> discrete_update list -> string
+val string_of_discrete_updates : ?sep:string -> DiscreteExpressions.variable_name_table -> discrete_update list -> string
 
 (** Template to convert clock updates into a string *)
-val string_of_clock_updates_template : AbstractModel.abstract_model -> clock_updates -> (clock_update -> string) -> (clock_update -> LinearConstraint.pxd_linear_term -> string) -> string -> string
+val string_of_clock_updates_template : DiscreteExpressions.variable_name_table -> clock_updates -> (clock_update -> string) -> (clock_update -> LinearConstraint.pxd_linear_term -> string) -> string -> string
 
 (** Convert the clock updates into a string *)
-val string_of_clock_updates :  AbstractModel.abstract_model -> clock_updates -> string
+val string_of_clock_updates :  DiscreteExpressions.variable_name_table -> clock_updates -> string
 
 (*(** Template to convert a boolean expresion into a string *)
 val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string*)
@@ -96,13 +93,13 @@ val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable
 val string_of_boolean_expression : (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
 
 (** Template to convert conditional updates into a string *)
-val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
+val string_of_conditional_updates_template : DiscreteExpressions.variable_name_table -> conditional_update list -> (DiscreteExpressions.variable_name_table -> clock_updates -> string) -> (DiscreteExpressions.variable_name_table -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
 
 (** Convert conditional updates into a string *)
-val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
+val string_of_conditional_updates : DiscreteExpressions.variable_name_table -> conditional_update list -> string
 
-val customized_string_of_parsed_update_type : Constants.customized_string -> AbstractModel.abstract_model -> update_type -> string
-val string_of_parsed_update_type : AbstractModel.abstract_model -> update_type -> string
+val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> DiscreteExpressions.variable_name_table -> scalar_or_index_update_type -> string
+val string_of_scalar_or_index_update_type : DiscreteExpressions.variable_name_table -> scalar_or_index_update_type -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)

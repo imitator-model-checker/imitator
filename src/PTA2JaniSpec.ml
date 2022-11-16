@@ -693,7 +693,13 @@ let string_of_custom_user_functions model =
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
-            | Assignment (discrete_update, next_expr) ->
+            | Assignment (_, next_expr)
+            | Local_assignment (_, next_expr)
+            | Clock_assignment (_, next_expr) ->
+                print_warning ("Assignment found in function `" ^ fun_def.name ^ "`. Assignment are not supported by Jani and will not be translated.");
+                string_of_next_expr next_expr
+
+            | Instruction (expr, next_expr) ->
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 string_of_next_expr next_expr
 
@@ -1029,19 +1035,11 @@ let string_of_clock_updates model = function
 		) list_of_clocks_lt)
 
 (* Convert an update into a string *)
-let string_of_discrete_update model (update_type, expr) =
-    match update_type with
-    | Void_update ->
-        json_struct [|
-            json_property "ref" (json_quoted "_");
-            json_property "value" (string_of_global_expression model.variable_names expr)
-        |]
-
-    | _ ->
-        json_struct [|
-            json_property "ref" (json_quoted (ModelPrinter.string_of_parsed_update_type model update_type));
-            json_property "value" (string_of_global_expression model.variable_names expr)
-        |]
+let string_of_discrete_update model (scalar_or_index_update_type, expr) =
+    json_struct [|
+        json_property "ref" (json_quoted (ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type));
+        json_property "value" (string_of_global_expression model.variable_names expr)
+    |]
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
@@ -1079,10 +1077,10 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
-	string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.rev_map (fun (parsed_update_type, global_expression) ->
+	string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.rev_map (fun (scalar_or_index_update_type, global_expression) ->
 
 		let expression = (string_of_global_expression model.variable_names global_expression) in
-		let variable_name = "\"" ^ ModelPrinter.string_of_parsed_update_type model parsed_update_type ^ "\"" in
+		let variable_name = "\"" ^ ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type ^ "\"" in
 		"{\"ref\": " ^ variable_name ^ jani_separator
 		^ " \"value\" : "
 		^ " {\"op\": \"ite\"" ^ jani_separator

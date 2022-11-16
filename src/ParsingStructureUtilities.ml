@@ -194,6 +194,11 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
                 (fold_parsed_normal_update_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
                 (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
+        | Parsed_instruction (expr, next_expr) ->
+            operator
+                (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
+                (fold_parsed_seq_code_bloc_rec local_variables next_expr)
+
         | Parsed_return_expr expr ->
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
@@ -202,7 +207,7 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
     in
     fold_parsed_seq_code_bloc_rec local_variables (* seq_code_bloc *)
 
-and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (update_type, expr) =
+and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
         | Parsed_scalar_update variable_name ->
@@ -221,15 +226,9 @@ and fold_parsed_normal_update_with_local_variables local_variables operator base
             operator
                 (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
                 (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
-
-    and fold_parsed_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-        | Parsed_variable_update parsed_scalar_or_index_update_type ->
-            fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type
-        | Parsed_void_update -> base
     in
-
     operator
-        (fold_parsed_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun update_type)
+        (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
         (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
@@ -340,6 +339,7 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
     | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_instruction of parsed_boolean_expression * 'a
     | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
     | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
     | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
@@ -401,6 +401,11 @@ let traverse_parsed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
         | Parsed_assignment (normal_update, next_expr) ->
             let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
             let traversed_element = Traversed_parsed_assignment (normal_update, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Parsed_instruction (expr, next_expr) ->
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+            let traversed_element = Traversed_parsed_instruction (expr, next_result) in
             traverse_fun local_variables traversed_element
 
         | Parsed_return_expr (expr) ->
@@ -570,10 +575,7 @@ let string_of_parsed_conj_dis = function
     | Parsed_or -> Constants.default_string.or_operator
 
 (* String representation of an assignment *)
-let string_of_assignment str_left_member str_right_member =
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "")
-    ^ str_right_member
+let string_of_assignment str_left_member str_right_member = str_left_member ^ " := " ^ str_right_member
 
 (* String representation of let-in structure *)
 let string_of_let_in variable_name str_discrete_type str_init_expr =
@@ -675,6 +677,10 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             string_of_parsed_normal_update variable_infos normal_update
             ^ string_of_parsed_seq_code_bloc variable_infos next_expr
 
+        | Parsed_instruction (expr, next_expr) ->
+            string_of_parsed_boolean_expression variable_infos expr
+            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+
         | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
             "for "
             ^ variable_name
@@ -716,8 +722,8 @@ and string_of_parsed_seq_code_bloc variable_infos = function
             "return " ^ string_of_parsed_boolean_expression variable_infos expr
         | Parsed_bloc_void -> ""
 
-and string_of_parsed_normal_update variable_infos (update_type, expr) =
-    let str_left_member = string_of_parsed_update_type variable_infos update_type in
+and string_of_parsed_normal_update variable_infos (parsed_scalar_or_index_update_type, expr) =
+    let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
     let str_right_member = string_of_parsed_boolean_expression variable_infos expr in
     string_of_assignment str_left_member str_right_member
 
@@ -748,12 +754,6 @@ and string_of_parsed_scalar_or_index_update_type variable_infos = function
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
         string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
-
-(* Get variable name if any *)
-and string_of_parsed_update_type variable_infos = function
-    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-        string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
-    | Parsed_void_update -> ""
 
 let string_of_parsed_fun_def variable_infos fun_def =
     (* Format each parameters to string *)

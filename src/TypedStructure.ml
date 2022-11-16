@@ -66,11 +66,7 @@ type typed_scalar_or_index_update_type =
     | Typed_scalar_update of variable_name
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
-type typed_update_type =
-    | Typed_variable_update of typed_scalar_or_index_update_type
-    | Typed_void_update
-
-type typed_normal_update = typed_update_type * typed_boolean_expression
+type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression
 
 type typed_loc_predicate =
 	| Typed_loc_predicate_EQ of automaton_name * location_name
@@ -105,6 +101,7 @@ type typed_loop_dir =
 type typed_seq_code_bloc =
     | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
     | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_assignment_scope
+    | Typed_instruction of typed_boolean_expression * typed_seq_code_bloc
     | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
@@ -269,11 +266,6 @@ let rec string_of_typed_scalar_or_index_update_type variable_infos = function
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
         ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr ^ "]"
 
-let string_of_typed_update_type variable_infos = function
-    | Typed_variable_update typed_scalar_or_index_update_type ->
-        string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
-    | Typed_void_update -> ""
-
 let rec string_of_typed_seq_code_bloc variable_infos = function
     | Typed_local_decl (variable_name, discrete_type, expr, next_expr) ->
         ParsingStructureUtilities.string_of_let_in
@@ -318,10 +310,15 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
         ^ " end\n\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
-    | Typed_assignment ((typed_update_type, update_expr), next_expr, _) ->
-        let str_left_member = string_of_typed_update_type variable_infos typed_update_type in
+    | Typed_assignment ((typed_scalar_or_index_update_type, update_expr), next_expr, _) ->
+        let str_left_member = string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type in
         let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
         ParsingStructureUtilities.string_of_assignment str_left_member str_right_member
+        ^ ";\n"
+        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+
+    | Typed_instruction (expr, next_expr) ->
+        string_of_typed_boolean_expression variable_infos expr
         ^ ";\n"
         ^ string_of_typed_seq_code_bloc variable_infos next_expr
 
@@ -379,6 +376,7 @@ and string_of_typed_state_predicate variable_infos = function
 type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_local_decl of variable_name * DiscreteType.var_type_discrete * typed_boolean_expression (* init expr *) * 'a
     | Traversed_typed_assignment of typed_normal_update * 'a
+    | Traversed_typed_instruction of typed_boolean_expression * 'a
     | Traversed_typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * 'a * 'a
     | Traversed_typed_while_loop of typed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
     | Traversed_typed_if of typed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
@@ -440,6 +438,11 @@ let traverse_typed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
         | Typed_assignment (normal_update, next_expr, _) ->
             let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
             let traversed_element = Traversed_typed_assignment (normal_update, next_result) in
+            traverse_fun local_variables traversed_element
+
+        | Typed_instruction (expr, next_expr) ->
+            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
+            let traversed_element = Traversed_typed_instruction (expr, next_result) in
             traverse_fun local_variables traversed_element
 
         | Typed_return_expr expr ->

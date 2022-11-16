@@ -205,21 +205,17 @@ and expression_access_type =
 (* Bloc of sequential code *)
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
-    | Assignment of (update_type * global_expression) * seq_code_bloc
-    | Local_assignment of (scalar_or_index_local_update_type * global_expression) * seq_code_bloc
+    | Assignment of discrete_update * seq_code_bloc
+    | Local_assignment of discrete_update * seq_code_bloc
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term) * seq_code_bloc
+    | Instruction of global_expression * seq_code_bloc
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
     | Return_expr of global_expression
     | Bloc_void
 
-(* Update type *)
-and scalar_or_index_local_update_type =
-    (* Variable update, ie: x := 1 *)
-    | Scalar_local_update of variable_name
-    (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
-    | Indexed_local_update of scalar_or_index_local_update_type * int_arithmetic_expression
+and discrete_update = scalar_or_index_update_type * global_expression
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -228,22 +224,11 @@ and scalar_or_index_update_type =
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
-and update_type =
-    (* Expression with assignment *)
-    | Variable_update of scalar_or_index_update_type
-    (* Unit expression, side effect expression without assignment, ie: stack_pop(s) *)
-    | Void_update
-
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_user of seq_code_bloc
 
 type nonlinear_constraint = discrete_boolean_expression list
-
-(** update: variable_index := linear_term *)
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = update_type * global_expression
-type discrete_local_update = scalar_or_index_local_update_type * global_expression
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
@@ -289,10 +274,9 @@ val string_of_list_expression : variable_name_table -> list_expression -> string
 val string_of_stack_expression : variable_name_table -> stack_expression -> string
 val string_of_queue_expression : variable_name_table -> queue_expression -> string
 
-val string_of_update_type : variable_name_table -> update_type -> string
 val string_of_discrete_update : variable_name_table -> discrete_update -> string
-val string_of_discrete_local_update : variable_name_table -> discrete_local_update -> string
-val string_of_scalar_or_index_local_update_type : variable_name_table -> scalar_or_index_local_update_type -> string
+val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> variable_name_table -> scalar_or_index_update_type -> string
+val string_of_scalar_or_index_update_type : variable_name_table -> scalar_or_index_update_type -> string
 
 val string_of_expression_access : variable_name_table -> expression_access_type -> int_arithmetic_expression -> string
 

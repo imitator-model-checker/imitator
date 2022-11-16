@@ -505,8 +505,18 @@ let string_of_fun_definitions model =
                     str_else_bloc
                     (string_of_next_expr next_expr)
 
-            | Assignment (discrete_update, next_expr) ->
+            | Assignment (discrete_update, next_expr)
+            | Local_assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Clock_assignment ((clock_index, expr), next_expr) ->
+                let variable_name = model.variable_names clock_index in
+                variable_name ^ " := " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names expr ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Instruction (expr, next_expr) ->
+                DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
                 ^ string_of_next_expr next_expr
 
             | Return_expr expr ->
@@ -724,9 +734,9 @@ let string_of_clock_updates model = function
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (parsed_update_type, global_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (scalar_or_index_update_type, global_expression) ->
         (* Convert the variable access to string *)
-		let variable_name = ModelPrinter.string_of_parsed_update_type model parsed_update_type in
+		let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
 		variable_name
 		^ (if variable_name <> "" then uppaal_assignment else "")
 		(* Convert the arithmetic_expression *)

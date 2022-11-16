@@ -277,8 +277,10 @@ fun_parameter_nonempty_list:
 seq_code_bloc:
   /* local declaration */
   | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
-  /* instruction */
+  /* assignment */
   | update_without_deprecated SEMICOLON seq_code_bloc_or_return { Parsed_assignment ($1, $3) }
+  /* instruction without return */
+  | boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_instruction ($1, $3) }
   /* for loop */
   | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc_or_return { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
@@ -560,9 +562,9 @@ update_seq_nonempty_list:
 /************************************************************/
 
 /* Variable or variable access */
-parsed_update_type:
+parsed_scalar_or_index_update_type:
   | NAME { Parsed_scalar_update $1 }
-  | parsed_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+  | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
 /** Normal updates */
@@ -570,28 +572,26 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ boolean_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $4)
+		(Parsed_scalar_update $1, $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $4)
+		(Parsed_scalar_update $1, $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ boolean_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_variable_update (Parsed_scalar_update $1), $3)
+		(Parsed_scalar_update $1, $3)
 	}
 
-	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
-  | boolean_expression { (Parsed_void_update, $1) }
+	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
 ;
 
 /** Normal updates without deprecated (avoid parsing errors on function)*/
 update_without_deprecated:
-	| parsed_update_type OP_ASSIGN boolean_expression { (Parsed_variable_update $1, $3) }
-  | boolean_expression { (Parsed_void_update, $1) }
+	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
 ;
 
 /** List containing only normal updates.

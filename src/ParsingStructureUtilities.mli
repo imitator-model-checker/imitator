@@ -65,6 +65,7 @@ type 'a variable_declaration_callback = (variable_name * var_type_discrete * int
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
     | Traversed_parsed_assignment of normal_update * 'a
+    | Traversed_parsed_instruction of parsed_boolean_expression * 'a
     | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
     | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
     | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
@@ -190,8 +191,7 @@ val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> s
 
 val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
-val string_of_parsed_clock_update : variable_infos -> parsed_scalar_or_index_update_type * parsed_boolean_expression -> string
-val string_of_parsed_update_type : variable_infos -> parsed_update_type -> string
+val string_of_parsed_clock_update : variable_infos -> normal_update -> string
 val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string
 
 (* Parsed linear constraint to string *)

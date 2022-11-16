@@ -369,7 +369,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 (* Concat current relations with next relations *)
                 next_declaration_relations @ relations
 
-            | Parsed_assignment ((parsed_update_type, expr), next_expr) ->
+            | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
 
                 let rec relations_of_scalar_or_index_update_type = function
                     | Parsed_scalar_update variable_name ->
@@ -416,28 +416,27 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
 
                 in
-                let relations_of_update_type = function
-                    | Parsed_variable_update parsed_scalar_or_index_update_type ->
-                        relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type
-                    | Parsed_void_update ->
-                        (* All variables found in expression are used by current function *)
-                        (* For example: stack_pop(s) + x + y *)
-                        (* Current function 'f' use s, x, y *)
 
-                        (* Get variables used in update expression *)
-                        let variables_used = get_variables_in_parsed_boolean_expression expr in
-                        let functions_used = get_functions_in_parsed_boolean_expression expr in
+                let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
-                        let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
+                (* Get list of relations for the next expression / declaration *)
+                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
+                (* Concat current relations with next relations *)
+                relations @ next_declaration_relations
 
-                        let fun_use_fun_relations = StringSet.fold (fun used_function_name acc ->
-                            (fun_ref, Fun_ref used_function_name) :: acc
-                        ) functions_used []
-                        in
-                        fun_use_variables_relations @ fun_use_fun_relations
+            | Parsed_instruction (expr, next_expr) ->
 
+                (* Get variables used in update expression *)
+                let variables_used = get_variables_in_parsed_boolean_expression expr in
+                let functions_used = get_functions_in_parsed_boolean_expression expr in
+
+                let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
+
+                let fun_use_fun_relations = StringSet.fold (fun used_function_name acc ->
+                    (fun_ref, Fun_ref used_function_name) :: acc
+                ) functions_used []
                 in
-                let relations = relations_of_update_type parsed_update_type in
+                let relations = fun_use_variables_relations @ fun_use_fun_relations in
 
                 (* Get list of relations for the next expression / declaration *)
                 let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
