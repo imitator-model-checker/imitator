@@ -29,8 +29,8 @@ type delayed_update_result =
     | Delayed_update_recorded
     | Delayed_update_already_updated of discrete_index
 
-val direct_update : variable_name_table option -> functions_table option -> discrete_access -> scalar_or_index_update_type * global_expression -> unit
-val delayed_update : variable_name_table option -> functions_table option -> discrete_access -> (discrete_index, AbstractValue.abstract_value) Hashtbl.t -> scalar_or_index_update_type * global_expression -> delayed_update_result
+val direct_update : variable_name_table option -> functions_table option -> discrete_access -> DiscreteExpressions.discrete_update -> unit
+val delayed_update : variable_name_table option -> functions_table option -> discrete_access -> (discrete_index, AbstractValue.abstract_value) Hashtbl.t -> DiscreteExpressions.discrete_update -> delayed_update_result
 val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
 val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool

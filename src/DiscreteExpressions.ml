@@ -205,8 +205,8 @@ and expression_access_type =
 (* Bloc of sequential code *)
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
-    | Assignment of (scalar_or_index_update_type * global_expression) * seq_code_bloc
-    | Local_assignment of (scalar_or_index_update_type * global_expression) * seq_code_bloc
+    | Assignment of discrete_update * seq_code_bloc
+    | Local_assignment of discrete_update * seq_code_bloc
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term) * seq_code_bloc
     | Instruction of global_expression * seq_code_bloc
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
@@ -221,6 +221,8 @@ and scalar_or_index_update_type =
     | Scalar_update of Automaton.discrete_index
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
+
+and discrete_update = scalar_or_index_update_type * global_expression
 
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
@@ -267,9 +269,6 @@ and 'a my_factor =
 
 type nonlinear_constraint = discrete_boolean_expression list
 
-(** update: variable_index := linear_term *)
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-type discrete_update = scalar_or_index_update_type * global_expression
 
 (** Check linearity of a discrete expression **)
 
