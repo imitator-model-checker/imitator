@@ -104,21 +104,21 @@ let string_of_sync model action_index =
 
 
 (** Convert clock updates into a string *)
-let string_of_clock_updates model clock_updates =
+let string_of_clock_updates variable_names clock_updates =
 	let sep = "\\n" in
 	let wrap_reset variable_index =  "\n\t\t & $" ^ (variable_names_with_style variable_index) ^ ":=0$\\\\" in
 	let wrap_expr variable_index linear_term = "\n\t\t & $"
 		^ (variable_names_with_style variable_index)
 			^ ":= "
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)^"$\\\\% " in
-	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+	ModelPrinter.string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
 (* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates model updates =
+let string_of_discrete_updates variable_names updates =
 	string_of_list_of_string_with_sep "\\n" (List.map (fun (scalar_or_index_update_type, global_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable access to string *)
-			^ ModelPrinter.string_of_scalar_or_index_update_type model scalar_or_index_update_type
+			^ ModelPrinter.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
 			^ ":="
 			(* Convert the arithmetic_expression *)
 			^ ModelPrinter.string_of_global_expression variable_names_with_style global_expression
@@ -127,12 +127,12 @@ let string_of_discrete_updates model updates =
 	) updates)
 
 (** Convert a list of conditional updates into a string *)
-let string_of_conditional_updates model conditional_updates =
+let string_of_conditional_updates variable_names conditional_updates =
 	let wrap_if boolean_expr  = "\n\t\t\\multicolumn{2}{l}{if ($" ^ (customized_string_of_boolean_expression tikz_string variable_names_with_style boolean_expr) ^ "$) then}\\\\%" in
 	let wrap_else = "\n\t\t\\multicolumn{2}{l}{else}\\\\%" in
 	let wrap_end = "\n\t\t\\multicolumn{2}{l}{end}%" in
 	let sep = "" in
-	ModelPrinter.string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
+	ModelPrinter.string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index source_location transition =
@@ -159,11 +159,11 @@ let string_of_transition model automaton_index source_location transition =
 
 	(* UPDATES *)
 	(* Clock updates *)
-	^ (string_of_clock_updates model clock_updates)
+	^ (string_of_clock_updates model.variable_names clock_updates)
 	(* Discrete updates *)
- 	^ (string_of_discrete_updates model discrete_updates)
+ 	^ (string_of_discrete_updates model.variable_names discrete_updates)
 	(* Conditional updates *)
-	^ (string_of_conditional_updates model conditional_updates)
+	^ (string_of_conditional_updates model.variable_names conditional_updates)
 
 	(* The end *)
 	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"

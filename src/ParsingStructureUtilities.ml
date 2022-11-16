@@ -575,10 +575,7 @@ let string_of_parsed_conj_dis = function
     | Parsed_or -> Constants.default_string.or_operator
 
 (* String representation of an assignment *)
-let string_of_assignment str_left_member str_right_member =
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "")
-    ^ str_right_member
+let string_of_assignment str_left_member str_right_member = str_left_member ^ " := " ^ str_right_member
 
 (* String representation of let-in structure *)
 let string_of_let_in variable_name str_discrete_type str_init_expr =

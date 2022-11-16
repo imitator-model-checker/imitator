@@ -248,7 +248,7 @@ let string_of_discrete_updates model updates =
 
 	string_of_list_of_string_with_sep ", " (List.map (fun (scalar_or_index_update_type, global_expression) ->
 	    (* Convert the variable access to string *)
-	    let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model scalar_or_index_update_type in
+	    let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
 		(* Convert the global_expression *)
         let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names global_expression in
 

@@ -542,7 +542,7 @@ let json_of_action model (action_index : Automaton.action_index) =
 
 
 (** generic template for converting clock updates into string *)
-let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep =
+let string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep =
 	match clock_updates with
 		| No_update -> ""
 		| Resets list_of_clocks ->
@@ -555,43 +555,38 @@ let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr se
 			) list_of_clocks_lt)
 
 (** Convert a clock update into a string *)
-let string_of_clock_updates model clock_updates =
+let string_of_clock_updates variable_names clock_updates =
 	let sep = ", " in
-	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
-	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
+	let wrap_reset variable_index =  (variable_names variable_index) ^ " := 0" in
+	let wrap_expr variable_index linear_term = (variable_names variable_index)
 			^ " := "
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
-	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+			^ (LinearConstraint.string_of_pxd_linear_term variable_names linear_term) in
+	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
 (** Convert a clock update into a JSON-like string *)
-let json_of_clock_updates model clock_updates =
+let json_of_clock_updates variable_names clock_updates =
 	let sep = "," in
-	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index)) ^ ": " ^ (json_of_string "0") ^ "" in
-	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)) ^ "" in
-	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t" ^ (json_of_string (variable_names variable_index)) ^ ": " ^ (json_of_string "0") ^ "" in
+	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_term)) ^ "" in
+	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
-(* TODO benjamin CLEAN use model or model.variable_names *)
-let customized_string_of_scalar_or_index_update_type customized_string model scalar_or_index_update_type =
-    DiscreteExpressions.customized_string_of_scalar_or_index_update_type customized_string model.variable_names scalar_or_index_update_type
+let customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type =
+    DiscreteExpressions.customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type
 
-(* TODO benjamin CLEAN use model or model.variable_names *)
-let string_of_scalar_or_index_update_type model scalar_or_index_update_type =
-    DiscreteExpressions.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type
-
-(* TODO benjamin CLEAN use model or model.variable_names *)
-let string_of_discrete_update model discrete_update = DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update
+let string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type =
+    DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
 
 (* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (string_of_discrete_update model) updates)
+let string_of_discrete_updates ?(sep=", ") variable_names updates =
+	string_of_list_of_string_with_sep sep (List.rev_map (DiscreteExpressions.string_of_discrete_update variable_names) updates)
 
 (* Convert a list of discrete updates into a JSON-like string *)
-let json_of_discrete_updates ?(sep=", ") model updates =
+let json_of_discrete_updates ?(sep=", ") variable_names updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (scalar_or_index_update_type, expr) ->
 		(* Convert the variable name *)
-		(json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type))
+		(json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type))
 		^ ": "
-		^ (json_of_string (DiscreteExpressions.string_of_global_expression model.variable_names expr))
+		^ (json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr))
 	) updates)
 
 (** Return if there is no clock updates *)
@@ -610,43 +605,43 @@ let separator_comma updates =
 	(first_separator, second_separator)
 
 (** Generic template to convert conditional updates into a string *)
-let string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
+let string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
 	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
 		let if_separator, _ = separator_comma if_updates in
 		let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
 		(** Convert the Boolean expression *)
 		(wrap_if boolean_expr)
 		(** Convert the if updates *)
-		^ (string_of_clock_updates model if_updates.clock)
+		^ (string_of_clock_updates variable_names if_updates.clock)
 		^ (if if_separator then sep else "")
-		^ (string_of_discrete_updates model if_updates.discrete)
+		^ (string_of_discrete_updates variable_names if_updates.discrete)
 		(** Convert the else updates *)
 		^ (if empty_else then "" else
 			let else_separator, _ = separator_comma else_updates in
 			wrap_else
-			^ (string_of_clock_updates model else_updates.clock)
+			^ (string_of_clock_updates variable_names else_updates.clock)
 			^ (if else_separator then sep else "")
-			^ (string_of_discrete_updates model else_updates.discrete))
+			^ (string_of_discrete_updates variable_names else_updates.discrete))
 		^ wrap_end
 	) conditional_updates)
 
 (** Convert a list of conditional updates into a string *)
-let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_boolean_expression model.variable_names boolean_expr) ^  ") then " in
+let string_of_conditional_updates variable_names conditional_updates =
+	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_boolean_expression variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in
 	let wrap_end = " end" in
 	let sep = ", " in
-	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
+	string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (** Convert a list of conditional updates into a JSON-like string *)
 (*** WARNING: not really supported ***)
-let json_of_conditional_updates model conditional_updates =
+let json_of_conditional_updates variable_names conditional_updates =
 	if conditional_updates <> [] then(
 		print_warning "Conditional updates not (really) supported in the JSON export!";
 		(* Do our best to still export something *)
 		""
 		^ "\n\t\t\t\t\t\t\t" ^ (json_of_string "conditional") ^ ": {"
-		^ "\n\t\t\t\t\t\t\t\t" ^ (json_of_string "update")  ^ ": " ^ (json_of_string (string_of_conditional_updates model conditional_updates)) ^ ""
+		^ "\n\t\t\t\t\t\t\t\t" ^ (json_of_string "update")  ^ ": " ^ (json_of_string (string_of_conditional_updates variable_names conditional_updates)) ^ ""
 		^ "\n\t\t\t\t\t\t\t}"
 	)else ""
 
@@ -675,15 +670,15 @@ let string_of_transition model automaton_index (transition : transition) =
 	^ " do {"
 	^ str_mix_or_empty
 	(* Clock updates *)
-	^ (string_of_clock_updates model clock_updates)
+	^ (string_of_clock_updates model.variable_names clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if first_separator then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	^ (string_of_discrete_updates model.variable_names discrete_updates)
 	(* Add a coma in case of both clocks and discrete and conditions *)
 	^ (if second_separator then ", " else "")
 	(* Conditional updates *)
-	^ (string_of_conditional_updates model conditional_updates)
+	^ (string_of_conditional_updates model.variable_names conditional_updates)
 	^ "} "
 	
 	(* Convert the sync *)
@@ -710,15 +705,15 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 	(* Convert the updates *)
 	^ "} updates{"
 	(* Clock updates *)
-	^ (string_of_clock_updates model clock_updates)
+	^ (string_of_clock_updates model.variable_names clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if first_separator then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	^ (string_of_discrete_updates model.variable_names discrete_updates)
 	(* Add a coma in case of both clocks and discrete and conditions *)
 	^ (if second_separator then ", " else "")
 	(* Conditional updates *)
-	^ (string_of_conditional_updates model conditional_updates)
+	^ (string_of_conditional_updates model.variable_names conditional_updates)
 	^ "} "
 
 	(* Convert the sync *)
@@ -747,11 +742,11 @@ let json_of_transition model automaton_index (transition : transition) =
 	(* Updates *)
 	^ "\n\t\t\t\t\t\t" ^ (json_of_string "updates") ^ ": {"
 	(* Clock updates *)
-	^ (json_of_clock_updates model clock_updates)
+	^ (json_of_clock_updates model.variable_names clock_updates)
 	(* Discrete updates *)
-	^ (json_of_discrete_updates model discrete_updates)
+	^ (json_of_discrete_updates model.variable_names discrete_updates)
 	(* Conditional updates *)
-	^ (json_of_conditional_updates model conditional_updates)
+	^ (json_of_conditional_updates model.variable_names conditional_updates)
 	^ "\n\t\t\t\t\t\t}"
 	
 (* 	(* Convert the target location *) *)
@@ -848,18 +843,6 @@ let string_of_automata model =
 	string_of_list_of_string_with_sep "\n\n" (
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) model.automata)
-
-(* TODO benjamin CLEAN comments *)
-(* Customized string representation of a variable update *)
-(*
-let rec customized_string_of_scalar_or_index_update_type customized_string model = function
-    | Scalar_update variable_index -> model.variable_names variable_index
-    | Indexed_update (scalar_or_index_update_type, index_expr) ->
-        customized_string_of_scalar_or_index_update_type customized_string model scalar_or_index_update_type ^ "[" ^ DiscreteExpressions.customized_string_of_int_arithmetic_expression customized_string model.variable_names index_expr ^ "]"
-
-(* String representation of a variable update *)
-let string_of_scalar_or_index_update_type = customized_string_of_scalar_or_index_update_type Constants.global_default_string
-*)
 
 (* Convert initial state of locations to string *)
 let string_of_new_initial_locations ?indent_level:(i=1) model =
