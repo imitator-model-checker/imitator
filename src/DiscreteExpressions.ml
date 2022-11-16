@@ -864,9 +864,7 @@ let string_of_scalar_or_index_update_type = customized_string_of_scalar_or_index
 
 let string_of_discrete_update variable_names (scalar_or_index_update_type, expr) =
     let str_left_member = string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type in
-    str_left_member
-    ^ (if str_left_member <> "" then " := " else "")
-    ^ string_of_global_expression variable_names expr
+    str_left_member ^ " := " ^ string_of_global_expression variable_names expr
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names nonlinear_constraint =

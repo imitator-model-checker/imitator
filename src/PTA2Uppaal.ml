@@ -505,8 +505,14 @@ let string_of_fun_definitions model =
                     str_else_bloc
                     (string_of_next_expr next_expr)
 
-            | Assignment (discrete_update, next_expr) ->
+            | Assignment (discrete_update, next_expr)
+            | Local_assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
+                ^ string_of_next_expr next_expr
+
+            | Clock_assignment ((clock_index, expr), next_expr) ->
+                let variable_name = model.variable_names clock_index in
+                variable_name ^ " := " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names expr ^ ";\n"
                 ^ string_of_next_expr next_expr
 
             | Instruction (expr, next_expr) ->
