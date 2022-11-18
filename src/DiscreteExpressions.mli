@@ -226,7 +226,7 @@ and scalar_or_index_update_type =
 
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
-    | Fun_user of seq_code_bloc
+    | Fun_user of seq_code_bloc * global_expression option
 
 type nonlinear_constraint = discrete_boolean_expression list
 

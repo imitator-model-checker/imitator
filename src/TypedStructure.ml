@@ -112,7 +112,7 @@ type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_seq_code_bloc; (* body *)
+    body : typed_seq_code_bloc * typed_boolean_expression option; (* body *)
 }
 
 (** Strings **)
@@ -325,7 +325,6 @@ let rec string_of_typed_seq_code_bloc variable_infos = function
     | Typed_return_expr expr ->
         string_of_typed_boolean_expression variable_infos expr
     | Typed_bloc_void -> ""
-
 
 let string_of_typed_loc_predicate variable_infos = function
 	| Typed_loc_predicate_EQ (automaton_name, location_name) ->

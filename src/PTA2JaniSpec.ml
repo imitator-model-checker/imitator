@@ -687,27 +687,27 @@ let string_of_custom_user_functions model =
         print_warning ("Trying to translate `" ^ fun_def.name ^ "`.");
 
         (* Convert a function expression into a string *)
-        let rec string_of_next_expr = function
+        let rec string_of_seq_code_bloc = function
 
             | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
-                string_of_next_expr next_expr
+                string_of_seq_code_bloc next_expr
 
             | Assignment (_, next_expr)
             | Local_assignment (_, next_expr)
             | Clock_assignment (_, next_expr) ->
                 print_warning ("Assignment found in function `" ^ fun_def.name ^ "`. Assignment are not supported by Jani and will not be translated.");
-                string_of_next_expr next_expr
+                string_of_seq_code_bloc next_expr
 
             | Instruction (expr, next_expr) ->
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
-                string_of_next_expr next_expr
+                string_of_seq_code_bloc next_expr
 
             | For_loop (_, _, _, _, _, next_expr)
             | While_loop (_, _, next_expr)
             | If (_, _, _, next_expr) ->
                 print_warning ("A if, while, for control structure was found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
-                string_of_next_expr next_expr
+                string_of_seq_code_bloc next_expr
 
             | Return_expr expr ->
                 string_of_global_expression model.variable_names expr
@@ -716,7 +716,7 @@ let string_of_custom_user_functions model =
 
         let string_of_fun_type = function
             | Fun_builtin _ -> "" (* Don't print builtin functions *)
-            | Fun_user f ->
+            | Fun_user (code_bloc, return_expr_opt) ->
                 let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
                 let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
                 (* Convert parameters into a string *)
@@ -726,7 +726,17 @@ let string_of_custom_user_functions model =
 
                 let str_param_array = array_of_list str_param_list in
 
-                let str_body = string_of_next_expr f in
+                (* Convert code bloc into a string *)
+                let str_code_bloc = string_of_seq_code_bloc code_bloc in
+                (* Convert return expr into a string *)
+                let str_return_expr =
+                    match return_expr_opt with
+                    | Some return_expr -> string_of_global_expression model.variable_names return_expr
+                    | None -> ""
+                in
+
+                (* Get whole string body *)
+                let str_body = str_code_bloc ^ str_return_expr in
 
                 (* Format function definition *)
                 jani_function_declaration

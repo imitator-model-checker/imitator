@@ -469,11 +469,11 @@ let string_of_fun_definitions model =
     let string_of_fun_definition fun_def =
 
         (* Convert a function expression into a string *)
-        let rec string_of_next_expr = function
+        let rec string_of_seq_code_bloc = function
             | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
                 string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
                 ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names init_expr ^ ";\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_seq_code_bloc next_expr
 
             | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
                 string_of_for_loop
@@ -481,43 +481,43 @@ let string_of_fun_definitions model =
                     (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings model.variable_names from_expr)
                     (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings model.variable_names to_expr)
                     loop_dir
-                    (string_of_next_expr inner_bloc)
-                    (string_of_next_expr next_expr)
+                    (string_of_seq_code_bloc inner_bloc)
+                    (string_of_seq_code_bloc next_expr)
 
             | While_loop (condition_expr, inner_bloc, next_expr) ->
                 string_of_while_loop
                     (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings model.variable_names condition_expr)
-                    (string_of_next_expr inner_bloc)
-                    (string_of_next_expr next_expr)
+                    (string_of_seq_code_bloc inner_bloc)
+                    (string_of_seq_code_bloc next_expr)
 
             | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
                 (* Get string of else bloc if defined *)
                 let str_else_bloc =
                     match else_bloc_opt with
                     | Some else_bloc ->
-                        string_of_next_expr else_bloc
+                        string_of_seq_code_bloc else_bloc
                     | None -> ""
                 in
 
                 string_of_if
                     (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings model.variable_names condition_expr)
-                    (string_of_next_expr then_bloc)
+                    (string_of_seq_code_bloc then_bloc)
                     str_else_bloc
-                    (string_of_next_expr next_expr)
+                    (string_of_seq_code_bloc next_expr)
 
             | Assignment (discrete_update, next_expr)
             | Local_assignment (discrete_update, next_expr) ->
                 DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_seq_code_bloc next_expr
 
             | Clock_assignment ((clock_index, expr), next_expr) ->
                 let variable_name = model.variable_names clock_index in
                 variable_name ^ " := " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names expr ^ ";\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_seq_code_bloc next_expr
 
             | Instruction (expr, next_expr) ->
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
-                ^ string_of_next_expr next_expr
+                ^ string_of_seq_code_bloc next_expr
 
             | Return_expr expr ->
                 "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";\n"
@@ -527,14 +527,26 @@ let string_of_fun_definitions model =
         (* Convert a function into a string *)
         let string_of_fun_type = function
             | Fun_builtin _ -> ""  (* Don't print builtin functions *)
-            | Fun_user f ->
+            | Fun_user (code_bloc, return_expr_opt) ->
                 let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
                 let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
                 (* Convert parameters into a string *)
                 let str_param_list = List.map (fun (param_name, type_constraint) -> string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
                 let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
-                let str_body = string_of_next_expr f in
+                (* Convert code bloc into a string *)
+                let str_code_bloc = string_of_seq_code_bloc code_bloc in
+                (* Convert return expr into a string *)
+                let str_return_expr =
+                    match return_expr_opt with
+                    | Some return_expr -> "\nreturn " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names return_expr ^ ";\n"
+                    | None -> ""
+                in
+
+                (* Get whole string body *)
+                let str_body = str_code_bloc ^ str_return_expr in
+                
+                
                 (* Format function definition *)
                 string_of_type_constraint return_type_constraint ^ " " ^ fun_def.name ^ "(" ^ str_params ^ ") { \n"
                 ^ str_body

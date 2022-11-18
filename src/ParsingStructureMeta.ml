@@ -631,7 +631,8 @@ let rec is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function
         (* Is a call to a user function ? *)
         if Hashtbl.mem user_function_definitions_table function_name then (
             let found_function_def = Hashtbl.find user_function_definitions_table function_name in
-            is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table found_function_def.body
+            let code_bloc, _ = found_function_def.body in
+            is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table code_bloc
         )
         else
             true

@@ -392,6 +392,9 @@ let string_of_seq_code_bloc model (* level *) (* expr *) =
     in
     string_of_seq_code_bloc_rec (* level *) (* expr *)
 
+
+
+
 (* Convert the function definitions into a string *)
 let string_of_fun_definitions model =
 
@@ -401,14 +404,24 @@ let string_of_fun_definitions model =
         (* Convert function into a string *)
         let string_of_fun_type = function
             | Fun_builtin _ -> "" (* Don't print builtin functions *)
-            | Fun_user seq_code_bloc ->
+            | Fun_user (code_bloc, return_expr_opt) ->
                 let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
                 let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
                 (* Convert parameters into a string *)
                 let str_param_list = List.map (fun (param_name, type_constraint) -> param_name ^ " : " ^ FunctionSig.string_of_type_constraint type_constraint) parameter_names_with_constraints in
                 let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
-                let str_body = string_of_seq_code_bloc model 1 seq_code_bloc in
+                (* Convert code bloc into a string *)
+                let str_code_bloc = string_of_seq_code_bloc model 1 code_bloc in
+                (* Convert return expr into a string *)
+                let str_return_expr =
+                    match return_expr_opt with
+                    | Some return_expr -> "\n" ^ DiscreteExpressions.string_of_global_expression model.variable_names return_expr
+                    | None -> ""
+                in
+
+                (* Get whole string body *)
+                let str_body = str_code_bloc ^ str_return_expr in
 
                 "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n\n"
                 ^ str_body

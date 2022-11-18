@@ -1395,8 +1395,10 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
             let function_calls_list = OCamlUtilities.string_set_to_list function_calls in
             (* Get all clock assignments in called functions recursively *)
             let function_clock_assignments = List.fold_left (fun acc function_name ->
-                let fun_def = Hashtbl.find user_function_definitions_table function_name in
-                clock_assignment_in_seq_code_bloc fun_def.body @ acc
+                let found_fun_def = Hashtbl.find user_function_definitions_table function_name in
+                (* Get code bloc of found function definition *)
+                let code_bloc, _ = found_fun_def.body in
+                clock_assignment_in_seq_code_bloc code_bloc @ acc
             ) [] function_calls_list
             in
 

@@ -165,14 +165,10 @@ type parsed_loop_dir =
     | Parsed_for_loop_up
     | Parsed_for_loop_down
 
-(* Two types of updates (old updates, mix updates) grouped in section *)
-type update_section = update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
-
 (****************************************************************)
 (** Bloc of sequential code *)
 (****************************************************************)
-
-and parsed_seq_code_bloc =
+type parsed_seq_code_bloc =
     | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * parsed_seq_code_bloc * int (* id *)
     | Parsed_assignment of normal_update * parsed_seq_code_bloc
     | Parsed_instruction of parsed_boolean_expression * parsed_seq_code_bloc
@@ -181,6 +177,9 @@ and parsed_seq_code_bloc =
     | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc (* then *) * parsed_seq_code_bloc option (* else *) * parsed_seq_code_bloc (* next *)
     | Parsed_return_expr of parsed_boolean_expression
     | Parsed_bloc_void
+
+(* Two types of updates (old updates, mix updates) grouped in section *)
+type update_section = update list (* updates, not sequential *) * parsed_seq_code_bloc (* mixin updates *)
 
 (****************************************************************)
 (** User functions *)
@@ -195,11 +194,12 @@ type function_metadata = {
 }
 
 (* Parsed function definition *)
+(* TODO benjamin CLEAN rename to parsed_fun_def *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
-    body : parsed_seq_code_bloc; (* body *)
+    body : parsed_seq_code_bloc * parsed_boolean_expression option; (* body *)
 }
 
 (* Parsed function definition list *)

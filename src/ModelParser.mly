@@ -251,15 +251,20 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc_or_return CT_END
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc return_opt CT_END
   {
     {
       name = $2;
       parameters = List.rev $4;
       return_type = $7;
-      body = $9;
+      body = $9, $10;
     }
   }
+;
+
+return_opt:
+  | CT_RETURN boolean_expression semicolon_opt { Some $2 }
+  | { None }
 ;
 
 fun_parameter_list:
@@ -276,25 +281,19 @@ fun_parameter_nonempty_list:
 /* Bloc of code (instructions, declarations, conditionals, loops) */
 seq_code_bloc:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON seq_code_bloc { Parsed_local_decl ($2, $4, $6, $8, Parsing.symbol_start ()) }
   /* assignment */
-  | update_without_deprecated SEMICOLON seq_code_bloc_or_return { Parsed_assignment ($1, $3) }
+  | update_without_deprecated SEMICOLON seq_code_bloc { Parsed_assignment ($1, $3) }
   /* instruction without return */
-  | boolean_expression SEMICOLON seq_code_bloc_or_return { Parsed_instruction ($1, $3) }
+  | boolean_expression SEMICOLON seq_code_bloc { Parsed_instruction ($1, $3) }
   /* for loop */
-  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc_or_return { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_for_loop ($2, $4, $6, $5, $8, $10, Parsing.symbol_start ()) }
   /* while loop */
-  | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc_or_return { Parsed_while_loop ($2, $4, $6) }
+  | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE seq_code_bloc { Parsed_while_loop ($2, $4, $6) }
   /* conditional */
-  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END seq_code_bloc_or_return { Parsed_if ($2, $4, None, $6) }
-  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END seq_code_bloc_or_return { Parsed_if ($2, $4, Some $6, $8) }
+  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, None, $6) }
+  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END seq_code_bloc { Parsed_if ($2, $4, Some $6, $8) }
   | { Parsed_bloc_void }
-;
-
-/* Bloc of code, or return expression */
-seq_code_bloc_or_return:
-  | seq_code_bloc { $1 }
-  | CT_RETURN boolean_expression semicolon_opt { Parsed_return_expr $2 }
 ;
 
 loop_dir:

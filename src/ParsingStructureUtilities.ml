@@ -332,9 +332,18 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
         | None -> base
     in
 
-    operator
-        (fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun fun_def.body)
-        decl_callback_result
+    let code_bloc, return_expr_opt = fun_def.body in
+
+    let return_expr_result =
+        match return_expr_opt with
+        | Some return_expr -> fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun return_expr
+        | None -> base
+    in
+
+    (fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun code_bloc)
+    |> operator return_expr_result
+    |> operator decl_callback_result
+
 
 type 'a traversed_parsed_seq_code_bloc =
     | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
@@ -755,6 +764,14 @@ and string_of_parsed_scalar_or_index_update_type variable_infos = function
         string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
 
+let string_of_parsed_fun_def_body variable_infos (code_bloc, return_expr_opt) =
+    let str_return_expr =
+        match return_expr_opt with
+        | Some return_expr -> "\n" ^ string_of_parsed_boolean_expression variable_infos return_expr
+        | None -> ""
+    in
+    string_of_parsed_seq_code_bloc variable_infos code_bloc ^ str_return_expr
+
 let string_of_parsed_fun_def variable_infos fun_def =
     (* Format each parameters to string *)
     let str_parameters_list = List.map (fun (parameter_name, parameter_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete parameter_type) fun_def.parameters in
@@ -762,7 +779,7 @@ let string_of_parsed_fun_def variable_infos fun_def =
     let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
     (* Format function definition to string *)
     "fn " ^ fun_def.name ^ " (" ^ str_parameters ^ ") : " ^ DiscreteType.string_of_var_type_discrete fun_def.return_type ^ "\n"
-    ^ string_of_parsed_seq_code_bloc variable_infos fun_def.body ^ "\n"
+    ^ string_of_parsed_fun_def_body variable_infos fun_def.body ^ "\n"
     ^ "end\n"
 
 let rec string_of_parsed_linear_constraint variable_infos = function

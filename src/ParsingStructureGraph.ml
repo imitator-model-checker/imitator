@@ -99,6 +99,7 @@ let variable_to_variable_relations local_variables variable_ref variables_used =
         (variable_ref, used_variable_ref) :: acc
     ) variables_used []
 
+(* TODO benjamin CLEAN rename to refs_in_parsed_boolean_expression *)
 (* Function that return component reference found in a parsed global expression *)
 let get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr =
     (* Get variables used in the local init expression of the variable *)
@@ -110,6 +111,7 @@ let get_variable_and_function_refs_in_parsed_boolean_expression local_variables 
     (* Get refs *)
     variables_used_refs @ functions_used_refs
 
+(* TODO benjamin CLEAN rename to refs_in_parsed_arithmetic_expression *)
 (* Function that return component reference found in a parsed arithmetic expression *)
 let get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables expr =
     (* Get variables used in the local init expression of the variable *)
@@ -467,8 +469,21 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         let local_variables = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
         (* Ref to function *)
         let fun_ref = Fun_ref fun_def.name in
+        (* Get code bloc and return expr *)
+        let code_bloc, return_expr_opt = fun_def.body in
+
         (* Get all component relations of current function body *)
-        relations_in_parsed_seq_code_bloc_rec local_variables fun_def.name fun_ref fun_def.body
+        let code_bloc_relations = relations_in_parsed_seq_code_bloc_rec local_variables fun_def.name fun_ref code_bloc in
+
+        let return_expr_relations =
+            match return_expr_opt with
+            | Some return_expr ->
+                (* Get references to variables and functions in the expression *)
+                let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables return_expr in
+                List.map (fun _ref -> (fun_ref, _ref)) all_refs
+            | None -> []
+        in
+        code_bloc_relations @ return_expr_relations
     in
 
 
@@ -700,7 +715,9 @@ let remove_unused_instructions local_variables dependency_graph code_bloc_name (
 let remove_unused_instructions_in_fun_def dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
     let local_variables = List.fold_right (fun (parameter_name, _) acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) fun_def.parameters StringMap.empty in
-     { fun_def with body = remove_unused_instructions local_variables dependency_graph fun_def.name fun_def.body }
+    (* Get code bloc and return expr *)
+    let code_bloc, return_expr_opt = fun_def.body in
+    { fun_def with body = remove_unused_instructions local_variables dependency_graph fun_def.name code_bloc, return_expr_opt }
 
 let model_cycle_infos (_, model_relations) =
 

@@ -111,7 +111,7 @@ type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_seq_code_bloc; (* body *)
+    body : typed_seq_code_bloc * typed_boolean_expression option; (* body *)
 }
 
 val label_of_typed_sequence_type : typed_sequence_type -> string
@@ -123,7 +123,6 @@ val string_of_typed_discrete_arithmetic_expression : variable_infos -> var_type_
 val string_of_typed_discrete_term : variable_infos -> var_type_discrete -> typed_discrete_term -> string
 val string_of_typed_discrete_factor : variable_infos -> var_type_discrete -> typed_discrete_factor -> string
 val string_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> string
-
 val string_of_typed_state_predicate : variable_infos -> typed_state_predicate -> string
 
 type 'a traversed_typed_seq_code_bloc =

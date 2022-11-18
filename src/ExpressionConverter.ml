@@ -796,20 +796,31 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
-    let typed_body, body_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt fun_def.body in
+
+    let code_bloc, return_expr_opt = fun_def.body in
+
+    let typed_code_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None code_bloc in
+
+    let typed_return_expr_opt, check_return_type, str_return_expr =
+        match return_expr_opt with
+        | Some return_expr ->
+            let typed_return_expr, check_return_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt return_expr in
+            Some typed_return_expr, check_return_type, string_of_typed_boolean_expression variable_infos typed_return_expr
+        | None -> None, Var_type_void, ""
+    in
 
     (* Check type compatibility between function body and return type *)
-    let is_body_type_compatible = is_discrete_type_compatibles body_discrete_type return_type in
+    let is_return_type_compatibles = is_discrete_type_compatibles check_return_type return_type in
 
-    if not is_body_type_compatible then
+    if not is_return_type_compatibles then
         raise (TypeError (
             "Function signature `"
             ^ fun_def.name
             ^ FunctionSig.string_of_signature signature
-            ^ "` does not match with implementation `"
-            ^ string_of_typed_seq_code_bloc variable_infos typed_body
+            ^ "` does not match with return expression `"
+            ^ str_return_expr
             ^ "` of type "
-            ^ DiscreteType.string_of_var_type_discrete body_discrete_type
+            ^ DiscreteType.string_of_var_type_discrete check_return_type
             ^ "."
         ));
 
@@ -817,7 +828,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
         name = fun_def.name;
         parameters = parameter_names;
         signature = signature;
-        body = typed_body;
+        body = typed_code_bloc, typed_return_expr_opt;
     }
     in
 
@@ -2591,13 +2602,25 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
         Bloc_void
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed_fun_definition) : fun_definition =
+    let typed_code_bloc, typed_return_expr_opt = typed_fun_def.body in
+
+    (* Convert return expr if needed *)
+    let converted_return_expr_opt =
+        match typed_return_expr_opt with
+        | Some typed_return_expr -> Some (global_expression_of_typed_boolean_expression variable_infos typed_return_expr)
+        | None -> None
+    in
+
     (* Search metadata of function to convert *)
     let meta = Hashtbl.find variable_infos.fun_meta typed_fun_def.name in
     {
         name = typed_fun_def.name;
         parameter_names = typed_fun_def.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_def.signature;
-        body = Fun_user (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_fun_def.body);
+        body = Fun_user (
+            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_code_bloc,
+            converted_return_expr_opt
+        );
         side_effect = meta.side_effect
     }
 

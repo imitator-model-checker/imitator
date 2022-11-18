@@ -628,7 +628,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
             let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
             builtin_f str_fun_call arg_values
 
-        | Fun_user seq_code_bloc ->
+        | Fun_user (code_bloc, return_expr_opt) ->
             let eval_context =
                 match eval_context_opt with
                 | Some eval_context ->
@@ -644,7 +644,11 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
-            eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc
+            eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context code_bloc;
+            match return_expr_opt with
+            | Some return_expr ->
+                eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) return_expr
+            | None -> Abstract_void_value
 
     in
     eval_fun_type_with_context eval_context_opt fun_def.body
