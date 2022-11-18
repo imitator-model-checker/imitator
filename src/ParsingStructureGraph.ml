@@ -83,6 +83,206 @@ let string_of_component_name = function
     | Fun_ref x -> x
     | Param_ref (x, _) -> x
 
+(* TODO benjamin CLEAN move as inner function to relations_in_parsed_seq_code_bloc_rec *)
+(* Functions that return ref of a variable, if variable is found in local variable table *)
+(* It return a Local_variable_ref, else a Global_variable_ref *)
+let get_variable_ref local_variables used_variable_name =
+    let used_variable_ref_opt = StringMap.find_opt used_variable_name local_variables in
+    match used_variable_ref_opt with
+    | Some used_variable_ref -> used_variable_ref
+    | None -> Global_variable_ref used_variable_name
+
+(* Create relations between a set of variables used by another variable reference *)
+let variable_to_variable_relations local_variables variable_ref variables_used =
+    StringSet.fold (fun used_variable_name acc ->
+        let used_variable_ref = get_variable_ref local_variables used_variable_name in
+        (variable_ref, used_variable_ref) :: acc
+    ) variables_used []
+
+(* Function that return component reference found in a parsed global expression *)
+let get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr =
+    (* Get variables used in the local init expression of the variable *)
+    let variables_used = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
+    let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
+    (* Get functions used in the local init expression of the variable *)
+    let functions_used = string_set_to_list (get_functions_in_parsed_boolean_expression expr) in
+    let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
+    (* Get refs *)
+    variables_used_refs @ functions_used_refs
+
+(* Function that return component reference found in a parsed arithmetic expression *)
+let get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables expr =
+    (* Get variables used in the local init expression of the variable *)
+    let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression expr) in
+    let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
+    (* Get functions used in the local init expression of the variable *)
+    let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression expr) in
+    let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
+    (* Get refs *)
+    variables_used_refs @ functions_used_refs
+
+let refs_of_parsed_scalar_or_index_update_type local_variables (* parsed_scalar_or_index_update_type *) =
+    let rec refs_of_parsed_scalar_or_index_update_type_rec = function
+        | Parsed_scalar_update variable_name ->
+            (* Create local variable ref representing a unique variable ref *)
+            [get_variable_ref local_variables variable_name]
+
+        | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
+            (* Get variables / functions used in the indexed expression of the variable *)
+            let index_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables index_expr in
+            let parsed_scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type_rec inner_scalar_or_index_update_type in
+
+            index_refs @ parsed_scalar_or_index_update_type_refs
+    in
+    refs_of_parsed_scalar_or_index_update_type_rec (* parsed_scalar_or_index_update_type *)
+
+(* All relations found in a sequential code bloc *)
+let rec relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref = function
+    | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
+
+        (* Create local variable ref representing a unique variable ref *)
+        let variable_ref = Local_variable_ref (variable_name, code_bloc_name, id) in
+        (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
+        let local_variables = StringMap.add variable_name variable_ref local_variables in
+
+        (* Get references to variables and functions in the local init expression *)
+        let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
+        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+        (* Create relation between current code bloc and declared variable *)
+        let bloc_relation = bloc_ref, variable_ref in
+
+        (* Get list of relations for the next expression / declaration *)
+        let next_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+        (* Concat current relations with next relations *)
+        next_declaration_relations @ relations @ [bloc_relation]
+
+    | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
+
+        let rec relations_of_scalar_or_index_update_type = function
+            | Parsed_scalar_update variable_name ->
+                (* Updated variable use all variables found in expression *)
+                (* For example x := a + b, x use a, b *)
+                (* and current function use x *)
+
+                (* Create local variable ref representing a unique variable ref *)
+                let variable_ref = get_variable_ref local_variables variable_name in
+
+                (* Get references to variables and functions in the update expression *)
+                let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+                (* For sake of simplicity we consider all assigned variable as used *)
+                let assigned_variable_relation = bloc_ref, variable_ref in
+
+                assigned_variable_relation :: relations
+
+            | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
+                (* Updated variable use all variables found in expression, and all variables found in index *)
+                (* For example x[y + z] = a + b, x use y, z, a, b *)
+                (* and current function use x *)
+                let variable_name = variable_name_of_parsed_scalar_or_index_update_type inner_scalar_or_index_update_type in
+                (* Create local variable ref representing a unique variable ref *)
+                let variable_ref = get_variable_ref local_variables variable_name in
+                (* Get variables / functions used in the indexed expression of the variable *)
+                let all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables index_expr in
+                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+                let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
+                relations @ variable_use_variables_relations
+        in
+
+        let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+
+        (* Get list of relations for the next expression / declaration *)
+        let next_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+        (* Concat current relations with next relations *)
+        relations @ next_relations
+
+    | Parsed_instruction (expr, next_expr) ->
+
+        let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+        let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+
+        (* Get list of relations for the next expression / declaration *)
+        let next_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+        (* Concat current relations with next relations *)
+        relations @ next_relations
+
+    | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
+        (* Create local variable ref representing a unique variable ref *)
+        let variable_ref = Local_variable_ref (variable_name, code_bloc_name, id) in
+        (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
+        let local_variables_of_loop = StringMap.add variable_name variable_ref local_variables in
+
+        (* Get variable and function refs used in the from expression *)
+        let from_all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
+        (* Get variable and function refs used in the to expression *)
+        let to_all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
+        let all_refs = from_all_refs @ to_all_refs in
+
+        (* variable of for loop (for i, i) use variables found in from_expr and to_expr  *)
+        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+        (* Create relation between current bloc and variable declared in for loop *)
+        let bloc_relation = bloc_ref, variable_ref in
+
+        (* Get list of relations for the inner expressions *)
+        let inner_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables_of_loop code_bloc_name bloc_ref inner_bloc in
+        (* Get list of relations for the next expression / declaration *)
+        let next_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+
+        (* Concat current relations with next relations *)
+        inner_declaration_relations @ next_declaration_relations @ relations @ [bloc_relation]
+
+    | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+
+        (* Get references to variables and functions in the condition expression *)
+        let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+
+        (* Make relations between variable used in condition expression and current function *)
+        let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+
+        (* Get list of relations for the inner expressions *)
+        let inner_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref inner_bloc in
+        (* Get list of relations for the next expression / declaration *)
+        let next_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+
+        (* Concat current relations with next relations *)
+        inner_declaration_relations @ next_declaration_relations @ relations
+
+    | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+
+        (* Get references to variables and functions in the condition expression *)
+        let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+
+        (* Make relations between variable used and current function *)
+        let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+
+        (* Get list of relations for the then bloc expressions *)
+        let then_bloc_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref then_bloc in
+
+        (* Get list of relations for the else bloc expressions *)
+        let else_bloc_declaration_relations =
+            match else_bloc_opt with
+            | Some else_bloc ->
+                relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref else_bloc
+            | None -> []
+        in
+
+        (* Get list of relations for the next expression / declaration *)
+        let next_declaration_relations = relations_in_parsed_seq_code_bloc_rec local_variables code_bloc_name bloc_ref next_expr in
+
+        (* Concat current relations with next relations *)
+        then_bloc_declaration_relations @ else_bloc_declaration_relations @ next_declaration_relations @ relations
+
+    | Parsed_return_expr expr ->
+        (* Get references to variables and functions in the expression *)
+        let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+        List.map (fun _ref -> (bloc_ref, _ref)) all_refs
+
+    | Parsed_bloc_void -> []
+
 (* Get the set of all variable names used in the parsed model *)
 let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_model) =
 	(* Create a set for components *)
@@ -184,11 +384,13 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
                 let _, mixin_updates = update_section in
 
+                (* TODO benjamin IMPORTANT replace code below by use of `relations_in_parsed_seq_code_bloc_rec` *)
                 ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
                     (fun _ -> function
-                        | Leaf_update_variable (Leaf_global_variable variable_name, _)
-                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
+                        | Leaf_update_variable (Leaf_global_variable variable_name, _) ->
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
+                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, id), _) ->
+                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, "", id)) !all_relations
                     )
                     (fun _ -> function
                         | Leaf_fun function_name ->
@@ -232,7 +434,9 @@ let declared_components_of_model parsed_model =
         (* Get all declared local variables in a given function definition *)
         let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
             let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
-            List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables
+            (* TODO benjamin tricky, we eliminate local variable with id = -1 (means that it's a parameter) *)
+            let local_variables_without_parameters = List.filter (fun (_, _, id) -> id <> -1) local_variables in
+            List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables_without_parameters
         in
 
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
@@ -254,37 +458,6 @@ let declared_components_of_model parsed_model =
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
-    (* TODO benjamin REFACTOR, can REDUCE now ! !!! *)
-    (*
-    let function_relations (fun_def : parsed_fun_definition) =
-        (* Ref to function *)
-        let fun_ref = Fun_ref fun_def.name in
-        (* Get parameter names *)
-        let parameter_names = List.map first_of_tuple fun_def.parameters in
-        let param_refs = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (fun_ref, Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
-
-        let used_refs = ParsingStructureUtilities.fold_parsed_seq_code_bloc
-            (@)
-            []
-            (fun _ -> function
-                | Leaf_update_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
-                | Leaf_update_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
-            )
-            (fun _ -> function
-                | Leaf_variable (Leaf_global_variable variable_name) -> [Global_variable_ref (variable_name)]
-                | Leaf_variable (Leaf_local_variable (variable_name, _, id)) -> [Local_variable_ref (variable_name, fun_def.name, id)]
-                | Leaf_fun function_name -> [Fun_ref function_name]
-                | Leaf_constant _ -> []
-            )
-            fun_def.body
-        in
-
-        let relations = List.map (fun used_ref -> fun_ref, used_ref) used_refs in
-        relations
-
-    in
-    *)
-
     (* Function that return all component relations of a given function definition *)
     let function_relations fun_def =
 
@@ -294,234 +467,8 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         let local_variables = List.fold_right (fun parameter_name acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) parameter_names StringMap.empty in
         (* Ref to function *)
         let fun_ref = Fun_ref fun_def.name in
-
-        (* Functions that return ref of a variable, if variable is found in local variable table *)
-        (* It return a Local_variable_ref, else a Global_variable_ref *)
-        let get_variable_ref local_variables used_variable_name =
-            let used_variable_ref_opt = StringMap.find_opt used_variable_name local_variables in
-            match used_variable_ref_opt with
-            | Some used_variable_ref -> used_variable_ref
-            | None -> Global_variable_ref used_variable_name
-        in
-
-        (* Create relations between a set of variables used by another variable reference *)
-        let variable_to_variable_relations local_variables variable_ref variables_used =
-            StringSet.fold (fun used_variable_name acc ->
-                let used_variable_ref = get_variable_ref local_variables used_variable_name in
-                (variable_ref, used_variable_ref) :: acc
-            ) variables_used []
-        in
-
-        (* Function that return component reference found in a parsed global expression *)
-        let get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr =
-            (* Get variables used in the local init expression of the variable *)
-            let variables_used = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
-            let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
-            (* Get functions used in the local init expression of the variable *)
-            let functions_used = string_set_to_list (get_functions_in_parsed_boolean_expression expr) in
-            let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
-            (* Get refs *)
-            variables_used_refs, functions_used_refs
-        in
-
-        (* Function that return component reference found in a parsed arithmetic expression *)
-        let get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables expr =
-            (* Get variables used in the local init expression of the variable *)
-            let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression expr) in
-            let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
-            (* Get functions used in the local init expression of the variable *)
-            let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression expr) in
-            let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
-            (* Get refs *)
-            variables_used_refs, functions_used_refs
-        in
-
-        (* Function that return all component relations of a given function expression *)
-        let rec function_relations_in_parsed_seq_code_bloc_rec local_variables = function
-            | Parsed_local_decl (variable_name, _, init_expr, next_expr, id) ->
-
-                (* Create local variable ref representing a unique variable ref *)
-                let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-                (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
-                let local_variables = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
-
-                (* Get variable and function refs used in the local init expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
-                let all_refs = variables_used_refs @ functions_used_refs in
-                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                (* Add a relation between current function and declared variable *)
-                (* The declared variable will always be considered as used here *)
-                let relations = (fun_ref, variable_ref) :: relations in
-                (* Old behavior (deprecated) *)
-                (*
-                (* Add a relation between current function and declared variable, if -no-var-autoremove option is set *)
-                let relations =
-                    if no_var_autoremove then
-                        (fun_ref, variable_ref) :: relations
-                    else
-                        relations
-                in
-                *)
-
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-                (* Concat current relations with next relations *)
-                next_declaration_relations @ relations
-
-            | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
-
-                let rec relations_of_scalar_or_index_update_type = function
-                    | Parsed_scalar_update variable_name ->
-                        (* Updated variable use all variables found in expression *)
-                        (* For example x := a + b, x use a, b *)
-                        (* and current function use x *)
-
-                        (* Create local variable ref representing a unique variable ref *)
-                        let variable_ref = get_variable_ref local_variables variable_name in
-
-                        (* Get variable and function refs used in the update expression *)
-                        let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
-                        let all_refs = variables_used_refs @ functions_used_refs in
-                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                        (* Here for sake of simplicity, we consider that all global variables modified in function are used (it's not always the case) *)
-
-                        (* Create relation between current function and assigned variable *)
-                        let cur_fun_used_variable_relation = fun_ref, variable_ref in
-                        (* Concat all relations *)
-                        cur_fun_used_variable_relation :: relations
-
-                    | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
-                        (* Updated variable use all variables found in expression, and all variables found in index *)
-                        (* For example x[y + z] = a + b, x use y, z, a, b *)
-                        (* and current function use x *)
-                        let variable_name = variable_name_of_parsed_scalar_or_index_update_type inner_scalar_or_index_update_type in
-
-                        (* Create local variable ref representing a unique variable ref *)
-                        let variable_ref = get_variable_ref local_variables variable_name in
-
-                        (* Get variables / functions used in the indexed expression of the variable *)
-                        let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression index_expr) in
-                        (* Get functions  used in the indexed expression of the variable *)
-                        let functions_used = string_set_to_list (get_functions_in_parsed_discrete_arithmetic_expression index_expr) in
-
-                        let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
-                        let functions_used_refs = List.map (fun function_name -> Fun_ref function_name) functions_used in
-                        let all_refs = variables_used_refs @ functions_used_refs in
-                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                        let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
-                        relations @ variable_use_variables_relations
-
-
-                in
-
-                let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-                (* Concat current relations with next relations *)
-                relations @ next_declaration_relations
-
-            | Parsed_instruction (expr, next_expr) ->
-
-                (* Get variables used in update expression *)
-                let variables_used = get_variables_in_parsed_boolean_expression expr in
-                let functions_used = get_functions_in_parsed_boolean_expression expr in
-
-                let fun_use_variables_relations = variable_to_variable_relations local_variables fun_ref variables_used in
-
-                let fun_use_fun_relations = StringSet.fold (fun used_function_name acc ->
-                    (fun_ref, Fun_ref used_function_name) :: acc
-                ) functions_used []
-                in
-                let relations = fun_use_variables_relations @ fun_use_fun_relations in
-
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-                (* Concat current relations with next relations *)
-                relations @ next_declaration_relations
-
-            | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
-                (* Create local variable ref representing a unique variable ref *)
-                let variable_ref = Local_variable_ref (variable_name, fun_def.name, id) in
-                (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
-                let local_variables_of_loop = StringMap.update variable_name (function None -> Some variable_ref | Some _ -> Some variable_ref) local_variables in
-
-                (* Get variable and function refs used in the from expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
-                let all_refs = variables_used_refs @ functions_used_refs in
-                (* Get variable and function refs used in the to expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
-                let all_refs = all_refs @ variables_used_refs @ functions_used_refs in
-
-                (* variable of for loop (for i, i) use variables found in from_expr and to_expr  *)
-                let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                (* Add a relation between current function and variable of for loop *)
-                let relations = (fun_ref, variable_ref) :: relations in
-
-                (* Get list of relations for the inner expressions *)
-                let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables_of_loop inner_bloc in
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-                (* Concat current relations with next relations *)
-                inner_declaration_relations @ next_declaration_relations @ relations
-
-            | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
-
-                (* Get variable and function refs used in the condition expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
-                let all_refs = variables_used_refs @ functions_used_refs in
-
-                (* Make relations between variable used in condition expression and current function *)
-                let relations = List.map (fun _ref -> (fun_ref, _ref)) all_refs in
-
-                (* Get list of relations for the inner expressions *)
-                let inner_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables inner_bloc in
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-
-                (* Concat current relations with next relations *)
-                inner_declaration_relations @ next_declaration_relations @ relations
-
-            | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-
-                (* Get variable and function refs used in the condition expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
-                let all_refs = variables_used_refs @ functions_used_refs in
-
-                (* Make relations between variable used and current function *)
-                let relations = List.map (fun _ref -> (fun_ref, _ref)) all_refs in
-
-                (* Get list of relations for the then bloc expressions *)
-                let then_bloc_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables then_bloc in
-
-                (* Get list of relations for the else bloc expressions *)
-                let else_bloc_declaration_relations =
-                    match else_bloc_opt with
-                    | Some else_bloc ->
-                        function_relations_in_parsed_seq_code_bloc_rec local_variables else_bloc
-                    | None -> []
-                in
-
-                (* Get list of relations for the next expression / declaration *)
-                let next_declaration_relations = function_relations_in_parsed_seq_code_bloc_rec local_variables next_expr in
-
-                (* Concat current relations with next relations *)
-                then_bloc_declaration_relations @ else_bloc_declaration_relations @ next_declaration_relations @ relations
-
-            | Parsed_return_expr expr ->
-                (* Get variable and function refs used in the expression *)
-                let variables_used_refs, functions_used_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
-                let all_refs = variables_used_refs @ functions_used_refs in
-                List.map (fun _ref -> (fun_ref, _ref)) all_refs
-
-            | Parsed_bloc_void -> []
-        in
         (* Get all component relations of current function body *)
-        function_relations_in_parsed_seq_code_bloc_rec local_variables fun_def.body
+        relations_in_parsed_seq_code_bloc_rec local_variables fun_def.name fun_ref fun_def.body
     in
 
 
@@ -669,7 +616,91 @@ let used_functions_of_model dependency_graph =
 let unused_functions_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Fun_ref name -> Some name | _ -> None)
 
+(* Remove all unused instruction in sequential code bloc *)
+let remove_unused_instructions local_variables dependency_graph code_bloc_name (* seq_code_bloc *) =
 
+    (* Get used components in model *)
+    let used_components = used_components_of_model dependency_graph in
+
+    let rec remove_unused_instructions_rec local_variables = function
+        | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) as seq ->
+
+            (* Get current assigned variable, if not used, remove instruction *)
+
+            let refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+            let scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
+            let all_refs = refs @ scalar_or_index_update_type_refs in
+
+
+
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+
+            (* If any component found is used by model, we keep instruction *)
+            let keep_instruction = List.exists (fun r ->
+                let used = ComponentSet.mem r used_components in
+                ImitatorUtilities.print_standard_message ("FOUND COMP: " ^ string_of_component r ^ ", used:" ^ string_of_bool used);
+                used
+            ) all_refs in
+            ImitatorUtilities.print_standard_message ("ass: " ^ variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type ^ ", keep:" ^ string_of_bool keep_instruction);
+            if keep_instruction then
+                Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr_without_unused_instructions)
+            else
+                next_expr_without_unused_instructions
+
+
+        | Parsed_instruction (expr, next_expr) ->
+            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+
+            (* If any component found is used by model, we keep instruction *)
+            let keep_instruction = List.exists (fun r -> ComponentSet.mem r used_components) all_refs in
+
+            if keep_instruction then
+                Parsed_instruction (expr, next_expr_without_unused_instructions)
+            else
+                next_expr_without_unused_instructions
+
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
+            (* Create local variable ref representing a unique variable ref *)
+            let variable_ref = Local_variable_ref (variable_name, code_bloc_name, id) in
+            (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
+            let local_variables = StringMap.add variable_name variable_ref local_variables in
+            (* Get references to variables and functions in the local init expression *)
+            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
+
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+
+            (* If any component found is used by model, we keep instruction *)
+            let keep_instruction = List.exists (fun r -> ComponentSet.mem r used_components) all_refs in
+
+            if keep_instruction then
+                Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr_without_unused_instructions, id)
+            else
+                next_expr_without_unused_instructions
+
+        (* These type of instruction are always been considered as used by the bloc ! *)
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, id) ->
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+            Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr_without_unused_instructions, id)
+
+        | Parsed_while_loop (cond_expr, inner_bloc, next_expr) ->
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+            Parsed_while_loop (cond_expr, inner_bloc, next_expr_without_unused_instructions)
+
+        | Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr) ->
+            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
+            Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr)
+
+        | Parsed_return_expr _
+        | Parsed_bloc_void as expr -> expr
+    in
+    remove_unused_instructions_rec local_variables (* seq_code_bloc *)
+
+let remove_unused_instructions_in_fun_def dependency_graph (fun_def : parsed_fun_definition) =
+    (* Add parameter names to local variables of function *)
+    let local_variables = List.fold_right (fun (parameter_name, _) acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) fun_def.parameters StringMap.empty in
+     { fun_def with body = remove_unused_instructions local_variables dependency_graph fun_def.name fun_def.body }
 
 let model_cycle_infos (_, model_relations) =
 

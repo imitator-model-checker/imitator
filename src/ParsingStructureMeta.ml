@@ -285,20 +285,7 @@ and is_linear_parsed_term variable_infos = function
 (* Check if a parsed factor is linear *)
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
-    | Parsed_DF_variable variable_name ->
-        (* TODO benjamin IMPORTANT check *)
-        (*
-        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-
-        (match var_type with
-        | Var_type_clock
-        | Var_type_parameter
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) -> true
-        | Var_type_discrete _ -> false
-        )
-        *)
-        true
+    | Parsed_DF_variable variable_name -> true
     (* only rational constant *)
     | Parsed_DF_constant value ->
         (match value with
