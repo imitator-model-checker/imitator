@@ -615,7 +615,6 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables variable_i
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (* parsed_seq_code_bloc *) =
 
     let rec type_check_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
-        List.iter (fun i -> ImitatorUtilities.print_standard_message ("type check instruction: " ^ ParsingStructureUtilities.string_of_parsed_instruction variable_infos i)) parsed_seq_code_bloc;
         List.map (type_check_parsed_instruction local_variables) parsed_seq_code_bloc
 
     and type_check_parsed_instruction local_variables = function

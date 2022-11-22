@@ -99,9 +99,8 @@ let variable_to_variable_relations local_variables variable_ref variables_used =
         (variable_ref, used_variable_ref) :: acc
     ) variables_used []
 
-(* TODO benjamin CLEAN rename to refs_in_parsed_boolean_expression *)
 (* Function that return component reference found in a parsed global expression *)
-let get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr =
+let refs_in_parsed_boolean_expression local_variables expr =
     (* Get variables used in the local init expression of the variable *)
     let variables_used = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
     let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
@@ -111,9 +110,8 @@ let get_variable_and_function_refs_in_parsed_boolean_expression local_variables 
     (* Get refs *)
     variables_used_refs @ functions_used_refs
 
-(* TODO benjamin CLEAN rename to refs_in_parsed_arithmetic_expression *)
 (* Function that return component reference found in a parsed arithmetic expression *)
-let get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables expr =
+let refs_in_parsed_arithmetic_expression local_variables expr =
     (* Get variables used in the local init expression of the variable *)
     let variables_used = string_set_to_list (get_variables_in_parsed_discrete_arithmetic_expression expr) in
     let variables_used_refs = List.map (get_variable_ref local_variables) variables_used in
@@ -131,7 +129,7 @@ let refs_of_parsed_scalar_or_index_update_type local_variables (* parsed_scalar_
 
         | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
             (* Get variables / functions used in the indexed expression of the variable *)
-            let index_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables index_expr in
+            let index_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
             let parsed_scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type_rec inner_scalar_or_index_update_type in
 
             index_refs @ parsed_scalar_or_index_update_type_refs
@@ -152,7 +150,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             let variable_ref = Local_variable_ref (variable_name, code_bloc_name, id) in
 
             (* Get references to variables and functions in the local init expression *)
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables init_expr in
 
             (* Add the new declared local variable *)
             Hashtbl.replace local_variables variable_name variable_ref;
@@ -177,7 +175,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
                     let variable_ref = get_variable_ref local_variables variable_name in
 
                     (* Get references to variables and functions in the update expression *)
-                    let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+                    let all_refs = refs_in_parsed_boolean_expression local_variables expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
                     (* For sake of simplicity we consider all assigned variable as used *)
@@ -193,7 +191,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
                     (* Create local variable ref representing a unique variable ref *)
                     let variable_ref = get_variable_ref local_variables variable_name in
                     (* Get variables / functions used in the indexed expression of the variable *)
-                    let all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables index_expr in
+                    let all_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
@@ -203,7 +201,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
         | Parsed_instruction expr ->
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables expr in
             let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
             relations
 
@@ -215,9 +213,9 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             Hashtbl.replace loop_local_variables variable_name variable_ref;
 
             (* Get variable and function refs used in the from expression *)
-            let from_all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables from_expr in
+            let from_all_refs = refs_in_parsed_arithmetic_expression local_variables from_expr in
             (* Get variable and function refs used in the to expression *)
-            let to_all_refs = get_variable_and_function_refs_in_parsed_arithmetic_expression local_variables to_expr in
+            let to_all_refs = refs_in_parsed_arithmetic_expression local_variables to_expr in
             let all_refs = from_all_refs @ to_all_refs in
 
             (* variable of for loop (for i, i) use variables found in from_expr and to_expr  *)
@@ -237,7 +235,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             let loop_local_variables = Hashtbl.copy local_variables in
 
             (* Get references to variables and functions in the condition expression *)
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables condition_expr in
 
             (* Make relations between variable used in condition expression and current function *)
             let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
@@ -253,7 +251,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             let then_local_variables = Hashtbl.copy local_variables in
 
             (* Get references to variables and functions in the condition expression *)
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables condition_expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables condition_expr in
 
             (* Make relations between variable used and current function *)
             let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
@@ -472,7 +470,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
             match return_expr_opt with
             | Some return_expr ->
                 (* Get references to variables and functions in the expression *)
-                let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables return_expr in
+                let all_refs = refs_in_parsed_boolean_expression local_variables return_expr in
                 List.map (fun _ref -> (fun_ref, _ref)) all_refs
             | None -> []
         in
@@ -636,7 +634,7 @@ let remove_unused_instructions local_variables dependency_graph code_bloc_name (
 
             (* Get current assigned variable, if not used, remove instruction *)
 
-            let refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+            let refs = refs_in_parsed_boolean_expression local_variables expr in
             let scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
             let all_refs = refs @ scalar_or_index_update_type_refs in
 
@@ -658,7 +656,7 @@ let remove_unused_instructions local_variables dependency_graph code_bloc_name (
 
 
         | Parsed_instruction (expr, next_expr) ->
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables expr in
 
             let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
 
@@ -676,7 +674,7 @@ let remove_unused_instructions local_variables dependency_graph code_bloc_name (
             (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
             let local_variables = StringMap.add variable_name variable_ref local_variables in
             (* Get references to variables and functions in the local init expression *)
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables init_expr in
+            let all_refs = refs_in_parsed_boolean_expression local_variables init_expr in
 
             let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
 
