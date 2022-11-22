@@ -1416,9 +1416,7 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
         | Parsed_local_decl _
         | Parsed_for_loop _
         | Parsed_while_loop _
-        | Parsed_if _
-        | Parsed_return_expr _
-        | Parsed_bloc_void -> []
+        | Parsed_if _ -> []
     in
 
     let parsed_clock_updates = clock_assignment_in_seq_code_bloc parsed_seq_code_bloc in

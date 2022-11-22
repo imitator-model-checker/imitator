@@ -773,11 +773,6 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
                 ))
             )
 
-        | Parsed_return_expr expr ->
-            let typed_expr, _ = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
-            Typed_return_expr typed_expr
-
-        | Parsed_bloc_void -> Typed_bloc_void
     in
     type_check_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
@@ -2504,9 +2499,7 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
             then_results @ else_results
 
         | Typed_local_decl _
-        | Typed_instruction _
-        | Typed_return_expr _
-        | Typed_bloc_void -> []
+        | Typed_instruction _ -> []
 
     in
 
@@ -2599,13 +2592,6 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
                 global_expression_of_typed_boolean_expression variable_infos typed_expr
             )
 
-        | Typed_return_expr typed_expr ->
-            Return_expr (
-                global_expression_of_typed_boolean_expression variable_infos typed_expr
-            )
-
-        | Typed_bloc_void ->
-            Bloc_void
     in
     seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc
 

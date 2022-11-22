@@ -105,8 +105,6 @@ type typed_seq_code_bloc =
     | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
-    | Typed_return_expr of typed_boolean_expression
-    | Typed_bloc_void
 
 and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
@@ -321,10 +319,6 @@ let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) 
         | Typed_instruction expr ->
             string_of_typed_boolean_expression variable_infos expr ^ ";"
 
-        | Typed_return_expr expr ->
-            string_of_typed_boolean_expression variable_infos expr ^ ";"
-
-        | Typed_bloc_void -> ""
     in
     string_of_typed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 
@@ -373,7 +367,8 @@ and string_of_typed_state_predicate variable_infos = function
 	| Typed_state_predicate_term (predicate_term, _) ->
         string_of_typed_state_predicate_term variable_infos predicate_term
 
-
+(* TODO benjamin CLEAN *)
+(*
 type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_local_decl of variable_name * DiscreteType.var_type_discrete * typed_boolean_expression (* init expr *) * 'a
     | Traversed_typed_assignment of typed_normal_update * 'a
@@ -383,7 +378,7 @@ type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_if of typed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
     | Traversed_typed_return_expr of typed_boolean_expression
     | Traversed_typed_bloc_void
-
+*)
 (* TODO benjamin CLEAN *)
 (* Traverse a bloc of sequential code using a callback function *)
 (* When traversing, all local variables are automatically computed *)
@@ -448,11 +443,6 @@ let traverse_typed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
             let traversed_element = Traversed_typed_instruction (expr, next_result) in
             traverse_fun local_variables traversed_element
 
-        | Typed_return_expr expr ->
-            traverse_fun local_variables (Traversed_typed_return_expr expr)
-
-        | Typed_bloc_void ->
-            traverse_fun local_variables Traversed_typed_bloc_void
     in
     traverse_parsed_seq_code_bloc_rec VariableMap.empty (* seq_code_bloc *)
 *)

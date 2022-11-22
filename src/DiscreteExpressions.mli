@@ -212,8 +212,6 @@ and seq_code_bloc =
     | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
-    | Return_expr of global_expression
-    | Bloc_void
 
 and seq_code_bloc_list = seq_code_bloc list
 

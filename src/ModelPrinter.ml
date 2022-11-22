@@ -383,11 +383,6 @@ let string_of_seq_code_bloc model level (* seq_code_bloc *) =
             ^ " := "
             ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_expr
             ^ ";"
-
-        | Return_expr expr ->
-            tabs ^ "return " ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";"
-
-        | Bloc_void -> ""
     in
 
     string_of_seq_code_bloc level (* seq_code_bloc *)

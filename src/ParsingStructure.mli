@@ -175,8 +175,6 @@ type parsed_seq_code_bloc =
     | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *) * int (* id *)
     | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* inner bloc *)
     | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* then *) * parsed_seq_code_bloc_list option (* else *)
-    | Parsed_return_expr of parsed_boolean_expression
-    | Parsed_bloc_void
 
 and parsed_seq_code_bloc_list = parsed_seq_code_bloc list
 

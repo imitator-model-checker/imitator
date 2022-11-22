@@ -206,11 +206,6 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
         | Parsed_instruction expr ->
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
-        | Parsed_return_expr expr ->
-            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
-
-        | Parsed_bloc_void ->
-            base
     in
     fold_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
@@ -422,11 +417,6 @@ let traverse_parsed_seq_code_bloc traverse_fun fold_fun (* parsed_seq_code_bloc 
             let traversed_element = Traversed_parsed_instruction expr in
             traverse_fun local_variables traversed_element
 
-        | Parsed_return_expr expr ->
-            traverse_fun local_variables (Traversed_parsed_return_expr expr)
-
-        | Parsed_bloc_void ->
-            traverse_fun local_variables Traversed_parsed_bloc_void
     in
     traverse_parsed_seq_code_bloc_rec (Hashtbl.create 0) (* parsed_seq_code_bloc *)
 *)
@@ -728,11 +718,6 @@ and string_of_parsed_instruction variable_infos = function
         ^ string_of_parsed_seq_code_bloc variable_infos then_bloc
         ^ str_else
         ^ " end\n"
-
-    | Parsed_return_expr expr ->
-        "return " ^ string_of_parsed_boolean_expression variable_infos expr
-
-    | Parsed_bloc_void -> ""
 
 and string_of_parsed_normal_update variable_infos (parsed_scalar_or_index_update_type, expr) =
     let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in

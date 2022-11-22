@@ -611,9 +611,7 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* parsed_seq_code_
             [left_variable_name, right_variable_names, expr]
 
         | Parsed_instruction _
-        | Parsed_local_decl _
-        | Parsed_return_expr _
-        | Parsed_bloc_void -> []
+        | Parsed_local_decl _ -> []
     in
     left_right_member_of_assignments_in_parsed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 

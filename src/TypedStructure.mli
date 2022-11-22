@@ -104,8 +104,6 @@ type typed_seq_code_bloc =
     | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
-    | Typed_return_expr of typed_boolean_expression
-    | Typed_bloc_void
 
 and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
@@ -127,6 +125,8 @@ val string_of_typed_discrete_factor : variable_infos -> var_type_discrete -> typ
 val string_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> string
 val string_of_typed_state_predicate : variable_infos -> typed_state_predicate -> string
 
+(* TODO benjamin CLEAN *)
+(*
 type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_local_decl of variable_name * DiscreteType.var_type_discrete * typed_boolean_expression (* init expr *) * 'a
     | Traversed_typed_assignment of typed_normal_update * 'a
@@ -136,6 +136,6 @@ type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_if of typed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
     | Traversed_typed_return_expr of typed_boolean_expression
     | Traversed_typed_bloc_void
-
+*)
 (* TODO benjamin CLEAN *)
 (*val traverse_typed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_typed_seq_code_bloc -> 'a) -> typed_seq_code_bloc -> 'a*)

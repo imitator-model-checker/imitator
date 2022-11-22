@@ -273,12 +273,6 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             (* Concat relations *)
             then_bloc_declaration_relations @ else_bloc_declaration_relations @ relations
 
-        | Parsed_return_expr expr ->
-            (* Get references to variables and functions in the expression *)
-            let all_refs = get_variable_and_function_refs_in_parsed_boolean_expression local_variables expr in
-            List.map (fun _ref -> (bloc_ref, _ref)) all_refs
-
-        | Parsed_bloc_void -> []
     in
     relations_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
@@ -706,9 +700,6 @@ let remove_unused_instructions local_variables dependency_graph code_bloc_name (
         | Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr) ->
             let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
             Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr)
-
-        | Parsed_return_expr _
-        | Parsed_bloc_void as expr -> expr
     in
     remove_unused_instructions_rec local_variables (* seq_code_bloc *)
 

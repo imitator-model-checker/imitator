@@ -513,9 +513,6 @@ let string_of_fun_definitions model =
             | Instruction expr ->
                 DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";"
 
-            | Return_expr expr ->
-                "return " ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names expr ^ ";"
-            | Bloc_void -> ""
         in
 
         (* Convert a function into a string *)

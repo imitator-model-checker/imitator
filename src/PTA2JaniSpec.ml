@@ -711,10 +711,6 @@ let string_of_custom_user_functions model =
             | If _ ->
                 print_warning ("A if, while, for control structure was found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 ""
-
-            | Return_expr expr ->
-                string_of_global_expression model.variable_names expr
-            | Bloc_void -> ""
         in
 
 

@@ -596,10 +596,6 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             | _ -> ()
             );
 
-        | Return_expr expr ->
-            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr; ()
-
-        | Bloc_void -> ()
     in
 
     eval_seq_code_bloc eval_context seq_code_bloc
