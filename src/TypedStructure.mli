@@ -98,20 +98,22 @@ type typed_loop_dir =
     | Typed_for_loop_down
 
 type typed_seq_code_bloc =
-    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
-    | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_assignment_scope
-    | Typed_instruction of typed_boolean_expression * typed_seq_code_bloc
-    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
-    | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
-    | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
+    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression
+    | Typed_assignment of typed_normal_update * typed_assignment_scope
+    | Typed_instruction of typed_boolean_expression
+    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
     | Typed_return_expr of typed_boolean_expression
     | Typed_bloc_void
+
+and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_seq_code_bloc * typed_boolean_expression option; (* body *)
+    body : typed_seq_code_bloc_list * typed_boolean_expression option; (* body *)
 }
 
 val label_of_typed_sequence_type : typed_sequence_type -> string
@@ -122,7 +124,7 @@ val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discre
 val string_of_typed_discrete_arithmetic_expression : variable_infos -> var_type_discrete -> typed_discrete_arithmetic_expression -> string
 val string_of_typed_discrete_term : variable_infos -> var_type_discrete -> typed_discrete_term -> string
 val string_of_typed_discrete_factor : variable_infos -> var_type_discrete -> typed_discrete_factor -> string
-val string_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> string
+val string_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> string
 val string_of_typed_state_predicate : variable_infos -> typed_state_predicate -> string
 
 type 'a traversed_typed_seq_code_bloc =
@@ -135,4 +137,5 @@ type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_return_expr of typed_boolean_expression
     | Traversed_typed_bloc_void
 
-val traverse_typed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_typed_seq_code_bloc -> 'a) -> typed_seq_code_bloc -> 'a
+(* TODO benjamin CLEAN *)
+(*val traverse_typed_seq_code_bloc : (var_type_discrete VariableMap.t -> 'a traversed_typed_seq_code_bloc -> 'a) -> typed_seq_code_bloc -> 'a*)

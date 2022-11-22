@@ -317,80 +317,81 @@ let string_of_declarations model =
 
 
 (* Convert a function expression into a string *)
-let string_of_seq_code_bloc model (* level *) (* expr *) =
+let string_of_seq_code_bloc model level (* seq_code_bloc *) =
 
-    let rec string_of_seq_code_bloc_rec level expr =
+    let rec string_of_seq_code_bloc level code_bloc =
+        let str_instructions = List.map (string_of_instruction level) code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
+
+    and string_of_instruction level instruction =
 
         (* Create tabs according to level *)
         let tabs, tabs_1  = OCamlUtilities.string_n_times level "  ", OCamlUtilities.string_n_times (level + 1) "  " in
 
-        match expr with
-        | Local_decl (variable_name, discrete_type, init_expr, next_expr) ->
+        match instruction with
+        | Local_decl (variable_name, discrete_type, init_expr) ->
             tabs
             ^ "var " ^ variable_name ^ " : "
             ^ DiscreteType.string_of_var_type_discrete discrete_type
             ^ " = "
             ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
-            ^ "; \n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+            ^ ";"
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
             tabs ^ "for " ^ variable_name ^ " = "
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
             ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names to_expr
             ^ " do\n"
-            ^ string_of_seq_code_bloc_rec (level + 1) inner_bloc
-            ^ tabs ^ "done\n\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+            ^ string_of_seq_code_bloc (level + 1) inner_bloc ^ "\n"
+            ^ tabs ^ "done\n"
 
-        | While_loop (condition_expr, inner_bloc, next_expr) ->
+        | While_loop (condition_expr, inner_bloc) ->
             tabs ^ "while "
             ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
             ^ " do\n"
-            ^ string_of_seq_code_bloc_rec (level + 1) inner_bloc
-            ^ tabs ^ "done\n\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+            ^ string_of_seq_code_bloc (level + 1) inner_bloc ^ "\n"
+            ^ tabs ^ "done\n"
 
-        | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+        | If (condition_expr, then_bloc, else_bloc_opt) ->
             (* Get string of else bloc if defined *)
             let str_else_bloc =
                 match else_bloc_opt with
                 | Some else_bloc ->
-                    tabs ^ "else\n" ^ string_of_seq_code_bloc_rec (level + 1) then_bloc
+                    tabs ^ "else\n" ^ string_of_seq_code_bloc (level + 1) then_bloc ^ "\n"
                 | None -> ""
             in
 
             tabs ^ "if "
             ^ DiscreteExpressions.string_of_boolean_expression model.variable_names condition_expr
             ^ " then\n"
-            ^ string_of_seq_code_bloc_rec (level + 1) then_bloc
+            ^ string_of_seq_code_bloc (level + 1) then_bloc ^ "\n"
             ^ str_else_bloc
-            ^ tabs ^ "end\n\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+            ^ tabs ^ "end\n"
 
-        | Assignment (discrete_update, next_expr)
-        | Local_assignment (discrete_update, next_expr) ->
-            tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+        | Assignment discrete_update
+        | Local_assignment discrete_update ->
+            tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";"
 
-        | Instruction (expr, next_expr) ->
-            tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";\n"
-            ^ string_of_seq_code_bloc_rec level next_expr
+        | Instruction expr ->
+            tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";"
 
-        | Clock_assignment ((clock_index, linear_expr), next_expr) ->
+        | Clock_assignment (clock_index, linear_expr) ->
             let clock_name = model.variable_names clock_index in
             tabs
             ^ clock_name
             ^ " := "
             ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_expr
-            ^ string_of_seq_code_bloc_rec level next_expr
+            ^ ";"
+
         | Return_expr expr ->
-            tabs ^ "return " ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ "\n"
+            tabs ^ "return " ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";"
 
         | Bloc_void -> ""
     in
-    string_of_seq_code_bloc_rec (* level *) (* expr *)
+
+    string_of_seq_code_bloc level (* seq_code_bloc *)
+
 
 
 
@@ -416,14 +417,14 @@ let string_of_fun_definitions model =
                 (* Convert return expr into a string *)
                 let str_return_expr =
                     match return_expr_opt with
-                    | Some return_expr -> "\n" ^ DiscreteExpressions.string_of_global_expression model.variable_names return_expr
+                    | Some return_expr -> "\t\nreturn " ^ DiscreteExpressions.string_of_global_expression model.variable_names return_expr
                     | None -> ""
                 in
 
                 (* Get whole string body *)
                 let str_body = str_code_bloc ^ str_return_expr in
 
-                "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n\n"
+                "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n"
                 ^ str_body
                 ^ "\nend"
         in

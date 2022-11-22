@@ -508,14 +508,16 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
 (* Eval sequential code bloc *)
 and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc =
 
-    let rec eval_seq_code_bloc_rec eval_context = function
-        | Local_decl (variable_name, _, expr, next_expr) ->
+    let rec eval_seq_code_bloc eval_context code_bloc =
+        List.iter (eval_instruction eval_context) code_bloc
+
+    and eval_instruction eval_context = function
+        | Local_decl (variable_name, _, expr) ->
             let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
             (* Add new variable to eval context *)
-            add_local_variable eval_context variable_name value;
-            eval_seq_code_bloc_rec eval_context next_expr
+            add_local_variable eval_context variable_name value
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
+        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
             let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
 
@@ -527,7 +529,7 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
                 let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
 
                 (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc_rec inner_eval_context inner_bloc in ()
+                let _ = eval_seq_code_bloc inner_eval_context inner_bloc in ()
             in
 
             let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
@@ -543,21 +545,17 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
                 done
             );
 
-            eval_seq_code_bloc_rec eval_context next_expr
-
-        | While_loop (condition_expr, inner_bloc, next_expr) ->
+        | While_loop (condition_expr, inner_bloc) ->
 
             (* Create inner loop context by adding new scope *)
             let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
 
             while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
                 (* Don't get any value as it was evaluated as void expression *)
-                eval_seq_code_bloc_rec inner_eval_context inner_bloc;
-            done;
+                eval_seq_code_bloc inner_eval_context inner_bloc;
+            done
 
-            eval_seq_code_bloc_rec eval_context next_expr
-
-        | If (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+        | If (condition_expr, then_bloc, else_bloc_opt) ->
 
             (* Evaluation condition *)
             let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
@@ -567,29 +565,24 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
             (* Execute then or else bloc (if defined) *)
             if condition_evaluated then (
-                let _ = eval_seq_code_bloc_rec inner_eval_context then_bloc in ()
+                let _ = eval_seq_code_bloc inner_eval_context then_bloc in ()
             ) else (
                 match else_bloc_opt with
                 | Some else_bloc ->
-                    let _ = eval_seq_code_bloc_rec inner_eval_context else_bloc in ()
+                    let _ = eval_seq_code_bloc inner_eval_context else_bloc in ()
                 | None -> ()
             );
 
-            eval_seq_code_bloc_rec eval_context next_expr
+        | Instruction expr ->
+            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr; ()
 
-        | Instruction (expr, next_expr) ->
-            let _ = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
-            eval_seq_code_bloc_rec eval_context next_expr
+        | Assignment normal_update ->
+            direct_update_with_context variable_names functions_table_opt eval_context normal_update
 
-        | Assignment (normal_update, next_expr) ->
-            direct_update_with_context variable_names functions_table_opt eval_context normal_update;
-            eval_seq_code_bloc_rec eval_context next_expr
+        | Local_assignment local_update ->
+            direct_update_with_context variable_names functions_table_opt eval_context local_update
 
-        | Local_assignment (local_update, next_expr) ->
-            direct_update_with_context variable_names functions_table_opt eval_context local_update;
-            eval_seq_code_bloc_rec eval_context next_expr
-
-        | Clock_assignment ((clock_index, linear_expr), next_expr) ->
+        | Clock_assignment (clock_index, linear_expr) ->
             let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
@@ -602,14 +595,14 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             ImitatorUtilities.print_standard_message (variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`")
             | _ -> ()
             );
-            eval_seq_code_bloc_rec eval_context next_expr
 
         | Return_expr expr ->
-            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr
+            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr; ()
 
-        | Bloc_void -> Abstract_void_value
+        | Bloc_void -> ()
     in
-    eval_seq_code_bloc_rec eval_context seq_code_bloc
+
+    eval_seq_code_bloc eval_context seq_code_bloc
 
 and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args =
 

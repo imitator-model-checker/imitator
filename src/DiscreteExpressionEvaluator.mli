@@ -34,8 +34,8 @@ val delayed_update : variable_name_table option -> functions_table option -> dis
 val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
 val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
-val eval_seq_code_bloc : variable_name_table option -> functions_table option -> discrete_access -> seq_code_bloc -> AbstractValue.abstract_value
-val eval_seq_code_bloc_with_context : variable_name_table option -> functions_table option -> eval_context -> seq_code_bloc -> AbstractValue.abstract_value
+val eval_seq_code_bloc : variable_name_table option -> functions_table option -> discrete_access -> seq_code_bloc_list -> unit
+val eval_seq_code_bloc_with_context : variable_name_table option -> functions_table option -> eval_context -> seq_code_bloc_list -> unit
 
 (* Check if a nonlinear constraint is satisfied *)
 val check_nonlinear_constraint : variable_name_table option -> functions_table option -> discrete_access -> nonlinear_constraint -> bool

@@ -65,6 +65,6 @@ val used_functions_of_model : dependency_graph -> StringSet.t
 val unused_functions_of_model : dependency_graph -> StringSet.t
 val used_variables_of_model : dependency_graph -> StringSet.t
 val unused_variables_of_model : dependency_graph -> StringSet.t
-val remove_unused_instructions_in_fun_def : dependency_graph -> parsed_fun_definition -> parsed_fun_definition
+(*val remove_unused_instructions_in_fun_def : dependency_graph -> parsed_fun_definition -> parsed_fun_definition*)
 
 val model_cycle_infos : dependency_graph -> (bool * string) list

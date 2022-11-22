@@ -99,20 +99,22 @@ type typed_loop_dir =
     | Typed_for_loop_down
 
 type typed_seq_code_bloc =
-    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression * typed_seq_code_bloc
-    | Typed_assignment of typed_normal_update * typed_seq_code_bloc * typed_assignment_scope
-    | Typed_instruction of typed_boolean_expression * typed_seq_code_bloc
-    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next bloc *)
-    | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* inner bloc *) * typed_seq_code_bloc (* next *)
-    | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc (* then bloc *) * typed_seq_code_bloc option (* else bloc *) * typed_seq_code_bloc (* next *)
+    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression
+    | Typed_assignment of typed_normal_update * typed_assignment_scope
+    | Typed_instruction of typed_boolean_expression
+    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
     | Typed_return_expr of typed_boolean_expression
     | Typed_bloc_void
+
+and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : variable_name list; (* parameter names *)
     signature : var_type_discrete list; (* signature *)
-    body : typed_seq_code_bloc * typed_boolean_expression option; (* body *)
+    body : typed_seq_code_bloc_list * typed_boolean_expression option; (* body *)
 }
 
 (** Strings **)
@@ -266,65 +268,65 @@ let rec string_of_typed_scalar_or_index_update_type variable_infos = function
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
         ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr ^ "]"
 
-let rec string_of_typed_seq_code_bloc variable_infos = function
-    | Typed_local_decl (variable_name, discrete_type, expr, next_expr) ->
-        ParsingStructureUtilities.string_of_let_in
-            variable_name
-            (DiscreteType.string_of_var_type_discrete discrete_type)
-            (string_of_typed_boolean_expression variable_infos expr)
-        ^ "\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) =
 
-    | Typed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr) ->
-        "for " ^ variable_name ^ " = "
-        ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
-        ^ (match loop_dir with Typed_for_loop_up -> " to " | Typed_for_loop_down -> " downto ")
-        ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
-        ^ " do\n"
-        ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
-        ^ "\ndone\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+    let rec string_of_typed_seq_code_bloc_rec parsed_seq_code_bloc =
+        let str_instructions = List.map string_of_typed_instruction parsed_seq_code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
 
-    | Typed_while_loop (condition_expr, inner_bloc, next_expr) ->
-        "while "
-        ^ string_of_typed_boolean_expression variable_infos condition_expr
-        ^ " do\n"
-        ^ string_of_typed_seq_code_bloc variable_infos inner_bloc
-        ^ "\ndone\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+    and string_of_typed_instruction = function
+        | Typed_local_decl (variable_name, discrete_type, expr) ->
+            ParsingStructureUtilities.string_of_let_in
+                variable_name
+                (DiscreteType.string_of_var_type_discrete discrete_type)
+                (string_of_typed_boolean_expression variable_infos expr)
 
-    | Typed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-        (* string representation of else bloc if defined *)
-        let str_else =
-            match else_bloc_opt with
-            | Some else_bloc ->
-                " else " ^ string_of_typed_seq_code_bloc variable_infos else_bloc
-            | None -> ""
-        in
+        | Typed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+            "for " ^ variable_name ^ " = "
+            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
+            ^ (match loop_dir with Typed_for_loop_up -> " to " | Typed_for_loop_down -> " downto ")
+            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
+            ^ " do\n"
+            ^ string_of_typed_seq_code_bloc_rec inner_bloc
+            ^ "\ndone"
 
-        "if "
-        ^ string_of_typed_boolean_expression variable_infos condition_expr
-        ^ " then "
-        ^ string_of_typed_seq_code_bloc variable_infos then_bloc
-        ^ str_else
-        ^ " end\n\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+        | Typed_while_loop (condition_expr, inner_bloc) ->
+            "while "
+            ^ string_of_typed_boolean_expression variable_infos condition_expr
+            ^ " do\n"
+            ^ string_of_typed_seq_code_bloc_rec inner_bloc
+            ^ "\ndone"
 
-    | Typed_assignment ((typed_scalar_or_index_update_type, update_expr), next_expr, _) ->
-        let str_left_member = string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type in
-        let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
-        ParsingStructureUtilities.string_of_assignment str_left_member str_right_member
-        ^ ";\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+        | Typed_if (condition_expr, then_bloc, else_bloc_opt) ->
+            (* string representation of else bloc if defined *)
+            let str_else =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    " else " ^ string_of_typed_seq_code_bloc_rec else_bloc
+                | None -> ""
+            in
 
-    | Typed_instruction (expr, next_expr) ->
-        string_of_typed_boolean_expression variable_infos expr
-        ^ ";\n"
-        ^ string_of_typed_seq_code_bloc variable_infos next_expr
+            "if "
+            ^ string_of_typed_boolean_expression variable_infos condition_expr
+            ^ " then "
+            ^ string_of_typed_seq_code_bloc_rec then_bloc
+            ^ str_else
+            ^ " end"
 
-    | Typed_return_expr expr ->
-        string_of_typed_boolean_expression variable_infos expr
-    | Typed_bloc_void -> ""
+        | Typed_assignment ((typed_scalar_or_index_update_type, update_expr), _) ->
+            let str_left_member = string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type in
+            let str_right_member = string_of_typed_boolean_expression variable_infos update_expr in
+            ParsingStructureUtilities.string_of_assignment str_left_member str_right_member ^ ";"
+
+        | Typed_instruction expr ->
+            string_of_typed_boolean_expression variable_infos expr ^ ";"
+
+        | Typed_return_expr expr ->
+            string_of_typed_boolean_expression variable_infos expr ^ ";"
+
+        | Typed_bloc_void -> ""
+    in
+    string_of_typed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 
 let string_of_typed_loc_predicate variable_infos = function
 	| Typed_loc_predicate_EQ (automaton_name, location_name) ->
@@ -382,6 +384,7 @@ type 'a traversed_typed_seq_code_bloc =
     | Traversed_typed_return_expr of typed_boolean_expression
     | Traversed_typed_bloc_void
 
+(* TODO benjamin CLEAN *)
 (* Traverse a bloc of sequential code using a callback function *)
 (* When traversing, all local variables are automatically computed *)
 (* Callback function give as parameters:
@@ -389,6 +392,7 @@ type 'a traversed_typed_seq_code_bloc =
  - a list of values returned by previously traversed branch
  - Current expression to process
 *)
+(*
 let traverse_typed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
 
     let rec traverse_parsed_seq_code_bloc_rec local_variables = function
@@ -451,3 +455,4 @@ let traverse_typed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
             traverse_fun local_variables Traversed_typed_bloc_void
     in
     traverse_parsed_seq_code_bloc_rec VariableMap.empty (* seq_code_bloc *)
+*)

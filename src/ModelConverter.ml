@@ -253,7 +253,7 @@ let check_normal_update variable_infos automaton_name normal_update =
     (* Get (maybe) an updated variable in normal update *)
     let updated_variable_name_opt = (
         ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
-            VariableMap.empty
+            (Hashtbl.create 0)
             (@)
             []
             (fun _ -> function
@@ -1379,13 +1379,14 @@ let convert_updates variable_infos updates : updates =
 
 (* TODO benjamin CLEAN UPDATES *)
 (* Get clock updates from a bloc of sequential code *)
-let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
+let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table parsed_seq_code_bloc =
 
-    let rec clock_assignment_in_seq_code_bloc = function
-        | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
+    let rec clock_assignment_in_seq_code_bloc parsed_seq_code_bloc =
+        let clock_updates_nested = List.map clock_assignment_in_parsed_instruction parsed_seq_code_bloc in
+        List.concat clock_updates_nested
 
-            (* Get next clock assignments *)
-            let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
+    and clock_assignment_in_parsed_instruction = function
+        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
             (* Get the update variable name *)
             let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
@@ -1409,19 +1410,18 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
                 | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
                 | _ -> []
             in
-            function_clock_assignments @ found_clock_assignments @ next_clock_assignments
+            function_clock_assignments @ found_clock_assignments
 
-        | Parsed_instruction (_, next_expr)
-        | Parsed_local_decl (_, _, _, next_expr, _)
-        | Parsed_for_loop (_, _, _, _, _, next_expr, _)
-        | Parsed_while_loop (_, _, next_expr)
-        | Parsed_if (_, _, _, next_expr) ->
-            clock_assignment_in_seq_code_bloc next_expr
+        | Parsed_instruction _
+        | Parsed_local_decl _
+        | Parsed_for_loop _
+        | Parsed_while_loop _
+        | Parsed_if _
         | Parsed_return_expr _
         | Parsed_bloc_void -> []
     in
 
-    let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
+    let parsed_clock_updates = clock_assignment_in_seq_code_bloc parsed_seq_code_bloc in
 	(* Flag to check if there are clock resets only to 0 *)
     let only_resets = is_only_resets variable_infos parsed_clock_updates in
 
@@ -1458,7 +1458,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	guard		= True_guard;
 	action		= -1;
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
-	new_updates = No_update, Bloc_void;
+	new_updates = No_update, [];
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in

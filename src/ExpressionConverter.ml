@@ -28,7 +28,7 @@ val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expres
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check whether a parsed sequential bloc definition is well typed *)
-val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> typed_seq_code_bloc
+val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> typed_seq_code_bloc_list
 (* Check whether a function definition is well typed *)
 val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
@@ -320,8 +320,8 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* local variables are more priority and shadow global variables  *)
 	    let discrete_type, scope =
             match local_variables_opt with
-            | Some local_variables when VariableMap.mem variable_name local_variables ->
-                let discrete_type = VariableMap.find variable_name local_variables in
+            | Some local_variables when Hashtbl.mem local_variables variable_name ->
+                let discrete_type = Hashtbl.find local_variables variable_name in
                 discrete_type, Local
 
             | _ ->
@@ -584,8 +584,8 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables variable_i
         (* Get assigned variable type *)
 
         let discrete_type =
-            if VariableMap.mem variable_name local_variables then (
-                VariableMap.find variable_name local_variables
+            if Hashtbl.mem local_variables variable_name then (
+                Hashtbl.find local_variables variable_name
             )
             else (
                 let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
@@ -612,177 +612,174 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables variable_i
         in
         Typed_indexed_update (typed_scalar_or_index_update_type, typed_index_expr_type, discrete_type), discrete_type
 
-let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt = function
-    | Parsed_local_decl (variable_name, variable_type, expr, next_expr, _) ->
-        (* Add local variable to hashtable *)
-        let new_local_variables = VariableMap.add variable_name variable_type local_variables in
+let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (* parsed_seq_code_bloc *) =
 
-        (* Eventually get a number type to infer *)
-        let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
+    let rec type_check_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
+        List.iter (fun i -> ImitatorUtilities.print_standard_message ("type check instruction: " ^ ParsingStructureUtilities.string_of_parsed_instruction variable_infos i)) parsed_seq_code_bloc;
+        List.map (type_check_parsed_instruction local_variables) parsed_seq_code_bloc
 
-        (* Type check and infer init expression of the local variable declaration *)
-        let typed_init_expr, init_discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
-        (* Type check and infer the next expression of the function body *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc new_local_variables variable_infos infer_type_opt next_expr in
+    and type_check_parsed_instruction local_variables = function
+        | Parsed_local_decl (variable_name, variable_type, expr, _) ->
 
-        (* Check compatibility between local variable declared type and it's init expression *)
-        if not (is_discrete_type_compatibles variable_type init_discrete_type) then
-            raise (TypeError (
-                ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
-            ));
+            (* Eventually get a number type to infer *)
+            let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
-        (* All is ok, convert to a typed function local declaration *)
-        Typed_local_decl (
-            variable_name,
-            variable_type,
-            typed_init_expr,
-            typed_next_expr
-        ), next_expr_discrete_type
+            (* Type check and infer init expression of the local variable declaration *)
+            let typed_init_expr, init_discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
 
-    | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
+            (* Add local variable to hashtable *)
+            Hashtbl.replace local_variables variable_name variable_type;
 
-        (* Resolve typed scalar or index update type *)
-        let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type local_variables variable_infos parsed_scalar_or_index_update_type in
+            (* Check compatibility between local variable declared type and it's init expression *)
+            if not (is_discrete_type_compatibles variable_type init_discrete_type) then
+                raise (TypeError (
+                    ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
+                ));
 
-        (* Eventually get a number type to infer *)
-        let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
-
-        (* Resolve typed expression *)
-        let typed_expr, expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
-
-        (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
-
-        let str_update_type = ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
-
-        (* Check compatibility between assignee variable type and it's assigned expression *)
-        if not (is_discrete_type_compatibles variable_type expr_type) then
-            raise (TypeError (
-                ill_typed_variable_message str_update_type (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
-            ));
-
-        (* Get assignment scope *)
-        let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-        let scope =
-            if VariableMap.mem variable_name local_variables then (
-                Ass_discrete_local
+            (* All is ok, convert to a typed function local declaration *)
+            Typed_local_decl (
+                variable_name,
+                variable_type,
+                typed_init_expr
             )
-            else (
-                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-                (match var_type with
-                | Var_type_clock -> Ass_clock
-                | _ -> Ass_discrete_global
+
+        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
+
+            (* Resolve typed scalar or index update type *)
+            let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type local_variables variable_infos parsed_scalar_or_index_update_type in
+
+            (* Eventually get a number type to infer *)
+            let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
+
+            (* Resolve typed expression *)
+            let typed_expr, expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos variable_number_type_opt expr in
+
+            let str_update_type = ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
+
+            (* Check compatibility between assignee variable type and it's assigned expression *)
+            if not (is_discrete_type_compatibles variable_type expr_type) then
+                raise (TypeError (
+                    ill_typed_variable_message str_update_type (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
+                ));
+
+            (* Get assignment scope *)
+            let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+
+            let scope =
+                if Hashtbl.mem local_variables variable_name then (
+                    Ass_discrete_local
                 )
+                else (
+                    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+                    (match var_type with
+                    | Var_type_clock -> Ass_clock
+                    | _ -> Ass_discrete_global
+                    )
+                )
+            in
+
+            Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
+
+        | Parsed_instruction expr ->
+            (* Resolve typed expression *)
+            let typed_expr, _ = type_check_parsed_boolean_expression (Some local_variables) variable_infos None expr in
+            Typed_instruction typed_expr
+
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, _) as outer_expr ->
+            (* Add local variable for loop to hashtable *)
+            let loop_local_variables = Hashtbl.copy local_variables in
+            Hashtbl.replace loop_local_variables variable_name (Var_type_discrete_number Var_type_discrete_int);
+
+            (* Resolve typed from expr *)
+            let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
+            (* Resolve typed to expr *)
+            let typed_to_expr, to_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
+            (* Resolve typed inner expr *)
+            let typed_inner_bloc = type_check_seq_code_bloc_rec loop_local_variables inner_bloc in
+
+            let typed_loop_dir =
+                match loop_dir with
+                | Parsed_for_loop_up -> Typed_for_loop_up
+                | Parsed_for_loop_down -> Typed_for_loop_down
+            in
+
+            (* Check from and to expr type are int *)
+            (match from_expr_type, to_expr_type with
+            | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
+                Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc)
+            | _ ->
+                raise (TypeError (
+                    ill_typed_message_of_expressions
+                        [
+                            string_of_parsed_arithmetic_expression variable_infos from_expr;
+                            string_of_parsed_arithmetic_expression variable_infos to_expr
+                        ]
+                        [from_expr_type; to_expr_type]
+                        (string_of_parsed_instruction variable_infos outer_expr)
+                ))
             )
-        in
 
-        Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), typed_next_expr, scope), next_expr_discrete_type
+        | Parsed_while_loop (condition_expr, inner_bloc) as outer_expr ->
 
-    | Parsed_instruction (expr, next_expr) ->
-        (* Resolve typed expression *)
-        let typed_expr, expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None expr in
-        (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+            let loop_local_variables = Hashtbl.copy local_variables in
 
-        Typed_instruction (typed_expr, typed_next_expr), next_expr_discrete_type
+            (* Resolve typed condition expr *)
+            let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
+            (* Resolve typed inner expr *)
+            let typed_inner_bloc = type_check_seq_code_bloc_rec loop_local_variables inner_bloc in
 
-    | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) as outer_expr ->
-        (* Add local variable for loop to hashtable *)
-        let loop_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
+            (match condition_expr_type with
+            | Var_type_discrete_bool ->
+                Typed_while_loop (typed_condition_expr, typed_inner_bloc)
+            | _ ->
+                raise (TypeError (
+                    ill_typed_message_of_expressions
+                        [string_of_parsed_boolean_expression variable_infos condition_expr]
+                        [condition_expr_type]
+                        (string_of_parsed_instruction variable_infos outer_expr)
+                ))
+            )
 
-        (* Resolve typed from expr *)
-        let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
-        (* Resolve typed to expr *)
-        let typed_to_expr, to_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
-        (* Resolve typed inner expr *)
-        let typed_inner_bloc, _ = type_check_seq_code_bloc loop_local_variables variable_infos None inner_bloc in
-        (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt) as outer_expr ->
+            (* Resolve typed from expr *)
+            let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
 
-        let typed_loop_dir =
-            match loop_dir with
-            | Parsed_for_loop_up -> Typed_for_loop_up
-            | Parsed_for_loop_down -> Typed_for_loop_down
-        in
+            let then_local_variables = Hashtbl.copy local_variables in
 
-        (* Check from and to expr type are int *)
-        (match from_expr_type, to_expr_type with
-        | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
-            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr), next_expr_discrete_type
-        | _ ->
-            raise (TypeError (
-                ill_typed_message_of_expressions
-                    [
-                        string_of_parsed_arithmetic_expression variable_infos from_expr;
-                        string_of_parsed_arithmetic_expression variable_infos to_expr
-                    ]
-                    [from_expr_type; to_expr_type]
-                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
-            ))
-        )
 
-    | Parsed_while_loop (condition_expr, inner_bloc, next_expr) as outer_expr ->
+            (* Resolve typed then expr *)
+            let typed_then_bloc = type_check_seq_code_bloc_rec then_local_variables then_bloc in
 
-        (* Resolve typed condition expr *)
-        let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
-        (* Resolve typed inner expr *)
-        let typed_inner_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None inner_bloc in
-        (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
+            (* Resolve typed else expr *)
+            let typed_else_bloc_opt =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    let else_local_variables = Hashtbl.copy local_variables in
+                    let typed_else_bloc = type_check_seq_code_bloc_rec else_local_variables else_bloc in
+                    Some typed_else_bloc
+                | None ->
+                    None
+            in
 
-        (match condition_expr_type with
-        | Var_type_discrete_bool ->
-            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr), next_expr_discrete_type
-        | _ ->
-            raise (TypeError (
-                ill_typed_message_of_expressions
-                    [string_of_parsed_boolean_expression variable_infos condition_expr]
-                    [condition_expr_type]
-                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
-            ))
-        )
+            (match condition_expr_type with
+            | Var_type_discrete_bool ->
+                Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt)
+            | _ ->
+                raise (TypeError (
+                    ill_typed_message_of_expressions
+                        [string_of_parsed_boolean_expression variable_infos condition_expr]
+                        [condition_expr_type]
+                        (string_of_parsed_instruction variable_infos outer_expr)
+                ))
+            )
 
-    | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) as outer_expr ->
-        (* Resolve typed from expr *)
-        let typed_condition_expr, condition_expr_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos None condition_expr in
+        | Parsed_return_expr expr ->
+            let typed_expr, _ = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
+            Typed_return_expr typed_expr
 
-        (* Resolve typed then expr *)
-        let typed_then_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None then_bloc in
-
-        (* Resolve typed else expr *)
-        let typed_else_bloc_opt =
-            match else_bloc_opt with
-            | Some else_bloc ->
-                let typed_else_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None else_bloc in
-                Some typed_else_bloc
-            | None ->
-                None
-        in
-
-        (* Resolve typed next expr *)
-        let typed_next_expr, next_expr_discrete_type = type_check_seq_code_bloc local_variables variable_infos infer_type_opt next_expr in
-
-        (match condition_expr_type with
-        | Var_type_discrete_bool ->
-            (* TODO benjamin look for the returned type, if return void instead when dissociate with function *)
-            Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr), next_expr_discrete_type
-        | _ ->
-            raise (TypeError (
-                ill_typed_message_of_expressions
-                    [string_of_parsed_boolean_expression variable_infos condition_expr]
-                    [condition_expr_type]
-                    (string_of_parsed_seq_code_bloc variable_infos outer_expr)
-            ))
-        )
-
-    | Parsed_return_expr expr ->
-        let typed_expr, discrete_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt expr in
-        Typed_return_expr typed_expr, discrete_type
-
-    | Parsed_bloc_void -> Typed_bloc_void, Var_type_void
+        | Parsed_bloc_void -> Typed_bloc_void
+    in
+    type_check_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
@@ -792,14 +789,15 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
     let signature = parameter_discrete_types @ [return_type] in
 
     (* Add parameters as local variables of the function *)
-    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name param_type acc) VariableMap.empty fun_def.parameters in
+    let local_variables = Hashtbl.create (List.length fun_def.parameters) in
+    List.iter (fun (param_name, param_type) -> Hashtbl.replace local_variables param_name param_type) fun_def.parameters;
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in
 
-    let code_bloc, return_expr_opt = fun_def.body in
+    let parsed_seq_code_bloc, return_expr_opt = fun_def.body in
 
-    let typed_code_bloc, _ = type_check_seq_code_bloc local_variables variable_infos None code_bloc in
+    let typed_seq_code_bloc = type_check_seq_code_bloc local_variables variable_infos None parsed_seq_code_bloc in
 
     let typed_return_expr_opt, check_return_type, str_return_expr =
         match return_expr_opt with
@@ -828,7 +826,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
         name = fun_def.name;
         parameters = parameter_names;
         signature = signature;
-        body = typed_code_bloc, typed_return_expr_opt;
+        body = typed_seq_code_bloc, typed_return_expr_opt;
     }
     in
 
@@ -1088,7 +1086,7 @@ let check_update variable_infos parsed_scalar_or_index_update_type expr =
 
     (* TODO benjamin here VariableMap.empty for local variable because this function is used only for check updates *)
     (* TODO benjamin Soon, this function will be removed *)
-    let typed_parsed_scalar_or_index_update_type, l_value_type = type_check_parsed_scalar_or_index_update_type VariableMap.empty variable_infos parsed_scalar_or_index_update_type in
+    let typed_parsed_scalar_or_index_update_type, l_value_type = type_check_parsed_scalar_or_index_update_type (Hashtbl.create 0) variable_infos parsed_scalar_or_index_update_type in
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
      if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
@@ -1161,8 +1159,7 @@ let check_state_predicate variable_infos predicate =
         ))
 
 (* Check whether a parsed sequential bloc definition is well typed *)
-let check_seq_code_bloc variable_infos parsed_seq_code_bloc =
-    first_of_tuple (type_check_seq_code_bloc VariableMap.empty variable_infos None parsed_seq_code_bloc)
+let check_seq_code_bloc variable_infos parsed_seq_code_bloc = type_check_seq_code_bloc (Hashtbl.create 0) variable_infos None parsed_seq_code_bloc
 
 (* Check whether a function definition is well typed *)
 let check_fun_definition variable_infos (parsed_fun_definition : parsed_fun_definition) =
@@ -1195,8 +1192,8 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolea
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val scalar_or_index_update_type_of_typed_scalar_or_index_update_type : variable_infos -> typed_scalar_or_index_update_type -> DiscreteExpressions.scalar_or_index_update_type
-val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> DiscreteExpressions.seq_code_bloc
-val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc -> AbstractModel.clock_updates
+val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> DiscreteExpressions.seq_code_bloc_list
+val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc_list -> AbstractModel.clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct
@@ -2476,13 +2473,12 @@ let linear_term_of_typed_boolean_expression variable_infos = function
 
 let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_bloc =
 
-    let clock_update_of_typed_seq_code_bloc_rec local_variables = function
-        | Traversed_typed_for_loop (_, _, _, _, inner_result, next_result)
-        | Traversed_typed_while_loop (_, inner_result, next_result) -> inner_result @ next_result
-        | Traversed_typed_if (_, then_result, else_result_opt, next_result) ->
-            then_result @ (match else_result_opt with Some else_result -> else_result | None -> []) @ next_result
-        | Traversed_typed_local_decl (_, _, _, next_result) -> next_result
-        | Traversed_typed_assignment ((typed_scalar_or_index_update_type, expr), next_result) ->
+    let rec clock_update_of_typed_seq_code_bloc_rec typed_seq_code_bloc =
+        let clock_updates = List.map clock_update_of_typed_instruction typed_seq_code_bloc in
+        List.concat clock_updates
+
+    and clock_update_of_typed_instruction = function
+        | Typed_assignment ((typed_scalar_or_index_update_type, expr), _) ->
 
             (* Check if updated variable is a clock *)
             (match typed_scalar_or_index_update_type with
@@ -2491,16 +2487,30 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
                 (* Get index of clock *)
                 let clock_index = VariableInfo.index_of_variable_name variable_infos variable_name in
                 (* Convert to update expression to a linear term *)
-                (clock_index, linear_term_of_typed_boolean_expression variable_infos expr) :: next_result
-            | _ -> next_result
+                [clock_index, linear_term_of_typed_boolean_expression variable_infos expr]
+            | _ -> []
             )
-        | Traversed_typed_instruction (_, next_result) -> next_result
-        | Traversed_typed_return_expr _
-        | Traversed_typed_bloc_void -> []
+        | Typed_for_loop (_, _, _, _, inner_bloc)
+        | Typed_while_loop (_, inner_bloc) ->
+            clock_update_of_typed_seq_code_bloc_rec inner_bloc
+        | Typed_if (_, then_bloc, else_bloc_opt) ->
+            let then_results = clock_update_of_typed_seq_code_bloc_rec then_bloc in
+            let else_results =
+                match else_bloc_opt with
+                | Some else_bloc -> clock_update_of_typed_seq_code_bloc_rec else_bloc
+                | None -> []
+            in
+
+            then_results @ else_results
+
+        | Typed_local_decl _
+        | Typed_instruction _
+        | Typed_return_expr _
+        | Typed_bloc_void -> []
 
     in
 
-    let converted_clock_updates = TypedStructure.traverse_typed_seq_code_bloc clock_update_of_typed_seq_code_bloc_rec seq_code_bloc in
+    let converted_clock_updates = clock_update_of_typed_seq_code_bloc_rec seq_code_bloc in
 
     (* Differentiate between different kinds of clock updates *)
     (* Case 1: no update *)
@@ -2519,87 +2529,85 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
     )
 
 
-let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos = function
-    | Typed_local_decl (variable_name, discrete_type, typed_init_expr, typed_next_expr) ->
-        Local_decl (
-            variable_name,
-            discrete_type,
-            global_expression_of_typed_boolean_expression variable_infos typed_init_expr,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
-        )
+let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc =
 
-    | Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc, typed_next_expr) ->
-        For_loop (
-            variable_name,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
-            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
-            loop_dir_of_typed_loop_dir typed_loop_dir,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
-        )
+    let rec seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc =
+        List.map instruction_of_typed_instruction typed_seq_code_bloc
 
-    | Typed_while_loop (typed_condition_expr, typed_inner_bloc, typed_next_expr) ->
-        While_loop (
-            bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_inner_bloc,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
-        )
-
-    | Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt, typed_next_expr) ->
-        let condition_expr = bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr in
-        let then_bloc = seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_then_bloc in
-        let next_expr = seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr in
-
-        let else_bloc_opt =
-            match typed_else_bloc_opt with
-            | Some typed_else_bloc ->
-                Some (seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_else_bloc)
-            | None -> None
-        in
-
-        If (
-            condition_expr,
-            then_bloc,
-            else_bloc_opt,
-            next_expr
-        )
-
-    | Typed_assignment ((typed_scalar_or_index_update_type, typed_expr), typed_next_expr, scope) ->
-
-        (match scope with
-        | Ass_discrete_global ->
-            Assignment (
-                (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-                global_expression_of_typed_boolean_expression variable_infos typed_expr),
-                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+    and instruction_of_typed_instruction = function
+        | Typed_local_decl (variable_name, discrete_type, typed_init_expr) ->
+            Local_decl (
+                variable_name,
+                discrete_type,
+                global_expression_of_typed_boolean_expression variable_infos typed_init_expr
             )
-        | Ass_discrete_local ->
-            Local_assignment (
-                (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-                global_expression_of_typed_boolean_expression variable_infos typed_expr),
-                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+
+        | Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc) ->
+            For_loop (
+                variable_name,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
+                int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
+                loop_dir_of_typed_loop_dir typed_loop_dir,
+                seq_code_bloc_of_typed_seq_code_bloc_rec typed_inner_bloc
             )
-        | Ass_clock ->
-            Clock_assignment (
-                (clock_index_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-                linear_term_of_typed_boolean_expression variable_infos typed_expr),
-                seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
+
+        | Typed_while_loop (typed_condition_expr, typed_inner_bloc) ->
+            While_loop (
+                bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr,
+                seq_code_bloc_of_typed_seq_code_bloc_rec typed_inner_bloc
             )
-        )
 
-    | Typed_instruction (typed_expr, typed_next_expr) ->
-        Instruction (
-            global_expression_of_typed_boolean_expression variable_infos typed_expr,
-            seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_next_expr
-        )
+        | Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt) ->
+            let condition_expr = bool_expression_of_typed_boolean_expression variable_infos typed_condition_expr in
+            let then_bloc = seq_code_bloc_of_typed_seq_code_bloc_rec typed_then_bloc in
 
-    | Typed_return_expr typed_expr ->
-        Return_expr (
-            global_expression_of_typed_boolean_expression variable_infos typed_expr
-        )
+            let else_bloc_opt =
+                match typed_else_bloc_opt with
+                | Some typed_else_bloc ->
+                    Some (seq_code_bloc_of_typed_seq_code_bloc_rec typed_else_bloc)
+                | None -> None
+            in
 
-    | Typed_bloc_void ->
-        Bloc_void
+            If (
+                condition_expr,
+                then_bloc,
+                else_bloc_opt
+            )
+
+        | Typed_assignment ((typed_scalar_or_index_update_type, typed_expr), scope) ->
+
+            (match scope with
+            | Ass_discrete_global ->
+                Assignment (
+                    (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+                    global_expression_of_typed_boolean_expression variable_infos typed_expr)
+                )
+            | Ass_discrete_local ->
+                Local_assignment (
+                    (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+                    global_expression_of_typed_boolean_expression variable_infos typed_expr)
+                )
+            | Ass_clock ->
+                Clock_assignment (
+                    (clock_index_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+                    linear_term_of_typed_boolean_expression variable_infos typed_expr)
+                )
+            )
+
+        | Typed_instruction typed_expr ->
+            Instruction (
+                global_expression_of_typed_boolean_expression variable_infos typed_expr
+            )
+
+        | Typed_return_expr typed_expr ->
+            Return_expr (
+                global_expression_of_typed_boolean_expression variable_infos typed_expr
+            )
+
+        | Typed_bloc_void ->
+            Bloc_void
+    in
+    seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc
 
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed_fun_definition) : fun_definition =
     let typed_code_bloc, typed_return_expr_opt = typed_fun_def.body in
