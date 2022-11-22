@@ -85,7 +85,7 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
-        let is_defined_local = VariableMap.mem variable_name local_variables in
+        let is_defined_local = Hashtbl.mem local_variables variable_name in
 
         let is_defined = is_defined_global || is_defined_local in
 
@@ -105,7 +105,7 @@ let is_variable_defined_on_update_with_callback variable_infos variable_not_defi
 
         let is_defined_global = is_variable_or_constant_declared variable_infos variable_name in
 
-        let is_defined_local = VariableMap.mem variable_name local_variables in
+        let is_defined_local = Hashtbl.mem local_variables variable_name in
 
         let is_defined = is_defined_global || is_defined_local in
 
@@ -285,20 +285,7 @@ and is_linear_parsed_term variable_infos = function
 (* Check if a parsed factor is linear *)
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
-    | Parsed_DF_variable variable_name ->
-        (* TODO benjamin IMPORTANT check *)
-        (*
-        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-
-        (match var_type with
-        | Var_type_clock
-        | Var_type_parameter
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat)
-        | Var_type_discrete (Var_type_discrete_number Var_type_discrete_weak_number) -> true
-        | Var_type_discrete _ -> false
-        )
-        *)
-        true
+    | Parsed_DF_variable variable_name -> true
     (* only rational constant *)
     | Parsed_DF_constant value ->
         (match value with
@@ -595,27 +582,38 @@ let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
 
 (* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
-let left_right_member_of_assignments_in_parsed_seq_code_bloc (* seq_code_bloc *) =
+let left_right_member_of_assignments_in_parsed_seq_code_bloc (* parsed_seq_code_bloc *) =
 
-    let left_right_member_of_assignments local_variables = function
-        | Traversed_parsed_for_loop (_, _, _, _, inner_result, next_result)
-        | Traversed_parsed_while_loop (_, inner_result, next_result) -> inner_result @ next_result
-        | Traversed_parsed_if (_, then_result, else_result_opt, next_result) ->
-            then_result @ (match else_result_opt with Some else_result -> else_result | None -> []) @ next_result
-        | Traversed_parsed_local_decl (_, _, _, next_result) -> next_result
+    let rec left_right_member_of_assignments_in_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
+        let left_right_members_nested = List.map left_right_member_of_assignments_in_instruction parsed_seq_code_bloc in
+        List.concat left_right_members_nested
 
-        | Traversed_parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_result) ->
+    and left_right_member_of_assignments_in_instruction = function
+        | Parsed_for_loop (_, _, _, _, inner_bloc, _)
+        | Parsed_while_loop (_, inner_bloc) ->
+            left_right_member_of_assignments_in_parsed_seq_code_bloc_rec inner_bloc
+
+        | Parsed_if (_, then_bloc, else_bloc_opt) ->
+            let then_bloc_results = left_right_member_of_assignments_in_parsed_seq_code_bloc_rec then_bloc in
+
+            let else_bloc_results =
+                match else_bloc_opt with
+                | Some else_bloc -> left_right_member_of_assignments_in_parsed_seq_code_bloc_rec else_bloc
+                | None -> []
+            in
+            then_bloc_results @ else_bloc_results
+
+        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
             let right_variable_names = string_set_to_list (get_variables_in_parsed_boolean_expression expr) in
             let left_variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
-            [left_variable_name, right_variable_names, expr] @ next_result
+            [left_variable_name, right_variable_names, expr]
 
-        | Traversed_parsed_instruction (_, next_result) -> next_result
-        | Traversed_parsed_return_expr _
-        | Traversed_parsed_bloc_void -> []
+        | Parsed_instruction _
+        | Parsed_local_decl _ -> []
     in
-    ParsingStructureUtilities.traverse_parsed_seq_code_bloc left_right_member_of_assignments (* seq_code_bloc *)
+    left_right_member_of_assignments_in_parsed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 
 (* Check whether clock updates found in parsed sequential code bloc are only resets *)
 let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
@@ -644,7 +642,8 @@ let rec is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function
         (* Is a call to a user function ? *)
         if Hashtbl.mem user_function_definitions_table function_name then (
             let found_function_def = Hashtbl.find user_function_definitions_table function_name in
-            is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table found_function_def.body
+            let code_bloc, _ = found_function_def.body in
+            is_only_resets_in_parsed_seq_code_bloc_deep variable_infos user_function_definitions_table code_bloc
         )
         else
             true
@@ -716,7 +715,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _)
         | Leaf_update_variable (Leaf_global_variable variable_name, _) ->
             (* Side effect occurs only when update a global variable *)
-            not (VariableMap.mem variable_name local_variables)
+            not (Hashtbl.mem local_variables variable_name)
 
     in
 

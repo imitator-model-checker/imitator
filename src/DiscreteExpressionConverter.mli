@@ -27,6 +27,6 @@ val convert_continuous_update : variable_infos -> parsed_scalar_or_index_update_
 (* Convert a parsed boolean expression to boolean expression for abstract model *)
 val convert_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> DiscreteExpressions.boolean_expression
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
-val convert_seq_code_bloc : variable_infos -> parsed_functions_table -> ParsingStructure.parsed_seq_code_bloc -> AbstractModel.clock_updates * DiscreteExpressions.seq_code_bloc
+val convert_seq_code_bloc : variable_infos -> parsed_functions_table -> ParsingStructure.parsed_seq_code_bloc_list -> AbstractModel.clock_updates * DiscreteExpressions.seq_code_bloc_list
 (* Convert a parsed function definition to function definition for abstract model *)
 val convert_fun_definition : variable_infos -> ParsingStructure.parsed_fun_definition -> AbstractModel.fun_definition

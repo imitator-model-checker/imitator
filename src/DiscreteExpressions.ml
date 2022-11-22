@@ -204,16 +204,16 @@ and expression_access_type =
 
 (* Bloc of sequential code *)
 and seq_code_bloc =
-    | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *) * seq_code_bloc
-    | Assignment of discrete_update * seq_code_bloc
-    | Local_assignment of discrete_update * seq_code_bloc
-    | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term) * seq_code_bloc
-    | Instruction of global_expression * seq_code_bloc
-    | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next bloc *)
-    | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *) * seq_code_bloc (* next *)
-    | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *) * seq_code_bloc (* next *)
-    | Return_expr of global_expression
-    | Bloc_void
+    | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *)
+    | Assignment of discrete_update
+    | Local_assignment of discrete_update
+    | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
+    | Instruction of global_expression
+    | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
+    | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
+    | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
+
+and seq_code_bloc_list = seq_code_bloc list
 
 (* Update type *)
 and scalar_or_index_update_type =
@@ -226,7 +226,7 @@ and discrete_update = scalar_or_index_update_type * global_expression
 
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
-    | Fun_user of seq_code_bloc
+    | Fun_user of seq_code_bloc_list * global_expression option
 
 type 'a my_expression =
     (* A typed expression *)

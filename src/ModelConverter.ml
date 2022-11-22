@@ -253,7 +253,7 @@ let check_normal_update variable_infos automaton_name normal_update =
     (* Get (maybe) an updated variable in normal update *)
     let updated_variable_name_opt = (
         ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
-            VariableMap.empty
+            (Hashtbl.create 0)
             (@)
             []
             (fun _ -> function
@@ -1379,13 +1379,14 @@ let convert_updates variable_infos updates : updates =
 
 (* TODO benjamin CLEAN UPDATES *)
 (* Get clock updates from a bloc of sequential code *)
-let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
+let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_table parsed_seq_code_bloc =
 
-    let rec clock_assignment_in_seq_code_bloc = function
-        | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) ->
+    let rec clock_assignment_in_seq_code_bloc parsed_seq_code_bloc =
+        let clock_updates_nested = List.map clock_assignment_in_parsed_instruction parsed_seq_code_bloc in
+        List.concat clock_updates_nested
 
-            (* Get next clock assignments *)
-            let next_clock_assignments = clock_assignment_in_seq_code_bloc next_expr in
+    and clock_assignment_in_parsed_instruction = function
+        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
             (* Get the update variable name *)
             let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
@@ -1395,8 +1396,10 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
             let function_calls_list = OCamlUtilities.string_set_to_list function_calls in
             (* Get all clock assignments in called functions recursively *)
             let function_clock_assignments = List.fold_left (fun acc function_name ->
-                let fun_def = Hashtbl.find user_function_definitions_table function_name in
-                clock_assignment_in_seq_code_bloc fun_def.body @ acc
+                let found_fun_def = Hashtbl.find user_function_definitions_table function_name in
+                (* Get code bloc of found function definition *)
+                let code_bloc, _ = found_fun_def.body in
+                clock_assignment_in_seq_code_bloc code_bloc @ acc
             ) [] function_calls_list
             in
 
@@ -1407,19 +1410,16 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
                 | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
                 | _ -> []
             in
-            function_clock_assignments @ found_clock_assignments @ next_clock_assignments
+            function_clock_assignments @ found_clock_assignments
 
-        | Parsed_instruction (_, next_expr)
-        | Parsed_local_decl (_, _, _, next_expr, _)
-        | Parsed_for_loop (_, _, _, _, _, next_expr, _)
-        | Parsed_while_loop (_, _, next_expr)
-        | Parsed_if (_, _, _, next_expr) ->
-            clock_assignment_in_seq_code_bloc next_expr
-        | Parsed_return_expr _
-        | Parsed_bloc_void -> []
+        | Parsed_instruction _
+        | Parsed_local_decl _
+        | Parsed_for_loop _
+        | Parsed_while_loop _
+        | Parsed_if _ -> []
     in
 
-    let parsed_clock_updates = clock_assignment_in_seq_code_bloc seq_code_bloc in
+    let parsed_clock_updates = clock_assignment_in_seq_code_bloc parsed_seq_code_bloc in
 	(* Flag to check if there are clock resets only to 0 *)
     let only_resets = is_only_resets variable_infos parsed_clock_updates in
 
@@ -1456,7 +1456,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 	guard		= True_guard;
 	action		= -1;
 	updates		= { clock = No_update; discrete = [] ; conditional = []};
-	new_updates = No_update, Bloc_void;
+	new_updates = No_update, [];
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -3176,9 +3176,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Iter on unused components and print warnings *)
     ComponentSet.iter (function
         | Fun_ref function_name ->
-            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")
+(*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
+            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
         | Local_variable_ref (variable_name, function_name, _) ->
-            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")
+(*            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")*)
+            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
         | Param_ref (param_name, function_name) ->
             print_warning ("Parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
         | _ -> ()
@@ -3502,6 +3504,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
+(*     TODO benjamin TEST no remove of unused functions*)
+(*    let used_function_definitions = parsed_model.fun_definitions in*)
+
+    (* let used_function_definitions = List.map (ParsingStructureGraph.remove_unused_instructions_in_fun_def dependency_graph) used_function_definitions in *)
 
     (* Check for function cycles *)
 
@@ -3526,33 +3532,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel
     );
 
-    (*
-    (* Function that remove unused local variable from function definitions *)
-    let fun_def_without_unused_local_vars =
-        (* Get unused components as a list *)
-        let unused_components_list = unused_components |> ComponentSet.to_seq |> List.of_seq in
 
-        (* For each used user defined function remove unused local vars declaration *)
-        List.map (fun (fun_def : parsed_fun_definition) ->
-            (* Get unused local vars for current function *)
-            let unused_local_vars = List.filter_map (function
-                | Local_variable_ref (variable_name, function_name, id) when function_name = fun_def.name ->
-                    Some (variable_name, id)
-                | _ -> None
-            ) unused_components_list in
-            (* Get function definition without unused local vars *)
-            Functions.fun_def_without_unused_local_vars unused_local_vars fun_def
-        ) used_function_definitions
-    in
-
-    (* Eventually remove unused local variables *)
-    let used_function_definitions =
-        if options#no_variable_autoremove then
-            used_function_definitions
-        else
-            fun_def_without_unused_local_vars
-    in
-    *)
     (* Create table of user function definitions *)
     let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
 

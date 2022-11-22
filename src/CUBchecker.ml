@@ -3181,7 +3181,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				discrete   = discrete_update; (** List of discrete updates *)
 				conditional= []
 			};
-			new_updates = Resets clock_updates, DiscreteExpressions.Bloc_void;
+			new_updates = Resets clock_updates, [];
 			target		= target_location_index;
 		} in
 		

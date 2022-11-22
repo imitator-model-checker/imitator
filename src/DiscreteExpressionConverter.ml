@@ -342,6 +342,43 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
     (* Return *)
     check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined && is_all_functions_defined
 
+let check_fun_def_return_expr variable_infos code_bloc_name return_expr =
+    (* If code bloc is named, we put name of location in messages *)
+    let str_location =  " in `" ^ code_bloc_name ^ "`" in
+
+    (* Check if all variables in function definition are defined *)
+    let is_all_variables_defined =
+
+        (* Prepare callback function that print error message when undeclared variable is found *)
+        let print_variable_in_fun_not_declared variable_name =
+            print_error (
+                "Variable `"
+                ^ variable_name
+                ^ str_location
+                ^ " was not declared."
+            )
+        in
+
+        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_fun_not_declared) return_expr
+    in
+
+    let is_all_functions_defined =
+
+        (* Prepare callback function that print error message when undeclared function is found *)
+        let print_function_in_fun_not_declared variable_name =
+            print_error (
+                "Function `"
+                ^ variable_name
+                ^ str_location
+                ^ " was not declared."
+            )
+        in
+
+        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_function_in_fun_not_declared) return_expr
+
+    in
+
+    is_all_variables_defined && is_all_functions_defined
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
@@ -402,8 +439,11 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         (* Check if it exist duplicate parameters *)
         List.length duplicate_parameters = 0
     in
+
+    let code_bloc, _ = fun_def.body in
+
     (* Return *)
-     check_seq_code_bloc_assignments variable_infos fun_def.name fun_def.body && is_all_variables_defined && is_consistent_duplicate_parameters
+     check_seq_code_bloc_assignments variable_infos fun_def.name code_bloc && is_all_variables_defined && is_consistent_duplicate_parameters
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_discrete_init variable_infos variable_name expr =

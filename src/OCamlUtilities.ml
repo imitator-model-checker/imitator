@@ -50,6 +50,11 @@ let a_of_a_option = function
 	| Some thing -> thing
 	| None -> raise Exceptions.NoneException
 
+(* Apply function to an element if Some, else return None *)
+let apply_or_none f = function
+    | Some x -> Some (f x)
+    | None -> None
+
 (************************************************************)
 (** Useful lambda functions *)
 (************************************************************)

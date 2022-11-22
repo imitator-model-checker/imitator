@@ -19,7 +19,7 @@ open OCamlUtilities
 open CustomModules
 
 (* Map of declared local variables *)
-type local_variables_map = (var_type_discrete * int) VariableMap.t
+type local_variables_map = (variable_name, var_type_discrete * int) Hashtbl.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
@@ -116,7 +116,7 @@ and fold_parsed_discrete_term_with_local_variables local_variables operator base
 and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
 	| Parsed_DF_variable variable_name ->
 
-	    let local_variable_opt = VariableMap.find_opt variable_name local_variables in
+	    let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
 
 	    let variable_leaf =
             match local_variable_opt with
@@ -140,11 +140,20 @@ and fold_parsed_discrete_factor_with_local_variables local_variables operator ba
 	| Parsed_DF_unary_min factor ->
 	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
-and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* seq_code_bloc *) =
-    let rec fold_parsed_seq_code_bloc_rec local_variables = function
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
-            (* Add new declared local variable *)
-            let new_local_variables = VariableMap.add variable_name (discrete_type, id) local_variables in
+and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* parsed_seq_code_bloc *) =
+
+
+    let rec fold_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
+        List.fold_left (fun acc instruction -> operator (fold_parsed_instruction local_variables instruction) acc) base parsed_seq_code_bloc
+
+    and fold_parsed_instruction local_variables = function
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, id) ->
+
+            (* Fold init expr *)
+            let init_expr_result = fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr in
+
+            (* Then add new declared local variable *)
+            Hashtbl.replace local_variables variable_name (discrete_type, id);
 
             let decl_callback_result =
                 match decl_callback with
@@ -152,13 +161,13 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
                 | None -> base
             in
 
-            (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr)
-            |> operator (fold_parsed_seq_code_bloc_rec new_local_variables next_expr)
+            init_expr_result
             |> operator decl_callback_result
 
-        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, next_expr, id) ->
-            (* Add local variable used for loop *)
-            let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int, id) local_variables in
+        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
+            (* Add variable used for loop to inner local variables scope *)
+            let inner_local_variables = Hashtbl.copy local_variables in
+            Hashtbl.replace inner_local_variables variable_name (Var_type_discrete_number Var_type_discrete_int, id);
 
             let decl_callback_result =
                 match decl_callback with
@@ -169,50 +178,43 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
             (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun from_expr)
             |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun to_expr)
             |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
-            |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
             |> operator decl_callback_result
 
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
+        | Parsed_while_loop (condition_expr, inner_bloc) ->
+            let inner_local_variables = Hashtbl.copy local_variables in
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
-            |> operator (fold_parsed_seq_code_bloc_rec local_variables inner_bloc)
-            |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
+            |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
 
-        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
+
+            let then_local_variables = Hashtbl.copy local_variables in
+            let else_local_variables = Hashtbl.copy local_variables in
+
             let else_bloc_result =
                 match else_bloc_opt with
-                | Some else_bloc -> fold_parsed_seq_code_bloc_rec local_variables else_bloc
+                | Some else_bloc -> fold_parsed_seq_code_bloc_rec else_local_variables else_bloc
                 | None -> base
             in
 
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
-            |> operator (fold_parsed_seq_code_bloc_rec local_variables then_bloc)
+            |> operator (fold_parsed_seq_code_bloc_rec then_local_variables then_bloc)
             |> operator else_bloc_result
-            |> operator (fold_parsed_seq_code_bloc_rec local_variables next_expr)
 
-        | Parsed_assignment (normal_update, next_expr) ->
-            operator
-                (fold_parsed_normal_update_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
-                (fold_parsed_seq_code_bloc_rec local_variables next_expr)
+        | Parsed_assignment normal_update ->
+            fold_parsed_normal_update_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
 
-        | Parsed_instruction (expr, next_expr) ->
-            operator
-                (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
-                (fold_parsed_seq_code_bloc_rec local_variables next_expr)
-
-        | Parsed_return_expr expr ->
+        | Parsed_instruction expr ->
             fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
-        | Parsed_bloc_void ->
-            base
     in
-    fold_parsed_seq_code_bloc_rec local_variables (* seq_code_bloc *)
+    fold_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
         | Parsed_scalar_update variable_name ->
 
-            let local_variable_opt = VariableMap.find_opt variable_name local_variables in
+            let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
 
             let variable_leaf =
                 match local_variable_opt with
@@ -234,14 +236,14 @@ and fold_parsed_normal_update_with_local_variables local_variables operator base
 (** Fold a parsed update expression using operator applying custom function on leaves **)
 and fold_parsed_update operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
 	| Normal normal_update ->
-	    fold_parsed_normal_update_with_local_variables VariableMap.empty operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
+	    fold_parsed_normal_update_with_local_variables (Hashtbl.create 0) operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
 	| Condition (bool_expr, update_list_if, update_list_else) ->
         let all_updates = update_list_if@update_list_else in
         let fold_updates = List.fold_left (fun acc normal_update ->
-            operator acc (fold_parsed_normal_update_with_local_variables VariableMap.empty operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
+            operator acc (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0) operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
         ) base all_updates
         in
-        operator fold_updates (fold_parsed_boolean_expression_with_local_variables VariableMap.empty operator base leaf_fun bool_expr)
+        operator fold_updates (fold_parsed_boolean_expression_with_local_variables (Hashtbl.create 0) operator base leaf_fun bool_expr)
 
 let rec fold_parsed_linear_constraint operator leaf_fun = function
     | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
@@ -266,12 +268,12 @@ and fold_parsed_linear_term operator leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
-let fold_parsed_boolean_expression operator = fold_parsed_boolean_expression_with_local_variables VariableMap.empty operator
-let fold_parsed_discrete_boolean_expression operator = fold_parsed_discrete_boolean_expression_with_local_variables VariableMap.empty operator
-let fold_parsed_discrete_arithmetic_expression operator = fold_parsed_discrete_arithmetic_expression_with_local_variables VariableMap.empty operator
-let fold_parsed_discrete_term operator = fold_parsed_discrete_term_with_local_variables VariableMap.empty operator
-let fold_parsed_discrete_factor operator = fold_parsed_discrete_factor_with_local_variables VariableMap.empty operator
-let fold_parsed_seq_code_bloc operator = fold_parsed_seq_code_bloc_with_local_variables VariableMap.empty operator
+let fold_parsed_boolean_expression operator = fold_parsed_boolean_expression_with_local_variables (Hashtbl.create 0) operator
+let fold_parsed_discrete_boolean_expression operator = fold_parsed_discrete_boolean_expression_with_local_variables (Hashtbl.create 0) operator
+let fold_parsed_discrete_arithmetic_expression operator = fold_parsed_discrete_arithmetic_expression_with_local_variables (Hashtbl.create 0) operator
+let fold_parsed_discrete_term operator = fold_parsed_discrete_term_with_local_variables (Hashtbl.create 0) operator
+let fold_parsed_discrete_factor operator = fold_parsed_discrete_factor_with_local_variables (Hashtbl.create 0) operator
+let fold_parsed_seq_code_bloc operator = fold_parsed_seq_code_bloc_with_local_variables (Hashtbl.create 0) operator
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
@@ -324,7 +326,8 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 (**)
 let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
-    let local_variables = List.fold_left (fun acc (param_name, param_type) -> VariableMap.add param_name (param_type, 0) acc) VariableMap.empty fun_def.parameters in
+    let local_variables = Hashtbl.create (List.length fun_def.parameters) in
+    List.iter (fun (param_name, param_type) -> Hashtbl.add local_variables param_name (param_type, 0)) fun_def.parameters;
 
     let decl_callback_result =
         match decl_callback with
@@ -332,91 +335,17 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
         | None -> base
     in
 
-    operator
-        (fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun fun_def.body)
-        decl_callback_result
+    let code_bloc, return_expr_opt = fun_def.body in
 
-type 'a traversed_parsed_seq_code_bloc =
-    | Traversed_parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * 'a
-    | Traversed_parsed_assignment of normal_update * 'a
-    | Traversed_parsed_instruction of parsed_boolean_expression * 'a
-    | Traversed_parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * 'a * 'a
-    | Traversed_parsed_while_loop of parsed_boolean_expression (* condition *) * 'a (* inner bloc result *) * 'a (* next result *)
-    | Traversed_parsed_if of parsed_boolean_expression (* condition *) * 'a (* then result *) * 'a option (* else result *) * 'a (* next result *)
-    | Traversed_parsed_return_expr of parsed_boolean_expression
-    | Traversed_parsed_bloc_void
+    let parsed_seq_code_bloc_result = fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun code_bloc in
 
-(* Traverse a bloc of sequential code using a callback function *)
-(* When traversing, all local variables are automatically computed *)
-(* Callback function give as parameters:
- - local variables at the current point of path,
- - a list of values returned by previously traversed branch
- - Current expression to process
-*)
-let traverse_parsed_seq_code_bloc traverse_fun (* seq_code_bloc *) =
-
-    let rec traverse_parsed_seq_code_bloc_rec local_variables = function
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
-            (* Add the new declared local variable to map *)
-            let new_local_variables = VariableMap.add variable_name discrete_type local_variables in
-
-            let next_result = traverse_parsed_seq_code_bloc_rec new_local_variables next_expr in
-
-            let traversed_element = Traversed_parsed_local_decl (variable_name, discrete_type, init_expr, next_result) in
-            traverse_fun new_local_variables traversed_element
-
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
-            (* Add the new declared local variable to map *)
-            let inner_local_variables = VariableMap.add variable_name (Var_type_discrete_number Var_type_discrete_int) local_variables in
-
-            let inner_bloc_result = traverse_parsed_seq_code_bloc_rec inner_local_variables inner_bloc in
-            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
-
-            let traversed_element = Traversed_parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc_result, next_result) in
-            traverse_fun local_variables traversed_element
-
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
-
-            let inner_bloc_result = traverse_parsed_seq_code_bloc_rec local_variables inner_bloc in
-            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
-
-            let traversed_element = Traversed_parsed_while_loop (condition_expr, inner_bloc_result, next_result) in
-            traverse_fun local_variables traversed_element
-
-        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-
-            let then_result = traverse_parsed_seq_code_bloc_rec local_variables then_bloc in
-
-            let else_result_opt =
-                match else_bloc_opt with
-                | Some else_bloc -> Some (traverse_parsed_seq_code_bloc_rec local_variables else_bloc)
-                | None -> None
-            in
-
-            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
-
-            let traversed_element = Traversed_parsed_if (condition_expr, then_result, else_result_opt, next_result) in
-            traverse_fun local_variables traversed_element
-
-        | Parsed_assignment (normal_update, next_expr) ->
-            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
-            let traversed_element = Traversed_parsed_assignment (normal_update, next_result) in
-            traverse_fun local_variables traversed_element
-
-        | Parsed_instruction (expr, next_expr) ->
-            let next_result = traverse_parsed_seq_code_bloc_rec local_variables next_expr in
-            let traversed_element = Traversed_parsed_instruction (expr, next_result) in
-            traverse_fun local_variables traversed_element
-
-        | Parsed_return_expr (expr) ->
-            traverse_fun local_variables (Traversed_parsed_return_expr expr)
-
-        | Parsed_bloc_void ->
-            traverse_fun local_variables Traversed_parsed_bloc_void
+    let return_expr_result =
+        match return_expr_opt with
+        | Some return_expr -> fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun return_expr
+        | None -> base
     in
-    traverse_parsed_seq_code_bloc_rec VariableMap.empty (* seq_code_bloc *)
 
-
+    parsed_seq_code_bloc_result |> operator return_expr_result |> operator decl_callback_result
 
 let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) []
 (** Check if all leaf of a parsing structure satisfy the predicate **)
@@ -440,11 +369,11 @@ let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables VariableMap.empty)
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
 (** Check if all leaf of a parsed update satisfy the predicate **)
 let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
-let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables VariableMap.empty)
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
 
 let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
 let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parsed_simple_predicate
@@ -481,7 +410,7 @@ let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_par
 (** Check if any leaf of a parsed update satisfy the predicate **)
 let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
-let exists_in_parsed_normal_update = apply_evaluate_or_with_base (fold_parsed_normal_update_with_local_variables VariableMap.empty)
+let exists_in_parsed_normal_update = apply_evaluate_or_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
 
 let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
 let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
@@ -520,7 +449,7 @@ let iterate_parsed_nonlinear_convex_predicate leaf_fun convex_predicate =
     List.iter (iterate_parsed_nonlinear_constraint leaf_fun) convex_predicate
 
 let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
-let iterate_parsed_normal_update = apply_evaluate_unit_with_base (fold_parsed_normal_update_with_local_variables VariableMap.empty)
+let iterate_parsed_normal_update = apply_evaluate_unit_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
 let iterate_in_parsed_loc_predicate = apply_evaluate_unit_with_base fold_parsed_loc_predicate
 let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_parsed_simple_predicate
 let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor
@@ -664,63 +593,56 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_Not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
-and string_of_parsed_seq_code_bloc variable_infos = function
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, _) ->
-            string_of_let_in
-                variable_name
-                (DiscreteType.string_of_var_type_discrete discrete_type)
-                (string_of_parsed_boolean_expression variable_infos init_expr)
-            ^ "\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+and string_of_parsed_seq_code_bloc variable_infos parsed_seq_code_bloc =
+    let str_instructions = List.map (string_of_parsed_instruction variable_infos) parsed_seq_code_bloc in
+    OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
 
-        | Parsed_assignment (normal_update, next_expr) ->
-            string_of_parsed_normal_update variable_infos normal_update
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+and string_of_parsed_instruction variable_infos = function
+    | Parsed_local_decl (variable_name, discrete_type, init_expr, _) ->
+        string_of_let_in
+            variable_name
+            (DiscreteType.string_of_var_type_discrete discrete_type)
+            (string_of_parsed_boolean_expression variable_infos init_expr)
 
-        | Parsed_instruction (expr, next_expr) ->
-            string_of_parsed_boolean_expression variable_infos expr
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+    | Parsed_assignment normal_update ->
+        string_of_parsed_normal_update variable_infos normal_update
 
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, _) ->
-            "for "
-            ^ variable_name
-            ^ " = "
-            ^ string_of_parsed_arithmetic_expression variable_infos from_expr
-            ^ (match loop_dir with Parsed_for_loop_up -> " to " | Parsed_for_loop_down -> " downto ")
-            ^ string_of_parsed_arithmetic_expression variable_infos to_expr
-            ^ " do\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
-            ^ "\ndone\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+    | Parsed_instruction expr ->
+        string_of_parsed_boolean_expression variable_infos expr
 
-        | Parsed_while_loop (condition_expr, inner_bloc, next_expr) ->
-            "while "
-            ^ string_of_parsed_boolean_expression variable_infos condition_expr
-            ^ " do\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
-            ^ "\ndone\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+    | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, _) ->
+        "for "
+        ^ variable_name
+        ^ " = "
+        ^ string_of_parsed_arithmetic_expression variable_infos from_expr
+        ^ (match loop_dir with Parsed_for_loop_up -> " to " | Parsed_for_loop_down -> " downto ")
+        ^ string_of_parsed_arithmetic_expression variable_infos to_expr
+        ^ " do\n"
+        ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
+        ^ "\ndone"
 
-        | Parsed_if (condition_expr, then_bloc, else_bloc_opt, next_expr) ->
-            (* string representation of else bloc if defined *)
-            let str_else =
-                match else_bloc_opt with
-                | Some else_bloc ->
-                    " else " ^ string_of_parsed_seq_code_bloc variable_infos else_bloc
-                | None -> ""
-            in
+    | Parsed_while_loop (condition_expr, inner_bloc) ->
+        "while "
+        ^ string_of_parsed_boolean_expression variable_infos condition_expr
+        ^ " do\n"
+        ^ string_of_parsed_seq_code_bloc variable_infos inner_bloc
+        ^ "\ndone"
 
-            "if "
-            ^ string_of_parsed_boolean_expression variable_infos condition_expr
-            ^ " then "
-            ^ string_of_parsed_seq_code_bloc variable_infos then_bloc
-            ^ str_else
-            ^ " end\n\n"
-            ^ string_of_parsed_seq_code_bloc variable_infos next_expr
+    | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
+        (* string representation of else bloc if defined *)
+        let str_else =
+            match else_bloc_opt with
+            | Some else_bloc ->
+                " else " ^ string_of_parsed_seq_code_bloc variable_infos else_bloc
+            | None -> ""
+        in
 
-        | Parsed_return_expr expr ->
-            "return " ^ string_of_parsed_boolean_expression variable_infos expr
-        | Parsed_bloc_void -> ""
+        "if "
+        ^ string_of_parsed_boolean_expression variable_infos condition_expr
+        ^ " then "
+        ^ string_of_parsed_seq_code_bloc variable_infos then_bloc
+        ^ str_else
+        ^ " end\n"
 
 and string_of_parsed_normal_update variable_infos (parsed_scalar_or_index_update_type, expr) =
     let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
@@ -755,6 +677,14 @@ and string_of_parsed_scalar_or_index_update_type variable_infos = function
         string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
         ^ l_del ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_del
 
+let string_of_parsed_fun_def_body variable_infos (code_bloc, return_expr_opt) =
+    let str_return_expr =
+        match return_expr_opt with
+        | Some return_expr -> "\n" ^ string_of_parsed_boolean_expression variable_infos return_expr
+        | None -> ""
+    in
+    string_of_parsed_seq_code_bloc variable_infos code_bloc ^ str_return_expr
+
 let string_of_parsed_fun_def variable_infos fun_def =
     (* Format each parameters to string *)
     let str_parameters_list = List.map (fun (parameter_name, parameter_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete parameter_type) fun_def.parameters in
@@ -762,7 +692,7 @@ let string_of_parsed_fun_def variable_infos fun_def =
     let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
     (* Format function definition to string *)
     "fn " ^ fun_def.name ^ " (" ^ str_parameters ^ ") : " ^ DiscreteType.string_of_var_type_discrete fun_def.return_type ^ "\n"
-    ^ string_of_parsed_seq_code_bloc variable_infos fun_def.body ^ "\n"
+    ^ string_of_parsed_fun_def_body variable_infos fun_def.body ^ "\n"
     ^ "end\n"
 
 let rec string_of_parsed_linear_constraint variable_infos = function

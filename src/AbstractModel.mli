@@ -110,7 +110,7 @@ type transition = {
     guard : guard;
     action : action_index;
     updates : updates;
-    new_updates : clock_updates * DiscreteExpressions.seq_code_bloc;
+    new_updates : clock_updates * DiscreteExpressions.seq_code_bloc_list;
     target : location_index;
 }
 
@@ -119,7 +119,7 @@ type transition_index = int
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
-(* TODO benjamin REFACTOR rename to fun_def *)
+(* TODO benjamin CLEAN rename to fun_def *)
 type fun_definition = {
     name : variable_name;
     parameter_names : variable_name list;
