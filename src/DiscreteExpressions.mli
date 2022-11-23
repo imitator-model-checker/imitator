@@ -46,6 +46,10 @@ type loop_dir =
     | Loop_up
     | Loop_down
 
+type update_scope =
+    | Global_update of Automaton.discrete_index
+    | Local_update of variable_name
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -220,7 +224,7 @@ and discrete_update = scalar_or_index_update_type * global_expression
 (* Update type *)
 and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
-    | Scalar_update of Automaton.discrete_index
+    | Scalar_update of update_scope
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
