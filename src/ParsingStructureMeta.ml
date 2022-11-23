@@ -61,10 +61,9 @@ let has_side_effects variable_infos local_variables = function
 let has_side_effects_on_update variable_infos local_variables = function
         | Leaf_update_variable (Leaf_global_variable variable_name, _)
         | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
-        (* TODO benjamin IMPORTANT below false is a wrong value,
+        (* TODO benjamin IMPORTANT below false is a wrong value, but This function tends to disapear when removing old updates
            I just set this value because this function is used in context of continuous update
            If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
-        (* TODO benjamin IMPORTANT This function tends to disapear when removing old updates *)
         false
         (* Side effect only occurs if the updated variable is global *)
 (*        not (VariableMap.mem variable_name local_variables)*)
@@ -711,7 +710,6 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
 
     let is_seq_code_bloc_leaf_has_side_effects local_variables = function
-        (* TODO benjamin IMPLEMENT *)
         | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _)
         | Leaf_update_variable (Leaf_global_variable variable_name, _) ->
             (* Side effect occurs only when update a global variable *)

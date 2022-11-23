@@ -615,7 +615,6 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables variable_i
 let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (* parsed_seq_code_bloc *) =
 
     let rec type_check_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
-        List.iter (fun i -> ImitatorUtilities.print_standard_message ("type check instruction: " ^ ParsingStructureUtilities.string_of_parsed_instruction variable_infos i)) parsed_seq_code_bloc;
         List.map (type_check_parsed_instruction local_variables) parsed_seq_code_bloc
 
     and type_check_parsed_instruction local_variables = function
@@ -1967,14 +1966,25 @@ let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_type
 let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
     | Typed_scalar_update variable_name ->
         let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+
         (match variable_kind with
         | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
-        | Variable_kind discrete_index -> Scalar_update discrete_index
+        | Variable_kind discrete_index -> Scalar_update (Global_update discrete_index)
         )
 
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
         Indexed_update (
             scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+            int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
+        )
+
+let rec local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
+    | Typed_scalar_update variable_name ->
+        Scalar_update (Local_update variable_name)
+
+    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
+        Indexed_update (
+            local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -2577,7 +2587,7 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
                 )
             | Ass_discrete_local ->
                 Local_assignment (
-                    (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
+                    (local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
                     global_expression_of_typed_boolean_expression variable_infos typed_expr)
                 )
             | Ass_clock ->

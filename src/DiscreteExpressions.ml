@@ -44,6 +44,10 @@ type loop_dir =
     | Loop_up
     | Loop_down
 
+type update_scope =
+    | Global_update of Automaton.discrete_index
+    | Local_update of variable_name
+
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
@@ -218,7 +222,7 @@ and seq_code_bloc_list = seq_code_bloc list
 (* Update type *)
 and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
-    | Scalar_update of Automaton.discrete_index
+    | Scalar_update of update_scope
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
@@ -852,9 +856,13 @@ let string_of_stack_expression = customized_string_of_stack_expression Constants
 let string_of_queue_expression = customized_string_of_queue_expression Constants.global_default_string
 let string_of_expression_access = customized_string_of_expression_access Constants.global_default_string
 
+let customized_string_of_update_scope variable_names = function
+    | Global_update variable_index -> variable_names variable_index
+    | Local_update variable_name -> variable_name
+
 (* Customized string representation of a variable update *)
 let rec customized_string_of_scalar_or_index_update_type customized_string variable_names = function
-    | Scalar_update variable_index -> variable_names variable_index
+    | Scalar_update update_scope -> customized_string_of_update_scope variable_names update_scope
     | Indexed_update (scalar_or_index_update_type, index_expr) ->
         customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type ^ "[" ^ customized_string_of_int_arithmetic_expression customized_string variable_names index_expr ^ "]"
 

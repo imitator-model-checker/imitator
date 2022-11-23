@@ -1317,8 +1317,7 @@ let split_to_clock_discrete_updates variable_infos updates =
     let is_clock_update (parsed_scalar_or_index_update_type, update_expr) =
         match parsed_scalar_or_index_update_type with
         | Parsed_scalar_update variable_name
-        (* TODO benjamin REFAC replace by call to VariableInfos module *)
-        when variable_infos.type_of_variables (index_of_variable_name variable_infos variable_name) = DiscreteType.Var_type_clock ->
+        when VariableInfo.is_clock variable_infos variable_name ->
             (* Retrieve variable type *)
             My_left (Parsed_scalar_update variable_name, update_expr)
 
@@ -1489,57 +1488,11 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 
               let updates, seq_code_bloc_update = update_section in
 
-                (* TODO benjamin IMPLEMENT have to delete some instruction ? in seq_code_bloc_update for removed variable ? *)
               let filtered_updates = filter_updates removed_variable_names updates in
-
-              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
-              (* Flag to check if there are clock resets only to 0 *)
-              (* let only_resets = ref true in *)
-
-              (* Split between the clock and discrete updates *)
-              (* let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
-                 					if type_of_variables variable_index = Var_type_clock then(
-                 						(* Update flag *)
-                 						if linear_term <> (LinearConstraint.make_pxd_linear_term [] NumConst.zero) then(
-                 							only_resets := false;
-                 						);
-                 						true
-                 					)else
-                 						false
-                 				) converted_updates
-                 				in *)
-
-              (* Split between the clock and discrete updates *)
-              (* let parsed_clock_updates, parsed_discrete_updates = List.partition (is_clock_update index_of_variables only_resets) filtered_updates
-                 				in *)
 
               (* translate parsed updates into their abstract model *)
               let converted_updates = convert_updates variable_infos filtered_updates in
               let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update in
-
-              (* TODO benjamin CLEAN, see with etienne always in comment, can we remove dead code ? *)
-              (* Convert the updates *)
-              (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
-                 					let variable_index = Hashtbl.find index_of_variables variable_name in
-                 					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
-                 					(variable_index, linear_term)
-                 				) filtered_updates in*)
-
-              (* Differentiate between different kinds of clock updates *)
-              (* let clock_updates : clock_updates =
-                 					(* Case 1: no update *)
-                 					if converted_clock_updates = [] then No_update
-                 					else (
-                 						(* Case 2: resets only *)
-                 						if !only_resets then (
-                 							(* Keep only the clock ids, not the linear terms *)
-                 							let clocks_to_reset, _ = List.split converted_clock_updates in
-                 							Resets clocks_to_reset
-                 						) else
-                 						(* Case 3: complex with linear terms *)
-                 							Updates converted_clock_updates
-                 					)
-                 				in *)
 
               (* Update the transition array *)
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);

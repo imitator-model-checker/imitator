@@ -645,42 +645,49 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
 and compute_update_value_opt_with_context variable_names functions_table_opt eval_context (scalar_or_index_update_type, expr) =
 
-    let rec discrete_index_of_parsed_scalar_or_index_update_type = function
-        | Scalar_update discrete_index -> discrete_index
+    let rec update_scope_of_parsed_scalar_or_index_update_type = function
+        | Scalar_update update_scope -> update_scope
         | Indexed_update (scalar_or_index_update_type, _) ->
-            discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type
+            update_scope_of_parsed_scalar_or_index_update_type scalar_or_index_update_type
     in
     (* Get discrete index *)
-    let discrete_index = discrete_index_of_parsed_scalar_or_index_update_type scalar_or_index_update_type in
+    let update_scope = update_scope_of_parsed_scalar_or_index_update_type scalar_or_index_update_type in
     (* Get value before update as old value *)
-    let old_value = eval_context.discrete_valuation discrete_index in
+    let old_value =
+        match update_scope with
+        | Global_update variable_index ->
+            eval_context.discrete_valuation variable_index
+        | Local_update variable_name ->
+            eval_local_variable eval_context variable_name
+    in
 
     (* Compute its new value *)
     let new_value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
     let new_value = pack_value variable_names functions_table_opt (Some eval_context) old_value new_value scalar_or_index_update_type in
 
-    Some (discrete_index, new_value)
+    update_scope, new_value
 
 (* Directly update a discrete variable *)
 (* This function is used for sequential updates *)
 and direct_update_with_context variable_names functions_table_opt eval_context update =
 
-    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
-    match discrete_index_new_value_pair_opt with
-    | None -> ()
-    | Some (discrete_index, new_value) ->
+    let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
+    match update_scope with
+    | Global_update discrete_index ->
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
+    | Local_update variable_name ->
+        set_local_variable eval_context variable_name new_value
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Record an update into the updated_discrete hash table, then the updates can be made later  *)
 (* This function is used for non-sequential updates *)
 and delayed_update_with_context variable_names functions_table_opt eval_context updated_discrete update =
 
-    let discrete_index_new_value_pair_opt = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
-    match discrete_index_new_value_pair_opt with
-    | None ->
-        Delayed_update_recorded (* update ok *)
-    | Some (discrete_index, new_value) ->
+    let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
+
+    match update_scope with
+    | Global_update discrete_index ->
         (* Check if already updated *)
         if Hashtbl.mem updated_discrete discrete_index then (
             (* Find its value *)
@@ -697,6 +704,8 @@ and delayed_update_with_context variable_names functions_table_opt eval_context 
             Hashtbl.add updated_discrete discrete_index new_value;
             Delayed_update_recorded
         )
+    | Local_update _ -> Delayed_update_recorded
+
 
 
 
