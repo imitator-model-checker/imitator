@@ -304,13 +304,18 @@ seq_code_bloc_nonempty_list:
   | instruction { [$1] }
 ;
 
+semicolon_or_comma:
+  | SEMICOLON {}
+  | COMMA {}
+;
+
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression semicolon_or_comma { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
   /* assignment */
-  | update_without_deprecated SEMICOLON { (Parsed_assignment $1) }
+  | update_without_deprecated semicolon_or_comma { (Parsed_assignment $1) }
   /* instruction without return */
-  | boolean_expression SEMICOLON { (Parsed_instruction $1) }
+  | boolean_expression semicolon_or_comma { (Parsed_instruction $1) }
   /* for loop */
   | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop ($2, $4, $6, $5, $8, Parsing.symbol_start ()) }
   /* while loop */
