@@ -285,17 +285,17 @@ seq_code_bloc_list:
 
 /* Bloc of code (instructions, declarations, conditionals, loops) */
 seq_code_bloc_nonempty_list:
-  | instruction SEMICOLON seq_code_bloc_nonempty_list { $1 :: $3 }
-  | instruction semicolon_opt { [$1] }
+  | instruction seq_code_bloc_nonempty_list { $1 :: $2 }
+  | instruction { [$1] }
 ;
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression SEMICOLON { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
   /* assignment */
-  | update_without_deprecated { (Parsed_assignment $1) }
+  | update_without_deprecated SEMICOLON { (Parsed_assignment $1) }
   /* instruction without return */
-  | boolean_expression { (Parsed_instruction $1) }
+  | boolean_expression SEMICOLON { (Parsed_instruction $1) }
   /* for loop */
   | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop ($2, $4, $6, $5, $8, Parsing.symbol_start ()) }
   /* while loop */
