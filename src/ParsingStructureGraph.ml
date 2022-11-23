@@ -425,7 +425,7 @@ let declared_components_of_model parsed_model =
         (* Get all declared local variables in a given function definition *)
         let all_declared_local_variables_in_fun_def (fun_def : parsed_fun_definition) =
             let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
-            (* TODO benjamin tricky, we eliminate local variable with id = -1 (means that it's a parameter) *)
+            (* Trick, we eliminate local variables with id = -1 (means that it's a parameter) *)
             let local_variables_without_parameters = List.filter (fun (_, _, id) -> id <> -1) local_variables in
             List.map (fun (variable_name, _, id) -> Local_variable_ref (variable_name, fun_def.name, id)) local_variables_without_parameters
         in

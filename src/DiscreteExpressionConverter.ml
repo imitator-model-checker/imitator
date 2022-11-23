@@ -540,7 +540,7 @@ let convert_guard variable_infos guard_convex_predicate =
             let discrete_guard = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
             let continuous_guard = linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate in
 
-            (* TODO benjamin, check if optimization is possible *)
+            (* TODO benjamin, check if optimization is possible now *)
             (* NOTE : This optimization (below) was possible when discrete part use only rational-valued variables
                I don't think that it's possible anymore *)
 
