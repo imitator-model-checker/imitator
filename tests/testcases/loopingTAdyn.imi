@@ -33,10 +33,10 @@ synclabs: a;
 
 (*** NOTE: added this transition, because IMITATOR (as of 2.8) only eliminates local clocks per automata; hence y must be used somewhere in this pta ***)
 loc l0: invariant True 
-	when True do {x := 0, y := 0} goto l1;
+	when True do { mix x := 0, y := 0 } goto l1;
 
 loc l1: invariant True 
-	when x = 1 sync a do {x := 0} goto l1;
+	when x = 1 sync a do { mix x := 0 } goto l1;
 
 end (* pta *)
 

@@ -1469,7 +1469,7 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
+let convert_transitions nb_transitions nb_actions declarations_info dependency_graph (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
   (* Extract values from model parsing info *)
@@ -1520,13 +1520,27 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              let updates, seq_code_bloc_update = update_section in
+              let updates, parsed_seq_code_bloc_update = update_section in
 
               let filtered_updates = filter_updates removed_variable_names updates in
+              (* TODO benjamin IMPLEMENT remove only if  *)
+              let filtered_parsed_seq_code_bloc_updates = ParsingStructureGraph.remove_unused_clock_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update in
 
               (* translate parsed updates into their abstract model *)
               let converted_updates = convert_updates variable_infos filtered_updates in
-              let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update in
+              let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table filtered_parsed_seq_code_bloc_updates in
+            (* TODO benjamin IMPORTANT REMOVE Test *)
+            let a, _ = converted_new_updates in
+              let converted_updates =
+                match a with
+                | Resets r ->
+                    {
+                      clock      = Resets r;
+                      discrete   = [];
+                      conditional= []
+                    }
+                | _ -> converted_updates
+              in
 
               (* Update the transition array *)
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
@@ -1662,6 +1676,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 (** Getting variables *)
 (************************************************************)
 
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in a parsed reference valuation *)
 (*------------------------------------------------------------*)
@@ -1670,6 +1685,7 @@ let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : 
 	let left, _ = List.split parsed_pval in
 	left
 
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in a parsed reference valuation *)
 (*------------------------------------------------------------*)
@@ -1683,7 +1699,7 @@ let get_variables_in_parsed_hyper_rectangle (parsed_hyper_rectangle : ParsingStr
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
-
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 let all_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
 	(* First create the set *)
 	let variables_used_ref = ref StringSet.empty in
@@ -3184,12 +3200,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
 
+    let declarations_info = {
+        clock_names = single_clock_names;
+        parameter_names = single_parameter_names;
+        discrete_names = single_discrete_names;
+    }
+    in
 	(*------------------------------------------------------------*)
 	(* Resolve dependencies between variables and functions *)
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
+    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove declarations_info parsed_model parsed_property_option in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
@@ -3224,20 +3246,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)else (
 
 		(* Gather all variables used *)
-		let all_variables_used_in_model = ParsingStructureGraph.used_variables_of_model dependency_graph in
+		let all_variables_used_in_model = ParsingStructureGraph.used_global_variables_of_model dependency_graph in
 		let all_variables_used_in_property = all_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
 			(* The variable is kept if… *)
-			if
-				(* Either it is used somewhere *)
-				(StringSet.mem variable_name all_variable_used)
-				(* Or it is a clock with the special global_time name *)
-				||
-				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
-			then true
+
+            (* Either it is used somewhere *)
+            let is_variable_used_somewhere = StringSet.mem variable_name all_variable_used in
+            (* Or it is a clock with the special global_time name *)
+            let is_special_global_time = variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names in
+
+			if is_variable_used_somewhere || is_special_global_time then (
+			    true
+            )
 			else (
 				(* First print a warning *)
 				print_warning ("The " ^ variable_type_name ^ " `" ^ variable_name ^ "` is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
@@ -3302,7 +3326,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
-	let discrete_names = discrete_names in
 
 	(* Make only one list for all variables *)
     (* Keep order (parameters, clocks, discretes) *)
@@ -3529,10 +3552,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
-(*     TODO benjamin TEST no remove of unused functions*)
-(*    let used_function_definitions = parsed_model.fun_definitions in*)
 
-    (* let used_function_definitions = List.map (ParsingStructureGraph.remove_unused_instructions_in_fun_def dependency_graph) used_function_definitions in *)
+    (* Remove unused clock assignments *)
+    (* TODO benjamin IMPLEMENT only if var autoremove *)
+    let used_function_definitions = List.map (ParsingStructureGraph.remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions in
+
 
     (* Check for function cycles *)
 
@@ -3756,7 +3780,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information user_function_definitions_table transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions declarations_info dependency_graph useful_parsing_model_information user_function_definitions_table transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

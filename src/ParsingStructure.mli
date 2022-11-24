@@ -498,6 +498,12 @@ type parsed_property = {
 	projection		: parsed_projection;
 }
 
+type declarations_info = {
+    clock_names : variable_name list;
+    parameter_names : variable_name list;
+    discrete_names : variable_name list;
+}
+
 (************************************************************)
 (************************************************************)
 (** Useful data structure to avoid multiple parameters in functions *)
