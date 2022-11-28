@@ -42,9 +42,6 @@ let counter_elimination = ref None
 (* Functions *)
 (**************************************************************)
 
-(** Alias to the function defined in ModelConverter *)
-let get_clocks_in_updates = ModelConverter.get_clocks_in_updates
-
 let get_clocks_in_guard clocks : guard -> Automaton.clock_index list = function
   | True_guard -> []
   | False_guard -> []
@@ -59,6 +56,16 @@ let is_constrained_in_guard clock_index : guard -> bool = function
   | Continuous_guard continuous_guard -> LinearConstraint.pxd_is_constrained continuous_guard clock_index
   | Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_is_constrained discrete_continuous_guard.continuous_guard clock_index
 
+let clocks_in_update update =
+    let clock_updates, _ = update in
+    match clock_updates with
+    (* No update at all *)
+    | No_update -> []
+    (* Reset to 0 only *)
+    | Resets clock_reset_list -> clock_reset_list
+    (* Reset to arbitrary value (including discrete, parameters and clocks) *)
+    | Updates clock_update_list ->
+      let result, _ = List.split clock_update_list in result
 
 (*------------------------------------------------------------*)
 (* Find the local clocks per automaton *)
@@ -105,7 +112,7 @@ let find_local_clocks () =
                 let guard , updates = transition.guard, transition.updates in
 
                 let clocks_in_guards = get_clocks_in_guard model.clocks guard in
-                let clocks_in_updates = get_clocks_in_updates updates in
+                let clocks_in_updates = clocks_in_update updates in
 
                 (* Add these 2 new lists to the current list *)
                 List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
@@ -191,7 +198,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
             List.iter (fun transition ->
 
                 (* Get the clocks updated or reset *)
-                let reset_clocks = ModelConverter.get_clocks_in_updates transition.updates in
+                let reset_clocks = clocks_in_update transition.updates in
 
                 (* Compute the local clocks updated or reset *)
                 let reset_local_clocks = list_inter reset_clocks local_clocks in

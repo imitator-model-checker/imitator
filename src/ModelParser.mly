@@ -333,7 +333,9 @@ control_structure:
   | CT_WHILE boolean_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_while_loop ($2, $4) }
   /* conditional */
   | CT_IF boolean_expression CT_THEN seq_code_bloc_list CT_END { Parsed_if ($2, $4, None) }
+  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc_list RPAREN CT_END { Parsed_if ($2, $5, None) }
   | CT_IF boolean_expression CT_THEN seq_code_bloc_list CT_ELSE seq_code_bloc_list CT_END { Parsed_if ($2, $4, Some $6) }
+  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc_list RPAREN CT_ELSE LPAREN seq_code_bloc_list RPAREN CT_END { Parsed_if ($2, $5, Some $9) }
 ;
 
 loop_dir:
@@ -555,9 +557,9 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { ([], []), NoSync }
+	| { [], NoSync }
 	| updates { $1, NoSync }
-	| syn_label { ([], []), (Sync $1) }
+	| syn_label { [], (Sync $1) }
 	| updates syn_label { $1, (Sync $2) }
 	| syn_label updates { $2, (Sync $1) }
 ;
@@ -569,8 +571,8 @@ updates:
 ;
 
 mix_updates:
-  | CT_MIX seq_code_bloc_list end_opt { [], $2 }
-  | update_list { $1, [] }
+  | CT_MIX seq_code_bloc_list end_opt { $2 }
+  | seq_code_bloc_list { $1 }
 ;
 
 /************************************************************/
@@ -579,28 +581,6 @@ end_opt:
   | CT_END {}
   | {}
 ;
-
-update_list:
-	| update_nonempty_list { $1 }
-	| { [] }
-;
-
-/************************************************************/
-
-update_nonempty_list:
-	| update COMMA update_nonempty_list { Normal $1 :: $3}
-	| update comma_opt { [Normal $1] }
-	| condition_update COMMA update_nonempty_list { Condition $1 :: $3}
-	| condition_update comma_opt { [Condition $1] }
-;
-
-update_seq_nonempty_list:
-	| update SEMICOLON update_seq_nonempty_list { Normal $1 :: $3}
-	| update semicolon_opt { [Normal $1] }
-	| condition_update SEMICOLON update_seq_nonempty_list { Condition $1 :: $3}
-	| condition_update semicolon_opt { [Condition $1] }
-;
-
 
 /************************************************************/
 
@@ -637,28 +617,9 @@ update_without_deprecated:
 	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
 ;
 
-/** List containing only normal updates.
-		NOTE: it is used to avoid nested conditional updates */
-normal_update_list:
-	| update COMMA normal_update_list { $1 :: $3}
-	| update comma_opt { [$1]}
-	| { [] }
-;
-
-normal_update_list_par_opt:
-	 | normal_update_list { $1 }
-	 | LPAREN normal_update_list RPAREN { $2 }
-;
-
 boolean_expression_par_opt:
 	 | boolean_expression { $1 }
 	 | LPAREN boolean_expression RPAREN { $2 }
-;
-
-/** Condition updates **/
-condition_update:
-	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_END { ($2, $4, []) }
-	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_ELSE normal_update_list_par_opt CT_END { ($2, $4, $6) }
 ;
 
 /************************************************************/

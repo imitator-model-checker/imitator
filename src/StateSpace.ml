@@ -335,9 +335,9 @@ let get_resets (model : AbstractModel.abstract_model) (state_index : State.state
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
 		let transition = model.transitions_description transition_index in
-
+        let clock_updates, _ = transition.updates in
 		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		match transition.updates.clock with
+		match clock_updates with
 			(* No update at all *)
 			| No_update -> current_resets
 			(* Reset to 0 only *)

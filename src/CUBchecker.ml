@@ -812,14 +812,8 @@ let check_cub model =
 	                											^ ") ----" );
 	                			print_message Verbose_low ("\n");
 	                			*)
-
-								(* First check that no conditional update is used as they are not supported *)
-								(*** NOTE (ÉA, 2019/05/30): discrete updates are not tested, I suppose ***)
-								if updates.conditional <> [] then
-									raise (InternalError("Conditional updates are not supported by CUB checker"))
-								;
-
-	                        	let clock_updates = match updates.clock with
+                                let clock_updates, _ = updates in
+	                        	let clock_updates = match clock_updates with
 	                        						  No_update -> []
 													| Resets clock_update -> clock_update
 													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
@@ -2168,15 +2162,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 														^ (model.location_names automaton_index target_location_index) 
 														^ ") ----" );
 						print_message Verbose_low ("\n"); *)
-						let clock_updates = match updates.clock with
+                        let clock_updates, _ = updates in
+						let clock_updates = match clock_updates with
 											No_update -> []
 											| Resets clock_update -> clock_update
 											| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
 						in
 
 						(*add transitions*)
+						let _, update_seq_code_bloc = updates in
 						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index target_location_index),
-														continuous_part_of_guard guard, clock_updates, action_index, updates.discrete);
+														continuous_part_of_guard guard, clock_updates, action_index, update_seq_code_bloc);
 						
 						()
 					) (model.transitions automaton_index location_index action_index); 
@@ -3176,12 +3172,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
-			updates		= {
-				clock      = Resets clock_updates; (** Clock updates *)
-				discrete   = discrete_update; (** List of discrete updates *)
-				conditional= []
-			};
-			new_updates = Resets clock_updates, [];
+			updates = Resets clock_updates, [];
 			target		= target_location_index;
 		} in
 		
@@ -3535,7 +3526,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let string_of_transition automaton_index transition_index = 
 			(* Get the actual transition *)
 			let transition = new_transitions_description transition_index in
-			let guard , clock_updates , discrete_update, target_location_index = transition.guard, transition.updates.clock, transition.updates.discrete, transition.target in
+			let clock_updates, update_seq_code_bloc = transition.updates in
+			let guard , clock_updates , discrete_update, target_location_index = transition.guard, clock_updates, update_seq_code_bloc, transition.target in
 			"["
 				^ "g=" ^ (ModelPrinter.string_of_guard model.variable_names guard)
 				^

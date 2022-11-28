@@ -23,9 +23,6 @@ open DiscreteType
 
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-val updates_of_update_section : update_section -> update list
-
 
 
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)

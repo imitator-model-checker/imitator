@@ -355,7 +355,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 
 			(* Gather in transitions *)
 			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
+			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
@@ -371,30 +371,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
                     | Leaf_constant _ -> ()
                 ) convex_predicate;
 
-				(* Gather in the updates *)
-				print_message Verbose_total ("            Gathering variables in updates");
-				let updates = updates_of_update_section update_section in
-
-				List.iter (fun update_expression ->
-					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-					ParsingStructureUtilities.iterate_parsed_update (fun _ _ -> ()) (fun _ -> function
-                        | Leaf_variable leaf_variable ->
-                            (match leaf_variable with
-                            | Leaf_global_variable variable_name ->
-                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                            | Leaf_local_variable (variable_name, _, id) ->
-                                all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
-                            )
-                        | Leaf_fun function_name ->
-                            all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_constant _ -> ()
-					) update_expression;
-
-                ) updates;
-
-                let _, mixin_updates = update_section in
-
-                let mixin_updates_relations = relations_in_parsed_seq_code_bloc declarations_info (Hashtbl.create 0) "" automaton_ref mixin_updates in
+                let mixin_updates_relations = relations_in_parsed_seq_code_bloc declarations_info (Hashtbl.create 0) "" automaton_ref updates in
                 all_relations := List.fold_left (fun acc r -> RelationSet.add r acc) !all_relations mixin_updates_relations;
 
             ) location.transitions;

@@ -677,6 +677,38 @@ let string_of_custom_datatypes =
         |]
     |])
 
+let string_of_seq_code_bloc model (* seq_code_bloc *) =
+
+    let string_of_instruction = function
+
+        | Assignment (scalar_or_index_update_type, expr)
+        | Local_assignment (scalar_or_index_update_type, expr) ->
+            json_struct [|
+                json_property "ref" (json_quoted (ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type));
+                json_property "value" (string_of_global_expression model.variable_names expr)
+            |]
+
+        | Clock_assignment (clock_index, linear_expr) ->
+            json_struct [|
+                json_property "ref" (model.variable_names clock_index);
+                json_property "value" (LinearConstraint.string_of_pxd_linear_term_for_jani model.variable_names linear_expr)
+            |]
+
+        | Local_decl _
+        | Instruction _
+        | For_loop _
+        | While_loop _
+        | If _ ->
+            print_warning ("Advanced expression found in update. Advanced expression are not supported by Jani and will not be translated.");
+            ""
+    in
+
+    let string_of_seq_code_bloc seq_code_bloc =
+        let str_instructions = List.map string_of_instruction seq_code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep "" str_instructions
+    in
+    string_of_seq_code_bloc (* seq_code_bloc *)
+
 (* Declarations of custom functions *)
 let string_of_custom_user_functions model =
 
@@ -686,8 +718,8 @@ let string_of_custom_user_functions model =
 
         print_warning ("Trying to translate `" ^ fun_def.name ^ "`.");
 
-        let rec string_of_seq_code_bloc code_bloc =
-            let str_instructions = List.map string_of_instruction code_bloc in
+        let rec string_of_seq_code_bloc seq_code_bloc =
+            let str_instructions = List.map string_of_instruction seq_code_bloc in
             OCamlUtilities.string_of_list_of_string_with_sep "" str_instructions
 
         and string_of_instruction = function
@@ -1028,6 +1060,7 @@ let string_of_initial_location model automaton_index =
 	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 	"\"" ^ (model.location_names automaton_index initial_location) ^ "\""
 
+(* TODO benjamin CLEAN UPDATES *)
 let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
@@ -1045,6 +1078,7 @@ let string_of_clock_updates model = function
 			^ "}"
 		) list_of_clocks_lt)
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert an update into a string *)
 let string_of_discrete_update model (scalar_or_index_update_type, expr) =
     json_struct [|
@@ -1086,6 +1120,8 @@ let string_of_conditional_clock_updates model boolean_expr order = function
 			^ "}}"
 		) list_of_clocks_lt)
 
+(* TODO benjamin CLEAN UPDATES *)
+(*
 (* Convert a list of discrete updates into a string *)
 let string_of_conditional_discrete_updates model boolean_expr order updates =
 	string_of_list_of_string_with_sep_without_empty_strings (jani_separator) (List.rev_map (fun (scalar_or_index_update_type, global_expression) ->
@@ -1124,37 +1160,13 @@ let string_of_conditional_updates model conditional_updates =
             ^ discrete_string
     )
   ) conditional_updates)
-
-let string_of_updates model automaton_index action_index clock_updates discrete_updates transition =
-  (*TODO DYLAN: use transition for cloclk/discrete ?*)
-	(* Check for emptiness of some updates *)
-	let no_clock_updates =
-		clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
-	in
-	let no_discrete_updates = discrete_updates = [] in
-  let no_conditional_updates = transition.updates.conditional = [] in
-	(* If no update at all: empty string *)
-	if no_clock_updates && no_discrete_updates && no_conditional_updates then ""
-
-	else(
-    let first_separator = (not no_clock_updates) && (not no_discrete_updates) in
-    let second_separator = ( (not no_clock_updates) && (no_discrete_updates) && (not no_conditional_updates) ) || ( (not no_discrete_updates) && (not no_conditional_updates) ) in
-    let conditional_updates = transition.updates.conditional in
-    ""
-		^ (string_of_clock_updates model clock_updates)
-		^ (if first_separator then jani_separator else "")
-		^ (string_of_discrete_updates model discrete_updates)
-    ^ (if second_separator then jani_separator else "")
-    ^ (string_of_conditional_updates model conditional_updates)
-		^ ""
-	)
+*)
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model actions_and_nb_automata action_index automaton_index source_location transition =
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
+    let _, update_seq_code_bloc = transition.updates in
 	let guard = string_of_guard model actions_and_nb_automata model.variable_names transition.guard in
-	let assignments = string_of_updates model automaton_index transition.action clock_updates discrete_updates transition in
+	let assignments = string_of_seq_code_bloc model update_seq_code_bloc in
 	(* Header *)
 
     let action_name = model.action_names action_index in

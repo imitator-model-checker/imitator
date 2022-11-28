@@ -29,11 +29,6 @@ let rec variable_name_of_parsed_scalar_or_index_update_type = function
     | Parsed_scalar_update variable_name -> variable_name
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-let updates_of_update_section update_section =
-    let updates, _ = update_section in
-    updates
-
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
 (* If the expression is more complex, return None *)
 let discrete_boolean_expression_constant_value_opt = function

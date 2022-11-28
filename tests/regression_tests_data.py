@@ -337,33 +337,6 @@ L/U subclass                            : L-PTA
 	##------------------------------------------------------------
 
 	#,
-
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2021/10/19
-		# Last modified            : 2021/10/19
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Test discrete swap',
-		'input_files': ['test-swap-discrete.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
-  pta: l1, i = 1, j = 2 ==> 
-		"""
-			} # end result file
-			,
-			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
-  pta: l2, i = 2, j = 1 ==> 
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 	
 	#------------------------------------------------------------
 	{
@@ -381,7 +354,7 @@ L/U subclass                            : L-PTA
 			} # end result file
 			,
 			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
-  pta: l2, i = 0, j = 2 ==> 
+  pta: l2, i = 0, j = 1 ==>
 		"""
 			} # end result file
 			,
@@ -2831,7 +2804,7 @@ when  y + 7 > 2*x
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
-x1 := 6*x + 10*y + -53, x2 := 6*x + 10*y + -53, x3 := y + 5*x + 5, x4 := x + -1, x5 := -6, x6 := 2*x + 11, x7 := -3*x + 23*y + 35, x8 := 12*x + 24, x9 := -12*y + 2*x + 4*z + 41
+x1 := 6*x + 10*y + -53; x2 := 6*x + 10*y + -53; x3 := y + 5*x + 5; x4 := x + -1; x5 := -6; x6 := 2*x + 11; x7 := -3*x + 23*y + 35; x8 := 12*x + 24; x9 := -12*y + 2*x + 4*z + 41;
 		"""
 			 } # end result file
 			,
@@ -4766,59 +4739,6 @@ END CONSTRAINT
 &True
 		"""
 			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2021/08/17
-		# Last modified            : 2021/08/17
-		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test simple operations on binary words',
-		'input_files': ['binary/testbinary.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			{'file': 'testbinary-statespace.states' , 'content' : """
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1, bw1 = 0b1010, bw2 = 0b1011 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 1:
-  pta: l1, bw1 = 0b1000, bw2 = 0b1010 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 2:
-  pta: l1, bw1 = 0b0000, bw2 = 0b1000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 3:
-  pta: l1, bw1 = 0b0000, bw2 = 0b0000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-		"""
-			} # end result file
 			,
 		] # end expectations
 	} # end test case

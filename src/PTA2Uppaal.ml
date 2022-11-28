@@ -719,7 +719,8 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 
 
 
-
+(* TODO benjamin CLEAN UPDATES *)
+(*
 let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
@@ -733,7 +734,10 @@ let string_of_clock_updates model = function
 			^ " = "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
+*)
 
+(* TODO benjamin CLEAN UPDATES *)
+(*
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (scalar_or_index_update_type, global_expression) ->
@@ -744,9 +748,11 @@ let string_of_discrete_updates model updates =
 		(* Convert the arithmetic_expression *)
 		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
+*)
 
+let string_of_seq_code_bloc model seq_code_bloc = "" (* TODO benjamin IMPLEMENT ! *)
 
-let string_of_updates model automaton_index action_index x_coord_str y_coord_str clock_updates discrete_updates =
+let string_of_updates model automaton_index action_index x_coord_str y_coord_str update_seq_code_bloc =
 
 	(* First add the update for the strong broadcast encoding *)
 
@@ -771,32 +777,21 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 	in
 
 	(* Check for emptiness of some updates *)
-	let no_clock_updates =
-		clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
-	in
-	let no_discrete_updates = discrete_updates = [] in
+	let no_updates = update_seq_code_bloc = [] in
 
 	(* If no update at all: empty string *)
-	if no_clock_updates && no_discrete_updates && update_strong_broadcast = "" then ""
+	if no_updates && update_strong_broadcast = "" then ""
 
 	else(
-		(* Manage separator between clock updates and discrete updates *)
-		let separator_clock_discrete =
-			if no_clock_updates || no_discrete_updates then "" else uppaal_update_separator
-		in
 
 		(* Manage separator between the normal updates (clocks and discrete), and the strong broadcast updates *)
 		let separator_clockdiscrete_strongbroadcast =
-			if no_clock_updates && no_discrete_updates || update_strong_broadcast = "" then "" else uppaal_update_separator
+			if no_updates || update_strong_broadcast = "" then "" else uppaal_update_separator
 		in
 
 		"<label kind=\"assignment\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">"
 		(* Clock updates *)
-		^ (string_of_clock_updates model clock_updates)
-		(* Add a separator in case of both clocks and discrete *)
-		^ separator_clock_discrete
-		(* Discrete updates *)
-		^ (string_of_discrete_updates model discrete_updates)
+		^ (string_of_seq_code_bloc model update_seq_code_bloc)
 		(* Add separator *)
 		^ separator_clockdiscrete_strongbroadcast
 		(* Special strong broadcast update *)
@@ -847,8 +842,7 @@ let string_of_sync model automaton_index action_index =
 (* Convert a transition of a location into a string *)
 (** TODO: Add conditions to the translation *)
 let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
+	let _, update_seq_code_bloc = transition.updates in
 
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
@@ -881,7 +875,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates discrete_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str update_seq_code_bloc)
 	)
 
 	(* Footer *)

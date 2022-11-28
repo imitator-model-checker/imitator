@@ -321,7 +321,7 @@ let string_of_seq_code_bloc model level (* seq_code_bloc *) =
 
     let rec string_of_seq_code_bloc level code_bloc =
         let str_instructions = List.map (string_of_instruction level) code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
+        OCamlUtilities.string_of_list_of_string_with_sep " " str_instructions
 
     and string_of_instruction level instruction =
 
@@ -589,6 +589,7 @@ let string_of_scalar_or_index_update_type variable_names scalar_or_index_update_
 let string_of_discrete_updates ?(sep=", ") variable_names updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (DiscreteExpressions.string_of_discrete_update variable_names) updates)
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a list of discrete updates into a JSON-like string *)
 let json_of_discrete_updates ?(sep=", ") variable_names updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (fun (scalar_or_index_update_type, expr) ->
@@ -597,6 +598,8 @@ let json_of_discrete_updates ?(sep=", ") variable_names updates =
 		^ ": "
 		^ (json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr))
 	) updates)
+
+let json_of_seq_code_bloc variable_names seq_code_bloc = "" (* TODO benjamin IMPLEMENT *)
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -642,6 +645,7 @@ let string_of_conditional_updates variable_names conditional_updates =
 	let sep = ", " in
 	string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
+(* TODO benjamin CLEAN UPDATES *)
 (** Convert a list of conditional updates into a JSON-like string *)
 (*** WARNING: not really supported ***)
 let json_of_conditional_updates variable_names conditional_updates =
@@ -659,14 +663,7 @@ let string_of_transition model automaton_index (transition : transition) =
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
-	let _, seq_code_bloc_updates = transition.new_updates in
-	let conditional_updates = transition.updates.conditional in
-	let first_separator, second_separator = separator_comma transition.updates in
-
-    let str_mix = string_of_seq_code_bloc model 0 seq_code_bloc_updates in
-    let str_mix_or_empty = if str_mix <> "" then "\nmix\n" ^ str_mix else "" in
+	let _, seq_code_bloc_updates = transition.updates in
 
 	(* Print some information *)
 (* 	print_message Verbose_total ("Updates retrieved…"); *)
@@ -677,17 +674,8 @@ let string_of_transition model automaton_index (transition : transition) =
 
 	(* Convert the updates *)
 	^ " do {"
-	^ str_mix_or_empty
-	(* Clock updates *)
-	^ (string_of_clock_updates model.variable_names clock_updates)
-	(* Add a coma in case of both clocks and discrete *)
-	^ (if first_separator then ", " else "")
-	(* Discrete updates *)
-	^ (string_of_discrete_updates model.variable_names discrete_updates)
-	(* Add a coma in case of both clocks and discrete and conditions *)
-	^ (if second_separator then ", " else "")
-	(* Conditional updates *)
-	^ (string_of_conditional_updates model.variable_names conditional_updates)
+	(* sequential updates *)
+	^ string_of_seq_code_bloc model 0 seq_code_bloc_updates
 	^ "} "
 	
 	(* Convert the sync *)
@@ -702,10 +690,7 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
-	let conditional_updates = transition.updates.conditional in
-	let first_separator, second_separator = separator_comma transition.updates in
+    let _, seq_code_bloc_updates = transition.updates in
 
 	"[PTA " ^ (model.automata_names automaton_index) ^ ": guard{"
 	(* Convert the guard *)
@@ -713,16 +698,8 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 
 	(* Convert the updates *)
 	^ "} updates{"
-	(* Clock updates *)
-	^ (string_of_clock_updates model.variable_names clock_updates)
-	(* Add a coma in case of both clocks and discrete *)
-	^ (if first_separator then ", " else "")
-	(* Discrete updates *)
-	^ (string_of_discrete_updates model.variable_names discrete_updates)
-	(* Add a coma in case of both clocks and discrete and conditions *)
-	^ (if second_separator then ", " else "")
-	(* Conditional updates *)
-	^ (string_of_conditional_updates model.variable_names conditional_updates)
+	(* Sequential updates *)
+	^ (string_of_seq_code_bloc model 0 seq_code_bloc_updates)
 	^ "} "
 
 	(* Convert the sync *)
@@ -733,9 +710,8 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 
 (* Convert a transition into a JSON-like string *)
 let json_of_transition model automaton_index (transition : transition) =
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
-	let conditional_updates = transition.updates.conditional in
+
+    let _, seq_code_bloc_updates = transition.updates in
 
 	""
 	(* Begin transition *)
@@ -751,11 +727,7 @@ let json_of_transition model automaton_index (transition : transition) =
 	(* Updates *)
 	^ "\n\t\t\t\t\t\t" ^ (json_of_string "updates") ^ ": {"
 	(* Clock updates *)
-	^ (json_of_clock_updates model.variable_names clock_updates)
-	(* Discrete updates *)
-	^ (json_of_discrete_updates model.variable_names discrete_updates)
-	(* Conditional updates *)
-	^ (json_of_conditional_updates model.variable_names conditional_updates)
+	^ (json_of_seq_code_bloc model.variable_names seq_code_bloc_updates)
 	^ "\n\t\t\t\t\t\t}"
 	
 (* 	(* Convert the target location *) *)

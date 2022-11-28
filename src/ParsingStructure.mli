@@ -178,9 +178,6 @@ type parsed_seq_code_bloc =
 
 and parsed_seq_code_bloc_list = parsed_seq_code_bloc list
 
-(* Two types of updates (old updates, mix updates) grouped in section *)
-type update_section = update list (* updates, not sequential *) * parsed_seq_code_bloc_list (* mixin updates *)
-
 (****************************************************************)
 (** User functions *)
 (****************************************************************)
@@ -213,7 +210,7 @@ type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = guard * update_section * sync * location_name
+type transition = guard * parsed_seq_code_bloc_list * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
