@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2021/07/09
+ * Last modified   : 2022/11/28
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 	s, ckG1, ckG2, ckG3, ckG4
@@ -45,7 +45,7 @@ var 	s, ckG1, ckG2, ckG3, ckG4
 (************************************************************)
   automaton input
 (************************************************************)
-synclabs: dUp, dDown, ckUp, ckDown;
+actions: dUp, dDown, ckUp, ckDown;
 
 loc Input0: invariant s <= tLO - tSetup 
 	when s = tLO - tSetup sync dUp do {} goto Input1;
@@ -70,7 +70,7 @@ end (* input *)
 (*Input : D, ck, qG2
 Output : qG1*)
 
-synclabs: dUp, dDown, ckUp, ckDown, qG2Up, qG2Down,
+actions: dUp, dDown, ckUp, ckDown, qG2Up, qG2Down,
 	qG1Up, qG1Down;
 
 loc G10000: invariant ckG1 <= dG1_u 
@@ -170,7 +170,7 @@ end (* g1 *)
 (*Input : qG1, ck
 Output : qG2*)
 
-synclabs: qG1Up, qG1Down, ckUp, ckDown,
+actions: qG1Up, qG1Down, ckUp, ckDown,
 	qG2Up, qG2Down;
 
 loc G2001: invariant ckG2 >= 0 
@@ -218,7 +218,7 @@ end (* g2 *)
 (*Input : q, ck, qG2
 Output : qG3*)
 
-synclabs: qUp, qDown, ckUp, ckDown, qG2Up, qG2Down,
+actions: qUp, qDown, ckUp, ckDown, qG2Up, qG2Down,
 	qG3Up, qG3Down;
 
 loc G30000: invariant ckG3 <= dG3_u 
@@ -318,7 +318,7 @@ end (* g3 *)
 (*Input : qG3
 Output : q*)
 
-synclabs: qG3Up, qG3Down,
+actions: qG3Up, qG3Down,
 	qUp, qDown;
 
 loc G401: invariant ckG4 >= 0 

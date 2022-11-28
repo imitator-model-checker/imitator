@@ -68,7 +68,7 @@ let unzip l = List.fold_left
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
+	CT_ACCEPTING CT_ACTIONS CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT
 	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
@@ -365,7 +365,11 @@ state_initialization:
 /************************************************************/
 
 sync_labels:
-	| CT_SYNCLABS COLON name_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON name_list SEMICOLON { $3 }
+	/** NOTE: deprecated since 3.4 */
+	| CT_SYNCLABS COLON name_list SEMICOLON {
+			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
+	$3 }
 ;
 
 /************************************************************/

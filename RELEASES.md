@@ -1,11 +1,14 @@
 # Releases
 
 *******************************************************
-## release 3.4 (2022-11-14)
+## release 3.4 (202x-xx-xx) Cheese Durian
 
 ### Syntax improvement
-* Remove backward-compatibility on assignment syntax, now we only accept `:=` operator
-* Both `;` and ',' instruction separators accepted
+
+### Syntax changes in the model
+* Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
+* Terminate backward-compatibility on assignment syntax: updates are now only defined using the `:=` operator
+* Both `;` and `,` instruction separators accepted
 
 
 *******************************************************

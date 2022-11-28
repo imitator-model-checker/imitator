@@ -168,7 +168,7 @@ the first and second ones (\styleIMI{proc1} and \styleIMI{proc2}) model the firs
 
 \paragraph{The first process}
 Let us first describe the \IPTA{} \styleIMI{proc1} (a graphical representation is given in \cref{pta:proc1}).
-This \IPTA{} uses six actions, given in the \styleIMI{synclabs} declaration.
+This \IPTA{} uses six actions, given in the \styleIMI{actions} declaration.
 
 \styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{invariant True}).
 At any time, when the discrete variable \styleIMI{turn} is equal to \styleIMI{IDLE}, then this \IPTA{} may synchronize on action \styleIMI{try\_1}, reset its clock \styleIMI{x1}, and enter location \styleIMI{active1}.
@@ -1570,7 +1570,7 @@ Examples of a \styleIMI{seq-then} update expression with multiple synchronized t
 (************************************************************)
 automaton pta1
 (************************************************************)
-	synclabs : a;
+	actions : a;
 
 	loc l1: invariant x <= 0
 	when True
@@ -1593,7 +1593,7 @@ automaton pta1
 	(************************************************************)
 	automaton pta2
 	(************************************************************)
-	synclabs : a;
+	actions : a;
 	loc l1: invariant True
 	when
 	& True
@@ -1615,7 +1615,7 @@ automaton pta1
 	(************************************************************)
 	automaton pta3
 	(************************************************************)
-	synclabs : a;
+	actions : a;
 	loc l1: invariant True
 	when
 	& True
@@ -4048,10 +4048,10 @@ For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not use 
 \paragraph{\styleOption{-sync-auto-detect} (default: disabled)}
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
-By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
+By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{actions} section.
 Therefore, if an action is declared but never used in (at least) one \IPTA{}, this label will never be synchronized in the execution.\footnote{In such a case, action label is actually completely removed before the execution, in order to optimize the execution, and the user is warned of this removal.}
 
-The option \styleOption{-sync-auto-detect} allows to detect automatically the actions in each \IPTA{}: the actions declared in the \styleIMI{synclabs} section are ignored, and \imitator{} considers as declared actions only the actions really used in this \IPTA{}.
+The option \styleOption{-sync-auto-detect} allows to detect automatically the actions in each \IPTA{}: the actions declared in the \styleIMI{actions} section are ignored, and \imitator{} considers as declared actions only the actions really used in this \IPTA{}.
 
 
 
@@ -4363,7 +4363,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{synclabs} \styleIMI{:} \nt{name\_list} \styleIMI{;} \\
+	$|$ & \styleIMI{actions} \styleIMI{:} \nt{name\_list} \styleIMI{;} \\
 \end{longtable}
 
 %------------------------------------------------------------
@@ -5634,6 +5634,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{\#synth} \\
 	\styleIMI{\#witness}\\
 	\styleIMI{accepting} \\
+	\styleIMI{actions} \\
 	\styleIMI{always} \\
 	\styleIMI{and} \\
 	\styleIMI{array\_append} \\
