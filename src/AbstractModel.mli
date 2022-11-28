@@ -254,6 +254,8 @@ type abstract_model = {
 	automata_per_action : action_index -> (automaton_index list);
 	(* The list of actions for each automaton for each location *)
 	actions_per_location : automaton_index -> location_index -> (action_index list);
+	(* Is an action controllable? *)
+	is_controllable_action : action_index -> bool;
 
 	(* The cost for each automaton and each location *)
 	costs : automaton_index -> location_index -> LinearConstraint.p_linear_term option;

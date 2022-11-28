@@ -3822,6 +3822,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	let controllable_actions_indices = make_controllable_actions parsed_model.controllable_actions variable_infos in
 
+	(* Is an action controllable? *)
+	let is_controllable_action action_index = List.mem action_index controllable_actions_indices in
 
 
 
@@ -4545,6 +4547,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automata_per_action = automata_per_action;
 	(* The list of actions for each automaton for each location *)
 	actions_per_location = actions_per_location;
+	(* Is an action controllable *)
+	is_controllable_action = is_controllable_action;
 
 	(* The cost for each automaton and each location *)
 	costs = costs;

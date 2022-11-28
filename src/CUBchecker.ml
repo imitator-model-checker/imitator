@@ -3681,6 +3681,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		transitions_description = new_transitions_description;
 		(* An array transition_index -> automaton_index *)
 		automaton_of_transition = new_automaton_of_transition;
+		(* Is an action controllable? *)
+		(*** WARNING (ÉA, 2022/11): might create problems for controllable actions in this setting! ***)
+		is_controllable_action = (fun action_index -> List.mem action_index model.controllable_actions);
 
         (* The list of declared functions *)
         functions_table = Hashtbl.create 0;
