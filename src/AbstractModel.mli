@@ -242,6 +242,8 @@ type abstract_model = {
 
 	(* All action indexes *)
 	actions : action_index list;
+	(* Only controllable action indexes *)
+	controllable_actions : action_index list;
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)

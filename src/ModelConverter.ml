@@ -156,9 +156,18 @@ let get_declared_synclabs_names =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Check that all controllable actions were declared *)
+(* Check that all controllable actions were declared; also warn for multiply declared names *)
 (*------------------------------------------------------------*)
 let check_controllable_actions (controllable_actions : string list) (all_actions : string list) : bool =
+	(* 1. Check duplicates (no big deal) *)
+	(* Compute the multiply defined variables *)
+	let multiply_defined_names = elements_existing_several_times controllable_actions in
+	(* Print a warning for each of them *)
+	match multiply_defined_names with
+		| [] -> true
+		| _ -> List.iter (fun variable_name -> print_warning ("Action `" ^ variable_name ^ "` is listed several times in the list of controllable actions.")) multiply_defined_names;
+
+	(* 2. Check for undefined actions *)
 	(*** NOTE: using fold_left instead of for_all to get ALL errors *)
 	let all_valid = List.fold_left (fun current_valid action_name ->
 		if not (List.mem action_name all_actions) then (
@@ -971,6 +980,18 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
     ) automata;
   (* Return the array *)
   actions_per_automaton
+
+
+(*------------------------------------------------------------*)
+(* Creating the list of controllable actions indexes *)
+(*------------------------------------------------------------*)
+(* Convert the list of controllable action names into a list of (unique) controllable action indices *)
+let make_controllable_actions (controllable_actions_names : action_name list) (variable_infos : ParsingStructure.variable_infos) : action_index list =
+	(* Remove duplicates *)
+	(*** NOTE (ÉA, 2022/11): sort-of duplicate operation from check_controllable_actions, but let us assume the number of actions remains reasonable *)
+	let unique_controllable_actions_names : action_name list = list_only_once controllable_actions_names in
+	(* Convert *)
+	List.map (Hashtbl.find variable_infos.index_of_variables) unique_controllable_actions_names
 
 
 (*------------------------------------------------------------*)
@@ -3793,7 +3814,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*** TODO : perform init for observer (location) ***)
 
 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert the controllable actions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	print_message Verbose_high ("*** Converting the controllable actions…");
+
+	let controllable_actions_indices = make_controllable_actions parsed_model.controllable_actions variable_infos in
 
 
 
@@ -4297,6 +4324,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			print_message Verbose_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
 		) actions;
 
+		(* All controllable action names *)
+		print_message Verbose_total ("\n*** All controllable actions:");
+		(* For each action *)
+		List.iter (fun action_index ->
+			print_message Verbose_total ((string_of_int action_index) ^ " -> " ^ (action_names action_index));
+		) controllable_actions_indices;
+
 		(* Debug print: actions per automaton *)
 		print_message Verbose_total ("\n*** Actions per automaton:");
 		(* For each automaton *)
@@ -4499,6 +4533,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* All action indexes *)
 	actions = actions;
+	(* Only controllable action indexes *)
+	controllable_actions = controllable_actions_indices;
 	(* Action names *)
 	action_names = action_names;
 	(* The type of actions *)
