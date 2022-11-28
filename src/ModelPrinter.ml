@@ -585,6 +585,7 @@ let customized_string_of_scalar_or_index_update_type customized_string variable_
 let string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type =
     DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") variable_names updates =
 	string_of_list_of_string_with_sep sep (List.rev_map (DiscreteExpressions.string_of_discrete_update variable_names) updates)
@@ -599,7 +600,34 @@ let json_of_discrete_updates ?(sep=", ") variable_names updates =
 		^ (json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr))
 	) updates)
 
-let json_of_seq_code_bloc variable_names seq_code_bloc = "" (* TODO benjamin IMPLEMENT *)
+let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
+
+    let json_of_instruction = function
+        | Assignment (scalar_or_index_update_type, expr)
+        | Local_assignment (scalar_or_index_update_type, expr) ->
+            json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type)
+            ^ ": "
+            ^ json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr)
+
+        | Clock_assignment (clock_index, linear_expr) ->
+            "\n\t\t\t\t\t\t\t"
+            ^ json_of_string (variable_names clock_index)
+            ^ ": "
+            ^ json_of_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_expr)
+
+        | Local_decl (variable_name, discrete_type, expr) -> ""
+        | Instruction expr -> ""
+        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) -> ""
+        | While_loop (condition_expr, inner_bloc) -> ""
+        | If (condition_expr, then_bloc, else_bloc_opt) -> "" (* TODO benjamin IMPLEMENT ! *)
+
+    in
+
+    let json_of_seq_code_bloc seq_code_bloc =
+        let str_instructions = List.map json_of_instruction seq_code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep ",\n" str_instructions
+    in
+    json_of_seq_code_bloc (* seq_code_bloc *)
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -727,7 +755,7 @@ let json_of_transition model automaton_index (transition : transition) =
 	(* Updates *)
 	^ "\n\t\t\t\t\t\t" ^ (json_of_string "updates") ^ ": {"
 	(* Clock updates *)
-	^ (json_of_seq_code_bloc model.variable_names seq_code_bloc_updates)
+	^ json_of_seq_code_bloc model.variable_names seq_code_bloc_updates
 	^ "\n\t\t\t\t\t\t}"
 	
 (* 	(* Convert the target location *) *)

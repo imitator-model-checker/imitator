@@ -752,6 +752,7 @@ let string_of_discrete_updates model updates =
 
 let string_of_seq_code_bloc model seq_code_bloc = "" (* TODO benjamin IMPLEMENT ! *)
 
+
 let string_of_updates model automaton_index action_index x_coord_str y_coord_str update_seq_code_bloc =
 
 	(* First add the update for the strong broadcast encoding *)
@@ -790,8 +791,8 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 		in
 
 		"<label kind=\"assignment\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">"
-		(* Clock updates *)
-		^ (string_of_seq_code_bloc model update_seq_code_bloc)
+		(* Updates *)
+		^ string_of_seq_code_bloc model update_seq_code_bloc
 		(* Add separator *)
 		^ separator_clockdiscrete_strongbroadcast
 		(* Special strong broadcast update *)
