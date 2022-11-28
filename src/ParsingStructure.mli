@@ -273,6 +273,7 @@ type parsed_projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_model = {
+	controllable_actions	: sync_name list;
 	variable_declarations	: variable_declarations;
 	fun_definitions         : parsed_fun_definition_list;
 	automata				: parsed_automaton list;

@@ -71,6 +71,7 @@ rule token = parse
  	| "before"         { CT_BEFORE }
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
+	| "controllable"   { CT_CONTROLLABLE }
   | "void"           { CT_VOID }
 	| "discrete"       { CT_DISCRETE }
 	| "rational"       { CT_DISCRETE }

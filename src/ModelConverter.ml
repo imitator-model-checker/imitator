@@ -156,6 +156,19 @@ let get_declared_synclabs_names =
 (************************************************************)
 
 (*------------------------------------------------------------*)
+(* Check that all controllable actions were declared *)
+(*------------------------------------------------------------*)
+let check_controllable_actions (controllable_actions : string list) (all_actions : string list) : bool =
+	(*** NOTE: using fold_left instead of for_all to get ALL errors *)
+	let all_valid = List.fold_left (fun current_valid action_name ->
+		if not (List.mem action_name all_actions) then (
+			print_error ("The action `" ^ action_name ^ "` declared as controllable was not declared for any automaton."); false)
+		else current_valid
+	) true controllable_actions in
+	all_valid
+
+
+(*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
 let check_variable_names clock_names discrete_names parameters_names constants =
@@ -164,7 +177,7 @@ let check_variable_names clock_names discrete_names parameters_names constants =
 		(* Compute the multiply defined variables *)
 		let multiply_defined_variables = elements_existing_several_times list_of_variables in
 		(* Print a warning for each of them *)
-		List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
+		List.iter (fun variable_name -> print_warning ("Multiply-declared variable `" ^ variable_name ^"`")) multiply_defined_variables;
 	in
 	warn_for_multiply_defined_variables clock_names;
 	warn_for_multiply_defined_variables discrete_names;
@@ -206,7 +219,7 @@ let check_declared_automata_names automata_names =
 	(* Print an error for each of them *)
 	match multiply_defined_names with
 	| [] -> true
-	| _ -> List.iter (fun variable_name -> print_error ("Several automata have name " ^ variable_name ^ ".")) multiply_defined_names; false
+	| _ -> List.iter (fun variable_name -> print_error ("Several automata have name `" ^ variable_name ^ "`.")) multiply_defined_names; false
 
 
 (*------------------------------------------------------------*)
@@ -365,7 +378,7 @@ let check_update variable_infos automaton_name = function
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
 	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
-		print_error ("The sync action '" ^ sync_name ^ "' used in automaton `" ^ automaton_name ^ "` was not declared for this automaton."); false)
+		print_error ("The action `" ^ sync_name ^ "` used in automaton `" ^ automaton_name ^ "` was not declared for this automaton."); false)
 		else true
 	| NoSync -> true
 
@@ -386,7 +399,7 @@ let synclab_used_everywhere automata synclab_name =
 				) locations ) then (
 				(* No location contains the synclab: warning and exception (to save a bit of time) *)
 				(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
-				print_warning ("The synclab '" ^ synclab_name ^ "' is not used in (at least) the automaton `" ^ automaton_name ^ "` where it is declared: it will thus be removed from the whole model.");
+				print_warning ("Action `" ^ synclab_name ^ "` is not used in (at least) the automaton `" ^ automaton_name ^ "` where it is declared: it will thus be removed from the whole model.");
 				raise Not_found;
 			);
 			);
@@ -755,7 +768,7 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
 
         (match variable_kind with
         | Constant_kind _ ->
-            print_error ("Initialize '" ^ variable_name ^ "' constant is forbidden");
+            print_error ("Initialize `" ^ variable_name ^ "` constant is forbidden");
             false
         | Variable_kind _ ->
 
@@ -777,11 +790,11 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
             else if not (DiscreteExpressionEvaluator.is_global_expression_constant (Some functions_table) converted_expr) then (
 
                 print_error (
-                    "Init variable \""
+                    "Init variable `"
                     ^ variable_name
-                    ^ "\" with a non constant expression \""
+                    ^ "` with a non constant expression `"
                     ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
-                    ^ "\" is forbidden."
+                    ^ "` is forbidden."
                 );
                 false
             ) else (
@@ -844,7 +857,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 		    let variable_type = var_type_of_variable_name variable_infos variable_name in
 		    let default_value = AbstractValue.default_value variable_type in
 
-			print_warning ("The discrete variable '" ^ variable_name ^ "' was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
+			print_warning ("The discrete variable `" ^ variable_name ^ "` was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete discrete_index default_value
 		);
     ) variable_infos.discrete;
@@ -2955,7 +2968,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) in
 
 
-    (* Create an hash table that will contain previously initialized constants *)
+
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create an hash table that will contain previously initialized constants *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     (* It allow to initialize a constant with an other one, previously defined *)
     let initialized_constants = (Hashtbl.create 0) in
     (* Create variable infos template *)
@@ -3054,6 +3071,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check the controllable actions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** NOTE (ÉA, 2022/11): will fail if some controllable actions use action names defined but not used in at least one automaton: modify behavior? ***)
+	let check_controllable_actions = check_controllable_actions parsed_model.controllable_actions action_names in
+	if not check_controllable_actions then(
+		print_error("There were errors in the definition of controllable actions.");
+	);
+
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Exit if not well formed *)
@@ -3065,7 +3091,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) else true in
 
 	(* Stop here if model not well formed *)
- 	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
+ 	if not (constants_consistent && all_variables_different && all_automata_different && check_controllable_actions && at_least_one_automaton) then raise InvalidModel;
  	
  	
  	
@@ -3985,7 +4011,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				if List.length transitions_for_this_location > 1 then(
 					(* Write a message *)
 					if verbose_mode_greater Verbose_high then(
-						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ " outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
+						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton `" ^ (automata_names automaton_index) ^ "`, in location `" ^ (location_names automaton_index location_index) ^ "`, there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ " outgoing transitions labeled with action `" ^ (action_names action_index) ^ "`.");
 					);
 
 					(* Update flag *)
@@ -4320,7 +4346,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let transition = transitions_description transition_index in
 			(* Print automaton + action *)
 				(*** TODO: print source too (and guard, and reset?!) ***)
-			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton '" ^ (automata_names automaton_index) ^ "' via action '" ^ (action_names (transition.action)) ^ "' to location '" ^ (location_names automaton_index (transition.target)) ^ "'")
+			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton `" ^ (automata_names automaton_index) ^ "` via action `" ^ (action_names (transition.action)) ^ "` to location `" ^ (location_names automaton_index (transition.target)) ^ "`")
 		done;
 		
 		print_message Verbose_total ("");

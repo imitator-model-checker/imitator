@@ -4191,7 +4191,16 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \nt{include\_file\_list} \nt{declarations} \nt{decl\_fun\_lists} \nt{automata} \\
+	$|$ & \nt{include\_file\_list} \nt{controllable\_actions} \nt{variables\_declarations} \nt{decl\_fun\_lists} \nt{automata} \\
+\end{longtable}
+
+%------------------------------------------------------------
+\regleGrammaire{controllable\_actions}
+%------------------------------------------------------------
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{controllable actions:} \nt{name\_list} \styleIMI{;} \\
+	$|$ & \emptystring
 \end{longtable}
 
 %------------------------------------------------------------
@@ -4266,7 +4275,7 @@ We define each of those two components below.
 \end{longtable}
 
 %------------------------------------------------------------
-\regleGrammaire{declarations}
+\regleGrammaire{variables\_declarations}
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
@@ -5647,6 +5656,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{binary} \\
 	\styleIMI{clock} \\
 	\styleIMI{constant} \\
+	\styleIMI{controllable} \\
 	\styleIMI{discrete} \\
 	\styleIMI{do} \\
 	\styleIMI{else} \\

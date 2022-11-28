@@ -34,6 +34,7 @@ let include_list = ref [];;
 
 let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 	{
+		controllable_actions	= List.append parsed_model.controllable_actions parsed_model_list.controllable_actions;
 		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
     fun_definitions = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
@@ -44,6 +45,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
+		controllable_actions	= [];
 		variable_declarations	= [];
     fun_definitions = [];
 		automata				= [];
@@ -70,7 +72,7 @@ let unzip l = List.fold_left
 %token
 	CT_ACCEPTING CT_ACTIONS CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BEFORE
-	CT_CLOCK CT_CONSTANT
+	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
   CT_INSIDE
   CT_DO
@@ -81,7 +83,7 @@ let unzip l = List.fold_left
 	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_INIT CT_CONTINUOUS CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -118,18 +120,20 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	declarations decl_fun_lists automata init_definition_option
+	controllable_actions_option variables_declarations decl_fun_lists automata init_definition_option
 	end_opt EOF
 	{
-		let declarations	= $1 in
-    let fun_definitions = $2 in
-		let automata		= $3 in
-		let init_definition	= $4 in
+		let controllable_actions	= $1 in
+		let declarations			= $2 in
+		let fun_definitions 		= $3 in
+		let automata				= $4 in
+		let init_definition			= $5 in
 
 		let main_model =
 		{
+			controllable_actions	= controllable_actions;
 			variable_declarations	= declarations;
-      fun_definitions = fun_definitions;
+			fun_definitions			= fun_definitions;
 			automata				= automata;
 			init_definition			= init_definition;
 		}
@@ -160,13 +164,24 @@ include_file_list:
 	| { [] }
 ;
 
+
+
 /************************************************************
-  DECLARATIONS
+  CONTROLLABLE ACTIONS
+************************************************************/
+controllable_actions_option:
+	| CT_CONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { $4 }
+	| { [] }
+;
+
+
+/************************************************************
+  VARIABLE DECLARATIONS
 ************************************************************/
 
 /************************************************************/
 
-declarations:
+variables_declarations:
 	| include_file_list CT_VAR decl_var_lists { $3 }
 	| { []}
 ;
