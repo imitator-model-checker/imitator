@@ -1678,28 +1678,28 @@ We give below some examples of user function definitions:
 		my_global_i, my_global_j : int;
 
 	(* This function has no argument, and return 2 *)
-	fn two() : int
+	function two() : int
 	begin
 		(* Return 2 *)
 		1 + 1
 	end
 
 	(* This function adds 1 to the integer argument *)
-	fn add_one(i : int) : int
+	function add_one(i : int) : int
 	begin
 		(* Add one to i *)
 		i + 1
 	end
 
 	(* This function sums the two integer arguments *)
-	fn add(a : int, b : int) : int
+	function add(a : int, b : int) : int
 	begin
 		(* Add a to b *)
 		a + b
 	end
 
 	(* Linear interpolation example with some local variables *)
-	fn lerp(a : rat, b : rat, x : rat) : rat
+	function lerp(a : rat, b : rat, x : rat) : rat
 	begin
 		let length : rat = b - a in
 		let pos : rat = length * x in
@@ -1707,14 +1707,14 @@ We give below some examples of user function definitions:
 	end
 
 	(* Get last element of a list *)
-	fn last(l : rat list)
+	function last(l : rat list)
 	begin
 		let n : int = list_length(l) in
 		l[n - 1]
 	end
 
 	(* This function has side-effects *)
-	fn side_effect(i : int, j : int) : int
+	function side_effect(i : int, j : int) : int
 	begin
 		(* Modify some global variables *)
 		my_global_i := i * 2;
@@ -1722,7 +1722,7 @@ We give below some examples of user function definitions:
 		my_global_i + my_global_j
 	end
 
-	fn side_effect_without_return_type(i : int, j : int) : void
+	function side_effect_without_return_type(i : int, j : int) : void
 	begin
 		side_effect(i, j);
 	end
@@ -1752,7 +1752,7 @@ We give below some examples of incorrect user function definitions:
 	p1, p2 : parameter;
 
 	(* This function try to modify a clock, parameter and argument value *)
-	fn modify_clock_param_arg() : int
+	function modify_clock_param_arg() : int
 	begin
 		(* Modification of a clock is forbidden, an error will be raised *)
 		x := 0;
@@ -1764,12 +1764,12 @@ We give below some examples of incorrect user function definitions:
 	end
 
 	(* Recursive calls are forbidden, an error will be raised *)
-	fn mutual_rec_f2() : int
+	function mutual_rec_f2() : int
 	begin
 		mutual_rec_f1()
 	end
 
-	fn mutual_rec_f1() : int
+	function mutual_rec_f1() : int
 	begin
 		let a : int = mutual_rec_f2() in
 		a + 1
@@ -1794,7 +1794,7 @@ We give below some examples of user function definitions:
 \begin{IMITATORmodel}
 
 	(* This function modify a global variable *)
-	fn side_effect_function() : int
+	function side_effect_function() : int
 	begin
 		(* Modification of a global variable lead to label the function internally as a ``side-effect function'' *)
 		my_global_i := 0;
@@ -1802,7 +1802,7 @@ We give below some examples of user function definitions:
 	end
 
 	(* This function shadow a local, a global variable and an argument *)
-	fn shadow_variables(i : int) : int
+	function shadow_variables(i : int) : int
 	begin
 		(* Local variable my_global_i shadow global variable of the same name *)
 		let my_global_i : int = 4 in
@@ -1816,7 +1816,7 @@ We give below some examples of user function definitions:
 	end
 
 	(* This function call another function *)
-	fn call_other_function() : int
+	function call_other_function() : int
 	begin
 		shadow_variables(0) + shadow_variables(1)
 	end
@@ -4217,6 +4217,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
+	$|$ & \styleIMI{function} \nt{<name>} \styleIMI{(} \nt{fun\_parameter\_list} \styleIMI{) : } \nt{var\_type\_discrete} \styleIMI{begin} \nt{fun\_body} \styleIMI{end} \\
 	$|$ & \styleIMI{fn} \nt{<name>} \styleIMI{(} \nt{fun\_parameter\_list} \styleIMI{) : } \nt{var\_type\_discrete} \styleIMI{begin} \nt{fun\_body} \styleIMI{end} \\
 \end{longtable}
 
@@ -5656,6 +5657,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{fill\_right} \\
 	\styleIMI{flow} \\
 	\styleIMI{fn} \\
+	\styleIMI{function} \\
 	\styleIMI{goto} \\
 	\styleIMI{happened} \\
 	\styleIMI{has} \\
