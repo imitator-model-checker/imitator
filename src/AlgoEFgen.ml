@@ -201,37 +201,6 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 		)
 
 
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Generate counter-example(s) if required by the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
-	(*** NOTE: old version from EFSynth ***)
-
-	method construct_counterexamples target_state_index =
-		()
-		
-		(*** NOTE: temporarily (?) disabled 2021/07 by ÉA, because merging is used by default, but not sound for counterexample reconstruction ***)
-(*		(* Only process counterexample if needed *)
-		let property = Input.get_property() in
-		if property.synthesis_type = Witness then(
-			
-			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
-			begin
-			match model.global_time_clock with
-				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
-		
-				| Some _ ->
-					let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
-
-					(* Generate the graphics *)
-					Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals");
-			end;
-		);
-		
-		(* The end *)
-		()
-		*)*)
-
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
