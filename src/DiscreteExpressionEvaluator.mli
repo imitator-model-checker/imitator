@@ -2,6 +2,7 @@ open CustomModules
 open DiscreteExpressions
 open LinearConstraint
 open Automaton
+open AbstractModel
 
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
@@ -31,8 +32,10 @@ type delayed_update_result =
     | Delayed_update_recorded
     | Delayed_update_already_updated of discrete_index
 
-val direct_update : variable_name_table option -> functions_table option -> discrete_access -> DiscreteExpressions.discrete_update -> unit
-val delayed_update : variable_name_table option -> functions_table option -> discrete_access -> (discrete_index, AbstractValue.abstract_value) Hashtbl.t -> DiscreteExpressions.discrete_update -> delayed_update_result
+val create_eval_context : discrete_access -> eval_context
+(* Get clocks that were updated effectively (found in eval context) *)
+val effective_clock_updates : eval_context -> abstract_model -> clock_updates
+
 val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
 val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
@@ -82,7 +85,6 @@ val eval_stack_top : string -> AbstractValue.abstract_value list -> AbstractValu
 val eval_stack_clear : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_stack_is_empty : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_stack_length : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-
 
 val is_global_expression_constant : functions_table option -> global_expression -> bool
 

@@ -933,13 +933,8 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
     (* Get functions that enable reading / writing global variables at a given location *)
     let discrete_access = DiscreteState.discrete_access_of_location location in
 
-	(* Check if we actually have updates *)
-	let has_updates = ref false in
-
     (* Create context *)
-    let discrete_valuation, discrete_setter = discrete_access in
-    (* TODO benjamin CLEAN create and replace by a new function DiscreteExpressionEvaluator.create_empty_context *)
-    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }in
+    let eval_context = DiscreteExpressionEvaluator.create_eval_context discrete_access in
 
 	(* Make update first ! *)
 	List.iter (fun transition_index ->
@@ -954,41 +949,22 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 
 	) combined_transition;
 
-    (**)
-    (* TODO benjamin CLEAN message for debug *)
+    (* Get clocks that were updated effectively in previous evaluation (just before at eval_seq_code_bloc...) *)
+    let clock_updates = DiscreteExpressionEvaluator.effective_clock_updates eval_context model in
 
-    let rewritten_clock_update =
-
-        let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
-        List.iter (fun (clock_index, l) ->
-            let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
-            ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
-        ) updated_clocks;
-
-        if List.length updated_clocks = 0 then (
-            ImitatorUtilities.print_standard_message ("no updates");
-            No_update
-        ) else (
-
-            let is_all_resets =
-                List.for_all (fun (_, linear_expr) ->
-                    match linear_expr with
-                    | LinearConstraint.IR_Coef coef -> NumConst.equal coef NumConst.zero
-                    | _ -> false
-                ) updated_clocks
-            in
-
-            if is_all_resets then (
-                ImitatorUtilities.print_standard_message ("only resets");
-                let clock_indexes = List.map first_of_tuple updated_clocks in
-                Resets clock_indexes
-            ) else (
-                ImitatorUtilities.print_standard_message ("updates: " ^ string_of_int (List.length updated_clocks));
-                Updates updated_clocks
-            )
-        )
-
+    (* Update the update flag *)
+    let has_updates =
+        match clock_updates with
+        (* Some updates? *)
+        | Resets (_ :: _)
+        | Updates (_ :: _) -> true
+        (* Otherwise: no update *)
+        | No_update
+        | Resets []
+        | Updates [] -> false
     in
+
+    let clock_updates = if has_updates then [clock_updates] else [] in
 
     (* TODO benjamin CLEAN comments *)
     (*
@@ -1006,18 +982,10 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	*)
 
 (*    let clock_updates = rewritten_clock_update :: automatically_gen_clock_updates in*)
-    let clock_updates = [rewritten_clock_update] in
 
-    (* Update the update flag *)
-    let has_updates = List.exists (function
-        (* Some updates? *)
-        | Resets (_ :: _)
-        | Updates (_ :: _) -> true
-        (* Otherwise: no update *)
-        | No_update
-        | Resets []
-        | Updates [] -> false
-    ) clock_updates in
+
+
+
 
 	(* Update the location for the automata synchronized with 'action_index' *)
 	let guards = List.map (fun transition_index ->
@@ -1042,7 +1010,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	let discrete_guards, continuous_guards = AbstractModelUtilities.split_guards_into_discrete_and_continuous guards in
 
 	(* Return the new location, the guards, unit updates, and the clock updates (if any!) *)
-	location, discrete_guards, continuous_guards, (if has_updates then clock_updates else [])
+	location, discrete_guards, continuous_guards, clock_updates
 
 
 

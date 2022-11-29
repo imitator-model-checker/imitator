@@ -1,4 +1,5 @@
 open CustomModules
+open OCamlUtilities
 open Automaton
 open DiscreteState
 open AbstractModel
@@ -144,6 +145,43 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
             IR_Times (coef, rewrite_clock_update_rec linear_term)
     in
     rewrite_clock_update_rec (* linear_expr *)
+
+
+(* TODO benjamin CLEAN message for debug, remove model parameter *)
+(* Get clocks that were updated effectively (found in eval context) *)
+let effective_clock_updates eval_context model =
+
+    (* Get ordered clock updates from context *)
+    let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
+
+    List.iter (fun (clock_index, l) ->
+        let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
+        ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
+    ) updated_clocks;
+
+    if List.length updated_clocks = 0 then (
+        ImitatorUtilities.print_standard_message ("no updates");
+        No_update
+    ) else (
+
+        let is_all_resets =
+            List.for_all (fun (_, linear_expr) ->
+                match linear_expr with
+                | LinearConstraint.IR_Coef coef -> NumConst.equal coef NumConst.zero
+                | _ -> false
+            ) updated_clocks
+        in
+
+        if is_all_resets then (
+            ImitatorUtilities.print_standard_message ("only resets");
+            let clock_indexes = List.map first_of_tuple updated_clocks in
+            Resets clock_indexes
+        ) else (
+            ImitatorUtilities.print_standard_message ("updates: " ^ string_of_int (List.length updated_clocks));
+            Updates updated_clocks
+        )
+    )
+
 
 (* Evaluate an expression *)
 let rec eval_global_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -325,6 +363,7 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Arithmetic_comparison (l_expr, relop, r_expr) ->
+        ImitatorUtilities.print_standard_message ("arihtmetic compare");
         (operator_of_relop relop)
             (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
             (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
