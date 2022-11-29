@@ -92,7 +92,7 @@ class algoPostStar (model : AbstractModel.abstract_model) =
 		
 		
 		(* Print some information *)
-(* 		print_message Verbose_total ("About to update transitions…"); *)
+		self#print_algo_message Verbose_total ("About to update transitions…");
 
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
@@ -100,7 +100,7 @@ class algoPostStar (model : AbstractModel.abstract_model) =
 		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 	
 		(* Print some information *)
-(* 		print_message Verbose_total ("Transitions successfully updated."); *)
+		self#print_algo_message Verbose_total ("Transitions successfully updated.");
 		
 		(* The state is necessarily kept by the algorithm *)
 		true
