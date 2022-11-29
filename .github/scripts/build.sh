@@ -53,10 +53,10 @@ opam install -y extlib fileutils oasis
 eval $(opam env)
 
 # install mlgmp
-[ ! -d "$(opam var lib)/gmp" ] && sh "${SCRIPT_FOLDER}/install-mlgmp.sh"
+[ ! -d "$(opam var lib)/gmp" ] && bash "${SCRIPT_FOLDER}/install-mlgmp.sh"
 
 # instal ppl
-[ ! -d "$(opam var lib)/ppl" ] && sh "${SCRIPT_FOLDER}/install-ppl.sh"
+[ ! -d "$(opam var lib)/ppl" ] && bash "${SCRIPT_FOLDER}/install-ppl.sh"
 
 # patch oasis for OSX
 if [[ "$RUNNER_OS" = "macOS" ]]; then
@@ -64,7 +64,7 @@ if [[ "$RUNNER_OS" = "macOS" ]]; then
 fi
 
 # Build IMITATOR
-sh build.sh
+bash build.sh
 
 # rename artefact
 if [ -v "${GITHUB_WORKSPACE}" ]; then
