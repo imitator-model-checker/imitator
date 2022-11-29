@@ -1,0 +1,15 @@
+(executable
+ (name IMITATOR)
+ (public_name IMITATOR)
+ (libraries gmp ppl extlib fileutils str unix threads)
+ (modules_without_implementation
+  abstractModel
+  abstractProperty
+  automaton
+  parsingStructure
+  result))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
