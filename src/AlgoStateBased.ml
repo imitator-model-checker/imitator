@@ -5217,24 +5217,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(* No initial termination: continue *)
 		| None ->
 
-		(*** TODO: remove ***)
-
-(*		(* Check if the initial state should be kept according to the algorithm *)
-		let initial_state_added = self#process_initial_state init_state in
-
-		(* Degenerate case: initial state cannot be kept: terminate *)
-		if not initial_state_added then(
-			(* Output a warning because this situation is still a little strange *)
-			print_warning "The initial state is not kept. Analysis will now terminate.";
-
-			(* Set the termination status *)
-			termination_status <- Some (Result.Regular_termination);
-
-			(* Return the algorithm-dependent result and terminate *)
-			self#compute_result
-		(* Else: start the algorithm in a regular manner *)
-		)else( *)
-
 			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
 			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check init_state with
 				(* The state is necessarily new as the state space was empty *)
