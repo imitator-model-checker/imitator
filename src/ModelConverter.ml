@@ -1371,7 +1371,8 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions declarations_info dependency_graph (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
+(* TODO factorise parameters ! so many parameters ! maybe we can remove some, or use structure, etc *)
+let convert_transitions options nb_transitions nb_actions declarations_info dependency_graph (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
   (* Extract values from model parsing info *)
@@ -1421,8 +1422,15 @@ let convert_transitions nb_transitions nb_actions declarations_info dependency_g
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              (* TODO benjamin IMPLEMENT remove only if  *)
-              let filtered_parsed_seq_code_bloc_updates = ParsingStructureGraph.remove_unused_clock_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update in
+              (* Filter instruction in update code bloc according to option -no-var-autoremove *)
+              let filtered_parsed_seq_code_bloc_updates =
+                if options#no_variable_autoremove then
+                    (* No variable auto remove, keep all instructions in update code bloc *)
+                    parsed_seq_code_bloc_update
+                else
+                    (* If variable auto remove, remove unused clock assignments *)
+                    ParsingStructureGraph.remove_unused_clock_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update
+              in
 
               (* translate parsed updates into their abstract model *)
               let converted_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table filtered_parsed_seq_code_bloc_updates in
@@ -3437,9 +3445,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Get only used user functions definition *)
     let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
 
-    (* Remove unused clock assignments *)
-    (* TODO benjamin IMPLEMENT only if var autoremove *)
-    let used_function_definitions = List.map (ParsingStructureGraph.remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions in
+    let used_function_definitions =
+        if options#no_variable_autoremove then
+            (* No variable auto remove, keep all instructions in function *)
+            used_function_definitions
+        else
+            (* If variable auto remove, remove unused clock assignments *)
+            List.map (ParsingStructureGraph.remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions
+    in
 
 
     (* Check for function cycles *)
@@ -3664,7 +3677,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions declarations_info dependency_graph useful_parsing_model_information user_function_definitions_table transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info dependency_graph useful_parsing_model_information user_function_definitions_table transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
