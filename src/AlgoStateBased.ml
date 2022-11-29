@@ -2731,12 +2731,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 					(* Cannot conclude anything from a single state yet *)
 					()
 
-			(*		| Some (Unreachable unreachable_global_locations) ->
-				(* Check whether the current location matches one of the unreachable global locations *)
-				if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
-					statespace_nature <- StateSpace.Bad;
-				);*)
-(* 				| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature.")) *)
 		)
 
 
