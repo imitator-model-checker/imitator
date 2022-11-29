@@ -29,6 +29,7 @@ if [ -z "${GITHUB_WORKSPACE}" ]; then
     ROOT_FOLDER="$(dirname $(dirname $SCRIPT_FOLDER))"
     cd "$ROOT_FOLDER"
 else
+    SCRIPT_FOLDER="${GITHUB_WORKSPACE}/.github/scripts"
     PATCH_FOLDER="${GITHUB_WORKSPACE}/.github/patches"
 fi
 

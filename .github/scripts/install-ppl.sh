@@ -23,5 +23,4 @@ cd interfaces/OCaml && make -j 4 && make install && cd ../../..
 rm -rf ppl-${PPL_VERSION}*
 
 # copy META file
-patch -p0 <"${PATCH_FOLDER}/META.ppl.patch"
 cp METAS/META.ppl "$(opam var lib)/ppl/META"
