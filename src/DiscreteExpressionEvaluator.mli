@@ -7,6 +7,7 @@ type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
+type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -21,7 +22,8 @@ type eval_context = {
     (* Current local variables *)
     local_variables : variable_table list;
     (**)
-    updated_clocks : clock_updates_history
+    updated_clocks : clock_updates_history;
+    updated_clocks_ordered : clock_updates_history_2;
 }
 
 (* Result returned on delayed update *)

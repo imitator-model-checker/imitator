@@ -617,8 +617,16 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
 
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
-
+    (* TODO benjamin CLEAN test *)
+    let test = ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc in
+    let up =
+    match test with
+    | No_update -> No_update
+    | Resets _ -> Resets []
+    | Updates _ -> Updates []
+    in
     (* Convert clock updates to linear terms *)
-    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
+    (* ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc *)
+    up,
     (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

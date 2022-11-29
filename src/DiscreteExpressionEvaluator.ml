@@ -11,7 +11,9 @@ open Exceptions
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+(* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
+type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -26,7 +28,8 @@ type eval_context = {
     (* Current local variables *)
     local_variables : variable_table list;
     (**)
-    updated_clocks : clock_updates_history
+    updated_clocks : clock_updates_history;
+    updated_clocks_ordered : clock_updates_history_2;
 }
 
 (* Result returned on delayed update *)
@@ -37,7 +40,7 @@ type delayed_update_result =
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; }
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
@@ -586,6 +589,8 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
+
 
             (match variable_names with
             | Some variable_names ->

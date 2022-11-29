@@ -285,6 +285,8 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				arbitrary_updates := true;
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun (clock_id, linear_term) ->
+                    ImitatorUtilities.print_standard_message ("The clock `" ^ (model.variable_names clock_id) ^ "` is updated NOW with: " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term);
+
 					(* Check if already updated *)
 					if Hashtbl.mem clocks_hash clock_id then (
 						(* Find its previous value *)
@@ -933,7 +935,8 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 
     (* Create context *)
     let discrete_valuation, discrete_setter = discrete_access in
-    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; }in
+    (* TODO benjamin CLEAN create and replace by a new function DiscreteExpressionEvaluator.create_empty_context *)
+    let eval_context = { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }in
 
 	(* Make update first ! *)
 	List.iter (fun transition_index ->
@@ -949,17 +952,20 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	) combined_transition;
 
     (**)
-    (*
-    let clock_updates =
+    (* TODO benjamin CLEAN message for debug *)
 
-        let updated_clocks = eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq in
+    let rewritten_clock_update =
+
+        let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
+        List.iter (fun (clock_index, l) ->
+            let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
+            ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
+        ) updated_clocks;
 
         if List.length updated_clocks = 0 then (
             ImitatorUtilities.print_standard_message ("no updates");
             No_update
         ) else (
-
-            has_updates := true;
 
             let is_all_resets =
                 List.for_all (fun (_, linear_expr) ->
@@ -981,71 +987,45 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 
     in
 
-    let clock_updates = [clock_updates] in
-    *)
 
 
 	(* Update the location for the automata synchronized with 'action_index' *)
 	(* make all non-sequential updates and return the list of guards and updates *)
-	let clock_updates = List.map (fun transition_index ->
+	let automatically_gen_clock_updates = List.map (fun transition_index ->
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
 		let _, transition = automaton_and_transition_of_transition_index transition_index in
  		let clock_updates, _ = transition.updates in
-
-        (* Map rewritten clock updates to clock updates list *)
- 		let rewritten_clock_updates =
-            match clock_updates with
-            | No_update ->
-                (* TODO benjamin CLEAN clean print message *)
-                ImitatorUtilities.print_standard_message ("no updates");
-                No_update
-            | Resets old_clock_indexes ->
-                (* TODO benjamin CLEAN clean print message *)
-                ImitatorUtilities.print_standard_message ("only resets");
-                (* Get clocks that were actually updated *)
-                (* Because resets contains all possible clock resets even if not updated, ie: if True then ... else x := 0 end *)
-                (* x were not actually updated but is in current reset *)
-                let clock_indexes = eval_context.updated_clocks |> Hashtbl.to_seq_keys |> List.of_seq in
-                let clock_indexes = List.filter (fun clock_index -> List.mem clock_index old_clock_indexes) clock_indexes in
-
-                let str_old_clock_indexes = List.map (fun i -> model.variable_names i) old_clock_indexes in
-                let str_clock_indexes = List.map (fun i -> model.variable_names i) clock_indexes in
-                let s1 = OCamlUtilities.string_of_list_of_string_with_sep "," str_old_clock_indexes in
-                let s2 = OCamlUtilities.string_of_list_of_string_with_sep "," str_clock_indexes in
-                ImitatorUtilities.print_standard_message ("Compare clock indexes resets : ");
-                ImitatorUtilities.print_standard_message ("OLD: " ^ s1);
-                ImitatorUtilities.print_standard_message ("ACTUALLY: " ^ s2);
-
-                (* Return as resets *)
-                Resets clock_indexes
-            | Updates old_updated_clocks ->
-                (* TODO benjamin CLEAN clean print message *)
-                ImitatorUtilities.print_standard_message ("not only resets");
-                let updated_clocks_list = eval_context.updated_clocks |> Hashtbl.to_seq |> List.of_seq in
-                let updated_clocks_list = List.filter (fun c -> List.mem c old_updated_clocks) updated_clocks_list in
-
-                Updates updated_clocks_list
-        in
-
-        (* Update the update flag *)
-        begin
-        match rewritten_clock_updates with
-            (* Some updates? *)
-            | Resets (_ :: _)
-            | Updates (_ :: _) -> has_updates := true
-            (* Otherwise: no update *)
-            | No_update
-            | Resets []
-            | Updates [] -> ()
-        end;
-
-        (* Keep the updates  *)
-        rewritten_clock_updates
+        clock_updates
 
 	) combined_transition
 	in
 
+    let clock_updates = rewritten_clock_update :: automatically_gen_clock_updates in
+
+    (* Update the update flag *)
+    let has_updates = List.exists (function
+        (* Some updates? *)
+        | Resets (_ :: _)
+        | Updates (_ :: _) -> true
+        (* Otherwise: no update *)
+        | No_update
+        | Resets []
+        | Updates [] -> false
+    ) clock_updates in
+
+    (*
+    begin
+    match clock_updates with
+        (* Some updates? *)
+        | Resets (_ :: _)
+        | Updates (_ :: _) -> has_updates := true
+        (* Otherwise: no update *)
+        | No_update
+        | Resets []
+        | Updates [] -> ()
+    end;
+    *)
 
 	(* Update the location for the automata synchronized with 'action_index' *)
 	let guards = List.map (fun transition_index ->
@@ -1070,7 +1050,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	let discrete_guards, continuous_guards = AbstractModelUtilities.split_guards_into_discrete_and_continuous guards in
 
 	(* Return the new location, the guards, unit updates, and the clock updates (if any!) *)
-	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
+	location, discrete_guards, continuous_guards, (if has_updates then clock_updates else [])
 
 
 
