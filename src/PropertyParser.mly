@@ -72,7 +72,7 @@ let resolve_property l =
 	CT_SEQUENCE CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_VALID
-	CT_WITHIN
+	CT_WIN CT_WITHIN
   CT_LIST CT_STACK CT_QUEUE
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
@@ -239,6 +239,11 @@ property:
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
 	| CT_PATTERN LPAREN pattern RPAREN { Parsed_pattern ($3) }
+
+	/*------------------------------------------------------------*/
+	/* Observer patterns */
+	/*------------------------------------------------------------*/
+	| CT_WIN state_predicate { Parsed_Win ($2) }
 
 ;
 

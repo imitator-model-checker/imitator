@@ -167,6 +167,8 @@ let get_v0_option () =
 			| ConvexIM _
 			| IMK _
 			| IMunion _
+
+			| Win _
 				-> None
 			
 			| Cover_cartography (v0, _)
@@ -1351,6 +1353,7 @@ let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : st
 				| EFtmin state_predicate
 				| Cycle_through state_predicate
 				| PRP (state_predicate, _)
+				| Win (state_predicate)
 					-> [state_predicate]
 					
 				| Cycle_through_generalized state_predicate_list

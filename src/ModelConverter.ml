@@ -1848,7 +1848,14 @@ let all_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_pattern (Parsed_Sequence_cyclic _)
 			-> ()
 
-	
+		(*------------------------------------------------------------*)
+		(* Games *)
+		(*------------------------------------------------------------*)
+
+		(* Parametric timed game: reachability condition *)
+		| Parsed_Win parsed_state_predicate -> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+
+
 		end;
 	end;
 	(* Return the set *)
@@ -2532,6 +2539,14 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 				current_result && check
 				) true actions_list
 
+
+		(*------------------------------------------------------------*)
+		(* Games *)
+		(*------------------------------------------------------------*)
+
+		(* Parametric timed game: reachability condition *)
+		| Parsed_Win parsed_state_predicate -> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+
 		end
 
 
@@ -2908,8 +2923,18 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			Some converted_observer_structure
 	
+		(*------------------------------------------------------------*)
+		(* Games *)
+		(*------------------------------------------------------------*)
+
+		(* Parametric timed game: reachability condition *)
+		| Parsed_Win parsed_state_predicate ->
+			(* Return a property and no observer *)
+			Win (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
 		in
-		
+
 		(* Get the synthesis or emptiness type *)
 		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
 		

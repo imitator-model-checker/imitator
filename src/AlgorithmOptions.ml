@@ -139,6 +139,13 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	| PRPC _
 		-> Inclusion_check
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win _ -> Inclusion_check
+
 
 
 (* Does the use of a given state_comparison_operator for a given abstract_property preserve the result correctness? *)
@@ -259,6 +266,15 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 		(* All comparison operators preserve correctness *)
 		-> true
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win _
+		(* No reversed inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check || state_comparison_operator = Inclusion_check
+
 
 
 (*------------------------------------------------------------*)
@@ -378,6 +394,12 @@ let merge_needed property =
 	| PRPC _
 		-> true
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win _ -> false
 
 
 (*------------------------------------------------------------*)
@@ -604,6 +626,13 @@ let supports_witness property =
 	| PRPC _
 		-> false
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win _ -> false
+
 
 (*------------------------------------------------------------*)
 (* Does the property support the #exemplification mode? *)
@@ -770,3 +799,10 @@ let text_of_property property =
 	(* Parametric reachability preservation *)
 	| PRPC _ -> "parametric reachability preservation cartography"
 
+
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win _ -> "parametric timed game with reachability condition (" ^ synthesis_or_witness ^ ")"

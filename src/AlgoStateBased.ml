@@ -2698,6 +2698,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				| Cycle_through state_predicate
 				| PRP (state_predicate , _)
 				| PRPC (state_predicate , _, _)
+				| Win state_predicate
 				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate model model.is_accepting state_predicate state then(

@@ -101,6 +101,7 @@ rule token = parse
 	| "step"           { CT_STEP }
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
+	| "Win"            { CT_WIN }
 	| "within"         { CT_WITHIN }
   | "list"           { CT_LIST }
   | "stack"          { CT_STACK }

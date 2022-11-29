@@ -1191,7 +1191,13 @@ let string_of_abstract_property model property =
 		| PRPC (state_predicate , hyper_rectangle, step) ->
 			"PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
-		
+		(*------------------------------------------------------------*)
+		(* Games *)
+		(*------------------------------------------------------------*)
+
+		(* Parametric timed game: reachability condition *)
+		| Win state_predicate -> "Win(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
 
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)

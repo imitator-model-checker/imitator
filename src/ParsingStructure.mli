@@ -480,6 +480,13 @@ type parsed_property_type =
 	
 	| Parsed_pattern of parsed_pattern
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Parsed_Win of parsed_state_predicate
+
 
 
 type parsed_property = {

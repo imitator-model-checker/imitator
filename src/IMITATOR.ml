@@ -1040,6 +1040,13 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
+			(************************************************************)
+			(* Games *)
+			(************************************************************)
+			(* Parametric timed game: reachability condition *)
+			| Win state_predicate ->
+
+				raise (NotImplemented "Timed games")
 
 
 			(************************************************************)

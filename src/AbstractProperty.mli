@@ -166,6 +166,13 @@ type property =
 	| PRPC of state_predicate * HyperRectangle.hyper_rectangle * NumConst.t
 
 
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	| Win of state_predicate
+
 
 
 type synthesis_type =
