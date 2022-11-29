@@ -317,6 +317,7 @@ class stateSpace : int ->
 		method increment_nb_gen_states : unit
 
 		(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+		(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
 		method add_state : AbstractAlgorithm.state_comparison_operator -> state -> addition_result
 
 		(** Add a transition to the state space *)

@@ -1385,6 +1385,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
 	method add_state state_comparison (new_state : state) : addition_result =
 		(* Statistics *)
 		counter_add_state#increment;
