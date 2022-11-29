@@ -48,8 +48,8 @@ fi
 [ ! -x "$(command -v python)" ] && ln -s $(which python3) "/usr/bin/python"
 
 # install opam and ocaml libraries
-docker_container=$(echo `[ ! -f /.dockerenv ]` $?)
-[[ "${docker_container}" = '0' ]] &&  opam init -a || opam init -a --disable-sandboxing
+docker_container=$(echo $([ ! -f /.dockerenv ]) $?)
+[[ "${docker_container}" = '0' ]] && opam init -a || opam init -a --disable-sandboxing
 
 opam install -y extlib fileutils oasis
 eval $(opam env)
@@ -69,7 +69,7 @@ fi
 bash build.sh
 
 # rename artefact
-if [[ -v "${GITHUB_WORKSPACE}" ]]; then
+if [ -v "${GITHUB_WORKSPACE}" ]; then
     cd bin
     platform=$(echo "${RUNNER_OS}" | awk '{print tolower($1)}')
     tag="${GITHUB_REF_NAME##*/}"
