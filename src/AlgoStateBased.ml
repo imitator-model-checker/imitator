@@ -4967,15 +4967,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
 
-(*			if options#mergeq then(
-				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
-			) else if options#merge then (
-	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
-				(* New version *)
-				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
-				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-			);*)
-
             (*** BEGIN CALL OF MERGING ***)
 			begin
             match options#merge_algorithm with
@@ -5007,55 +4998,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
 				state_space#empty_states_for_comparison;
 			);
-
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(***                                        BEGIN ALGORITHM-SPECIFIC CODE                                             ***)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-(*			(* If check-point option: check if the constraint is equal to pi0 *)
-			(*** TO OPTIMIZE !!! (at least compute pi0_constraint once for all) ***)
-			(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
-			(*** TODO: also allow for BC ***)
-			if options#imitator_mode = Inverse_method  && options#check_point then(
-				print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0…");
-				(* Get all constraints *)
-				let all_p_constraints = StateSpace.all_p_constraints state_space in
-				(* Computing the constraint intersection *)
-				let current_intersection = LinearConstraint.p_intersection all_p_constraints in
-				(* Get pi0 *)
-				let pi0 = Input.get_pi0() in
-				(* Converting pi0 to a list *)
-				let pi0_list = List.map (fun p -> (p, pi0#get_value p)) model.parameters in
-				(* Converting pi0 to a constraint *)
-				let pi0_constraint = LinearConstraint.p_constraint_of_point pi0_list in
-				(* Print *)
-				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium ("\nPi0: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names pi0_constraint));
-				);
-				(* Checking whether the constraint is *included* within pi0 *)
-				if LinearConstraint.p_is_leq current_intersection pi0_constraint then(
-					(* Print message *)
-					print_message Verbose_standard ("\nCurrent accumulated constraint is now restricted to pi0. Analysis can safely terminate.");
-					(* Stop *)
-					limit_reached := true;
-				);
-			);*)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(***                                          END ALGORITHM-SPECIFIC CODE                                             ***)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
-	(**********************************************************************************************************************)
 
 			(* Print some memory information *)
 			if options#statistics then(
