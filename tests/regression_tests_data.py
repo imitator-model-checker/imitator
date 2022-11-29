@@ -12047,7 +12047,7 @@ True
 						"PTA": "pta",
 						"guard": " x = 1",
 						"updates": {
-							"x": "0""d1": "d1 + 2"
+							"x": "0", "d1": "d1 + 2"
 						}
 					}
 					}
@@ -12260,7 +12260,7 @@ BEGIN RESULT
 						"PTA": "pta",
 						"guard": " x = 1",
 						"updates": {
-							"x": "0""d1": "d1 + 2"
+							"x": "0", "d1": "d1 + 2"
 						}
 					}
 					}
@@ -12449,7 +12449,7 @@ BEGIN RESULT
 						"PTA": "pta",
 						"guard": " x = 1",
 						"updates": {
-							"x": "0""d1": "d1 + 2"
+							"x": "0", "d1": "d1 + 2"
 						}
 					}
 					}
