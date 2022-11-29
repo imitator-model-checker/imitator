@@ -9,6 +9,12 @@
   parsingStructure
   result))
 
+(ocamllex
+ (modules ModelLexer PropertyLexer))
+
+(ocamlyacc
+ (modules ModelParser PropertyParser))
+
 (env
  (dev
   (flags

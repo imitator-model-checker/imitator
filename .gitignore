@@ -101,3 +101,6 @@ doc/classDiagramSimplified.png
 # IDE
 .vscode
 *kate-swp
+
+# Dune
+IMITATOR.opam
