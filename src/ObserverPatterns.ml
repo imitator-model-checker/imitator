@@ -447,7 +447,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-                updates = (Resets [observer_clock_index]), [];
+                updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= location_inter;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -455,7 +455,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= location_inter;
 			}];
 		transitions.(location_inter).(a2) <-
@@ -508,7 +508,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -516,7 +516,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= location_ok;
 			}];
 		transitions.(location_ok).(a2) <-
@@ -568,7 +568,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -621,7 +621,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -666,7 +666,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -711,7 +711,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = (Resets [observer_clock_index]), [];
+				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
