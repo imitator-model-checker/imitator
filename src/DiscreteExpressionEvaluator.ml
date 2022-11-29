@@ -574,7 +574,7 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             );
 
         | Instruction expr ->
-            eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr; ()
+            let _ = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in ()
 
         | Assignment normal_update ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update

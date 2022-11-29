@@ -7,7 +7,24 @@
   abstractProperty
   automaton
   parsingStructure
-  result))
+  result)
+ (flags
+  (:standard
+   -cclib
+   -static
+   -cclib
+   -lppl
+   -cclib
+   -ltinfo
+   -cclib
+   -lppl_ocaml
+   -cclib
+   -lstdc++
+   -cclib
+   -lgmp
+   -cclib
+   -lgmpxx))
+ (modes native))
 
 (ocamllex
  (modules ModelLexer PropertyLexer))
@@ -19,3 +36,11 @@
  (dev
   (flags
    (:standard -warn-error -A))))
+
+; TODO: Add these steps in the dune project
+; # Handling build number (using Python)
+; PreBuildCommand: python gen_build_info.py
+; # strip: considerably reduces the size!
+; PostBuildCommand: echo "Copying main binanry file to bin/imitator …" ; cp _build/src/IMITATOR.native bin/imitator ; strip bin/imitator
+
+; TODO: Runt regresion tests

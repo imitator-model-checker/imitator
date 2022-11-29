@@ -2,6 +2,8 @@
 
 (name IMITATOR)
 
+(version 3.4)
+
 (generate_opam_files true)
 
 (source
