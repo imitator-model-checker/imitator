@@ -1,86 +1,74 @@
-# PPL version
-PPL_VERSION=1.2
+#!/bin/bash
 
-# Patches folder
-PATCH_FOLDER="${GITHUB_WORKSPACE}/.github/patches"
+set -a
 
+# check OS
+case $(uname) in
+'Linux')
+    RUNNER_OS='Linux'
+    ;;
+'Darwin')
+    RUNNER_OS='macOS'
+    ;;
+*)
+    echo "This script only supports Linux or OSX"
+    exit 1
+    ;;
+esac
+
+# ignore sudo commands when the user is root
+sudo() {
+    [[ $EUID = 0 ]] || set -- command sudo "$@"
+    "$@"
+}
+
+# script folder
+if [ -z "${GITHUB_WORKSPACE}" ]; then
+    SCRIPT_FOLDER=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+    PATCH_FOLDER="$(dirname $SCRIPT_FOLDER)/patches"
+    ROOT_FOLDER="$(dirname $(dirname $SCRIPT_FOLDER))"
+    cd "$ROOT_FOLDER"
+else
+    PATCH_FOLDER="${GITHUB_WORKSPACE}/.github/patches"
+fi
+
+# install dependencies
 if [[ "$RUNNER_OS" = "Linux" ]]; then
+    DEBIAN_FRONTEND=noninteractive
     sudo apt-get update -qq
-    sudo apt-get install -qq wget unzip curl build-essential g++ m4 ocaml-native-compilers camlp4-extra ocaml oasis ocaml-findlib \
-        libextlib-ocaml libextlib-ocaml-dev libfileutils-ocaml-dev \
-        libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
-        libppl-dev \
+    sudo apt-get install -qq wget unzip curl build-essential g++ m4 opam python3 \
+        libgmp-dev libmpfr-dev libppl-dev \
         graphviz plotutils
-
-    if [[ "$DISTRIBUTED" = "True" ]]; then
-        sudo apt-get install -qq openmpi-bin openmpi-common libopenmpi-dev
-
-        # installing version without Bytes package
-        git clone https://github.com/xavierleroy/ocamlmpi
-        (cd ocamlmpi; git reset --hard c6eaf91; make clean; make MPIINCDIR=/usr/lib/openmpi/include; make opt; sudo make install)
-        rm -rf ocamlmpi
-
-        # Installting Bytes Package
-        git clone https://github.com/chambart/ocaml-bytes.git
-        (cd ocaml-bytes; ./configure --prefix=/usr --libdir=/usr/lib/ocaml/; make; sudo make install)
-        rm -rf ocaml-bytes
-    fi
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-    brew install opam gmp plotutils ppl
-
-    # install opam and ocaml libraries
-    opam init -a
-    opam install -y extlib fileutils oasis
-    eval $(opam env)
-
-    # install mlgmp
-    git clone https://github.com/monniaux/mlgmp.git && cd mlgmp
-    git apply "${PATCH_FOLDER}/gmp.patch"
-    make && sudo make install && cd ..
-    rm -rf mlgmp
-    sudo cp METAS/META.gmp $(opam var lib)/gmp/META
+    brew install opam gmp ppl graphviz plotutils
 fi
 
-# installing PPL
-wget -q --no-check-certificate https://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
-unzip -qq ppl-${PPL_VERSION}.zip
+# python fix
+[ ! -x "$(command -v python)" ] && ln -s $(which python3) "/usr/bin/python"
 
-cd ppl-${PPL_VERSION}
-if [[ "$RUNNER_OS" = "Linux" ]]; then
-    ./configure --prefix=/usr
-elif [[ "$RUNNER_OS" = "macOS" ]]; then
-    # patch clang
-    patch -p0 < "${PATCH_FOLDER}/clang5.patch"
+# install opam and ocaml libraries
+opam init -a
+opam install -y extlib fileutils oasis
+eval $(opam env)
 
-    # compile ppl
-    ./configure --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp --disable-documentation --enable-interfaces=ocaml
-    make
+# install mlgmp
+[ ! -d "$(opam var lib)/gmp" ] && sh "${SCRIPT_FOLDER}/install-mlgmp.sh"
+
+# instal ppl
+[ ! -d "$(opam var lib)/ppl" ] && sh "${SCRIPT_FOLDER}/install-ppl.sh"
+
+# patch oasis for OSX
+if [[ "$RUNNER_OS" = "macOS" ]]; then
+    patch -p0 <"${PATCH_FOLDER}/oasis-config.patch"
 fi
-cd interfaces/OCaml && make -j 4 && sudo make install && cd ../../..
-rm -rf ppl-${PPL_VERSION}*
 
 # Build IMITATOR
-if [[ "$RUNNER_OS" = "Linux" ]]; then
-    sudo cp METAS/META.ppl /usr/lib/ocaml/METAS/
-elif [[ "$RUNNER_OS" = "macOS" ]]; then
-    # patch oasis
-    patch -p0 < "${PATCH_FOLDER}/oasis-config.patch"
+sh build.sh
 
-    # patch ppl META file
-    patch -p0 < "${PATCH_FOLDER}/META.ppl.patch"
-
-    echo $(ls -al)
-    sudo cp METAS/META.ppl $(opam var lib)/ppl/META
-fi
-
-platform=`echo "${RUNNER_OS}" | awk '{print tolower($1)}'`
-tag="${GITHUB_REF_NAME##*/}"
-if [[ "$DISTRIBUTED" = "True" ]]; then
-    sh build-patator.sh
+# rename artefact
+if [ -v "${GITHUB_WORKSPACE}" ]; then
     cd bin
-    mv "patator" "patator-${tag}-${platform}-amd64"
-else
-    sh build.sh
-    cd bin
+    platform=$(echo "${RUNNER_OS}" | awk '{print tolower($1)}')
+    tag="${GITHUB_REF_NAME##*/}"
     mv "imitator" "imitator-${tag}-${platform}-amd64"
 fi

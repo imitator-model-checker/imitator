@@ -11,8 +11,6 @@ jobs:
           - ubuntu-latest
           - macos-latest
     runs-on: ${{ matrix.os }}
-    env:
-      DISTRIBUTED: False
     steps:
       # setup repository
       - name: Checkout
