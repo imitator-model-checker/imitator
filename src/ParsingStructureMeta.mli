@@ -23,9 +23,6 @@ open DiscreteType
 
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-val updates_of_update_section : update_section -> update list
-
 
 
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
@@ -45,6 +42,11 @@ val has_side_effect_parsed_discrete_arithmetic_expression : variable_infos -> pa
 val has_side_effect_parsed_normal_update : variable_infos -> normal_update -> bool
 (* Check if a parsed state predicate has side effects *)
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
+
+(* Check if a parsed boolean expression contains function call(s) *)
+val has_fun_call_parsed_boolean_expression : parsed_boolean_expression -> bool
+(* Check if a parsed discrete arithmetic expression contains function call(s) *)
+val has_fun_call_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> bool
 
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 (*

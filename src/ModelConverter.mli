@@ -44,6 +44,3 @@ val check_and_make_pi0 : ParsingStructure.pi0 -> (*Options.imitator_options ->*)
 
 (** Check and convert the parsed hyper-rectangle into an abstract representation *)
 val check_and_make_v0 : ParsingStructure.v0 -> (*Options.imitator_options ->*) HyperRectangle.hyper_rectangle*)
-
-(** Get clocks index used on the updates *)
-val get_clocks_in_updates : AbstractModel.updates -> Automaton.clock_index list

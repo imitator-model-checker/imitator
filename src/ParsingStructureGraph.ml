@@ -136,8 +136,22 @@ let refs_of_parsed_scalar_or_index_update_type local_variables (* parsed_scalar_
     in
     refs_of_parsed_scalar_or_index_update_type_rec (* parsed_scalar_or_index_update_type *)
 
+let is_clock local_variables declarations_info variable_name =
+    not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.clock_names
+
+let is_discrete local_variables declarations_info variable_name =
+    not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.discrete_names
+
+let is_reset variable_name = function
+    | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) ->
+        ParsedValue.is_zero value
+    | _ -> false
+
+let is_clock_reset local_variables declarations_info variable_name expr =
+    is_clock local_variables declarations_info variable_name && is_reset variable_name expr && variable_name <> Constants.global_time_clock_name
+
 (* All relations found in a sequential code bloc *)
-let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_ref (* parsed_seq_code_bloc *) =
+let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code_bloc_name bloc_ref (* parsed_seq_code_bloc *) =
 
     let rec relations_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
         let relations_nested = List.map (relations_in_parsed_instruction local_variables) parsed_seq_code_bloc in
@@ -158,30 +172,58 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
             let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
             (* Create relation between current code bloc and declared variable *)
-(*            let bloc_relation = bloc_ref, variable_ref in*)
+            let bloc_relation = bloc_ref, variable_ref in
 
             (* Concat relations *)
-            relations (* @ [bloc_relation] *)
+            relations @ [bloc_relation]
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
+            let rec contains_function_call =
+                let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
+                let rec has_indexes_fun_call = function
+                    | Parsed_scalar_update variable_name -> false
+                    | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
+                        let index_contains_fun_call = ParsingStructureMeta.has_fun_call_parsed_discrete_arithmetic_expression index_expr in
+                         index_contains_fun_call || has_indexes_fun_call inner_scalar_or_index_update_type
+                in
+                has_fun_call || has_indexes_fun_call parsed_scalar_or_index_update_type
+            in
+
+
             let rec relations_of_scalar_or_index_update_type = function
                 | Parsed_scalar_update variable_name ->
-                    (* Updated variable use all variables found in expression *)
-                    (* For example x := a + b, x use a, b *)
-                    (* and current function use x *)
 
-                    (* Create local variable ref representing a unique variable ref *)
-                    let variable_ref = get_variable_ref local_variables variable_name in
+                    (* Is only a clock reset ? We consider not use *)
+                    if is_clock_reset local_variables declarations_info variable_name expr then
+                        []
+                    else (
 
-                    (* Get references to variables and functions in the update expression *)
-                    let all_refs = refs_in_parsed_boolean_expression local_variables expr in
-                    let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+                        (* Updated variable use all variables found in expression *)
+                        (* For example x := a + b, x use a, b *)
+                        (* and current function use x *)
 
-                    (* For sake of simplicity we consider all assigned variable as used *)
-                    let assigned_variable_relation = bloc_ref, variable_ref in
+                        (* Create local variable ref representing a unique variable ref *)
+                        let variable_ref = get_variable_ref local_variables variable_name in
 
-                    assigned_variable_relation :: relations
+                        (* Get references to variables and functions in the update expression *)
+                        let all_refs = refs_in_parsed_boolean_expression local_variables expr in
+                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+
+                        (* Check if assigned expression contains function call(s) *)
+                        (* If there are any function call, it mean that it may have side effects in expression *)
+                        (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
+                        let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
+
+
+                        if has_fun_call then (
+                            let assigned_variable_relation = bloc_ref, variable_ref in
+                            assigned_variable_relation :: relations
+                        )
+                        else
+                            relations
+
+                    )
 
                 | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
                     (* Updated variable use all variables found in expression, and all variables found in index *)
@@ -194,11 +236,33 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
                     let all_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
+                    (* Check if index expression contains function call(s) *)
+                    (* If there are any function call, it mean that it may have side effects in expression *)
+                    (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
+                    let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
+
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     relations @ variable_use_variables_relations
             in
 
-            relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type
+            let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+            (* Create local variable ref representing a unique variable ref *)
+            let variable_ref = get_variable_ref local_variables variable_name in
+
+            let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+
+            let has_fun_call = contains_function_call in
+            if has_fun_call then (
+                let assigned_variable_relation = bloc_ref, variable_ref in
+                assigned_variable_relation :: relations
+            )
+            else
+                relations
+
+
+
+
+
 
         | Parsed_instruction expr ->
             let all_refs = refs_in_parsed_boolean_expression local_variables expr in
@@ -275,7 +339,7 @@ let rec relations_in_parsed_seq_code_bloc local_variables code_bloc_name bloc_re
     relations_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 (* Get the set of all variable names used in the parsed model *)
-let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_model) =
+let all_components_used_in_automatons declarations_info (parsed_model : ParsingStructure.parsed_model) =
 	(* Create a set for components *)
 	let all_relations = ref RelationSet.empty in
 
@@ -336,7 +400,7 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
 
 			(* Gather in transitions *)
 			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, update_section, (*sync*)_, (*target_location_name*)_) ->
+			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
@@ -352,48 +416,8 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
                     | Leaf_constant _ -> ()
                 ) convex_predicate;
 
-				(* Gather in the updates *)
-				print_message Verbose_total ("            Gathering variables in updates");
-				let updates = updates_of_update_section update_section in
-
-				List.iter (fun update_expression ->
-					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-					ParsingStructureUtilities.iterate_parsed_update (fun _ _ -> ()) (fun _ -> function
-                        | Leaf_variable leaf_variable ->
-                            (match leaf_variable with
-                            | Leaf_global_variable variable_name ->
-                                all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                            | Leaf_local_variable (variable_name, _, id) ->
-                                all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
-                            )
-                        | Leaf_fun function_name ->
-                            all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_constant _ -> ()
-					) update_expression;
-
-                ) updates;
-
-                let _, mixin_updates = update_section in
-
-                (* TODO benjamin IMPORTANT replace code below by use of `relations_in_parsed_seq_code_bloc_rec` *)
-                ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc
-                    (fun _ -> function
-                        | Leaf_update_variable (Leaf_global_variable variable_name, _) ->
-                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                        | Leaf_update_variable (Leaf_local_variable (variable_name, _, id), _) ->
-                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, "", id)) !all_relations
-                    )
-                    (fun _ -> function
-                        | Leaf_fun function_name ->
-                            all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
-                        | Leaf_variable (Leaf_global_variable variable_name) ->
-                            all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                        | Leaf_variable (Leaf_local_variable (variable_name, _, id)) ->
-                            all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, "", id)) !all_relations
-                        | Leaf_constant _ -> ()
-                    )
-                    mixin_updates
-                ;
+                let mixin_updates_relations = relations_in_parsed_seq_code_bloc declarations_info (Hashtbl.create 0) "" automaton_ref updates in
+                all_relations := List.fold_left (fun acc r -> RelationSet.add r acc) !all_relations mixin_updates_relations;
 
             ) location.transitions;
         ) locations;
@@ -401,6 +425,189 @@ let all_components_used_in_automatons (parsed_model : ParsingStructure.parsed_mo
     ) parsed_model.automata;
 
     RelationSet.to_seq !all_relations |> List.of_seq
+
+
+(* Gather the set of all variable names used in the parsed property *)
+let all_components_used_in_property_option parsed_property_option =
+
+    let get_variables_in_parsed_pval parsed_pval =
+        let left, _ = List.split parsed_pval in left
+    in
+
+    let get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle =
+        (* Return the left part of all triples *)
+        List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle
+    in
+
+	(* First create the set *)
+	let variables_used_ref = ref StringSet.empty in
+
+	(* Gather variables to the set, passed by reference *)
+	begin
+	match parsed_property_option with
+	| None -> ()
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+
+		(*------------------------------------------------------------*)
+		(* Basic properties *)
+		(*------------------------------------------------------------*)
+
+		(* Validity *)
+		| Parsed_Valid -> ()
+
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate ->
+		    ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+
+
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
+			(* First get the variables in the state predicate *)
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			(* Then add the parameter name *)
+			variables_used_ref := StringSet.add parameter_name !variables_used_ref
+
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate ->
+            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+
+
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+
+		(** Accepting infinite-run (cycle) through a state predicate *)
+		| Parsed_Cycle_Through parsed_state_predicate
+			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+
+		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
+			-> List.iter (ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
+
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> ()
+
+
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> ()
+
+
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval
+		(* IMK *)
+		| Parsed_IMK parsed_pval
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval ->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
+
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
+			(* First get the variables in the state predicate *)
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			(* Then add the pval *)
+			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
+
+
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+
+		(* Cartography *)
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, _)
+		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, _)
+		(** Look for the border using the cartography*)
+		| Parsed_Border_cartography (parsed_hyper_rectangle, _)
+		(** Randomly pick up values for a given number of iterations *)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, _, _)
+		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, _)
+			->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle);
+
+
+		(** Cover the whole cartography using learning-based abstractions *)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, _)
+		(* Parametric reachability preservation *)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
+			->
+			(* First get the variables in the state predicate *)
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+			(* Then add the HyperRectangle *)
+			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
+
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		(* if a2 then a1 has happened before *)
+		| Parsed_pattern (Parsed_action_precedence_acyclic _)
+		(* everytime a2 then a1 has happened before *)
+		| Parsed_pattern (Parsed_action_precedence_cyclic _)
+		(* everytime a2 then a1 has happened once before *)
+		| Parsed_pattern (Parsed_action_precedence_cyclicstrict _)
+			-> ()
+
+		(* a within d *)
+		| Parsed_pattern (Parsed_action_deadline (_ , duration)) ->
+(*			get_variables_in_linear_expression variables_used_ref duration*)
+            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
+
+
+		(* if a2 then a1 happened within d before *)
+		| Parsed_pattern (Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration))
+		(* everytime a2 then a1 happened within d before *)
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration))
+		(* everytime a2 then a1 happened once within d before *)
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)) ->
+(*			get_variables_in_linear_expression variables_used_ref duration*)
+				variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
+
+		(* if a1 then eventually a2 within d *)
+		| Parsed_pattern (Parsed_TB_response_acyclic (_, _, parsed_duration))
+		(* everytime a1 then eventually a2 within d *)
+		| Parsed_pattern (Parsed_TB_response_cyclic (_, _, parsed_duration))
+		(* everytime a1 then eventually a2 within d once before next *)
+		| Parsed_pattern (Parsed_TB_response_cyclicstrict (_, _, parsed_duration)) ->
+(*		    get_variables_in_linear_expression variables_used_ref parsed_duration*)
+            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression parsed_duration;
+
+		(* sequence a1, …, an *)
+		| Parsed_pattern (Parsed_Sequence_acyclic _)
+		(* always sequence a1, …, an *)
+		| Parsed_pattern (Parsed_Sequence_cyclic _)
+			-> ()
+
+
+		end;
+	end;
+	(* Return the set *)
+	let variables_used = string_set_to_list !variables_used_ref in
+	List.map (fun variable_name -> Global_variable_ref variable_name) variables_used
+
 
 (* All declared components found in the parsed model *)
 let declared_components_of_model parsed_model =
@@ -447,7 +654,7 @@ let declared_components_of_model parsed_model =
 
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
-let dependency_graph ?(no_var_autoremove=false) parsed_model =
+let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model parsed_property_opt =
 
     (* Function that return all component relations of a given function definition *)
     let function_relations fun_def =
@@ -464,7 +671,7 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
         let code_bloc, return_expr_opt = fun_def.body in
 
         (* Get all component relations of current function body *)
-        let code_bloc_relations = relations_in_parsed_seq_code_bloc local_variables fun_def.name fun_ref code_bloc in
+        let code_bloc_relations = relations_in_parsed_seq_code_bloc declarations_info local_variables fun_def.name fun_ref code_bloc in
 
         let return_expr_relations =
             match return_expr_opt with
@@ -480,14 +687,20 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
 
     (* Get variables and functions used by automatons *)
     let automatons_relations =
-        all_components_used_in_automatons parsed_model
+        all_components_used_in_automatons declarations_info parsed_model
     in
     (* Get variables and functions used in all declared functions *)
     let system_functions_relations =
         List.fold_left (fun acc fun_def -> function_relations fun_def @ acc) [] parsed_model.fun_definitions
     in
 
-    (* Get variables and functions dependencies in init *)
+    (* Get components used in property and create relations between them and system *)
+    let property_relations =
+        let all_components_used_in_property = all_components_used_in_property_option parsed_property_opt in
+        List.map (fun c -> System_ref, c) all_components_used_in_property
+    in
+
+    (* Create relations found between components in init *)
     let init_relations =
         List.fold_left (fun acc init ->
             match init with
@@ -512,14 +725,19 @@ let dependency_graph ?(no_var_autoremove=false) parsed_model =
                 List.map (fun (l_variable_name, r_variable_name) -> Global_variable_ref l_variable_name, Global_variable_ref r_variable_name) combination @ acc
         ) [] parsed_model.init_definition
     in
+
     (* Concat all relations, to get overall relations of the model *)
-    let all_model_relations = automatons_relations @ system_functions_relations @ init_relations in
+    let all_model_relations = automatons_relations @ system_functions_relations @ init_relations @ property_relations in
+
     (* Remove variable to variable relations when it's an auto reference *)
     let all_model_relations_without_variable_autoref = List.filter (function
         | (Global_variable_ref _ as a, (Global_variable_ref _ as b)) -> a <> b
         | (Local_variable_ref _ as a, (Local_variable_ref _ as b)) -> a <> b
         | _ -> true
     ) all_model_relations in
+
+    (* If no var auto remove active, we make relations between system and every components *)
+
 
     (* Return dependency graph of the model *)
     declared_components_of_model parsed_model, all_model_relations_without_variable_autoref
@@ -553,7 +771,7 @@ let used_components_of_model_list (_, component_relations) =
     in
 
     (* Get system refs *)
-    let system_refs = List.filter (fun (s, d) -> match s with Automaton_ref _ -> true | _ -> false) component_relations in
+    let system_refs = List.filter (fun (s, d) -> match s with System_ref -> true | _ -> false) component_relations in
     (* Find all reachable refs (variables / functions) from system refs... *)
     List.fold_left (fun acc system_ptr -> all_reachable_ref system_ptr @ acc) [] system_refs
 
@@ -607,11 +825,11 @@ let filter_map_components_used_in_model = filter_map_components_from used_compon
 let filter_map_components_unused_in_model = filter_map_components_from unused_components_of_model_list
 
 (* Get the names of all used global variable *)
-let used_variables_of_model dependency_graph =
+let used_global_variables_of_model dependency_graph =
     filter_map_components_used_in_model dependency_graph (function Global_variable_ref variable_name -> Some variable_name | _ -> None)
 
 (* Get the names of all unused global variable *)
-let unused_variables_of_model dependency_graph =
+let unused_global_variables_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Global_variable_ref variable_name -> Some variable_name | _ -> None)
 
 (* Get the names of all function used *)
@@ -622,92 +840,87 @@ let used_functions_of_model dependency_graph =
 let unused_functions_of_model dependency_graph =
     filter_map_components_unused_in_model dependency_graph (function Fun_ref name -> Some name | _ -> None)
 
-(* Remove all unused instruction in sequential code bloc *)
-(*
-let remove_unused_instructions local_variables dependency_graph code_bloc_name (* seq_code_bloc *) =
 
-    (* Get used components in model *)
-    let used_components = used_components_of_model dependency_graph in
+(* Remove all unused clock assignments in sequential code bloc *)
+let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
 
-    let rec remove_unused_instructions_rec local_variables = function
-        | Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr) as seq ->
+    (* Get global variables used in model *)
+    let used_global_variables = used_global_variables_of_model dependency_graph in
+    let used_global_variables_list = string_set_to_list used_global_variables in
 
-            (* Get current assigned variable, if not used, remove instruction *)
+    let rec remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
+        List.filter_map (remove_unused_clock_assignment_instruction local_variables) parsed_seq_code_bloc
 
-            let refs = refs_in_parsed_boolean_expression local_variables expr in
-            let scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
-            let all_refs = refs @ scalar_or_index_update_type_refs in
+    and remove_unused_clock_assignment_instruction local_variables = function
+        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
+            (* Is only a clock reset ? We consider not use *)
+            let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
+            let is_discrete = is_discrete local_variables declarations_info variable_name in
 
+            let is_clock_reset = is_clock_reset local_variables declarations_info variable_name expr in
+            let is_not_used = not (List.mem variable_name used_global_variables_list) in
 
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-
-            (* If any component found is used by model, we keep instruction *)
-            let keep_instruction = List.exists (fun r ->
-                let used = ComponentSet.mem r used_components in
-                ImitatorUtilities.print_standard_message ("FOUND COMP: " ^ string_of_component r ^ ", used:" ^ string_of_bool used);
-                used
-            ) all_refs in
-            ImitatorUtilities.print_standard_message ("ass: " ^ variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type ^ ", keep:" ^ string_of_bool keep_instruction);
-            if keep_instruction then
-                Parsed_assignment ((parsed_scalar_or_index_update_type, expr), next_expr_without_unused_instructions)
+            if (is_clock_reset && is_not_used) || (not is_clock_reset && is_not_used) then (
+                None
+            )
             else
-                next_expr_without_unused_instructions
+                Some instruction
 
+        | Parsed_instruction expr as instruction ->
+            Some instruction
 
-        | Parsed_instruction (expr, next_expr) ->
-            let all_refs = refs_in_parsed_boolean_expression local_variables expr in
-
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-
-            (* If any component found is used by model, we keep instruction *)
-            let keep_instruction = List.exists (fun r -> ComponentSet.mem r used_components) all_refs in
-
-            if keep_instruction then
-                Parsed_instruction (expr, next_expr_without_unused_instructions)
-            else
-                next_expr_without_unused_instructions
-
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr, id) ->
-            (* Create local variable ref representing a unique variable ref *)
-            let variable_ref = Local_variable_ref (variable_name, code_bloc_name, id) in
-            (* Add the new declared local variable (or update if the new declaration shadows a previous one) *)
-            let local_variables = StringMap.add variable_name variable_ref local_variables in
-            (* Get references to variables and functions in the local init expression *)
-            let all_refs = refs_in_parsed_boolean_expression local_variables init_expr in
-
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-
-            (* If any component found is used by model, we keep instruction *)
-            let keep_instruction = List.exists (fun r -> ComponentSet.mem r used_components) all_refs in
-
-            if keep_instruction then
-                Parsed_local_decl (variable_name, discrete_type, init_expr, next_expr_without_unused_instructions, id)
-            else
-                next_expr_without_unused_instructions
+        | Parsed_local_decl (variable_name, discrete_type, init_expr, id) as instruction ->
+            (* Add local variable *)
+            Hashtbl.replace local_variables variable_name id;
+            Some instruction
 
         (* These type of instruction are always been considered as used by the bloc ! *)
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr, id) ->
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-            Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, next_expr_without_unused_instructions, id)
+        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, id) ->
+            let loop_local_variables = Hashtbl.copy local_variables in
+            (* Add loop variable *)
+            Hashtbl.replace loop_local_variables variable_name id;
 
-        | Parsed_while_loop (cond_expr, inner_bloc, next_expr) ->
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-            Parsed_while_loop (cond_expr, inner_bloc, next_expr_without_unused_instructions)
+            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            Some (Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, filtered_inner_bloc, id))
 
-        | Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr) ->
-            let next_expr_without_unused_instructions = remove_unused_instructions_rec local_variables next_expr in
-            Parsed_if (cond_expr, then_expr, else_expr_opt, next_expr)
+        | Parsed_while_loop (cond_expr, inner_bloc) ->
+            let loop_local_variables = Hashtbl.copy local_variables in
+            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            Some (Parsed_while_loop (cond_expr, filtered_inner_bloc))
+
+        | Parsed_if (cond_expr, then_bloc, else_bloc_opt) ->
+            let then_local_variables = Hashtbl.copy local_variables in
+            let filtered_then_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec then_local_variables then_bloc in
+
+            let filtered_else_bloc =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    let else_local_variables = Hashtbl.copy local_variables in
+                    Some (remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec else_local_variables else_bloc)
+                | None -> None
+            in
+
+            Some (Parsed_if (cond_expr, filtered_then_bloc, filtered_else_bloc))
     in
-    remove_unused_instructions_rec local_variables (* seq_code_bloc *)
+    remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
-let remove_unused_instructions_in_fun_def dependency_graph (fun_def : parsed_fun_definition) =
+
+let remove_unused_clock_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
+    remove_unused_clock_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
+
+(* Remove all unused clock assignments in function definition *)
+let remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
-    let local_variables = List.fold_right (fun (parameter_name, _) acc -> StringMap.add parameter_name (Param_ref (parameter_name, fun_def.name)) acc) fun_def.parameters StringMap.empty in
+    let local_variables = Hashtbl.create (List.length fun_def.parameters) in
+    List.iter (fun (parameter_name, _) -> Hashtbl.add local_variables parameter_name (-1)) fun_def.parameters;
+
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in
-    { fun_def with body = remove_unused_instructions local_variables dependency_graph fun_def.name code_bloc, return_expr_opt }
-*)
+    { fun_def with body = remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
+
+
+
 
 let model_cycle_infos (_, model_relations) =
 

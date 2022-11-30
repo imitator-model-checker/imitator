@@ -20,6 +20,7 @@ open ImitatorUtilities
 open Exceptions
 open Result
 open AbstractModel
+open DiscreteExpressions
 open AbstractProperty
 open AbstractValue
 
@@ -223,7 +224,8 @@ let string_of_sync model action_index =
 	| Action_type_nosync -> " "
 
 
-
+(* TODO benjamin CLEAN UPDATES *)
+(*
 let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
@@ -237,9 +239,10 @@ let string_of_clock_updates model = function
 			^ "' = "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
+*)
 
-
-
+(* TODO benjamin CLEAN UPDATES *)
+(*
 (* Convert a list of updates into a string *)
 (*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 let string_of_discrete_updates model updates =
@@ -261,32 +264,64 @@ let string_of_discrete_updates model updates =
 		^ str_update_expr
 
 	) updates)
+*)
+
+let string_of_seq_code_bloc model (* seq_code_bloc *) =
+
+    print_warning ("Some update expressions may not be well translated to HyTech.");
+
+    let string_of_instruction = function
+        | Assignment (scalar_or_index_update_type, expr) ->
+            (* Convert the variable access to string *)
+            let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
+            (* Convert the expression to string *)
+            let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names expr in
+
+            variable_name
+            ^ "' = "
+            ^ str_update_expr
+
+        | Clock_assignment (clock_index, linear_term) ->
+            model.variable_names clock_index
+            ^ "' = "
+            ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term
+
+        | Local_assignment _ ->
+            print_warning ("Update contains local variable assignments, HyTech does not support such expressions."); ""
+        | Local_decl _
+        | Instruction _
+        | For_loop _
+        | While_loop _
+        | If _ ->
+            print_warning ("Update contains some advanced expressions, HyTech does not support such expressions."); ""
+
+    in
+    let string_of_seq_code_bloc seq_code_bloc =
+        let str_instructions = List.map string_of_instruction seq_code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings ", " str_instructions
+    in
+
+    string_of_seq_code_bloc (* seq_code_bloc *)
 
 
 (* Convert a transition of a location into a string *)
 (** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index transition =
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
-	let conditional_updates = transition.updates.conditional in
+
+	let _, update_seq_code_bloc = transition.updates in
 
     let str_guard = ModelPrinter.string_of_guard model.variable_names transition.guard in
 
     if not (is_linear_guard transition.guard) then
         print_warning ("Guard `" ^ str_guard ^ "` contains non-linear expression(s) or are not rational-valued, HyTech does not support such expressions.");
 
-	(if conditional_updates <> [] then print_warning "Conditional updates are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ str_guard
 	(* Convert the updates *)
 	^ " do {"
-	(* Clock updates *)
-	^ (string_of_clock_updates model clock_updates)
-	(* Add a coma in case of both clocks and discrete *)
-	^ (if clock_updates <> No_update && discrete_updates <> [] then ", " else "")
-	(* Discrete updates *)
-	^ (string_of_discrete_updates model discrete_updates)
+	(* Updates *)
+	^ string_of_seq_code_bloc model update_seq_code_bloc
 	^ "} "
 
 	(* Convert the sync *)

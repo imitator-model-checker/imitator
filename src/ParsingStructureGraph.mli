@@ -45,7 +45,7 @@ type dependency_graph = component list (* declared components *) * relation list
 
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
-val dependency_graph : ?no_var_autoremove:bool -> parsed_model -> dependency_graph
+val dependency_graph : ?no_var_autoremove:bool -> declarations_info -> parsed_model -> parsed_property option -> dependency_graph
 
 (* Get dependency graph as string (dot graphviz format) *)
 val string_of_dependency_graph : dependency_graph -> string
@@ -63,8 +63,10 @@ val unused_components_of_model : dependency_graph -> ComponentSet.t
 
 val used_functions_of_model : dependency_graph -> StringSet.t
 val unused_functions_of_model : dependency_graph -> StringSet.t
-val used_variables_of_model : dependency_graph -> StringSet.t
-val unused_variables_of_model : dependency_graph -> StringSet.t
-(*val remove_unused_instructions_in_fun_def : dependency_graph -> parsed_fun_definition -> parsed_fun_definition*)
+val used_global_variables_of_model : dependency_graph -> StringSet.t
+val unused_global_variables_of_model : dependency_graph -> StringSet.t
+
+val remove_unused_clock_assignments_in_updates : declarations_info -> dependency_graph -> parsed_seq_code_bloc_list -> parsed_seq_code_bloc_list
+val remove_unused_clock_assignments_in_fun_def : declarations_info -> dependency_graph -> parsed_fun_definition -> parsed_fun_definition
 
 val model_cycle_infos : dependency_graph -> (bool * string) list

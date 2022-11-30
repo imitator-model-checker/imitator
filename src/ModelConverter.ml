@@ -62,24 +62,6 @@ let get_clocks_in_linear_constraint clocks =
     	list_only_once list_of_clocks*)
   LinearConstraint.pxd_find_variables clocks
 
-
-(*** WARNING: duplicate function in ClockElimination ***)
-let rec get_clocks_in_updates updates : clock_index list =
-  let get_clocks: clock_updates -> clock_index list = function
-    (* No update at all *)
-    | No_update -> []
-    (* Reset to 0 only *)
-    | Resets clock_reset_list -> clock_reset_list
-    (* Reset to arbitrary value (including discrete, parameters and clocks) *)
-    | Updates clock_update_list ->
-      let result, _ = List.split clock_update_list in result
-  in
-  let clocks_in_conditions = List.flatten (List.map
-    (fun (b, u1, u2) -> (get_clocks_in_updates u1) @ (get_clocks_in_updates u2) )
-    updates.conditional)
-  in
-  (get_clocks updates.clock) @ clocks_in_conditions
-
 (************************************************************)
 (** Print error messages *)
 (************************************************************)
@@ -326,63 +308,6 @@ let check_normal_update variable_infos automaton_name normal_update =
     )
 
 (*------------------------------------------------------------*)
-(* Check that an update is well formed *)
-(*------------------------------------------------------------*)
-let check_update variable_infos automaton_name = function
-	| Normal normal_update ->
-	    check_normal_update variable_infos automaton_name normal_update
-
-	| Condition (bool_expr, update_list_if, update_list_else) ->
-
-	    (* Concatenate updates*)
-	    let all_updates = update_list_if @ update_list_else in
-
-        (* Prepare print error function for conditional containing clock or parameter *)
-	    let print_conditional_update_contain_clock_or_param_error var_type variable_name =
-            print_error (
-                "Condition update `"
-                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos bool_expr
-                ^ "` contains "
-                ^ DiscreteType.string_of_var_type var_type
-                ^ " `"
-                ^ variable_name
-                ^ "` in automaton `"
-                ^ automaton_name
-                ^ "`."
-            )
-	    in
-
-        (* Prepare callback function that print error message when undeclared variable is found *)
-        let print_variable_in_update_condition_not_declared variable_name =
-            print_error (
-                "Variable `"
-                ^ variable_name
-                ^ "` used in update condition `"
-                ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos bool_expr
-                ^ "` in automaton `"
-                ^ automaton_name
-                ^ "` was not declared."
-            )
-        in
-
-	    (* Check that all variables in update condition are declared *)
-        let all_declared_in_condition = ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_update_condition_not_declared) bool_expr in
-
-	    (* Check that boolean condition expression doesn't contains any clock(s) or parameter(s) *)
-	    let is_condition_use_only_discrete =
-	        ParsingStructureMeta.only_discrete_in_parsed_boolean_expression variable_infos (Some print_conditional_update_contain_clock_or_param_error) bool_expr
-        in
-
-	    (* Check all normal updates are valid (make a map for avoid short-circuit eval with for_all) *)
-	    let is_valid_normal_updates =
-	        List.map (check_normal_update variable_infos automaton_name) all_updates
-	        |> List.for_all identity
-        in
-
-	    (* If all normal updates and condition are valid, update is valid *)
-	    all_declared_in_condition && is_valid_normal_updates && is_condition_use_only_discrete
-
-(*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
@@ -575,14 +500,10 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
-			List.iter (fun (convex_predicate, update_section, sync, target_location_name) ->
+			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
 				if not (ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
-				(* Check the updates *)
-				print_message Verbose_total ("            Checking updates");
-				let updates = ParsingStructureMeta.updates_of_update_section update_section in
-				List.iter (fun update -> if not (check_update variable_infos automaton_name update) then well_formed := false) updates;
 				(* Check the sync *)
 				print_message Verbose_total ("            Checking sync name ");
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
@@ -1256,25 +1177,6 @@ let get_conditional_update_value = function
   | Condition u -> u
   | _ -> assert false
 
-
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Filter the updates that should assign some variable name to be removed to any expression *)
-let filter_updates removed_variable_names updates =
-  let not_removed_variable (parsed_scalar_or_index_update_type, _) =
-    let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-    not (List.mem variable_name removed_variable_names)
-  in
-  List.fold_left (fun acc u ->
-      match u with
-      | Normal update ->
-        if (not_removed_variable update) then u::acc else acc
-      | Condition (bool, updates_if, updates_else) ->
-        let filtered_if = List.filter (not_removed_variable) updates_if in
-        let filtered_else = List.filter (not_removed_variable) updates_else in
-        Condition (bool, filtered_if, filtered_else)::acc
-    ) [] updates
-
 (* TODO benjamin CLEAN UPDATES *)
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update variable_infos only_resets updates_list =
@@ -1469,7 +1371,8 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
+(* TODO factorise parameters ! so many parameters ! maybe we can remove some, or use structure, etc *)
+let convert_transitions options nb_transitions nb_actions declarations_info dependency_graph (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
   (* Extract values from model parsing info *)
@@ -1488,8 +1391,7 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
-	updates		= { clock = No_update; discrete = [] ; conditional = []};
-	new_updates = No_update, [];
+	updates = No_update, [];
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -1515,18 +1417,23 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
           array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 
           (* Iterate on transitions *)
-          List.iter (fun (action_index, guard, update_section, target_location_index) ->
+          List.iter (fun (action_index, guard, parsed_seq_code_bloc_update, target_location_index) ->
 
               (* Convert the guard *)
               let converted_guard = DiscreteExpressionConverter.convert_guard variable_infos guard in
 
-              let updates, seq_code_bloc_update = update_section in
-
-              let filtered_updates = filter_updates removed_variable_names updates in
+              (* Filter instruction in update code bloc according to option -no-var-autoremove *)
+              let filtered_parsed_seq_code_bloc_updates =
+                if options#no_variable_autoremove then
+                    (* No variable auto remove, keep all instructions in update code bloc *)
+                    parsed_seq_code_bloc_update
+                else
+                    (* If variable auto remove, remove unused clock assignments *)
+                    ParsingStructureGraph.remove_unused_clock_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update
+              in
 
               (* translate parsed updates into their abstract model *)
-              let converted_updates = convert_updates variable_infos filtered_updates in
-              let converted_new_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc_update in
+              let converted_updates = DiscreteExpressionConverter.convert_seq_code_bloc variable_infos user_function_definitions_table filtered_parsed_seq_code_bloc_updates in
 
               (* Update the transition array *)
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
@@ -1536,7 +1443,6 @@ let convert_transitions nb_transitions nb_actions (useful_parsing_model_informat
 					guard   = converted_guard;
 					action  = action_index;
 					updates = converted_updates;
-					new_updates = converted_new_updates;
 					target  = target_location_index;
 				};
               (* Add the automaton *)
@@ -1662,6 +1568,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 (** Getting variables *)
 (************************************************************)
 
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in a parsed reference valuation *)
 (*------------------------------------------------------------*)
@@ -1670,6 +1577,7 @@ let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : 
 	let left, _ = List.split parsed_pval in
 	left
 
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in a parsed reference valuation *)
 (*------------------------------------------------------------*)
@@ -1683,7 +1591,7 @@ let get_variables_in_parsed_hyper_rectangle (parsed_hyper_rectangle : ParsingStr
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
-
+(* TODO benjamin CLEAN when UPDATES cleaned *)
 let all_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
 	(* First create the set *)
 	let variables_used_ref = ref StringSet.empty in
@@ -3184,12 +3092,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	let single_discrete_names_by_type = list_only_once possibly_multiply_defined_discrete_names_by_type in
 
+    let declarations_info = {
+        clock_names = single_clock_names;
+        parameter_names = single_parameter_names;
+        discrete_names = single_discrete_names;
+    }
+    in
 	(*------------------------------------------------------------*)
 	(* Resolve dependencies between variables and functions *)
 	(*------------------------------------------------------------*)
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove parsed_model in
+    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove declarations_info parsed_model parsed_property_option in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
@@ -3224,20 +3138,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	)else (
 
 		(* Gather all variables used *)
-		let all_variables_used_in_model = ParsingStructureGraph.used_variables_of_model dependency_graph in
+		let all_variables_used_in_model = ParsingStructureGraph.used_global_variables_of_model dependency_graph in
 		let all_variables_used_in_property = all_variables_in_property_option parsed_property_option in
 		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
 			(* The variable is kept if… *)
-			if
-				(* Either it is used somewhere *)
-				(StringSet.mem variable_name all_variable_used)
-				(* Or it is a clock with the special global_time name *)
-				||
-				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
-			then true
+
+            (* Either it is used somewhere *)
+            let is_variable_used_somewhere = StringSet.mem variable_name all_variable_used in
+            (* Or it is a clock with the special global_time name *)
+            let is_special_global_time = variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names in
+
+			if is_variable_used_somewhere || is_special_global_time then (
+			    true
+            )
 			else (
 				(* First print a warning *)
 				print_warning ("The " ^ variable_type_name ^ " `" ^ variable_name ^ "` is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
@@ -3302,7 +3218,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
-	let discrete_names = discrete_names in
 
 	(* Make only one list for all variables *)
     (* Keep order (parameters, clocks, discretes) *)
@@ -3528,11 +3443,24 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Get user functions metadata from parsed functions *)
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
-    let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
-(*     TODO benjamin TEST no remove of unused functions*)
-(*    let used_function_definitions = parsed_model.fun_definitions in*)
+    let used_function_definitions =
+        (*
+        if options#no_variable_autoremove then
+            parsed_model.fun_definitions
+        else
+        *)
+            List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
+    in
 
-    (* let used_function_definitions = List.map (ParsingStructureGraph.remove_unused_instructions_in_fun_def dependency_graph) used_function_definitions in *)
+    let used_function_definitions =
+        if options#no_variable_autoremove then
+            (* No variable auto remove, keep all instructions in function *)
+            used_function_definitions
+        else
+            (* If variable auto remove, remove unused clock assignments *)
+            List.map (ParsingStructureGraph.remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions
+    in
+
 
     (* Check for function cycles *)
 
@@ -3756,7 +3684,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions useful_parsing_model_information user_function_definitions_table transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info dependency_graph useful_parsing_model_information user_function_definitions_table transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4193,22 +4121,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let transition_contains_complex_update (transition : AbstractModel.transition) : bool =
 		let is_clock_update_complex = function
 			| No_update
-			| Resets _
-				-> false
+			| Resets _ -> false
 			| Updates _ -> true
 		in
-		let rec is_updates_complex (updates : AbstractModel.updates) : bool =
-			(* Check the "clock updates" part *)
-			(is_clock_update_complex updates.clock)
-			(* Check the "conditional updates" part *)
-			||
-			(List.exists is_conditional_updates_complex updates.conditional)
-		and is_conditional_updates_complex (conditional_update : AbstractModel.conditional_update) : bool =
-			let (_, updates_if, updates_else) = conditional_update in
-			is_updates_complex updates_if || is_updates_complex updates_else
-		in
-		let is_mix_updates_complex (clock_update, _) = is_clock_update_complex clock_update in
-		is_updates_complex transition.updates || is_mix_updates_complex transition.new_updates
+
+		let is_updates_complex (clock_update, _) = is_clock_update_complex clock_update in
+		is_updates_complex transition.updates
 	in
 	
 	let has_complex_updates : bool = 

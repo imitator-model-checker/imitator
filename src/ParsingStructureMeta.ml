@@ -29,11 +29,6 @@ let rec variable_name_of_parsed_scalar_or_index_update_type = function
     | Parsed_scalar_update variable_name -> variable_name
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
-(* Gather all updates of update section (pre-updates, updates and post-updates) *)
-let updates_of_update_section update_section =
-    let updates, _ = update_section in
-    updates
-
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
 (* If the expression is more complex, return None *)
 let discrete_boolean_expression_constant_value_opt = function
@@ -47,8 +42,14 @@ let is_constant variable_infos local_variables = function
     | Leaf_variable (Leaf_global_variable variable_name)
     | Leaf_variable (Leaf_local_variable (variable_name, _, _))-> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
-    (* TODO benjamin IMPROVE not always true, a function can be constant *)
+    (* TODO benjamin IMPROVE not always true, a function can be constant if it's content is constant too *)
     | Leaf_fun _ -> false
+
+(* Check if leaf is a function call *)
+let has_fun_call _ = function
+    | Leaf_fun _ -> true
+    | Leaf_variable _
+    | Leaf_constant _ -> false
 
 (* Check if leaf has side effects *)
 let has_side_effects variable_infos local_variables = function
@@ -58,6 +59,7 @@ let has_side_effects variable_infos local_variables = function
     | Leaf_variable _
     | Leaf_constant _ -> false
 
+(* TODO benjamin CLEAN UPDATES *)
 let has_side_effects_on_update variable_infos local_variables = function
         | Leaf_update_variable (Leaf_global_variable variable_name, _)
         | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) ->
@@ -231,6 +233,11 @@ let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exist
 let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects_on_update variable_infos) (has_side_effects variable_infos)
 (* Check if a parsed state predicate has side effects *)
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
+
+(* Check if a parsed boolean expression contains function call(s) *)
+let has_fun_call_parsed_boolean_expression = exists_in_parsed_boolean_expression has_fun_call
+(* Check if a parsed discrete arithmetic expression contains function call(s) *)
+let has_fun_call_parsed_discrete_arithmetic_expression = exists_in_parsed_discrete_arithmetic_expression has_fun_call
 
 (* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function

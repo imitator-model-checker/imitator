@@ -60,7 +60,7 @@ let string_of_sync model action_index =
 	| Action_type_sync -> (model.action_names action_index) ^ "\\n"
 	| Action_type_nosync -> ""
 
-
+(* TODO benjamin CLEAN UPDATES *)
 (** Convert clock updates into a string *)
 let string_of_clock_updates variable_names clock_updates =
 	let sep = "\\n" in
@@ -70,6 +70,7 @@ let string_of_clock_updates variable_names clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names linear_term) in
 	ModelPrinter.string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
+(* TODO benjamin CLEAN UPDATES *)
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates variable_names discrete_updates =
 	ModelPrinter.string_of_discrete_updates ~sep:"\\n" variable_names discrete_updates
@@ -84,8 +85,8 @@ let string_of_conditional_updates variable_names conditional_updates =
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index source_location transition =
-(* s_12 -> s_5 [label="bUp"]; *)
-	let first_separator, second_separator = ModelPrinter.separator_comma transition.updates in
+    (* s_12 -> s_5 [label="bUp"]; *)
+	let _, update_seq_code_bloc = transition.updates in
 	"\n\t"
 	(* Source *)
 	^ (id_of_location automaton_index source_location)
@@ -118,15 +119,8 @@ let string_of_transition model automaton_index source_location transition =
 		)
 	(* Sync *)
 	^ (string_of_sync model transition.action)
-	(* Clock updates *)
-	^ (string_of_clock_updates model.variable_names transition.updates.clock)
-	(* Add a \n in case of both clocks and discrete *)
-	^ (if first_separator then "\\n" else "")
-	(* Discrete updates *)
-	^ (string_of_discrete_updates model.variable_names transition.updates.discrete)
-	(* Add a \n in case of both discrete and conditional updates *)
-	^ (if second_separator then "\\n" else "")
-	^ (string_of_conditional_updates model.variable_names transition.updates.conditional)
+	(* Updates *)
+	^ ModelPrinter.string_of_seq_code_bloc model 1 update_seq_code_bloc
 	^ "\"];"
 
 

@@ -161,17 +161,23 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
         (* Check that no variable (clocks, discrete) was updated by a param *)
         let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
-            (* Get eventual var type (or none if variable was not declared or removed) *)
-            let right_params =
-                List.filter_map (fun right_variable_name ->
-                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
-                    match var_type_opt with
-                    | Some Var_type_parameter -> Some right_variable_name
-                    | _ -> None
-                ) right_variable_names
-            in
-            let has_right_params = List.length right_params > 0 in
-            if has_right_params then (left_variable_name, right_params) :: acc else acc
+            let left_var_type = VariableInfo.var_type_of_variable_or_constant variable_infos left_variable_name in
+
+            match left_var_type with
+            (* We are able to update a clock with a parameter *)
+            | Var_type_clock -> []
+            | _ ->
+                (* Get eventual var type (or none if variable was not declared or removed) *)
+                let right_params =
+                    List.filter_map (fun right_variable_name ->
+                        let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
+                        match var_type_opt with
+                        | Some Var_type_parameter -> Some right_variable_name
+                        | _ -> None
+                    ) right_variable_names
+                in
+                let has_right_params = List.length right_params > 0 in
+                if has_right_params then (left_variable_name, right_params) :: acc else acc
 
         ) [] left_right_variable_names in
 
@@ -613,6 +619,7 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
     (* Convert clock updates to linear terms *)
+    (* ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc *)
     ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
     (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc

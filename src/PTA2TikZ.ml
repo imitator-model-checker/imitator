@@ -102,7 +102,8 @@ let string_of_sync model action_index =
 	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
-
+(* TODO benjamin CLEAN UPDATES *)
+(*
 (** Convert clock updates into a string *)
 let string_of_clock_updates variable_names clock_updates =
 	let sep = "\\n" in
@@ -133,12 +134,15 @@ let string_of_conditional_updates variable_names conditional_updates =
 	let wrap_end = "\n\t\t\\multicolumn{2}{l}{end}%" in
 	let sep = "" in
 	ModelPrinter.string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
+*)
+
+let string_of_seq_code_bloc variable_names seq_code_bloc = "" (* TODO benjamin IMPLEMENT !*)
+
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index source_location transition =
-	let clock_updates = transition.updates.clock in
-	let discrete_updates = transition.updates.discrete in
-	let conditional_updates = transition.updates.conditional in
+	let _, update_seq_code_bloc = transition.updates in
+
 	let source_location_name = model.location_names automaton_index source_location in
 	let destination_location_name = model.location_names automaton_index transition.target in
 
@@ -158,12 +162,8 @@ let string_of_transition model automaton_index source_location transition =
 	^ (string_of_sync model transition.action)
 
 	(* UPDATES *)
-	(* Clock updates *)
-	^ (string_of_clock_updates model.variable_names clock_updates)
-	(* Discrete updates *)
- 	^ (string_of_discrete_updates model.variable_names discrete_updates)
-	(* Conditional updates *)
-	^ (string_of_conditional_updates model.variable_names conditional_updates)
+	(* Updates *)
+	^ string_of_seq_code_bloc model.variable_names update_seq_code_bloc
 
 	(* The end *)
 	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"

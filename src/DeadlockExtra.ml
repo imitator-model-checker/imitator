@@ -45,11 +45,9 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
 		let transitions_description = model.transitions_description transition_index in
-		(** Collecting the updates by evaluating the conditions, if there is any *)
-        let _ (* no clock update for seq updates *), discrete_updates = AlgoStateBased.get_updates (Some model.variable_names) (Some model.functions_table) glob_location transitions_description.updates in
 
-        (* Make `seq` sequential updates (make these updates now, only on discrete) *)
-        List.iter (direct_update (Some model.variable_names) (Some model.functions_table) discrete_access) (List.rev discrete_updates);
+        let _, update_seq_code_bloc = transitions_description.updates in
+        eval_seq_code_bloc (Some model.variable_names) (Some model.functions_table) discrete_access update_seq_code_bloc;
 	) transition;
 
     let discrete = State.discrete_constraint_of_global_location model location in
@@ -87,6 +85,8 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
 
+(* TODO benjamin CLEAN UPDATES *)
+(*
 let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
@@ -101,6 +101,23 @@ let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transiti
 
 	(* Keep each update once *)
     (* TODO: check for inconsistent updates? *)
+	OCamlUtilities.list_only_once updates
+*)
+let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+
+	(* For all transitions involved in the combined transition *)
+	let updates = List.fold_left (fun current_updates transition_index ->
+		(* Get the actual transition *)
+		let transition = model.transitions_description transition_index in
+		let clock_updates, _ = transition.updates in
+        clock_updates :: current_updates
+	) [] combined_transition
+	in
+
+	(* Keep each update once *)
+    (* TODO: check for inconsistent updates? see with new sequential updates and rewritten clocks ! *)
 	OCamlUtilities.list_only_once updates
 
 let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index transition s2_index =

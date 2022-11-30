@@ -1,4 +1,5 @@
 open CustomModules
+open OCamlUtilities
 open Automaton
 open DiscreteState
 open AbstractModel
@@ -11,7 +12,9 @@ open Exceptions
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+(* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
+type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -26,7 +29,8 @@ type eval_context = {
     (* Current local variables *)
     local_variables : variable_table list;
     (**)
-    updated_clocks : clock_updates_history
+    updated_clocks : clock_updates_history;
+    updated_clocks_ordered : clock_updates_history_2;
 }
 
 (* Result returned on delayed update *)
@@ -37,7 +41,7 @@ type delayed_update_result =
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; }
+    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
@@ -141,6 +145,43 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
             IR_Times (coef, rewrite_clock_update_rec linear_term)
     in
     rewrite_clock_update_rec (* linear_expr *)
+
+
+(* TODO benjamin CLEAN message for debug, remove model parameter *)
+(* Get clocks that were updated effectively (found in eval context) *)
+let effective_clock_updates eval_context model =
+
+    (* Get ordered clock updates from context *)
+    let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
+
+    List.iter (fun (clock_index, l) ->
+        let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
+        ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
+    ) updated_clocks;
+
+    if List.length updated_clocks = 0 then (
+        ImitatorUtilities.print_standard_message ("no updates");
+        No_update
+    ) else (
+
+        let is_all_resets =
+            List.for_all (fun (_, linear_expr) ->
+                match linear_expr with
+                | LinearConstraint.IR_Coef coef -> NumConst.equal coef NumConst.zero
+                | _ -> false
+            ) updated_clocks
+        in
+
+        if is_all_resets then (
+            ImitatorUtilities.print_standard_message ("only resets");
+            let clock_indexes = List.map first_of_tuple updated_clocks in
+            Resets clock_indexes
+        ) else (
+            ImitatorUtilities.print_standard_message ("updates: " ^ string_of_int (List.length updated_clocks));
+            Updates updated_clocks
+        )
+    )
+
 
 (* Evaluate an expression *)
 let rec eval_global_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -586,6 +627,8 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
+
 
             (match variable_names with
             | Some variable_names ->
@@ -595,6 +638,8 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             ImitatorUtilities.print_standard_message (variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`")
             | _ -> ()
             );
+
+
 
     in
 
