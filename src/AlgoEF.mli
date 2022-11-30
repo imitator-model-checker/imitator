@@ -28,6 +28,9 @@ class algoEF : AbstractModel.abstract_model -> AbstractProperty.state_predicate 
 		(* Class variables *)
 		(************************************************************)
 
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Name of the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method algorithm_name : string
 
 
@@ -35,5 +38,8 @@ class algoEF : AbstractModel.abstract_model -> AbstractProperty.state_predicate 
 		(* Class methods *)
 		(************************************************************)
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Method packaging the result output by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_result : Result.imitator_result
 end

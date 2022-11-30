@@ -2531,7 +2531,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	val nb_NEGATIVE_EXAMPLES_MAX : int = 6
 
 
+	(*------------------------------------------------------------*)
 	(* Counters *)
+	(*------------------------------------------------------------*)
 	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
 
 	val counter_compute_p_constraint_with_cache = create_hybrid_counter_and_register "AlgoStateBased.compute_p_constraint_with_cache" States_counter Verbose_experiments

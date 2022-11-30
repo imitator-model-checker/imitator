@@ -3,8 +3,8 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Main file for IMITATOR
  *
@@ -759,7 +759,6 @@ match options#imitator_mode with
 			(* Reachability *)
 			(************************************************************)
 			| EF state_predicate ->
-
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model state_predicate in myalgo
 
 
@@ -1045,8 +1044,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-
-				raise (NotImplemented "Timed games")
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model state_predicate in myalgo
 
 
 			(************************************************************)

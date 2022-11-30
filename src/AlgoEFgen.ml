@@ -43,11 +43,15 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 	(* Class variables *)
 	(************************************************************)
 	
+	(*------------------------------------------------------------*)
 	(* Counters *)
+	(*------------------------------------------------------------*)
+
 	(*** NOTE: if EF is called several times, then each call will create a counter ***)
 	
-	(* The bad state has been found *)
-	val counter_found_bad = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
+	(* The target state has been found *)
+	val counter_found_target = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
+
 	(* Methods counters *)
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
@@ -126,7 +130,7 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 				); (* end if projection *)
 
 				(* Statistics *)
-				counter_found_bad#increment;
+				counter_found_target#increment;
 				
 				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
 				(*** NOTE: advantage of doing it twice: print less information :-) ***)
