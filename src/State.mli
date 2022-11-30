@@ -70,7 +70,8 @@ val match_state_predicate : AbstractModel.abstract_model -> (Automaton.automaton
 
 (************************************************************)
 (** Constraints satisfaction *)
-(*************************************************************)
+(************************************************************)
+
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 val evaluate_d_nonlinear_constraint_in_location : AbstractModel.abstract_model -> DiscreteState.global_location -> AbstractModel.discrete_guard -> bool
@@ -84,9 +85,11 @@ val is_discrete_guards_satisfied : AbstractModel.abstract_model -> DiscreteState
 (** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
 val is_constraint_and_continuous_guard_satisfiable : LinearConstraint.pxd_linear_constraint -> AbstractModel.guard -> bool
 
+
 (************************************************************)
 (** Computation of invariants *)
-(*************************************************************)
+(************************************************************)
+
 
 (** Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 val discrete_constraint_of_global_location : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint
@@ -101,6 +104,24 @@ val compute_invariant : AbstractModel.abstract_model -> DiscreteState.global_loc
 (** Compute the invariant associated to a location and valuate the value of the discrete variables   *)
 val compute_valuated_invariant : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.px_linear_constraint
 
+
+(************************************************************)
+(************************************************************)
+(** Operations on states: computation of successors and predecessors *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Time-elapsing and time-past *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Functions to apply the updates to a linear constraint (either by intersection with the updates, or by existential quantification) *)
+(* linear_constraint: the linear constraint (modified by this function) *)
+(* clock_updates    : the list of clock updates to apply *)
+(*------------------------------------------------------------*)
+val apply_updates_assign_forward : AbstractModel.abstract_model -> LinearConstraint.pxd_linear_constraint -> AbstractModel.clock_updates list -> unit
+val apply_updates_assign_backward : AbstractModel.abstract_model -> LinearConstraint.pxd_linear_constraint -> AbstractModel.clock_updates list -> unit
 
 
 (************************************************************)

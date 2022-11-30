@@ -59,10 +59,10 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
 let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z updates transition =
-(*     let model = Input.get_model () in (* only for printing *) *)
+    let model = Input.get_model () in
     let constr = px_copy z in
     let constr_pxd = pxd_of_px_constraint constr in
-    (AlgoStateBased.apply_updates_assign_backward constr_pxd updates);
+    (State.apply_updates_assign_backward model constr_pxd updates);
 
     let constr_px = dl_instantiate_discrete_after_seq state_space state_index constr_pxd transition in
 

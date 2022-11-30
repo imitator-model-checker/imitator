@@ -243,7 +243,7 @@ let get_clocks_in_updates (updates : AbstractModel.clock_updates list) : Automat
 (* Check whether there are some complex updates of the form clock' = linear_term *)
 (*------------------------------------------------------------*)
 
-
+(*
 (*------------------------------------------------------------*)
 (* Generic function to apply the updates to a linear constraint (either by intersection with the updates, or by existential quantification) *)
 (* time_direction   : if Forward, then apply updates; if Backward, apply 'inverted' updates *)
@@ -559,7 +559,7 @@ let apply_updates_assign = apply_updates_assign_gen LinearConstraint.Time_forwar
 (*------------------------------------------------------------*)
 (* Apply the updates to a linear constraint by existential quantification and with backward direction (that is, when applying x := x+y+i+1, "x+y+i+1" is replaced with "x" *)
 (*------------------------------------------------------------*)
-let apply_updates_assign_backward = apply_updates_assign_gen LinearConstraint.Time_backward
+let apply_updates_assign_backward = apply_updates_assign_gen LinearConstraint.Time_backward*)
 
 
 (*------------------------------------------------------------*)
@@ -1089,7 +1089,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 				| Some clock_index ->
 				(* Reset it *)
 					print_message Verbose_medium "Resetting the special reset clock…";
-					apply_updates_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+					State.apply_updates_assign_forward model source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
 			end;
 
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
@@ -1145,7 +1145,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 		);
 
 		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
-		apply_updates_assign current_constraint clock_updates;
+		State.apply_updates_assign_forward model current_constraint clock_updates;
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nResult:");
@@ -1685,7 +1685,7 @@ let discrete_predecessors
 	);
 
 	(* Apply the inverted updates (from n-1 to n) *)
-	apply_updates_assign_backward current_pxd_constraint updates_n_minus_1_n;
+	State.apply_updates_assign_backward model current_pxd_constraint updates_n_minus_1_n;
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -1731,6 +1731,7 @@ let discrete_predecessors
 
 (* Rebuild the "initial admissible valuations" after taking a transition from state n-1 to n, i.e., apply guard and updates to z_n-1, and intersect with z_n *)
 let compute_admissible_valuations_after_transition
+		(model					: AbstractModel.abstract_model)
 		(state_n_minus_1		: State.state)
 		(transition_n_minus_1_n	: StateSpace.combined_transition)
 		(state_n				: State.state)
@@ -1752,7 +1753,7 @@ let compute_admissible_valuations_after_transition
 	let z_n_minus_1_and_continuous_guard : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection ((LinearConstraint.pxd_of_px_constraint z_n_minus_1) :: continuous_guards) in
 
 	(* Apply updates *)
-	apply_updates_assign z_n_minus_1_and_continuous_guard updates_n_minus_1;
+	State.apply_updates_assign_forward model z_n_minus_1_and_continuous_guard updates_n_minus_1;
 
 	(* Remove discrete from n, as they can be different from discrete at n+1 *)
 	let z_n_minus_1_and_continuous_guard_without_discrete : LinearConstraint.px_linear_constraint = LinearConstraint.pxd_hide_discrete_and_collapse z_n_minus_1_and_continuous_guard in
@@ -1971,7 +1972,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (predeces
 		let state_n			: State.state							= state_space#get_state symbolic_step_n.source in
 
 		(* Call dedicated function *)
-		let admissible_initial_valuations : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n transition_n_n_plus_1 target_state in
+		let admissible_initial_valuations : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition model state_n transition_n_n_plus_1 target_state in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
@@ -2126,7 +2127,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (predeces
 			let state_n_minus_1			: State.state						= state_space#get_state symbolic_step_n_minus_1.source in
 
 			(* Call dedicated function *)
-			let admissible_initial_valuations_at_n : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition state_n_minus_1 transition_n_minus_1_n state_n in
+			let admissible_initial_valuations_at_n : LinearConstraint.px_linear_constraint = compute_admissible_valuations_after_transition model state_n_minus_1 transition_n_minus_1_n state_n in
 
 			admissible_initial_valuations_at_n
 		)

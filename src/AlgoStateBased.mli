@@ -66,12 +66,6 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (* Class-independent functions *)
 (**************************************************************)
 
-
-
-
-
-val apply_updates_assign_backward : LinearConstraint.pxd_linear_constraint -> (AbstractModel.clock_updates list) -> unit
-
 (*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
 (* Returns a pair (stopped clocks, elapsing clocks)           *)
