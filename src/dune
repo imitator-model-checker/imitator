@@ -8,14 +8,11 @@
   automaton
   parsingStructure
   result)
- (flags
+ (link_flags
+  (:include link_flags.%{system})
   (:standard
    -cclib
-   -static
-   -cclib
    -lppl
-   -cclib
-   -ltinfo
    -cclib
    -lppl_ocaml
    -cclib
@@ -31,6 +28,16 @@
 
 (ocamlyacc
  (modules ModelParser PropertyParser))
+
+(rule
+ (with-stdout-to
+  link_flags.linux
+  (echo "(-cclib -static -cclib -ltinfo)")))
+
+(rule
+ (with-stdout-to
+  link_flags.macosx
+  (echo "()")))
 
 (env
  (dev
