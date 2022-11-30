@@ -43,6 +43,11 @@ val has_side_effect_parsed_normal_update : variable_infos -> normal_update -> bo
 (* Check if a parsed state predicate has side effects *)
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
 
+(* Check if a parsed boolean expression contains function call(s) *)
+val has_fun_call_parsed_boolean_expression : parsed_boolean_expression -> bool
+(* Check if a parsed discrete arithmetic expression contains function call(s) *)
+val has_fun_call_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> bool
+
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 (*
 val is_linear_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool

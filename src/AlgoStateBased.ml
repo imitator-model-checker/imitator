@@ -302,8 +302,6 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 					Hashtbl.replace clocks_hash clock_id linear_term;
 				) list_of_clocks_lt;
 		) clock_updates;
-		(* TODO benjamin CLEAN message *)
-		ImitatorUtilities.print_standard_message ("--------");
 
 		(* THREE CASES: no updates, only resets (to 0) or updates (to linear terms) *)
 

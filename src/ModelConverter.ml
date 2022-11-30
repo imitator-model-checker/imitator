@@ -3443,7 +3443,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Get user functions metadata from parsed functions *)
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
     (* Get only used user functions definition *)
-    let used_function_definitions = List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions in
+    let used_function_definitions =
+        (*
+        if options#no_variable_autoremove then
+            parsed_model.fun_definitions
+        else
+        *)
+            List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
+    in
 
     let used_function_definitions =
         if options#no_variable_autoremove then

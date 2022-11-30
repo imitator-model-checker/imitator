@@ -2015,7 +2015,7 @@ Number of discrete variables            : 1
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the state space (no float conversion)',
 		'input_files': ['testFloat.imi'],
-		'options'    : '-mode statespace -states-description',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testFloat-statespace.states' , 'content' : """
 pta: l2, i = 5/4, j = 1/3
@@ -2036,7 +2036,7 @@ pta: l2, i = 5/4, j = 1/3
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the state space (with float conversion)',
 		'input_files': ['testFloat.imi'],
-		'options'    : '-mode statespace -states-description -output-float',
+		'options'    : '-mode statespace -states-description -output-float -no-var-autoremove',
 		'expectations' : [
 		# NOTE: cut the end of the float just in case the OS doesn't represent them the same way…
 			{'file': 'testFloat-statespace.states' , 'content' : """
@@ -2138,7 +2138,7 @@ DESCRIPTION OF THE TRANSITIONS
 	{
 		'purpose'    : 'Test updates (printing)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-imi2IMI',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
@@ -3957,7 +3957,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-1.res' , 'content' : """
 Error                                   : invalid model
@@ -3980,7 +3980,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-2.res' , 'content' : """
 Error                                   : invalid model
@@ -4959,7 +4959,7 @@ P: lend, s = stack([0]), i = 2, j = 0
 	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-mode statespace -depth-limit 4 -states-description',
+		'options'    : '-mode statespace -depth-limit 4 -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testUpdates-statespace.states' , 'content' : """
 
@@ -5048,7 +5048,7 @@ pta1: lend, pta2: lend, pta3: lend, r1 = 0, r2 = 2, r3 = 3, top1 = 0, top2 = 1, 
         'purpose'    : 'Test that constant update is forbidden',
         'input_files': ['updates/constant-update.imi'],
 		'tags': 'behavior, update',
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'constant-update.res' , 'content' : """
 Error                                   : invalid model
@@ -7365,7 +7365,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testEFexemplify-discrete.res' , 'content' : """
 BEGIN RESULT
@@ -11957,7 +11957,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -12168,7 +12168,7 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 

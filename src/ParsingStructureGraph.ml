@@ -139,6 +139,8 @@ let refs_of_parsed_scalar_or_index_update_type local_variables (* parsed_scalar_
 let is_clock local_variables declarations_info variable_name =
     not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.clock_names
 
+let is_discrete local_variables declarations_info variable_name =
+    not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.discrete_names
 
 let is_reset variable_name = function
     | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) ->
@@ -170,12 +172,24 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
             let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
             (* Create relation between current code bloc and declared variable *)
-(*            let bloc_relation = bloc_ref, variable_ref in*)
+            let bloc_relation = bloc_ref, variable_ref in
 
             (* Concat relations *)
-            relations (* @ [bloc_relation] *)
+            relations @ [bloc_relation]
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
+
+            let rec contains_function_call =
+                let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
+                let rec has_indexes_fun_call = function
+                    | Parsed_scalar_update variable_name -> false
+                    | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
+                        let index_contains_fun_call = ParsingStructureMeta.has_fun_call_parsed_discrete_arithmetic_expression index_expr in
+                         index_contains_fun_call || has_indexes_fun_call inner_scalar_or_index_update_type
+                in
+                has_fun_call || has_indexes_fun_call parsed_scalar_or_index_update_type
+            in
+
 
             let rec relations_of_scalar_or_index_update_type = function
                 | Parsed_scalar_update variable_name ->
@@ -196,10 +210,19 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                         let all_refs = refs_in_parsed_boolean_expression local_variables expr in
                         let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                        (* For sake of simplicity we consider all assigned variable as used *)
-                        let assigned_variable_relation = bloc_ref, variable_ref in
+                        (* Check if assigned expression contains function call(s) *)
+                        (* If there are any function call, it mean that it may have side effects in expression *)
+                        (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
+                        let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
 
-                        assigned_variable_relation :: relations
+
+                        if has_fun_call then (
+                            let assigned_variable_relation = bloc_ref, variable_ref in
+                            assigned_variable_relation :: relations
+                        )
+                        else
+                            relations
+
                     )
 
                 | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
@@ -213,11 +236,33 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                     let all_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
+                    (* Check if index expression contains function call(s) *)
+                    (* If there are any function call, it mean that it may have side effects in expression *)
+                    (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
+                    let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
+
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     relations @ variable_use_variables_relations
             in
 
-            relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type
+            let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+            (* Create local variable ref representing a unique variable ref *)
+            let variable_ref = get_variable_ref local_variables variable_name in
+
+            let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+
+            let has_fun_call = contains_function_call in
+            if has_fun_call then (
+                let assigned_variable_relation = bloc_ref, variable_ref in
+                assigned_variable_relation :: relations
+            )
+            else
+                relations
+
+
+
+
+
 
         | Parsed_instruction expr ->
             let all_refs = refs_in_parsed_boolean_expression local_variables expr in
@@ -726,7 +771,7 @@ let used_components_of_model_list (_, component_relations) =
     in
 
     (* Get system refs *)
-    let system_refs = List.filter (fun (s, d) -> match s with Automaton_ref _ -> true | _ -> false) component_relations in
+    let system_refs = List.filter (fun (s, d) -> match s with System_ref -> true | _ -> false) component_relations in
     (* Find all reachable refs (variables / functions) from system refs... *)
     List.fold_left (fun acc system_ptr -> all_reachable_ref system_ptr @ acc) [] system_refs
 
@@ -799,8 +844,7 @@ let unused_functions_of_model dependency_graph =
 (* Remove all unused clock assignments in sequential code bloc *)
 let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
 
-    (* Get used components in model *)
-(*    let used_components = used_components_of_model_list dependency_graph in*)
+    (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
     let used_global_variables_list = string_set_to_list used_global_variables in
 
@@ -812,11 +856,14 @@ let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables decl
             (* Is only a clock reset ? We consider not use *)
             let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
+            let is_discrete = is_discrete local_variables declarations_info variable_name in
+
             let is_clock_reset = is_clock_reset local_variables declarations_info variable_name expr in
             let is_not_used = not (List.mem variable_name used_global_variables_list) in
 
-            if is_clock_reset && is_not_used then
+            if (is_clock_reset && is_not_used) || (not is_clock_reset && is_not_used) then (
                 None
+            )
             else
                 Some instruction
 

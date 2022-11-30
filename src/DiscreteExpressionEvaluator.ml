@@ -363,7 +363,6 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Arithmetic_comparison (l_expr, relop, r_expr) ->
-        ImitatorUtilities.print_standard_message ("arihtmetic compare");
         (operator_of_relop relop)
             (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
             (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
