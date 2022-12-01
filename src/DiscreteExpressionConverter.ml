@@ -403,8 +403,25 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             )
         in
 
-        let print_variable_in_fun_not_declared_opt = Some print_variable_in_fun_not_declared in
-        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos print_variable_in_fun_not_declared_opt fun_def
+        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos (Some print_variable_in_fun_not_declared) fun_def
+    in
+
+    (* Check if all functions called in function definition are defined *)
+    let is_all_functions_defined =
+
+        (* Prepare callback function that print error message when undeclared function is found *)
+        let print_function_in_fun_not_declared variable_name =
+            print_error (
+                "Function `"
+                ^ variable_name
+                ^ "` used in function `"
+                ^ fun_def.name
+                ^ "` was not declared."
+            )
+        in
+
+        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos (Some print_function_in_fun_not_declared) fun_def
+
     in
 
     (* Check if there isn't duplicate parameter with inconsistent types *)
@@ -446,10 +463,11 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         List.length duplicate_parameters = 0
     in
 
+    (* Get code bloc and return expression of the function *)
     let code_bloc, _ = fun_def.body in
 
     (* Return *)
-     check_seq_code_bloc_assignments variable_infos fun_def.name code_bloc && is_all_variables_defined && is_consistent_duplicate_parameters
+    check_seq_code_bloc_assignments variable_infos fun_def.name code_bloc && is_all_variables_defined && is_all_functions_defined && is_consistent_duplicate_parameters
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_discrete_init variable_infos variable_name expr =
