@@ -60,7 +60,7 @@ loc l2: invariant True
         & rational_of_int((i + 1) * 2) > j + 1 & (True)
         & x > j
         & p = x + k
-    do { b1 := not(b1), b2 := not(b2), i := 0, j := 1, x := 0 , if not(b1) & (2 + 1 > 3 | 1 < 2) & k < 10 then k := k + 1 end }
+    do { b1 := not(b1), b2 := not(b2), i := 0, j := 1, x := 0 , if b1 & (2 + 1 > 3 | 1 < 2) & k < 10 then k := k + 1 end }
     goto l1;
 	
 accepting loc lend: invariant True
