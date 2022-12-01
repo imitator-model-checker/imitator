@@ -185,7 +185,7 @@ let default_string = {
 	true_string   = "True";
 	false_string  = "False";
 	and_operator  = "\n& ";
-	or_operator   = " or ";
+	or_operator   = "\n| ";
 	l_operator    = " < ";
 	le_operator   = " <= ";
 	eq_operator   = " = ";
@@ -201,7 +201,7 @@ let default_string_without_whitespace = {
 	true_string   = "True";
 	false_string  = "False";
 	and_operator  = "\n& ";
-	or_operator   = " or ";
+	or_operator   = "\n| ";
 	l_operator    = "<";
 	le_operator   = "<=";
 	eq_operator   = "=";
