@@ -869,9 +869,13 @@ let rec customized_string_of_scalar_or_index_update_type customized_string varia
 (* String representation of a variable update *)
 let string_of_scalar_or_index_update_type = customized_string_of_scalar_or_index_update_type Constants.global_default_string
 
-let string_of_discrete_update variable_names (scalar_or_index_update_type, expr) =
-    let str_left_member = string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type in
-    str_left_member ^ " := " ^ string_of_global_expression variable_names expr
+(* Get string of a discrete update *)
+let customized_string_of_discrete_update customized_string variable_names (scalar_or_index_update_type, expr) =
+    let str_left_member = customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type in
+    str_left_member ^ customized_string.assign_op ^ customized_string_of_global_expression customized_string variable_names expr
+
+(* Get string of a discrete update with default strings *)
+let string_of_discrete_update = customized_string_of_discrete_update global_default_string
 
 (* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names nonlinear_constraint =

@@ -166,6 +166,7 @@ type customized_string = {
     arithmetic_string : customized_arithmetic_string;
     boolean_string : customized_boolean_string;
     array_string : customized_array_string;
+    assign_op : string;
     binary_word_representation : customized_binary_word_representation;
 }
 

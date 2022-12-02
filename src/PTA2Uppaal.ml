@@ -51,12 +51,13 @@ let all_uppaal_strings : customized_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = uppaal_boolean_strings;
     array_string = uppaal_array_strings;
+    assign_op = " = ";
     binary_word_representation = Binary_word_representation_int;
 }
 
 let uppaal_update_separator = ", "
 
-let uppaal_assignment = " = "
+
 
 
 (* Positioning *)
@@ -507,7 +508,7 @@ and string_of_instruction ?(sep=";") variable_names = function
 
     | Assignment discrete_update
     | Local_assignment discrete_update ->
-        DiscreteExpressions.string_of_discrete_update variable_names discrete_update ^ sep
+        DiscreteExpressions.customized_string_of_discrete_update all_uppaal_strings variable_names discrete_update ^ sep
 
     | Clock_assignment (clock_index, expr) ->
         let variable_name = variable_names clock_index in
@@ -801,7 +802,7 @@ let string_of_discrete_updates model updates =
         (* Convert the variable access to string *)
 		let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
 		variable_name
-		^ (if variable_name <> "" then uppaal_assignment else "")
+		^ (if variable_name <> "" then all_uppaal_strings.assign_op else "")
 		(* Convert the arithmetic_expression *)
 		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
 	) updates)
@@ -825,9 +826,9 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 			(* Arbitrarily, the first automaton index in the list is "!" and therefore responsible for resetting the number, and the others are "?", and therefore they increment *)
 			if automaton_index = List.nth automata_for_this_action 0
 				(* := 1 *)
-				then uppaal_assignment ^ (string_of_int 1)
+				then all_uppaal_strings.assign_op ^ (string_of_int 1)
 				(* ++ *)
-				else uppaal_assignment ^ discrete_name ^ " + 1"
+				else all_uppaal_strings.assign_op ^ discrete_name ^ " + 1"
 	(* Otherwise, no update *)
 	else ""
 	in
