@@ -2234,7 +2234,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let count_t = ref 1 in
 			DynArray.iter ( fun transition -> 
 				print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
-				let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
+				let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = transition in
 				(*work here*)
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
@@ -2304,7 +2304,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let count_t = ref 1 in
 		DynArray.iter ( fun transition -> 
 			print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
-			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
+			let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
 			let continuous_part_invariant_s0 = continuous_part_of_guard invariant_s0 in
 			print_message Verbose_low ("   continuous part of invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names continuous_part_invariant_s0 ) ) ;
@@ -2447,7 +2447,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) locations;
 
 		print_message Verbose_low ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 			print_message Verbose_low ("\n" 
 											^ source_location_index ^ " |-----> " ^ target_location_index 
 											^ "\n GUARD: \n"
@@ -2565,21 +2565,21 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] STAGE 3 - ADDING TRANSITIONS *)
 	DynArray.iter (fun (_, transitions, _, _, index, init_locs) ->
 
-		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 			let listCubLoc1 = Hashtbl.find_all index source_location_index in
 			let listCubLoc2 = Hashtbl.find_all index target_location_index in
 
 			List.iter (fun loc1 ->  
-				DynArray.add transitions (loc1, target_location_index, guard, clock_updates, action_index, discrete_update);
+				DynArray.add transitions (loc1, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc);
 			) listCubLoc1;
 
 			List.iter (fun loc2 ->  
-				DynArray.add transitions (source_location_index, loc2, guard, clock_updates, action_index, discrete_update);
+				DynArray.add transitions (source_location_index, loc2, guard, clock_updates, action_index, update_seq_code_bloc);
 			) listCubLoc2;
 
 			List.iter (fun loc1 -> 
 				List.iter (fun loc2 -> 
-					DynArray.add transitions (loc1, loc2, guard, clock_updates, action_index, discrete_update);
+					DynArray.add transitions (loc1, loc2, guard, clock_updates, action_index, update_seq_code_bloc);
 				) listCubLoc2;
 			) listCubLoc1;
 
@@ -2599,7 +2599,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_low ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_low ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 			print_message Verbose_low ("\n" 
 											^ source_location_index ^ " |-----> " ^ target_location_index 
 											(* ^ "\n GUARD: \n"
@@ -2626,7 +2626,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_transitions = DynArray.make 0 in
 	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
 		for i = 1 to (DynArray.length transitions) do
-			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = DynArray.get transitions (i-1) in
+			let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = DynArray.get transitions (i-1) in
 			let s0_cons = Hashtbl.find locations location_index in
 			let s1_cons = Hashtbl.find locations target_location_index in
 
@@ -2687,7 +2687,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		print_message Verbose_low ("\n----------------SUB MODEL: "^ (string_of_int !model_count) ^"----------------" );
 
 		print_message Verbose_low ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length transitions) );
-		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 			print_message Verbose_low ("\n" 
 											^ source_location_index ^ " |-----> " ^ target_location_index 
 											(* ^ "\n GUARD: \n"
@@ -2769,10 +2769,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		) locations;
 
-		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) -> 
 			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
 			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
-			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, update_seq_code_bloc);
 
 		) transitions;
 
@@ -2852,10 +2852,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		) locations;
 
-		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) -> 
 			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
 			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
-			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, update_seq_code_bloc);
 
 		) transitions;
 
@@ -2920,10 +2920,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		) locations;
 
-		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) -> 
 			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index_2 in
 			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index_2 in
-			DynArray.add newtransitions_2 (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+			DynArray.add newtransitions_2 (newloc1, newloc2, guard, clock_updates, action_index, update_seq_code_bloc);
 
 		) transitions;
 
@@ -2975,7 +2975,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) new_invariants_per_location_hashtbl;
 
 		print_message Verbose_low ("\nNUMBER OF TRANSITIONS :"^ string_of_int (DynArray.length newtransitions) );
-		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, discrete_update) ->
+		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 
 			
 			print_message Verbose_low ("\n" 
@@ -3152,11 +3152,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	print_message Verbose_low ("\nSorting new transitions per origin location…");
 	
-	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index, discrete_update) -> 
+	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index, update_seq_code_bloc) -> 
 	
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", discrete_update = TODO)…");
+			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", update_seq_code_bloc = TODO)…");
 		);
 	
 		(* Get the source location index *)
@@ -3165,14 +3165,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let target_location_index = Hashtbl.find location_index_of_location_name newloc2 in
 		
 		(* Convert to abstract_model.transition *)
-		(* type transition = guard * clock_updates * discrete_update list * location_index *)
+		(* type transition = guard * clock_updates * update_seq_code_bloc list * location_index *)
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
 
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
-			updates = Resets clock_updates, [];
+			updates = Resets clock_updates, update_seq_code_bloc;
 			target		= target_location_index;
 		} in
 		
@@ -3527,7 +3527,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			(* Get the actual transition *)
 			let transition = new_transitions_description transition_index in
 			let clock_updates, update_seq_code_bloc = transition.updates in
-			let guard , clock_updates , discrete_update, target_location_index = transition.guard, clock_updates, update_seq_code_bloc, transition.target in
+			let guard , clock_updates , update_seq_code_bloc, target_location_index = transition.guard, clock_updates, update_seq_code_bloc, transition.target in
 			"["
 				^ "g=" ^ (ModelPrinter.string_of_guard model.variable_names guard)
 				^

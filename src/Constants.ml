@@ -177,6 +177,7 @@ type customized_string = {
     arithmetic_string : customized_arithmetic_string;
     boolean_string : customized_boolean_string;
     array_string : customized_array_string;
+    assign_op : string;
     binary_word_representation : customized_binary_word_representation;
 }
 
@@ -185,7 +186,7 @@ let default_string = {
 	true_string   = "True";
 	false_string  = "False";
 	and_operator  = "\n& ";
-	or_operator   = " or ";
+	or_operator   = "\n| ";
 	l_operator    = " < ";
 	le_operator   = " <= ";
 	eq_operator   = " = ";
@@ -201,7 +202,7 @@ let default_string_without_whitespace = {
 	true_string   = "True";
 	false_string  = "False";
 	and_operator  = "\n& ";
-	or_operator   = " or ";
+	or_operator   = "\n| ";
 	l_operator    = "<";
 	le_operator   = "<=";
 	eq_operator   = "=";
@@ -244,6 +245,7 @@ let global_default_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = default_string;
     array_string = default_array_string;
+    assign_op = " := ";
     binary_word_representation = Binary_word_representation_standard;
 }
 

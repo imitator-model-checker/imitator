@@ -278,6 +278,7 @@ val string_of_list_expression : variable_name_table -> list_expression -> string
 val string_of_stack_expression : variable_name_table -> stack_expression -> string
 val string_of_queue_expression : variable_name_table -> queue_expression -> string
 
+val customized_string_of_discrete_update : Constants.customized_string -> variable_name_table -> discrete_update -> string
 val string_of_discrete_update : variable_name_table -> discrete_update -> string
 val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> variable_name_table -> scalar_or_index_update_type -> string
 val string_of_scalar_or_index_update_type : variable_name_table -> scalar_or_index_update_type -> string
