@@ -444,6 +444,25 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
                 ^ "."
             ));
 
+        (* Check that no argument is a clock *)
+        let args_clock_or_param_names = List.fold_left (fun acc expr -> StringSet.union acc (ParsingStructureMeta.get_clocks_and_parameters_in_parsed_boolean_expression variable_infos expr)) StringSet.empty argument_expressions in
+        let args_clock_or_param_names_list = OCamlUtilities.string_set_to_list args_clock_or_param_names in
+
+        let is_any_clock_or_param_in_args = List.length args_clock_or_param_names_list > 0 in
+
+        if is_any_clock_or_param_in_args then (
+            let str_clock_names = OCamlUtilities.string_of_list_of_string_with_sep ", " args_clock_or_param_names_list in
+
+            raise (TypeError (
+                "Some arguments in `"
+                ^ string_of_parsed_factor variable_infos func
+                ^ "` contains clock(s) or parameter(s) `"
+                ^ str_clock_names
+                ^ "`. Unable to use a clock or parameter as function argument."
+            ))
+        );
+
+
         (* Type check arguments *)
         (* We doesn't infer arguments types because arguments types are not dependent of the context *)
         let type_checks = List.map (type_check_parsed_boolean_expression local_variables_opt variable_infos None (* None: mean no inference for arguments *)) argument_expressions in
@@ -618,7 +637,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
         List.map (type_check_parsed_instruction local_variables) parsed_seq_code_bloc
 
     and type_check_parsed_instruction local_variables = function
-        | Parsed_local_decl (variable_name, variable_type, expr, _) ->
+        | Parsed_local_decl (variable_name, variable_type, expr, _) as local_decl ->
 
             (* Eventually get a number type to infer *)
             let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
@@ -628,6 +647,21 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
 
             (* Add local variable to hashtable *)
             Hashtbl.replace local_variables variable_name variable_type;
+
+            (* Check that assigned expression doesn't contains any clock or parameter *)
+            let expr_clock_params = ParsingStructureMeta.get_clocks_and_parameters_in_parsed_boolean_expression variable_infos expr in
+
+            (* If there is any clock or parameter in init expression of a local declaration, raise a type error *)
+            if expr_clock_params <> StringSet.empty then (
+                let str_expr_clock_params = OCamlUtilities.string_of_list_of_string_with_sep ", " (OCamlUtilities.string_set_to_list expr_clock_params) in
+                raise (TypeError (
+                    "Clock(s) or parameter(s) `"
+                    ^ str_expr_clock_params
+                    ^ "` found in `"
+                    ^ ParsingStructureUtilities.string_of_parsed_instruction variable_infos local_decl
+                    ^ "`. Unable to init a local discrete variable with a clock or parameter."
+                ))
+            );
 
             (* Check compatibility between local variable declared type and it's init expression *)
             if not (is_discrete_type_compatibles variable_type init_discrete_type) then

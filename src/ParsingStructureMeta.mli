@@ -96,6 +96,7 @@ val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -
 
 val get_variables_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
 val get_functions_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
+val get_clocks_and_parameters_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> StringSet.t
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
 val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t

@@ -463,11 +463,34 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         List.length duplicate_parameters = 0
     in
 
+
     (* Get code bloc and return expression of the function *)
-    let code_bloc, _ = fun_def.body in
+    let code_bloc, return_expr_opt = fun_def.body in
+
+    (* Check that function doesn't return any clock or parameter *)
+    let returned_clock_and_param_names =
+        match return_expr_opt with
+        | Some return_expr ->
+            let return_clock_and_param_names = ParsingStructureMeta.get_clocks_and_parameters_in_parsed_boolean_expression variable_infos return_expr in
+            OCamlUtilities.string_set_to_list return_clock_and_param_names
+        | None -> []
+    in
+
+    let is_return_clock_or_param = List.length returned_clock_and_param_names > 0 in
+
+    if is_return_clock_or_param then (
+        let str_clock_names = OCamlUtilities.string_of_list_of_string_with_sep ", " returned_clock_and_param_names in
+        print_error (
+            "Clock(s) or parameter(s) `"
+            ^ str_clock_names
+            ^ "` found in return of function `"
+            ^ fun_def.name
+            ^ "`. Unable to return clock or parameter."
+        )
+    );
 
     (* Return *)
-    check_seq_code_bloc_assignments variable_infos fun_def.name code_bloc && is_all_variables_defined && is_all_functions_defined && is_consistent_duplicate_parameters
+    check_seq_code_bloc_assignments variable_infos fun_def.name code_bloc && is_all_variables_defined && is_all_functions_defined && is_consistent_duplicate_parameters && not is_return_clock_or_param
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_discrete_init variable_infos variable_name expr =
