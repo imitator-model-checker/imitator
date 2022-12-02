@@ -467,57 +467,59 @@ let only_assignment_in_update seq_code_bloc =
         | _ -> false
     ) seq_code_bloc
 
-let string_of_seq_code_bloc ?(sep=";") variable_names (* seq_code_bloc *) =
+(* Convert sequential code bloc into UPPAAL strings *)
+let rec string_of_seq_code_bloc ?(sep=";") variable_names seq_code_bloc =
+    let str_instructions = List.map (string_of_instruction variable_names) seq_code_bloc in
+    OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
 
-    let rec string_of_seq_code_bloc_rec seq_code_bloc =
-        let str_instructions = List.map string_of_instruction seq_code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
+(* Convert an instruction into UPPAAL string *)
+and string_of_instruction ?(sep=";") variable_names = function
+    | Local_decl (variable_name, discrete_type, init_expr) ->
+        string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
+        ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings variable_names init_expr ^ sep
 
-    (* Convert a function expression into a string *)
-    and string_of_instruction = function
-        | Local_decl (variable_name, discrete_type, init_expr) ->
-            string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
-            ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings variable_names init_expr ^ sep
+    | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+        string_of_for_loop
+            variable_name
+            (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names from_expr)
+            (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names to_expr)
+            loop_dir
+            (string_of_seq_code_bloc ~sep:sep variable_names inner_bloc)
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
-            string_of_for_loop
-                variable_name
-                (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names from_expr)
-                (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names to_expr)
-                loop_dir
-                (string_of_seq_code_bloc_rec inner_bloc)
+    | While_loop (condition_expr, inner_bloc) ->
+        string_of_while_loop
+            (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings variable_names condition_expr)
+            (string_of_seq_code_bloc ~sep:sep variable_names inner_bloc)
 
-        | While_loop (condition_expr, inner_bloc) ->
-            string_of_while_loop
-                (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings variable_names condition_expr)
-                (string_of_seq_code_bloc_rec inner_bloc)
+    | If (condition_expr, then_bloc, else_bloc_opt) ->
+        (* Get string of else bloc if defined *)
+        let str_else_bloc =
+            match else_bloc_opt with
+            | Some else_bloc ->
+                string_of_seq_code_bloc ~sep:sep variable_names else_bloc
+            | None -> ""
+        in
 
-        | If (condition_expr, then_bloc, else_bloc_opt) ->
-            (* Get string of else bloc if defined *)
-            let str_else_bloc =
-                match else_bloc_opt with
-                | Some else_bloc ->
-                    string_of_seq_code_bloc_rec else_bloc
-                | None -> ""
-            in
+        string_of_if
+            (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings variable_names condition_expr)
+            (string_of_seq_code_bloc ~sep:sep variable_names then_bloc)
+            str_else_bloc
 
-            string_of_if
-                (DiscreteExpressions.customized_string_of_boolean_expression all_uppaal_strings variable_names condition_expr)
-                (string_of_seq_code_bloc_rec then_bloc)
-                str_else_bloc
+    | Assignment discrete_update
+    | Local_assignment discrete_update ->
+        DiscreteExpressions.string_of_discrete_update variable_names discrete_update ^ sep
 
-        | Assignment discrete_update
-        | Local_assignment discrete_update ->
-            DiscreteExpressions.string_of_discrete_update variable_names discrete_update ^ sep
+    | Clock_assignment (clock_index, expr) ->
+        let variable_name = variable_names clock_index in
+        variable_name ^ " = " ^ LinearConstraint.string_of_pxd_linear_term variable_names expr ^ sep
 
-        | Clock_assignment (clock_index, expr) ->
-            let variable_name = variable_names clock_index in
-            variable_name ^ " = " ^ LinearConstraint.string_of_pxd_linear_term variable_names expr ^ sep
+    | Instruction expr ->
+        DiscreteExpressions.string_of_global_expression variable_names expr ^ sep
 
-        | Instruction expr ->
-            DiscreteExpressions.string_of_global_expression variable_names expr ^ sep
-    in
-    string_of_seq_code_bloc_rec (* seq_code_bloc *)
+(* Convert a sequential code bloc into a UPPAAL string for <assignment> *)
+let string_of_simple_seq_code_bloc variable_names seq_code_bloc =
+    let str_instructions = List.map (string_of_instruction ~sep:"" variable_names) seq_code_bloc in
+    OCamlUtilities.string_of_list_of_string_with_sep "," str_instructions
 
 (* Convert the function definitions into a string *)
 let string_of_fun_definitions model =
@@ -583,6 +585,7 @@ let string_of_complex_updates model =
         ) pta_without_obs |> List.concat
     in
 
+    (* Convert each complex update into UPPAAL function *)
     let str_complex_updates_functions =
 
         List.map (fun (automaton_index, location_index, action_index, transition) ->
@@ -602,6 +605,7 @@ let string_of_complex_updates model =
         ) all_transitions
 
 	in
+	(* Return concatenated string *)
 	OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings "\n\n" str_complex_updates_functions
 
 
@@ -841,9 +845,12 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 			if no_updates || update_strong_broadcast = "" then "" else uppaal_update_separator
 		in
 
+        (* Convert updates to string *)
         let str_updates =
+            (* Only assignment, convert directly to list of updates *)
             if only_assignment_in_update update_seq_code_bloc then
-                string_of_seq_code_bloc ~sep:"," model.variable_names update_seq_code_bloc
+                string_of_simple_seq_code_bloc model.variable_names update_seq_code_bloc
+            (* Not only assignments in update, make call to previously defined function *)
             else
                 "update_" ^ string_of_int automaton_index ^ "_" ^ string_of_int action_index ^ "()"
         in
