@@ -57,7 +57,9 @@ type abstract_state = {
 let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
 
 (* Counter for updates of continuous variables (mostly PPL) *)
-let counter_updates_assign = create_hybrid_counter_and_register "StateBased.updates_assign" States_counter Verbose_experiments
+let counter_updates_assign = create_hybrid_counter_and_register "State.updates_assign" States_counter Verbose_experiments
+(* Counter for updates of continuous variables (mostly PPL) *)
+let counter_clock_updates_assign = create_discrete_counter_and_register "State.clock_updates_assign" States_counter Verbose_experiments
 
 
 
@@ -319,6 +321,11 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 
 
 	if clock_updates <> [] then(
+
+		(* Statistics *)
+		counter_clock_updates_assign#increment;
+
+
 		(* Merge updates *)
 
 		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
