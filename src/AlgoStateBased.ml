@@ -152,7 +152,7 @@ let counter_post_from_one_state = create_hybrid_counter_and_register "StateBased
 let counter_process_post_n = create_hybrid_counter_and_register "StateBased.process_post_n" States_counter Verbose_experiments
 
 (* Counter for updates of continuous variables (mostly PPL) *)
-let counter_updates_assign = create_hybrid_counter_and_register "StateBased.updates_assign" States_counter Verbose_experiments
+(* let counter_updates_assign = create_hybrid_counter_and_register "StateBased.updates_assign" States_counter Verbose_experiments *)
 
 (* Misc counters *)
 let counter_nplus1 = create_hybrid_counter_and_register "StateBased.computation of post_n+1" States_counter Verbose_medium
