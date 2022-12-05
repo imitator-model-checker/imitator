@@ -122,7 +122,7 @@ let check_assert_dimensions = true
 
 	let ppl_tcounter_minimize = create_hybrid_counter_and_register "minimize" PPL_counter Verbose_low
 
-	let ppl_tcounter_maximize = create_hybrid_counter_and_register "maxnimize" PPL_counter Verbose_low
+	let ppl_tcounter_maximize = create_hybrid_counter_and_register "maximize" PPL_counter Verbose_low
 
 	let ppl_tcounter_add_constraints = create_hybrid_counter_and_register "add_constraints" PPL_counter Verbose_low
 
@@ -220,7 +220,7 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 	let ppl_tcounter_nncc_minimize = create_hybrid_counter_and_register "nncc_minimize" PPL_counter Verbose_low
 
-	let ppl_tcounter_nncc_maximize = create_hybrid_counter_and_register "nncc_maxnimize" PPL_counter Verbose_low
+	let ppl_tcounter_nncc_maximize = create_hybrid_counter_and_register "nncc_maximize" PPL_counter Verbose_low
 
 	let ppl_nncc_pairwise_reduce = create_hybrid_counter_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
 	
