@@ -4,20 +4,20 @@ index 2e54a3c..b357aa7 100644
 +++ b/Makefile
 @@ -5,7 +5,7 @@ OCAML_LIBDIR:= $(shell ocamlc -where)
  # GMP_INCLUDES= -I/opt/gmp-4.1.2/include -I/users/absint2/local/include -I$(HOME)/packages/gmp/include
-
+ 
  # GMP_LIBDIR=/opt/gmp-4.1.2/lib
 -DESTDIR= $(OCAML_LIBDIR)/gmp
 +DESTDIR= $(shell opam var lib)/gmp
-
+ 
  #RLIBFLAGS= -cclib "-Wl,-rpath $(GMP_LIBDIR)" # Linux, FreeBSD
  #RLIBFLAGS= -cclib "-Wl,-R $(GMP_LIBDIR)" # Solaris
 @@ -13,10 +13,10 @@ DESTDIR= $(OCAML_LIBDIR)/gmp
-
+ 
  # LIBFLAGS= -cclib -L. -cclib -L$(GMP_LIBDIR) $(RLIBFLAGS) \
  #	-cclib -lmpfr -cclib -lgmp -cclib -L$(DESTDIR)
 -LIBFLAGS = -cclib -L$(shell pwd) -cclib -lgmp -cclib -lmpfr
-+LIBFLAGS = -cclib -L. -cclib -lgmp -cclib -lmpfr
-
++LIBFLAGS = -cclib -L. -cclib -lgmp -cclib -lmpfr 
+ 
  #CC= icc
 -CFLAGS_MISC= -Wall -Wno-unused -Werror -g -O3
 +CFLAGS_MISC= -Wall -Wno-unused -g -O3
@@ -90,5 +90,6 @@ index 678426d..c63d2b1 100644
 +   ^ (if base <= 10 then "E" else "@")
 +   ^ (string_of_int (pred exponent))
 +;;
-
+ 
    let to_string = to_string_base_digits ~mode: GMP_RNDN ~base: 10 ~digits: 10;;
+ 
