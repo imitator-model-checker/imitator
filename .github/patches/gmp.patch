@@ -20,7 +20,7 @@ index 2e54a3c..b357aa7 100644
  
  #CC= icc
 -CFLAGS_MISC= -Wall -Wno-unused -Werror -g -O3
-+CFLAGS_MISC= -Wall -Wno-unused -g -O3
++CFLAGS_MISC= -Wall -Wno-unused -Werror -g -O3 -Wno-incompatible-pointer-types-discards-qualifiers
  #CFLAGS_MISC=
  CFLAGS_INCLUDE= -I $(OCAML_LIBDIR) $(GMP_INCLUDES)
  CFLAGS= $(CFLAGS_MISC) $(CFLAGS_INCLUDE)
