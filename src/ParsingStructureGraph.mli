@@ -66,7 +66,7 @@ val unused_functions_of_model : dependency_graph -> StringSet.t
 val used_global_variables_of_model : dependency_graph -> StringSet.t
 val unused_global_variables_of_model : dependency_graph -> StringSet.t
 
-val remove_unused_clock_assignments_in_updates : declarations_info -> dependency_graph -> parsed_seq_code_bloc_list -> parsed_seq_code_bloc_list
-val remove_unused_clock_assignments_in_fun_def : declarations_info -> dependency_graph -> parsed_fun_definition -> parsed_fun_definition
+val remove_unused_assignments_in_updates : declarations_info -> dependency_graph -> parsed_seq_code_bloc_list -> parsed_seq_code_bloc_list
+val remove_unused_assignments_in_fun_def : declarations_info -> dependency_graph -> parsed_fun_definition -> parsed_fun_definition
 
 val model_cycle_infos : dependency_graph -> (bool * string) list

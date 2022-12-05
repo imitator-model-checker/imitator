@@ -631,6 +631,9 @@ let check_init_definition parsed_model =
                 true
         | _ -> true
     in
+
+    (* TODO benjamin IMPLEMENT remove unused variable inits *)
+
     check_init_predicate
 
 let is_inequality_has_left_hand_removed_variable removed_variable_names = function
@@ -1429,7 +1432,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info depe
                     parsed_seq_code_bloc_update
                 else
                     (* If variable auto remove, remove unused clock assignments *)
-                    ParsingStructureGraph.remove_unused_clock_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update
+                    ParsingStructureGraph.remove_unused_assignments_in_updates declarations_info dependency_graph parsed_seq_code_bloc_update
               in
 
               (* translate parsed updates into their abstract model *)
@@ -3458,7 +3461,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             used_function_definitions
         else
             (* If variable auto remove, remove unused clock assignments *)
-            List.map (ParsingStructureGraph.remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions
+            List.map (ParsingStructureGraph.remove_unused_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions
     in
 
 

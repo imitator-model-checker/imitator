@@ -842,13 +842,13 @@ let unused_functions_of_model dependency_graph =
 
 
 (* Remove all unused clock assignments in sequential code bloc *)
-let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
+let remove_unused_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
 
     (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
     let used_global_variables_list = string_set_to_list used_global_variables in
 
-    let rec remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
+    let rec remove_unused_assignments_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
         List.filter_map (remove_unused_clock_assignment_instruction local_variables) parsed_seq_code_bloc
 
     and remove_unused_clock_assignment_instruction local_variables = function
@@ -881,44 +881,45 @@ let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables decl
             (* Add loop variable *)
             Hashtbl.replace loop_local_variables variable_name id;
 
-            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
             Some (Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, filtered_inner_bloc, id))
 
         | Parsed_while_loop (cond_expr, inner_bloc) ->
             let loop_local_variables = Hashtbl.copy local_variables in
-            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
             Some (Parsed_while_loop (cond_expr, filtered_inner_bloc))
 
         | Parsed_if (cond_expr, then_bloc, else_bloc_opt) ->
             let then_local_variables = Hashtbl.copy local_variables in
-            let filtered_then_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec then_local_variables then_bloc in
+            let filtered_then_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec then_local_variables then_bloc in
 
             let filtered_else_bloc =
                 match else_bloc_opt with
                 | Some else_bloc ->
                     let else_local_variables = Hashtbl.copy local_variables in
-                    Some (remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec else_local_variables else_bloc)
+                    Some (remove_unused_assignments_in_parsed_seq_code_bloc_rec else_local_variables else_bloc)
                 | None -> None
             in
 
             Some (Parsed_if (cond_expr, filtered_then_bloc, filtered_else_bloc))
     in
-    remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
+    remove_unused_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 
-let remove_unused_clock_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
-    remove_unused_clock_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
+let remove_unused_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
+    remove_unused_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
 
 (* Remove all unused clock assignments in function definition *)
-let remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
+let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
     List.iter (fun (parameter_name, _) -> Hashtbl.add local_variables parameter_name (-1)) fun_def.parameters;
 
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in
-    { fun_def with body = remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
+    { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
 
+let remove_unused_inits declarations_info dependency_graph init = ""
 
 
 
