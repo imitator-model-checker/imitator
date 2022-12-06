@@ -209,19 +209,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                         (* Get references to variables and functions in the update expression *)
                         let all_refs = refs_in_parsed_boolean_expression local_variables expr in
                         let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                        (* Check if assigned expression contains function call(s) *)
-                        (* If there are any function call, it mean that it may have side effects in expression *)
-                        (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
-                        let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
-
-
-                        if has_fun_call then (
-                            let assigned_variable_relation = bloc_ref, variable_ref in
-                            assigned_variable_relation :: relations
-                        )
-                        else
-                            relations
+                        relations
 
                     )
 
@@ -236,11 +224,6 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                     let all_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                    (* Check if index expression contains function call(s) *)
-                    (* If there are any function call, it mean that it may have side effects in expression *)
-                    (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
-                    let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
-
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     relations @ variable_use_variables_relations
             in
@@ -251,7 +234,11 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
 
             let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
+            (* Check if assigned expression contains function call(s) *)
+            (* If there are any function call, it mean that it may have side effects in expression *)
+            (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
             let has_fun_call = contains_function_call in
+
             if has_fun_call then (
                 let assigned_variable_relation = bloc_ref, variable_ref in
                 assigned_variable_relation :: relations
@@ -491,6 +478,7 @@ let all_components_used_in_property_option parsed_property_option =
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
+        | Parsed_Win parsed_state_predicate
 			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
@@ -842,21 +830,19 @@ let unused_functions_of_model dependency_graph =
 
 
 (* Remove all unused clock assignments in sequential code bloc *)
-let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
+let remove_unused_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
 
     (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
     let used_global_variables_list = string_set_to_list used_global_variables in
 
-    let rec remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
+    let rec remove_unused_assignments_in_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
         List.filter_map (remove_unused_clock_assignment_instruction local_variables) parsed_seq_code_bloc
 
     and remove_unused_clock_assignment_instruction local_variables = function
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
             (* Is only a clock reset ? We consider not use *)
             let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-            let is_discrete = is_discrete local_variables declarations_info variable_name in
 
             let is_clock_reset = is_clock_reset local_variables declarations_info variable_name expr in
             let is_not_used = not (List.mem variable_name used_global_variables_list) in
@@ -881,45 +867,74 @@ let remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables decl
             (* Add loop variable *)
             Hashtbl.replace loop_local_variables variable_name id;
 
-            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
             Some (Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, filtered_inner_bloc, id))
 
         | Parsed_while_loop (cond_expr, inner_bloc) ->
             let loop_local_variables = Hashtbl.copy local_variables in
-            let filtered_inner_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
+            let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec loop_local_variables inner_bloc in
             Some (Parsed_while_loop (cond_expr, filtered_inner_bloc))
 
         | Parsed_if (cond_expr, then_bloc, else_bloc_opt) ->
             let then_local_variables = Hashtbl.copy local_variables in
-            let filtered_then_bloc = remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec then_local_variables then_bloc in
+            let filtered_then_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec then_local_variables then_bloc in
 
             let filtered_else_bloc =
                 match else_bloc_opt with
                 | Some else_bloc ->
                     let else_local_variables = Hashtbl.copy local_variables in
-                    Some (remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec else_local_variables else_bloc)
+                    Some (remove_unused_assignments_in_parsed_seq_code_bloc_rec else_local_variables else_bloc)
                 | None -> None
             in
 
             Some (Parsed_if (cond_expr, filtered_then_bloc, filtered_else_bloc))
     in
-    remove_unused_clock_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
+    remove_unused_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 
-let remove_unused_clock_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
-    remove_unused_clock_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
+(* Remove all unused assignments in sequential code bloc *)
+let remove_unused_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
+    remove_unused_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
 
-(* Remove all unused clock assignments in function definition *)
-let remove_unused_clock_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
+(* Remove all unused assignments in function definition *)
+let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
     List.iter (fun (parameter_name, _) -> Hashtbl.add local_variables parameter_name (-1)) fun_def.parameters;
 
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in
-    { fun_def with body = remove_unused_clock_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
+    { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
 
+(* Check whether a init state predicate is used *)
+let is_init_state_predicate_used used_global_variables (* init_state_predicate *) =
 
+    (* Check whether linear constraint is used *)
+    let is_linear_constraint_used = function
+        | Parsed_true_constraint
+        | Parsed_false_constraint -> true
+        | Parsed_linear_constraint (l_expr, _ ,r_expr) ->
+            (* If any variable in constraint are used, then linear constraint in init is used *)
+            let variable_names =
+                StringSet.union (get_variables_in_linear_expression l_expr) (get_variables_in_linear_expression r_expr)
+                |> OCamlUtilities.string_set_to_list
+            in
+            List.exists (fun variable_name -> StringSet.mem variable_name used_global_variables || variable_name = Constants.global_time_clock_name) variable_names
+    in
+    (* Check whether init state predicate is used *)
+    let is_init_state_predicate_used = function
+        | Parsed_discrete_predicate (variable_name, expr) ->
+            StringSet.mem variable_name used_global_variables
+        | Parsed_linear_predicate linear_constraint ->
+            is_linear_constraint_used linear_constraint
+        | _ -> true
+    in
+    is_init_state_predicate_used (* init_state_predicate *)
+
+(* Filter a init_definition (init_state_predicate list) to keep only init definition of used variables *)
+let remove_unused_inits dependency_graph (* init_definition *) =
+    let used_global_variables = used_global_variables_of_model dependency_graph in
+    List.filter (is_init_state_predicate_used used_global_variables) (* init_definition *)
 
 
 let model_cycle_infos (_, model_relations) =

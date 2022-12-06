@@ -53,7 +53,8 @@ val is_discrete_variable : variable_infos -> variable_name -> bool
 
 (* Check if variable is a clock *)
 val is_clock : variable_infos -> variable_name -> bool
-
+(* Check (if variable is defined) whether variable is a clock*)
+val is_clock_or_param : variable_infos -> variable_name -> bool
 
 (* Get function metadata given it's name *)
 val function_metadata_by_name : variable_infos -> variable_name -> function_metadata

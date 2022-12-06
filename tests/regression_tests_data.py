@@ -4902,22 +4902,22 @@ END CONSTRAINT
     "P -> f1 -> x -> f2 -> x -> f1",
     "P -> f1 -> x -> f2 -> x -> f1",
     "P -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
     "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
     "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
     "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1"
+    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1"
   ]
       """
          } # end result file
@@ -7806,7 +7806,7 @@ BEGIN RESULT
  Run #1
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -7829,11 +7829,13 @@ True
 				"continuous_variables": {
 					"x": "0",
 					"y": "0",
+					"swap": "-1",
 					"global_time": "0"
 				},
 				"flows": {
-					"x": "1", 
-					"y": "0", 
+					"x": "1",
+					"y": "0",
+					"swap": "1",
 					"global_time": "1"
 				}
 			}
@@ -7866,15 +7868,17 @@ True
 				"continuous_variables": {
 					"x": "2",
 					"y": "5",
+					"swap": "1",
 					"global_time": "2"
 				},
 				"flows": {
-					"x": "3", 
-					"y": "2", 
+					"x": "3",
+					"y": "2",
+					"swap": "1",
 					"global_time": "1"
 				}
 			}
-			}, 
+			},
 			{
 			"transition": {
 				"nature": "concrete",
@@ -7886,8 +7890,11 @@ True
 						"PTA": "pta",
 						"guard": " x = 5",
 						"updates": {
+							"swap": "x",
+
 							"x": "y",
-							"y": "x"
+
+							"y": "swap"
 						}
 					}
 					}
@@ -7904,15 +7911,17 @@ True
 				"continuous_variables": {
 					"x": "7",
 					"y": "5",
+					"swap": "5",
 					"global_time": "3"
 				},
 				"flows": {
-					"x": "-12", 
-					"y": "1", 
+					"x": "-12",
+					"y": "1",
+					"swap": "1",
 					"global_time": "1"
 				}
 			}
-			}, 
+			},
 			{
 			"transition": {
 				"nature": "concrete",
@@ -7941,11 +7950,13 @@ True
 				"continuous_variables": {
 					"x": "1",
 					"y": "9/2",
+					"swap": "11/2",
 					"global_time": "7/2"
 				},
 				"flows": {
 					"x": "1",
 					"y": "1",
+					"swap": "1",
 					"global_time": "1"
 				}
 			}
@@ -7956,7 +7967,6 @@ True
 (************************************************************)
 
 END RESULT
-
 """
 			} # end result file
 			,

@@ -153,6 +153,15 @@ let is_discrete_variable variable_infos variable_name =
 (* Check if variable is a clock *)
 let [@inline] is_clock variable_infos variable_name = var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
 
+(* Check (if variable is defined) whether variable is a clock*)
+let [@inline] is_clock_or_param variable_infos variable_name =
+    let var_type_opt = var_type_of_variable_or_constant_opt variable_infos variable_name in
+    match var_type_opt with
+    | Some Var_type_clock
+    | Some Var_type_parameter -> true
+    | _ -> false
+
+
 (* Get function meta given it's name, raise an error if the function doesn't exists *)
 let function_metadata_by_name variable_infos function_name =
     let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in

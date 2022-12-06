@@ -438,12 +438,41 @@ let add_function_of_discrete_boolean_expression function_used_ref local_variable
         (* Add the variable name to the set and update the reference *)
         function_used_ref := StringSet.add function_name !function_used_ref
 
-let get_functions_in_parsed_boolean_expression_with_accumulator function_used_ref =
-    iterate_parsed_boolean_expression (add_function_of_discrete_boolean_expression function_used_ref)
+(* Gather all variable and function names used in a discrete boolean expression *)
+let add_variable_and_function_of_discrete_boolean_expression variables_used_ref local_variables = function
+    | Leaf_constant _ -> ()
+    | Leaf_variable (Leaf_global_variable variable_name)
+    | Leaf_variable (Leaf_local_variable (variable_name, _, _))
+    | Leaf_fun variable_name ->
+         (* Add the variable name to the set and update the reference *)
+         variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+(* Gather all clock and parameter names used in a discrete boolean expression *)
+let add_clock_or_parameter_of_discrete_boolean_expression variable_infos variables_used_ref _ = function
+    | Leaf_constant _
+    | Leaf_fun _
+    | Leaf_variable (Leaf_local_variable _) -> ()
+    | Leaf_variable (Leaf_global_variable variable_name) ->
+        (* Only add if it's a clock or parameter *)
+        if (VariableInfo.is_clock_or_param variable_infos variable_name) then (
+            (* Add the variable name to the set and update the reference *)
+            variables_used_ref := StringSet.add variable_name !variables_used_ref;
+        )
 
 (* Gather all variable names used in a parsed boolean expression in a given accumulator *)
 let get_variables_in_parsed_boolean_expression_with_accumulator variables_used_ref =
     iterate_parsed_boolean_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
+
+let get_functions_in_parsed_boolean_expression_with_accumulator function_used_ref =
+    iterate_parsed_boolean_expression (add_function_of_discrete_boolean_expression function_used_ref)
+
+(* Gather all variable and function names used in a parsed boolean expression in a given accumulator *)
+let get_variables_and_functions_in_parsed_boolean_expression_with_accumulator variables_used_ref =
+    iterate_parsed_boolean_expression (add_variable_and_function_of_discrete_boolean_expression variables_used_ref)
+
+(* Gather all clock and parameter names used in a parsed boolean expression in a given accumulator *)
+let get_clocks_and_parameters_in_parsed_boolean_expression_with_accumulator variable_infos variables_used_ref =
+    iterate_parsed_boolean_expression (add_clock_or_parameter_of_discrete_boolean_expression variable_infos variables_used_ref)
 
 (* Gather all variable names used in a parsed discrete boolean expression in a given accumulator *)
 let get_variables_in_parsed_discrete_boolean_expression_with_accumulator variables_used_ref =
@@ -516,12 +545,20 @@ let wrap_accumulator f expr =
     !variables_used_ref
 
 (* Gather all variable names used in a parsed boolean expression *)
+let get_variables_in_parsed_boolean_expression =
+    wrap_accumulator get_variables_in_parsed_boolean_expression_with_accumulator
+
+(* Gather all variable names used in a parsed boolean expression *)
 let get_functions_in_parsed_boolean_expression =
     wrap_accumulator get_functions_in_parsed_boolean_expression_with_accumulator
 
-(* Gather all variable names used in a parsed boolean expression *)
-let get_variables_in_parsed_boolean_expression =
-    wrap_accumulator get_variables_in_parsed_boolean_expression_with_accumulator
+(* Gather all variable and function names used in a parsed boolean expression *)
+let get_variables_and_functions_in_parsed_boolean_expression =
+    wrap_accumulator get_variables_and_functions_in_parsed_boolean_expression_with_accumulator
+
+(* Gather all clock and parameter names used in a parsed boolean expression *)
+let get_clocks_and_parameters_in_parsed_boolean_expression variable_infos =
+    wrap_accumulator (get_clocks_and_parameters_in_parsed_boolean_expression_with_accumulator variable_infos)
 
 (* Gather all variable names used in a parsed discrete boolean expression *)
 let get_variables_in_parsed_discrete_boolean_expression =
