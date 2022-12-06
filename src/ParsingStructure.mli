@@ -91,7 +91,7 @@ and parsed_discrete_factor =
     | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
-	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
+	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
 
 
 

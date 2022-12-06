@@ -421,9 +421,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             ))
         )
 
-	| Parsed_function_call (name_factor, argument_expressions) as func ->
-        (* Get function name *)
-        let function_name = ParsingStructureUtilities.function_name_of_parsed_factor name_factor in
+	| Parsed_function_call (function_name, argument_expressions) as func ->
         (* Get function metadata *)
         let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
         (* Get function arity *)

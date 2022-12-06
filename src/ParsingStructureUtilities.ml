@@ -65,11 +65,6 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
-(* Extract function name from parsed factor *)
-let function_name_of_parsed_factor = function
-	| Parsed_DF_variable name -> name
-    | factor -> raise (TypeError "Trying to make a call on a non-function.")
-
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
@@ -130,8 +125,7 @@ and fold_parsed_discrete_factor_with_local_variables local_variables operator ba
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
 	| Parsed_DF_expression expr ->
         fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
-    | Parsed_function_call (factor_name, argument_expressions) ->
-        let function_name = function_name_of_parsed_factor factor_name in
+    | Parsed_function_call (function_name, argument_expressions) ->
         operator
             (leaf_fun local_variables (Leaf_fun function_name))
             (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr) acc) base argument_expressions)
@@ -474,7 +468,7 @@ let label_of_parsed_factor_constructor = function
 	| Parsed_DF_access _ -> "access"
 	| Parsed_DF_expression _ -> "expression"
 	| Parsed_DF_unary_min _ -> "minus"
-    | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
+    | Parsed_function_call (function_name, _) -> function_name
 
 
 

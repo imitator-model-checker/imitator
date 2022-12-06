@@ -162,9 +162,6 @@ val iterate_in_parsed_function_definition :  ?decl_callback:unit variable_declar
 
 val label_of_parsed_factor_constructor : parsed_discrete_factor -> string
 
-(* Parsed expression to string *)
-val function_name_of_parsed_factor : parsed_discrete_factor -> string
-
 val string_of_assignment : string -> string -> string
 val string_of_let_in : string -> string -> string -> string
 

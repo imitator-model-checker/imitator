@@ -402,8 +402,8 @@ product_quotient:
 
 arithmetic_factor:
   | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
-  | arithmetic_factor LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
-  | arithmetic_factor LPAREN RPAREN { Parsed_function_call ($1, []) }
+  | NAME LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
+  | NAME LPAREN RPAREN { Parsed_function_call ($1, []) }
   | literal_scalar_constant { Parsed_DF_constant $1 }
   | literal_non_scalar_constant { $1 }
   | NAME { Parsed_DF_variable $1 }
