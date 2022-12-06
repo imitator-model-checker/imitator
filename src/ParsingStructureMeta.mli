@@ -76,6 +76,8 @@ val all_variables_defined_in_parsed_state_predicate : useful_parsing_model_infor
 
 (* Check that there is only discrete variables in a parsed boolean expression *)
 val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
+(* Check that there is only discrete variables in a parsed arithmetic expression *)
+val only_discrete_in_parsed_discrete_arithmetic_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 

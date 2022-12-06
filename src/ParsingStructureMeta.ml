@@ -399,6 +399,10 @@ let all_variables_defined_in_parsed_state_predicate parsing_infos variable_infos
 let only_discrete_in_parsed_boolean_expression variable_infos clock_or_param_found_callback_opt expr =
     for_all_in_parsed_boolean_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
 
+(* Check that there is only discrete variables in a parsed arithmetic expression *)
+let only_discrete_in_parsed_discrete_arithmetic_expression variable_infos clock_or_param_found_callback_opt expr =
+    for_all_in_parsed_discrete_arithmetic_expression (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
+
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr

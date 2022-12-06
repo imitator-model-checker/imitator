@@ -133,6 +133,73 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
 
 let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
 
+(* Check that some expression in sequential code bloc contains only discrete *)
+let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq_code_bloc *) =
+
+    (* Message when clock or parameter found *)
+    let clock_or_param_found_callback_opt str_expr =
+        Some (fun var_type variable_name ->
+            print_error (
+                String.capitalize_ascii (DiscreteType.string_of_var_type var_type)
+                ^ " `"
+                ^ variable_name
+                ^ "`"
+                ^ " found in `"
+                ^ str_expr
+                ^ "`. Unable to use "
+                ^ DiscreteType.string_of_var_type var_type
+                ^ " in this context."
+            )
+        )
+    in
+
+    (* Currify some functions, apply variable_infos *)
+    let check_only_discrete = ParsingStructureMeta.only_discrete_in_parsed_boolean_expression variable_infos in
+    let check_only_discrete_in_arithmetic = ParsingStructureMeta.only_discrete_in_parsed_discrete_arithmetic_expression variable_infos in
+
+    let rec check_inner_expression_of_seq_code_bloc seq_code_bloc =
+        List.for_all check_inner_expression_of_instruction seq_code_bloc
+
+    and check_inner_expression_of_instruction instruction =
+
+        (* String of instruction*)
+        let str_instruction = ParsingStructureUtilities.string_of_parsed_instruction variable_infos instruction in
+        (* Get error message to display when clock or parameter found *)
+        let clock_or_param_found_callback_opt = clock_or_param_found_callback_opt str_instruction in
+        (* Currify apply message *)
+        let check_only_discrete = check_only_discrete clock_or_param_found_callback_opt in
+        let check_only_discrete_in_arithmetic = check_only_discrete_in_arithmetic clock_or_param_found_callback_opt in
+
+        (* Check only discrete in, instruction, for loop bounds, while condition, if condition ... *)
+        match instruction with
+        | Parsed_local_decl (_, _, expr, _)
+        | Parsed_instruction expr as instruction ->
+            check_only_discrete expr
+
+        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc, _) ->
+            check_only_discrete_in_arithmetic from_expr
+            && check_only_discrete_in_arithmetic to_expr
+            && check_inner_expression_of_seq_code_bloc inner_bloc
+
+        | Parsed_while_loop (condition_expr, inner_bloc) ->
+            check_only_discrete condition_expr
+            && check_inner_expression_of_seq_code_bloc inner_bloc
+
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
+            let else_bloc_checked =
+                match else_bloc_opt with
+                | Some else_bloc -> check_inner_expression_of_seq_code_bloc else_bloc
+                | None -> true
+            in
+            check_only_discrete condition_expr
+            && check_inner_expression_of_seq_code_bloc then_bloc
+            && else_bloc_checked
+
+        | Parsed_assignment _ -> true
+    in
+    check_inner_expression_of_seq_code_bloc (* seq_code_bloc *)
+
+(* Check that assignment in sequential code bloc are allowed *)
 let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc =
 
     (* If code bloc is named, we put name of location in messages *)
@@ -159,7 +226,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ -> None
         ) left_variable_names in
 
-        (* Check that no variable (clocks, discrete) was updated by a param *)
+        (* Check that no discrete variable was updated by a param *)
         let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
             let left_var_type = VariableInfo.var_type_of_variable_or_constant variable_infos left_variable_name in
 
@@ -345,46 +412,11 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
     in
 
+    let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
+    let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+
     (* Return *)
-    check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined && is_all_functions_defined
-
-let check_fun_def_return_expr variable_infos code_bloc_name return_expr =
-    (* If code bloc is named, we put name of location in messages *)
-    let str_location =  " in `" ^ code_bloc_name ^ "`" in
-
-    (* Check if all variables in function definition are defined *)
-    let is_all_variables_defined =
-
-        (* Prepare callback function that print error message when undeclared variable is found *)
-        let print_variable_in_fun_not_declared variable_name =
-            print_error (
-                "Variable `"
-                ^ variable_name
-                ^ str_location
-                ^ " was not declared."
-            )
-        in
-
-        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_fun_not_declared) return_expr
-    in
-
-    let is_all_functions_defined =
-
-        (* Prepare callback function that print error message when undeclared function is found *)
-        let print_function_in_fun_not_declared variable_name =
-            print_error (
-                "Function `"
-                ^ variable_name
-                ^ str_location
-                ^ " was not declared."
-            )
-        in
-
-        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_function_in_fun_not_declared) return_expr
-
-    in
-
-    is_all_variables_defined && is_all_functions_defined
+    is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
