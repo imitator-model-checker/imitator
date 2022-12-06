@@ -616,7 +616,7 @@ let check_init_definition parsed_model =
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
-                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s).");
                 false
             )
             else
@@ -624,7 +624,7 @@ let check_init_definition parsed_model =
         (* General case: check *)
         | Parsed_linear_constraint _ as linear_constraint ->
             if not (ParsingStructureMeta.all_variables_defined_in_linear_constraint variable_infos undeclared_variable_in_linear_constraint_message linear_constraint) then (
-                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s)");
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s).");
                 false
             )
             else
@@ -755,11 +755,14 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
     (* Partition init predicates between initial location and inequalities *)
     let initial_locations, init_inequalities = OCamlUtilities.partition_map partition_and_map_loc_init_and_variable_inits init_definition in
 
+
     (* For all definitions : *)
     (* Check that automaton names and location names exist *)
     (* Check that continuous variables used in continuous init exist *)
     (* Check that discrete variables used in discrete init exist *)
     let definitions_well_formed = List.for_all (check_init_definition useful_parsing_model_information) init_definition in
+
+
 
     (* Check there is only one initial location per automaton *)
     let one_loc_per_automaton = has_one_loc_per_automaton initial_locations useful_parsing_model_information observer_automaton_index_option in
@@ -3590,8 +3593,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
+    let init_definition =
+        (* If no auto remove, keep all inits *)
+        if options#no_variable_autoremove then
+            parsed_model.init_definition
+        (* If auto remove, remove all unused variable inits *)
+        else
+            ParsingStructureGraph.remove_unused_inits dependency_graph parsed_model.init_definition
+    in
 
-	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
+	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information init_definition observer_automaton_index_option in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
@@ -4158,7 +4169,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 
 	let (initial_location, initial_constraint) =
-		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition in
 
 	(* Add the observer initial constraint *)
 	begin

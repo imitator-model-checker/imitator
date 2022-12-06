@@ -906,10 +906,11 @@ let remove_unused_assignments_in_parsed_seq_code_bloc local_variables declaratio
     remove_unused_assignments_in_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
 
 
+(* Remove all unused assignments in sequential code bloc *)
 let remove_unused_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
     remove_unused_assignments_in_parsed_seq_code_bloc (Hashtbl.create 0) declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
 
-(* Remove all unused clock assignments in function definition *)
+(* Remove all unused assignments in function definition *)
 let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
@@ -919,8 +920,35 @@ let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun
     let code_bloc, return_expr_opt = fun_def.body in
     { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc local_variables declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
 
-let remove_unused_inits declarations_info dependency_graph init = ""
+(* Check whether a init state predicate is used *)
+let is_init_state_predicate_used used_global_variables (* init_state_predicate *) =
 
+    (* Check whether linear constraint is used *)
+    let is_linear_constraint_used = function
+        | Parsed_true_constraint
+        | Parsed_false_constraint -> true
+        | Parsed_linear_constraint (l_expr, _ ,r_expr) ->
+            (* If any variable in constraint are used, then linear constraint in init is used *)
+            let variable_names =
+                StringSet.union (get_variables_in_linear_expression l_expr) (get_variables_in_linear_expression r_expr)
+                |> OCamlUtilities.string_set_to_list
+            in
+            List.exists (fun variable_name -> StringSet.mem variable_name used_global_variables || variable_name = Constants.global_time_clock_name) variable_names
+    in
+    (* Check whether init state predicate is used *)
+    let is_init_state_predicate_used = function
+        | Parsed_discrete_predicate (variable_name, expr) ->
+            StringSet.mem variable_name used_global_variables
+        | Parsed_linear_predicate linear_constraint ->
+            is_linear_constraint_used linear_constraint
+        | _ -> true
+    in
+    is_init_state_predicate_used (* init_state_predicate *)
+
+(* Filter a init_definition (init_state_predicate list) to keep only init definition of used variables *)
+let remove_unused_inits dependency_graph (* init_definition *) =
+    let used_global_variables = used_global_variables_of_model dependency_graph in
+    List.filter (is_init_state_predicate_used used_global_variables) (* init_definition *)
 
 
 let model_cycle_infos (_, model_relations) =
