@@ -209,19 +209,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                         (* Get references to variables and functions in the update expression *)
                         let all_refs = refs_in_parsed_boolean_expression local_variables expr in
                         let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
-
-                        (* Check if assigned expression contains function call(s) *)
-                        (* If there are any function call, it mean that it may have side effects in expression *)
-                        (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
-                        let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
-
-
-                        if has_fun_call then (
-                            let assigned_variable_relation = bloc_ref, variable_ref in
-                            assigned_variable_relation :: relations
-                        )
-                        else
-                            relations
+                        relations
 
                     )
 
@@ -236,11 +224,6 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
                     let all_refs = refs_in_parsed_arithmetic_expression local_variables index_expr in
                     let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
 
-                    (* Check if index expression contains function call(s) *)
-                    (* If there are any function call, it mean that it may have side effects in expression *)
-                    (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
-                    let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
-
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     relations @ variable_use_variables_relations
             in
@@ -251,7 +234,11 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
 
             let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
+            (* Check if assigned expression contains function call(s) *)
+            (* If there are any function call, it mean that it may have side effects in expression *)
+            (* In this case, we have to consider assigned variable as used in order to NOT delete this assignment instruction on auto-remove :) *)
             let has_fun_call = contains_function_call in
+
             if has_fun_call then (
                 let assigned_variable_relation = bloc_ref, variable_ref in
                 assigned_variable_relation :: relations
