@@ -841,7 +841,7 @@ let rename_linear_term (variable_pairs : (variable * variable) list) (linear_ter
 				(* Not found: no replacement => keep v *)
 				Not_found -> v
 			in IR_Var replaced_v
-		
+        | IR_Local_var _ -> raise (InternalError ("`IR_Local_var` should not happen here."))
 		(* IR_Coef: unchanged *)
 		| IR_Coef c -> IR_Coef c
 		
@@ -873,6 +873,7 @@ let evaluate_linear_term_gen (keep_coeff : bool) valuation_function (linear_term
 		| IR_Var v -> (
 			  try valuation_function v 
 			  with _ -> raise(InternalError ("No value was found for variable " ^ (string_of_int v) ^ ", while trying to evaluate a linear term; this variable was probably not defined.")))
+        | IR_Local_var _ -> raise (InternalError ("`IR_Local_var` should not happen here."))
 		| IR_Plus (lterm, rterm) -> (
 				let lval = evaluate_linear_term_gen_rec rterm in
 				let rval = evaluate_linear_term_gen_rec lterm in
@@ -1061,6 +1062,7 @@ let pxd_linear_term_is_unary (linear_term : internal_linear_term) =
 	match linear_term with
 		| IR_Coef z -> true
 		| IR_Var v -> true
+		| IR_Local_var _ -> true
 		| IR_Plus (t,u) -> false
 		| IR_Minus (t,u) -> false
 		| IR_Times (t,u) -> false
@@ -1069,6 +1071,7 @@ let op_term_of_pxd_linear_term (linear_term : internal_linear_term) =
 	match linear_term with
 		| IR_Coef z -> ""
 		| IR_Var v ->  ""
+		| IR_Local_var _ -> ""
 		| IR_Plus (t,u) -> "+"
 		| IR_Minus (t,u) -> "-"
 		| IR_Times (t,u) -> "*"
@@ -1079,7 +1082,7 @@ let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
 		| IR_Var v -> "Variable", (names v), linear_term
-		
+		| IR_Local_var v -> "Variable", v, linear_term
 (*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
 		
 		| Unary_Minus t -> "Unary", (
@@ -1106,7 +1109,8 @@ let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_ter
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
 		
 		| IR_Var v -> "Variable", (names v), linear_term
-		
+		| IR_Local_var v -> "Variable", v, linear_term
+
 (*		| Unary_Plus t -> "Unary", (string_of_ppl_linear_term names t), linear_term
 		
 		| Unary_Minus t -> "Unary", (
@@ -1172,6 +1176,7 @@ let normalize_linear_term (lt : internal_linear_term) : (Ppl.linear_expression *
 		let result =
 		match lt with
 			| IR_Var v -> Variable v, NumConst.one
+			| IR_Local_var _ -> raise (InternalError ("`IR_Local_var` should not happen here."))
 			| IR_Coef c -> (
 					let p = NumConst.get_num c in
 					let q = NumConst.get_den c in
@@ -4813,6 +4818,7 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								match linear_term with
 								| IR_Coef c -> ()
 								| IR_Var v -> ()
+								| IR_Local_var _ -> ()
 								| IR_Plus (lterm, rterm) -> 	(
 													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
 			  											(* isMinus lterm;
@@ -4831,10 +4837,14 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 
 
 (*for linear term*)
+(* TODO this function is only used in isSmaller, and isSmaller just look to the length of coefs_var list
+Is this function really necessary ? If we just want the length maybe can we replace this function by another that return the length ...
+I try to make this function below `length_of_linear_term` *)
 let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										let _ = match linear_term with
 										| IR_Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
 										| IR_Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
+										| IR_Local_var _ -> raise (InternalError ("`IR_Local_var` should not happen here."))
 										| IR_Plus (lterm, rterm) -> (
 			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
 											coefs_vars := !coefs_vars@get_coefs_vars rterm;
@@ -4851,6 +4861,18 @@ let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										in 
 
 										!coefs_vars
+
+(* TODO to check *)
+let rec length_of_linear_term = function
+    | IR_Coef _
+    | IR_Var _
+    | IR_Local_var _ -> 1
+    | IR_Plus (l_term, r_term)
+    | IR_Minus (l_term, r_term) ->
+        length_of_linear_term l_term + length_of_linear_term r_term
+    | IR_Times (_, r_term) ->
+        length_of_linear_term r_term
+
 
 let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
 															List.iter 	(fun (var1, coef1) ->
