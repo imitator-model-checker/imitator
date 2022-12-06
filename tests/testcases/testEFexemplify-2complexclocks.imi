@@ -26,6 +26,7 @@ var
 (* Clocks *)
 	x,
 	y,
+	swap,
  	global_time,
 		: clock;
 
@@ -41,7 +42,7 @@ loc l1: invariant x <= 2 flow{ y' = 0}
 
 loc l2: invariant x <= 5 flow{ x' = 3, y' = 2}
 	(* x = 5, y = 7, t = 3 *)
-	when x = 5 do { x := y, y := x} goto l3;
+	when x = 5 do { swap := x, x := y, y := swap} goto l3;
 	(* x = 7, y = 5, t = 3 *)
 
 loc l3: invariant x >= 0 flow{ x' = -12}
