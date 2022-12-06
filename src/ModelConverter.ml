@@ -1378,15 +1378,9 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
 	and creates a structure transition_index -> automaton_index
 *)
 (* TODO factorise parameters ! so many parameters ! maybe we can remove some, or use structure, etc *)
-let convert_transitions options nb_transitions nb_actions declarations_info dependency_graph (useful_parsing_model_information : useful_parsing_model_information) user_function_definitions_table transitions
+let convert_transitions options nb_transitions nb_actions declarations_info variable_infos dependency_graph user_function_definitions_table transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
-  (* Extract values from model parsing info *)
-  let index_of_variables, constants, removed_variable_names, type_of_variables =
-    useful_parsing_model_information.variable_infos.index_of_variables, useful_parsing_model_information.variable_infos.constants,
-    useful_parsing_model_information.variable_infos.removed_variable_names, useful_parsing_model_information.variable_infos.type_of_variables in
-
-    let variable_infos = useful_parsing_model_information.variable_infos in
 
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   
@@ -3698,7 +3692,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info dependency_graph useful_parsing_model_information user_function_definitions_table transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info variable_infos dependency_graph user_function_definitions_table transitions in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

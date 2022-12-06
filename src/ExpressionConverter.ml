@@ -1109,8 +1109,6 @@ let check_update variable_infos parsed_scalar_or_index_update_type expr =
 
     (* Resolve typed expression *)
     let typed_expr, expr_type = type_check_parsed_boolean_expression None variable_infos variable_number_type_opt expr in
-    (* Check eventual side effects in update expression (left and right member) *)
-    let has_side_effects = ParsingStructureMeta.has_side_effect_parsed_normal_update variable_infos (parsed_scalar_or_index_update_type, expr) in
 
     (* TODO benjamin here VariableMap.empty for local variable because this function is used only for check updates *)
     (* TODO benjamin Soon, this function will be removed *)

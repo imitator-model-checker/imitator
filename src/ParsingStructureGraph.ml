@@ -491,6 +491,7 @@ let all_components_used_in_property_option parsed_property_option =
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
+        | Parsed_Win parsed_state_predicate
 			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
 		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
@@ -855,8 +856,6 @@ let remove_unused_assignments_in_parsed_seq_code_bloc local_variables declaratio
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
             (* Is only a clock reset ? We consider not use *)
             let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-            let is_discrete = is_discrete local_variables declarations_info variable_name in
 
             let is_clock_reset = is_clock_reset local_variables declarations_info variable_name expr in
             let is_not_used = not (List.mem variable_name used_global_variables_list) in
