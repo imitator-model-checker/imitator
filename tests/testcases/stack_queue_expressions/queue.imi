@@ -44,9 +44,6 @@ loc l1: invariant True
     & queue_is_empty(s1)
 
   do {
-
-    mix
-
       (* Test queue functions *)
 
       queue_push(1, s1);

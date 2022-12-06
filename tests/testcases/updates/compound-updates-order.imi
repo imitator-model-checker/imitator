@@ -38,13 +38,12 @@ loc l1: invariant x <= 0
 	when
     & True
   do {
-    mix
-        stack_push(0, s);
-        r1 := 1;
-        r2 := 2;
-        r3 := 3;
-        x := r1 + r2 + r3; (* x = 6 *)
-        top1 := stack_top(s);
+    stack_push(0, s);
+    r1 := 1;
+    r2 := 2;
+    r3 := 3;
+    x := r1 + r2 + r3; (* x = 6 *)
+    top1 := stack_top(s);
   }
   sync a
   goto lend;
@@ -62,13 +61,11 @@ loc l1: invariant True
 	when
     & True
   do {
-    mix
-        stack_push(1, s);
-        r1 := 0;
-        y := r1 + r2 + r3; (* y = 5 *)
-        z := x - 1; (* z = 5 *)
-        top2 := stack_top(s);
-    end
+    stack_push(1, s);
+    r1 := 0;
+    y := r1 + r2 + r3; (* y = 5 *)
+    z := x - 1; (* z = 5 *)
+    top2 := stack_top(s);
   }
   sync a
   goto lend;

@@ -72,22 +72,21 @@ rule token = parse
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
 	| "controllable"   { CT_CONTROLLABLE }
-  | "void"           { CT_VOID }
+  	| "void"           { CT_VOID }
 	| "discrete"       { CT_DISCRETE }
 	| "rational"       { CT_DISCRETE }
-  | "rat"            { CT_DISCRETE }
+  	| "rat"            { CT_DISCRETE }
 	| "int"            { CT_INT }
 	| "bool"           { CT_BOOL }
 	| "binary"         { CT_BINARY_WORD }
-  | "array"          { CT_ARRAY }
+  	| "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
-  | "seq"            { CT_SEQ }
-  | "mix"            { CT_MIX }
-  | "begin"          { CT_BEGIN }
-  | "in"             { CT_IN }
+	| "seq"            { CT_SEQ }
+	| "begin"          { CT_BEGIN }
+	| "in"             { CT_IN }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
-  | "inside"         { CT_INSIDE }
+  	| "inside"         { CT_INSIDE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
@@ -120,32 +119,17 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
-  (*
-  | "rational_of_int"{ CT_BUILTIN_FUNC_RATIONAL_OF_INT }
-  | "pow"            { CT_POW }
-  | "shift_left"     { CT_SHIFT_LEFT }
-  | "shift_right"    { CT_SHIFT_RIGHT }
-  | "fill_left"      { CT_FILL_LEFT }
-  | "fill_right"     { CT_FILL_RIGHT }
-  | "logand"         { CT_LOG_AND }
-  | "logor"          { CT_LOG_OR }
-  | "logxor"         { CT_LOG_XOR }
-  | "lognot"         { CT_LOG_NOT }
-  | "array_append"   { CT_ARRAY_CONCAT }
-
-  | "list_cons"      { CT_LIST_CONS }
-  *)
-  | "list"           { CT_LIST }
-  | "stack"          { CT_STACK }
-  | "queue"          { CT_QUEUE }
-  | "function"       { CT_FUN   }
-  | "fn"             { CT_FUN   }
-  | "return"         { CT_RETURN }
-  | "for"            { CT_FOR }
-  | "from"           { CT_FROM }
-  | "to"             { CT_TO }
-  | "downto"         { CT_DOWNTO }
-  | "done"           { CT_DONE }
+	| "list"           { CT_LIST }
+	| "stack"          { CT_STACK }
+	| "queue"          { CT_QUEUE }
+	| "function"       { CT_FUN   }
+	| "fn"             { CT_FUN   }
+	| "return"         { CT_RETURN }
+	| "for"            { CT_FOR }
+	| "from"           { CT_FROM }
+	| "to"             { CT_TO }
+	| "downto"         { CT_DOWNTO }
+	| "done"           { CT_DONE }
 
 
 

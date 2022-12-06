@@ -10,10 +10,9 @@ synclabs: a;
 
 loc l1: invariant x<=p
 	when True do {
-	    mix
         c := 2;
         x := c;
-        end } goto l2;
+    } goto l2;
 
 loc l2: invariant x <= p
 	when True do {x := 0 } goto l2;

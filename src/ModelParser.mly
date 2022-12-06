@@ -74,11 +74,10 @@ let unzip l = List.fold_left
 	CT_BEFORE
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
-  CT_INSIDE
-  CT_DO
-  CT_SEQ
-  CT_MIX
-  CT_IN
+	CT_INSIDE
+	CT_DO
+	CT_SEQ
+	CT_IN
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE CT_FLOW
 	CT_GOTO
@@ -567,12 +566,7 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE mix_updates RBRACE { $3 }
-;
-
-mix_updates:
-  | CT_MIX seq_code_bloc_list end_opt { $2 }
-  | seq_code_bloc_list { $1 }
+  | CT_DO LBRACE seq_code_bloc_list RBRACE { $3 }
 ;
 
 /************************************************************/

@@ -6,9 +6,8 @@ loc l1: invariant True
 	when
     & True
   do {
-    mix
-        stack_push(2, s);
-        top3 := stack_top(s);
+    stack_push(2, s);
+    top3 := stack_top(s);
   }
   sync a
   goto lend;

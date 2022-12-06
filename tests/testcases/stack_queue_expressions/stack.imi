@@ -45,8 +45,6 @@ loc l1: invariant True
 
   do {
 
-    mix
-
       (* Test stack functions *)
 
       stack_push(1, s1);

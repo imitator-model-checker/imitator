@@ -42,12 +42,11 @@ automaton P
 
     (* i, j are not used elsewhere in model, but they aren't removed *)
     (* because they were used in seq (where there are potential side-effect functions used) *)
-    mix
-      stack_push(0, s); (* s = [0] *)
-      stack_push(1, s); (* s = [0, 1] *)
-      stack_push(2, s); (* s = [0, 1, 2] *)
-      i := stack_pop(s); (* s = [0, 1], i = 2 *)
-      j := f(); (* s = [0], j = 0 *)
+    stack_push(0, s); (* s = [0] *)
+    stack_push(1, s); (* s = [0, 1] *)
+    stack_push(2, s); (* s = [0, 1, 2] *)
+    i := stack_pop(s); (* s = [0, 1], i = 2 *)
+    j := f(); (* s = [0], j = 0 *)
 
   }
   goto lend;

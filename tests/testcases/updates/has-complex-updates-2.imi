@@ -32,7 +32,6 @@ automaton P
   when True
 
   do {
-    mix
       b := False;
       x := 0;
       y := 5;
