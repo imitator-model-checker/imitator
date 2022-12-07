@@ -228,11 +228,11 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
         (* Check that no discrete variable was updated by a param *)
         let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
-            let left_var_type = VariableInfo.var_type_of_variable_or_constant variable_infos left_variable_name in
+            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_name in
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
-            | Var_type_clock -> []
+            | Some Var_type_clock -> []
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
