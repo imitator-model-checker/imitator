@@ -191,7 +191,6 @@ type function_metadata = {
 }
 
 (* Parsed function definition *)
-(* TODO benjamin CLEAN rename to parsed_fun_def *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
