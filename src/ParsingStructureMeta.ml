@@ -32,7 +32,7 @@ let rec variable_name_of_parsed_scalar_or_index_update_type = function
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
 (* If the expression is more complex, return None *)
 let discrete_boolean_expression_constant_value_opt = function
-    | Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant (Bool_value v)))) -> Some v
+    | Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant (Bool_value v)))) -> Some v
     | _ -> None
 
 (* Tree leaf functions *)
@@ -242,25 +242,25 @@ let has_fun_call_parsed_discrete_arithmetic_expression = exists_in_parsed_discre
 (* Check if a parsed boolean expression is linear *)
 let rec is_linear_parsed_boolean_expression variable_infos = function
     | Parsed_conj_dis _ -> false
-    | Parsed_Discrete_boolean_expression expr ->
+    | Parsed_discrete_bool_expr expr ->
         is_linear_parsed_discrete_boolean_expression variable_infos expr
 
 (* Check if a parsed discrete boolean expression is linear *)
 and is_linear_parsed_discrete_boolean_expression variable_infos = function
-    | Parsed_arithmetic_expression expr ->
+    | Parsed_arithmetic_expr expr ->
         is_linear_parsed_arithmetic_expression variable_infos expr
-    | Parsed_boolean_expression expr ->
+    | Parsed_nested_bool_expr expr ->
         is_linear_parsed_boolean_expression variable_infos expr
     | Parsed_comparison _
     | Parsed_comparison_in _
-    | Parsed_Not _ -> false
+    | Parsed_not _ -> false
 
 (* Check if a parsed arithmetic expression is linear *)
 and is_linear_parsed_arithmetic_expression variable_infos = function
     | Parsed_sum_diff (expr, term, _) ->
         is_linear_parsed_arithmetic_expression variable_infos expr &&
         is_linear_parsed_term variable_infos term
-    | Parsed_DAE_term term ->
+    | Parsed_term term ->
         is_linear_parsed_term variable_infos term
 
 (* Check if a parsed term is linear *)
@@ -285,26 +285,26 @@ and is_linear_parsed_term variable_infos = function
         in
         is_linear && is_linear_product_quotient
 
-    | Parsed_DT_factor factor ->
+    | Parsed_factor factor ->
         is_linear_parsed_factor variable_infos factor
 
 (* Check if a parsed factor is linear *)
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
-    | Parsed_DF_variable variable_name -> true
+    | Parsed_variable variable_name -> true
     (* only rational constant *)
-    | Parsed_DF_constant value ->
+    | Parsed_constant value ->
         (match value with
         | Rational_value _
         | Weak_number_value _ -> true
         | _ -> false
         )
-    | Parsed_DF_expression expr ->
+    | Parsed_nested_expr expr ->
         is_linear_parsed_arithmetic_expression variable_infos expr
-    | Parsed_DF_unary_min factor ->
+    | Parsed_unary_min factor ->
         is_linear_parsed_factor variable_infos factor
     | Parsed_sequence _
-    | Parsed_DF_access _
+    | Parsed_access _
     | Parsed_function_call _ -> false
 
 let all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr =
@@ -672,7 +672,7 @@ let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
                 let is_clock = VariableInfo.is_clock variable_infos variable_name in
                 let is_reset_value =
                     match update_expr with
-                    | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) when ParsedValue.is_zero value -> true
+                    | Parsed_discrete_bool_expr (Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant value)))) when ParsedValue.is_zero value -> true
                     | _ -> false
                 in
 

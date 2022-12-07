@@ -627,7 +627,7 @@ syn_label:
 /************************************************************/
 
 arithmetic_expression:
-	| arithmetic_term { Parsed_DAE_term $1 }
+	| arithmetic_term { Parsed_term $1 }
 	| arithmetic_expression sum_diff arithmetic_term { Parsed_sum_diff ($1, $3, $2) }
 ;
 
@@ -638,12 +638,12 @@ sum_diff:
 
 /* Term over variables and rationals (includes recursion with arithmetic_expression) */
 arithmetic_term:
-	| arithmetic_factor { Parsed_DT_factor $1 }
+	| arithmetic_factor { Parsed_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| number NAME { Parsed_product_quotient (Parsed_DT_factor (Parsed_DF_constant ($1)), Parsed_DF_variable $2, Parsed_mul) }
+	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable $2, Parsed_mul) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
-	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
+	| OP_MINUS arithmetic_factor { Parsed_factor(Parsed_unary_min $2) }
 ;
 
 product_quotient:
@@ -653,18 +653,18 @@ product_quotient:
 
 /*
 postfix_arithmetic_factor:
-  | arithmetic_factor { Parsed_DT_factor $1 }
-  | postfix_arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_DF_access ($1, NumConst.to_int $3) }
+  | arithmetic_factor { Parsed_factor $1 }
+  | postfix_arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_access ($1, NumConst.to_int $3) }
 ;
 */
 
 arithmetic_factor:
-  | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_DF_access ($1, $3) }
+  | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_access ($1, $3) }
   | NAME LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
-  | literal_scalar_constant { Parsed_DF_constant $1 }
+  | literal_scalar_constant { Parsed_constant $1 }
   | literal_non_scalar_constant { $1 }
-  | NAME { Parsed_DF_variable $1 }
-  | LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+  | NAME { Parsed_variable $1 }
+  | LPAREN arithmetic_expression RPAREN { Parsed_nested_expr $2 }
 ;
 
 literal_scalar_constant:
@@ -817,13 +817,13 @@ pos_float:
 /************************************************************/
 
 boolean_expression:
-	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	| discrete_boolean_expression { Parsed_discrete_bool_expr $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
   | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 ;
 
 discrete_boolean_expression:
-	| arithmetic_expression { Parsed_arithmetic_expression $1 }
+	| arithmetic_expression { Parsed_arithmetic_expr $1 }
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
@@ -831,8 +831,8 @@ discrete_boolean_expression:
 	/* allowed for convenience */
 	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
-	| LPAREN boolean_expression RPAREN { Parsed_boolean_expression $2 }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| LPAREN boolean_expression RPAREN { Parsed_nested_bool_expr $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_not $3 }
 ;
 
 /************************************************************/

@@ -115,12 +115,12 @@ let rec type_check_parsed_boolean_expression local_variables_opt variable_infos 
             ))
         )
 
-	| Parsed_Discrete_boolean_expression expr ->
+	| Parsed_discrete_bool_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_discrete_bool_expr (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt = function
-    | Parsed_arithmetic_expression expr ->
+    | Parsed_arithmetic_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_arithmetic_expr (typed_expr, discrete_type), discrete_type
 
@@ -188,11 +188,11 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
                     (string_of_parsed_discrete_boolean_expression variable_infos outer_expr)
             ))
 
-	| Parsed_boolean_expression expr ->
+	| Parsed_nested_bool_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_bool_expr typed_expr, discrete_type
 
-	| Parsed_Not expr as outer_expr ->
+	| Parsed_not expr as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 
         (* Check that expression type is Boolean *)
@@ -238,7 +238,7 @@ and type_check_parsed_discrete_arithmetic_expression local_variables_opt variabl
             ))
         )
 
-	| Parsed_DAE_term term ->
+	| Parsed_term term ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
 	    Typed_term (typed_expr, discrete_type), discrete_type
 
@@ -246,7 +246,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
     (* Specific case, literal rational => constant / constant *)
     (* Should be reduced before... *)
 
-    | Parsed_product_quotient ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor), Parsed_div) as outer_expr ->
+    | Parsed_product_quotient ((Parsed_factor (Parsed_constant lv) as term), (Parsed_constant rv as factor), Parsed_div) as outer_expr ->
 
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
@@ -310,12 +310,12 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         ))
         )
 
-	| Parsed_DT_factor factor ->
+	| Parsed_factor factor ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
-	| Parsed_DF_variable variable_name ->
+	| Parsed_variable variable_name ->
         (* If it's local variable, take it's type *)
         (* local variables are more priority and shadow global variables  *)
 	    let discrete_type, scope =
@@ -338,7 +338,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type
 
-	| Parsed_DF_constant value ->
+	| Parsed_constant value ->
         let discrete_type = ParsedValue.discrete_type_of_value value in
 
         (* If infer type is given and discrete type is unknown number *)
@@ -388,7 +388,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             ))
         )
 
-    | Parsed_DF_access (factor, index_expr) ->
+    | Parsed_access (factor, index_expr) ->
         let typed_factor, factor_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
         let typed_index, index_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos None (* None: mean no inference for index *) index_expr in
 
@@ -402,11 +402,11 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         | _ -> raise (TypeError "Cannot make an access to another type than array or list.")
         )
 
-	| Parsed_DF_expression expr ->
+	| Parsed_nested_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_expr (typed_expr, discrete_type), discrete_type
 
-	| Parsed_DF_unary_min factor as outer_expr ->
+	| Parsed_unary_min factor as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 
         (* Check that expression is a number *)

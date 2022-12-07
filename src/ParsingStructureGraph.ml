@@ -143,7 +143,7 @@ let is_discrete local_variables declarations_info variable_name =
     not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.discrete_names
 
 let is_reset variable_name = function
-    | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) ->
+    | Parsed_discrete_bool_expr (Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant value)))) ->
         ParsedValue.is_zero value
     | _ -> false
 

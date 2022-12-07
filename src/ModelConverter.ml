@@ -665,23 +665,23 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
                 let rational_value = ParsedValue.Weak_number_value c in
                 My_left (
                     updated_variable_name,
-                    Parsed_Discrete_boolean_expression (
-                    Parsed_arithmetic_expression (
-                    Parsed_DAE_term (
-                    Parsed_DT_factor (
-                    Parsed_DF_constant rational_value))))
+                    Parsed_discrete_bool_expr (
+                    Parsed_arithmetic_expr (
+                    Parsed_term (
+                    Parsed_factor (
+                    Parsed_constant rational_value))))
                 )
             (* Constant: OK *)
             | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
                 let coef_rational_value = ParsedValue.Weak_number_value coef in
                 My_left (
                     updated_variable_name,
-                    Parsed_Discrete_boolean_expression (
-                    Parsed_arithmetic_expression (
-                    Parsed_DAE_term (
+                    Parsed_discrete_bool_expr (
+                    Parsed_arithmetic_expr (
+                    Parsed_term (
                     Parsed_product_quotient (
-                    Parsed_DT_factor (Parsed_DF_constant coef_rational_value),
-                    Parsed_DF_variable variable_name,
+                    Parsed_factor (Parsed_constant coef_rational_value),
+                    Parsed_variable variable_name,
                     Parsed_mul))))
                 )
 
@@ -1236,7 +1236,7 @@ let is_only_resets variable_infos updates =
         (* An expression to zero *)
         let is_update_to_zero =
             match update with
-            | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) when ParsedValue.is_zero value -> true
+            | Parsed_discrete_bool_expr (Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant value)))) when ParsedValue.is_zero value -> true
             | _ -> false
         in
         (* Check if it's a clock *)
