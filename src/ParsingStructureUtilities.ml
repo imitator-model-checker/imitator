@@ -161,11 +161,11 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
             (* Add variable used for loop to inner local variables scope *)
             let inner_local_variables = Hashtbl.copy local_variables in
-            Hashtbl.replace inner_local_variables variable_name (Var_type_discrete_number Var_type_discrete_int, id);
+            Hashtbl.replace inner_local_variables variable_name (Dt_number Dt_int, id);
 
             let decl_callback_result =
                 match decl_callback with
-                | Some decl_callback -> decl_callback (variable_name, (Var_type_discrete_number Var_type_discrete_int), id)
+                | Some decl_callback -> decl_callback (variable_name, (Dt_number Dt_int), id)
                 | None -> base
             in
 

@@ -86,7 +86,7 @@ let type_check_collection discrete_types infer_type_opt =
         (* Yes, we infer to this type *)
         | Some inner_type -> inner_type
         (* No, the type remain unknown for now: weak *)
-        | None -> Var_type_weak
+        | None -> Dt_weak
 
 let rec type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) as outer_expr ->
@@ -102,7 +102,7 @@ let rec type_check_parsed_boolean_expression local_variables_opt variable_infos 
 
         (* Check that left and right members are Boolean *)
         (match l_type, r_type with
-        | Var_type_discrete_bool, Var_type_discrete_bool -> Typed_conj_dis (l_typed_expr, r_typed_expr, typed_conj_dis), Var_type_discrete_bool
+        | Dt_bool, Dt_bool -> Typed_conj_dis (l_typed_expr, r_typed_expr, typed_conj_dis), Dt_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -132,7 +132,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
         (* Check that left and right members are type compatibles *)
         if is_discrete_type_compatibles l_type r_type then (
             let discrete_type = stronger_discrete_type_of l_type r_type in
-            Typed_comparison (l_typed_expr, relop, r_typed_expr, discrete_type), Var_type_discrete_bool
+            Typed_comparison (l_typed_expr, relop, r_typed_expr, discrete_type), Dt_bool
         )
         else
             raise (TypeError (
@@ -153,7 +153,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
         (* Check that expression are numbers *)
         let in_number_type, lw_number_type, up_number_type =
             match in_type, lw_type, up_type with
-            | Var_type_discrete_number in_number_type, Var_type_discrete_number lw_number_type, Var_type_discrete_number up_number_type -> in_number_type, lw_number_type, up_number_type
+            | Dt_number in_number_type, Dt_number lw_number_type, Dt_number up_number_type -> in_number_type, lw_number_type, up_number_type
             | _ -> raise (TypeError (
                 ill_typed_message_of_expressions
                     [
@@ -174,7 +174,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
 
         if in_lw_compatible && in_up_compatible && lw_up_compatible then (
             let inner_number_type = stronger_discrete_number_type_of (stronger_discrete_number_type_of in_number_type lw_number_type) up_number_type in
-            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type), Var_type_discrete_bool
+            Typed_comparison_in (in_typed_expr, lw_typed_expr, up_typed_expr, inner_number_type), Dt_bool
         )
         else
             raise (TypeError (
@@ -197,7 +197,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
 
         (* Check that expression type is Boolean *)
 	    (match discrete_type with
-	    | Var_type_discrete_bool -> Typed_not_expr typed_expr, Var_type_discrete_bool
+	    | Dt_bool -> Typed_not_expr typed_expr, Dt_bool
 	    | _ ->
             raise (TypeError (
                 "Expression `"
@@ -223,9 +223,9 @@ and type_check_parsed_discrete_arithmetic_expression local_variables_opt variabl
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
-        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
+        | Dt_number l_number_type, Dt_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_sum_diff (l_typed_expr, r_typed_expr, discrete_number_type, typed_sum_diff), Var_type_discrete_number discrete_number_type
+            Typed_sum_diff (l_typed_expr, r_typed_expr, discrete_number_type, typed_sum_diff), Dt_number discrete_number_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -253,7 +253,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
-        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
+        | Dt_number l_number_type, Dt_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
 
             (* Doing division *)
             let l_numconst = ParsedValue.to_numconst_value lv in
@@ -265,13 +265,13 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
             (* If it's representable by an int, it can be a rational or an int *)
             let discrete_number_type =
                 if can_be_int then
-                    Var_type_discrete_weak_number
+                    Dt_weak_number
                 (* If it's not representable by an int, it's a rational *)
                 else
-                    Var_type_discrete_rat
+                    Dt_rat
             in
 
-            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, Typed_div), Var_type_discrete_number discrete_number_type
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, Typed_div), Dt_number discrete_number_type
 
         | _ ->
 
@@ -297,9 +297,9 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 
         (* Check that members are numbers and compatible *)
         (match l_type, r_type with
-        | Var_type_discrete_number l_number_type, Var_type_discrete_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
+        | Dt_number l_number_type, Dt_number r_number_type when is_discrete_type_number_compatibles l_number_type r_number_type ->
             let discrete_number_type = stronger_discrete_number_type_of l_number_type r_number_type in
-            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, typed_product_quotient), Var_type_discrete_number discrete_number_type
+            Typed_product_quotient (l_typed_expr, r_typed_expr, discrete_number_type, typed_product_quotient), Dt_number discrete_number_type
         | _ -> raise (TypeError (
             ill_typed_message
                 (string_of_parsed_term variable_infos term)
@@ -332,7 +332,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
-            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_weak_number -> infer_type
+            | Some ((Dt_number _) as infer_type), Dt_number Dt_weak_number -> infer_type
             | _ -> discrete_type
         in
 
@@ -345,7 +345,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* we can infer directly unknown number to infer type *)
         let infer_discrete_type =
             match infer_type_opt, discrete_type with
-            | Some ((Var_type_discrete_number _) as infer_type), Var_type_discrete_number Var_type_discrete_weak_number -> infer_type
+            | Some ((Dt_number _) as infer_type), Dt_number Dt_weak_number -> infer_type
             | _ -> discrete_type
         in
 
@@ -367,13 +367,13 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             let discrete_type, seq_type =
                 match seq_type with
                     | Parsed_array ->
-                        Var_type_discrete_array (inner_type, List.length list_expr), Typed_array
+                        Dt_array (inner_type, List.length list_expr), Typed_array
                     | Parsed_list ->
-                        Var_type_discrete_list inner_type, Typed_list
+                        Dt_list inner_type, Typed_list
                     | Parsed_stack ->
-                        Var_type_discrete_stack inner_type, Typed_stack
+                        Dt_stack inner_type, Typed_stack
                     | Parsed_queue ->
-                        Var_type_discrete_queue inner_type, Typed_queue
+                        Dt_queue inner_type, Typed_queue
             in
             Typed_sequence (typed_expressions, inner_type, seq_type), discrete_type
         )
@@ -397,8 +397,8 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         (* Check that accessed element is a collection *)
         (match factor_type with
-        | Var_type_discrete_array (inner_type, _)
-        | Var_type_discrete_list inner_type -> Typed_access (typed_factor, typed_index, factor_type, inner_type), inner_type
+        | Dt_array (inner_type, _)
+        | Dt_list inner_type -> Typed_access (typed_factor, typed_index, factor_type, inner_type), inner_type
         | _ -> raise (TypeError "Cannot make an access to another type than array or list.")
         )
 
@@ -411,7 +411,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         (* Check that expression is a number *)
         (match discrete_type with
-        | Var_type_discrete_number discrete_number_type -> Typed_unary_min (typed_expr, discrete_number_type), discrete_type
+        | Dt_number discrete_number_type -> Typed_unary_min (typed_expr, discrete_number_type), discrete_type
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -481,7 +481,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         if not is_compatibles then
         (
             (* Call signature with return type *)
-            let complete_call_signature = call_signature @ [Var_type_weak] in
+            let complete_call_signature = call_signature @ [Dt_weak] in
 
             raise (TypeError (
                 "Function call `"
@@ -557,7 +557,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
                 let infer_resolved_constraint =
                     match infer_type_opt, resolved_constraint with
-                    | Some ((Var_type_discrete_number _) as infer_type), Resolved_type_constraint (Var_type_discrete_number Var_type_discrete_weak_number) -> Resolved_type_constraint infer_type
+                    | Some ((Dt_number _) as infer_type), Resolved_type_constraint (Dt_number Dt_weak_number) -> Resolved_type_constraint infer_type
                     | _ -> resolved_constraint
                 in
                 constraint_name, infer_resolved_constraint
@@ -615,16 +615,16 @@ let rec type_check_parsed_scalar_or_index_update_type local_variables variable_i
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
 
         let typed_scalar_or_index_update_type, discrete_type = type_check_parsed_scalar_or_index_update_type local_variables variable_infos parsed_scalar_or_index_update_type in
-        let typed_index_expr_type, index_discrete_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) index_expr in
+        let typed_index_expr_type, index_discrete_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Dt_number Dt_int)) index_expr in
 
         (* Check that index expression is an int expression *)
-        if index_discrete_type <> Var_type_discrete_number Var_type_discrete_int then
+        if index_discrete_type <> Dt_number Dt_int then
             raise (TypeError ("Index of expression `" ^ ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos indexed_update ^ "` is not an integer."));
 
         (* Check is an array *)
         let discrete_type =
             match discrete_type with
-            | Var_type_discrete_array (inner_type, _) -> inner_type
+            | Dt_array (inner_type, _) -> inner_type
             | _ -> raise (TypeError "Trying to make a write access to a non-array variable.")
         in
         Typed_indexed_update (typed_scalar_or_index_update_type, typed_index_expr_type, discrete_type), discrete_type
@@ -642,7 +642,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
 
             (* Check that local variable wasn't typed with void *)
             (match variable_type with
-            | Var_type_void ->
+            | Dt_void ->
                 raise (TypeError (
                     "Variable `"
                     ^ variable_name
@@ -737,12 +737,12 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
         | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, _) as outer_expr ->
             (* Add local variable for loop to hashtable *)
             let loop_local_variables = Hashtbl.copy local_variables in
-            Hashtbl.replace loop_local_variables variable_name (Var_type_discrete_number Var_type_discrete_int);
+            Hashtbl.replace loop_local_variables variable_name (Dt_number Dt_int);
 
             (* Resolve typed from expr *)
-            let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) from_expr in
+            let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Dt_number Dt_int)) from_expr in
             (* Resolve typed to expr *)
-            let typed_to_expr, to_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Var_type_discrete_number Var_type_discrete_int)) to_expr in
+            let typed_to_expr, to_expr_type = type_check_parsed_discrete_arithmetic_expression (Some local_variables) variable_infos (Some (Dt_number Dt_int)) to_expr in
             (* Resolve typed inner expr *)
             let typed_inner_bloc = type_check_seq_code_bloc_rec loop_local_variables inner_bloc in
 
@@ -754,7 +754,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
 
             (* Check from and to expr type are int *)
             (match from_expr_type, to_expr_type with
-            | Var_type_discrete_number Var_type_discrete_int, Var_type_discrete_number Var_type_discrete_int ->
+            | Dt_number Dt_int, Dt_number Dt_int ->
                 Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc)
             | _ ->
                 raise (TypeError (
@@ -778,7 +778,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
             let typed_inner_bloc = type_check_seq_code_bloc_rec loop_local_variables inner_bloc in
 
             (match condition_expr_type with
-            | Var_type_discrete_bool ->
+            | Dt_bool ->
                 Typed_while_loop (typed_condition_expr, typed_inner_bloc)
             | _ ->
                 raise (TypeError (
@@ -811,7 +811,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
             in
 
             (match condition_expr_type with
-            | Var_type_discrete_bool ->
+            | Dt_bool ->
                 Typed_if (typed_condition_expr, typed_then_bloc, typed_else_bloc_opt)
             | _ ->
                 raise (TypeError (
@@ -848,7 +848,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
         | Some return_expr ->
             let typed_return_expr, check_return_type = type_check_parsed_boolean_expression (Some local_variables) variable_infos infer_type_opt return_expr in
             Some typed_return_expr, check_return_type, string_of_typed_boolean_expression variable_infos typed_return_expr
-        | None -> None, Var_type_void, ""
+        | None -> None, Dt_void, ""
     in
 
     (* Check type compatibility between function body and return type *)
@@ -878,8 +878,8 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
 
 
 let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
-	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Var_type_discrete_bool
-	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Var_type_discrete_bool
+	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Dt_bool
+	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Dt_bool
 
 let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = function
 	| Parsed_discrete_boolean_expression expr ->
@@ -901,9 +901,9 @@ let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = funct
 	    let typed_predicate, discrete_type = type_check_parsed_loc_predicate variable_infos infer_type_opt predicate in
 	    Typed_loc_predicate typed_predicate, discrete_type
 
-	| Parsed_state_predicate_true -> Typed_state_predicate_true, Var_type_discrete_bool
-	| Parsed_state_predicate_false -> Typed_state_predicate_false, Var_type_discrete_bool
-	| Parsed_state_predicate_accepting -> Typed_state_predicate_accepting, Var_type_discrete_bool
+	| Parsed_state_predicate_true -> Typed_state_predicate_true, Dt_bool
+	| Parsed_state_predicate_false -> Typed_state_predicate_false, Dt_bool
+	| Parsed_state_predicate_accepting -> Typed_state_predicate_accepting, Dt_bool
 
 and type_check_parsed_state_predicate variable_infos infer_type_opt = function
 	| Parsed_state_predicate_OR (l_expr, r_expr) as outer_expr ->
@@ -911,8 +911,8 @@ and type_check_parsed_state_predicate variable_infos infer_type_opt = function
 	    let r_typed_expr, r_type = type_check_parsed_state_predicate variable_infos infer_type_opt r_expr in
 
 	    (match l_type, r_type with
-	    | Var_type_discrete_bool, Var_type_discrete_bool ->
-	        Typed_state_predicate_OR (l_typed_expr, r_typed_expr), Var_type_discrete_bool
+	    | Dt_bool, Dt_bool ->
+	        Typed_state_predicate_OR (l_typed_expr, r_typed_expr), Dt_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -935,8 +935,8 @@ and type_check_parsed_state_predicate_term variable_infos infer_type_opt = funct
 	    let r_typed_expr, r_type = type_check_parsed_state_predicate_term variable_infos infer_type_opt r_expr in
 
 	    (match l_type, r_type with
-	    | Var_type_discrete_bool, Var_type_discrete_bool ->
-	        Typed_state_predicate_term_AND (l_typed_expr, r_typed_expr), Var_type_discrete_bool
+	    | Dt_bool, Dt_bool ->
+	        Typed_state_predicate_term_AND (l_typed_expr, r_typed_expr), Dt_bool
         | _ ->
             raise (TypeError (
                 ill_typed_message_of_expressions
@@ -959,7 +959,7 @@ and type_check_parsed_state_predicate_factor variable_infos infer_type_opt = fun
 
         (* Check that expression type is boolean *)
 	    (match discrete_type with
-	    | Var_type_discrete_bool -> Typed_state_predicate_factor_NOT typed_expr, discrete_type
+	    | Dt_bool -> Typed_state_predicate_factor_NOT typed_expr, discrete_type
 	    | _ ->
 	        raise (TypeError (
                 ill_typed_message_of_expressions
@@ -1088,7 +1088,7 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 
     (* Check that non-linear constraint is a Boolean expression *)
     match discrete_type with
-    | DiscreteType.Var_type_discrete_bool -> typed_nonlinear_constraint
+    | DiscreteType.Dt_bool -> typed_nonlinear_constraint
     | _ ->
         raise (TypeError (
             "Guard or invariant expression `"
@@ -1161,7 +1161,7 @@ let check_conditional variable_infos expr =
 
     (* Check that non-linear constraint is a Boolean expression *)
     match expr_type with
-    | Var_type_discrete_bool ->
+    | Dt_bool ->
         typed_expr
     | _ ->
         raise (TypeError (
@@ -1193,7 +1193,7 @@ let check_state_predicate variable_infos predicate =
         ));
 
     match discrete_type with
-    | Var_type_discrete_bool -> typed_predicate
+    | Dt_bool -> typed_predicate
     | _ -> raise (TypeError (
             "Property `"
             ^ string_of_typed_state_predicate variable_infos typed_predicate
@@ -1298,55 +1298,55 @@ let raise_conversion_error str_structure_name str_expr =
 let rec global_expression_of_typed_boolean_expression variable_infos expr =
     let discrete_type =
         match expr with
-        | Typed_conj_dis _ -> Var_type_discrete_bool
+        | Typed_conj_dis _ -> Dt_bool
         | Typed_discrete_bool_expr (_, discrete_type) -> discrete_type
     in
     global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type
 
 and global_expression_of_typed_boolean_expression_by_type variable_infos expr = function
-    | Var_type_void ->
+    | Dt_void ->
         Void_expression (
             void_expression_of_typed_boolean_expression variable_infos expr
         )
-    | Var_type_discrete_number discrete_number_type ->
+    | Dt_number discrete_number_type ->
         Arithmetic_expression (
             discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type expr
         )
-    | Var_type_discrete_bool ->
+    | Dt_bool ->
         Bool_expression (
             bool_expression_of_typed_boolean_expression variable_infos expr
         )
-    | Var_type_discrete_binary_word length ->
+    | Dt_bin length ->
         Binary_word_expression (
             binary_expression_of_typed_boolean_expression variable_infos length expr
         )
-    | Var_type_discrete_array (inner_type, _) ->
+    | Dt_array (inner_type, _) ->
         Array_expression (
             array_expression_of_typed_boolean_expression variable_infos inner_type expr
         )
-    | Var_type_discrete_list inner_type ->
+    | Dt_list inner_type ->
         List_expression (
             list_expression_of_typed_boolean_expression variable_infos inner_type expr
         )
-    | Var_type_discrete_stack _ ->
+    | Dt_stack _ ->
         Stack_expression (
             stack_expression_of_typed_boolean_expression variable_infos expr
         )
-    | Var_type_discrete_queue _ ->
+    | Dt_queue _ ->
         Queue_expression (
             queue_expression_of_typed_boolean_expression variable_infos expr
         )
-    | Var_type_weak ->
+    | Dt_weak ->
         raise (InternalError expression_must_have_type_message)
 
 
 and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos discrete_number_type = function
 	| Typed_discrete_bool_expr (expr, _) ->
 	    (match discrete_number_type with
-	    | Var_type_discrete_weak_number
-	    | Var_type_discrete_rat ->
+	    | Dt_weak_number
+	    | Dt_rat ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
-	    | Var_type_discrete_int ->
+	    | Dt_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr)
 	    )
 	| _ -> raise (InternalError "Trying to convert Boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
@@ -1354,10 +1354,10 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
 	| Typed_arithmetic_expr (expr, discrete_type) ->
 	    (match discrete_number_type with
-	    | Var_type_discrete_weak_number
-	    | Var_type_discrete_rat ->
+	    | Dt_weak_number
+	    | Dt_rat ->
 	        Rational_arithmetic_expression (rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
-	    | Var_type_discrete_int ->
+	    | Dt_int ->
 	        Int_arithmetic_expression (int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr)
 	    )
 
@@ -1369,8 +1369,8 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
 	    let sum_diff = sum_diff_of_typed_sum_diff typed_sum_diff in
 
         (match discrete_number_type with
-        | Var_type_discrete_weak_number
-        | Var_type_discrete_rat ->
+        | Dt_weak_number
+        | Dt_rat ->
             Rational_arithmetic_expression (
                 Rational_sum_diff (
                     rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
@@ -1378,7 +1378,7 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
                     sum_diff
                 )
             )
-        | Var_type_discrete_int ->
+        | Dt_int ->
             Int_arithmetic_expression (
                 Int_sum_diff (
                     int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr,
@@ -1390,10 +1390,10 @@ and discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression varia
 
 	| Typed_term (term, _) ->
         (match discrete_number_type with
-        | Var_type_discrete_weak_number
-        | Var_type_discrete_rat ->
+        | Dt_weak_number
+        | Dt_rat ->
             Rational_arithmetic_expression (Rational_term (rational_arithmetic_expression_of_typed_term variable_infos term))
-        | Var_type_discrete_int ->
+        | Dt_int ->
             Int_arithmetic_expression (Int_term (int_arithmetic_expression_of_typed_term variable_infos term))
         )
 
@@ -1442,50 +1442,50 @@ and bool_expression_of_typed_comparison variable_infos l_expr parsed_relop r_exp
     let relop = relop_of_parsed_relop parsed_relop in
 
     match discrete_type with
-    | Var_type_discrete_number discrete_number_type ->
+    | Dt_number discrete_number_type ->
         Arithmetic_comparison (
             discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type l_expr,
             relop,
             discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type r_expr
         )
-    | Var_type_discrete_bool ->
+    | Dt_bool ->
         Boolean_comparison (
             bool_expression_of_typed_discrete_boolean_expression variable_infos l_expr,
             relop,
             bool_expression_of_typed_discrete_boolean_expression variable_infos r_expr
         )
-    | Var_type_discrete_binary_word length ->
+    | Dt_bin length ->
         Binary_comparison (
             binary_expression_of_typed_discrete_boolean_expression variable_infos length l_expr,
             relop,
             binary_expression_of_typed_discrete_boolean_expression variable_infos length r_expr
         )
-    | Var_type_discrete_array (inner_type, _) ->
+    | Dt_array (inner_type, _) ->
         Array_comparison (
             array_expression_of_typed_discrete_boolean_expression variable_infos inner_type l_expr,
             relop,
             array_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
-    | Var_type_discrete_list inner_type ->
+    | Dt_list inner_type ->
         List_comparison (
             list_expression_of_typed_discrete_boolean_expression variable_infos inner_type l_expr,
             relop,
             list_expression_of_typed_discrete_boolean_expression variable_infos inner_type r_expr
         )
-    | Var_type_discrete_stack _ as discrete_type ->
+    | Dt_stack _ as discrete_type ->
         Stack_comparison (
             stack_expression_of_typed_boolean_expression variable_infos (Typed_discrete_bool_expr (l_expr, discrete_type)),
             relop,
             stack_expression_of_typed_boolean_expression variable_infos (Typed_discrete_bool_expr (r_expr, discrete_type))
         )
-    | Var_type_discrete_queue _ as discrete_type ->
+    | Dt_queue _ as discrete_type ->
         Queue_comparison (
             queue_expression_of_typed_boolean_expression variable_infos (Typed_discrete_bool_expr (l_expr, discrete_type)),
             relop,
             queue_expression_of_typed_boolean_expression variable_infos (Typed_discrete_bool_expr (r_expr, discrete_type))
         )
-    | Var_type_void
-    | Var_type_weak ->
+    | Dt_void
+    | Dt_weak ->
         raise (InternalError expression_must_have_type_message)
 
 and bool_expression_of_typed_factor variable_infos = function
@@ -1522,7 +1522,7 @@ and bool_expression_of_typed_factor variable_infos = function
         )
 
 	| _ as expr ->
-	    raise_conversion_error "Bool" (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+	    raise_conversion_error "Bool" (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 (* Rational expression conversion *)
 and rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
@@ -1598,7 +1598,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    rational_expression_of_typed_function_call variable_infos argument_expressions function_name
 
 	| _ as expr ->
-        raise_conversion_error "rational" (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+        raise_conversion_error "rational" (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 and rational_expression_of_typed_function_call variable_infos argument_expressions function_name =
     let fun_meta = user_function_meta variable_infos function_name in
@@ -1689,7 +1689,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
 	| _ as expr ->
-        raise_conversion_error "int" (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+        raise_conversion_error "int" (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 (* Binary word conversion *)
 and binary_expression_of_typed_boolean_expression variable_infos length = function
@@ -1739,7 +1739,7 @@ and binary_expression_of_typed_factor variable_infos length = function
         )
 
     | _ as expr ->
-        raise_conversion_error "binary word" (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+        raise_conversion_error "binary word" (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 (* Array expression conversion *)
 and array_expression_of_typed_boolean_expression variable_infos discrete_type = function
@@ -1794,7 +1794,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         )
 
 	| _ as expr ->
-        raise_conversion_error Constants.array_string (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+        raise_conversion_error Constants.array_string (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 
 (* List expression conversion *)
@@ -1848,7 +1848,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         )
 
 	| _ as expr ->
-        raise_conversion_error Constants.list_string (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+        raise_conversion_error Constants.list_string (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 (* Stack expression conversion *)
 and stack_expression_of_typed_boolean_expression variable_infos expr =
@@ -1894,7 +1894,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             )
 
         | _ as expr ->
-            raise_error (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+            raise_error (string_of_typed_discrete_factor variable_infos Dt_weak expr)
     in
     stack_expression_of_typed_boolean_expression expr
 
@@ -1943,7 +1943,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             )
 
         | _ as expr ->
-            raise_error (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+            raise_error (string_of_typed_discrete_factor variable_infos Dt_weak expr)
     in
     queue_expression_of_typed_boolean_expression expr
 
@@ -1985,7 +1985,7 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
             )
 
         | _ as expr ->
-            raise_error (string_of_typed_discrete_factor variable_infos Var_type_weak expr)
+            raise_error (string_of_typed_discrete_factor variable_infos Dt_weak expr)
     in
     void_expression_of_typed_boolean_expression expr
 
@@ -1994,11 +1994,11 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
 (* --------------------*)
 
 and expression_access_type_of_typed_factor variable_infos factor = function
-    | Var_type_discrete_array (inner_type, _) ->
+    | Dt_array (inner_type, _) ->
         Expression_array_access (
             array_expression_of_typed_factor variable_infos inner_type factor
         )
-    | Var_type_discrete_list inner_type ->
+    | Dt_list inner_type ->
         Expression_list_access (
             list_expression_of_typed_factor variable_infos inner_type factor
         )
@@ -2280,7 +2280,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
             let factor_coefs = linear_coefs_of_typed_factor factor in
 
             (* Eventually prepare string representation of expression for the message when conversion fail *)
-            let str_outer_term_lazy = lazy (string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term) in
+            let str_outer_term_lazy = lazy (string_of_typed_discrete_term variable_infos (Dt_number Dt_rat) outer_term) in
 
             let result =
             (match product_quotient with
@@ -2349,7 +2349,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
         | factor ->
             raise (InvalidExpression (
-                unable_to_convert_error_msg (string_of_typed_discrete_factor variable_infos (Var_type_discrete_number Var_type_discrete_rat) factor)
+                unable_to_convert_error_msg (string_of_typed_discrete_factor variable_infos (Dt_number Dt_rat) factor)
             ))
     in
 

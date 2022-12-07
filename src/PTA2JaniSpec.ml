@@ -203,30 +203,30 @@ let jani_compound_datatype_ref str_datatype str_compound_datatype =
 
 (* String of number var type *)
 let string_of_var_type_discrete_number = function
-    | Var_type_discrete_rat -> json_quoted "real"
-    | Var_type_discrete_int -> json_quoted "int"
-    | Var_type_discrete_weak_number -> json_quoted "number"
+    | Dt_rat -> json_quoted "real"
+    | Dt_int -> json_quoted "int"
+    | Dt_weak_number -> json_quoted "number"
 
 (* String of discrete var type *)
 let rec string_of_var_type_discrete = function
-    | Var_type_void -> "void"
-    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
-    | Var_type_discrete_bool -> json_quoted "bool"
-    | Var_type_discrete_binary_word _ ->
+    | Dt_void -> "void"
+    | Dt_number x -> string_of_var_type_discrete_number x
+    | Dt_bool -> json_quoted "bool"
+    | Dt_bin _ ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (json_quoted "bool");
         |]
 
-    | Var_type_discrete_array (inner_type, _)
-    | Var_type_discrete_list inner_type
-    | Var_type_discrete_stack inner_type
-    | Var_type_discrete_queue inner_type ->
+    | Dt_array (inner_type, _)
+    | Dt_list inner_type
+    | Dt_stack inner_type
+    | Dt_queue inner_type ->
         json_struct [|
             json_property "kind" (json_quoted "array");
             json_property "base" (string_of_var_type_discrete inner_type)
         |]
-    | Var_type_weak ->
+    | Dt_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
 
 (* String of length constraint for Jani *)

@@ -186,20 +186,20 @@ let neq a b =
 
 
 let default_number_value = function
-    | Var_type_discrete_rat -> Abstract_rat_value NumConst.zero
-    | Var_type_discrete_int -> Abstract_int_value Int32.zero
+    | Dt_rat -> Abstract_rat_value NumConst.zero
+    | Dt_int -> Abstract_int_value Int32.zero
     | _ -> raise (InternalError "Unable to get number value of non number type.")
 
 let rec default_value_of_discrete_type = function
-    | Var_type_void -> Abstract_void_value
-    | Var_type_discrete_number t -> Abstract_scalar_value (Abstract_number_value (default_number_value t))
-    | Var_type_discrete_bool -> Abstract_scalar_value (Abstract_bool_value false)
-    | Var_type_discrete_binary_word l -> Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.zero l))
-    | Var_type_discrete_array (inner_type, length) -> Abstract_container_value (Abstract_array_value (Array.make length (default_value_of_discrete_type inner_type)))
-    | Var_type_discrete_list inner_type -> Abstract_container_value (Abstract_list_value [])
-    | Var_type_discrete_stack inner_type -> Abstract_container_value (Abstract_stack_value (Stack.create ()))
-    | Var_type_discrete_queue inner_type -> Abstract_container_value (Abstract_queue_value (Queue.create ()))
-    | Var_type_weak -> raise (InternalError "Unable to have default value of a weak typed variable.")
+    | Dt_void -> Abstract_void_value
+    | Dt_number t -> Abstract_scalar_value (Abstract_number_value (default_number_value t))
+    | Dt_bool -> Abstract_scalar_value (Abstract_bool_value false)
+    | Dt_bin l -> Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.zero l))
+    | Dt_array (inner_type, length) -> Abstract_container_value (Abstract_array_value (Array.make length (default_value_of_discrete_type inner_type)))
+    | Dt_list inner_type -> Abstract_container_value (Abstract_list_value [])
+    | Dt_stack inner_type -> Abstract_container_value (Abstract_stack_value (Stack.create ()))
+    | Dt_queue inner_type -> Abstract_container_value (Abstract_queue_value (Queue.create ()))
+    | Dt_weak -> raise (InternalError "Unable to have default value of a weak typed variable.")
 
 let default_value = function
     | Var_type_clock
@@ -207,40 +207,40 @@ let default_value = function
     | Var_type_discrete discrete_type -> default_value_of_discrete_type discrete_type
 
 let discrete_type_of_number_value = function
-    | Abstract_rat_value _ -> Var_type_discrete_number Var_type_discrete_rat
-    | Abstract_int_value _ -> Var_type_discrete_number Var_type_discrete_int
+    | Abstract_rat_value _ -> Dt_number Dt_rat
+    | Abstract_int_value _ -> Dt_number Dt_int
 
 let discrete_type_of_scalar_value = function
     | Abstract_number_value v -> discrete_type_of_number_value v
-    | Abstract_bool_value _ -> Var_type_discrete_bool
-    | Abstract_binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
+    | Abstract_bool_value _ -> Dt_bool
+    | Abstract_binary_word_value value -> Dt_bin (BinaryWord.length value)
 
 let rec discrete_type_of_value = function
-    | Abstract_void_value -> Var_type_void
+    | Abstract_void_value -> Dt_void
     | Abstract_scalar_value v -> discrete_type_of_scalar_value v
     | Abstract_container_value v -> discrete_type_of_container_value v
 
 and discrete_type_of_container_value = function
     | Abstract_array_value a ->
         if Array.length a = 0 then
-            Var_type_discrete_array (Var_type_weak, 0)
+            Dt_array (Dt_weak, 0)
         else
-            Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
+            Dt_array (discrete_type_of_value (Array.get a 0), Array.length a)
     | Abstract_list_value l ->
         if List.length l = 0 then
-            Var_type_discrete_list Var_type_weak
+            Dt_list Dt_weak
         else
-            Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
+            Dt_list (discrete_type_of_value (List.nth l 0))
     | Abstract_stack_value l ->
         if Stack.length l = 0 then
-            Var_type_discrete_stack Var_type_weak
+            Dt_stack Dt_weak
         else
-            Var_type_discrete_stack (discrete_type_of_value (Stack.top l))
+            Dt_stack (discrete_type_of_value (Stack.top l))
     | Abstract_queue_value l ->
         if Queue.length l = 0 then
-            Var_type_discrete_queue Var_type_weak
+            Dt_queue Dt_weak
         else
-            Var_type_discrete_queue (discrete_type_of_value (Queue.peek l))
+            Dt_queue (discrete_type_of_value (Queue.peek l))
 
 
 let rec deep_copy = function

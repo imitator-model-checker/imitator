@@ -34,31 +34,31 @@ type parsed_value =
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
-    | Weak_number_value _ -> Var_type_discrete_number Var_type_discrete_weak_number
-    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rat
-    | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
-    | Bool_value _ -> Var_type_discrete_bool
-    | Binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
+    | Weak_number_value _ -> Dt_number Dt_weak_number
+    | Rational_value _ -> Dt_number Dt_rat
+    | Int_value _ -> Dt_number Dt_int
+    | Bool_value _ -> Dt_bool
+    | Binary_word_value value -> Dt_bin (BinaryWord.length value)
     | Array_value a ->
         if Array.length a = 0 then
-            Var_type_discrete_array (Var_type_weak, 0)
+            Dt_array (Dt_weak, 0)
         else
-            Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
+            Dt_array (discrete_type_of_value (Array.get a 0), Array.length a)
     | List_value l ->
         if List.length l = 0 then
-            Var_type_discrete_list Var_type_weak
+            Dt_list Dt_weak
         else
-            Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
+            Dt_list (discrete_type_of_value (List.nth l 0))
     | Stack_value l ->
         if Stack.length l = 0 then
-            Var_type_discrete_stack Var_type_weak
+            Dt_stack Dt_weak
         else
-            Var_type_discrete_stack (discrete_type_of_value (Stack.top l))
+            Dt_stack (discrete_type_of_value (Stack.top l))
     | Queue_value l ->
         if Queue.length l = 0 then
-            Var_type_discrete_queue Var_type_weak
+            Dt_queue Dt_weak
         else
-            Var_type_discrete_queue (discrete_type_of_value (Queue.peek l))
+            Dt_queue (discrete_type_of_value (Queue.peek l))
 
 (************************************************************)
 (** Value functions  *)

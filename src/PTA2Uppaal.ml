@@ -65,25 +65,25 @@ let scaling_factor = 200
 
 (* Customized string of discrete number type for UPPAAL *)
 let string_of_var_type_discrete_number = function
-    | Var_type_discrete_weak_number
-    | Var_type_discrete_rat -> "int"
-    | Var_type_discrete_int -> "int"
+    | Dt_weak_number
+    | Dt_rat -> "int"
+    | Dt_int -> "int"
 
 (* Customized string of discrete var type for UPPAAL *)
 let rec string_of_var_type_discrete = function
-    | Var_type_void -> "void"
-    | Var_type_discrete_number x -> string_of_var_type_discrete_number x
-    | Var_type_discrete_bool -> "bool"
-    | Var_type_discrete_binary_word length ->
+    | Dt_void -> "void"
+    | Dt_number x -> string_of_var_type_discrete_number x
+    | Dt_bool -> "bool"
+    | Dt_bin length ->
         let warning_in_comment = if length > 31 then ", WARNING: length > 31 can lead to overflow !" else "" in
         let comment = "/* binary(" ^ string_of_int length ^ ")" ^ warning_in_comment ^ " */" in
         "int " ^ comment
-    | Var_type_discrete_array (inner_type, _)
-    | Var_type_discrete_list inner_type
-    | Var_type_discrete_stack inner_type
-    | Var_type_discrete_queue inner_type ->
+    | Dt_array (inner_type, _)
+    | Dt_list inner_type
+    | Dt_stack inner_type
+    | Dt_queue inner_type ->
         string_of_var_type_discrete inner_type
-    | Var_type_weak ->
+    | Dt_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
 
 
@@ -191,7 +191,7 @@ let rec string_of_discrete_name_from_var_type discrete_name = function
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
-    | Var_type_discrete_array (inner_type, length) ->
+    | Dt_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
         ^ "["
         ^ string_of_int length

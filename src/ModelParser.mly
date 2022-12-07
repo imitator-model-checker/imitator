@@ -209,16 +209,16 @@ decl_var_list:
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
-	| CT_CONSTANT { Var_type_discrete (Var_type_discrete_number Var_type_discrete_rat) }
+	| CT_CONSTANT { Var_type_discrete (Dt_number Dt_rat) }
 	| CT_PARAMETER { Var_type_parameter }
 	| var_type_discrete { Var_type_discrete $1 }
 ;
 
 var_type_discrete:
-    | var_type_discrete_number { Var_type_discrete_number $1 }
-    | CT_VOID { Var_type_void }
-    | CT_BOOL { Var_type_discrete_bool }
-    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Var_type_discrete_binary_word (NumConst.to_bounded_int $3) }
+    | var_type_discrete_number { Dt_number $1 }
+    | CT_VOID { Dt_void }
+    | CT_BOOL { Dt_bool }
+    | CT_BINARY_WORD LPAREN pos_integer RPAREN { Dt_bin (NumConst.to_bounded_int $3) }
     | var_type_discrete_array { $1 }
     | var_type_discrete_list { $1 }
     | var_type_discrete_stack { $1 }
@@ -226,28 +226,28 @@ var_type_discrete:
 ;
 
 var_type_discrete_array:
-  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
-  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Var_type_discrete_array ($1, NumConst.to_bounded_int $4) }
+  | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Dt_array ($1, NumConst.to_bounded_int $4) }
+  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Dt_array ($1, NumConst.to_bounded_int $4) }
 ;
 
 var_type_discrete_list:
-  | var_type_discrete CT_LIST { Var_type_discrete_list $1 }
-  | var_type_discrete_list CT_LIST { Var_type_discrete_list $1 }
+  | var_type_discrete CT_LIST { Dt_list $1 }
+  | var_type_discrete_list CT_LIST { Dt_list $1 }
 ;
 
 var_type_discrete_stack:
-  | var_type_discrete CT_STACK { Var_type_discrete_stack $1 }
-  | var_type_discrete_stack CT_STACK { Var_type_discrete_stack $1 }
+  | var_type_discrete CT_STACK { Dt_stack $1 }
+  | var_type_discrete_stack CT_STACK { Dt_stack $1 }
 ;
 
 var_type_discrete_queue:
-  | var_type_discrete CT_QUEUE { Var_type_discrete_queue $1 }
-  | var_type_discrete_queue CT_QUEUE { Var_type_discrete_queue $1 }
+  | var_type_discrete CT_QUEUE { Dt_queue $1 }
+  | var_type_discrete_queue CT_QUEUE { Dt_queue $1 }
 ;
 
 var_type_discrete_number:
-    | CT_DISCRETE { Var_type_discrete_rat }
-    | CT_INT { Var_type_discrete_int }
+    | CT_DISCRETE { Dt_rat }
+    | CT_INT { Dt_int }
 ;
 
 /************************************************************/
