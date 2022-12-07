@@ -290,7 +290,7 @@ let string_of_scalar_value = function
         else
             jani_strings.boolean_string.false_string
 
-    | Abstract_binary_word_value value ->
+    | Abstract_bin_value value ->
         let bool_array = BinaryWord.to_array value in
         let str_values = Array.map (fun x -> if x then "true" else "false") bool_array in
         jani_array_value str_values
@@ -535,7 +535,7 @@ and string_of_int_arithmetic_expression variable_names =
 	in string_of_int_arithmetic_expression
 
 and string_of_binary_word_expression variable_names = function
-    | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_binary_word_value value))
+    | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_bin_value value))
     | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
     | Binary_word_local_variable variable_name -> json_quoted variable_name
 

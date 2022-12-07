@@ -152,7 +152,7 @@ let string_of_number_value = function
 let string_of_scalar_value = function
     | Abstract_number_value v -> string_of_number_value v
     | Abstract_bool_value v -> if v then uppaal_boolean_strings.true_string else uppaal_boolean_strings.false_string
-    | Abstract_binary_word_value v ->
+    | Abstract_bin_value v ->
         let length = BinaryWord.length v in
 
         if length > 31 then

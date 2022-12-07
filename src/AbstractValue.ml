@@ -26,7 +26,7 @@ type abstract_number_value =
 type abstract_scalar_value =
     | Abstract_number_value of abstract_number_value
     | Abstract_bool_value of bool
-    | Abstract_binary_word_value of BinaryWord.t
+    | Abstract_bin_value of BinaryWord.t
 
 type abstract_value =
     | Abstract_void_value
@@ -48,7 +48,7 @@ let customized_string_of_number_value customized_string = function
 let customized_string_of_scalar_value customized_string = function
     | Abstract_number_value v -> customized_string_of_number_value customized_string v
     | Abstract_bool_value v -> if v then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
-    | Abstract_binary_word_value v -> BinaryWord.string_of_binaryword v
+    | Abstract_bin_value v -> BinaryWord.string_of_binaryword v
 
 let rec customized_string_of_value customized_string = function
     | Abstract_void_value -> ""
@@ -94,7 +94,7 @@ let bool_value = function
     | v -> raise (InternalError ("Unable to get bool value of non-bool value: " ^ string_of_value v))
 
 let binary_word_value = function
-    | Abstract_scalar_value (Abstract_binary_word_value v) -> v
+    | Abstract_scalar_value (Abstract_bin_value v) -> v
     | v -> raise (InternalError ("Unable to get binary word value of non-binary word value: " ^ string_of_value v))
 
 let array_value = function
@@ -123,7 +123,7 @@ let hash_number_value = function
 let hash_scalar_value = function
     | Abstract_number_value v -> hash_number_value v
     | Abstract_bool_value v -> if v then 1 else 0
-    | Abstract_binary_word_value v -> BinaryWord.hash v
+    | Abstract_bin_value v -> BinaryWord.hash v
 
 let rec hash = function
     | Abstract_void_value -> 0
@@ -146,7 +146,7 @@ let to_float_number_value = function
 let to_float_scalar_value = function
     | Abstract_number_value v -> to_float_number_value v
     | Abstract_bool_value x -> if x then 1.0 else 0.0
-    | Abstract_binary_word_value x -> float_of_int (BinaryWord.hash x)
+    | Abstract_bin_value x -> float_of_int (BinaryWord.hash x)
 
 let to_float_value = function
     | Abstract_scalar_value v -> to_float_scalar_value v
@@ -162,7 +162,7 @@ let equal_number_value a b = match a, b with
 let equal_scalar_value a b = match a, b with
     | Abstract_number_value a, Abstract_number_value b -> equal_number_value a b
     | Abstract_bool_value a, Abstract_bool_value b -> a = b
-    | Abstract_binary_word_value a, Abstract_binary_word_value b -> BinaryWord.equal a b
+    | Abstract_bin_value a, Abstract_bin_value b -> BinaryWord.equal a b
     | _ -> raise (InternalError "Unable to compare two different typed values.")
 
 let equal_container_value a b = match a, b with
@@ -194,7 +194,7 @@ let rec default_value_of_discrete_type = function
     | Dt_void -> Abstract_void_value
     | Dt_number t -> Abstract_scalar_value (Abstract_number_value (default_number_value t))
     | Dt_bool -> Abstract_scalar_value (Abstract_bool_value false)
-    | Dt_bin l -> Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.zero l))
+    | Dt_bin l -> Abstract_scalar_value (Abstract_bin_value (BinaryWord.zero l))
     | Dt_array (inner_type, length) -> Abstract_container_value (Abstract_array_value (Array.make length (default_value_of_discrete_type inner_type)))
     | Dt_list inner_type -> Abstract_container_value (Abstract_list_value [])
     | Dt_stack inner_type -> Abstract_container_value (Abstract_stack_value (Stack.create ()))
@@ -213,7 +213,7 @@ let discrete_type_of_number_value = function
 let discrete_type_of_scalar_value = function
     | Abstract_number_value v -> discrete_type_of_number_value v
     | Abstract_bool_value _ -> Dt_bool
-    | Abstract_binary_word_value value -> Dt_bin (BinaryWord.length value)
+    | Abstract_bin_value value -> Dt_bin (BinaryWord.length value)
 
 let rec discrete_type_of_value = function
     | Abstract_void_value -> Dt_void
@@ -280,7 +280,7 @@ let rec of_parsed_value = function
     | Rat_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_rat_value v))
     | Int_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_int_value v))
     | Bool_value v -> Abstract_scalar_value (Abstract_bool_value v)
-    | Bin_value v -> Abstract_scalar_value (Abstract_binary_word_value v)
+    | Bin_value v -> Abstract_scalar_value (Abstract_bin_value v)
     | Array_value values -> Abstract_container_value (Abstract_array_value (Array.map of_parsed_value values))
     | List_value values -> Abstract_container_value (Abstract_list_value (List.map of_parsed_value values))
     | Stack_value values ->

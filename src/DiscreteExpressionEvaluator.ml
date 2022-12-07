@@ -188,7 +188,7 @@ let rec eval_global_expression_with_context variable_names functions_table_opt e
     | Void_expression expr -> eval_void_expression_with_context variable_names functions_table_opt eval_context_opt expr
     | Arithmetic_expression expr -> Abstract_scalar_value (eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt expr)
     | Bool_expression expr -> Abstract_scalar_value (Abstract_bool_value (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt expr))
-    | Binary_word_expression expr -> Abstract_scalar_value (Abstract_binary_word_value (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt expr))
+    | Binary_word_expression expr -> Abstract_scalar_value (Abstract_bin_value (eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Array_expression expr -> Abstract_container_value (Abstract_array_value (eval_array_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | List_expression expr -> Abstract_container_value (Abstract_list_value (eval_list_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Stack_expression expr -> Abstract_container_value (Abstract_stack_value (eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt expr))
@@ -935,43 +935,43 @@ let eval_rational_of_int str_expr = function
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_shift_left str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.shift_left b (Int32.to_int i)))
+    | Abstract_scalar_value (Abstract_bin_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.shift_left b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_shift_right str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.shift_right b (Int32.to_int i)))
+    | Abstract_scalar_value (Abstract_bin_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.shift_right b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_fill_left str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.fill_left b (Int32.to_int i)))
+    | Abstract_scalar_value (Abstract_bin_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.fill_left b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_fill_right str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.fill_right b (Int32.to_int i)))
+    | Abstract_scalar_value (Abstract_bin_value (b)) :: Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.fill_right b (Int32.to_int i)))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_and str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_and l_binary_word r_binary_word))
+    | Abstract_scalar_value (Abstract_bin_value (l_binary_word)) :: Abstract_scalar_value (Abstract_bin_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.log_and l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_or str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_or l_binary_word r_binary_word))
+    | Abstract_scalar_value (Abstract_bin_value (l_binary_word)) :: Abstract_scalar_value (Abstract_bin_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.log_or l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_xor str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (l_binary_word)) :: Abstract_scalar_value (Abstract_binary_word_value (r_binary_word)) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_xor l_binary_word r_binary_word))
+    | Abstract_scalar_value (Abstract_bin_value (l_binary_word)) :: Abstract_scalar_value (Abstract_bin_value (r_binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.log_xor l_binary_word r_binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_log_not str_expr = function
-    | Abstract_scalar_value (Abstract_binary_word_value (binary_word)) :: _ ->
-        Abstract_scalar_value (Abstract_binary_word_value (BinaryWord.log_not binary_word))
+    | Abstract_scalar_value (Abstract_bin_value (binary_word)) :: _ ->
+        Abstract_scalar_value (Abstract_bin_value (BinaryWord.log_not binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_array_append str_expr = function
