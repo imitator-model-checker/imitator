@@ -277,10 +277,10 @@ let to_rat_value = function
 
 let rec of_parsed_value = function
     | Weak_number_value v -> raise (InternalError "Unable to convert number value to abstract value")
-    | Rational_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_rat_value v))
+    | Rat_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_rat_value v))
     | Int_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_int_value v))
     | Bool_value v -> Abstract_scalar_value (Abstract_bool_value v)
-    | Binary_word_value v -> Abstract_scalar_value (Abstract_binary_word_value v)
+    | Bin_value v -> Abstract_scalar_value (Abstract_binary_word_value v)
     | Array_value values -> Abstract_container_value (Abstract_array_value (Array.map of_parsed_value values))
     | List_value values -> Abstract_container_value (Abstract_list_value (List.map of_parsed_value values))
     | Stack_value values ->

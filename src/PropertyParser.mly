@@ -443,12 +443,12 @@ function_argument_fol:
 
 number:
 	| integer { ParsedValue.Weak_number_value $1 }
-	| float { ParsedValue.Rational_value $1 }
-	/*| integer OP_DIV pos_integer { ( ParsedValue.Rational_value (NumConst.div $1 $3)) }*/
+	| float { ParsedValue.Rat_value $1 }
+	/*| integer OP_DIV pos_integer { ( ParsedValue.Rat_value (NumConst.div $1 $3)) }*/
 ;
 
 binary_word:
-        BINARYWORD { ParsedValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+        BINARYWORD { ParsedValue.Bin_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 
@@ -502,7 +502,7 @@ pos_float:
 ;
 
 binary_word:
-        BINARYWORD { ParsedValue.Binary_word_value (BinaryWord.binaryword_of_string $1) }
+        BINARYWORD { ParsedValue.Bin_value (BinaryWord.binaryword_of_string $1) }
 ;
 
 /************************************************************/

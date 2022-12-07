@@ -24,10 +24,10 @@ open DiscreteType
 
 type parsed_value =
     | Weak_number_value of NumConst.t
-    | Rational_value of NumConst.t
+    | Rat_value of NumConst.t
     | Int_value of Int32.t
     | Bool_value of bool
-    | Binary_word_value of BinaryWord.t
+    | Bin_value of BinaryWord.t
     | Array_value of parsed_value array
     | List_value of parsed_value list
     | Stack_value of parsed_value Stack.t

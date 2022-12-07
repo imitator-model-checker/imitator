@@ -295,7 +295,7 @@ and is_linear_parsed_factor variable_infos = function
     (* only rational constant *)
     | Parsed_constant value ->
         (match value with
-        | Rational_value _
+        | Rat_value _
         | Weak_number_value _ -> true
         | _ -> false
         )
