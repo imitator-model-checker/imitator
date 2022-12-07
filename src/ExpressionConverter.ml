@@ -637,6 +637,24 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
     and type_check_parsed_instruction local_variables = function
         | Parsed_local_decl (variable_name, variable_type, expr, _) as local_decl ->
 
+            (* String of discrete type*)
+            let str_discrete_type = DiscreteType.string_of_var_type_discrete variable_type in
+
+            (* Check that local variable wasn't typed with void *)
+            (match variable_type with
+            | Var_type_void ->
+                raise (TypeError (
+                    "Variable `"
+                    ^ variable_name
+                    ^ "` was declared as `"
+                    ^ str_discrete_type
+                    ^ "`. Unable to declare variable as `"
+                    ^ str_discrete_type
+                    ^ "`."
+                ))
+            | _ -> ()
+            );
+
             (* Eventually get a number type to infer *)
             let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
@@ -664,7 +682,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
             (* Check compatibility between local variable declared type and it's init expression *)
             if not (is_discrete_type_compatibles variable_type init_discrete_type) then
                 raise (TypeError (
-                    ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
+                    ill_typed_variable_message variable_name str_discrete_type (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
                 ));
 
             (* All is ok, convert to a typed function local declaration *)
