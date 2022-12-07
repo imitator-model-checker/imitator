@@ -190,7 +190,7 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
 
 	| Parsed_nested_bool_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_bool_expr typed_expr, discrete_type
+	    Typed_nested_bool_expr typed_expr, discrete_type
 
 	| Parsed_not expr as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
@@ -404,7 +404,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
 	| Parsed_nested_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_expr (typed_expr, discrete_type), discrete_type
+	    Typed_nested_expr (typed_expr, discrete_type), discrete_type
 
 	| Parsed_unary_min factor as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
@@ -1425,7 +1425,7 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
 	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type up_expr
 	    )
 
-	| Typed_bool_expr expr ->
+	| Typed_nested_bool_expr expr ->
 	    Boolean_expression (
 	        bool_expression_of_typed_boolean_expression variable_infos expr
 	    )
@@ -1503,7 +1503,7 @@ and bool_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Bool_constant (ParsedValue.bool_value value)
 
-    | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+    | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         bool_expression_of_typed_factor variable_infos factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1583,7 +1583,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Rational_constant (ParsedValue.to_numconst_value value)
 
-	| Typed_expr (expr, _) ->
+	| Typed_nested_expr (expr, _) ->
 	    Rational_nested_expression (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
@@ -1668,7 +1668,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Int_constant (ParsedValue.to_int_value value)
 
-	| Typed_expr (expr, _) ->
+	| Typed_nested_expr (expr, _) ->
 	    Int_nested_expression (
 	        int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
@@ -1720,7 +1720,7 @@ and binary_expression_of_typed_factor variable_infos length = function
     | Typed_constant (value, _) ->
         Binary_word_constant (ParsedValue.binary_word_value value)
 
-    | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+    | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         binary_expression_of_typed_factor variable_infos length factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1775,7 +1775,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         let expressions = List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list in
         Literal_array (Array.of_list expressions)
 
-	| Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+	| Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         array_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1829,7 +1829,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
     | Typed_sequence (expr_list, _, Typed_list) ->
         Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list)
 
-	| Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+	| Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         list_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1873,7 +1873,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
                 | Variable_kind discrete_index -> Stack_variable discrete_index
                 )
             )
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             stack_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1922,7 +1922,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
                 )
             )
 
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             queue_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1972,7 +1972,7 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
                 It should be checked before."
             ))
 
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             void_expression_of_typed_factor factor
 
         | Typed_function_call (function_name, argument_expressions, _) ->
@@ -2342,7 +2342,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 | Lt_var (c, v, s) -> Lt_var (NumConst.neg c, v, s)
             ) factors
 
-	    | Typed_expr (expr, _) ->
+	    | Typed_nested_expr (expr, _) ->
 	        let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
 	        (* Reduce sums of variables and constants *)
 	        let _, _, term_list = reduce_terms_list coefs_list in term_list
