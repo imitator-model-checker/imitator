@@ -143,7 +143,7 @@ let is_discrete local_variables declarations_info variable_name =
     not (Hashtbl.mem local_variables variable_name) && List.mem variable_name declarations_info.discrete_names
 
 let is_reset variable_name = function
-    | Parsed_Discrete_boolean_expression (Parsed_arithmetic_expression (Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant value)))) ->
+    | Parsed_discrete_bool_expr (Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant value)))) ->
         ParsedValue.is_zero value
     | _ -> false
 
@@ -841,13 +841,11 @@ let remove_unused_assignments_in_parsed_seq_code_bloc local_variables declaratio
 
     and remove_unused_clock_assignment_instruction local_variables = function
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
-            (* Is only a clock reset ? We consider not use *)
             let variable_name = variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
-            let is_clock_reset = is_clock_reset local_variables declarations_info variable_name expr in
-            let is_not_used = not (List.mem variable_name used_global_variables_list) in
+            let is_not_used = not (List.mem variable_name used_global_variables_list) && not (Hashtbl.mem local_variables variable_name) in
 
-            if (is_clock_reset && is_not_used) || (not is_clock_reset && is_not_used) then (
+            if is_not_used then (
                 None
             )
             else

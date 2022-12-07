@@ -65,11 +65,6 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
-(* Extract function name from parsed factor *)
-let function_name_of_parsed_factor = function
-	| Parsed_DF_variable name -> name
-    | factor -> raise (TypeError "Trying to make a call on a non-function.")
-
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
@@ -77,11 +72,11 @@ let rec fold_parsed_boolean_expression_with_local_variables local_variables oper
 	    operator
 	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun l_expr)
 	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun r_expr)
-	| Parsed_Discrete_boolean_expression expr ->
+	| Parsed_discrete_bool_expr expr ->
 	    fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
 and fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
-    | Parsed_arithmetic_expression expr ->
+    | Parsed_arithmetic_expr expr ->
         fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
 	| Parsed_comparison (l_expr, _, r_expr) ->
 	    operator
@@ -93,8 +88,8 @@ and fold_parsed_discrete_boolean_expression_with_local_variables local_variables
             (operator
                 (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun lower_expr)
                 (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun upper_expr))
-	| Parsed_boolean_expression expr
-	| Parsed_Not expr ->
+	| Parsed_nested_bool_expr expr
+	| Parsed_not expr ->
         fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
 
 and fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun = function
@@ -102,7 +97,7 @@ and fold_parsed_discrete_arithmetic_expression_with_local_variables local_variab
         operator
             (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr)
             (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
-	| Parsed_DAE_term term ->
+	| Parsed_term term ->
         fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term
 
 and fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun = function
@@ -110,11 +105,11 @@ and fold_parsed_discrete_term_with_local_variables local_variables operator base
 	    operator
 	        (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
 	        (fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor)
-	| Parsed_DT_factor factor ->
+	| Parsed_factor factor ->
         fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
-	| Parsed_DF_variable variable_name ->
+	| Parsed_variable variable_name ->
 
 	    let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
 
@@ -126,18 +121,17 @@ and fold_parsed_discrete_factor_with_local_variables local_variables operator ba
 
 	    leaf_fun local_variables (Leaf_variable variable_leaf)
 
-	| Parsed_DF_constant value -> leaf_fun local_variables (Leaf_constant value)
+	| Parsed_constant value -> leaf_fun local_variables (Leaf_constant value)
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
-	| Parsed_DF_expression expr ->
+	| Parsed_nested_expr expr ->
         fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
-    | Parsed_function_call (factor_name, argument_expressions) ->
-        let function_name = function_name_of_parsed_factor factor_name in
+    | Parsed_function_call (function_name, argument_expressions) ->
         operator
             (leaf_fun local_variables (Leaf_fun function_name))
             (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr) acc) base argument_expressions)
-    | Parsed_DF_access (factor, _)
+    | Parsed_access (factor, _)
 	(* | Parsed_log_not factor *)
-	| Parsed_DF_unary_min factor ->
+	| Parsed_unary_min factor ->
 	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* parsed_seq_code_bloc *) =
@@ -468,13 +462,13 @@ let label_of_parsed_sequence_type = function
     | Parsed_queue -> "queue"
 
 let label_of_parsed_factor_constructor = function
-	| Parsed_DF_variable _ -> "variable"
-	| Parsed_DF_constant _ -> "constant"
+	| Parsed_variable _ -> "variable"
+	| Parsed_constant _ -> "constant"
 	| Parsed_sequence (_, seq_type) -> label_of_parsed_sequence_type seq_type
-	| Parsed_DF_access _ -> "access"
-	| Parsed_DF_expression _ -> "expression"
-	| Parsed_DF_unary_min _ -> "minus"
-    | Parsed_function_call (variable, _) -> function_name_of_parsed_factor variable
+	| Parsed_access _ -> "access"
+	| Parsed_nested_expr _ -> "expression"
+	| Parsed_unary_min _ -> "minus"
+    | Parsed_function_call (function_name, _) -> function_name
 
 
 
@@ -522,7 +516,7 @@ let rec string_of_parsed_arithmetic_expression variable_infos = function
             ^ string_of_parsed_sum_diff sum_diff
             ^ string_of_parsed_term variable_infos term
 
-    | Parsed_DAE_term term ->
+    | Parsed_term term ->
         string_of_parsed_term variable_infos term
 
 and string_of_parsed_term variable_infos = function
@@ -531,11 +525,11 @@ and string_of_parsed_term variable_infos = function
         ^ string_of_parsed_product_quotient parsed_product_quotient
         ^ string_of_parsed_factor variable_infos factor
 
-    | Parsed_DT_factor factor ->
+    | Parsed_factor factor ->
         string_of_parsed_factor variable_infos factor
 
 and string_of_parsed_factor variable_infos = function
-    | Parsed_DF_variable variable_name ->
+    | Parsed_variable variable_name ->
         if (is_constant_is_defined variable_infos variable_name) then (
             (* Retrieve the value of the global constant *)
             let value = value_of_constant_name variable_infos variable_name in
@@ -544,7 +538,7 @@ and string_of_parsed_factor variable_infos = function
             ^ AbstractValue.string_of_value value
         ) else
             variable_name
-    | Parsed_DF_constant value -> ParsedValue.string_of_value value
+    | Parsed_constant value -> ParsedValue.string_of_value value
     | Parsed_sequence (expr_list, seq_type) as seq ->
         let str_elements = List.map (string_of_parsed_boolean_expression variable_infos) expr_list in
         let str_array = "[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_elements ^ "]" in
@@ -554,10 +548,10 @@ and string_of_parsed_factor variable_infos = function
         | Parsed_stack
         | Parsed_queue -> label_of_parsed_factor_constructor seq ^ "(" ^ str_array ^ ")"
         )
-    | Parsed_DF_access (factor, expr) ->
+    | Parsed_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
-    | Parsed_DF_expression arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
-    | Parsed_DF_unary_min factor ->
+    | Parsed_nested_expr arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
+    | Parsed_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
     | Parsed_function_call (_, argument_expressions) as func ->
         let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
@@ -571,11 +565,11 @@ and string_of_parsed_boolean_expression variable_infos = function
             ^ string_of_parsed_conj_dis parsed_conj_dis
             ^ string_of_parsed_boolean_expression variable_infos r_expr
 
-    | Parsed_Discrete_boolean_expression expr ->
+    | Parsed_discrete_bool_expr expr ->
         string_of_parsed_discrete_boolean_expression variable_infos expr
 
 and string_of_parsed_discrete_boolean_expression variable_infos = function
-    | Parsed_arithmetic_expression expr ->
+    | Parsed_arithmetic_expr expr ->
         string_of_parsed_arithmetic_expression variable_infos expr
     | Parsed_comparison (l_expr, relop, r_expr) ->
         string_of_parsed_relop
@@ -588,9 +582,9 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
         let str_expr2 = string_of_parsed_arithmetic_expression variable_infos expr2 in
         let str_expr3 = string_of_parsed_arithmetic_expression variable_infos expr3 in
         str_expr1 ^ " in [" ^ str_expr2 ^ ".." ^ str_expr3 ^ "]"
-    | Parsed_boolean_expression expr ->
+    | Parsed_nested_bool_expr expr ->
         string_of_parsed_boolean_expression variable_infos expr
-    | Parsed_Not expr ->
+    | Parsed_not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
 and string_of_parsed_seq_code_bloc variable_infos parsed_seq_code_bloc =

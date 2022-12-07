@@ -115,12 +115,12 @@ let rec type_check_parsed_boolean_expression local_variables_opt variable_infos 
             ))
         )
 
-	| Parsed_Discrete_boolean_expression expr ->
+	| Parsed_discrete_bool_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_discrete_bool_expr (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_boolean_expression local_variables_opt variable_infos infer_type_opt = function
-    | Parsed_arithmetic_expression expr ->
+    | Parsed_arithmetic_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
 	    Typed_arithmetic_expr (typed_expr, discrete_type), discrete_type
 
@@ -188,11 +188,11 @@ and type_check_parsed_discrete_boolean_expression local_variables_opt variable_i
                     (string_of_parsed_discrete_boolean_expression variable_infos outer_expr)
             ))
 
-	| Parsed_boolean_expression expr ->
+	| Parsed_nested_bool_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_bool_expr typed_expr, discrete_type
+	    Typed_nested_bool_expr typed_expr, discrete_type
 
-	| Parsed_Not expr as outer_expr ->
+	| Parsed_not expr as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_boolean_expression local_variables_opt variable_infos infer_type_opt expr in
 
         (* Check that expression type is Boolean *)
@@ -238,7 +238,7 @@ and type_check_parsed_discrete_arithmetic_expression local_variables_opt variabl
             ))
         )
 
-	| Parsed_DAE_term term ->
+	| Parsed_term term ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
 	    Typed_term (typed_expr, discrete_type), discrete_type
 
@@ -246,7 +246,7 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
     (* Specific case, literal rational => constant / constant *)
     (* Should be reduced before... *)
 
-    | Parsed_product_quotient ((Parsed_DT_factor (Parsed_DF_constant lv) as term), (Parsed_DF_constant rv as factor), Parsed_div) as outer_expr ->
+    | Parsed_product_quotient ((Parsed_factor (Parsed_constant lv) as term), (Parsed_constant rv as factor), Parsed_div) as outer_expr ->
 
 	    let l_typed_expr, l_type = type_check_parsed_discrete_term local_variables_opt variable_infos infer_type_opt term in
 	    let r_typed_expr, r_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
@@ -310,12 +310,12 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
         ))
         )
 
-	| Parsed_DT_factor factor ->
+	| Parsed_factor factor ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
-	| Parsed_DF_variable variable_name ->
+	| Parsed_variable variable_name ->
         (* If it's local variable, take it's type *)
         (* local variables are more priority and shadow global variables  *)
 	    let discrete_type, scope =
@@ -338,7 +338,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
 
         Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type
 
-	| Parsed_DF_constant value ->
+	| Parsed_constant value ->
         let discrete_type = ParsedValue.discrete_type_of_value value in
 
         (* If infer type is given and discrete type is unknown number *)
@@ -388,7 +388,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             ))
         )
 
-    | Parsed_DF_access (factor, index_expr) ->
+    | Parsed_access (factor, index_expr) ->
         let typed_factor, factor_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
         let typed_index, index_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos None (* None: mean no inference for index *) index_expr in
 
@@ -402,11 +402,11 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         | _ -> raise (TypeError "Cannot make an access to another type than array or list.")
         )
 
-	| Parsed_DF_expression expr ->
+	| Parsed_nested_expr expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_arithmetic_expression local_variables_opt variable_infos infer_type_opt expr in
-	    Typed_expr (typed_expr, discrete_type), discrete_type
+	    Typed_nested_expr (typed_expr, discrete_type), discrete_type
 
-	| Parsed_DF_unary_min factor as outer_expr ->
+	| Parsed_unary_min factor as outer_expr ->
 	    let typed_expr, discrete_type = type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt factor in
 
         (* Check that expression is a number *)
@@ -421,9 +421,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
             ))
         )
 
-	| Parsed_function_call (name_factor, argument_expressions) as func ->
-        (* Get function name *)
-        let function_name = ParsingStructureUtilities.function_name_of_parsed_factor name_factor in
+	| Parsed_function_call (function_name, argument_expressions) as func ->
         (* Get function metadata *)
         let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
         (* Get function arity *)
@@ -639,6 +637,24 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
     and type_check_parsed_instruction local_variables = function
         | Parsed_local_decl (variable_name, variable_type, expr, _) as local_decl ->
 
+            (* String of discrete type*)
+            let str_discrete_type = DiscreteType.string_of_var_type_discrete variable_type in
+
+            (* Check that local variable wasn't typed with void *)
+            (match variable_type with
+            | Var_type_void ->
+                raise (TypeError (
+                    "Variable `"
+                    ^ variable_name
+                    ^ "` was declared as `"
+                    ^ str_discrete_type
+                    ^ "`. Unable to declare variable as `"
+                    ^ str_discrete_type
+                    ^ "`."
+                ))
+            | _ -> ()
+            );
+
             (* Eventually get a number type to infer *)
             let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
@@ -666,7 +682,7 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
             (* Check compatibility between local variable declared type and it's init expression *)
             if not (is_discrete_type_compatibles variable_type init_discrete_type) then
                 raise (TypeError (
-                    ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
+                    ill_typed_variable_message variable_name str_discrete_type (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) init_discrete_type
                 ));
 
             (* All is ok, convert to a typed function local declaration *)
@@ -1409,7 +1425,7 @@ and bool_expression_of_typed_discrete_boolean_expression variable_infos = functi
 	        discrete_arithmetic_expression_of_typed_discrete_arithmetic_expression variable_infos discrete_number_type up_expr
 	    )
 
-	| Typed_bool_expr expr ->
+	| Typed_nested_bool_expr expr ->
 	    Boolean_expression (
 	        bool_expression_of_typed_boolean_expression variable_infos expr
 	    )
@@ -1487,7 +1503,7 @@ and bool_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Bool_constant (ParsedValue.bool_value value)
 
-    | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+    | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         bool_expression_of_typed_factor variable_infos factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1567,7 +1583,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Rational_constant (ParsedValue.to_numconst_value value)
 
-	| Typed_expr (expr, _) ->
+	| Typed_nested_expr (expr, _) ->
 	    Rational_nested_expression (
 	        rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
@@ -1652,7 +1668,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	| Typed_constant (value, _) ->
 	    Int_constant (ParsedValue.to_int_value value)
 
-	| Typed_expr (expr, _) ->
+	| Typed_nested_expr (expr, _) ->
 	    Int_nested_expression (
 	        int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
         )
@@ -1704,7 +1720,7 @@ and binary_expression_of_typed_factor variable_infos length = function
     | Typed_constant (value, _) ->
         Binary_word_constant (ParsedValue.binary_word_value value)
 
-    | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+    | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         binary_expression_of_typed_factor variable_infos length factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1759,7 +1775,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         let expressions = List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list in
         Literal_array (Array.of_list expressions)
 
-	| Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+	| Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         array_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1813,7 +1829,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
     | Typed_sequence (expr_list, _, Typed_list) ->
         Literal_list (List.map (fun expr -> global_expression_of_typed_boolean_expression_by_type variable_infos expr discrete_type) expr_list)
 
-	| Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+	| Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
         list_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1857,7 +1873,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
                 | Variable_kind discrete_index -> Stack_variable discrete_index
                 )
             )
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             stack_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1906,7 +1922,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
                 )
             )
 
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             queue_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
@@ -1956,7 +1972,7 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
                 It should be checked before."
             ))
 
-        | Typed_expr (Typed_term (Typed_factor (factor, _), _), _) ->
+        | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             void_expression_of_typed_factor factor
 
         | Typed_function_call (function_name, argument_expressions, _) ->
@@ -2194,136 +2210,6 @@ let linear_term_of_linear_expression variable_infos linear_expression =
     let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
     linear_term_of_array array_of_coef constant
 
-(* TODO benjamin CLEAN UP *)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-(*
-let linear_term_of_typed_arithmetic_expression variable_infos pdae =
-
-    let index_of_variables = variable_infos.index_of_variables in
-    let constants = variable_infos.constants in
-
-	(* Create an array of coef *)
-	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-	(* Create a zero constant *)
-	let constant = ref NumConst.zero in
-
-	let rec update_coef_array_in_typed_update_arithmetic_expression mult_factor = function
-		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_plus) ->
-            (* Update coefficients in the arithmetic expression *)
-            update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-            (* Update coefficients in the term *)
-            update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-		| Typed_sum_diff (parsed_update_arithmetic_expression, parsed_update_term, _, Typed_minus) ->
-            (* Update coefficients in the arithmetic expression *)
-            update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-            (* Update coefficients in the term: multiply by -1 for negation *)
-            update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-            | Typed_term (parsed_update_term, _) ->
-            update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-
-	and update_coef_array_in_parsed_update_term mult_factor = function
-		(* Multiplication is only allowed with a constant multiplier *)
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_mul) as outer_term ->
-
-            (* Convert to abstract tree *)
-            let converted_term = rational_arithmetic_expression_of_typed_term variable_infos parsed_update_term in
-            let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
-
-            (* Try to evaluate the term and the factor *)
-            let numconst_valued_term_opt = DiscreteExpressionEvaluator.eval_constant_rational_term_opt None (* function table *) converted_term in
-            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None (* function table *) converted_factor in
-
-            (* Update coefficients *)
-            (match numconst_valued_term_opt, numconst_valued_factor_opt with
-            (* k * x with x a variable and k a constant *)
-            | Some numconst_valued_term, None ->
-                update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
-            (* x * k with x a variable and k a constant *)
-            | None, Some numconst_valued_factor ->
-                update_coef_array_in_parsed_update_term (NumConst.mul numconst_valued_factor mult_factor) parsed_update_term
-            (* k1 * k2 with k1 and k2 constants *)
-            | Some numconst_valued_term, Some _ ->
-                update_coef_array_in_parsed_update_factor (NumConst.mul numconst_valued_term mult_factor) parsed_update_factor
-            (* v1 * v2 with v1 and v2 variables *)
-            | None, None ->
-                raise (
-                    InvalidExpression (
-                        "Unable to convert expression `"
-                        ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term
-                        ^ "` to a linear expression. Expression linearity should be checked before."
-                    )
-                )
-            )
-
-
-
-		| Typed_product_quotient (parsed_update_term, parsed_update_factor, _, Typed_div) as outer_term ->
-
-            (* Convert to abstract tree *)
-            let converted_factor = rational_arithmetic_expression_of_typed_factor variable_infos parsed_update_factor in
-            (* Try to evaluate the factor *)
-            let numconst_valued_factor_opt = DiscreteExpressionEvaluator.eval_constant_rational_factor_opt None (* function table *) converted_factor in
-
-            (* Update coefficients *)
-            (match numconst_valued_factor_opt with
-            | Some numconst_valued_factor ->
-                update_coef_array_in_parsed_update_term (NumConst.div mult_factor numconst_valued_factor) parsed_update_term
-            | None ->
-                raise (
-                    InvalidExpression (
-                        "Unable to convert expression `"
-                        ^ string_of_typed_discrete_term variable_infos (Var_type_discrete_number Var_type_discrete_rat) outer_term
-                        ^ "` to a linear expression. Expression linearity should be checked before."
-                    )
-                )
-            )
-
-		| Typed_factor (parsed_update_factor, _) ->
-		    update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
-
-	and update_coef_array_in_parsed_update_factor mult_factor = function
-		| Typed_variable (variable_name, _, _) ->
-			(* Try to find the variable_index *)
-			if Hashtbl.mem index_of_variables variable_name then (
-				let variable_index = Hashtbl.find index_of_variables variable_name in
-				(* Update the array *)
-				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
-				(* Try to find a constant *)
-			) else (
-				if Hashtbl.mem constants variable_name then (
-                    (* Retrieve the value of the global constant *)
-                    let value = Hashtbl.find constants variable_name in
-                    let numconst_value = AbstractValue.numconst_value value in
-                    (* Update the constant *)
-                    constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-				) else (
-				    raise (InvalidExpression ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'update_coef_array_in_parsed_update_factor' although this should have been checked before."))
-				)
-			)
-		| Typed_constant (var_value, _) ->
-            (* Update the constant *)
-            let numconst_value = ParsedValue.to_numconst_value var_value in
-            constant := NumConst.add !constant (NumConst.mul mult_factor numconst_value)
-		| Typed_unary_min (parsed_discrete_factor, _) ->
-			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
-		| Typed_expr (parsed_update_arithmetic_expression, _) ->
-            update_coef_array_in_typed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
-		| factor ->
-            raise (
-                InvalidExpression (
-                    "Unable to convert expression `"
-                    ^ string_of_typed_discrete_factor variable_infos (Var_type_discrete_number Var_type_discrete_rat) factor
-                    ^ "` to a linear expression. Expression linearity should be checked before."
-                )
-            )
-	in
-
-	(* Call the recursive function updating the coefficients *)
-	update_coef_array_in_typed_update_arithmetic_expression NumConst.one pdae;
-
-	(* Create the linear term *)
-	linear_term_of_array array_of_coef !constant
-*)
 
 type linear_term_element =
     | Lt_var of NumConst.t * variable_name * typed_variable_scope
@@ -2456,7 +2342,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 | Lt_var (c, v, s) -> Lt_var (NumConst.neg c, v, s)
             ) factors
 
-	    | Typed_expr (expr, _) ->
+	    | Typed_nested_expr (expr, _) ->
 	        let coefs_list = linear_coefs_of_typed_arithmetic_expression expr in
 	        (* Reduce sums of variables and constants *)
 	        let _, _, term_list = reduce_terms_list coefs_list in term_list

@@ -1,3 +1,16 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: Mirror of parsing structure with type information
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/12/07
+ *
+ ************************************************************)
+
 open ParsingStructure
 open ParsingStructureUtilities
 open ImitatorUtilities
@@ -34,7 +47,7 @@ and typed_discrete_boolean_expression =
     | Typed_arithmetic_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_comparison of typed_discrete_boolean_expression * parsed_relop * typed_discrete_boolean_expression * var_type_discrete (* implicitly bool type *)
 	| Typed_comparison_in of typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * typed_discrete_arithmetic_expression * var_type_discrete_number (* implicitly bool type *)
-	| Typed_bool_expr of typed_boolean_expression (* implicitly bool type *)
+	| Typed_nested_bool_expr of typed_boolean_expression (* implicitly bool type *)
 	| Typed_not_expr of typed_boolean_expression (* implicitly bool type *)
 
 and typed_discrete_arithmetic_expression =
@@ -57,7 +70,7 @@ and typed_discrete_factor =
 	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
 	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
-	| Typed_expr of typed_discrete_arithmetic_expression * var_type_discrete
+	| Typed_nested_expr of typed_discrete_arithmetic_expression * var_type_discrete
 	| Typed_unary_min of typed_discrete_factor * var_type_discrete_number
     | Typed_access of typed_discrete_factor * typed_discrete_arithmetic_expression * var_type_discrete * inner_type
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
@@ -128,7 +141,7 @@ let label_of_typed_factor_constructor = function
 	| Typed_constant _ -> "constant"
 	| Typed_sequence (_, _, seq_type) -> label_of_typed_sequence_type seq_type
 	| Typed_access _ -> "access"
-	| Typed_expr _ -> "expression"
+	| Typed_nested_expr _ -> "expression"
 	| Typed_unary_min _ -> "minus"
     | Typed_function_call (function_name, _, _) -> function_name
 
@@ -181,7 +194,7 @@ and string_of_typed_discrete_boolean_expression variable_infos = function
         in
         string_format_typed_node str_node Var_type_discrete_bool
 
-	| Typed_bool_expr expr ->
+	| Typed_nested_bool_expr expr ->
         string_of_typed_boolean_expression variable_infos expr
 
 	| Typed_not_expr expr ->
@@ -231,7 +244,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 
 	    string_format_typed_node str_node discrete_type
 
-	| Typed_expr (expr, _) ->
+	| Typed_nested_expr (expr, _) ->
 	    let str_node = "(" ^ string_of_typed_discrete_arithmetic_expression variable_infos discrete_type expr ^ ")" in
         string_format_typed_node str_node discrete_type
 

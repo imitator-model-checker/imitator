@@ -76,7 +76,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
                 raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
         )
     (* Try to convert factor *)
-    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+    | Parsed_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
 
 (* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
 (* If it's not possible, we raise an InvalidExpression exception *)
@@ -90,35 +90,35 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
         | Parsed_plus -> Linear_plus_expression (linear_expr, linear_term)
         | Parsed_minus ->  Linear_minus_expression (linear_expr, linear_term)
         )
-    | Parsed_DAE_term term ->
+    | Parsed_term term ->
         Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
 
 (* Try to convert parsed discrete factor to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-        | Parsed_DF_constant value -> Constant (ParsedValue.to_numconst_value value)
-        | Parsed_DF_unary_min parsed_discrete_factor ->
+        | Parsed_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_constant value -> Constant (ParsedValue.to_numconst_value value)
+        | Parsed_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
-                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
-                | Parsed_DF_constant value ->
+                | Parsed_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_constant value ->
                     let numconst_value = ParsedValue.to_numconst_value value in
                     Constant (NumConst.neg numconst_value)
                 | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
             )
 
         (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        | Parsed_DF_expression expr ->
+        | Parsed_nested_expr expr ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
 
         | _ as factor ->
             raise (InvalidExpression ("Use of \"" ^ ParsingStructureUtilities.label_of_parsed_factor_constructor factor ^ "\" is forbidden in an expression involving clock(s) or parameter(s)"))
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
-    | Parsed_arithmetic_expression _ ->
+    | Parsed_arithmetic_expr _ ->
         raise (InvalidExpression "An expression that involve clock(s) / parameter(s) contains a boolean variable")
-    | Parsed_comparison (Parsed_arithmetic_expression l_expr, relop, Parsed_arithmetic_expression r_expr) ->
+    | Parsed_comparison (Parsed_arithmetic_expr l_expr, relop, Parsed_arithmetic_expr r_expr) ->
         Parsed_linear_constraint (
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
             relop,
@@ -128,11 +128,78 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
         raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
     | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
-    | Parsed_boolean_expression _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
-    | Parsed_Not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
+    | Parsed_nested_bool_expr _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
+    | Parsed_not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
 
 let linear_constraint_of_nonlinear_constraint = try_convert_linear_expression_of_parsed_discrete_boolean_expression
 
+(* Check that some expression in sequential code bloc contains only discrete *)
+let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq_code_bloc *) =
+
+    (* Message when clock or parameter found *)
+    let clock_or_param_found_callback_opt str_expr =
+        Some (fun var_type variable_name ->
+            print_error (
+                String.capitalize_ascii (DiscreteType.string_of_var_type var_type)
+                ^ " `"
+                ^ variable_name
+                ^ "`"
+                ^ " found in `"
+                ^ str_expr
+                ^ "`. Unable to use "
+                ^ DiscreteType.string_of_var_type var_type
+                ^ " in this context."
+            )
+        )
+    in
+
+    (* Currify some functions, apply variable_infos *)
+    let check_only_discrete = ParsingStructureMeta.only_discrete_in_parsed_boolean_expression variable_infos in
+    let check_only_discrete_in_arithmetic = ParsingStructureMeta.only_discrete_in_parsed_discrete_arithmetic_expression variable_infos in
+
+    let rec check_inner_expression_of_seq_code_bloc seq_code_bloc =
+        List.for_all check_inner_expression_of_instruction seq_code_bloc
+
+    and check_inner_expression_of_instruction instruction =
+
+        (* String of instruction*)
+        let str_instruction = ParsingStructureUtilities.string_of_parsed_instruction variable_infos instruction in
+        (* Get error message to display when clock or parameter found *)
+        let clock_or_param_found_callback_opt = clock_or_param_found_callback_opt str_instruction in
+        (* Currify apply message *)
+        let check_only_discrete = check_only_discrete clock_or_param_found_callback_opt in
+        let check_only_discrete_in_arithmetic = check_only_discrete_in_arithmetic clock_or_param_found_callback_opt in
+
+        (* Check only discrete in, instruction, for loop bounds, while condition, if condition ... *)
+        match instruction with
+        | Parsed_local_decl (_, _, expr, _)
+        | Parsed_instruction expr ->
+            check_only_discrete expr
+
+        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc, _) ->
+            check_only_discrete_in_arithmetic from_expr
+            && check_only_discrete_in_arithmetic to_expr
+            && check_inner_expression_of_seq_code_bloc inner_bloc
+
+        | Parsed_while_loop (condition_expr, inner_bloc) ->
+            check_only_discrete condition_expr
+            && check_inner_expression_of_seq_code_bloc inner_bloc
+
+        | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
+            let else_bloc_checked =
+                match else_bloc_opt with
+                | Some else_bloc -> check_inner_expression_of_seq_code_bloc else_bloc
+                | None -> true
+            in
+            check_only_discrete condition_expr
+            && check_inner_expression_of_seq_code_bloc then_bloc
+            && else_bloc_checked
+
+        | Parsed_assignment _ -> true
+    in
+    check_inner_expression_of_seq_code_bloc (* seq_code_bloc *)
+
+(* Check that assignment in sequential code bloc are allowed *)
 let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc =
 
     (* If code bloc is named, we put name of location in messages *)
@@ -159,13 +226,13 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ -> None
         ) left_variable_names in
 
-        (* Check that no variable (clocks, discrete) was updated by a param *)
+        (* Check that no discrete variable was updated by a param *)
         let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
-            let left_var_type = VariableInfo.var_type_of_variable_or_constant variable_infos left_variable_name in
+            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_name in
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
-            | Var_type_clock -> []
+            | Some Var_type_clock -> []
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
@@ -292,10 +359,11 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_clock_updated_with_non_linear)
     in
 
+    (*
     (* TODO benjamin REFACTOR check that in type checking, not here *)
-    (* Check if there isn't any void typed variable or parameter *)
+    (* Check if there isn't any void typed variable or formal parameter *)
     let is_any_void_local_variable =
-        (* Get local variables / parameters of parsed sequential code bloc *)
+        (* Get local variables / formal parameters of parsed sequential code bloc *)
         let local_variables = ParsingStructureMeta.local_variables_of_parsed_seq_code_bloc seq_code_bloc in
         (* Check if exist any void variable *)
         List.exists (fun (variable_name, discrete_type, _) ->
@@ -304,8 +372,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ -> false
         ) local_variables
     in
+    *)
     (* Return *)
-    is_assignments_are_allowed && not is_any_void_local_variable
+    is_assignments_are_allowed (* && not is_any_void_local_variable *)
 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
@@ -345,46 +414,11 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
     in
 
+    let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
+    let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+
     (* Return *)
-    check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc && is_all_variables_defined && is_all_functions_defined
-
-let check_fun_def_return_expr variable_infos code_bloc_name return_expr =
-    (* If code bloc is named, we put name of location in messages *)
-    let str_location =  " in `" ^ code_bloc_name ^ "`" in
-
-    (* Check if all variables in function definition are defined *)
-    let is_all_variables_defined =
-
-        (* Prepare callback function that print error message when undeclared variable is found *)
-        let print_variable_in_fun_not_declared variable_name =
-            print_error (
-                "Variable `"
-                ^ variable_name
-                ^ str_location
-                ^ " was not declared."
-            )
-        in
-
-        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_variable_in_fun_not_declared) return_expr
-    in
-
-    let is_all_functions_defined =
-
-        (* Prepare callback function that print error message when undeclared function is found *)
-        let print_function_in_fun_not_declared variable_name =
-            print_error (
-                "Function `"
-                ^ variable_name
-                ^ str_location
-                ^ " was not declared."
-            )
-        in
-
-        ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression variable_infos (Some print_function_in_fun_not_declared) return_expr
-
-    in
-
-    is_all_variables_defined && is_all_functions_defined
+    is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =

@@ -52,25 +52,25 @@ type parsed_conj_dis =
 (****************************************************************)
 type parsed_boolean_expression =
     | Parsed_conj_dis of parsed_boolean_expression * parsed_boolean_expression * parsed_conj_dis (* Conjunction / Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
+	| Parsed_discrete_bool_expr of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
-    | Parsed_arithmetic_expression of parsed_discrete_arithmetic_expression
+    | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_comparison_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
-	| Parsed_boolean_expression of parsed_boolean_expression
+	| Parsed_nested_bool_expr of parsed_boolean_expression
     (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
-	| Parsed_Not of parsed_boolean_expression (** Negation *)
+	| Parsed_not of parsed_boolean_expression (** Negation *)
 
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
 and parsed_discrete_arithmetic_expression =
     | Parsed_sum_diff of parsed_discrete_arithmetic_expression * parsed_discrete_term * parsed_sum_diff
-	| Parsed_DAE_term of parsed_discrete_term
+	| Parsed_term of parsed_discrete_term
 
 and parsed_sum_diff =
     | Parsed_plus
@@ -78,20 +78,20 @@ and parsed_sum_diff =
 
 and parsed_discrete_term =
 	| Parsed_product_quotient of parsed_discrete_term * parsed_discrete_factor * parsed_product_quotient
-	| Parsed_DT_factor of parsed_discrete_factor
+	| Parsed_factor of parsed_discrete_factor
 
 and parsed_product_quotient =
     | Parsed_mul
     | Parsed_div
 
 and parsed_discrete_factor =
-	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of ParsedValue.parsed_value
+	| Parsed_variable of variable_name
+	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
-    | Parsed_DF_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
-	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min of parsed_discrete_factor
-	| Parsed_function_call of parsed_discrete_factor (* name *) * parsed_boolean_expression list (* arguments *)
+    | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+	| Parsed_nested_expr of parsed_discrete_arithmetic_expression
+	| Parsed_unary_min of parsed_discrete_factor
+	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
 
 
 
@@ -191,7 +191,6 @@ type function_metadata = {
 }
 
 (* Parsed function definition *)
-(* TODO benjamin CLEAN rename to parsed_fun_def *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)

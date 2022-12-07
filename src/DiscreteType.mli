@@ -73,13 +73,13 @@ val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
 
 val extract_inner_type : var_type_discrete -> var_type_discrete
 
-(* Check if discrete type is a Var_type_discrete_rat *)
+(* Check if discrete type is a rational *)
 val is_discrete_type_rational_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_int *)
+(* Check if discrete type is a int *)
 val is_discrete_type_int_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_bool *)
+(* Check if discrete type is a bool *)
 val is_discrete_type_bool_type : var_type_discrete -> bool
-(* Check if discrete type is a Var_type_discrete_binary_word *)
+(* Check if discrete type is a binary word *)
 val is_discrete_type_binary_word_type : var_type_discrete -> bool
 (* Get discrete type of a var type *)
 (* Note : clocks / parameter are of rational type *)

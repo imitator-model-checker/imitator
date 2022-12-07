@@ -143,22 +143,22 @@ let rec default_type_of_type_holding_unknown_number_type = function
     | Var_type_discrete_queue inner_type -> Var_type_discrete_queue (default_type_of_type_holding_unknown_number_type inner_type)
     | _ as discrete_type -> discrete_type
 
-(* Check if discrete type is a Var_type_discrete_rat *)
+(* Check if discrete type is a rational *)
 let is_discrete_type_rational_type = function
     | Var_type_discrete_number Var_type_discrete_rat -> true
     | _ -> false
 
-(* Check if discrete type is a Var_type_discrete_int *)
+(* Check if discrete type is a int *)
 let is_discrete_type_int_type = function
     | Var_type_discrete_number Var_type_discrete_int -> true
     | _ -> false
 
-(* Check if discrete type is a Var_type_discrete_bool *)
+(* Check if discrete type is a bool *)
 let is_discrete_type_bool_type = function
     | Var_type_discrete_bool -> true
     | _ -> false
 
-(* Check if discrete type is a Var_type_discrete_binary_word *)
+(* Check if discrete type is a binary word *)
 let is_discrete_type_binary_word_type = function
     | Var_type_discrete_binary_word _ -> true
     | _ -> false
