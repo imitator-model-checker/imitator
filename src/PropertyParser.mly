@@ -406,7 +406,7 @@ arithmetic_factor:
   | NAME LPAREN RPAREN { Parsed_function_call ($1, []) }
   | literal_scalar_constant { Parsed_constant $1 }
   | literal_non_scalar_constant { $1 }
-  | NAME { Parsed_variable $1 }
+  | NAME { Parsed_variable ($1, 0) }
   | LPAREN arithmetic_expression RPAREN { Parsed_nested_expr $2 }
 ;
 

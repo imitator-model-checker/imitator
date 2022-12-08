@@ -315,7 +315,8 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
-	| Parsed_variable variable_name ->
+	| Parsed_variable (variable_name, id) ->
+	    ImitatorUtilities.print_standard_message ("Variable : " ^ variable_name ^ ":" ^ string_of_int id);
         (* If it's local variable, take it's type *)
         (* local variables are more priority and shadow global variables  *)
 	    let discrete_type, scope =

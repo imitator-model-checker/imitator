@@ -96,12 +96,12 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* Try to convert parsed discrete factor to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_variable (variable_name, _) -> Variable(NumConst.one, variable_name)
         | Parsed_constant value -> Constant (ParsedValue.to_numconst_value value)
         | Parsed_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
-                | Parsed_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_variable (variable_name, _) -> Variable(NumConst.minus_one, variable_name)
                 | Parsed_constant value ->
                     let numconst_value = ParsedValue.to_numconst_value value in
                     Constant (NumConst.neg numconst_value)

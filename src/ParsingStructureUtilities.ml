@@ -109,7 +109,7 @@ and fold_parsed_discrete_term_with_local_variables local_variables operator base
         fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
-	| Parsed_variable variable_name ->
+	| Parsed_variable (variable_name, _) ->
 
 	    let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
 
@@ -529,7 +529,7 @@ and string_of_parsed_term variable_infos = function
         string_of_parsed_factor variable_infos factor
 
 and string_of_parsed_factor variable_infos = function
-    | Parsed_variable variable_name ->
+    | Parsed_variable (variable_name, _) ->
         if (is_constant_is_defined variable_infos variable_name) then (
             (* Retrieve the value of the global constant *)
             let value = value_of_constant_name variable_infos variable_name in
@@ -772,3 +772,254 @@ let json_of_function_metadata (fm : function_metadata) =
         "name", JsonFormatter.Json_string fm.name;
         "side-effects", JsonFormatter.Json_bool fm.side_effect
     ]
+
+(* Functions below, reconstruct the parsed model by making the link between variables occurrence and their declarations *)
+(* I would like to do it more simply, but it was impossible to do directly in the parser (action )*)
+(* These functions are really important because it allow to retrieve variables *)
+
+(* Set to variable ref, variable id *)
+let link_variables_in_parsed_model parsed_model =
+
+    (* Accumulator that will contains all local declared variables *)
+    let local_variables_accumulator = Hashtbl.create 0 in
+
+    let rec link_variables_in_parsed_boolean_expression local_variables = function
+        | Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) ->
+            Parsed_conj_dis (
+                link_variables_in_parsed_boolean_expression local_variables l_expr,
+                link_variables_in_parsed_boolean_expression local_variables r_expr,
+                parsed_conj_dis
+            )
+
+        | Parsed_discrete_bool_expr expr ->
+            Parsed_discrete_bool_expr (
+                link_variables_in_parsed_discrete_boolean_expression local_variables expr
+            )
+
+    and link_variables_in_parsed_discrete_boolean_expression local_variables = function
+        | Parsed_arithmetic_expr expr ->
+            Parsed_arithmetic_expr (
+                link_variables_in_parsed_arithmetic_expression local_variables expr
+            )
+
+        | Parsed_comparison (l_expr, relop, r_expr) ->
+            Parsed_comparison (
+                link_variables_in_parsed_discrete_boolean_expression local_variables l_expr,
+                relop,
+                link_variables_in_parsed_discrete_boolean_expression local_variables r_expr
+            )
+
+        | Parsed_comparison_in (lw_expr, md_expr, up_expr) ->
+            Parsed_comparison_in (
+                link_variables_in_parsed_arithmetic_expression local_variables lw_expr,
+                link_variables_in_parsed_arithmetic_expression local_variables md_expr,
+                link_variables_in_parsed_arithmetic_expression local_variables up_expr
+            )
+
+        | Parsed_nested_bool_expr expr ->
+            Parsed_nested_bool_expr (
+                link_variables_in_parsed_boolean_expression local_variables expr
+            )
+
+        | Parsed_not expr ->
+            Parsed_not (
+                link_variables_in_parsed_boolean_expression local_variables expr
+            )
+
+    and link_variables_in_parsed_arithmetic_expression local_variables = function
+        | Parsed_sum_diff (expr, term, parsed_sum_diff) ->
+            Parsed_sum_diff (
+                link_variables_in_parsed_arithmetic_expression local_variables expr,
+                link_variables_in_parsed_discrete_term local_variables term,
+                parsed_sum_diff
+            )
+
+        | Parsed_term term ->
+            Parsed_term (
+                link_variables_in_parsed_discrete_term local_variables term
+            )
+
+    and link_variables_in_parsed_discrete_term local_variables = function
+        | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+            Parsed_product_quotient (
+                link_variables_in_parsed_discrete_term local_variables term,
+                link_variables_in_parsed_discrete_factor local_variables factor,
+                parsed_product_quotient
+            )
+
+        | Parsed_factor factor ->
+            Parsed_factor (
+                link_variables_in_parsed_discrete_factor local_variables factor
+            )
+
+    and link_variables_in_parsed_discrete_factor local_variables = function
+        | Parsed_variable (variable_name, _) ->
+            (* Found variable id *)
+            let variable_id =
+                let variable_opt = Hashtbl.find_opt local_variables variable_name in
+                match variable_opt with
+                (* If found in local variables get id *)
+                | Some (discrete_type, id) -> ImitatorUtilities.print_standard_message ("found"); id
+                | None -> ImitatorUtilities.print_standard_message ("not found"); 0 (* global variable id *)
+            in
+            Parsed_variable (variable_name, variable_id)
+
+        | Parsed_constant _ as constant -> constant
+        | Parsed_sequence (expressions, parsed_sequence_type) ->
+            Parsed_sequence (
+                List.map (link_variables_in_parsed_boolean_expression local_variables) expressions,
+                parsed_sequence_type
+            )
+
+        | Parsed_access (element, index_expr) ->
+            Parsed_access (
+                link_variables_in_parsed_discrete_factor local_variables element,
+                link_variables_in_parsed_arithmetic_expression local_variables index_expr
+            )
+
+        | Parsed_nested_expr expr ->
+            Parsed_nested_expr (
+                link_variables_in_parsed_arithmetic_expression local_variables expr
+            )
+
+        | Parsed_unary_min factor ->
+            Parsed_unary_min (
+                link_variables_in_parsed_discrete_factor local_variables factor
+            )
+
+        | Parsed_function_call (function_name, arguments) ->
+            Parsed_function_call (
+                function_name,
+                List.map (link_variables_in_parsed_boolean_expression local_variables) arguments
+            )
+    in
+
+    let rec link_variables_in_parsed_scalar_or_index_update_type local_variables = function
+        | Parsed_scalar_update variable_name ->
+            Parsed_scalar_update variable_name
+        | Parsed_indexed_update (parsed_scalar_or_index_update_type, expr) ->
+            let linked_parsed_scalar_or_index_update_type = link_variables_in_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
+            let linked_expr = link_variables_in_parsed_arithmetic_expression local_variables expr in
+            Parsed_indexed_update (linked_parsed_scalar_or_index_update_type, linked_expr)
+    in
+
+    let link_variables_in_parsed_seq_code_bloc local_variables (* seq_code_bloc *) =
+
+        let rec link_variables_in_parsed_seq_code_bloc local_variables seq_code_bloc =
+            List.map (link_variables_in_parsed_instruction local_variables) seq_code_bloc
+
+        and link_variables_in_parsed_instruction local_variables = function
+            | Parsed_local_decl (variable_name, discrete_type, expr, id) ->
+                let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
+                ImitatorUtilities.print_standard_message ("add var " ^ variable_name ^ ":" ^ string_of_int id);
+                Hashtbl.replace local_variables variable_name (discrete_type, id);
+                Hashtbl.add local_variables_accumulator (variable_name, id) discrete_type;
+                Parsed_local_decl (variable_name, discrete_type, linked_expr, id)
+
+            | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
+                let linked_parsed_scalar_or_index_update_type = link_variables_in_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
+                let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
+                Parsed_assignment (linked_parsed_scalar_or_index_update_type, linked_expr)
+
+            | Parsed_instruction expr ->
+                Parsed_instruction (link_variables_in_parsed_boolean_expression local_variables expr)
+
+            | Parsed_for_loop (variable_name, from_expr, to_expr, parsed_loop_dir, inner_bloc, id) ->
+                let linked_from_expr = link_variables_in_parsed_arithmetic_expression local_variables from_expr in
+                let linked_to_expr = link_variables_in_parsed_arithmetic_expression local_variables to_expr in
+                (* Add variable used for loop to inner local variables scope *)
+                let inner_local_variables = Hashtbl.copy local_variables in
+                let discrete_type = Dt_number Dt_int in
+                Hashtbl.replace inner_local_variables variable_name (discrete_type, id);
+                Hashtbl.add local_variables_accumulator (variable_name, id) discrete_type;
+                let linked_inner_bloc = link_variables_in_parsed_seq_code_bloc inner_local_variables inner_bloc in
+                Parsed_for_loop (variable_name, linked_from_expr, linked_to_expr, parsed_loop_dir, linked_inner_bloc, id)
+
+            | Parsed_while_loop (condition_expr, inner_bloc) ->
+                let linked_condition_expr = link_variables_in_parsed_boolean_expression local_variables condition_expr in
+                (* Add variable used for loop to inner local variables scope *)
+                let inner_local_variables = Hashtbl.copy local_variables in
+                let linked_inner_bloc = link_variables_in_parsed_seq_code_bloc inner_local_variables inner_bloc in
+                Parsed_while_loop (linked_condition_expr, linked_inner_bloc)
+
+            | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
+                let then_local_variables = Hashtbl.copy local_variables in
+                let linked_condition_expr = link_variables_in_parsed_boolean_expression local_variables condition_expr in
+                let linked_then_bloc = link_variables_in_parsed_seq_code_bloc then_local_variables then_bloc in
+                let linked_else_bloc_opt =
+                    match else_bloc_opt with
+                    | Some else_bloc ->
+                        let else_local_variables = Hashtbl.copy local_variables in
+                        Some (link_variables_in_parsed_seq_code_bloc else_local_variables else_bloc)
+                    | None -> None
+                in
+                Parsed_if (linked_condition_expr, linked_then_bloc, linked_else_bloc_opt)
+
+        in
+        link_variables_in_parsed_seq_code_bloc local_variables (* seq_code_bloc *)
+    in
+
+    (* Link variables in function definition *)
+    let link_variables_in_fun_defs fun_defs =
+        let link_variables_in_fun_def fun_def =
+
+            let code_bloc, return_expr_opt = fun_def.body in
+
+            (* Create local variable table *)
+            let local_variables = Hashtbl.create (List.length fun_def.parameters) in
+            (* Add parameters to local variables *)
+            List.iter (fun (variable_name, discrete_type) ->
+                Hashtbl.replace local_variables variable_name (discrete_type, -1);
+                Hashtbl.add local_variables_accumulator (variable_name, -1) discrete_type;
+            ) fun_def.parameters;
+
+            (* Link variables in sequential code bloc *)
+            let linked_code_bloc = link_variables_in_parsed_seq_code_bloc local_variables code_bloc in
+            (* Link variables in return expression (if any) *)
+            let linked_return_expr_opt =
+                match return_expr_opt with
+                | Some return_expr -> Some (link_variables_in_parsed_boolean_expression local_variables return_expr)
+                | None -> None
+            in
+            (* Return new function definition with linked variables *)
+            { fun_def with body = linked_code_bloc, linked_return_expr_opt }
+
+        in
+        List.map link_variables_in_fun_def fun_defs
+    in
+
+    let link_variables_in_automata automata =
+        let link_variables_in_automaton automaton =
+            let automaton_name, sync_names, locations = automaton in
+
+            let link_variables_in_locations locations =
+                let link_variables_in_location location =
+
+                    let link_variables_in_transitions transitions =
+                        let link_variables_in_transition transition =
+
+                            let guard, code_bloc, sync, location_name = transition in
+
+                            let link_variables_in_guard = List.map (link_variables_in_parsed_discrete_boolean_expression (Hashtbl.create 0)) in
+
+                            link_variables_in_guard guard, link_variables_in_parsed_seq_code_bloc (Hashtbl.create 0) code_bloc, sync, location_name
+                        in
+                        List.map link_variables_in_transition transitions
+                    in
+
+                    {location with transitions = link_variables_in_transitions location.transitions }
+                in
+                List.map link_variables_in_location locations
+            in
+            automaton_name, sync_names, link_variables_in_locations locations
+        in
+        List.map link_variables_in_automaton automata
+    in
+
+
+    (* Link variables to their declaration in automata and function definitions *)
+    {
+        parsed_model with
+        automata = link_variables_in_automata parsed_model.automata;
+        fun_definitions = link_variables_in_fun_defs parsed_model.fun_definitions;
+    }(* , local_variables_accumulator *)

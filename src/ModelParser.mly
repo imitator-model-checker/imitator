@@ -640,7 +640,7 @@ sum_diff:
 arithmetic_term:
 	| arithmetic_factor { Parsed_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable $2, Parsed_mul) }
+	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable ($2, 0), Parsed_mul) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| OP_MINUS arithmetic_factor { Parsed_factor(Parsed_unary_min $2) }
@@ -663,7 +663,7 @@ arithmetic_factor:
   | NAME LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
   | literal_scalar_constant { Parsed_constant $1 }
   | literal_non_scalar_constant { $1 }
-  | NAME { Parsed_variable $1 }
+  | NAME { Parsed_variable ($1, 0) }
   | LPAREN arithmetic_expression RPAREN { Parsed_nested_expr $2 }
 ;
 

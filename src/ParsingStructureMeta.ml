@@ -291,7 +291,7 @@ and is_linear_parsed_term variable_infos = function
 (* Check if a parsed factor is linear *)
 and is_linear_parsed_factor variable_infos = function
     (* only rational variable *)
-    | Parsed_variable variable_name -> true
+    | Parsed_variable _ -> true
     (* only rational constant *)
     | Parsed_constant value ->
         (match value with

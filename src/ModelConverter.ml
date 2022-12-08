@@ -632,8 +632,6 @@ let check_init_definition parsed_model =
         | _ -> true
     in
 
-    (* TODO benjamin IMPLEMENT remove unused variable inits *)
-
     check_init_predicate
 
 let is_inequality_has_left_hand_removed_variable removed_variable_names = function
@@ -681,7 +679,7 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
                     Parsed_term (
                     Parsed_product_quotient (
                     Parsed_factor (Parsed_constant coef_rational_value),
-                    Parsed_variable variable_name,
+                    Parsed_variable (variable_name, 0),
                     Parsed_mul))))
                 )
 
@@ -2877,7 +2875,13 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
-	
+
+    print_message Verbose_high ("\n*** Link variables to declarations.");
+    (* TODO benjamin IMPLEMENT *)
+    (* Link variables to their declaration *)
+    let parsed_model = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+
+
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

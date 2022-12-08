@@ -85,7 +85,7 @@ and parsed_product_quotient =
     | Parsed_div
 
 and parsed_discrete_factor =
-	| Parsed_variable of variable_name
+	| Parsed_variable of variable_name * int (* id *)
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
