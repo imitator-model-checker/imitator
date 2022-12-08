@@ -182,17 +182,17 @@ and string_of_typed_discrete_boolean_expression variable_infos = function
 	    let str_r_expr = string_of_typed_discrete_boolean_expression variable_infos r_expr in
 	    let str_node = ParsingStructureUtilities.string_of_parsed_relop relop str_l_expr str_r_expr in
         let x = str_node ^ " " ^ DiscreteType.string_of_var_type_discrete discrete_type ^ " comparison " in
-        string_format_typed_node x Var_type_discrete_bool
+        string_format_typed_node x Dt_bool
 
 	| Typed_comparison_in (in_expr, lw_expr, up_expr, discrete_number_type) ->
-	    let discrete_type = Var_type_discrete_number discrete_number_type in
+	    let discrete_type = Dt_number discrete_number_type in
 	    let str_node =
             string_of_typed_discrete_arithmetic_expression variable_infos discrete_type in_expr
             ^ Constants.default_string.in_operator
             ^ string_of_typed_discrete_arithmetic_expression variable_infos discrete_type lw_expr
             ^ string_of_typed_discrete_arithmetic_expression variable_infos discrete_type up_expr
         in
-        string_format_typed_node str_node Var_type_discrete_bool
+        string_format_typed_node str_node Dt_bool
 
 	| Typed_nested_bool_expr expr ->
         string_of_typed_boolean_expression variable_infos expr
@@ -253,7 +253,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
         let str_node =
             string_of_typed_discrete_factor variable_infos discrete_type factor
             ^ "["
-            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr
+            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) index_expr
             ^ "]"
         in
         string_format_typed_node str_node inner_type
@@ -277,7 +277,7 @@ let rec string_of_typed_scalar_or_index_update_type variable_infos = function
     | Typed_scalar_update variable_name -> variable_name
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, discrete_type) ->
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
-        ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) index_expr ^ "]"
+        ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) index_expr ^ "]"
 
 let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) =
 
@@ -294,9 +294,9 @@ let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) 
 
         | Typed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
             "for " ^ variable_name ^ " = "
-            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) from_expr
+            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) from_expr
             ^ (match loop_dir with Typed_for_loop_up -> " to " | Typed_for_loop_down -> " downto ")
-            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Var_type_discrete_number Var_type_discrete_int) to_expr
+            ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) to_expr
             ^ " do\n"
             ^ string_of_typed_seq_code_bloc_rec inner_bloc
             ^ "\ndone"

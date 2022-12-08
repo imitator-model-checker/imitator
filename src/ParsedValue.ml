@@ -22,11 +22,11 @@ open DiscreteType
 
 type parsed_value =
     | Weak_number_value of NumConst.t
-    | Rational_value of NumConst.t
+    | Rat_value of NumConst.t
     (* TODO benjamin make literal int to have the use of this variant *)
     | Int_value of Int32.t
     | Bool_value of bool
-    | Binary_word_value of BinaryWord.t
+    | Bin_value of BinaryWord.t
     | Array_value of parsed_value array
     | List_value of parsed_value list
     | Stack_value of parsed_value Stack.t
@@ -34,31 +34,31 @@ type parsed_value =
 
 (* Get discrete var type of a discrete value *)
 let rec discrete_type_of_value = function
-    | Weak_number_value _ -> Var_type_discrete_number Var_type_discrete_weak_number
-    | Rational_value _ -> Var_type_discrete_number Var_type_discrete_rat
-    | Int_value _ -> Var_type_discrete_number Var_type_discrete_int
-    | Bool_value _ -> Var_type_discrete_bool
-    | Binary_word_value value -> Var_type_discrete_binary_word (BinaryWord.length value)
+    | Weak_number_value _ -> Dt_number Dt_weak_number
+    | Rat_value _ -> Dt_number Dt_rat
+    | Int_value _ -> Dt_number Dt_int
+    | Bool_value _ -> Dt_bool
+    | Bin_value value -> Dt_bin (BinaryWord.length value)
     | Array_value a ->
         if Array.length a = 0 then
-            Var_type_discrete_array (Var_type_weak, 0)
+            Dt_array (Dt_weak, 0)
         else
-            Var_type_discrete_array (discrete_type_of_value (Array.get a 0), Array.length a)
+            Dt_array (discrete_type_of_value (Array.get a 0), Array.length a)
     | List_value l ->
         if List.length l = 0 then
-            Var_type_discrete_list Var_type_weak
+            Dt_list Dt_weak
         else
-            Var_type_discrete_list (discrete_type_of_value (List.nth l 0))
+            Dt_list (discrete_type_of_value (List.nth l 0))
     | Stack_value l ->
         if Stack.length l = 0 then
-            Var_type_discrete_stack Var_type_weak
+            Dt_stack Dt_weak
         else
-            Var_type_discrete_stack (discrete_type_of_value (Stack.top l))
+            Dt_stack (discrete_type_of_value (Stack.top l))
     | Queue_value l ->
         if Queue.length l = 0 then
-            Var_type_discrete_queue Var_type_weak
+            Dt_queue Dt_weak
         else
-            Var_type_discrete_queue (discrete_type_of_value (Queue.peek l))
+            Dt_queue (discrete_type_of_value (Queue.peek l))
 
 (************************************************************)
 (** Value functions  *)
@@ -73,10 +73,10 @@ let customized_string_of_value customized_string =
 
     let rec customized_string_of_value_rec = function
         | Weak_number_value x
-        | Rational_value x -> NumConst.string_of_numconst x
+        | Rat_value x -> NumConst.string_of_numconst x
         | Bool_value x -> if x then customized_string.boolean_string.true_string else customized_string.boolean_string.false_string
         | Int_value x -> Int32.to_string x
-        | Binary_word_value b -> BinaryWord.string_of_binaryword b
+        | Bin_value b -> BinaryWord.string_of_binaryword b
         | Array_value a ->
             let str_values = Array.map (fun x -> customized_string_of_value_rec x) a in
             l_bra_del ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_bra_del
@@ -103,13 +103,13 @@ let string_of_value = customized_string_of_value global_default_string
 (** Default values  **)
 
 (* Default discrete rational value *)
-let default_rational = Rational_value NumConst.zero
+let default_rational = Rat_value NumConst.zero
 (* Default discrete int value *)
 let default_int = Int_value Int32.zero
 (* Default discrete bool value *)
 let default_bool = Bool_value false
 (* Default discrete binary word value *)
-let default_binary_word_value l = Binary_word_value (BinaryWord.zero l)
+let default_binary_word_value l = Bin_value (BinaryWord.zero l)
 (* Default discrete list value *)
 let default_list_value = List_value []
 (* Default discrete stack value *)
@@ -120,7 +120,7 @@ let default_queue_value = Queue_value (Queue.create ())
 
 let is_zero = function
     | Weak_number_value value
-    | Rational_value value -> value = NumConst.zero
+    | Rat_value value -> value = NumConst.zero
     | Int_value value -> value = Int32.zero
     | value -> false
 
@@ -129,7 +129,7 @@ let is_zero = function
 
 (* Get NumConst.t value of rational discrete value *)
 let numconst_value = function
-    | Rational_value x -> x
+    | Rat_value x -> x
     | v -> raise (InternalError ("Unable to get rational value of non-rational discrete value: " ^ string_of_value v))
 
 (* Get Int32.t value of int32 discrete value *)
@@ -144,7 +144,7 @@ let bool_value = function
 
 (* Get binary word value of discrete value *)
 let binary_word_value = function
-    | Binary_word_value x -> x
+    | Bin_value x -> x
     | _ as value -> raise (InternalError ("Unable to get binary word value of non binary word `" ^ string_of_value value ^ "`"))
 
 (* Get array value of discrete value *)
@@ -170,7 +170,7 @@ let queue_value = function
 (* Convert any discrete value to NumConst.t value, if possible *)
 let to_numconst_value = function
     | Weak_number_value x
-    | Rational_value x -> x
+    | Rat_value x -> x
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> NumConst.numconst_of_int (Int32.to_int x)
     | value -> raise (InternalError ("Unable to convert " ^ string_of_value value ^ " to rational NumConst.t value"))
@@ -180,11 +180,11 @@ let to_numconst_value = function
 let to_int_value = function
     (* Warning !!!! conversion to int should be dependant of the platform ! *)
     | Weak_number_value x
-    | Rational_value x -> Int32.of_int (NumConst.to_int x)
+    | Rat_value x -> Int32.of_int (NumConst.to_int x)
     | Bool_value x -> if x then Int32.one else Int32.zero
     (* Warning, a bit is lost when converting on 32 bit platform !*)
     | Int_value x -> x
-    | Binary_word_value x -> Int32.of_int (BinaryWord.hash x)
+    | Bin_value x -> Int32.of_int (BinaryWord.hash x)
     | Array_value _ -> raise (InternalError "Unable to convert array to Int32.t value")
     | List_value _ -> raise (InternalError "Unable to convert list to Int32.t value")
     | Stack_value _ -> raise (InternalError "Unable to convert stack to Int32.t value")

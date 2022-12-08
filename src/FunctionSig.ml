@@ -155,9 +155,9 @@ let rec is_discrete_type_compatible_with_length_constraint length = function
 
 let is_discrete_type_compatible_with_defined_type_number_constraint discrete_number_type defined_type_number_constraint =
     match discrete_number_type, defined_type_number_constraint with
-    | Var_type_discrete_int, Int_constraint _
-    | Var_type_discrete_rat, Rat_constraint
-    | Var_type_discrete_weak_number, _ -> true
+    | Dt_int, Int_constraint _
+    | Dt_rat, Rat_constraint
+    | Dt_weak_number, _ -> true
     | _ -> false
 
 let is_discrete_type_compatible_with_type_number_constraint discrete_number_type = function
@@ -172,18 +172,18 @@ let rec is_discrete_type_compatible_with_type_constraint discrete_type = functio
 
 and is_discrete_type_compatible_with_defined_type_constraint discrete_type defined_type_constraint =
     match discrete_type, defined_type_constraint with
-    | Var_type_void, Void_constraint -> true
-    | Var_type_discrete_number discrete_number_type, Number_constraint type_number_constraint ->
+    | Dt_void, Void_constraint -> true
+    | Dt_number discrete_number_type, Number_constraint type_number_constraint ->
         is_discrete_type_compatible_with_type_number_constraint discrete_number_type type_number_constraint
-    | Var_type_discrete_bool, Bool_constraint -> true
-    | Var_type_discrete_binary_word length, Binary_constraint length_constraint ->
+    | Dt_bool, Bool_constraint -> true
+    | Dt_bin length, Binary_constraint length_constraint ->
         is_discrete_type_compatible_with_length_constraint length length_constraint
-    | Var_type_discrete_array (inner_type, length), Array_constraint (type_constraint, length_constraint) ->
+    | Dt_array (inner_type, length), Array_constraint (type_constraint, length_constraint) ->
         is_discrete_type_compatible_with_type_constraint inner_type type_constraint
         && is_discrete_type_compatible_with_length_constraint length length_constraint
-    | Var_type_discrete_list inner_type, List_constraint type_constraint
-    | Var_type_discrete_stack inner_type, Stack_constraint type_constraint
-    | Var_type_discrete_queue inner_type, Queue_constraint type_constraint ->
+    | Dt_list inner_type, List_constraint type_constraint
+    | Dt_stack inner_type, Stack_constraint type_constraint
+    | Dt_queue inner_type, Queue_constraint type_constraint ->
         is_discrete_type_compatible_with_type_constraint inner_type type_constraint
     | _ -> false
 
@@ -197,33 +197,33 @@ let is_signature_compatible_with_signature_constraint signature signature_constr
 (** -------------------- **)
 
 let type_number_constraint_of_discrete_number_type = function
-    | Var_type_discrete_rat -> Rat_constraint
-    | Var_type_discrete_int -> Int_constraint Int_type_constraint
+    | Dt_rat -> Rat_constraint
+    | Dt_int -> Int_constraint Int_type_constraint
     (* Note benjamin: a case that never happen shouldn't appear, due to a bad modeling, to fix *)
-    | Var_type_discrete_weak_number -> raise (InternalError "should never happen")
+    | Dt_weak_number -> raise (InternalError "should never happen")
 
 let type_constraint_of_discrete_type discrete_type =
     let rec type_constraint_of_discrete_type_rec = function
-        | Var_type_void -> Void_constraint
-        | Var_type_discrete_number discrete_number_type ->
+        | Dt_void -> Void_constraint
+        | Dt_number discrete_number_type ->
             let type_number_constraint = type_number_constraint_of_discrete_number_type discrete_number_type in
             Number_constraint (Defined_type_number_constraint type_number_constraint)
-        | Var_type_discrete_bool -> Bool_constraint
-        | Var_type_discrete_binary_word length -> Binary_constraint (Length_constraint length)
-        | Var_type_discrete_array (inner_type, length) ->
+        | Dt_bool -> Bool_constraint
+        | Dt_bin length -> Binary_constraint (Length_constraint length)
+        | Dt_array (inner_type, length) ->
             let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
             Array_constraint (inner_type_constraint, Length_constraint length)
-        | Var_type_discrete_list inner_type ->
+        | Dt_list inner_type ->
             let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
             List_constraint inner_type_constraint
-        | Var_type_discrete_stack inner_type ->
+        | Dt_stack inner_type ->
             let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
             Stack_constraint inner_type_constraint
-        | Var_type_discrete_queue inner_type ->
+        | Dt_queue inner_type ->
             let inner_type_constraint = Defined_type_constraint (type_constraint_of_discrete_type_rec inner_type) in
             Queue_constraint inner_type_constraint
         (* Note benjamin: a case that never happen shouldn't appear, due to a bad modeling, to fix *)
-        | Var_type_weak -> raise (InternalError "should never happen")
+        | Dt_weak -> raise (InternalError "should never happen")
     in
     Defined_type_constraint (type_constraint_of_discrete_type_rec discrete_type)
 

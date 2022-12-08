@@ -22,7 +22,7 @@ type abstract_number_value =
 type abstract_scalar_value =
     | Abstract_number_value of abstract_number_value
     | Abstract_bool_value of bool
-    | Abstract_binary_word_value of BinaryWord.t
+    | Abstract_bin_value of BinaryWord.t
 
 type abstract_value =
     | Abstract_void_value

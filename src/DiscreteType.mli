@@ -19,21 +19,21 @@
 
 (* Specific type of number *)
 type var_type_discrete_number =
-    | Var_type_discrete_rat
-    | Var_type_discrete_int
-    | Var_type_discrete_weak_number
+    | Dt_rat
+    | Dt_int
+    | Dt_weak_number
 
 (* Specific type of discrete variables *)
 type var_type_discrete =
-    | Var_type_weak
-    | Var_type_void
-    | Var_type_discrete_bool
-    | Var_type_discrete_number of var_type_discrete_number
-    | Var_type_discrete_binary_word of int
-    | Var_type_discrete_array of var_type_discrete * int
-    | Var_type_discrete_list of var_type_discrete
-    | Var_type_discrete_stack of var_type_discrete
-    | Var_type_discrete_queue of var_type_discrete
+    | Dt_weak
+    | Dt_void
+    | Dt_bool
+    | Dt_number of var_type_discrete_number
+    | Dt_bin of int
+    | Dt_array of var_type_discrete * int
+    | Dt_list of var_type_discrete
+    | Dt_stack of var_type_discrete
+    | Dt_queue of var_type_discrete
 
 (* Type of variable in declarations *)
 type var_type =

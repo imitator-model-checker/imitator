@@ -832,7 +832,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
                 ^ "` used in init constraint \""
                 ^ ParsingStructureUtilities.string_of_parsed_init_state_predicate variable_infos lp
                 ^ "\" should be "
-                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat)
+                ^ DiscreteType.string_of_var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat)
             );
             continuous_init_error := true;
         ) non_rational_variable_names
@@ -852,7 +852,7 @@ let has_void_constant_or_variable str_var_kind name var_type =
     let str_var_kind_capitalized = String.capitalize_ascii str_var_kind in
 
     match var_type with
-    | Var_type_discrete Var_type_void -> print_error (str_var_kind_capitalized ^ " `" ^ name ^ "` was declared as `void`. A " ^ str_var_kind ^ " cannot be declared as `void`."); true
+    | Var_type_discrete Dt_void -> print_error (str_var_kind_capitalized ^ " `" ^ name ^ "` was declared as `void`. A " ^ str_var_kind ^ " cannot be declared as `void`."); true
     | _ -> false
 
 (************************************************************)
@@ -2938,7 +2938,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         removed_variable_names = [];
         discrete = [];
         fun_meta = Hashtbl.create 0;
-        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Var_type_discrete_number DiscreteType.Var_type_discrete_rat);
+        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat);
     }
     in
 

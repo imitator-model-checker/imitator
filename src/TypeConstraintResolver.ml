@@ -48,15 +48,15 @@ let string_of_resolved_constraints resolved_constraints =
 (* Given a discrete type, resolve the constraint type or the constraint length of a type constraint *)
 let rec resolve_constraint defined_type_constraint discrete_type =
     match defined_type_constraint, discrete_type with
-    | Number_constraint type_number_constraint, Var_type_discrete_number type_number ->
+    | Number_constraint type_number_constraint, Dt_number type_number ->
         resolve_type_number_constraint type_number type_number_constraint
-    | Binary_constraint length_constraint, Var_type_discrete_binary_word length ->
+    | Binary_constraint length_constraint, Dt_bin length ->
         resolve_length_constraint length length_constraint
-    | Array_constraint (type_constraint, length_constraint), Var_type_discrete_array (inner_type, length) ->
+    | Array_constraint (type_constraint, length_constraint), Dt_array (inner_type, length) ->
         resolve_type_constraint inner_type type_constraint @ resolve_length_constraint length length_constraint
-    | List_constraint type_constraint, Var_type_discrete_list inner_type
-    | Stack_constraint type_constraint, Var_type_discrete_stack inner_type
-    | Queue_constraint type_constraint, Var_type_discrete_queue inner_type ->
+    | List_constraint type_constraint, Dt_list inner_type
+    | Stack_constraint type_constraint, Dt_stack inner_type
+    | Queue_constraint type_constraint, Dt_queue inner_type ->
         resolve_type_constraint inner_type type_constraint
     | _ -> []
 
@@ -70,7 +70,7 @@ and resolve_defined_type_number_constraint = function
     | Int_constraint (Int_name_constraint constraint_name) -> []
 
 and resolve_type_number_constraint type_number = function
-    | Number_type_name_constraint constraint_name -> [constraint_name, Resolved_type_constraint (Var_type_discrete_number type_number)]
+    | Number_type_name_constraint constraint_name -> [constraint_name, Resolved_type_constraint (Dt_number type_number)]
     | Defined_type_number_constraint type_number_constraint -> resolve_defined_type_number_constraint type_number_constraint
 
 and resolve_length_constraint length = function
@@ -105,9 +105,9 @@ let resolve_constraints variable_infos signature discrete_types =
             List.hd length_constraint_resolutions
         (* Else if it's a type constraint, return the stronger *)
         else (
-            let resolved_discrete_types = List.map (function | Resolved_type_constraint discrete_type -> discrete_type | Resolved_length_constraint _ -> Var_type_weak) type_constraint_resolutions in
+            let resolved_discrete_types = List.map (function | Resolved_type_constraint discrete_type -> discrete_type | Resolved_length_constraint _ -> Dt_weak) type_constraint_resolutions in
             (* Reduce discrete types to get the stronger type !  *)
-            let stronger_type = List.fold_left stronger_discrete_type_of Var_type_weak resolved_discrete_types in
+            let stronger_type = List.fold_left stronger_discrete_type_of Dt_weak resolved_discrete_types in
             Resolved_type_constraint stronger_type
         )
 
@@ -174,29 +174,29 @@ let get_discrete_type_resolved_constraint resolved_constraints_table constraint_
 
 let rec discrete_type_of_defined_type_constraint resolved_constraints_table = function
     | Void_constraint ->
-        Var_type_void
+        Dt_void
     | Number_constraint type_number_constraint ->
         discrete_type_of_type_number_constraint resolved_constraints_table type_number_constraint
     | Bool_constraint ->
-        Var_type_discrete_bool
+        Dt_bool
     | Binary_constraint length_constraint ->
         let length = discrete_type_of_length_constraint resolved_constraints_table length_constraint in
-        Var_type_discrete_binary_word length
+        Dt_bin length
     | Array_constraint (type_constraint, length_constraint) ->
-        Var_type_discrete_array (
+        Dt_array (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint,
             discrete_type_of_length_constraint resolved_constraints_table length_constraint
         )
     | List_constraint type_constraint ->
-        Var_type_discrete_list (
+        Dt_list (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
         )
     | Stack_constraint type_constraint ->
-        Var_type_discrete_stack (
+        Dt_stack (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
         )
     | Queue_constraint type_constraint ->
-        Var_type_discrete_queue (
+        Dt_queue (
             discrete_type_of_type_constraint_name resolved_constraints_table type_constraint
         )
 
@@ -208,11 +208,11 @@ and discrete_type_of_type_constraint_name resolved_constraints_table = function
 and discrete_type_of_type_number_constraint resolved_constraints_table = function
     | Number_type_name_constraint constraint_name ->
         get_discrete_type_resolved_constraint resolved_constraints_table constraint_name
-    | Defined_type_number_constraint number_type -> Var_type_discrete_number (discrete_type_of_defined_type_number_constraint resolved_constraints_table number_type)
+    | Defined_type_number_constraint number_type -> Dt_number (discrete_type_of_defined_type_number_constraint resolved_constraints_table number_type)
 
 and discrete_type_of_defined_type_number_constraint resolved_constraints_table = function
-    | Rat_constraint -> Var_type_discrete_rat
-    | Int_constraint _ -> Var_type_discrete_int
+    | Rat_constraint -> Dt_rat
+    | Int_constraint _ -> Dt_int
 
 and discrete_type_of_length_constraint resolved_constraints_table = function
     | Length_constraint_expression length_constraint_expr -> discrete_type_of_length_constraint_expression resolved_constraints_table length_constraint_expr
