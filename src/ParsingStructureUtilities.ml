@@ -923,7 +923,7 @@ let link_variables_in_parsed_model parsed_model =
             | Parsed_local_decl (variable_name, discrete_type, expr, id) ->
                 let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
                 Hashtbl.replace local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator (variable_name, id) discrete_type;
+                Hashtbl.add local_variables_accumulator (variable_name, id) (Var_type_discrete discrete_type);
                 Parsed_local_decl (variable_name, discrete_type, linked_expr, id)
 
             | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
@@ -941,7 +941,7 @@ let link_variables_in_parsed_model parsed_model =
                 let inner_local_variables = Hashtbl.copy local_variables in
                 let discrete_type = Dt_number Dt_int in
                 Hashtbl.replace inner_local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator (variable_name, id) discrete_type;
+                Hashtbl.add local_variables_accumulator (variable_name, id) (Var_type_discrete discrete_type);
                 let linked_inner_bloc = link_variables_in_parsed_seq_code_bloc inner_local_variables inner_bloc in
                 Parsed_for_loop (variable_name, linked_from_expr, linked_to_expr, parsed_loop_dir, linked_inner_bloc, id)
 
@@ -980,7 +980,7 @@ let link_variables_in_parsed_model parsed_model =
             (* Add parameters to local variables *)
             List.iter (fun (parameter_name, id, discrete_type) ->
                 Hashtbl.replace local_variables parameter_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator (parameter_name, id) discrete_type;
+                Hashtbl.add local_variables_accumulator (parameter_name, id) (Var_type_discrete discrete_type);
             ) fun_def.parameters;
 
             (* Link variables in sequential code bloc *)
@@ -1026,6 +1026,10 @@ let link_variables_in_parsed_model parsed_model =
         List.map link_variables_in_automaton automata
     in
 
+    (* Add global declared variables to *)
+    List.iter (fun (var_type, variables_list) ->
+        List.iter (fun (variable_name, _) -> Hashtbl.add local_variables_accumulator (variable_name, 0) var_type) variables_list
+    ) parsed_model.variable_declarations;
 
     (* Link variables to their declaration in automata and function definitions *)
     {

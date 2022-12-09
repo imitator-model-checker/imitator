@@ -321,9 +321,9 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         (* local variables are more priority and shadow global variables  *)
         let discrete_type, scope =
             if Hashtbl.mem variable_infos.local_variables (variable_name, id) then (
-                let discrete_type = Hashtbl.find variable_infos.local_variables (variable_name, id) in
-                ImitatorUtilities.print_standard_message ("found local variable: " ^ variable_name ^ ":" ^ string_of_int id ^ ":" ^ DiscreteType.string_of_var_type_discrete discrete_type);
-                discrete_type, Local
+                let var_type = Hashtbl.find variable_infos.local_variables (variable_name, id) in
+                ImitatorUtilities.print_standard_message ("found local variable: " ^ variable_name ^ ":" ^ string_of_int id ^ ":" ^ DiscreteType.string_of_var_type var_type);
+                DiscreteType.discrete_type_of_var_type var_type, if id <> 0 then Local else Global
             ) else (
                 VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name, Global
             )
