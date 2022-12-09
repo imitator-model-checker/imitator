@@ -195,4 +195,4 @@ val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predi
 val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
 val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
-val link_variables_in_parsed_model : parsed_model -> parsed_model
+val link_variables_in_parsed_model : parsed_model -> parsed_model * (variable_name * variable_id, var_type_discrete) Hashtbl.t

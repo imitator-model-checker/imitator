@@ -2877,10 +2877,10 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
     print_message Verbose_high ("\n*** Link variables to declarations.");
-    (* TODO benjamin IMPLEMENT *)
-    (* Link variables to their declaration *)
-    let parsed_model = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+    (* Recompute model to link variables to their declarations, and return all local variables declarations *)
+    let parsed_model, local_variables = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
 
+    print_message Verbose_high ("\n*** Linking variables finished.");
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)

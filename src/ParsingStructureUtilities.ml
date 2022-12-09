@@ -1022,4 +1022,4 @@ let link_variables_in_parsed_model parsed_model =
         parsed_model with
         automata = link_variables_in_automata parsed_model.automata;
         fun_definitions = link_variables_in_fun_defs parsed_model.fun_definitions;
-    }(* , local_variables_accumulator *)
+    } , local_variables_accumulator
