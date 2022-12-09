@@ -828,14 +828,14 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
 
 let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
-    let parameter_names, parameter_discrete_types = List.split fun_def.parameters in
+    let parameter_names, parameter_discrete_types = List.map first_of_triplet fun_def.parameters, List.map third_of_triplet fun_def.parameters in
     let return_type = fun_def.return_type in
     (* Construct signature *)
     let signature = parameter_discrete_types @ [return_type] in
 
     (* Add parameters as local variables of the function *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
-    List.iter (fun (param_name, param_type) -> Hashtbl.replace local_variables param_name param_type) fun_def.parameters;
+    List.iter (fun (param_name, _ (* id *), param_type) -> Hashtbl.replace local_variables param_name param_type) fun_def.parameters;
 
     (* Eventually infer the body expression type of function to the return type underlying type of the function *)
     let infer_type_opt = Some (DiscreteType.extract_inner_type return_type) in

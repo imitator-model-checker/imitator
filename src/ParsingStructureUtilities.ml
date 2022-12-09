@@ -321,11 +321,11 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
     (* Add parameters as local variables *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
-    List.iter (fun (param_name, param_type) -> Hashtbl.add local_variables param_name (param_type, 0)) fun_def.parameters;
+    List.iter (fun (param_name, _ (* id *), param_type) -> Hashtbl.add local_variables param_name (param_type, 0)) fun_def.parameters;
 
     let decl_callback_result =
         match decl_callback with
-        | Some decl_callback -> List.fold_left (fun acc (param_name, param_type) -> operator acc (decl_callback (param_name, param_type, -1))) base fun_def.parameters
+        | Some decl_callback -> List.fold_left (fun acc (param_name, _ (* id *), param_type) -> operator acc (decl_callback (param_name, param_type, -1))) base fun_def.parameters
         | None -> base
     in
 
@@ -681,7 +681,7 @@ let string_of_parsed_fun_def_body variable_infos (code_bloc, return_expr_opt) =
 
 let string_of_parsed_fun_def variable_infos fun_def =
     (* Format each parameters to string *)
-    let str_parameters_list = List.map (fun (parameter_name, parameter_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete parameter_type) fun_def.parameters in
+    let str_parameters_list = List.map (fun (parameter_name, _ (* id *), parameter_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete parameter_type) fun_def.parameters in
     (* Format all parameters to string *)
     let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
     (* Format function definition to string *)
@@ -968,9 +968,9 @@ let link_variables_in_parsed_model parsed_model =
             (* Create local variable table *)
             let local_variables = Hashtbl.create (List.length fun_def.parameters) in
             (* Add parameters to local variables *)
-            List.iter (fun (variable_name, discrete_type) ->
-                Hashtbl.replace local_variables variable_name (discrete_type, -1);
-                Hashtbl.add local_variables_accumulator (variable_name, -1) discrete_type;
+            List.iter (fun (parameter_name, id, discrete_type) ->
+                Hashtbl.replace local_variables parameter_name (discrete_type, id);
+                Hashtbl.add local_variables_accumulator (parameter_name, id) discrete_type;
             ) fun_def.parameters;
 
             (* Link variables in sequential code bloc *)

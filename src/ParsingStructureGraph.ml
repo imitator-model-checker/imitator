@@ -633,7 +633,7 @@ let declared_components_of_model parsed_model =
 
         (* Get all declared parameters in a given function definition *)
         let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
-            List.fold_left (fun acc (variable_name, _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
+            List.fold_left (fun acc (variable_name, _ (* id *), _) -> Param_ref (variable_name, fun_def.name) :: acc) [] fun_def.parameters
         in
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
@@ -648,7 +648,7 @@ let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model p
     let function_relations fun_def =
 
         (* Get parameter names *)
-        let parameter_names = List.map first_of_tuple fun_def.parameters in
+        let parameter_names = List.map first_of_triplet fun_def.parameters in
         (* Add parameter names to local variables of function *)
         let local_variables = Hashtbl.create (List.length parameter_names) in
         List.iter (fun parameter_name -> Hashtbl.add local_variables parameter_name (Param_ref (parameter_name, fun_def.name))) parameter_names;
@@ -898,7 +898,7 @@ let remove_unused_assignments_in_updates declarations_info dependency_graph (* p
 let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Add parameter names to local variables of function *)
     let local_variables = Hashtbl.create (List.length fun_def.parameters) in
-    List.iter (fun (parameter_name, _) -> Hashtbl.add local_variables parameter_name (-1)) fun_def.parameters;
+    List.iter (fun (parameter_name, _ (* id *), _) -> Hashtbl.add local_variables parameter_name (-1)) fun_def.parameters;
 
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in

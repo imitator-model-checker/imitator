@@ -85,7 +85,7 @@ and parsed_product_quotient =
     | Parsed_div
 
 and parsed_discrete_factor =
-	| Parsed_variable of variable_name * int (* id *)
+	| Parsed_variable of variable_name * variable_id
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
@@ -169,10 +169,10 @@ type parsed_loop_dir =
 (** Bloc of sequential code *)
 (****************************************************************)
 type parsed_seq_code_bloc =
-    | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * int (* id *)
+    | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * variable_id
     | Parsed_assignment of normal_update
     | Parsed_instruction of parsed_boolean_expression
-    | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *) * int (* id *)
+    | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *) * variable_id
     | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* inner bloc *)
     | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* then *) * parsed_seq_code_bloc_list option (* else *)
 
@@ -193,7 +193,7 @@ type function_metadata = {
 (* Parsed function definition *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
+    parameters : (variable_name * variable_id * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
     body : parsed_seq_code_bloc_list * parsed_boolean_expression option; (* body *)
 }

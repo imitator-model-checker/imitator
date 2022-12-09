@@ -435,10 +435,10 @@ let builtin_function_bodies_table =
 (* Compute metadata of a user defined function definition *)
 let metadata_of_parsed_function_definition builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
     (* Concat parameters type and return type *)
-    let signature = List.map second_of_tuple fun_def.parameters @ [fun_def.return_type] in
+    let signature = List.map third_of_triplet fun_def.parameters @ [fun_def.return_type] in
     {
         name = fun_def.name;
-        parameter_names = List.map first_of_tuple fun_def.parameters;
+        parameter_names = List.map first_of_triplet fun_def.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature signature;
         side_effect = ParsingStructureMeta.is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
     }
