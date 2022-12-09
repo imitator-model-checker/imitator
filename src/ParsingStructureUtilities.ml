@@ -859,8 +859,8 @@ let link_variables_in_parsed_model parsed_model =
                 let variable_opt = Hashtbl.find_opt local_variables variable_name in
                 match variable_opt with
                 (* If found in local variables get id *)
-                | Some (discrete_type, id) -> ImitatorUtilities.print_standard_message ("found"); id
-                | None -> ImitatorUtilities.print_standard_message ("not found"); 0 (* global variable id *)
+                | Some (discrete_type, id) -> id
+                | None -> 0 (* global variable id *)
             in
             Parsed_variable (variable_name, variable_id)
 

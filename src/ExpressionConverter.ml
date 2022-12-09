@@ -316,17 +316,17 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
 	| Parsed_variable (variable_name, id) ->
-	    ImitatorUtilities.print_standard_message ("Variable : " ^ variable_name ^ ":" ^ string_of_int id);
+	    ImitatorUtilities.print_standard_message ("Variable found on type checking : " ^ variable_name ^ ":" ^ string_of_int id);
         (* If it's local variable, take it's type *)
         (* local variables are more priority and shadow global variables  *)
-	    let discrete_type, scope =
-            match local_variables_opt with
-            | Some local_variables when Hashtbl.mem local_variables variable_name ->
-                let discrete_type = Hashtbl.find local_variables variable_name in
+        let discrete_type, scope =
+            if Hashtbl.mem variable_infos.local_variables (variable_name, id) then (
+                let discrete_type = Hashtbl.find variable_infos.local_variables (variable_name, id) in
+                ImitatorUtilities.print_standard_message ("found local variable: " ^ variable_name ^ ":" ^ string_of_int id ^ ":" ^ DiscreteType.string_of_var_type_discrete discrete_type);
                 discrete_type, Local
-
-            | _ ->
+            ) else (
                 VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name, Global
+            )
         in
 
         (* If infer type is given and discrete type is unknown number *)
