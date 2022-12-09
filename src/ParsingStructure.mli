@@ -148,7 +148,7 @@ type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
 type parsed_scalar_or_index_update_type =
-    | Parsed_scalar_update of variable_name
+    | Parsed_scalar_update of variable_name * variable_id
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
 
 (** basic updating *)

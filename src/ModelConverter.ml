@@ -1240,7 +1240,7 @@ let is_only_resets variable_infos updates =
         (* Check if it's a clock *)
         let is_clock =
             match parsed_scalar_or_index_update_type with
-            | Parsed_scalar_update variable_name ->
+            | Parsed_scalar_update (variable_name, _ (* id *)) ->
                 VariableInfo.var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
             | _ -> false
         in
@@ -1256,10 +1256,10 @@ let split_to_clock_discrete_updates variable_infos updates =
     (** Function that check if a normal update is a clock update *)
     let is_clock_update (parsed_scalar_or_index_update_type, update_expr) =
         match parsed_scalar_or_index_update_type with
-        | Parsed_scalar_update variable_name
+        | Parsed_scalar_update (variable_name, _ (* id *))
         when VariableInfo.is_clock variable_infos variable_name ->
             (* Retrieve variable type *)
-            My_left (Parsed_scalar_update variable_name, update_expr)
+            My_left (Parsed_scalar_update (variable_name, 0), update_expr)
 
         | _ ->
             My_right (parsed_scalar_or_index_update_type, update_expr)
@@ -1346,7 +1346,7 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
                 (* Get type of the variable *)
                 let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
                 match var_type_opt with
-                | Some Var_type_clock -> [Parsed_scalar_update variable_name, expr]
+                | Some Var_type_clock -> [Parsed_scalar_update (variable_name, 0), expr]
                 | _ -> []
             in
             function_clock_assignments @ found_clock_assignments

@@ -598,7 +598,7 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         Typed_function_call (function_name, typed_expressions, return_type), return_type
 
 let rec type_check_parsed_scalar_or_index_update_type local_variables variable_infos = function
-    | Parsed_scalar_update variable_name ->
+    | Parsed_scalar_update (variable_name, _ (* id *)) ->
         (* Get assigned variable type *)
 
         let discrete_type =

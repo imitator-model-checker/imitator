@@ -206,7 +206,7 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
 and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-        | Parsed_scalar_update variable_name ->
+        | Parsed_scalar_update (variable_name, _ (* id *)) ->
 
             let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
 
@@ -665,7 +665,7 @@ and string_of_parsed_update variable_infos = function
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
 and string_of_parsed_scalar_or_index_update_type variable_infos = function
-    | Parsed_scalar_update variable_name -> variable_name
+    | Parsed_scalar_update (variable_name, _ (* id *)) -> variable_name
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, expr) ->
         let l_del, r_del = Constants.default_array_string.array_access_delimiter in
         string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type
@@ -862,6 +862,7 @@ let link_variables_in_parsed_model parsed_model =
                 | Some (discrete_type, id) -> id
                 | None -> 0 (* global variable id *)
             in
+            ImitatorUtilities.print_standard_message ("link ref `" ^ variable_name ^ ":" ^ string_of_int variable_id ^ "`");
             Parsed_variable (variable_name, variable_id)
 
         | Parsed_constant _ as constant -> constant
@@ -895,8 +896,18 @@ let link_variables_in_parsed_model parsed_model =
     in
 
     let rec link_variables_in_parsed_scalar_or_index_update_type local_variables = function
-        | Parsed_scalar_update variable_name ->
-            Parsed_scalar_update variable_name
+        | Parsed_scalar_update (variable_name, _) ->
+            (* Found variable id *)
+            let variable_id =
+                let variable_opt = Hashtbl.find_opt local_variables variable_name in
+                match variable_opt with
+                (* If found in local variables get id *)
+                | Some (discrete_type, id) -> id
+                | None -> 0 (* global variable id *)
+            in
+            ImitatorUtilities.print_standard_message ("link assignment `" ^ variable_name ^ ":" ^ string_of_int variable_id ^ "`");
+            Parsed_scalar_update (variable_name, variable_id)
+
         | Parsed_indexed_update (parsed_scalar_or_index_update_type, expr) ->
             let linked_parsed_scalar_or_index_update_type = link_variables_in_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in
             let linked_expr = link_variables_in_parsed_arithmetic_expression local_variables expr in
@@ -911,7 +922,6 @@ let link_variables_in_parsed_model parsed_model =
         and link_variables_in_parsed_instruction local_variables = function
             | Parsed_local_decl (variable_name, discrete_type, expr, id) ->
                 let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
-                ImitatorUtilities.print_standard_message ("add var " ^ variable_name ^ ":" ^ string_of_int id);
                 Hashtbl.replace local_variables variable_name (discrete_type, id);
                 Hashtbl.add local_variables_accumulator (variable_name, id) discrete_type;
                 Parsed_local_decl (variable_name, discrete_type, linked_expr, id)

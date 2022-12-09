@@ -26,7 +26,7 @@ open Exceptions
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)
 let rec variable_name_of_parsed_scalar_or_index_update_type = function
-    | Parsed_scalar_update variable_name -> variable_name
+    | Parsed_scalar_update (variable_name, _ (* id *)) -> variable_name
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)

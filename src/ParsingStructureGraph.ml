@@ -123,7 +123,7 @@ let refs_in_parsed_arithmetic_expression local_variables expr =
 
 let refs_of_parsed_scalar_or_index_update_type local_variables (* parsed_scalar_or_index_update_type *) =
     let rec refs_of_parsed_scalar_or_index_update_type_rec = function
-        | Parsed_scalar_update variable_name ->
+        | Parsed_scalar_update (variable_name, _ (* id *)) ->
             (* Create local variable ref representing a unique variable ref *)
             [get_variable_ref local_variables variable_name]
 
@@ -182,7 +182,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
             let rec contains_function_call =
                 let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
                 let rec has_indexes_fun_call = function
-                    | Parsed_scalar_update variable_name -> false
+                    | Parsed_scalar_update _ -> false
                     | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
                         let index_contains_fun_call = ParsingStructureMeta.has_fun_call_parsed_discrete_arithmetic_expression index_expr in
                          index_contains_fun_call || has_indexes_fun_call inner_scalar_or_index_update_type
@@ -192,7 +192,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info local_variables code
 
 
             let rec relations_of_scalar_or_index_update_type = function
-                | Parsed_scalar_update variable_name ->
+                | Parsed_scalar_update (variable_name, _ (* id *)) ->
 
                     (* Is only a clock reset ? We consider not use *)
                     if is_clock_reset local_variables declarations_info variable_name expr then

@@ -580,7 +580,7 @@ end_opt:
 
 /* Variable or variable access */
 parsed_scalar_or_index_update_type:
-  | NAME { Parsed_scalar_update $1 }
+  | NAME { Parsed_scalar_update ($1, 0) }
   | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
@@ -589,18 +589,18 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ boolean_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $4)
+		(Parsed_scalar_update ($1, 0), $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $4)
+		(Parsed_scalar_update ($1, 0), $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ boolean_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $3)
+		(Parsed_scalar_update ($1, 0), $3)
 	}
 
 	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
