@@ -23,6 +23,7 @@
   (ocaml
    (>= 4.08))
   dune
+  oasis
   mlgmp
   ppl
   extlib
