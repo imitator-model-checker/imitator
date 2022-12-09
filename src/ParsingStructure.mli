@@ -515,6 +515,7 @@ type variable_infos = {
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
+	local_variables : ((variable_name * variable_id), DiscreteType.var_type_discrete) Hashtbl.t;
 	fun_meta : (Automaton.variable_name, function_metadata) Hashtbl.t;
 }
 
