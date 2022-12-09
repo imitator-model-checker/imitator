@@ -19,14 +19,16 @@
 
 from __future__ import print_function
 
+import os
 import subprocess
 from time import gmtime, strftime
 
 # ************************************************************
 # CONSTANTS
 # ************************************************************
-ml_file_name = "src/BuildInfo.ml"
-mli_file_name = "src/BuildInfo.mli"
+folder = "" if (os.path.basename(os.getcwd()) == "src") else "src/"
+ml_file_name = folder + "BuildInfo.ml"
+mli_file_name = folder + "BuildInfo.mli"
 
 print("Python is now handling build information…")
 
@@ -42,20 +44,20 @@ year_str = strftime("%Y", gmtime())
 # TRY TO GET GIT INFORMATION
 # ************************************************************
 ocaml_fmt = 'Some "{}"'
-git_fmt = 'Retrieved git {}: {}'
+git_fmt = "Retrieved git {}: {}"
 
 
 def get_ocaml_info(info):
     """Method that gets specific information from git and returns a typed value for Ocaml"""
-    if info == 'hash':  # NOTE: command is 'git rev-parse HEAD'
+    if info == "hash":  # NOTE: command is 'git rev-parse HEAD'
         git_command = ["git", "rev-parse", "HEAD"]
-    elif info == 'branch':
+    elif info == "branch":
         git_command = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
     else:
-        raise NotImplemented
+        raise NotImplementedError
 
     try:
-        git_info = (subprocess.check_output(git_command)).rstrip().decode('utf-8')
+        git_info = (subprocess.check_output(git_command)).rstrip().decode("utf-8")
     except:  # Case: exception with problem (typically return code <> 1)
         print("Error with git: give up git information")
         # nothing
@@ -72,10 +74,10 @@ def get_ocaml_info(info):
 
 
 # 1) Retrieve the git hash number
-git_hash_ocaml = get_ocaml_info('hash')
+git_hash_ocaml = get_ocaml_info("hash")
 
 # 2) Retrieve the branch
-git_branch_ocaml = get_ocaml_info('branch')
+git_branch_ocaml = get_ocaml_info("branch")
 
 
 # ************************************************************
@@ -93,17 +95,17 @@ ml_fmt = """
 (*****************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN (France)
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Author:        python script
- * 
- * Automatically generated: {date} 
+ *
+ * Automatically generated: {date}
  *
  ****************************************************************)
- 
+
 let build_time = "{current_build_date}"
 let build_year = "{year}"
 let git_branch = {git_branch}
@@ -111,28 +113,33 @@ let git_hash = {git_hash}
 
 """
 
-write_to_file(ml_file_name, ml_fmt.format(date=date_str,
-                                          current_build_date=current_build_date,
-                                          year=year_str,
-                                          git_branch=git_branch_ocaml,
-                                          git_hash=git_hash_ocaml))
+write_to_file(
+    ml_file_name,
+    ml_fmt.format(
+        date=date_str,
+        current_build_date=current_build_date,
+        year=year_str,
+        git_branch=git_branch_ocaml,
+        git_hash=git_hash_ocaml,
+    ),
+)
 
 # .mli
 mli_fmt = """
 (*****************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN (France)
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Author:        python script
- * 
+ *
  * Automatically generated: {date}
  *
  ****************************************************************)
- 
+
 val build_time   : string
 val build_year   : string
 val git_branch   : string option

@@ -1,6 +1,5 @@
 (executable
  (name IMITATOR)
- (public_name IMITATOR)
  (libraries gmp ppl extlib fileutils str unix threads)
  (modules_without_implementation
   abstractModel
@@ -23,6 +22,10 @@
    -lgmpxx))
  (modes native))
 
+(install
+ (section bin)
+ (files imitator))
+
 (ocamllex
  (modules ModelLexer PropertyLexer))
 
@@ -44,10 +47,22 @@
   (flags
    (:standard -warn-error -A))))
 
-; TODO: Add these steps in the dune project
-; # Handling build number (using Python)
-; PreBuildCommand: python gen_build_info.py
-; # strip: considerably reduces the size!
-; PostBuildCommand: echo "Copying main binanry file to bin/imitator …" ; cp _build/src/IMITATOR.native bin/imitator ; strip bin/imitator
+(rule
+ (targets BuildInfo.ml BuildInfo.mli)
+ (deps
+  (:gen ../gen_build_info.py))
+ (action
+  (run python %{gen})))
 
-; TODO: Runt regresion tests
+(rule
+ (target imitator)
+ (deps IMITATOR.exe)
+ (mode
+  (promote
+   (into ../bin)))
+ (action
+  (progn
+   (echo "\nCopying main binary file to bin/imitator \226\128\166")
+   (run chmod u+w %{deps})
+   (run strip %{deps})
+   (copy %{deps} %{target}))))
