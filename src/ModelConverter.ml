@@ -254,8 +254,8 @@ let check_normal_update variable_infos automaton_name normal_update =
 
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
-    (* Get (maybe) an updated variable in normal update *)
-    let updated_variable_name_opt = (
+    (* Get an updated variable in normal update *)
+    let updated_variable_name = (
         ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
             (Hashtbl.create 0)
             (@)
@@ -266,13 +266,11 @@ let check_normal_update variable_infos automaton_name normal_update =
             )
             (fun _ _ -> []) normal_update
             |> List.filter (fun x -> x <> "")
-            |> List.nth_opt
+            |> List.nth
         ) 0
     in
 
-    let updated_variable_name = match updated_variable_name_opt with Some updated_variable_name -> updated_variable_name | None -> "_" in
-
-    if updated_variable_name <> "_" && is_variable_or_constant_defined variable_infos updated_variable_name then
+    if is_variable_or_constant_defined variable_infos updated_variable_name then
         (* Get kind (variable or constant ?) of updated variable *)
         let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
         (* Get var type of updated variable *)
