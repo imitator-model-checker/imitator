@@ -20,7 +20,7 @@ open OCamlUtilities
 
 (* Definition state of variable / constant *)
 type variable_constant_defined_state =
-    | Variable_defined
+    | Variable_defined (* of variable_index *)
     | Constant_defined
     | Variable_removed
     | Not_declared
@@ -36,14 +36,13 @@ let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.va
 (* Get variable index given a variable name *)
 let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
 
-(* Get variable index given a variable name or None if variable was not found *)
-let [@inline] index_of_variable_name_opt variable_infos = Hashtbl.find_opt variable_infos.index_of_variables
-
 (* Get constant value given a constant name *)
 let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
 
 (* Check if variable is defined => declared and not removed  *)
-let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.index_of_variables
+let [@inline] is_variable_is_defined variable_infos variable_name =
+    Hashtbl.mem variable_infos.index_of_variables variable_name
+
 
 (* Check if variable was removed *)
 let [@inline] is_variable_removed variable_infos variable_name = List.mem variable_name variable_infos.removed_variable_names
@@ -108,14 +107,6 @@ let var_type_of_variable_or_constant_opt variable_infos variable_name =
 let discrete_type_of_variable_or_constant variable_infos variable_name =
     let var_type = var_type_of_variable_or_constant variable_infos variable_name in
     DiscreteType.discrete_type_of_var_type var_type
-
-(* Get some discrete type of a variable or a constant given it's name *)
-(* it return None if constant or variable was not declared or removed *)
-let discrete_type_of_variable_or_constant_opt variable_infos variable_name =
-    let var_type_opt = var_type_of_variable_or_constant_opt variable_infos variable_name in
-    match var_type_opt with
-    | Some var_type -> Some (DiscreteType.discrete_type_of_var_type var_type)
-    | None -> None
 
 (* Know if variable with a given name is a variable or a constant *)
 let variable_kind_of_variable_name variable_infos variable_name =
