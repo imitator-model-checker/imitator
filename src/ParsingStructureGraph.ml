@@ -114,24 +114,7 @@ let components_in_parsed_arithmetic_expression expr =
     (* Get refs *)
     variables_used_components @ functions_used_components
 
-(*
-let refs_of_parsed_scalar_or_index_update_type (* parsed_scalar_or_index_update_type *) =
-    let rec refs_of_parsed_scalar_or_index_update_type_rec = function
-        | Parsed_scalar_update (variable_name, _ (* id *)) ->
-            (* Create local variable ref representing a unique variable ref *)
-            [get_variable_component declarations_info variable_name]
-
-        | Parsed_indexed_update (inner_scalar_or_index_update_type, index_expr) ->
-            (* Get variables / functions used in the indexed expression of the variable *)
-            let index_refs = components_in_parsed_arithmetic_expression index_expr in
-            let parsed_scalar_or_index_update_type_refs = refs_of_parsed_scalar_or_index_update_type_rec inner_scalar_or_index_update_type in
-
-            index_refs @ parsed_scalar_or_index_update_type_refs
-    in
-    refs_of_parsed_scalar_or_index_update_type_rec (* parsed_scalar_or_index_update_type *)
-*)
-
-(* TODO benjamin Check if clock_names can be a constant *)
+(* TODO benjamin Check if clock_names can be a constant (ex : x = 1 : clock) not good practice to check global variable if id = 0 *)
 let is_clock declarations_info (variable_name, id) =
     id = 0 && List.mem variable_name declarations_info.clock_names
 
@@ -145,7 +128,7 @@ let is_clock_reset declarations_info variable_ref expr =
     is_clock declarations_info variable_ref && is_reset expr && variable_name <> Constants.global_time_clock_name
 
 (* All relations found in a sequential code bloc *)
-let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_ref (* parsed_seq_code_bloc *) =
+let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_component (* parsed_seq_code_bloc *) =
 
     let rec relations_in_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
         let relations_nested = List.map relations_in_parsed_instruction parsed_seq_code_bloc in
@@ -155,15 +138,15 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
         | Parsed_local_decl (variable_name, _, init_expr, id) ->
 
             (* Create local variable ref representing a unique variable ref *)
-            let variable_ref = Local_variable_component (variable_name, code_bloc_name, id) in
+            let variable_component = Local_variable_component (variable_name, code_bloc_name, id) in
 
             (* Get references to variables and functions in the local init expression *)
-            let all_refs = components_in_parsed_boolean_expression init_expr in
+            let all_components = components_in_parsed_boolean_expression init_expr in
 
-            let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+            let relations = List.map (fun c -> (variable_component, c)) all_components in
 
             (* Create relation between current code bloc and declared variable *)
-            let bloc_relation = bloc_ref, variable_ref in
+            let bloc_relation = bloc_component, variable_component in
 
             (* Concat relations *)
             relations @ [bloc_relation]
@@ -195,11 +178,11 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
                         (* and current function use x *)
 
                         (* Create local variable ref representing a unique variable ref *)
-                        let variable_ref = get_variable_component variable_ref in
+                        let variable_component = get_variable_component variable_ref in
 
                         (* Get references to variables and functions in the update expression *)
-                        let all_refs = components_in_parsed_boolean_expression expr in
-                        let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+                        let all_components = components_in_parsed_boolean_expression expr in
+                        let relations = List.map (fun c -> (variable_component, c)) all_components in
                         relations
 
                     )
@@ -210,10 +193,10 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
                     (* and current function use x *)
                     let variable_ref = variable_ref_of_parsed_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     (* Create local variable ref representing a unique variable ref *)
-                    let variable_ref = get_variable_component variable_ref in
+                    let variable_component = get_variable_component variable_ref in
                     (* Get variables / functions used in the indexed expression of the variable *)
-                    let all_refs = components_in_parsed_arithmetic_expression index_expr in
-                    let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+                    let all_components = components_in_parsed_arithmetic_expression index_expr in
+                    let relations = List.map (fun c -> (variable_component, c)) all_components in
 
                     let variable_use_variables_relations = relations_of_scalar_or_index_update_type inner_scalar_or_index_update_type in
                     relations @ variable_use_variables_relations
@@ -221,7 +204,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
 
             let variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
             (* Create local variable ref representing a unique variable ref *)
-            let variable_ref = get_variable_component variable_ref in
+            let variable_component = get_variable_component variable_ref in
 
             let relations = relations_of_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
@@ -231,7 +214,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
             let has_fun_call = contains_function_call in
 
             if has_fun_call then (
-                let assigned_variable_relation = bloc_ref, variable_ref in
+                let assigned_variable_relation = bloc_component, variable_component in
                 assigned_variable_relation :: relations
             )
             else
@@ -243,25 +226,25 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
 
 
         | Parsed_instruction expr ->
-            let all_refs = components_in_parsed_boolean_expression expr in
-            let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+            let all_components = components_in_parsed_boolean_expression expr in
+            let relations = List.map (fun c -> (bloc_component, c)) all_components in
             relations
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
             (* Create local variable ref representing a unique variable ref *)
-            let variable_ref = Local_variable_component (variable_name, code_bloc_name, id) in
+            let variable_component = Local_variable_component (variable_name, code_bloc_name, id) in
 
             (* Get variable and function refs used in the from expression *)
-            let from_all_refs = components_in_parsed_arithmetic_expression from_expr in
+            let from_all_components = components_in_parsed_arithmetic_expression from_expr in
             (* Get variable and function refs used in the to expression *)
-            let to_all_refs = components_in_parsed_arithmetic_expression to_expr in
-            let all_refs = from_all_refs @ to_all_refs in
+            let to_all_components = components_in_parsed_arithmetic_expression to_expr in
+            let all_components = from_all_components @ to_all_components in
 
             (* variable of for loop (for i, i) use variables found in from_expr and to_expr  *)
-            let relations = List.map (fun _ref -> (variable_ref, _ref)) all_refs in
+            let relations = List.map (fun c -> (variable_component, c)) all_components in
 
             (* Create relation between current bloc and variable declared in for loop *)
-            let bloc_relation = bloc_ref, variable_ref in
+            let bloc_relation = bloc_component, variable_component in
 
             (* Get list of relations for the inner expressions *)
             let inner_declaration_relations = relations_in_parsed_seq_code_bloc_rec inner_bloc in
@@ -272,10 +255,10 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
         | Parsed_while_loop (condition_expr, inner_bloc) ->
 
             (* Get references to variables and functions in the condition expression *)
-            let all_refs = components_in_parsed_boolean_expression condition_expr in
+            let all_components = components_in_parsed_boolean_expression condition_expr in
 
             (* Make relations between variable used in condition expression and current function *)
-            let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+            let relations = List.map (fun c -> (bloc_component, c)) all_components in
 
             (* Get list of relations for the inner expressions *)
             let inner_declaration_relations = relations_in_parsed_seq_code_bloc_rec inner_bloc in
@@ -286,10 +269,10 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
         | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
 
             (* Get references to variables and functions in the condition expression *)
-            let all_refs = components_in_parsed_boolean_expression condition_expr in
+            let all_components = components_in_parsed_boolean_expression condition_expr in
 
             (* Make relations between variable used and current function *)
-            let relations = List.map (fun _ref -> (bloc_ref, _ref)) all_refs in
+            let relations = List.map (fun c -> (bloc_component, c)) all_components in
 
             (* Get list of relations for the then bloc expressions *)
             let then_bloc_declaration_relations = relations_in_parsed_seq_code_bloc_rec then_bloc in
@@ -318,8 +301,8 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 	(* Gather in each automaton *)
 	List.iter (fun (automaton_name, sync_name_list, locations) ->
 		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
-        let automaton_ref = Automaton_component automaton_name in
-        all_relations := RelationSet.add (System_component, automaton_ref) !all_relations;
+        let automaton_component = Automaton_component automaton_name in
+        all_relations := RelationSet.add (System_component, automaton_component) !all_relations;
 		(* Gather in each location *)
 		List.iter (fun (location : parsed_location) ->
 			print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
@@ -331,7 +314,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 				print_message Verbose_total ("          Gathering variables in used cost");
 				ParsingStructureUtilities.iterate_parsed_linear_expression (function
                     | Leaf_linear_variable (_, variable_name) ->
-                        all_relations := RelationSet.add (automaton_ref, Global_variable_component variable_name) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
                     | Leaf_linear_constant _
                     | Leaf_false_linear_constraint
                     | Leaf_true_linear_constraint -> ()
@@ -344,13 +327,13 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			(* Gather in the stopwatches *)
 			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
 			List.iter (fun stopwatch_name ->
-				all_relations := RelationSet.add (automaton_ref, Global_variable_component stopwatch_name) !all_relations
+				all_relations := RelationSet.add (automaton_component, Global_variable_component stopwatch_name) !all_relations
             ) location.stopped;
 
 			(* Gather in the flows *)
 			print_message Verbose_total ("          Gathering variables used in possible flows");
 			List.iter (fun (clock_name, _) ->
-				all_relations := RelationSet.add (automaton_ref, Global_variable_component clock_name) !all_relations
+				all_relations := RelationSet.add (automaton_component, Global_variable_component clock_name) !all_relations
             ) location.flow;
 
 			(* Gather in the convex predicate *)
@@ -358,11 +341,11 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
                 | Leaf_variable ((variable_name, id) as variable_ref) ->
                     if VariableInfo.is_global variable_ref then
-                        all_relations := RelationSet.add (automaton_ref, Global_variable_component variable_name) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
                     else
-                        all_relations := RelationSet.add (automaton_ref, Local_variable_component (variable_name, automaton_name, id)) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Local_variable_component (variable_name, automaton_name, id)) !all_relations
                 | Leaf_fun function_name ->
-                    all_relations := RelationSet.add (automaton_ref, Fun_component function_name) !all_relations
+                    all_relations := RelationSet.add (automaton_component, Fun_component function_name) !all_relations
                 | Leaf_constant _ -> ()
 			) location.invariant;
 
@@ -375,15 +358,15 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 
                     | Leaf_variable ((variable_name, id) as variable_ref) ->
                         if VariableInfo.is_global variable_ref then
-                            all_relations := RelationSet.add (automaton_ref, Global_variable_component variable_name) !all_relations
+                            all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
                         else
-                            all_relations := RelationSet.add (automaton_ref, Local_variable_component (variable_name, automaton_name, id)) !all_relations
+                            all_relations := RelationSet.add (automaton_component, Local_variable_component (variable_name, automaton_name, id)) !all_relations
                     | Leaf_fun function_name ->
-                        all_relations := RelationSet.add (automaton_ref, Fun_component function_name) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Fun_component function_name) !all_relations
                     | Leaf_constant _ -> ()
                 ) convex_predicate;
 
-                let mixin_updates_relations = relations_in_parsed_seq_code_bloc declarations_info "" automaton_ref updates in
+                let mixin_updates_relations = relations_in_parsed_seq_code_bloc declarations_info "" automaton_component updates in
                 all_relations := List.fold_left (fun acc r -> RelationSet.add r acc) !all_relations mixin_updates_relations;
 
             ) location.transitions;
@@ -628,19 +611,19 @@ let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model p
     let function_relations (fun_def : parsed_fun_definition) =
 
         (* Ref to function *)
-        let fun_ref = Fun_component fun_def.name in
+        let fun_component = Fun_component fun_def.name in
         (* Get code bloc and return expr *)
         let code_bloc, return_expr_opt = fun_def.body in
 
         (* Get all component relations of current function body *)
-        let code_bloc_relations = relations_in_parsed_seq_code_bloc declarations_info fun_def.name fun_ref code_bloc in
+        let code_bloc_relations = relations_in_parsed_seq_code_bloc declarations_info fun_def.name fun_component code_bloc in
 
         let return_expr_relations =
             match return_expr_opt with
             | Some return_expr ->
                 (* Get references to variables and functions in the expression *)
-                let all_refs = components_in_parsed_boolean_expression return_expr in
-                List.map (fun _ref -> (fun_ref, _ref)) all_refs
+                let all_components = components_in_parsed_boolean_expression return_expr in
+                List.map (fun c -> (fun_component, c)) all_components
             | None -> []
         in
         code_bloc_relations @ return_expr_relations
@@ -709,33 +692,33 @@ let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model p
 let used_components_of_model_list (_, component_relations) =
 
     (* A set that will contain already processed references, to avoid circular *)
-    let already_processed_ref = ref RelationSet.empty in
+    let already_processed_component = ref RelationSet.empty in
 
     (* Function that compute all reachable refs given a source ref *)
-    let rec all_reachable_ref relation =
+    let rec all_reachable_component relation =
 
         (* Decompose relation *)
-        let variable_ref, used_variable_ref = relation in
+        let _, used_variable_component = relation in
 
-        let already_processed = !already_processed_ref in
+        let already_processed = !already_processed_component in
 
         (* Check if relation was already processed *)
         (* Avoid that circular references make an infinite loop *)
         if RelationSet.mem relation already_processed then [] else (
-            already_processed_ref := RelationSet.add relation already_processed;
+            already_processed_component := RelationSet.add relation already_processed;
             (* Get destination refs as new source starting from the current ref *)
-            let source_refs = List.filter (fun (a, b) -> a = used_variable_ref) component_relations in
+            let source_refs = List.filter (fun (a, b) -> a = used_variable_component) component_relations in
             (* Compute destination refs *)
-            let dest_refs = List.fold_left (fun acc s -> all_reachable_ref s @ acc) [] source_refs in
+            let dest_refs = List.fold_left (fun acc s -> all_reachable_component s @ acc) [] source_refs in
             (* Add current ref with computed destination refs *)
-            used_variable_ref :: dest_refs
+            used_variable_component :: dest_refs
         )
     in
 
     (* Get system refs *)
     let system_refs = List.filter (fun (s, d) -> match s with System_component -> true | _ -> false) component_relations in
     (* Find all reachable refs (variables / functions) from system refs... *)
-    List.fold_left (fun acc system_ptr -> all_reachable_ref system_ptr @ acc) [] system_refs
+    List.fold_left (fun acc system_ptr -> all_reachable_component system_ptr @ acc) [] system_refs
 
 (* Get all components that are effectively used by automatons of the model *)
 (* It mean all components that are reachable starting from the system reference *)
@@ -900,13 +883,13 @@ let model_cycle_infos (_, model_relations) =
 
     let rec is_cycle_in already_seen c =
 
-        let is_fun_ref = function
+        let is_fun_component = function
             | Fun_component _ -> true
             | _ -> false
         in
 
         if List.mem c already_seen then (
-            if is_fun_ref c then (
+            if is_fun_component c then (
                 [true, c :: already_seen]
             )
             else (
