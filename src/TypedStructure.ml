@@ -76,7 +76,7 @@ and typed_discrete_factor =
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
 type typed_scalar_or_index_update_type =
-    | Typed_scalar_update of variable_name
+    | Typed_scalar_update of variable_ref
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
 type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression
@@ -274,7 +274,7 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
         ^ string_of_typed_discrete_factor variable_infos discrete_type factor
 
 let rec string_of_typed_scalar_or_index_update_type variable_infos = function
-    | Typed_scalar_update variable_name -> variable_name
+    | Typed_scalar_update (variable_name, _ (* id *)) -> variable_name
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, discrete_type) ->
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
         ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) index_expr ^ "]"

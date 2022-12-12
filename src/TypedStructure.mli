@@ -75,7 +75,7 @@ and typed_discrete_factor =
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
 type typed_scalar_or_index_update_type =
-    | Typed_scalar_update of variable_name
+    | Typed_scalar_update of variable_ref
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
 type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression

@@ -315,19 +315,11 @@ and type_check_parsed_discrete_term local_variables_opt variable_infos infer_typ
 	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_type_opt = function
-	| Parsed_variable (variable_name, id) ->
+	| Parsed_variable ((variable_name, id) as variable_ref) ->
 	    ImitatorUtilities.print_standard_message ("Variable found on type checking : " ^ variable_name ^ ":" ^ string_of_int id);
-        (* If it's local variable, take it's type *)
-        (* local variables are more priority and shadow global variables  *)
-        let discrete_type, scope =
-            if Hashtbl.mem variable_infos.local_variables (variable_name, id) then (
-                let var_type = Hashtbl.find variable_infos.local_variables (variable_name, id) in
-                ImitatorUtilities.print_standard_message ("found local variable: " ^ variable_name ^ ":" ^ string_of_int id ^ ":" ^ DiscreteType.string_of_var_type var_type);
-                DiscreteType.discrete_type_of_var_type var_type, if id <> 0 then Local else Global
-            ) else (
-                VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name, Global
-            )
-        in
+
+        let discrete_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_ref in
+        let scope = if VariableInfo.is_global variable_ref then Global else Local in
 
         (* If infer type is given and discrete type is unknown number *)
         (* we can infer directly unknown number to infer type *)
@@ -598,20 +590,11 @@ and type_check_parsed_discrete_factor local_variables_opt variable_infos infer_t
         Typed_function_call (function_name, typed_expressions, return_type), return_type
 
 let rec type_check_parsed_scalar_or_index_update_type local_variables variable_infos = function
-    | Parsed_scalar_update (variable_name, _ (* id *)) ->
+    | Parsed_scalar_update variable_ref ->
         (* Get assigned variable type *)
+        let discrete_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_ref in
 
-        let discrete_type =
-            if Hashtbl.mem local_variables variable_name then (
-                Hashtbl.find local_variables variable_name
-            )
-            else (
-                let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-                discrete_type_of_var_type var_type
-            )
-        in
-
-        Typed_scalar_update variable_name, discrete_type
+        Typed_scalar_update variable_ref, discrete_type
 
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
 
@@ -713,19 +696,15 @@ let rec type_check_seq_code_bloc local_variables variable_infos infer_type_opt (
                 ));
 
             (* Get assignment scope *)
-            let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+            let variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
             let scope =
-                if Hashtbl.mem local_variables variable_name then (
+                if VariableInfo.is_clock variable_infos variable_ref then
+                    Ass_clock
+                else if VariableInfo.is_global variable_ref then
+                    Ass_discrete_global
+                else
                     Ass_discrete_local
-                )
-                else (
-                    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
-                    (match var_type with
-                    | Var_type_clock -> Ass_clock
-                    | _ -> Ass_discrete_global
-                    )
-                )
             in
 
             Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
@@ -1013,10 +992,10 @@ let check_type_assignment variable_infos variable_name variable_type expr =
 (* Check that a discrete variable initialization is well typed *)
 let check_discrete_init variable_infos variable_name expr =
 
-    (* Get the variable index *)
-    let discrete_index = index_of_variable_name variable_infos variable_name in
+    (* Create variable ref of discrete init, id=0 because all inits are used to init global variables *)
+    let variable_ref = variable_name, 0 in
     (* Get variable type *)
-    let var_type = VariableInfo.var_type_of_variable_index variable_infos discrete_index in
+    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_ref in
 
     (* Check whether variable is clock or parameter *)
     let is_clock_or_parameter = var_type == DiscreteType.Var_type_clock || var_type == DiscreteType.Var_type_parameter in
@@ -1027,7 +1006,7 @@ let check_discrete_init variable_infos variable_name expr =
     );
 
     (* Get variable type *)
-    let variable_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_name in
+    let variable_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_ref in
     (* Check expression / variable type consistency *)
     let typed_expr = check_type_assignment variable_infos variable_name variable_type expr in
     (* Print type annotations *)
@@ -1111,10 +1090,10 @@ let check_guard variable_infos =
 let check_update variable_infos parsed_scalar_or_index_update_type expr =
 
     (* Get assigned variable name *)
-    let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+    let (variable_name, _) as variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
     (* Get assigned variable type *)
-    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_name in
+    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_ref in
 
     (* Eventually get a number type to infer *)
     let variable_number_type_opt =
@@ -1495,10 +1474,12 @@ and bool_expression_of_typed_factor variable_infos = function
 	    | Local ->
 	        Bool_local_variable variable_name
 	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> Bool_constant (AbstractValue.bool_value value)
-            | Variable_kind discrete_index -> Bool_variable discrete_index
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                Bool_variable discrete_index
             )
         )
 	| Typed_constant (value, _) ->
@@ -1574,10 +1555,12 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	    | Local ->
 	        Rational_local_variable variable_name
 	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> Rational_constant (AbstractValue.numconst_value value)
-            | Variable_kind discrete_index -> Rational_variable discrete_index
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                Rational_variable discrete_index
             )
         )
 
@@ -1659,10 +1642,12 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	    | Local ->
 	        Int_local_variable variable_name
 	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> Int_constant (AbstractValue.to_int_value value)
-            | Variable_kind discrete_index -> Int_variable discrete_index
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                Int_variable discrete_index
             )
         )
 
@@ -1711,10 +1696,12 @@ and binary_expression_of_typed_factor variable_infos length = function
         | Local ->
             Binary_word_local_variable variable_name
         | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> Binary_word_constant (AbstractValue.binary_word_value value)
-            | Variable_kind discrete_index -> Binary_word_variable (discrete_index, length)
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                Binary_word_variable (discrete_index, length)
             )
         )
 
@@ -1761,10 +1748,12 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 	    | Local ->
 	        Array_local_variable variable_name
 	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> Array_constant (AbstractValue.array_value value)
-            | Variable_kind discrete_index -> Array_variable discrete_index
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                Array_variable discrete_index
             )
         )
 
@@ -1817,10 +1806,12 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 	    | Local ->
 	        List_local_variable variable_name
 	    | Global ->
-            let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
             (match variable_kind with
             | Constant_kind value -> List_constant (AbstractValue.list_value value)
-            | Variable_kind discrete_index -> List_variable discrete_index
+            | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                List_variable discrete_index
             )
         )
 
@@ -1868,10 +1859,12 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             | Local ->
                 Stack_local_variable variable_name
             | Global ->
-                let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
                 (match variable_kind with
                 | Constant_kind value -> Literal_stack
-                | Variable_kind discrete_index -> Stack_variable discrete_index
+                | Variable_kind ->
+                    let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                    Stack_variable discrete_index
                 )
             )
         | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
@@ -1916,10 +1909,12 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             | Local ->
                 Queue_local_variable variable_name
             | Global ->
-                let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
                 (match variable_kind with
                 | Constant_kind value -> Literal_queue
-                | Variable_kind discrete_index -> Queue_variable discrete_index
+                | Variable_kind ->
+                    let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                    Queue_variable discrete_index
                 )
             )
 
@@ -2013,12 +2008,14 @@ and expression_access_type_of_typed_factor variable_infos factor = function
 let nonlinear_constraint_of_typed_nonlinear_constraint = bool_expression_of_typed_discrete_boolean_expression
 
 let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
-    | Typed_scalar_update variable_name ->
-        let variable_kind = variable_kind_of_variable_name variable_infos variable_name in
+    | Typed_scalar_update ((variable_name, _ (* id *)) as variable_ref) ->
+        let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
 
         (match variable_kind with
         | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
-        | Variable_kind discrete_index -> Scalar_update (Global_update discrete_index)
+        | Variable_kind ->
+            let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+            Scalar_update (Global_update discrete_index)
         )
 
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
@@ -2028,7 +2025,7 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
         )
 
 let rec local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
-    | Typed_scalar_update variable_name ->
+    | Typed_scalar_update (variable_name, _ (* id *)) ->
         Scalar_update (Local_update variable_name)
 
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
@@ -2038,7 +2035,7 @@ let rec local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type v
         )
 
 let clock_index_of_typed_scalar_or_index_update_type variable_infos = function
-    | Typed_scalar_update clock_name -> VariableInfo.index_of_variable_name variable_infos clock_name
+    | Typed_scalar_update (clock_name, _ (* id *)) -> VariableInfo.index_of_variable_name variable_infos clock_name
     | _ -> raise (InternalError "Unable to have indexed update on clock.")
 
 (*------------------------------------------------------------*)
@@ -2324,10 +2321,10 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
             (match scope with
             | Local -> [Lt_var (NumConst.one, variable_name, Local)]
             | Global ->
-                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
                 (match variable_kind with
                 | Constant_kind value -> [Lt_cons (AbstractValue.numconst_value value)]
-                | Variable_kind _ -> [Lt_var (NumConst.one, variable_name, Global)]
+                | Variable_kind -> [Lt_var (NumConst.one, variable_name, Global)]
                 )
             )
 
@@ -2406,10 +2403,11 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
 
             (* Check if updated variable is a clock *)
             (match typed_scalar_or_index_update_type with
-            | Typed_scalar_update variable_name
-            when VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name = Some DiscreteType.Var_type_clock ->
+            | Typed_scalar_update variable_ref
+            when VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref = Some DiscreteType.Var_type_clock ->
+                let clock_name, _ = variable_ref in
                 (* Get index of clock *)
-                let clock_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+                let clock_index = VariableInfo.index_of_variable_name variable_infos clock_name in
                 (* Convert to update expression to a linear term *)
                 [clock_index, linear_term_of_typed_boolean_expression variable_infos expr]
             | _ -> []

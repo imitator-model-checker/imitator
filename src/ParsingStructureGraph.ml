@@ -373,13 +373,11 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			(* Gather in the convex predicate *)
 			print_message Verbose_total ("          Gathering variables in convex predicate");
 			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
-                | Leaf_variable leaf_variable ->
-                    (match leaf_variable with
-                    | Leaf_global_variable variable_name ->
+                | Leaf_variable ((variable_name, id) as variable_ref) ->
+                    if VariableInfo.is_global variable_ref then
                         all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                    | Leaf_local_variable (variable_name, _, id) ->
+                    else
                         all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
-                    )
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                 | Leaf_constant _ -> ()
@@ -391,13 +389,12 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
 				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
-                    | Leaf_variable leaf_variable ->
-                        (match leaf_variable with
-                        | Leaf_global_variable variable_name ->
+
+                    | Leaf_variable ((variable_name, id) as variable_ref) ->
+                        if VariableInfo.is_global variable_ref then
                             all_relations := RelationSet.add (automaton_ref, Global_variable_ref variable_name) !all_relations
-                        | Leaf_local_variable (variable_name, _, id) ->
+                        else
                             all_relations := RelationSet.add (automaton_ref, Local_variable_ref (variable_name, automaton_name, id)) !all_relations
-                        )
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_ref, Fun_ref function_name) !all_relations
                     | Leaf_constant _ -> ()

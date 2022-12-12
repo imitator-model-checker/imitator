@@ -255,33 +255,32 @@ let check_normal_update variable_infos automaton_name normal_update =
     (* Check that all variables in update are declared, and call print function if it's not the case *)
     let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
     (* Get an updated variable in normal update *)
-    let updated_variable_name = (
+    let updated_variable_ref = (
         ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
             (Hashtbl.create 0)
             (@)
             []
-            (fun _ -> function
-                | Leaf_update_variable (Leaf_global_variable variable_name, _)
-                | Leaf_update_variable (Leaf_local_variable (variable_name, _, _), _) -> [variable_name]
-            )
+            (fun _ -> function Leaf_update_variable (variable_ref, _) -> [variable_ref])
             (fun _ _ -> []) normal_update
-            |> List.filter (fun x -> x <> "")
             |> List.nth
         ) 0
     in
 
-    if is_variable_or_constant_defined variable_infos updated_variable_name then
+    if VariableInfo.is_variable_or_constant_defined variable_infos updated_variable_ref then
         (* Get kind (variable or constant ?) of updated variable *)
-        let variable_kind = variable_kind_of_variable_name variable_infos updated_variable_name in
+        let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos updated_variable_ref in
         (* Get var type of updated variable *)
-        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos updated_variable_name in
+        let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos updated_variable_ref in
 
         (* Check if variable is a constant *)
-        let is_constant = match variable_kind with Constant_kind _ -> true | Variable_kind _ -> false in
+        let is_constant = match variable_kind with Constant_kind _ -> true | Variable_kind -> false in
         (* Check if variable is a parameter *)
         let is_parameter = match var_type with DiscreteType.Var_type_parameter -> true | _ -> false in
         (* Check if variable is a discrete type *)
         let is_discrete = match var_type with DiscreteType.Var_type_discrete _ -> true | _ -> false in
+
+        (* Get variable name from ref *)
+        let updated_variable_name, _ = updated_variable_ref in
 
         (* Eventually print error messages *)
         if is_constant then print_update_constant_error updated_variable_name;
@@ -348,7 +347,8 @@ let synclab_used_everywhere automata synclab_name =
 let check_stopwatches variable_infos location_name stopwatches =
 
     List.map (fun stopwatch_name ->
-            let var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos stopwatch_name in
+
+            let var_type = VariableInfo.var_type_of_global_variable_or_constant_opt variable_infos stopwatch_name in
             match var_type with
             (* Ok *)
             | Some Var_type_clock -> true
@@ -581,7 +581,7 @@ let check_init_definition parsed_model =
     let rec check_init_predicate = function
         | Parsed_discrete_predicate (variable_name, expr) ->
             (* Check that l-value variable exist *)
-            if not (is_variable_or_constant_declared variable_infos variable_name) then (
+            if not (is_global_variable_or_constant_declared variable_infos variable_name) then (
                 print_error ("Variable `" ^ variable_name ^ "` in discrete init is not declared");
                 false
             )
@@ -610,7 +610,7 @@ let check_init_definition parsed_model =
 
     and check_init_constraint = function
         (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when is_variable_removed variable_infos variable_name ->
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when VariableInfo.is_global_variable_removed variable_infos variable_name ->
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
@@ -646,7 +646,7 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
 (* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_boolean_expression) *)
 let discrete_init_of_discrete_linear_predicate variable_infos = function
     | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, updated_variable_name)), op , expression))
-    when is_discrete_variable variable_infos updated_variable_name ->
+    when VariableInfo.is_discrete_global_variable variable_infos updated_variable_name ->
 
         (* Check *)
         if NumConst.neq coeff NumConst.one then (
@@ -693,16 +693,16 @@ let discrete_init_of_discrete_linear_predicate variable_infos = function
 let check_discrete_inits functions_table variable_infos init_values_for_discrete (variable_name, expr) =
 
         (* Get kind of variable *)
-        let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_name in
+        let variable_kind = VariableInfo.variable_kind_of_global_variable_name variable_infos variable_name in
 
         (match variable_kind with
         | Constant_kind _ ->
             print_error ("Initialize `" ^ variable_name ^ "` constant is forbidden");
             false
-        | Variable_kind _ ->
+        | Variable_kind ->
 
             (* Get the variable index *)
-            let discrete_index = index_of_variable_name variable_infos variable_name in
+            let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
             (* Convert init to abstract model *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
@@ -785,8 +785,8 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
 	List.iter (fun discrete_index ->
 		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
-		    let variable_name = variable_name_of_index variable_infos discrete_index in
-		    let variable_type = var_type_of_variable_name variable_infos variable_name in
+		    let variable_name = VariableInfo.variable_name_of_index variable_infos discrete_index in
+		    let variable_type = VariableInfo.var_type_of_global_variable_name variable_infos variable_name in
 		    let default_value = AbstractValue.default_value variable_type in
 
 			print_warning ("The discrete variable `" ^ variable_name ^ "` was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
@@ -815,7 +815,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 
         (* Gathering all variables that are non rational *)
         let non_rational_variable_names = StringSet.filter (fun variable_name ->
-            let discrete_type = discrete_type_of_variable_or_constant variable_infos variable_name in
+            let discrete_type = VariableInfo.discrete_type_of_global_variable_or_constant variable_infos variable_name in
             not (DiscreteType.is_discrete_type_rational_type discrete_type)
         ) variable_names
         in
@@ -1238,8 +1238,8 @@ let is_only_resets variable_infos updates =
         (* Check if it's a clock *)
         let is_clock =
             match parsed_scalar_or_index_update_type with
-            | Parsed_scalar_update (variable_name, _ (* id *)) ->
-                VariableInfo.var_type_of_variable_or_constant variable_infos variable_name = Var_type_clock
+            | Parsed_scalar_update variable_ref ->
+                VariableInfo.var_type_of_variable_or_constant variable_infos variable_ref = Var_type_clock
             | _ -> false
         in
         (* Check if it's a clock and update to zero *)
@@ -1254,10 +1254,10 @@ let split_to_clock_discrete_updates variable_infos updates =
     (** Function that check if a normal update is a clock update *)
     let is_clock_update (parsed_scalar_or_index_update_type, update_expr) =
         match parsed_scalar_or_index_update_type with
-        | Parsed_scalar_update (variable_name, _ (* id *))
-        when VariableInfo.is_clock variable_infos variable_name ->
+        | Parsed_scalar_update variable_ref
+        when VariableInfo.is_clock variable_infos variable_ref ->
             (* Retrieve variable type *)
-            My_left (Parsed_scalar_update (variable_name, 0), update_expr)
+            My_left (Parsed_scalar_update variable_ref, update_expr)
 
         | _ ->
             My_right (parsed_scalar_or_index_update_type, update_expr)
@@ -1326,7 +1326,7 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
             (* Get the update variable name *)
-            let variable_name = ParsingStructureMeta.variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+            let variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
             (* Get all function calls in the assignment expression *)
             let function_calls = ParsingStructureMeta.get_functions_in_parsed_boolean_expression expr in
@@ -1342,9 +1342,9 @@ let clock_updates_of_seq_code_bloc variable_infos user_function_definitions_tabl
 
             let found_clock_assignments =
                 (* Get type of the variable *)
-                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+                let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
                 match var_type_opt with
-                | Some Var_type_clock -> [Parsed_scalar_update (variable_name, 0), expr]
+                | Some Var_type_clock -> [Parsed_scalar_update variable_ref, expr]
                 | _ -> []
             in
             function_clock_assignments @ found_clock_assignments
@@ -2097,11 +2097,11 @@ let check_parsed_state_predicate parsing_infos expr =
 (*------------------------------------------------------------*)
 let check_parameter_name suffix_explanation_string variable_infos parameter_name =
 	(* First check it is a variable *)
-	if not (is_variable_is_defined variable_infos parameter_name) then(
+	if not (VariableInfo.is_global_variable_is_defined variable_infos parameter_name) then(
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(
-		let parameter_index = index_of_variable_name variable_infos parameter_name in
+		let parameter_index = VariableInfo.index_of_variable_name variable_infos parameter_name in
 		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false

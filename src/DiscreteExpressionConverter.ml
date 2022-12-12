@@ -207,28 +207,32 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
     let is_assignments_are_allowed =
         (* Check for variables (local and global) at the left and right side of an assignment *)
-        let left_right_variable_names = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
-        let left_variable_names = List.map first_of_triplet left_right_variable_names in
+        let left_right_variable_refs = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
+        let left_variable_refs = List.map first_of_triplet left_right_variable_refs in
 
         (* Check that no constants are updated *)
-        let assigned_constant_names = List.filter_map (fun variable_name ->
-            let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
+        let assigned_constant_names = List.filter_map (fun variable_ref ->
+            let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_ref in
             match variable_kind_opt with
-            | Some (VariableInfo.Constant_kind _) -> Some variable_name
+            | Some (VariableInfo.Constant_kind _) ->
+                let variable_name, _ = variable_ref in
+                Some variable_name
             | _ -> None
-        ) left_variable_names in
+        ) left_variable_refs in
 
         (* Check that no params are updated *)
-        let assigned_param_names = List.filter_map (fun variable_name ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let assigned_param_names = List.filter_map (fun variable_ref ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
-            | Some Var_type_parameter -> Some variable_name
+            | Some Var_type_parameter ->
+                let variable_name, _ = variable_ref in
+                Some variable_name
             | _ -> None
-        ) left_variable_names in
+        ) left_variable_refs in
 
         (* Check that no discrete variable was updated by a param *)
-        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
-            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_name in
+        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
+            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_ref in
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
@@ -236,55 +240,61 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
-                    List.filter_map (fun right_variable_name ->
-                        let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
-                        match var_type_opt with
-                        | Some Var_type_parameter -> Some right_variable_name
-                        | _ -> None
-                    ) right_variable_names
+                    List.filter_map (fun right_variable_ref ->
+                        if VariableInfo.is_param variable_infos right_variable_ref then (
+                            let right_variable_name, _ = right_variable_ref in
+                            Some right_variable_name
+                        ) else
+                            None
+                    ) right_variable_refs
                 in
                 let has_right_params = List.length right_params > 0 in
+                let left_variable_name, _ = left_variable_ref in
                 if has_right_params then (left_variable_name, right_params) :: acc else acc
 
-        ) [] left_right_variable_names in
+        ) [] left_right_variable_refs in
 
         (* Get only discrete variable names *)
-        let left_discrete_variable_names = List.filter (fun (variable_name, _, _) ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let left_discrete_variable_refs = List.filter (fun (variable_ref, _, _) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
             | None
             | Some (Var_type_discrete _) -> true
             | Some _ -> false
-        ) left_right_variable_names in
+        ) left_right_variable_refs in
 
         (* Check that no discrete variable was updated by a clock *)
-        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
+        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_clocks =
-                List.filter_map (fun right_variable_name ->
-                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
-                    match var_type_opt with
-                    | Some Var_type_clock -> Some right_variable_name
-                    | _ -> None
-                ) right_variable_names
+                List.filter_map (fun right_variable_ref ->
+                    if VariableInfo.is_clock variable_infos right_variable_ref then (
+                        let right_variable_name, _ = right_variable_ref in
+                        Some right_variable_name
+                    ) else
+                        None
+                ) right_variable_refs
             in
             let has_right_clocks = List.length right_clocks > 0 in
+            let left_variable_name, _ = left_variable_ref in
             if has_right_clocks then (left_variable_name, right_clocks) :: acc else acc
 
-        ) [] left_discrete_variable_names in
+        ) [] left_discrete_variable_refs in
 
         (* Check that clock update is a linear expression *)
-        let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_name, _, expr) ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_ref, _, expr) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
             | Some Var_type_clock ->
                 let is_linear = ParsingStructureMeta.is_linear_parsed_boolean_expression variable_infos expr in
-                if not is_linear then
+                if not is_linear then (
+                    let variable_name, _ = variable_ref in
                     Some (variable_name, ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr)
+                )
                 else
                     None
             | _ -> None
-        ) left_right_variable_names in
+        ) left_right_variable_refs in
 
         (* Is any constant modifications found in user function ? *)
         let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in

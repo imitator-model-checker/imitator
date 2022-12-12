@@ -23,19 +23,15 @@ type local_variables_map = (variable_name, var_type_discrete * int) Hashtbl.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
-type variable_leaf =
-    | Leaf_local_variable of variable_name * var_type_discrete * int
-    | Leaf_global_variable of variable_name
-
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
-    | Leaf_variable of variable_leaf
+    | Leaf_variable of variable_ref
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_leaf * parsed_boolean_expression
+    | Leaf_update_variable of variable_ref * parsed_boolean_expression
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -109,17 +105,8 @@ and fold_parsed_discrete_term_with_local_variables local_variables operator base
         fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
 
 and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
-	| Parsed_variable (variable_name, _) ->
-
-	    let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
-
-	    let variable_leaf =
-            match local_variable_opt with
-            | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
-            | None -> Leaf_global_variable variable_name
-	    in
-
-	    leaf_fun local_variables (Leaf_variable variable_leaf)
+	| Parsed_variable variable_ref ->
+	    leaf_fun local_variables (Leaf_variable variable_ref)
 
 	| Parsed_constant value -> leaf_fun local_variables (Leaf_constant value)
 	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
@@ -206,17 +193,8 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
 and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-        | Parsed_scalar_update (variable_name, _ (* id *)) ->
-
-            let local_variable_opt = Hashtbl.find_opt local_variables variable_name in
-
-            let variable_leaf =
-                match local_variable_opt with
-                | Some (discrete_type, id) -> Leaf_local_variable (variable_name, discrete_type, id)
-                | None -> Leaf_global_variable variable_name
-            in
-
-            seq_code_bloc_leaf_fun local_variables (Leaf_update_variable (variable_leaf, expr))
+        | Parsed_scalar_update variable_ref ->
+            seq_code_bloc_leaf_fun local_variables (Leaf_update_variable (variable_ref, expr))
 
         | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
             operator

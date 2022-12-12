@@ -16,11 +16,13 @@
 (****************************************************************)
 
 type variable_index = int
-type variable_name = string
 type automaton_name	= string
 type location_name	= string
 type sync_name		= string
+
+type variable_name = string
 type variable_id = int
+type variable_ref = variable_name * variable_id
 
 (****************************************************************)
 (** Operators *)
@@ -85,7 +87,7 @@ and parsed_product_quotient =
     | Parsed_div
 
 and parsed_discrete_factor =
-	| Parsed_variable of variable_name * variable_id
+	| Parsed_variable of variable_ref
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
@@ -148,7 +150,7 @@ type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
 type parsed_scalar_or_index_update_type =
-    | Parsed_scalar_update of variable_name * variable_id
+    | Parsed_scalar_update of variable_ref
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
 
 (** basic updating *)

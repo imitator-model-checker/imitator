@@ -20,19 +20,15 @@ type local_variables_map = (variable_name, var_type_discrete * int) Hashtbl.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
-type variable_leaf =
-    | Leaf_local_variable of variable_name * var_type_discrete * int
-    | Leaf_global_variable of variable_name
-
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
-    | Leaf_variable of variable_leaf
+    | Leaf_variable of variable_ref
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_leaf * parsed_boolean_expression
+    | Leaf_update_variable of variable_ref * parsed_boolean_expression
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
