@@ -33,8 +33,7 @@ type param_ref = param_name * fun_name
 type component =
     | System_component
     | Automaton_component of automaton_name
-    | Global_variable_component of variable_name
-    | Local_variable_component of local_variable_ref
+    | Variable_component of variable_ref
     | Param_component of param_ref
     | Fun_component of fun_name
 
@@ -60,8 +59,7 @@ end)
 let string_of_component = function
     | System_component -> "sys"
     | Automaton_component x -> "auto_" ^ x
-    | Global_variable_component x -> x
-    | Local_variable_component (x, _, id) -> x ^ "_" ^ string_of_int id
+    | Variable_component (variable_name, id) -> if id = 0 then variable_name else variable_name ^ "_" ^ string_of_int id
     | Fun_component x -> "fun_" ^ x
     | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name
 
@@ -69,8 +67,7 @@ let string_of_component = function
 let string_of_component_with_attr = function
     | System_component -> "sys [color=gray]"
     | Automaton_component x -> "auto_" ^ x ^ "[color=red]"
-    | Global_variable_component x -> x
-    | Local_variable_component (x, _, id) -> x ^ "_" ^ string_of_int id ^ "[color=darkseagreen2]"
+    | Variable_component (variable_name, id) -> if id = 0 then variable_name else variable_name ^ "_" ^ string_of_int id ^ "[color=darkseagreen2]"
     | Fun_component x -> "fun_" ^ x ^ "[color=darkseagreen][label=\"" ^ x ^ ":fun\"]"
     | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name ^ "[color=darkseagreen2][label=\"" ^ x ^ ":param\"]"
 
@@ -78,19 +75,13 @@ let string_of_component_with_attr = function
 let string_of_component_name = function
     | System_component -> ""
     | Automaton_component x -> x
-    | Global_variable_component x -> x
-    | Local_variable_component (x, _, _) -> x
+    | Variable_component (variable_name, _) -> variable_name
     | Fun_component x -> x
     | Param_component (x, _) -> x
 
-(* TODO IMPLEMENT *)
-(* Functions that return ref of a variable, if variable is found in local variable table *)
-(* It return a Local_variable_component, else a Global_variable_component *)
-let get_variable_component ((variable_name, id) as variable_ref) =
-    if VariableInfo.is_global variable_ref then
-        Global_variable_component variable_name
-    else
-        Local_variable_component (variable_name, "", id)
+(* TODO benjamin CLEAN REMOVE ? *)
+(* Functions that return component of a variable *)
+let get_variable_component variable_ref = Variable_component variable_ref
 
 (* Function that return component reference found in a parsed global expression *)
 let components_in_parsed_boolean_expression expr =
@@ -138,7 +129,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
         | Parsed_local_decl (variable_name, _, init_expr, id) ->
 
             (* Create local variable ref representing a unique variable ref *)
-            let variable_component = Local_variable_component (variable_name, code_bloc_name, id) in
+            let variable_component = Variable_component (variable_name, id) in
 
             (* Get references to variables and functions in the local init expression *)
             let all_components = components_in_parsed_boolean_expression init_expr in
@@ -232,7 +223,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
             (* Create local variable ref representing a unique variable ref *)
-            let variable_component = Local_variable_component (variable_name, code_bloc_name, id) in
+            let variable_component = Variable_component (variable_name, id) in
 
             (* Get variable and function refs used in the from expression *)
             let from_all_components = components_in_parsed_arithmetic_expression from_expr in
@@ -314,7 +305,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 				print_message Verbose_total ("          Gathering variables in used cost");
 				ParsingStructureUtilities.iterate_parsed_linear_expression (function
                     | Leaf_linear_variable (_, variable_name) ->
-                        all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, 0)) !all_relations
                     | Leaf_linear_constant _
                     | Leaf_false_linear_constraint
                     | Leaf_true_linear_constraint -> ()
@@ -327,13 +318,13 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			(* Gather in the stopwatches *)
 			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
 			List.iter (fun stopwatch_name ->
-				all_relations := RelationSet.add (automaton_component, Global_variable_component stopwatch_name) !all_relations
+				all_relations := RelationSet.add (automaton_component, Variable_component (stopwatch_name, 0)) !all_relations
             ) location.stopped;
 
 			(* Gather in the flows *)
 			print_message Verbose_total ("          Gathering variables used in possible flows");
 			List.iter (fun (clock_name, _) ->
-				all_relations := RelationSet.add (automaton_component, Global_variable_component clock_name) !all_relations
+				all_relations := RelationSet.add (automaton_component, Variable_component (clock_name, 0)) !all_relations
             ) location.flow;
 
 			(* Gather in the convex predicate *)
@@ -341,9 +332,9 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
                 | Leaf_variable ((variable_name, id) as variable_ref) ->
                     if VariableInfo.is_global variable_ref then
-                        all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, 0)) !all_relations
                     else
-                        all_relations := RelationSet.add (automaton_component, Local_variable_component (variable_name, automaton_name, id)) !all_relations
+                        all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, id)) !all_relations
                 | Leaf_fun function_name ->
                     all_relations := RelationSet.add (automaton_component, Fun_component function_name) !all_relations
                 | Leaf_constant _ -> ()
@@ -358,9 +349,9 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 
                     | Leaf_variable ((variable_name, id) as variable_ref) ->
                         if VariableInfo.is_global variable_ref then
-                            all_relations := RelationSet.add (automaton_component, Global_variable_component variable_name) !all_relations
+                            all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, 0)) !all_relations
                         else
-                            all_relations := RelationSet.add (automaton_component, Local_variable_component (variable_name, automaton_name, id)) !all_relations
+                            all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, id)) !all_relations
                     | Leaf_fun function_name ->
                         all_relations := RelationSet.add (automaton_component, Fun_component function_name) !all_relations
                     | Leaf_constant _ -> ()
@@ -557,7 +548,7 @@ let all_components_used_in_property_option parsed_property_option =
 	end;
 	(* Return the set *)
 	let variables_used = string_set_to_list !variables_used_ref in
-	List.map (fun variable_name -> Global_variable_component variable_name) variables_used
+	List.map (fun variable_name -> Variable_component (variable_name, 0)) variables_used
 
 
 (* All declared components found in the parsed model *)
@@ -566,7 +557,7 @@ let declared_components_of_model parsed_model =
     (* Get all declared variables in model *)
     let all_declared_variables_in_model =
         List.map (fun (_, variables_list) ->
-            List.map (fun (variable_name, _) -> Global_variable_component variable_name) variables_list
+            List.map (fun (variable_name, _) -> Variable_component (variable_name, 0)) variables_list
         ) parsed_model.variable_declarations
         (* Flatten list of list of variable components *)
         |> List.flatten
@@ -585,7 +576,7 @@ let declared_components_of_model parsed_model =
             let local_variables = ParsingStructureMeta.local_variables_of_parsed_fun_def fun_def in
             (* Trick, we eliminate local variables with id = -1 (means that it's a parameter) *)
             let local_variables_without_parameters = List.filter (fun (_, _, id) -> id <> -1) local_variables in
-            List.map (fun (variable_name, _, id) -> Local_variable_component (variable_name, fun_def.name, id)) local_variables_without_parameters
+            List.map (fun (variable_name, _, id) -> Variable_component (variable_name, id)) local_variables_without_parameters
         in
 
         List.fold_left (fun acc fun_def -> all_declared_local_variables_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
@@ -660,14 +651,14 @@ let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model p
             | Parsed_discrete_predicate (variable_name, expr) ->
                 let used_variable_names = get_variables_in_parsed_boolean_expression expr in
                 let used_variable_names_list = string_set_to_list used_variable_names in
-                List.map (fun used_variable_name -> Global_variable_component variable_name, Global_variable_component used_variable_name) used_variable_names_list
+                List.map (fun used_variable_name -> Variable_component (variable_name, 0), Variable_component (used_variable_name, 0)) used_variable_names_list
             (* Linear constraint: get variables *)
             | Parsed_linear_predicate (Parsed_linear_constraint (l_expr, _, r_expr)) ->
                 let left_hand_variables = string_set_to_list (get_variables_in_linear_expression l_expr) in
                 let right_hand_variables = string_set_to_list (get_variables_in_linear_expression r_expr) in
                 let left_and_right_variables = left_hand_variables @ right_hand_variables in
                 let combination = OCamlUtilities.list_combination left_and_right_variables left_and_right_variables in
-                List.map (fun (l_variable_name, r_variable_name) -> Global_variable_component l_variable_name, Global_variable_component r_variable_name) combination @ acc
+                List.map (fun (l_variable_name, r_variable_name) -> Variable_component (l_variable_name, 0), Variable_component (r_variable_name, 0)) combination @ acc
         ) [] parsed_model.init_definition
     in
 
@@ -676,8 +667,7 @@ let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model p
 
     (* Remove variable to variable relations when it's an auto reference *)
     let all_model_relations_without_variable_autoref = List.filter (function
-        | (Global_variable_component _ as a, (Global_variable_component _ as b)) -> a <> b
-        | (Local_variable_component _ as a, (Local_variable_component _ as b)) -> a <> b
+        | (Variable_component _ as a, (Variable_component _ as b)) -> a <> b
         | _ -> true
     ) all_model_relations in
 
@@ -742,14 +732,7 @@ let unused_components_of_model dependency_graph =
         (declared_components_set)
         (used_components_set)
     in
-    (* Remove parameters and local variables from unused components if the function to which they belong is unused *)
-    (* Note that it's useless to print message `param x of f` is unused if the function `f` is unused *)
-    ComponentSet.filter (function
-        | Param_component (_, function_name)
-        | Local_variable_component (_, function_name, _) ->
-            not (ComponentSet.mem (Fun_component function_name) unused_components)
-        | _ -> true
-    ) unused_components
+    unused_components
 
 
 let unused_components_of_model_list dependency_graph =
@@ -771,11 +754,11 @@ let filter_map_components_unused_in_model = filter_map_components_from unused_co
 
 (* Get the names of all used global variable *)
 let used_global_variables_of_model dependency_graph =
-    filter_map_components_used_in_model dependency_graph (function Global_variable_component variable_name -> Some variable_name | _ -> None)
+    filter_map_components_used_in_model dependency_graph (function Variable_component (variable_name, id) when id = 0 -> Some variable_name | _ -> None)
 
 (* Get the names of all unused global variable *)
 let unused_global_variables_of_model dependency_graph =
-    filter_map_components_unused_in_model dependency_graph (function Global_variable_component variable_name -> Some variable_name | _ -> None)
+    filter_map_components_unused_in_model dependency_graph (function Variable_component (variable_name, id) when id = 0 -> Some variable_name | _ -> None)
 
 (* Get the names of all function used *)
 let used_functions_of_model dependency_graph =

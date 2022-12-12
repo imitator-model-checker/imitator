@@ -29,8 +29,7 @@ type param_ref = param_name * fun_name
 type component =
     | System_component
     | Automaton_component of automaton_name
-    | Global_variable_component of variable_name
-    | Local_variable_component of local_variable_ref
+    | Variable_component of variable_ref
     | Param_component of param_ref
     | Fun_component of fun_name
 
