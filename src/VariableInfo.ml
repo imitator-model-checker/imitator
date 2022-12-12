@@ -168,8 +168,7 @@ let is_discrete_variable variable_infos ((variable_name, _) as variable_ref) =
         DiscreteType.is_discrete_type var_type
     | Constant_defined -> false
     | _ ->
-        (* TODO benjamin CLEAN change message *)
-        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."))
+        raise (InternalError ("The variable `" ^ variable_name ^ "` was undeclared or removed."))
 
 (* Check if global variable is a discrete variable given it's name *)
 let is_discrete_global_variable variable_infos variable_name =
