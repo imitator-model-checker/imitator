@@ -500,6 +500,7 @@ type declarations_info = {
     clock_names : variable_name list;
     parameter_names : variable_name list;
     discrete_names : variable_name list;
+    variable_refs : ((variable_name * variable_id), DiscreteType.var_type) Hashtbl.t;
 }
 
 (************************************************************)

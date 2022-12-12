@@ -741,6 +741,7 @@ let rev_filter_map f l =
 
 let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
 let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
+let var_set_to_list x = x |> CustomModules.VarSet.to_seq |> List.of_seq
 
 (* Convert list to array *)
 let array_of_list x = x |> List.to_seq |> Array.of_seq

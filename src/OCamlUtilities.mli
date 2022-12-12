@@ -289,6 +289,7 @@ val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
 
 val list_to_string_set : string list -> CustomModules.StringSet.t
 val string_set_to_list : CustomModules.StringSet.t -> string list
+val var_set_to_list : CustomModules.VarSet.t -> (string * int) list
 
 (* Convert list to array *)
 val array_of_list : 'a list -> 'a array

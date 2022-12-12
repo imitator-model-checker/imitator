@@ -27,12 +27,12 @@ type param_ref = param_name * fun_name
 
 (* Reference to a program component *)
 type component =
-    | System_ref
-    | Automaton_ref of automaton_name
-    | Global_variable_ref of variable_name
-    | Local_variable_ref of local_variable_ref
-    | Param_ref of param_ref
-    | Fun_ref of fun_name
+    | System_component
+    | Automaton_component of automaton_name
+    | Global_variable_component of variable_name
+    | Local_variable_component of local_variable_ref
+    | Param_component of param_ref
+    | Fun_component of fun_name
 
 (* A components set *)
 module ComponentSet : Set.S with type elt = component

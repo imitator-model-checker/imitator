@@ -492,6 +492,10 @@ let get_functions_in_parsed_discrete_boolean_expression_with_accumulator variabl
 let get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator variables_used_ref =
     iterate_parsed_discrete_arithmetic_expression (add_variable_of_discrete_boolean_expression variables_used_ref)
 
+(* Gather all variable refs used in a parsed discrete arithmetic expression in a given accumulator *)
+let get_variable_refs_in_parsed_discrete_arithmetic_expression_with_accumulator variables_used_ref =
+    iterate_parsed_discrete_arithmetic_expression (add_variable_ref_of_discrete_boolean_expression variables_used_ref)
+
 (* Gather all function names used in a parsed discrete arithmetic expression in a given accumulator *)
 let get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator functions_used_ref =
     iterate_parsed_discrete_arithmetic_expression (add_function_of_discrete_boolean_expression functions_used_ref)
@@ -583,6 +587,10 @@ let get_variables_in_parsed_discrete_boolean_expression =
 (* Gather all variable names used in a parsed discrete arithmetic expression *)
 let get_variables_in_parsed_discrete_arithmetic_expression =
     wrap_accumulator get_variables_in_parsed_discrete_arithmetic_expression_with_accumulator
+
+(* Gather all variable refs used in a parsed discrete arithmetic expression *)
+let get_variable_refs_in_parsed_discrete_arithmetic_expression =
+    wrap_var_ref_accumulator get_variable_refs_in_parsed_discrete_arithmetic_expression_with_accumulator
 
 (* Gather all function names used in a parsed discrete arithmetic expression *)
 let get_functions_in_parsed_discrete_arithmetic_expression =

@@ -2876,7 +2876,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     print_message Verbose_high ("\n*** Link variables to declarations.");
     (* Recompute model to link variables to their declarations, and return all local variables declarations *)
-    let parsed_model, local_variables = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+    let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
 
     print_message Verbose_high ("\n*** Linking variables finished.");
 
@@ -3099,6 +3099,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         clock_names = single_clock_names;
         parameter_names = single_parameter_names;
         discrete_names = single_discrete_names;
+        variable_refs = variable_refs;
     }
     in
 	(*------------------------------------------------------------*)
@@ -3117,13 +3118,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Iter on unused components and print warnings *)
     ComponentSet.iter (function
-        | Fun_ref function_name ->
+        | Fun_component function_name ->
 (*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
             print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
-        | Local_variable_ref (variable_name, function_name, _) ->
+        | Local_variable_component (variable_name, function_name, _) ->
 (*            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")*)
             print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
-        | Param_ref (param_name, function_name) ->
+        | Param_component (param_name, function_name) ->
             print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
         | _ -> ()
     ) unused_components;
@@ -3530,7 +3531,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variables					= variables;
         variable_names				= variable_names;
         removed_variable_names		= removed_variable_names;
-        local_variables             = local_variables;
+        local_variables             = variable_refs;
         fun_meta                   = functions_metadata_table;
     }
     in
