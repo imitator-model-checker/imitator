@@ -18,8 +18,6 @@ open DiscreteType
 open OCamlUtilities
 open CustomModules
 
-(* Map of declared local variables *)
-type local_variables_map = (variable_name, var_type_discrete * int) Hashtbl.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
@@ -53,9 +51,9 @@ type state_predicate_leaf =
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
 (* Type of callback function called when reach a leaf of a discrete expression *)
-type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+type 'a parsing_structure_leaf_callback = parsing_structure_leaf -> 'a
 (* Type of callback function called when reach a leaf of a sequential code bloc *)
-type 'a seq_code_bloc_leaf_callback = local_variables_map -> parsed_seq_code_bloc_leaf -> 'a
+type 'a seq_code_bloc_leaf_callback = parsed_seq_code_bloc_leaf -> 'a
 (* Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
@@ -63,78 +61,75 @@ type 'a variable_declaration_callback = (variable_name * var_type_discrete * int
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
-let rec fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
+let rec fold_parsed_boolean_expression operator base leaf_fun = function
     | Parsed_conj_dis (l_expr, r_expr, _) ->
 	    operator
-	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun l_expr)
-	        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun r_expr)
+	        (fold_parsed_boolean_expression operator base leaf_fun l_expr)
+	        (fold_parsed_boolean_expression operator base leaf_fun r_expr)
 	| Parsed_discrete_bool_expr expr ->
-	    fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
+	    fold_parsed_discrete_boolean_expression operator base leaf_fun expr
 
-and fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun = function
+and fold_parsed_discrete_boolean_expression operator base leaf_fun = function
     | Parsed_arithmetic_expr expr ->
-        fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
+        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
 	| Parsed_comparison (l_expr, _, r_expr) ->
 	    operator
-	        (fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun l_expr)
-	        (fold_parsed_discrete_boolean_expression_with_local_variables local_variables operator base leaf_fun r_expr)
+	        (fold_parsed_discrete_boolean_expression operator base leaf_fun l_expr)
+	        (fold_parsed_discrete_boolean_expression operator base leaf_fun r_expr)
 	| Parsed_comparison_in (lower_expr, expr, upper_expr) ->
 	    operator
-	        (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr)
+	        (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
             (operator
-                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun lower_expr)
-                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun upper_expr))
+                (fold_parsed_discrete_arithmetic_expression operator base leaf_fun lower_expr)
+                (fold_parsed_discrete_arithmetic_expression operator base leaf_fun upper_expr))
 	| Parsed_nested_bool_expr expr
 	| Parsed_not expr ->
-        fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
+        fold_parsed_boolean_expression operator base leaf_fun expr
 
-and fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun = function
+and fold_parsed_discrete_arithmetic_expression operator base leaf_fun = function
 	| Parsed_sum_diff (expr, term, _) ->
         operator
-            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr)
-            (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
+            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr)
+            (fold_parsed_discrete_term operator base leaf_fun term)
 	| Parsed_term term ->
-        fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term
+        fold_parsed_discrete_term operator base leaf_fun term
 
-and fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun = function
+and fold_parsed_discrete_term operator base leaf_fun = function
 	| Parsed_product_quotient (term, factor, _) ->
 	    operator
-	        (fold_parsed_discrete_term_with_local_variables local_variables operator base leaf_fun term)
-	        (fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor)
+	        (fold_parsed_discrete_term operator base leaf_fun term)
+	        (fold_parsed_discrete_factor operator base leaf_fun factor)
 	| Parsed_factor factor ->
-        fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
+        fold_parsed_discrete_factor operator base leaf_fun factor
 
-and fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun = function
+and fold_parsed_discrete_factor operator base leaf_fun = function
 	| Parsed_variable variable_ref ->
-	    leaf_fun local_variables (Leaf_variable variable_ref)
+	    leaf_fun (Leaf_variable variable_ref)
 
-	| Parsed_constant value -> leaf_fun local_variables (Leaf_constant value)
-	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)) base expr_list
+	| Parsed_constant value -> leaf_fun (Leaf_constant value)
+	| Parsed_sequence (expr_list, _) -> List.fold_left (fun acc expr -> operator acc (fold_parsed_boolean_expression operator base leaf_fun expr)) base expr_list
 	| Parsed_nested_expr expr ->
-        fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun expr
+        fold_parsed_discrete_arithmetic_expression operator base leaf_fun expr
     | Parsed_function_call (function_name, argument_expressions) ->
         operator
-            (leaf_fun local_variables (Leaf_fun function_name))
-            (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr) acc) base argument_expressions)
+            (leaf_fun (Leaf_fun function_name))
+            (List.fold_left (fun acc expr -> operator (fold_parsed_boolean_expression operator base leaf_fun expr) acc) base argument_expressions)
     | Parsed_access (factor, _)
 	(* | Parsed_log_not factor *)
 	| Parsed_unary_min factor ->
-	    fold_parsed_discrete_factor_with_local_variables local_variables operator base leaf_fun factor
+	    fold_parsed_discrete_factor operator base leaf_fun factor
 
-and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* parsed_seq_code_bloc *) =
+and fold_parsed_seq_code_bloc operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* parsed_seq_code_bloc *) =
 
 
-    let rec fold_parsed_seq_code_bloc_rec local_variables parsed_seq_code_bloc =
-        List.fold_left (fun acc instruction -> operator (fold_parsed_instruction local_variables instruction) acc) base parsed_seq_code_bloc
+    let rec fold_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
+        List.fold_left (fun acc instruction -> operator (fold_parsed_instruction instruction) acc) base parsed_seq_code_bloc
 
-    and fold_parsed_instruction local_variables = function
+    and fold_parsed_instruction = function
         | Parsed_local_decl (variable_name, discrete_type, init_expr, id) ->
 
             (* Fold init expr *)
-            let init_expr_result = fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun init_expr in
-
-            (* Then add new declared local variable *)
-            Hashtbl.replace local_variables variable_name (discrete_type, id);
+            let init_expr_result = fold_parsed_boolean_expression operator base leaf_fun init_expr in
 
             let decl_callback_result =
                 match decl_callback with
@@ -146,9 +141,6 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
             |> operator decl_callback_result
 
         | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
-            (* Add variable used for loop to inner local variables scope *)
-            let inner_local_variables = Hashtbl.copy local_variables in
-            Hashtbl.replace inner_local_variables variable_name (Dt_number Dt_int, id);
 
             let decl_callback_result =
                 match decl_callback with
@@ -156,66 +148,62 @@ and fold_parsed_seq_code_bloc_with_local_variables local_variables operator base
                 | None -> base
             in
 
-            (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun from_expr)
-            |> operator (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun to_expr)
-            |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
+            (fold_parsed_discrete_arithmetic_expression operator base leaf_fun from_expr)
+            |> operator (fold_parsed_discrete_arithmetic_expression operator base leaf_fun to_expr)
+            |> operator (fold_parsed_seq_code_bloc_rec inner_bloc)
             |> operator decl_callback_result
 
         | Parsed_while_loop (condition_expr, inner_bloc) ->
-            let inner_local_variables = Hashtbl.copy local_variables in
-            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
-            |> operator (fold_parsed_seq_code_bloc_rec inner_local_variables inner_bloc)
+            fold_parsed_boolean_expression operator base leaf_fun condition_expr
+            |> operator (fold_parsed_seq_code_bloc_rec inner_bloc)
 
         | Parsed_if (condition_expr, then_bloc, else_bloc_opt) ->
 
-            let then_local_variables = Hashtbl.copy local_variables in
-            let else_local_variables = Hashtbl.copy local_variables in
-
             let else_bloc_result =
                 match else_bloc_opt with
-                | Some else_bloc -> fold_parsed_seq_code_bloc_rec else_local_variables else_bloc
+                | Some else_bloc -> fold_parsed_seq_code_bloc_rec else_bloc
                 | None -> base
             in
 
-            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun condition_expr
-            |> operator (fold_parsed_seq_code_bloc_rec then_local_variables then_bloc)
+            fold_parsed_boolean_expression operator base leaf_fun condition_expr
+            |> operator (fold_parsed_seq_code_bloc_rec then_bloc)
             |> operator else_bloc_result
 
         | Parsed_assignment normal_update ->
-            fold_parsed_normal_update_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
+            fold_parsed_normal_update operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
 
         | Parsed_instruction expr ->
-            fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr
+            fold_parsed_boolean_expression operator base leaf_fun expr
 
     in
-    fold_parsed_seq_code_bloc_rec local_variables (* parsed_seq_code_bloc *)
+    fold_parsed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 
-and fold_parsed_normal_update_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
+and fold_parsed_normal_update operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
-    let rec fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
+    let rec fold_parsed_scalar_or_index_update_type_with_local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
         | Parsed_scalar_update variable_ref ->
-            seq_code_bloc_leaf_fun local_variables (Leaf_update_variable (variable_ref, expr))
+            seq_code_bloc_leaf_fun (Leaf_update_variable (variable_ref, expr))
 
         | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
             operator
-                (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
-                (fold_parsed_discrete_arithmetic_expression_with_local_variables local_variables operator base leaf_fun index_expr)
+                (fold_parsed_scalar_or_index_update_type_with_local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
+                (fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr)
     in
     operator
-        (fold_parsed_scalar_or_index_update_type_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
-        (fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun expr)
+        (fold_parsed_scalar_or_index_update_type_with_local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
+        (fold_parsed_boolean_expression operator base leaf_fun expr)
 
 (** Fold a parsed update expression using operator applying custom function on leaves **)
 and fold_parsed_update operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
 	| Normal normal_update ->
-	    fold_parsed_normal_update_with_local_variables (Hashtbl.create 0) operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
+	    fold_parsed_normal_update operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
 	| Condition (bool_expr, update_list_if, update_list_else) ->
         let all_updates = update_list_if@update_list_else in
         let fold_updates = List.fold_left (fun acc normal_update ->
-            operator acc (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0) operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
+            operator acc (fold_parsed_normal_update operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
         ) base all_updates
         in
-        operator fold_updates (fold_parsed_boolean_expression_with_local_variables (Hashtbl.create 0) operator base leaf_fun bool_expr)
+        operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
 
 let rec fold_parsed_linear_constraint operator leaf_fun = function
     | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
@@ -239,13 +227,6 @@ and fold_parsed_linear_expression operator leaf_fun = function
 and fold_parsed_linear_term operator leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
-
-let fold_parsed_boolean_expression operator = fold_parsed_boolean_expression_with_local_variables (Hashtbl.create 0) operator
-let fold_parsed_discrete_boolean_expression operator = fold_parsed_discrete_boolean_expression_with_local_variables (Hashtbl.create 0) operator
-let fold_parsed_discrete_arithmetic_expression operator = fold_parsed_discrete_arithmetic_expression_with_local_variables (Hashtbl.create 0) operator
-let fold_parsed_discrete_term operator = fold_parsed_discrete_term_with_local_variables (Hashtbl.create 0) operator
-let fold_parsed_discrete_factor operator = fold_parsed_discrete_factor_with_local_variables (Hashtbl.create 0) operator
-let fold_parsed_seq_code_bloc operator = fold_parsed_seq_code_bloc_with_local_variables (Hashtbl.create 0) operator
 
 (** Fold a parsed linear constraint using operator applying custom function on leafs **)
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
@@ -297,9 +278,6 @@ and fold_parsed_state_predicate operator base predicate_leaf_fun leaf_fun = func
 
 (**)
 let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (fun_def : parsed_fun_definition) =
-    (* Add parameters as local variables *)
-    let local_variables = Hashtbl.create (List.length fun_def.parameters) in
-    List.iter (fun (param_name, _ (* id *), param_type) -> Hashtbl.add local_variables param_name (param_type, 0)) fun_def.parameters;
 
     let decl_callback_result =
         match decl_callback with
@@ -309,11 +287,11 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
 
     let code_bloc, return_expr_opt = fun_def.body in
 
-    let parsed_seq_code_bloc_result = fold_parsed_seq_code_bloc_with_local_variables local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun code_bloc in
+    let parsed_seq_code_bloc_result = fold_parsed_seq_code_bloc operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun code_bloc in
 
     let return_expr_result =
         match return_expr_opt with
-        | Some return_expr -> fold_parsed_boolean_expression_with_local_variables local_variables operator base leaf_fun return_expr
+        | Some return_expr -> fold_parsed_boolean_expression operator base leaf_fun return_expr
         | None -> base
     in
 
@@ -341,11 +319,11 @@ let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 (** Check if all leaf of a parsed update satisfy the predicate **)
 let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
-let for_all_in_parsed_normal_update = apply_evaluate_and_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
+let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 
 let for_all_in_parsed_loc_predicate = apply_evaluate_and_with_base fold_parsed_loc_predicate
 let for_all_in_parsed_simple_predicate = apply_evaluate_and_with_base fold_parsed_simple_predicate
@@ -382,7 +360,7 @@ let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_par
 (** Check if any leaf of a parsed update satisfy the predicate **)
 let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
-let exists_in_parsed_normal_update = apply_evaluate_or_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
+let exists_in_parsed_normal_update = apply_evaluate_or_with_base fold_parsed_normal_update
 
 let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
 let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
@@ -421,7 +399,7 @@ let iterate_parsed_nonlinear_convex_predicate leaf_fun convex_predicate =
     List.iter (iterate_parsed_nonlinear_constraint leaf_fun) convex_predicate
 
 let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
-let iterate_parsed_normal_update = apply_evaluate_unit_with_base (fold_parsed_normal_update_with_local_variables (Hashtbl.create 0))
+let iterate_parsed_normal_update = apply_evaluate_unit_with_base fold_parsed_normal_update
 let iterate_in_parsed_loc_predicate = apply_evaluate_unit_with_base fold_parsed_loc_predicate
 let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_parsed_simple_predicate
 let iterate_in_parsed_state_predicate_factor = apply_evaluate_unit_with_base fold_parsed_state_predicate_factor

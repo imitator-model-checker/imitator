@@ -329,7 +329,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 
 			(* Gather in the convex predicate *)
 			print_message Verbose_total ("          Gathering variables in convex predicate");
-			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
+			ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (function
                 | Leaf_variable ((variable_name, id) as variable_ref) ->
                     if VariableInfo.is_global variable_ref then
                         all_relations := RelationSet.add (automaton_component, Variable_component (variable_name, 0)) !all_relations
@@ -345,7 +345,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in convex predicate");
-				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (fun _ -> function
+				ParsingStructureUtilities.iterate_parsed_nonlinear_convex_predicate (function
 
                     | Leaf_variable ((variable_name, id) as variable_ref) ->
                         if VariableInfo.is_global variable_ref then

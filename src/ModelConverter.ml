@@ -256,12 +256,11 @@ let check_normal_update variable_infos automaton_name normal_update =
     let all_variables_declared = ParsingStructureMeta.all_variables_defined_in_parsed_normal_update variable_infos print_variable_in_update_not_declared_opt normal_update in
     (* Get an updated variable in normal update *)
     let updated_variable_ref = (
-        ParsingStructureUtilities.fold_parsed_normal_update_with_local_variables
-            (Hashtbl.create 0)
+        ParsingStructureUtilities.fold_parsed_normal_update
             (@)
             []
-            (fun _ -> function Leaf_update_variable (variable_ref, _) -> [variable_ref])
-            (fun _ _ -> []) normal_update
+            (function Leaf_update_variable (variable_ref, _) -> [variable_ref])
+            (fun _ -> []) normal_update
             |> List.nth
         ) 0
     in
