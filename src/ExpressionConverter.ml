@@ -315,11 +315,9 @@ and type_check_parsed_discrete_term variable_infos infer_type_opt = function
 	    Typed_factor (typed_expr, discrete_type), discrete_type
 
 and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
-	| Parsed_variable ((variable_name, id) as variable_ref) ->
-	    ImitatorUtilities.print_standard_message ("Variable found on type checking : " ^ variable_name ^ ":" ^ string_of_int id);
+	| Parsed_variable variable_ref ->
 
         let discrete_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_ref in
-        let scope = if VariableInfo.is_global variable_ref then Global else Local in
 
         (* If infer type is given and discrete type is unknown number *)
         (* we can infer directly unknown number to infer type *)
@@ -329,7 +327,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
             | _ -> discrete_type
         in
 
-        Typed_variable (variable_name, infer_discrete_type, scope), infer_discrete_type
+        Typed_variable (variable_ref, infer_discrete_type), infer_discrete_type
 
 	| Parsed_constant value ->
         let discrete_type = ParsedValue.discrete_type_of_value value in
@@ -1451,12 +1449,15 @@ and bool_expression_of_typed_comparison variable_infos l_expr parsed_relop r_exp
         raise (InternalError expression_must_have_type_message)
 
 and bool_expression_of_typed_factor variable_infos = function
-	| Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
 	    (match scope with
 	    | Local ->
 	        Bool_local_variable variable_name
 	    | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> Bool_constant (AbstractValue.bool_value value)
             | Variable_kind ->
@@ -1532,12 +1533,14 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 	        rational_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
-	| Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
 	    (match scope with
 	    | Local ->
 	        Rational_local_variable variable_name
 	    | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> Rational_constant (AbstractValue.numconst_value value)
             | Variable_kind ->
@@ -1619,12 +1622,14 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 	        int_arithmetic_expression_of_typed_factor variable_infos factor
 	    )
 
-	| Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
 	    (match scope with
 	    | Local ->
 	        Int_local_variable variable_name
 	    | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> Int_constant (AbstractValue.to_int_value value)
             | Variable_kind ->
@@ -1673,12 +1678,14 @@ and binary_expression_of_typed_discrete_boolean_expression variable_infos length
         raise_conversion_error "binary word" (string_of_typed_discrete_boolean_expression variable_infos expr)
 
 and binary_expression_of_typed_factor variable_infos length = function
-    | Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
         (match scope with
         | Local ->
             Binary_word_local_variable variable_name
         | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> Binary_word_constant (AbstractValue.binary_word_value value)
             | Variable_kind ->
@@ -1725,12 +1732,14 @@ and array_expression_of_typed_discrete_boolean_expression variable_infos discret
         raise_conversion_error Constants.array_string (string_of_typed_discrete_boolean_expression variable_infos expr)
 
 and array_expression_of_typed_factor variable_infos discrete_type = function
-	| Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
 	    (match scope with
 	    | Local ->
 	        Array_local_variable variable_name
 	    | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> Array_constant (AbstractValue.array_value value)
             | Variable_kind ->
@@ -1783,12 +1792,14 @@ and list_expression_of_typed_discrete_boolean_expression variable_infos discrete
         raise_conversion_error Constants.list_string (string_of_typed_discrete_boolean_expression variable_infos expr)
 
 and list_expression_of_typed_factor variable_infos discrete_type = function
-	| Typed_variable (variable_name, _, scope) ->
+	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+	    let scope = VariableInfo.variable_scope_of variable_ref in
+
 	    (match scope with
 	    | Local ->
 	        List_local_variable variable_name
 	    | Global ->
-            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
             | Constant_kind value -> List_constant (AbstractValue.list_value value)
             | Variable_kind ->
@@ -1836,12 +1847,14 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             raise_error (string_of_typed_boolean_expression variable_infos outer_expr)
 
     and stack_expression_of_typed_factor = function
-        | Typed_variable (variable_name, _, scope) ->
+        | Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+            let scope = VariableInfo.variable_scope_of variable_ref in
+
             (match scope with
             | Local ->
                 Stack_local_variable variable_name
             | Global ->
-                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
                 | Constant_kind value -> Literal_stack
                 | Variable_kind ->
@@ -1849,6 +1862,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
                     Stack_variable discrete_index
                 )
             )
+
         | Typed_nested_expr (Typed_term (Typed_factor (factor, _), _), _) ->
             stack_expression_of_typed_factor factor
 
@@ -1886,12 +1900,14 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             raise_error (string_of_typed_boolean_expression variable_infos outer_expr)
 
     and queue_expression_of_typed_factor = function
-        | Typed_variable (variable_name, _, scope) ->
+        | Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
+            let scope = VariableInfo.variable_scope_of variable_ref in
+
             (match scope with
             | Local ->
                 Queue_local_variable variable_name
             | Global ->
-                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
+                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
                 | Constant_kind value -> Literal_queue
                 | Variable_kind ->
@@ -1937,7 +1953,7 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
             raise_error (string_of_typed_boolean_expression variable_infos expr)
 
     and void_expression_of_typed_factor = function
-        | Typed_variable (variable_name, _, scope) ->
+        | Typed_variable _ ->
             (* Some code should control that variables and function parameters cannot be declared as void *)
             (* If this exception is raised, it mean that control was not made before properly *)
             raise (InternalError (
@@ -2192,7 +2208,7 @@ let linear_term_of_linear_expression variable_infos linear_expression =
 
 
 type linear_term_element =
-    | Lt_var of NumConst.t * variable_name * typed_variable_scope
+    | Lt_var of NumConst.t * variable_ref
     | Lt_cons of NumConst.t
 
 (* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
@@ -2209,23 +2225,20 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
     (* For all examples consider this linear expression : 1 - 2 + 3x - 2 + y - 2x *)
     let reduce_terms_list list =
         (* Separate constants and variables with coefs (ex: split into [1;-2;-2] and [(3,x);(1,y);(-2, x)]) *)
-        let constants, weighted_variables = OCamlUtilities.partition_map (function Lt_cons k -> My_left k | Lt_var (coef, variable_name, scope) -> My_right (coef, variable_name, scope)) list in
+        let constants, weighted_variables = OCamlUtilities.partition_map (function Lt_cons k -> My_left k | Lt_var (coef, variable_ref) -> My_right (coef, variable_ref)) list in
         (* Compute value of the constant by adding constants together *)
         (* ex: [1;-2;-2] = -3 *)
         let constants_sum = List.fold_left NumConst.add NumConst.zero constants in
-        (* Group variable by name, ex: [(x, [3;-2]); (y, [1])] *)
-        let wv_grouped_by_variable_name = OCamlUtilities.group_by_and_map (fun (_, variable_name, _) -> variable_name) (fun (coef, _, scope) -> coef, scope) weighted_variables in
+        (* Group variable by ref (name * id), ex: [(x, [3;-2]); (y, [1])] *)
+        let wv_grouped_by_variable_ref = OCamlUtilities.group_by_and_map (fun (_, variable_ref) -> variable_ref) (fun (coef, _) -> coef) weighted_variables in
         (* Compute for each variable the coef by adding them together (ex: for [(x, [3;-2]); (y, [1])] we obtain [(x, 1); (y, 1)] ) *)
-        let weighted_variables_without_duplicates = List.map (fun (variable_name, coefs_and_scopes) ->
-            let coefs, scopes = List.split coefs_and_scopes in
-            (* Take first scope found as scope for this variable, all scopes should be equals *)
-            let scope = List.hd scopes in
+        let weighted_variables_without_duplicates = List.map (fun (variable_ref, coefs) ->
             (* Sum all coefs and return triplet *)
-            List.fold_left NumConst.add NumConst.zero coefs, variable_name, scope
-        ) wv_grouped_by_variable_name in
+            List.fold_left NumConst.add NumConst.zero coefs, variable_ref
+        ) wv_grouped_by_variable_ref in
 
         (* Reconstruct list of linear_term_elements *)
-        let terms_list = (List.map (fun (coef, variable_name, scope) -> Lt_var (coef, variable_name, scope)) weighted_variables_without_duplicates) @ [Lt_cons (constants_sum)] in
+        let terms_list = (List.map (fun (coef, variable_ref) -> Lt_var (coef, variable_ref)) weighted_variables_without_duplicates) @ [Lt_cons (constants_sum)] in
         (* Return list of variables with coef and constant value at raw form, and terms list *)
         weighted_variables_without_duplicates, constants_sum, terms_list
     in
@@ -2241,7 +2254,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 match sum_diff with
                 | Typed_minus ->
                     (match term_coefs with
-                    | Lt_var (c, v, s) :: t -> Lt_var (NumConst.neg c, v, s) :: t
+                    | Lt_var (c, v) :: t -> Lt_var (NumConst.neg c, v) :: t
                     | Lt_cons c :: t -> Lt_cons (NumConst.neg c) :: t
                     | [] -> []
                     )
@@ -2269,8 +2282,8 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 let combination = OCamlUtilities.list_combination_2 term_coefs factor_coefs in
                 let coefs_list = List.map (fun (a, b) -> match a, b with
                     | Lt_cons c1, Lt_cons c2 -> Lt_cons (NumConst.mul c1 c2)
-                    | Lt_cons c1, Lt_var (c2, v, s)
-                    | Lt_var (c1, v, s), Lt_cons c2 -> Lt_var (NumConst.mul c1 c2, v, s)
+                    | Lt_cons c1, Lt_var (c2, v)
+                    | Lt_var (c1, v), Lt_cons c2 -> Lt_var (NumConst.mul c1 c2, v)
                     | Lt_var _, Lt_var _ -> raise (InvalidExpression (unable_to_convert_error_msg (Lazy.force str_outer_term_lazy)))
                 ) combination
                 in
@@ -2281,9 +2294,9 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
                 let combination = OCamlUtilities.list_combination_2 term_coefs factor_coefs in
                 let coefs_list = List.map (fun (a, b) -> match a, b with
                     | Lt_cons c1, Lt_cons c2 -> Lt_cons (NumConst.div c1 c2)
-                    | Lt_var (c1, v, s), Lt_cons c2 ->
+                    | Lt_var (c1, v), Lt_cons c2 ->
                         let inverse_c = NumConst.div NumConst.one c2 in
-                        Lt_var (NumConst.mul c1 inverse_c, v, s)
+                        Lt_var (NumConst.mul c1 inverse_c, v)
                     | Lt_cons _, Lt_var _
                     | Lt_var _, Lt_var _ -> raise (InvalidExpression (unable_to_convert_error_msg (Lazy.force str_outer_term_lazy)))
                 ) combination
@@ -2298,16 +2311,12 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
             linear_coefs_of_typed_factor factor
 
     and linear_coefs_of_typed_factor = function
-        | Typed_variable (variable_name, _, scope) ->
+        | Typed_variable (variable_ref, _) ->
 
-            (match scope with
-            | Local -> [Lt_var (NumConst.one, variable_name, Local)]
-            | Global ->
-                let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos (variable_name, 0) in
-                (match variable_kind with
-                | Constant_kind value -> [Lt_cons (AbstractValue.numconst_value value)]
-                | Variable_kind -> [Lt_var (NumConst.one, variable_name, Global)]
-                )
+            let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
+            (match variable_kind with
+            | Constant_kind value -> [Lt_cons (AbstractValue.numconst_value value)]
+            | Variable_kind -> [Lt_var (NumConst.one, variable_ref)]
             )
 
         | Typed_constant (value, _) ->
@@ -2319,7 +2328,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
             List.map (function
                 | Lt_cons c -> Lt_cons (NumConst.neg c)
-                | Lt_var (c, v, s) -> Lt_var (NumConst.neg c, v, s)
+                | Lt_var (c, v) -> Lt_var (NumConst.neg c, v)
             ) factors
 
 	    | Typed_nested_expr (expr, _) ->
@@ -2339,7 +2348,10 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
     let weighted_variables_without_duplicates, constants_sum, _ = reduce_terms_list coefs_list in
 
     (* Create linear term as sum of linear terms *)
-    let linear_term = List.fold_right (fun (coef, variable_name, scope) acc ->
+    let linear_term = List.fold_right (fun (coef, variable_ref) acc ->
+
+        let scope = VariableInfo.variable_scope_of variable_ref in
+        let variable_name, _ = variable_ref in
 
         let ir_var =
             match scope with

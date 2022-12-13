@@ -18,6 +18,8 @@ open ParsingStructure
 open DiscreteType
 open OCamlUtilities
 
+type variable_scope = Global | Local
+
 (* Definition state of variable / constant *)
 type variable_constant_defined_state =
     | Variable_defined (* of variable_index *)
@@ -33,6 +35,8 @@ type variable_kind =
 let [@inline] is_global (_, id) = id = 0
 
 let [@inline] is_local variable_ref = not (is_global variable_ref)
+
+let variable_scope_of variable_ref = if is_global variable_ref then Global else Local
 
 (* Get variable name given a variable index  *)
 let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names

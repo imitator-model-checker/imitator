@@ -19,6 +19,8 @@ open DiscreteType
 open ParsedValue
 open OCamlUtilities
 
+type variable_scope = Global | Local
+
 (* Variable kind type represent a variable or a constant kind *)
 type variable_kind =
     | Variable_kind
@@ -26,6 +28,7 @@ type variable_kind =
 
 val is_global : variable_ref -> bool
 val is_local : variable_ref -> bool
+val variable_scope_of : variable_ref -> variable_scope
 
 val variable_name_of_index : variable_infos -> variable_index -> variable_name
 val index_of_variable_name : variable_infos -> variable_name -> variable_index

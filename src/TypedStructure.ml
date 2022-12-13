@@ -20,10 +20,6 @@ open CustomModules
 
 type inner_type = var_type_discrete
 
-type typed_variable_scope =
-    | Global
-    | Local
-
 type typed_assignment_scope =
     | Ass_discrete_global
     | Ass_discrete_local
@@ -67,7 +63,7 @@ and typed_product_quotient =
     | Typed_div
 
 and typed_discrete_factor =
-	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
+	| Typed_variable of variable_ref * var_type_discrete
 	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_nested_expr of typed_discrete_arithmetic_expression * var_type_discrete
@@ -222,7 +218,7 @@ and string_of_typed_discrete_term variable_infos discrete_type = function
             string_of_typed_discrete_factor variable_infos discrete_type factor
 
 and string_of_typed_discrete_factor variable_infos discrete_type = function
-	| Typed_variable (variable_name, _, _) ->
+	| Typed_variable ((variable_name, _ (* id *)), _) ->
 	    string_format_typed_node variable_name discrete_type
 	| Typed_constant (value, _) ->
         string_format_typed_node (ParsedValue.string_of_value value) discrete_type
