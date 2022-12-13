@@ -22,19 +22,13 @@ open OCamlUtilities
 
 type automaton_name = string
 type variable_name = string
-type param_name = string
 type fun_name = string
-type id = int
-
-type local_variable_ref = variable_name * fun_name * id
-type param_ref = param_name * fun_name
 
 (* Reference to a program component *)
 type component =
     | System_component
     | Automaton_component of automaton_name
     | Variable_component of variable_ref
-    | Param_component of param_ref
     | Fun_component of fun_name
 
 (* Relation between two components a -> b mean a use b *)
@@ -61,15 +55,15 @@ let string_of_component = function
     | Automaton_component x -> "auto_" ^ x
     | Variable_component (variable_name, id) -> if id = 0 then variable_name else variable_name ^ "_" ^ string_of_int id
     | Fun_component x -> "fun_" ^ x
-    | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name
+(*    | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name*)
 
 (* String of component with attributes for DOT format *)
 let string_of_component_with_attr = function
     | System_component -> "sys [color=gray]"
-    | Automaton_component x -> "auto_" ^ x ^ "[color=red]"
+    | Automaton_component x -> "auto_" ^ x ^ "[color=red][label=\"" ^ x ^ ":auto\"]"
     | Variable_component (variable_name, id) -> if id = 0 then variable_name else variable_name ^ "_" ^ string_of_int id ^ "[color=darkseagreen2]"
     | Fun_component x -> "fun_" ^ x ^ "[color=darkseagreen][label=\"" ^ x ^ ":fun\"]"
-    | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name ^ "[color=darkseagreen2][label=\"" ^ x ^ ":param\"]"
+(*    | Param_component (x, function_name) -> "param_" ^ x ^ "_of_" ^ function_name ^ "[color=darkseagreen2][label=\"" ^ x ^ ":param\"]"*)
 
 (* String of component name only *)
 let string_of_component_name = function
@@ -77,7 +71,6 @@ let string_of_component_name = function
     | Automaton_component x -> x
     | Variable_component (variable_name, _) -> variable_name
     | Fun_component x -> x
-    | Param_component (x, _) -> x
 
 (* Functions that return component of a variable *)
 let get_variable_component variable_ref = Variable_component variable_ref
@@ -104,7 +97,7 @@ let components_in_parsed_arithmetic_expression expr =
     (* Get refs *)
     variables_used_components @ functions_used_components
 
-(* TODO benjamin IMPORTANT Check if clock_names can be a constant (ex : x = 1 : clock) *)
+(* TODO benjamin IMPORTANT add check because a clock can be a constant (ex : x = 1 : clock) *)
 (* Check whether a variable is a clock, given it's name (search in declarations_info) *)
 let is_clock declarations_info variable_ref =
     let variable_name, _ = variable_ref in
@@ -140,10 +133,10 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
             let relations = List.map (fun c -> (variable_component, c)) all_components in
 
             (* Create relation between current code bloc and declared variable *)
-            let bloc_relation = bloc_component, variable_component in
+            (* let bloc_relation = bloc_component, variable_component in *)
 
             (* Concat relations *)
-            relations @ [bloc_relation]
+            relations (* @ [bloc_relation] *)
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
@@ -590,7 +583,7 @@ let declared_components_of_model parsed_model =
 
         (* Get all declared parameters in a given function definition *)
         let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
-            List.fold_left (fun acc (variable_name, _ (* id *), _) -> Param_component (variable_name, fun_def.name) :: acc) [] fun_def.parameters
+            List.fold_left (fun acc (variable_name, id, _) -> Variable_component (variable_name, id) :: acc) [] fun_def.parameters
         in
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in
@@ -773,7 +766,7 @@ let unused_functions_of_model dependency_graph =
 
 
 (* Remove all unused clock assignments in sequential code bloc *)
-let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph code_bloc_name (* parsed_seq_code_bloc *) =
+let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph (* parsed_seq_code_bloc *) =
 
     (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
@@ -794,10 +787,8 @@ let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependen
             else
                 Some instruction
 
-        | Parsed_instruction expr as instruction ->
-            Some instruction
-
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, id) as instruction ->
+        | Parsed_instruction _
+        | Parsed_local_decl _ as instruction ->
             Some instruction
 
         (* These type of instruction are always been considered as used by the bloc ! *)
@@ -826,13 +817,13 @@ let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependen
 
 (* Remove all unused assignments in sequential code bloc *)
 let remove_unused_assignments_in_updates declarations_info dependency_graph (* parsed_seq_code_bloc *) =
-    remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph "" (* parsed_seq_code_bloc *)
+    remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph (* parsed_seq_code_bloc *)
 
 (* Remove all unused assignments in function definition *)
 let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in
-    { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph fun_def.name code_bloc, return_expr_opt }
+    { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph code_bloc, return_expr_opt }
 
 (* Check whether a init state predicate is used *)
 let is_init_state_predicate_used used_global_variables (* init_state_predicate *) =

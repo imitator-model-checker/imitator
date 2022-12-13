@@ -696,7 +696,6 @@ let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
                 in
 
                 not is_clock || is_clock && is_reset_value
-            | _ -> true
         )
         (fun _ -> true) (* seq_code_bloc *)
 

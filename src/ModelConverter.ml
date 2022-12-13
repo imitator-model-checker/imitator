@@ -3119,12 +3119,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     ComponentSet.iter (function
         | Fun_component function_name ->
 (*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
-            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model.")
-        | Variable_component (variable_name, id) ->
-(*            print_warning ("Local variable `" ^ variable_name ^ "` in `" ^ function_name ^ "` is declared but never used; it is therefore removed from the model. Use option -no-var-autoremove to keep it.")*)
+            print_warning ("Function `" ^ function_name ^ "` is declared but never used.")
+        | Variable_component ((variable_name, id) as variable_ref) when VariableInfo.is_local variable_ref ->
             print_warning ("Local variable `" ^ variable_name ^ "` at `" ^ string_of_int id ^ "` is declared but never used.")
-        | Param_component (param_name, function_name) ->
-            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")
+(*        | Param_component (param_name, function_name) ->*)
+(*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
         | _ -> ()
     ) unused_components;
 

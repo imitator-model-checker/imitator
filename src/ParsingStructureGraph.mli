@@ -18,19 +18,13 @@ open CustomModules
 
 type automaton_name = string
 type variable_name = string
-type param_name = string
 type fun_name = string
-type id = int
-
-type local_variable_ref = variable_name * fun_name * id
-type param_ref = param_name * fun_name
 
 (* Reference to a program component *)
 type component =
     | System_component
     | Automaton_component of automaton_name
     | Variable_component of variable_ref
-    | Param_component of param_ref
     | Fun_component of fun_name
 
 (* A components set *)
