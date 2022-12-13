@@ -79,7 +79,6 @@ let string_of_component_name = function
     | Fun_component x -> x
     | Param_component (x, _) -> x
 
-(* TODO benjamin CLEAN REMOVE ? *)
 (* Functions that return component of a variable *)
 let get_variable_component variable_ref = Variable_component variable_ref
 
@@ -105,15 +104,19 @@ let components_in_parsed_arithmetic_expression expr =
     (* Get refs *)
     variables_used_components @ functions_used_components
 
-(* TODO benjamin Check if clock_names can be a constant (ex : x = 1 : clock) not good practice to check global variable if id = 0 *)
-let is_clock declarations_info (variable_name, id) =
-    id = 0 && List.mem variable_name declarations_info.clock_names
+(* TODO benjamin IMPORTANT Check if clock_names can be a constant (ex : x = 1 : clock) *)
+(* Check whether a variable is a clock, given it's name (search in declarations_info) *)
+let is_clock declarations_info variable_ref =
+    let variable_name, _ = variable_ref in
+    VariableInfo.is_global variable_ref && List.mem variable_name declarations_info.clock_names
 
+(* Check whether a discrete boolean expression is a reset *)
 let is_reset = function
     | Parsed_discrete_bool_expr (Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant value)))) ->
         ParsedValue.is_zero value
     | _ -> false
 
+(* Check whether an update is a clock reset *)
 let is_clock_reset declarations_info variable_ref expr =
     let variable_name, _ = variable_ref in
     is_clock declarations_info variable_ref && is_reset expr && variable_name <> Constants.global_time_clock_name
@@ -781,9 +784,9 @@ let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependen
 
     and remove_unused_assignment_instruction = function
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
-            let variable_name, id = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-            (* TODO benjamin REFAC check that is global variable with id = 0 is not a good practice *)
-            let is_not_used = not (List.mem variable_name used_global_variables_list) && id = 0 in
+            let variable_name, id as variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+
+            let is_not_used = not (List.mem variable_name used_global_variables_list) && VariableInfo.is_global variable_ref in
 
             if is_not_used then (
                 None

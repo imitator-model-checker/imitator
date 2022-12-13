@@ -2938,7 +2938,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         index_of_variables = Hashtbl.create 0;
         removed_variable_names = [];
         discrete = [];
-        local_variables = Hashtbl.create 0;
+        variable_refs = Hashtbl.create 0;
         fun_meta = Hashtbl.create 0;
         type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat);
     }
@@ -3530,7 +3530,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variables					= variables;
         variable_names				= variable_names;
         removed_variable_names		= removed_variable_names;
-        local_variables             = variable_refs;
+        variable_refs             = variable_refs;
         fun_meta                   = functions_metadata_table;
     }
     in

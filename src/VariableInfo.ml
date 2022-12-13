@@ -44,7 +44,7 @@ let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_info
 let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
 
 (* Check if variable is defined => declared and not removed  *)
-let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.local_variables
+let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.variable_refs
 
 (* Check if global variable is defined => declared and not removed  *)
 let [@inline] is_global_variable_is_defined variable_infos variable_name =
@@ -89,7 +89,7 @@ let variable_constant_defined_state_of variable_infos ((variable_name, _) as var
 let [@inline] var_type_of_variable_index variable_infos = variable_infos.type_of_variables
 
 (* Get var type of a variable given it's name *)
-let [@inline] var_type_of_variable_name variable_infos = Hashtbl.find variable_infos.local_variables
+let [@inline] var_type_of_variable_name variable_infos = Hashtbl.find variable_infos.variable_refs
 
 (* Get var type of a global variable given it's name *)
 let [@inline] var_type_of_global_variable_name variable_infos variable_name =
@@ -100,7 +100,7 @@ let var_type_of_variable_or_constant variable_infos ((variable_name, _) as varia
     let defined_state = variable_constant_defined_state_of variable_infos variable_ref in
     match defined_state with
     | Variable_defined ->
-        Hashtbl.find variable_infos.local_variables variable_ref
+        Hashtbl.find variable_infos.variable_refs variable_ref
     | Constant_defined ->
         let value = value_of_constant_name variable_infos variable_name in
         Var_type_discrete (AbstractValue.discrete_type_of_value value)
@@ -164,7 +164,7 @@ let is_discrete_variable variable_infos ((variable_name, _) as variable_ref) =
 
      match defined_state with
      | Variable_defined ->
-        let var_type = Hashtbl.find variable_infos.local_variables variable_ref in
+        let var_type = Hashtbl.find variable_infos.variable_refs variable_ref in
         DiscreteType.is_discrete_type var_type
     | Constant_defined -> false
     | _ ->
