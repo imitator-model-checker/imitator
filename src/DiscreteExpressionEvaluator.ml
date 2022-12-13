@@ -154,13 +154,21 @@ let effective_clock_updates eval_context model =
     (* Get ordered clock updates from context *)
     let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
 
-    List.iter (fun (clock_index, l) ->
-        let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
-        ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
-    ) updated_clocks;
+    (* Display clock updates found only if verbose=high *)
+    let lazy_str_clock_updates = lazy (
+        let str_clock_updates =
+            List.map (fun (clock_index, l) ->
+                let str_linear_expr = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
+                "`" ^ model.variable_names clock_index ^ "=" ^ str_linear_expr ^ "`"
+            ) updated_clocks
+        in
+        "Update clock(s): " ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_clock_updates
+    )
+    in
+    ImitatorUtilities.print_message_lazy Verbose_high lazy_str_clock_updates;
 
     if List.length updated_clocks = 0 then (
-        ImitatorUtilities.print_standard_message ("no updates");
+        ImitatorUtilities.print_message_lazy Verbose_high (lazy "No clock updates.");
         No_update
     ) else (
 
@@ -173,11 +181,11 @@ let effective_clock_updates eval_context model =
         in
 
         if is_all_resets then (
-            ImitatorUtilities.print_standard_message ("only resets");
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy "Only clock resets.");
             let clock_indexes = List.map first_of_tuple updated_clocks in
             Resets clock_indexes
         ) else (
-            ImitatorUtilities.print_standard_message ("updates: " ^ string_of_int (List.length updated_clocks));
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy (string_of_int (List.length updated_clocks) ^ " clock updates found."));
             Updates updated_clocks
         )
     )
@@ -629,15 +637,16 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
             Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
 
-
-            (match variable_names with
-            | Some variable_names ->
-            let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
-            let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
-            (* TODO benjamin CLEAN remove message, just for testing *)
-            ImitatorUtilities.print_standard_message (variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`")
-            | _ -> ()
-            );
+            let lazy_rewriting_message = lazy (
+                match variable_names with
+                | Some variable_names ->
+                    let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
+                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
+                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
+                | _ -> ""
+            )
+            in
+            ImitatorUtilities.print_message_lazy Verbose_high lazy_rewriting_message;
 
 
 
