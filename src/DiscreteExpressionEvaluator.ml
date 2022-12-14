@@ -105,9 +105,8 @@ let try_eval_local_variable variable_ref = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
+(* TODO benjamin CLEAN currify *)
 let set_local_variable eval_context variable_ref value =
-    let variable_name, id = variable_ref in
-    ImitatorUtilities.print_standard_message ("SET: " ^ variable_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value value);
     eval_context.local_discrete_setter variable_ref value
 
 let try_eval_function function_name : functions_table option -> fun_definition = function
@@ -272,8 +271,8 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         numconst_value value
 
-    | Rational_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Rational_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         numconst_value result
 
 and eval_int_expression_with_context variable_names functions_table_opt eval_context_opt (* expr *) =
@@ -343,8 +342,8 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
             int_value value
 
-        | Int_function_call (function_name, param_names, expr_args) ->
-            let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+        | Int_function_call (function_name, param_refs, expr_args) ->
+            let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
             int_value result
 
     in
@@ -426,8 +425,8 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         bool_value value
 
-    | Bool_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Bool_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         bool_value result
 
 and eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -443,8 +442,8 @@ and eval_binary_word_expression_with_context variable_names functions_table_opt 
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         binary_word_value value
 
-    | Binary_word_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Binary_word_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         binary_word_value result
 
 and eval_array_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -463,8 +462,8 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         array_value value
 
-    | Array_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Array_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         array_value result
 
 and eval_list_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -482,8 +481,8 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         list_value value
 
-    | List_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | List_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         list_value result
 
 and eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -493,9 +492,7 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
         stack_value (try_eval_variable variable_index eval_context_opt)
 
     | Stack_local_variable variable_ref ->
-                (* Variable should exist as it was checked before *)
-        let variable_name, _ = variable_ref in
-        ImitatorUtilities.print_standard_message ("eval stack: " ^ variable_name);
+        (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         stack_value discrete_value
 
@@ -503,8 +500,8 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         stack_value value
 
-    | Stack_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Stack_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         stack_value result
 
 and eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -522,13 +519,13 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         queue_value value
 
-    | Queue_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Queue_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         queue_value result
 
 and eval_void_expression_with_context variable_names functions_table_opt eval_context_opt = function
-    | Void_function_call (function_name, param_names, expr_args) ->
-        let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Void_function_call (function_name, param_refs, expr_args) ->
+        let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         Abstract_void_value
 
 and get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr =
@@ -664,10 +661,12 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
     eval_seq_code_bloc eval_context seq_code_bloc
 
-and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args =
+and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args =
 
     (* Get function definition *)
     let fun_def = try_eval_function function_name functions_table_opt in
+    (* Get formal parameter names *)
+    let param_names = List.map first_of_tuple param_refs in
     (* Compute arguments values *)
     let arg_values = List.map (eval_global_expression_with_context variable_names functions_table_opt eval_context_opt) expr_args in
     (* Associate each parameter with their value *)

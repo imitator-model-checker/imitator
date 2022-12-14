@@ -751,7 +751,8 @@ let string_of_custom_user_functions model =
             | Fun_builtin _ -> "" (* Don't print builtin functions *)
             | Fun_user (code_bloc, return_expr_opt) ->
                 let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
-                let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
+                let parameter_names = List.map first_of_tuple fun_def.parameter_refs in
+                let parameter_names_with_constraints = List.combine parameter_names parameters_signature in
                 (* Convert parameters into a string *)
                 let str_param_list = List.map (fun (param_name, type_constraint) ->
                     jani_function_parameter param_name (string_of_type_constraint type_constraint)

@@ -482,7 +482,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         (* Check that each parameter have different name *)
         (* Group parameters by their names *)
-        let parameters_by_names = OCamlUtilities.group_by first_of_triplet fun_def.parameters in
+        let parameters_by_names = OCamlUtilities.group_by (fun ((variable_name, _), _) -> variable_name) fun_def.parameters in
         (* If for one parameter name, their is more than one parameter, there is duplicates *)
         let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
 
@@ -497,7 +497,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             if List.length group_without_duplicates = 1 then (
                 print_error (current_duplicate_parameter_message ^ ".");
             ) else (
-                let str_parameters_list = List.map (fun (parameter_name, _ (* id *), discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
+                let str_parameters_list = List.map (fun ((parameter_name, _ (* id *)), discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
                 let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
                 print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
             )

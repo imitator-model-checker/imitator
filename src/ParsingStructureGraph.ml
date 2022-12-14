@@ -583,7 +583,7 @@ let declared_components_of_model parsed_model =
 
         (* Get all declared parameters in a given function definition *)
         let all_declared_params_in_fun_def (fun_def : parsed_fun_definition) =
-            List.fold_left (fun acc (variable_name, id, _) -> Variable_component (variable_name, id) :: acc) [] fun_def.parameters
+            List.fold_left (fun acc (variable_ref, _) -> Variable_component variable_ref :: acc) [] fun_def.parameters
         in
         List.fold_left (fun acc fun_def -> all_declared_params_in_fun_def fun_def @ acc) [] parsed_model.fun_definitions
     in

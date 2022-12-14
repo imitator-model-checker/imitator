@@ -187,7 +187,7 @@ and parsed_seq_code_bloc_list = parsed_seq_code_bloc list
 (* Metadata of a function *)
 type function_metadata = {
     name : variable_name;
-    parameter_names : variable_name list;
+    parameter_refs : variable_ref list;
     signature_constraint : FunctionSig.signature_constraint;
     side_effect : bool;
 }

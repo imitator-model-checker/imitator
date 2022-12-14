@@ -281,7 +281,7 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
 
     let decl_callback_result =
         match decl_callback with
-        | Some decl_callback -> List.fold_left (fun acc ((param_name, _ (* id *)), param_type) -> operator acc (decl_callback (param_name, param_type, -1))) base fun_def.parameters
+        | Some decl_callback -> List.fold_left (fun acc ((param_name, id), param_type) -> operator acc (decl_callback (param_name, param_type, id))) base fun_def.parameters
         | None -> base
     in
 

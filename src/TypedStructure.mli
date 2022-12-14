@@ -118,7 +118,7 @@ and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : variable_ref list; (* parameter names and ids *)
+    parameter_refs : variable_ref list; (* parameter names and ids *)
     signature : var_type_discrete list; (* signature *)
     body : typed_seq_code_bloc_list * typed_boolean_expression option; (* body *)
 }

@@ -87,7 +87,7 @@ and rational_factor =
 	| Rational_unary_min of rational_factor
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
-    | Rational_function_call of variable_name * variable_name list * global_expression list
+    | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -109,7 +109,7 @@ and int_factor =
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
-    | Int_function_call of variable_name * variable_name list * global_expression list
+    | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 
 (************************************************************)
@@ -150,7 +150,7 @@ and discrete_boolean_expression =
 	| Bool_constant of bool
     | Bool_array_access of expression_access_type * int_arithmetic_expression
 
-    | Bool_function_call of variable_name * variable_name list * global_expression list
+    | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -165,7 +165,7 @@ and binary_word_expression =
     | Binary_word_variable of Automaton.variable_index * int
 	| Binary_word_local_variable of Automaton.variable_ref
     | Binary_word_array_access of expression_access_type * int_arithmetic_expression
-    | Binary_word_function_call of variable_name * variable_name list * global_expression list
+    | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** Array expression **)
 and array_expression =
@@ -174,7 +174,7 @@ and array_expression =
     | Array_variable of Automaton.variable_index
     | Array_local_variable of Automaton.variable_ref
     | Array_array_access of expression_access_type * int_arithmetic_expression
-    | Array_function_call of variable_name * variable_name list * global_expression list
+    | Array_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** List expression **)
 and list_expression =
@@ -183,24 +183,24 @@ and list_expression =
     | List_variable of Automaton.variable_index
     | List_local_variable of Automaton.variable_ref
     | List_array_access of expression_access_type * int_arithmetic_expression
-    | List_function_call of variable_name * variable_name list * global_expression list
+    | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
     | Stack_local_variable of Automaton.variable_ref
     | Stack_array_access of expression_access_type * int_arithmetic_expression
-    | Stack_function_call of variable_name * variable_name list * global_expression list
+    | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_local_variable of Automaton.variable_ref
     | Queue_array_access of expression_access_type * int_arithmetic_expression
-    | Queue_function_call of variable_name * variable_name list * global_expression list
+    | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and void_expression =
-    | Void_function_call of variable_name * variable_name list * global_expression list
+    | Void_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and expression_access_type =
     | Expression_array_access of array_expression

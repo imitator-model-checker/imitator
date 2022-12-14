@@ -285,7 +285,6 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				arbitrary_updates := true;
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun (clock_id, linear_term) ->
-				    (* TODO benjamin CLEAN message *)
                     ImitatorUtilities.print_standard_message ("The clock `" ^ (model.variable_names clock_id) ^ "` is updated NOW with: " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term);
 
 					(* Check if already updated *)

@@ -704,11 +704,6 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                     Ass_discrete_local
             in
 
-            let variable_name, id = variable_ref in
-            ImitatorUtilities.print_standard_message (
-                "SET SCOPE: " ^ variable_name ^ ":" ^ string_of_int id ^ " -> "
-                ^ (match scope with Ass_clock -> "clock" | Ass_discrete_global -> "globule" | Ass_discrete_local -> "locule")
-            );
             Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
 
         | Parsed_instruction expr ->
@@ -835,7 +830,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
 
     let typed_fun_def = {
         name = fun_def.name;
-        parameters = parameter_refs;
+        parameter_refs = parameter_refs;
         signature = signature;
         body = typed_seq_code_bloc, typed_return_expr_opt;
     }
@@ -1489,7 +1484,7 @@ and bool_expression_of_typed_factor variable_infos = function
 
         Bool_function_call (
             function_name,
-            fun_meta.parameter_names,
+            fun_meta.parameter_refs,
             List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
         )
 
@@ -1581,7 +1576,7 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
 
     Rational_function_call (
         function_name,
-        fun_meta.parameter_names,
+        fun_meta.parameter_refs,
         List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
     )
 
@@ -1664,7 +1659,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 
         Int_function_call (
             function_name,
-            fun_meta.parameter_names,
+            fun_meta.parameter_refs,
             List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
         )
 
@@ -1718,7 +1713,7 @@ and binary_expression_of_typed_factor variable_infos length = function
 
         Binary_word_function_call (
             function_name,
-            fun_meta.parameter_names,
+            fun_meta.parameter_refs,
             List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
         )
 
@@ -1777,7 +1772,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 
         Array_function_call (
             function_name,
-            fun_meta.parameter_names,
+            fun_meta.parameter_refs,
             List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
         )
 
@@ -1835,7 +1830,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 
         List_function_call (
             function_name,
-            fun_meta.parameter_names,
+            fun_meta.parameter_refs,
             List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
         )
 
@@ -1886,7 +1881,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
 
             Stack_function_call (
                 function_name,
-                fun_meta.parameter_names,
+                fun_meta.parameter_refs,
                 List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
             )
 
@@ -1939,7 +1934,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
 
             Queue_function_call (
                 function_name,
-                fun_meta.parameter_names,
+                fun_meta.parameter_refs,
                 List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
             )
 
@@ -1981,7 +1976,7 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
 
             Void_function_call (
                 function_name,
-                fun_meta.parameter_names,
+                fun_meta.parameter_refs,
                 List.map (global_expression_of_typed_boolean_expression variable_infos) argument_expressions
             )
 
@@ -2537,7 +2532,7 @@ let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed
     let meta = Hashtbl.find variable_infos.fun_meta typed_fun_def.name in
     {
         name = typed_fun_def.name;
-        parameter_names = typed_fun_def.parameters;
+        parameter_refs = typed_fun_def.parameter_refs;
         signature_constraint = FunctionSig.signature_constraint_of_signature typed_fun_def.signature;
         body = Fun_user (
             seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_code_bloc,
