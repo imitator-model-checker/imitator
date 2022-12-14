@@ -9,16 +9,14 @@ open DiscreteExpressions
 open LinearConstraint
 open Exceptions
 
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
-type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+type functions_table = (variable_name, fun_definition) Hashtbl.t
+type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 (* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
-type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
-type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
-type discrete_access = discrete_valuation * discrete_setter
+
 
 (* Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -40,7 +38,7 @@ type delayed_update_result =
 
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
-let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
+let [@inline] create_eval_context (discrete_valuation, discrete_setter, local_discrete_valuation, local_discrete_setter) =
     { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)

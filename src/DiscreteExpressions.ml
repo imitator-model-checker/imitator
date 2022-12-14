@@ -46,7 +46,7 @@ type loop_dir =
 
 type update_scope =
     | Global_update of Automaton.discrete_index
-    | Local_update of variable_name
+    | Local_update of variable_name (* TODO benjamin here variable_ref *)
 
 (****************************************************************)
 (** Global expression *)
@@ -210,6 +210,7 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
+    (* TODO benjamin REFAC remove not necessary *)
     | Local_assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
     | Instruction of global_expression

@@ -34,3 +34,5 @@ type discrete_index		= variable_index
 type discrete_value		= NumConst.t
 type variable_value		= NumConst.t
 type variable_name		= string
+type variable_id        = string
+type variable_ref       = variable_name * variable_id

@@ -32,12 +32,19 @@ type global_location_index = int
 (** Global location: location for each automaton + value of the discrete *)
 type global_location
 
+type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
+type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
+type local_discrete_valuation = variable_ref -> AbstractValue.abstract_value
+type local_discrete_setter = variable_ref -> AbstractValue.abstract_value -> unit
+type discrete_access = discrete_valuation * discrete_setter * local_discrete_valuation * local_discrete_setter
+
 (** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
 type rational_display =
 	| Exact_display
 	| Float_display
 
-
+(* Local variables table type *)
+type local_variables_table = (variable_ref, AbstractValue.abstract_value) Hashtbl.t
 
 (************************************************************)
 (** {2 Locations} *)
@@ -55,13 +62,14 @@ val initialize : int -> int -> int -> unit
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
-val make_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location
+val make_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> local_variables_table -> global_location
 
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
 (*val update_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> global_location*)
 
 (* Side-effect function for updating a discrete variable given a value at given location *)
-val update_discrete_with : discrete_index * AbstractValue.abstract_value -> global_location -> unit
+(*val update_discrete_with : discrete_index * AbstractValue.abstract_value -> global_location -> unit*)
+
 (** Side-effet version of update_location. *)
 val update_location_with : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> unit
 
@@ -90,7 +98,7 @@ val get_discrete_rational_value : global_location -> discrete_index -> NumConst.
 val set_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value -> unit
 (** Get a tuple of functions for reading / writing a global variable at a given location *)
 (* A discrete access enable to read or write a value of a variable at a given discrete index *)
-val discrete_access_of_location : global_location -> (discrete_index -> AbstractValue.abstract_value) * (discrete_index -> AbstractValue.abstract_value -> unit)
+val discrete_access_of_location : global_location -> discrete_access
 
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int

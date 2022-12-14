@@ -171,7 +171,7 @@ let init_state_list model initial_loc_array =
 		let former_initial_location = model.initial_location in
   		let initial_PTA_locations = !initial_locations_list in
   		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
-  		let global_init_location = DiscreteState.make_location initial_PTA_locations discrete_values in
+  		let global_init_location = DiscreteState.make_location initial_PTA_locations discrete_values (Hashtbl.create 0) in
   		
   		global_init_location_constr := ((global_init_location, (LinearConstraint.pxd_hide_discrete_and_collapse !init_constr)))::(!global_init_location_constr);
 	

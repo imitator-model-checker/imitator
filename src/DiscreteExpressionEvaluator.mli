@@ -3,16 +3,13 @@ open DiscreteExpressions
 open LinearConstraint
 open Automaton
 open AbstractModel
+open DiscreteState
 
+type variable_name_table = variable_index -> variable_name
 type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
-type variable_name_table = variable_index -> variable_name
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
-
-type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
-type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
-type discrete_access = discrete_valuation * discrete_setter
 
 (* Record that contain context (current location, current local variables) for evaluating an expression *)
 type eval_context = {

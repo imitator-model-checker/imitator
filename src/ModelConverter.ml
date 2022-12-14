@@ -1480,7 +1480,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		) initial_locations in
 
 	(* Construct the initial location *)
-	let initial_location = DiscreteState.make_location locations init_discrete_pairs in
+	let initial_location = DiscreteState.make_location locations init_discrete_pairs (Hashtbl.create 0) in
 
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
