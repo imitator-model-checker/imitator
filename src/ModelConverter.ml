@@ -1459,7 +1459,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -1480,7 +1480,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		) initial_locations in
 
 	(* Construct the initial location *)
-	let initial_location = DiscreteState.make_location locations init_discrete_pairs (Hashtbl.create 0) in
+	let initial_location = DiscreteState.make_location locations init_discrete_pairs local_variables_table in
 
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
@@ -4165,8 +4165,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print some information *)
 	print_message Verbose_high ("*** Building initial state…");
 
+    (* Extract only local variable references and init values *)
+    let variable_refs_list = variable_refs |> Hashtbl.to_seq |> List.of_seq in
+    let local_variables_list =
+        List.filter_map (fun ((variable_name, id), var_type) ->
+            if id <> 0 then Some ((variable_name, id), AbstractValue.default_value var_type) else None
+        ) variable_refs_list |> List.to_seq
+    in
+    let local_variables_table = Hashtbl.of_seq local_variables_list in
+
 	let (initial_location, initial_constraint) =
-		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition in
 
 	(* Add the observer initial constraint *)
 	begin

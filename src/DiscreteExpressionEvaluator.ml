@@ -24,6 +24,10 @@ type eval_context = {
     discrete_valuation : discrete_valuation;
     (* Setter of global variables at the context (current location) *)
     discrete_setter : discrete_setter;
+    (* Valuation of local variables at the context (current location) *)
+    local_discrete_valuation : local_discrete_valuation;
+    (* Setter of local variables at the context (current location) *)
+    local_discrete_setter : local_discrete_setter;
     (* Current local variables *)
     local_variables : variable_table list;
     (**)
@@ -39,7 +43,15 @@ type delayed_update_result =
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter, local_discrete_valuation, local_discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }
+    {
+        discrete_valuation = discrete_valuation;
+        discrete_setter = discrete_setter;
+        local_discrete_valuation = local_discrete_valuation;
+        local_discrete_setter = local_discrete_setter;
+        local_variables = [Hashtbl.create 0];
+        updated_clocks = Hashtbl.create 0;
+        updated_clocks_ordered = Queue.create ()
+    }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function

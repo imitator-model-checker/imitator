@@ -11,12 +11,16 @@ type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
-(* Record that contain context (current location, current local variables) for evaluating an expression *)
+(* Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
     (* Valuation of global variables at the context (current location) *)
     discrete_valuation : discrete_valuation;
     (* Setter of global variables at the context (current location) *)
     discrete_setter : discrete_setter;
+    (* Valuation of local variables at the context (current location) *)
+    local_discrete_valuation : local_discrete_valuation;
+    (* Setter of local variables at the context (current location) *)
+    local_discrete_setter : local_discrete_setter;
     (* Current local variables *)
     local_variables : variable_table list;
     (**)

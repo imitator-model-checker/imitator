@@ -41,6 +41,7 @@ val to_float_value : abstract_value -> float
 val equal : abstract_value -> abstract_value -> bool
 val neq : abstract_value -> abstract_value -> bool
 val default_value : var_type -> abstract_value
+val default_value_of_discrete_type : var_type_discrete -> abstract_value
 val deep_copy : abstract_value -> abstract_value
 val string_of_value : abstract_value -> string
 
