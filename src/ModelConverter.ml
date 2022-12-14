@@ -4170,9 +4170,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let local_variables_list =
         List.filter_map (fun ((variable_name, id), var_type) ->
             if id <> 0 then Some ((variable_name, id), AbstractValue.default_value var_type) else None
-        ) variable_refs_list |> List.to_seq
+        ) variable_refs_list
     in
-    let local_variables_table = Hashtbl.of_seq local_variables_list in
+    List.iter (fun ((variable_name, id), value) ->
+        ImitatorUtilities.print_standard_message ("YO: " ^ variable_name ^ ":" ^ string_of_int id ^ ":" ^ AbstractValue.string_of_value value)
+    ) local_variables_list;
+    let local_variables_table = local_variables_list |> List.to_seq |> Hashtbl.of_seq in
+
 
 	let (initial_location, initial_constraint) =
 		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition in

@@ -48,7 +48,7 @@ type loop_dir =
 
 type update_scope =
     | Global_update of Automaton.discrete_index
-    | Local_update of variable_name
+    | Local_update of Automaton.variable_ref
 
 (****************************************************************)
 (** Global expression *)
@@ -81,7 +81,7 @@ and rational_term =
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
-	| Rational_local_variable of variable_name
+	| Rational_local_variable of Automaton.variable_ref
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
@@ -103,7 +103,7 @@ and int_term =
 
 and int_factor =
 	| Int_variable of Automaton.variable_index
-	| Int_local_variable of variable_name
+	| Int_local_variable of Automaton.variable_ref
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
@@ -145,7 +145,7 @@ and discrete_boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
 	| Bool_variable of Automaton.variable_index
-	| Bool_local_variable of variable_name
+	| Bool_local_variable of Automaton.variable_ref
 	(** discrete constant in boolean expression *)
 	| Bool_constant of bool
     | Bool_array_access of expression_access_type * int_arithmetic_expression
@@ -163,7 +163,7 @@ and discrete_boolean_expression =
 and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-	| Binary_word_local_variable of variable_name
+	| Binary_word_local_variable of Automaton.variable_ref
     | Binary_word_array_access of expression_access_type * int_arithmetic_expression
     | Binary_word_function_call of variable_name * variable_name list * global_expression list
 
@@ -172,7 +172,7 @@ and array_expression =
     | Literal_array of global_expression array
     | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
-    | Array_local_variable of variable_name
+    | Array_local_variable of Automaton.variable_ref
     | Array_array_access of expression_access_type * int_arithmetic_expression
     | Array_function_call of variable_name * variable_name list * global_expression list
 
@@ -181,21 +181,21 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
-    | List_local_variable of variable_name
+    | List_local_variable of Automaton.variable_ref
     | List_array_access of expression_access_type * int_arithmetic_expression
     | List_function_call of variable_name * variable_name list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
-    | Stack_local_variable of variable_name
+    | Stack_local_variable of Automaton.variable_ref
     | Stack_array_access of expression_access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * variable_name list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
-    | Queue_local_variable of variable_name
+    | Queue_local_variable of Automaton.variable_ref
     | Queue_array_access of expression_access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * variable_name list * global_expression list
 

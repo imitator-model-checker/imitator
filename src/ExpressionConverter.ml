@@ -693,6 +693,8 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
             (* Get assignment scope *)
             let variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
+
+
             let scope =
                 if VariableInfo.is_clock variable_infos variable_ref then
                     Ass_clock
@@ -702,6 +704,11 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                     Ass_discrete_local
             in
 
+            let variable_name, id = variable_ref in
+            ImitatorUtilities.print_standard_message (
+                "SET SCOPE: " ^ variable_name ^ ":" ^ string_of_int id ^ " -> "
+                ^ (match scope with Ass_clock -> "clock" | Ass_discrete_global -> "globule" | Ass_discrete_local -> "locule")
+            );
             Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
 
         | Parsed_instruction expr ->
@@ -791,7 +798,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
 
 let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.parsed_fun_definition) =
     (* Get parameter types and return type of the function *)
-    let parameter_names, parameter_discrete_types = List.map first_of_triplet fun_def.parameters, List.map third_of_triplet fun_def.parameters in
+    let parameter_refs, parameter_discrete_types = List.map first_of_tuple fun_def.parameters, List.map second_of_tuple fun_def.parameters in
     let return_type = fun_def.return_type in
     (* Construct signature *)
     let signature = parameter_discrete_types @ [return_type] in
@@ -828,7 +835,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
 
     let typed_fun_def = {
         name = fun_def.name;
-        parameters = parameter_names;
+        parameters = parameter_refs;
         signature = signature;
         body = typed_seq_code_bloc, typed_return_expr_opt;
     }
@@ -1455,7 +1462,7 @@ and bool_expression_of_typed_factor variable_infos = function
 
 	    (match scope with
 	    | Local ->
-	        Bool_local_variable variable_name
+	        Bool_local_variable variable_ref
 	    | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1538,7 +1545,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 
 	    (match scope with
 	    | Local ->
-	        Rational_local_variable variable_name
+	        Rational_local_variable variable_ref
 	    | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1627,7 +1634,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
 
 	    (match scope with
 	    | Local ->
-	        Int_local_variable variable_name
+	        Int_local_variable variable_ref
 	    | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1683,7 +1690,7 @@ and binary_expression_of_typed_factor variable_infos length = function
 
         (match scope with
         | Local ->
-            Binary_word_local_variable variable_name
+            Binary_word_local_variable variable_ref
         | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1737,7 +1744,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
 
 	    (match scope with
 	    | Local ->
-	        Array_local_variable variable_name
+	        Array_local_variable variable_ref
 	    | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1797,7 +1804,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
 
 	    (match scope with
 	    | Local ->
-	        List_local_variable variable_name
+	        List_local_variable variable_ref
 	    | Global ->
             let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
             (match variable_kind with
@@ -1852,7 +1859,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
 
             (match scope with
             | Local ->
-                Stack_local_variable variable_name
+                Stack_local_variable variable_ref
             | Global ->
                 let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
@@ -1905,7 +1912,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
 
             (match scope with
             | Local ->
-                Queue_local_variable variable_name
+                Queue_local_variable variable_ref
             | Global ->
                 let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
@@ -2023,8 +2030,8 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
         )
 
 let rec local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos = function
-    | Typed_scalar_update (variable_name, _ (* id *)) ->
-        Scalar_update (Local_update variable_name)
+    | Typed_scalar_update variable_ref ->
+        Scalar_update (Local_update variable_ref)
 
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
         Indexed_update (
@@ -2356,7 +2363,7 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
         let ir_var =
             match scope with
             | Local ->
-                LinearConstraint.IR_Local_var variable_name
+                LinearConstraint.IR_Local_var variable_ref
             | Global ->
                 (* Get index of variable *)
                 let variable_index = VariableInfo.index_of_variable_name variable_infos variable_name in

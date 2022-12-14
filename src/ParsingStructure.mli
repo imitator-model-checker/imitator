@@ -195,7 +195,7 @@ type function_metadata = {
 (* Parsed function definition *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : (variable_name * variable_id * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
+    parameters : (variable_ref * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
     body : parsed_seq_code_bloc_list * parsed_boolean_expression option; (* body *)
 }

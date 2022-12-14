@@ -94,30 +94,28 @@ let try_eval_variable variable_index = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
+let eval_local_variable eval_context = eval_context.local_discrete_valuation
+
+(* Try evaluating a local variable value if an eval context is given *)
+(* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
+(* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
+let try_eval_local_variable variable_ref = function
+    | Some eval_context ->
+        eval_local_variable eval_context variable_ref
+    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
+    | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
+
+let set_local_variable eval_context variable_ref value =
+    let variable_name, id = variable_ref in
+    ImitatorUtilities.print_standard_message ("SET: " ^ variable_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value value);
+    eval_context.local_discrete_setter variable_ref value
+
 let try_eval_function function_name : functions_table option -> fun_definition = function
     | Some functions_table -> Hashtbl.find functions_table function_name
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
 
-let eval_local_variable eval_context variable_name =
-        (* Search variable through scopes from the bottom scope to the top scope *)
-        let var_scope = List.find (fun var_scope -> Hashtbl.mem var_scope variable_name) eval_context.local_variables in
-        Hashtbl.find var_scope variable_name
-
-(* Try evaluating a local variable value if an eval context is given *)
-(* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
-(* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
-let try_eval_local_variable variable_name = function
-    | Some eval_context ->
-        eval_local_variable eval_context variable_name
-    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
-    | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
-
-let set_local_variable eval_context variable_name value =
-    (* Search variable through scopes from the bottom scope to the top scope *)
-    let var_scope = List.find (fun var_scope -> Hashtbl.mem var_scope variable_name) eval_context.local_variables in
-    Hashtbl.replace var_scope variable_name value
-
+(* TODO benjamin CLEAN remove *)
 let add_local_variable eval_context variable_name value =
     (* Get bottom scope *)
     let var_scope = List.hd eval_context.local_variables in
@@ -142,8 +140,8 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
                     IR_Var variable_index
                 )
             )
-        | IR_Local_var variable_name ->
-            let value = numconst_value (eval_local_variable eval_context variable_name) in
+        | IR_Local_var variable_ref ->
+            let value = numconst_value (eval_local_variable eval_context variable_ref) in
             IR_Coef value
 
         | IR_Coef _ as ir_coef -> ir_coef
@@ -256,9 +254,9 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
         numconst_value (try_eval_variable variable_index eval_context_opt)
     | Rational_constant variable_value ->
         variable_value
-    | Rational_local_variable variable_name ->
+    | Rational_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         numconst_value discrete_value
     | Rational_nested_expression expr ->
         eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr
@@ -327,9 +325,9 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             int_value (try_eval_variable variable_index eval_context_opt)
         | Int_constant variable_value ->
             variable_value;
-        | Int_local_variable variable_name ->
+        | Int_local_variable variable_ref ->
                         (* Variable should exist as it was checked before *)
-            let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+            let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
             int_value discrete_value
 
         | Int_nested_expression expr ->
@@ -374,9 +372,9 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         bool_value (try_eval_variable variable_index eval_context_opt)
     | Bool_constant value ->
         value
-    | Bool_local_variable variable_name ->
+    | Bool_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         bool_value discrete_value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
@@ -436,9 +434,9 @@ and eval_binary_word_expression_with_context variable_names functions_table_opt 
     | Binary_word_constant value -> value
     | Binary_word_variable (variable_index, _) ->
         binary_word_value (try_eval_variable variable_index eval_context_opt)
-    | Binary_word_local_variable variable_name ->
+    | Binary_word_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         binary_word_value discrete_value
 
     | Binary_word_array_access (access_type, index_expr) ->
@@ -456,9 +454,9 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
         array_value (try_eval_variable variable_index eval_context_opt)
     | Array_constant values ->
         values
-    | Array_local_variable variable_name ->
+    | Array_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         array_value discrete_value
 
     | Array_array_access (access_type, index_expr) ->
@@ -476,9 +474,9 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
         list_value (try_eval_variable variable_index eval_context_opt)
     | List_constant values ->
         values
-    | List_local_variable variable_name ->
+    | List_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         list_value discrete_value
     | List_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
@@ -494,9 +492,11 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
     | Stack_variable variable_index ->
         stack_value (try_eval_variable variable_index eval_context_opt)
 
-    | Stack_local_variable variable_name ->
+    | Stack_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let variable_name, _ = variable_ref in
+        ImitatorUtilities.print_standard_message ("eval stack: " ^ variable_name);
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         stack_value discrete_value
 
     | Stack_array_access (access_type, index_expr) ->
@@ -513,9 +513,9 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
     | Queue_variable variable_index ->
         queue_value (try_eval_variable variable_index eval_context_opt)
 
-    | Queue_local_variable variable_name ->
+    | Queue_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         queue_value discrete_value
 
     | Queue_array_access (access_type, index_expr) ->
@@ -673,6 +673,8 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
     (* Associate each parameter with their value *)
     let param_names_with_arg_values = List.combine param_names arg_values in
 
+    (* TODO benjamin IMPLEMENT set local var parameters with value *)
+
     (* Eval function *)
     let eval_fun_type_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
@@ -684,12 +686,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
         | Fun_user (code_bloc, return_expr_opt) ->
             let eval_context =
                 match eval_context_opt with
-                | Some eval_context ->
-                    (* Push scope of function body *)
-                    let new_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-                    List.iter (fun (param_name, value) -> add_local_variable new_eval_context param_name value) param_names_with_arg_values;
-                    new_eval_context
-
+                | Some eval_context -> eval_context
                 | None -> raise (InternalError
                     "Trying to evaluate a function without `eval_context`.
                     Only constant expression can be evaluated without context
@@ -720,9 +717,10 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
     let old_value =
         match update_scope with
         | Global_update variable_index ->
+            (* TODO benjamin change here *)
             eval_context.discrete_valuation variable_index
-        | Local_update variable_name ->
-            eval_local_variable eval_context variable_name
+        | Local_update variable_ref ->
+            eval_local_variable eval_context variable_ref
     in
 
     (* Compute its new value *)
@@ -740,8 +738,8 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
     | Global_update discrete_index ->
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
-    | Local_update variable_name ->
-        set_local_variable eval_context variable_name new_value
+    | Local_update variable_ref ->
+        set_local_variable eval_context variable_ref new_value
 
 (* TODO benjamin CLEAN UPDATES *)
 (* Record an update into the updated_discrete hash table, then the updates can be made later  *)

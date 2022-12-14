@@ -46,7 +46,7 @@ type loop_dir =
 
 type update_scope =
     | Global_update of Automaton.discrete_index
-    | Local_update of variable_name (* TODO benjamin here variable_ref *)
+    | Local_update of Automaton.variable_ref
 
 (****************************************************************)
 (** Global expression *)
@@ -79,7 +79,7 @@ and rational_term =
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
-	| Rational_local_variable of variable_name
+	| Rational_local_variable of Automaton.variable_ref
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
@@ -101,7 +101,7 @@ and int_term =
 
 and int_factor =
 	| Int_variable of Automaton.variable_index
-	| Int_local_variable of variable_name
+	| Int_local_variable of Automaton.variable_ref
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
@@ -138,7 +138,7 @@ and discrete_boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	(** Discrete boolean variable *)
 	| Bool_variable of Automaton.variable_index
-    | Bool_local_variable of variable_name
+    | Bool_local_variable of Automaton.variable_ref
 	(** Discrete boolean constant *)
 	| Bool_constant of bool
     | Bool_array_access of expression_access_type * int_arithmetic_expression
@@ -155,7 +155,7 @@ and discrete_boolean_expression =
 and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-    | Binary_word_local_variable of variable_name
+    | Binary_word_local_variable of Automaton.variable_ref
     | Binary_word_array_access of expression_access_type * int_arithmetic_expression
     | Binary_word_function_call of variable_name * variable_name list * global_expression list
 
@@ -171,7 +171,7 @@ and array_expression =
     | Literal_array of global_expression array
     | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
-    | Array_local_variable of variable_name
+    | Array_local_variable of Automaton.variable_ref
     | Array_array_access of expression_access_type * int_arithmetic_expression
     | Array_function_call of variable_name * variable_name list * global_expression list
 
@@ -180,21 +180,21 @@ and list_expression =
     | Literal_list of global_expression list
     | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
-    | List_local_variable of variable_name
+    | List_local_variable of Automaton.variable_ref
     | List_array_access of expression_access_type * int_arithmetic_expression
     | List_function_call of variable_name * variable_name list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
-    | Stack_local_variable of variable_name
+    | Stack_local_variable of Automaton.variable_ref
     | Stack_array_access of expression_access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * variable_name list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
-    | Queue_local_variable of variable_name
+    | Queue_local_variable of Automaton.variable_ref
     | Queue_array_access of expression_access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * variable_name list * global_expression list
 
@@ -265,7 +265,7 @@ and 'a my_term =
 and 'a my_factor =
 	| My_global_variable of Automaton.variable_index
 	| My_global_constant of 'a
-	| My_local_variable of variable_name
+	| My_local_variable of Automaton.variable_ref
 	| My_expression of 'a my_arithmetic_expression
 	| My_unary_min of 'a my_factor
     | My_rat_of of 'a my_arithmetic_expression
@@ -456,14 +456,14 @@ let label_of_bool_factor = function
 	| Boolean_expression _ -> "bool expression"
 	| Not_bool _ -> "bool negation expression"
 	| Bool_variable _ -> "bool variable"
-	| Bool_local_variable variable_name -> variable_name
+	| Bool_local_variable (variable_name, _) -> variable_name
 	| Bool_constant _ -> "bool constant"
 	| Bool_array_access _ -> "array_get"
     | Bool_function_call (function_name, _, _) -> function_name
 
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
-	| Rational_local_variable variable_name -> variable_name
+	| Rational_local_variable (variable_name, _) -> variable_name
 	| Rational_constant _ -> "rational constant"
 	| Rational_nested_expression _ -> "rational expression"
 	| Rational_unary_min _ -> "rational minus"
@@ -473,7 +473,7 @@ let label_of_rational_factor = function
 
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
-	| Int_local_variable variable_name -> variable_name
+	| Int_local_variable (variable_name, _) -> variable_name
 	| Int_constant _ -> "int constant"
 	| Int_nested_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
@@ -485,7 +485,7 @@ let label_of_int_factor = function
 let label_of_binary_word_expression = function
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
-    | Binary_word_local_variable variable_name -> variable_name
+    | Binary_word_local_variable (variable_name, _) -> variable_name
 	| Binary_word_array_access _ -> "array_get"
     | Binary_word_function_call (function_name, _, _) -> function_name
 
@@ -493,7 +493,7 @@ let label_of_array_expression = function
     | Literal_array _ -> "array"
     | Array_constant _ -> "array"
     | Array_variable _ -> "array"
-    | Array_local_variable variable_name -> variable_name
+    | Array_local_variable (variable_name, _) -> variable_name
 	| Array_array_access _ -> "array_get"
 	| Array_function_call (function_name, _, _) -> function_name
 
@@ -501,21 +501,21 @@ let label_of_list_expression = function
     | Literal_list _ -> "list"
     | List_constant _ -> "list"
     | List_variable _ -> "list"
-    | List_local_variable variable_name -> variable_name
+    | List_local_variable (variable_name, _) -> variable_name
 	| List_array_access _ -> "array_get"
 	| List_function_call (function_name, _, _) -> function_name
 
 let label_of_stack_expression = function
     | Literal_stack -> Constants.stack_string
     | Stack_variable _ -> Constants.stack_string
-    | Stack_local_variable variable_name -> variable_name
+    | Stack_local_variable (variable_name, _) -> variable_name
 	| Stack_array_access _ -> "array_get"
 	| Stack_function_call (function_name, _, _) -> function_name
 
 let label_of_queue_expression = function
     | Literal_queue -> "queue"
     | Queue_variable _ -> "queue"
-    | Queue_local_variable variable_name -> variable_name
+    | Queue_local_variable (variable_name, _) -> variable_name
 	| Queue_array_access _ -> "array_get"
 	| Queue_function_call (function_name, _, _) -> function_name
 
@@ -585,7 +585,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 
 	and string_of_factor customized_string = function
 		| Rational_variable discrete_index -> variable_names discrete_index
-		| Rational_local_variable variable_name -> variable_name
+		| Rational_local_variable (variable_name, _) -> variable_name
 		| Rational_constant value -> NumConst.to_string value
 		| Rational_unary_min discrete_factor ->
 		    Constants.default_arithmetic_string.unary_min_string ^
@@ -645,7 +645,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 
 	and string_of_int_factor customized_string = function
 		| Int_variable i -> variable_names i
-		| Int_local_variable variable_name -> variable_name
+		| Int_local_variable (variable_name, _) -> variable_name
 		| Int_constant value -> Int32.to_string value
 		| Int_unary_min factor ->
 		    Constants.default_arithmetic_string.unary_min_string ^
@@ -725,7 +725,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
     | Bool_variable discrete_index -> variable_names discrete_index
-    | Bool_local_variable variable_name -> variable_name
+    | Bool_local_variable (variable_name, _) -> variable_name
     | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
     | Bool_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -759,7 +759,7 @@ and customized_string_of_binary_word_expression customized_string variable_names
     | Binary_word_variable (variable_index, length) as binary_word_expression ->
         print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
         variable_names variable_index
-    | Binary_word_local_variable variable_name ->
+    | Binary_word_local_variable (variable_name, _) ->
         variable_name
     | Binary_word_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -776,7 +776,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
     | Array_variable variable_index -> variable_names variable_index
-    | Array_local_variable variable_name -> variable_name
+    | Array_local_variable (variable_name, _) -> variable_name
 
     | Array_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -796,7 +796,7 @@ and customized_string_of_list_expression customized_string variable_names = func
         label_of_list_expression list_expr
         ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
     | List_variable variable_index -> variable_names variable_index
-    | List_local_variable variable_name -> variable_name
+    | List_local_variable (variable_name, _) -> variable_name
 
     | List_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -807,7 +807,7 @@ and customized_string_of_list_expression customized_string variable_names = func
 and customized_string_of_stack_expression customized_string variable_names = function
     | Literal_stack -> "stack()"
     | Stack_variable variable_index -> variable_names variable_index
-    | Stack_local_variable variable_name -> variable_name
+    | Stack_local_variable (variable_name, _) -> variable_name
 
     | Stack_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -818,7 +818,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
 and customized_string_of_queue_expression customized_string variable_names = function
     | Literal_queue -> "queue()"
     | Queue_variable variable_index -> variable_names variable_index
-    | Queue_local_variable variable_name -> variable_name
+    | Queue_local_variable (variable_name, _) -> variable_name
 
     | Queue_array_access (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -859,7 +859,7 @@ let string_of_expression_access = customized_string_of_expression_access Constan
 
 let customized_string_of_update_scope variable_names = function
     | Global_update variable_index -> variable_names variable_index
-    | Local_update variable_name -> variable_name
+    | Local_update (variable_name, _) -> variable_name
 
 (* Customized string representation of a variable update *)
 let rec customized_string_of_scalar_or_index_update_type customized_string variable_names = function
