@@ -122,10 +122,10 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
         List.concat relations_nested
 
     and relations_in_parsed_instruction = function
-        | Parsed_local_decl (variable_name, _, init_expr, id) ->
+        | Parsed_local_decl (variable_ref, _, init_expr) ->
 
             (* Create local variable ref representing a unique variable ref *)
-            let variable_component = Variable_component (variable_name, id) in
+            let variable_component = Variable_component variable_ref in
 
             (* Get references to variables and functions in the local init expression *)
             let all_components = components_in_parsed_boolean_expression init_expr in

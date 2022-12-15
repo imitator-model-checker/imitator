@@ -126,7 +126,7 @@ and fold_parsed_seq_code_bloc operator base ?(decl_callback=None) seq_code_bloc_
         List.fold_left (fun acc instruction -> operator (fold_parsed_instruction instruction) acc) base parsed_seq_code_bloc
 
     and fold_parsed_instruction = function
-        | Parsed_local_decl (variable_name, discrete_type, init_expr, id) ->
+        | Parsed_local_decl ((variable_name, id), discrete_type, init_expr) ->
 
             (* Fold init expr *)
             let init_expr_result = fold_parsed_boolean_expression operator base leaf_fun init_expr in
@@ -548,7 +548,7 @@ and string_of_parsed_seq_code_bloc variable_infos parsed_seq_code_bloc =
     OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
 
 and string_of_parsed_instruction variable_infos = function
-    | Parsed_local_decl (variable_name, discrete_type, init_expr, _) ->
+    | Parsed_local_decl ((variable_name, _ (* id *)), discrete_type, init_expr) ->
         string_of_let_in
             variable_name
             (DiscreteType.string_of_var_type_discrete discrete_type)
@@ -876,11 +876,11 @@ let link_variables_in_parsed_model parsed_model =
             List.map (link_variables_in_parsed_instruction local_variables) seq_code_bloc
 
         and link_variables_in_parsed_instruction local_variables = function
-            | Parsed_local_decl (variable_name, discrete_type, expr, id) ->
+            | Parsed_local_decl ((variable_name, id) as variable_ref, discrete_type, expr) ->
                 let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
                 Hashtbl.replace local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator (variable_name, id) (Var_type_discrete discrete_type);
-                Parsed_local_decl (variable_name, discrete_type, linked_expr, id)
+                Hashtbl.add local_variables_accumulator variable_ref (Var_type_discrete discrete_type);
+                Parsed_local_decl (variable_ref, discrete_type, linked_expr)
 
             | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
                 let linked_parsed_scalar_or_index_update_type = link_variables_in_parsed_scalar_or_index_update_type local_variables parsed_scalar_or_index_update_type in

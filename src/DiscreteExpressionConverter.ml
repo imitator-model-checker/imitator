@@ -172,7 +172,7 @@ let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq
 
         (* Check only discrete in, instruction, for loop bounds, while condition, if condition ... *)
         match instruction with
-        | Parsed_local_decl (_, _, expr, _)
+        | Parsed_local_decl (_, _, expr)
         | Parsed_instruction expr ->
             check_only_discrete expr
 

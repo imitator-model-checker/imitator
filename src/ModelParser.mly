@@ -317,7 +317,7 @@ semicolon_or_comma:
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */

@@ -617,7 +617,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
         List.map type_check_parsed_instruction parsed_seq_code_bloc
 
     and type_check_parsed_instruction = function
-        | Parsed_local_decl (variable_name, variable_type, expr, id) as local_decl ->
+        | Parsed_local_decl ((variable_name, _ (* id *)) as variable_ref, variable_type, expr) as local_decl ->
 
             (* String of discrete type*)
             let str_discrete_type = DiscreteType.string_of_var_type_discrete variable_type in
@@ -666,7 +666,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
 
             (* All is ok, convert to a typed function local declaration *)
             Typed_local_decl (
-                (variable_name, id),
+                variable_ref,
                 variable_type,
                 typed_init_expr
             )
