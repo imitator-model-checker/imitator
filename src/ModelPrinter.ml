@@ -329,7 +329,7 @@ let string_of_seq_code_bloc model level (* seq_code_bloc *) =
         let tabs, tabs_1  = OCamlUtilities.string_n_times level "  ", OCamlUtilities.string_n_times (level + 1) "  " in
 
         match instruction with
-        | Local_decl (variable_name, discrete_type, init_expr) ->
+        | Local_decl ((variable_name, _), discrete_type, init_expr) ->
             tabs
             ^ "var " ^ variable_name ^ " : "
             ^ DiscreteType.string_of_var_type_discrete discrete_type
@@ -616,7 +616,7 @@ let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
             ^ ": "
             ^ json_of_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_expr)
 
-        | Local_decl (variable_name, discrete_type, expr) -> ""
+        | Local_decl ((variable_name, _), discrete_type, expr) -> ""
         | Instruction expr -> ""
         | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) -> ""
         | While_loop (condition_expr, inner_bloc) -> ""

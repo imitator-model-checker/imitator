@@ -724,7 +724,7 @@ let string_of_custom_user_functions model =
 
         and string_of_instruction = function
 
-            | Local_decl (variable_name, discrete_type, init_expr) ->
+            | Local_decl ((variable_name, _), discrete_type, init_expr) ->
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 ""
 

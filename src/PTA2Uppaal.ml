@@ -475,7 +475,7 @@ let rec string_of_seq_code_bloc ?(sep=";") variable_names seq_code_bloc =
 
 (* Convert an instruction into UPPAAL string *)
 and string_of_instruction ?(sep=";") variable_names = function
-    | Local_decl (variable_name, discrete_type, init_expr) ->
+    | Local_decl ((variable_name, _), discrete_type, init_expr) ->
         string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
         ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings variable_names init_expr ^ sep
 

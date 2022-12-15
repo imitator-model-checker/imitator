@@ -208,7 +208,7 @@ and expression_access_type =
 
 (* Bloc of sequential code *)
 and seq_code_bloc =
-    | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *)
+    | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
     (* TODO benjamin REFAC remove not necessary *)
     | Local_assignment of discrete_update

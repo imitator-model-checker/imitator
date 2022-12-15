@@ -568,10 +568,10 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         List.iter (eval_instruction eval_context) code_bloc
 
     and eval_instruction eval_context = function
-        | Local_decl (variable_name, _, expr) ->
+        | Local_decl (variable_ref, _, expr) ->
             let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
-            (* Add new variable to eval context *)
-            add_local_variable eval_context variable_name value
+            (* Set local variable with initial value *)
+            set_local_variable eval_context variable_ref value
 
         | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
@@ -665,20 +665,18 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
 
     (* Get function definition *)
     let fun_def = try_eval_function function_name functions_table_opt in
-    (* Get formal parameter names *)
-    let param_names = List.map first_of_tuple param_refs in
     (* Compute arguments values *)
     let arg_values = List.map (eval_global_expression_with_context variable_names functions_table_opt eval_context_opt) expr_args in
     (* Associate each parameter with their value *)
-    let param_names_with_arg_values = List.combine param_names arg_values in
-
-    (* TODO benjamin IMPLEMENT set local var parameters with value *)
+    let param_refs_with_arg_values = List.combine param_refs arg_values in
 
     (* Eval function *)
     let eval_fun_type_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
             (* Execute built-in function given argument values *)
             let l_del, r_del = Constants.default_paren_delimiter in
+            (* Get formal parameter names *)
+            let param_names = List.map first_of_tuple param_refs in
             let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
             builtin_f str_fun_call arg_values
 
@@ -693,6 +691,15 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
+
+            (* TODO benjamin IMPLEMENT set local var parameters with value *)
+            (* Set parameter values to computed argument values *)
+            List.iter (fun (param_ref, value) ->
+                let param_name, id = param_ref in
+                ImitatorUtilities.print_standard_message ("set formal parameter: " ^ param_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value value);
+                set_local_variable eval_context param_ref value
+            ) param_refs_with_arg_values;
+
             eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context code_bloc;
             match return_expr_opt with
             | Some return_expr ->
@@ -735,9 +742,13 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
     let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
     match update_scope with
     | Global_update discrete_index ->
+        let variable_names = match variable_names with Some variable_names -> variable_names in
         (* Direct update ! *)
+        ImitatorUtilities.print_standard_message ("UPDATE GLOBAL: " ^ variable_names discrete_index ^ "=" ^ AbstractValue.string_of_value new_value);
         eval_context.discrete_setter discrete_index new_value
     | Local_update variable_ref ->
+        let variable_name, id = variable_ref in
+        ImitatorUtilities.print_standard_message ("UPDATE LOCAL: " ^ variable_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value new_value);
         set_local_variable eval_context variable_ref new_value
 
 (* TODO benjamin CLEAN UPDATES *)
