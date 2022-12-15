@@ -179,7 +179,6 @@ let copy_location location =
 	(* Copy the array of discrete values *)
 	let cpy_discrete = copy_discrete_values_at_location location in
 	(* Copy the table of local variables and reinit values of local variables *)
-	(* TODO benjamin IMPLEMENT, see if have to reset *)
 	let local_variables_table = Hashtbl.copy (get_local_variables location) in
 	(* Return the new location *)
 	cpy_locations, cpy_discrete, local_variables_table

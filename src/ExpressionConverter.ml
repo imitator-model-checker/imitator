@@ -1088,8 +1088,6 @@ let check_update variable_infos parsed_scalar_or_index_update_type expr =
     (* Resolve typed expression *)
     let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt expr in
 
-    (* TODO benjamin here VariableMap.empty for local variable because this function is used only for check updates *)
-    (* TODO benjamin Soon, this function will be removed *)
     let typed_parsed_scalar_or_index_update_type, l_value_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
 
     (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)

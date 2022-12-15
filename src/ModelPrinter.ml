@@ -315,13 +315,33 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(* Count the number of instruction in a code bloc *)
+let count_instructions (* seq_code_bloc *) =
+    let rec count_instructions code_bloc =
+        List.fold_left (fun acc x -> acc + count_instruction x) 0 code_bloc
+
+    and count_instruction = function
+        | For_loop (_, _, _, _, inner_bloc)
+        | While_loop (_, inner_bloc) ->
+            2 + count_instructions inner_bloc
+        | If (_, then_bloc, else_bloc_opt) ->
+            1 + count_instructions then_bloc
+            + (match else_bloc_opt with None -> 0 | Some else_bloc -> 1 + count_instructions else_bloc)
+        | Local_decl _
+        | Assignment _
+        | Local_assignment _
+        | Instruction _
+        | Clock_assignment _ -> 1
+    in
+    count_instructions (* seq_code_bloc *)
+
 
 (* Convert a function expression into a string *)
-let string_of_seq_code_bloc model level (* seq_code_bloc *) =
+let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
 
     let rec string_of_seq_code_bloc level code_bloc =
         let str_instructions = List.map (string_of_instruction level) code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep " " str_instructions
+        OCamlUtilities.string_of_list_of_string_with_sep sep str_instructions
 
     and string_of_instruction level instruction =
 
@@ -338,7 +358,8 @@ let string_of_seq_code_bloc model level (* seq_code_bloc *) =
             ^ ";"
 
         | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
-            tabs ^ "for " ^ variable_name ^ " = "
+            ImitatorUtilities.print_standard_message ("length of code bloc: " ^ string_of_int (List.length inner_bloc));
+            tabs ^ "for " ^ variable_name ^ " from "
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
             ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names to_expr
@@ -409,18 +430,18 @@ let string_of_fun_definitions model =
                 let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in
 
                 (* Convert code bloc into a string *)
-                let str_code_bloc = string_of_seq_code_bloc model 1 code_bloc in
+                let str_code_bloc = string_of_seq_code_bloc model 1 ~sep:"\n" code_bloc in
                 (* Convert return expr into a string *)
                 let str_return_expr =
                     match return_expr_opt with
-                    | Some return_expr -> "\t\nreturn " ^ DiscreteExpressions.string_of_global_expression model.variable_names return_expr
+                    | Some return_expr -> "\n  return " ^ DiscreteExpressions.string_of_global_expression model.variable_names return_expr
                     | None -> ""
                 in
 
                 (* Get whole string body *)
                 let str_body = str_code_bloc ^ str_return_expr in
 
-                "fn " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n"
+                "function " ^ fun_def.name ^ "(" ^ str_params ^ ") : " ^ FunctionSig.string_of_type_constraint return_type_constraint ^ " begin\n"
                 ^ str_body
                 ^ "\nend"
         in
@@ -458,12 +479,14 @@ let string_of_discrete_boolean_expression = DiscreteExpressions.string_of_discre
 let customized_string_of_guard customized_boolean_string variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
 	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_guard discrete_guard -> DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
-	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Discrete_guard discrete_guard ->
+	    DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_guard
+	| Continuous_guard continuous_guard ->
+	    LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		(DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard)
-		^ LinearConstraint.string_of_and ^
-		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+		DiscreteExpressions.customized_string_of_nonlinear_constraint customized_boolean_string variable_names discrete_continuous_guard.discrete_guard
+		^ LinearConstraint.string_of_and
+		^ LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard
 
 (** Convert a guard into a string *)
 let string_of_guard = customized_string_of_guard Constants.global_default_string
@@ -690,23 +713,29 @@ let json_of_conditional_updates variable_names conditional_updates =
 (* Convert a transition into a string *)
 let string_of_transition model automaton_index (transition : transition) =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
+    (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_action model transition.action) ^ "`…"); *)
 
+    (* Get update code bloc*)
 	let _, seq_code_bloc_updates = transition.updates in
+	(* Convert the updates *)
+    let str_do =
+        let nb_instructions = count_instructions seq_code_bloc_updates in
+        let tab_level, str_do, str_do_end, sep =
+            if nb_instructions < 4 then
+                0, " do {", "}", " "
+            else
+                3, " do {\n", "\n\t}", "\n"
+        in
 
-	(* Print some information *)
-(* 	print_message Verbose_total ("Updates retrieved…"); *)
+        let str_updates = string_of_seq_code_bloc model tab_level ~sep:sep seq_code_bloc_updates in
+        str_do ^ str_updates ^ str_do_end
 
+    in
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (string_of_guard model.variable_names transition.guard)
-
-	(* Convert the updates *)
-	^ " do {"
-	(* sequential updates *)
-	^ string_of_seq_code_bloc model 0 seq_code_bloc_updates
-	^ "} "
-	
+    (* Convert do *)
+	^ str_do
 	(* Convert the sync *)
 	^ (string_of_action model transition.action)
 	(* Convert the target location *)
