@@ -479,7 +479,7 @@ and string_of_instruction ?(sep=";") variable_names = function
         string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
         ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings variable_names init_expr ^ sep
 
-    | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+    | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
         string_of_for_loop
             variable_name
             (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names from_expr)

@@ -562,16 +562,15 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             (* Set local variable with initial value *)
             set_local_variable eval_context variable_ref value
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+        | For_loop (variable_ref, from_expr, to_expr, loop_dir, inner_bloc) ->
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
             let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
 
             let execute_inner_bloc i =
-                let abs_value = AbstractValue.of_int (Int32.of_int i) in
-                (* TODO benjamin IMPLEMENT *)
-(*                set_local_variable eval_context param_ref value*)
+                let value = AbstractValue.of_int (Int32.of_int i) in
+                set_local_variable eval_context variable_ref value;
                 (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc eval_context inner_bloc in ()
+                eval_seq_code_bloc eval_context inner_bloc
             in
 
             let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
@@ -601,11 +600,11 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
             (* Execute then or else bloc (if defined) *)
             if condition_evaluated then (
-                let _ = eval_seq_code_bloc eval_context then_bloc in ()
+                eval_seq_code_bloc eval_context then_bloc
             ) else (
                 match else_bloc_opt with
                 | Some else_bloc ->
-                    let _ = eval_seq_code_bloc eval_context else_bloc in ()
+                    eval_seq_code_bloc eval_context else_bloc
                 | None -> ()
             );
 

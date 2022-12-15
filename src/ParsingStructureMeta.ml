@@ -655,7 +655,7 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* parsed_seq_code_
         List.concat left_right_members_nested
 
     and left_right_member_of_assignments_in_instruction = function
-        | Parsed_for_loop (_, _, _, _, inner_bloc, _)
+        | Parsed_for_loop (_, _, _, _, inner_bloc)
         | Parsed_while_loop (_, inner_bloc) ->
             left_right_member_of_assignments_in_parsed_seq_code_bloc_rec inner_bloc
 

@@ -327,7 +327,7 @@ instruction:
 
 control_structure:
   /* for loop */
-  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop ($2, $4, $6, $5, $8, Parsing.symbol_start ()) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop (($2, Parsing.symbol_start ()), $4, $6, $5, $8) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_while_loop ($2, $4) }
   /* conditional */

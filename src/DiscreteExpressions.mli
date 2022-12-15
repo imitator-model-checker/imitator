@@ -213,7 +213,7 @@ and seq_code_bloc =
     | Local_assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
     | Instruction of global_expression
-    | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
+    | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
 

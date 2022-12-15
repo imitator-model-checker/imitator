@@ -217,9 +217,9 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
             let relations = List.map (fun c -> (bloc_component, c)) all_components in
             relations
 
-        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
+        | Parsed_for_loop (variable_ref, from_expr, to_expr, _, inner_bloc) ->
             (* Create local variable ref representing a unique variable ref *)
-            let variable_component = Variable_component (variable_name, id) in
+            let variable_component = Variable_component variable_ref in
 
             (* Get variable and function refs used in the from expression *)
             let from_all_components = components_in_parsed_arithmetic_expression from_expr in
@@ -792,9 +792,9 @@ let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependen
             Some instruction
 
         (* These type of instruction are always been considered as used by the bloc ! *)
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, id) ->
+        | Parsed_for_loop (variable_ref, from_expr, to_expr, loop_dir, inner_bloc) ->
             let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec inner_bloc in
-            Some (Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, filtered_inner_bloc, id))
+            Some (Parsed_for_loop (variable_ref, from_expr, to_expr, loop_dir, filtered_inner_bloc))
 
         | Parsed_while_loop (cond_expr, inner_bloc) ->
             let filtered_inner_bloc = remove_unused_assignments_in_parsed_seq_code_bloc_rec inner_bloc in

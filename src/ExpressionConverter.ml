@@ -711,7 +711,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
             let typed_expr, _ = type_check_parsed_boolean_expression variable_infos None expr in
             Typed_instruction typed_expr
 
-        | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, _) as outer_expr ->
+        | Parsed_for_loop (variable_ref, from_expr, to_expr, loop_dir, inner_bloc) as outer_expr ->
             (* Resolve typed from expr *)
             let typed_from_expr, from_expr_type = type_check_parsed_discrete_arithmetic_expression variable_infos (Some (Dt_number Dt_int)) from_expr in
             (* Resolve typed to expr *)
@@ -728,7 +728,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
             (* Check from and to expr type are int *)
             (match from_expr_type, to_expr_type with
             | Dt_number Dt_int, Dt_number Dt_int ->
-                Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc)
+                Typed_for_loop (variable_ref, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc)
             | _ ->
                 raise (TypeError (
                     ill_typed_message_of_expressions
@@ -2458,9 +2458,9 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
                 global_expression_of_typed_boolean_expression variable_infos typed_init_expr
             )
 
-        | Typed_for_loop (variable_name, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc) ->
+        | Typed_for_loop (variable_ref, typed_from_expr, typed_to_expr, typed_loop_dir, typed_inner_bloc) ->
             For_loop (
-                variable_name,
+                variable_ref,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_from_expr,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos typed_to_expr,
                 loop_dir_of_typed_loop_dir typed_loop_dir,

@@ -140,7 +140,7 @@ and fold_parsed_seq_code_bloc operator base ?(decl_callback=None) seq_code_bloc_
             init_expr_result
             |> operator decl_callback_result
 
-        | Parsed_for_loop (variable_name, from_expr, to_expr, _, inner_bloc, id) ->
+        | Parsed_for_loop ((variable_name, id), from_expr, to_expr, _, inner_bloc) ->
 
             let decl_callback_result =
                 match decl_callback with
@@ -560,7 +560,7 @@ and string_of_parsed_instruction variable_infos = function
     | Parsed_instruction expr ->
         string_of_parsed_boolean_expression variable_infos expr
 
-    | Parsed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc, _) ->
+    | Parsed_for_loop ((variable_name, _ (* id *)), from_expr, to_expr, loop_dir, inner_bloc) ->
         "for "
         ^ variable_name
         ^ " = "
@@ -890,16 +890,16 @@ let link_variables_in_parsed_model parsed_model =
             | Parsed_instruction expr ->
                 Parsed_instruction (link_variables_in_parsed_boolean_expression local_variables expr)
 
-            | Parsed_for_loop (variable_name, from_expr, to_expr, parsed_loop_dir, inner_bloc, id) ->
+            | Parsed_for_loop ((variable_name, id) as variable_ref, from_expr, to_expr, parsed_loop_dir, inner_bloc) ->
                 let linked_from_expr = link_variables_in_parsed_arithmetic_expression local_variables from_expr in
                 let linked_to_expr = link_variables_in_parsed_arithmetic_expression local_variables to_expr in
                 (* Add variable used for loop to inner local variables scope *)
                 let inner_local_variables = Hashtbl.copy local_variables in
                 let discrete_type = Dt_number Dt_int in
                 Hashtbl.replace inner_local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator (variable_name, id) (Var_type_discrete discrete_type);
+                Hashtbl.add local_variables_accumulator variable_ref (Var_type_discrete discrete_type);
                 let linked_inner_bloc = link_variables_in_parsed_seq_code_bloc inner_local_variables inner_bloc in
-                Parsed_for_loop (variable_name, linked_from_expr, linked_to_expr, parsed_loop_dir, linked_inner_bloc, id)
+                Parsed_for_loop (variable_ref, linked_from_expr, linked_to_expr, parsed_loop_dir, linked_inner_bloc)
 
             | Parsed_while_loop (condition_expr, inner_bloc) ->
                 let linked_condition_expr = link_variables_in_parsed_boolean_expression local_variables condition_expr in

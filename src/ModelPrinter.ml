@@ -337,7 +337,7 @@ let string_of_seq_code_bloc model level (* seq_code_bloc *) =
             ^ DiscreteExpressions.string_of_global_expression model.variable_names init_expr
             ^ ";"
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+        | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
             tabs ^ "for " ^ variable_name ^ " = "
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
             ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
@@ -618,7 +618,7 @@ let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 
         | Local_decl ((variable_name, _), discrete_type, expr) -> ""
         | Instruction expr -> ""
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) -> ""
+        | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) -> ""
         | While_loop (condition_expr, inner_bloc) -> ""
         | If (condition_expr, then_bloc, else_bloc_opt) -> "" (* TODO benjamin IMPLEMENT ! *)
 

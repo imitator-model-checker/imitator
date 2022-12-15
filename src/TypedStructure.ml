@@ -111,7 +111,7 @@ type typed_seq_code_bloc =
     | Typed_local_decl of variable_ref * var_type_discrete * typed_boolean_expression
     | Typed_assignment of typed_normal_update * typed_assignment_scope
     | Typed_instruction of typed_boolean_expression
-    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_for_loop of variable_ref * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
 
@@ -288,7 +288,7 @@ let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) 
                 (DiscreteType.string_of_var_type_discrete discrete_type)
                 (string_of_typed_boolean_expression variable_infos expr)
 
-        | Typed_for_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+        | Typed_for_loop ((variable_name, _ (* id *)), from_expr, to_expr, loop_dir, inner_bloc) ->
             "for " ^ variable_name ^ " = "
             ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) from_expr
             ^ (match loop_dir with Typed_for_loop_up -> " to " | Typed_for_loop_down -> " downto ")

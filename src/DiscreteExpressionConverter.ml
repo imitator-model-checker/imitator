@@ -176,7 +176,7 @@ let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq
         | Parsed_instruction expr ->
             check_only_discrete expr
 
-        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc, _) ->
+        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc) ->
             check_only_discrete_in_arithmetic from_expr
             && check_only_discrete_in_arithmetic to_expr
             && check_inner_expression_of_seq_code_bloc inner_bloc
