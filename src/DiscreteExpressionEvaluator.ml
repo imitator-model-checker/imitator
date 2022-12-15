@@ -11,7 +11,6 @@ open Exceptions
 
 type variable_name_table = variable_index -> variable_name
 type functions_table = (variable_name, fun_definition) Hashtbl.t
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 (* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
@@ -28,8 +27,6 @@ type eval_context = {
     local_discrete_valuation : local_discrete_valuation;
     (* Setter of local variables at the context (current location) *)
     local_discrete_setter : local_discrete_setter;
-    (* Current local variables *)
-    local_variables : variable_table list;
     (**)
     updated_clocks : clock_updates_history;
     updated_clocks_ordered : clock_updates_history_2;
@@ -48,7 +45,6 @@ let [@inline] create_eval_context (discrete_valuation, discrete_setter, local_di
         discrete_setter = discrete_setter;
         local_discrete_valuation = local_discrete_valuation;
         local_discrete_setter = local_discrete_setter;
-        local_variables = [Hashtbl.create 0];
         updated_clocks = Hashtbl.create 0;
         updated_clocks_ordered = Queue.create ()
     }
@@ -113,13 +109,6 @@ let try_eval_function function_name : functions_table option -> fun_definition =
     | Some functions_table -> Hashtbl.find functions_table function_name
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
-
-(* TODO benjamin CLEAN remove *)
-let add_local_variable eval_context variable_name value =
-    (* Get bottom scope *)
-    let var_scope = List.hd eval_context.local_variables in
-    (* Add variable to the scope *)
-    Hashtbl.replace var_scope variable_name value
 
 (* Replace discrete variable by their current value in a linear expression that update a clock *)
 let rewrite_clock_update variable_names eval_context (* linear_expr *) =
@@ -579,13 +568,10 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
             let execute_inner_bloc i =
                 let abs_value = AbstractValue.of_int (Int32.of_int i) in
-                (* Add loop variable to eval context *)
-                add_local_variable eval_context variable_name abs_value;
-                (* Create inner loop context by adding new scope *)
-                let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
+                (* TODO benjamin IMPLEMENT *)
+(*                set_local_variable eval_context param_ref value*)
                 (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc inner_eval_context inner_bloc in ()
+                let _ = eval_seq_code_bloc eval_context inner_bloc in ()
             in
 
             let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
@@ -603,12 +589,9 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
         | While_loop (condition_expr, inner_bloc) ->
 
-            (* Create inner loop context by adding new scope *)
-            let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
             while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
                 (* Don't get any value as it was evaluated as void expression *)
-                eval_seq_code_bloc inner_eval_context inner_bloc;
+                eval_seq_code_bloc eval_context inner_bloc;
             done
 
         | If (condition_expr, then_bloc, else_bloc_opt) ->
@@ -616,16 +599,13 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             (* Evaluation condition *)
             let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
 
-            (* Create inner context by adding new scope *)
-            let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
             (* Execute then or else bloc (if defined) *)
             if condition_evaluated then (
-                let _ = eval_seq_code_bloc inner_eval_context then_bloc in ()
+                let _ = eval_seq_code_bloc eval_context then_bloc in ()
             ) else (
                 match else_bloc_opt with
                 | Some else_bloc ->
-                    let _ = eval_seq_code_bloc inner_eval_context else_bloc in ()
+                    let _ = eval_seq_code_bloc eval_context else_bloc in ()
                 | None -> ()
             );
 
@@ -639,9 +619,11 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             direct_update_with_context variable_names functions_table_opt eval_context local_update
 
         | Clock_assignment (clock_index, linear_expr) ->
-            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
+            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
+            (* Add clock update into table *)
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            (* Push clock update on queue *)
             Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
 
             let lazy_rewriting_message = lazy (
@@ -692,20 +674,15 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                 )
             in
 
-            (* TODO benjamin IMPLEMENT set local var parameters with value *)
             (* Set parameter values to computed argument values *)
-            List.iter (fun (param_ref, value) ->
-                let param_name, id = param_ref in
-                ImitatorUtilities.print_standard_message ("set formal parameter: " ^ param_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value value);
-                set_local_variable eval_context param_ref value
-            ) param_refs_with_arg_values;
-
+            List.iter (fun (param_ref, value) -> set_local_variable eval_context param_ref value) param_refs_with_arg_values;
+            (* Eval function body *)
             eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context code_bloc;
+
             match return_expr_opt with
             | Some return_expr ->
                 eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) return_expr
             | None -> Abstract_void_value
-
     in
     eval_fun_type_with_context eval_context_opt fun_def.body
 
@@ -723,7 +700,6 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
     let old_value =
         match update_scope with
         | Global_update variable_index ->
-            (* TODO benjamin change here *)
             eval_context.discrete_valuation variable_index
         | Local_update variable_ref ->
             eval_local_variable eval_context variable_ref
@@ -742,13 +718,9 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
     let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
     match update_scope with
     | Global_update discrete_index ->
-        let variable_names = match variable_names with Some variable_names -> variable_names in
         (* Direct update ! *)
-        ImitatorUtilities.print_standard_message ("UPDATE GLOBAL: " ^ variable_names discrete_index ^ "=" ^ AbstractValue.string_of_value new_value);
         eval_context.discrete_setter discrete_index new_value
     | Local_update variable_ref ->
-        let variable_name, id = variable_ref in
-        ImitatorUtilities.print_standard_message ("UPDATE LOCAL: " ^ variable_name ^ ":" ^ string_of_int id ^ "=" ^ AbstractValue.string_of_value new_value);
         set_local_variable eval_context variable_ref new_value
 
 (* TODO benjamin CLEAN UPDATES *)

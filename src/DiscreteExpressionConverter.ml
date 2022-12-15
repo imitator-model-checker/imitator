@@ -369,22 +369,8 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_clock_updated_with_non_linear)
     in
 
-    (*
-    (* TODO benjamin REFACTOR check that in type checking, not here *)
-    (* Check if there isn't any void typed variable or formal parameter *)
-    let is_any_void_local_variable =
-        (* Get local variables / formal parameters of parsed sequential code bloc *)
-        let local_variables = ParsingStructureMeta.local_variables_of_parsed_seq_code_bloc seq_code_bloc in
-        (* Check if exist any void variable *)
-        List.exists (fun (variable_name, discrete_type, _) ->
-            match discrete_type with
-            | Dt_void -> print_error ("Local variable or formal parameter `" ^ variable_name ^ "` " ^ str_location ^ " was declared as `void`. A variable cannot be declared as `void`."); true
-            | _ -> false
-        ) local_variables
-    in
-    *)
     (* Return *)
-    is_assignments_are_allowed (* && not is_any_void_local_variable *)
+    is_assignments_are_allowed
 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =

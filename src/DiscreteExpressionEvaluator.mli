@@ -6,7 +6,6 @@ open AbstractModel
 open DiscreteState
 
 type variable_name_table = variable_index -> variable_name
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
 type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
@@ -21,8 +20,6 @@ type eval_context = {
     local_discrete_valuation : local_discrete_valuation;
     (* Setter of local variables at the context (current location) *)
     local_discrete_setter : local_discrete_setter;
-    (* Current local variables *)
-    local_variables : variable_table list;
     (**)
     updated_clocks : clock_updates_history;
     updated_clocks_ordered : clock_updates_history_2;
