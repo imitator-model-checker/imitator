@@ -193,18 +193,6 @@ and fold_parsed_normal_update operator base ?(decl_callback=None) seq_code_bloc_
         (fold_parsed_scalar_or_index_update_type_with_local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
         (fold_parsed_boolean_expression operator base leaf_fun expr)
 
-(** Fold a parsed update expression using operator applying custom function on leaves **)
-and fold_parsed_update operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
-	| Normal normal_update ->
-	    fold_parsed_normal_update operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update
-	| Condition (bool_expr, update_list_if, update_list_else) ->
-        let all_updates = update_list_if@update_list_else in
-        let fold_updates = List.fold_left (fun acc normal_update ->
-            operator acc (fold_parsed_normal_update operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun normal_update)
-        ) base all_updates
-        in
-        operator fold_updates (fold_parsed_boolean_expression operator base leaf_fun bool_expr)
-
 let rec fold_parsed_linear_constraint operator leaf_fun = function
     | Parsed_true_constraint -> leaf_fun Leaf_true_linear_constraint
     | Parsed_false_constraint -> leaf_fun Leaf_false_linear_constraint
@@ -320,8 +308,6 @@ let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
 (** Check if all leaf of a parsed update satisfy the predicate **)
 let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
-(** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_update = apply_evaluate_and_with_base fold_parsed_update
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
 let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 
@@ -356,9 +342,6 @@ let exists_in_parsed_linear_term = apply_evaluate_or fold_parsed_linear_term
 let exists_in_parsed_linear_constraint = apply_evaluate_or fold_parsed_linear_constraint
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_parsed_nonlinear_constraint
-
-(** Check if any leaf of a parsed update satisfy the predicate **)
-let exists_in_parsed_update = apply_evaluate_or_with_base fold_parsed_update
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 let exists_in_parsed_normal_update = apply_evaluate_or_with_base fold_parsed_normal_update
 
@@ -398,7 +381,6 @@ let iterate_parsed_nonlinear_constraint = apply_evaluate_unit_with_base fold_par
 let iterate_parsed_nonlinear_convex_predicate leaf_fun convex_predicate =
     List.iter (iterate_parsed_nonlinear_constraint leaf_fun) convex_predicate
 
-let iterate_parsed_update = apply_evaluate_unit_with_base fold_parsed_update
 let iterate_parsed_normal_update = apply_evaluate_unit_with_base fold_parsed_normal_update
 let iterate_in_parsed_loc_predicate = apply_evaluate_unit_with_base fold_parsed_loc_predicate
 let iterate_in_parsed_simple_predicate = apply_evaluate_unit_with_base fold_parsed_simple_predicate
@@ -603,20 +585,6 @@ and string_of_parsed_clock_update variable_infos (scalar_or_index_update_type, e
     let str_left_member = string_of_parsed_scalar_or_index_update_type variable_infos scalar_or_index_update_type in
     let str_right_member = string_of_parsed_boolean_expression variable_infos expr in
     string_of_assignment str_left_member str_right_member
-
-and string_of_parsed_update variable_infos = function
-	| Normal normal_update ->
-        string_of_parsed_normal_update variable_infos normal_update
-	| Condition (bool_expr, update_list_if, update_list_else) ->
-	    let str_update_if_list = List.map (string_of_parsed_normal_update variable_infos) update_list_if in
-	    let str_update_else_list = List.map (string_of_parsed_normal_update variable_infos) update_list_else in
-	    let count_update_in_else = List.length str_update_else_list in
-	    "if "
-        ^ string_of_parsed_boolean_expression variable_infos bool_expr
-        ^ " then "
-        ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_update_if_list
-        ^ (if count_update_in_else > 0 then " else " ^ OCamlUtilities.string_of_list_of_string_with_sep "," str_update_else_list else "")
-        ^ " end"
 
 (* Get variable name from a variable access *)
 (* ex : my_var[0][0] -> my_var *)

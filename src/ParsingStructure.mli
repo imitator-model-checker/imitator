@@ -155,13 +155,6 @@ type parsed_scalar_or_index_update_type =
 
 (** basic updating *)
 type normal_update = parsed_scalar_or_index_update_type * parsed_boolean_expression
-(** conditional updating *)
-and condition_update = parsed_boolean_expression * normal_update list * normal_update list
-
-(** Updates on transitions *)
-type update =
-	| Normal of normal_update (** Updates without conditions *)
-	| Condition of condition_update (** Updates with conditions *)
 
 type parsed_loop_dir =
     | Parsed_for_loop_up

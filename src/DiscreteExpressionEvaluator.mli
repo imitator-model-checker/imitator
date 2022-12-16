@@ -25,11 +25,6 @@ type eval_context = {
     updated_clocks_ordered : clock_updates_history_2;
 }
 
-(* Result returned on delayed update *)
-type delayed_update_result =
-    | Delayed_update_recorded
-    | Delayed_update_already_updated of discrete_index
-
 val create_eval_context : discrete_access -> eval_context
 (* Get clocks that were updated effectively (found in eval context) *)
 val effective_clock_updates : eval_context -> abstract_model -> clock_updates

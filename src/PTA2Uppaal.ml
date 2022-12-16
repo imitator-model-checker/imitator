@@ -775,40 +775,6 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 	"\n\t" ^ get_uppaal_label_tag_string "invariant" x_coord_str y_coord_str invariant_and_strong_broadcast_invariant
 
 
-
-
-(* TODO benjamin CLEAN UPDATES *)
-(*
-let string_of_clock_updates model = function
-	| No_update -> ""
-	| Resets list_of_clocks ->
-		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
-			(model.variable_names variable_index)
-			^ " = 0"
-		) list_of_clocks)
-	| Updates list_of_clocks_lt ->
-		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
-			(model.variable_names variable_index)
-			^ " = "
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
-		) list_of_clocks_lt)
-*)
-
-(* TODO benjamin CLEAN UPDATES *)
-(*
-(* Convert a list of updates into a string *)
-let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (scalar_or_index_update_type, global_expression) ->
-        (* Convert the variable access to string *)
-		let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
-		variable_name
-		^ (if variable_name <> "" then all_uppaal_strings.assign_op else "")
-		(* Convert the arithmetic_expression *)
-		^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings model.variable_names global_expression
-	) updates)
-*)
-
-
 let string_of_updates model automaton_index action_index x_coord_str y_coord_str update_seq_code_bloc =
 
 	(* First add the update for the strong broadcast encoding *)

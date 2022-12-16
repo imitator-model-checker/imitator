@@ -79,8 +79,6 @@ val for_all_in_parsed_linear_constraint : bool linear_expression_leaf_callback -
 val for_all_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
 val for_all_in_parsed_normal_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
-(** Check if all leaf of a parsed update satisfy the predicate **)
-val for_all_in_parsed_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> update -> bool
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 val for_all_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> bool
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
@@ -109,8 +107,6 @@ val exists_in_parsed_linear_constraint : bool linear_expression_leaf_callback ->
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 val exists_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 
-(** Check if any leaf of a parsed update satisfy the predicate **)
-val exists_in_parsed_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> update -> bool
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 val exists_in_parsed_normal_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
 (** Check if any leaf of a parsed state predicate satisfy the predicate **)
@@ -129,7 +125,6 @@ val iterate_parsed_discrete_boolean_expression : unit parsing_structure_leaf_cal
 val iterate_parsed_discrete_arithmetic_expression : unit parsing_structure_leaf_callback -> parsed_discrete_arithmetic_expression -> unit
 val iterate_parsed_discrete_term : unit parsing_structure_leaf_callback -> parsed_discrete_term -> unit
 val iterate_parsed_discrete_factor : unit parsing_structure_leaf_callback -> parsed_discrete_factor -> unit
-val iterate_parsed_update : ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> update -> unit
 val iterate_parsed_normal_update : ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> normal_update -> unit
 
 val iterate_in_parsed_loc_predicate : (state_predicate_leaf -> unit) -> unit parsing_structure_leaf_callback -> parsed_loc_predicate -> unit
@@ -169,7 +164,6 @@ val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> string
 val string_of_parsed_instruction : variable_infos -> parsed_seq_code_bloc -> string
 
-val string_of_parsed_update : variable_infos -> update -> string
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
 val string_of_parsed_clock_update : variable_infos -> normal_update -> string
 val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scalar_or_index_update_type -> string

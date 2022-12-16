@@ -38,8 +38,6 @@ val has_side_effect_parsed_boolean_expression : variable_infos -> parsed_boolean
 val has_side_effect_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 (* Check if a parsed discrete arithmetic expression has side effects *)
 val has_side_effect_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
-(* Check if a parsed normal update has side effects *)
-val has_side_effect_parsed_normal_update : variable_infos -> normal_update -> bool
 (* Check if a parsed state predicate has side effects *)
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
 
@@ -66,7 +64,6 @@ val all_functions_defined_in_parsed_seq_code_bloc : variable_infos -> variable_c
 val all_variables_defined_in_parsed_fun_def : variable_infos -> variable_callback -> parsed_fun_definition -> bool
 val all_functions_defined_in_parsed_fun_def : variable_infos -> variable_callback -> parsed_fun_definition -> bool
 val all_variables_defined_in_parsed_normal_update : variable_infos -> variable_callback -> normal_update -> bool
-val all_variables_defined_in_parsed_update : variable_infos -> variable_callback -> update -> bool
 val all_variables_defined_in_linear_expression : variable_infos -> (variable_name -> unit) -> linear_expression -> bool
 val all_variables_defined_in_linear_constraint : variable_infos -> (variable_name -> unit) -> linear_constraint -> bool
 val all_variables_defined_in_nonlinear_constraint : variable_infos -> variable_callback -> nonlinear_constraint -> bool
@@ -90,8 +87,6 @@ val is_parsed_linear_expression_constant : variable_infos -> linear_expression -
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
-val get_variables_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
-val get_functions_in_parsed_update_with_accumulator : StringSet.t ref -> update -> unit
 val get_variables_in_parsed_normal_update_with_accumulator : StringSet.t ref -> normal_update -> unit
 val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref -> parsed_simple_predicate -> unit
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
@@ -109,7 +104,6 @@ val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_ari
 val get_variable_refs_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> VarSet.t
 val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 
-val get_variables_in_parsed_update : update -> StringSet.t
 val get_variables_in_parsed_normal_update : normal_update -> StringSet.t
 val get_variables_in_linear_expression : linear_expression -> StringSet.t
 val get_variables_in_linear_constraint : linear_constraint -> StringSet.t

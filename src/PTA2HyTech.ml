@@ -224,48 +224,6 @@ let string_of_sync model action_index =
 	| Action_type_nosync -> " "
 
 
-(* TODO benjamin CLEAN UPDATES *)
-(*
-let string_of_clock_updates model = function
-	| No_update -> ""
-	| Resets list_of_clocks ->
-		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
-			(model.variable_names variable_index)
-			^ "' = 0"
-		) list_of_clocks)
-	| Updates list_of_clocks_lt ->
-		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
-			(model.variable_names variable_index)
-			^ "' = "
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
-		) list_of_clocks_lt)
-*)
-
-(* TODO benjamin CLEAN UPDATES *)
-(*
-(* Convert a list of updates into a string *)
-(*** WARNING: calling string_of_global_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
-let string_of_discrete_updates model updates =
-
-    print_warning ("Some update expressions may not be well translated to HyTech.");
-
-	string_of_list_of_string_with_sep ", " (List.map (fun (scalar_or_index_update_type, global_expression) ->
-	    (* Convert the variable access to string *)
-	    let variable_name = ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type in
-		(* Convert the global_expression *)
-        let str_update_expr = ModelPrinter.string_of_global_expression model.variable_names global_expression in
-
-	    (* If update is a void update *)
-	    if variable_name = "" then
-	        print_warning ("Side effect update expression `" ^ str_update_expr ^ "` are not supported by HyTech.");
-
-		variable_name
-		^ "' = "
-		^ str_update_expr
-
-	) updates)
-*)
-
 let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
     print_warning ("Some update expressions may not be well translated to HyTech.");

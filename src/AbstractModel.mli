@@ -93,18 +93,6 @@ type guard =
 (** Invariant: guard *)
 type invariant = guard
 
-
-
-(** Updates *)
-type updates = {
-  clock      : clock_updates;           (** Clock updates *)
-  discrete   : DiscreteExpressions.discrete_update list;    (** List of discrete updates *)
-  conditional: conditional_update list; (** List of conditional updates *)
-}
-
-(** Conditional updates *)
-and conditional_update = DiscreteExpressions.boolean_expression * updates * updates
-
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {
     guard : guard;

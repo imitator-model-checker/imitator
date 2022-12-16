@@ -638,28 +638,6 @@ let convert_guard variable_infos guard_convex_predicate =
     (* If some false construct found: false guard *)
     ) with False_exception -> False_guard
 
-(* TODO benjamin CLEAN UPDATES *)
-(* Convert a parsed update to update for abstract model *)
-let convert_update variable_infos parsed_scalar_or_index_update_type expr =
-    let typed_scalar_or_index_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos parsed_scalar_or_index_update_type expr in
-    ExpressionConverter.Convert.scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Convert a parsed continuous update to continuous update for abstract model *)
-let convert_continuous_update variable_infos parsed_scalar_or_index_update_type expr =
-    let typed_scalar_or_index_update_type, typed_expr = ExpressionConverter.TypeChecker.check_update variable_infos parsed_scalar_or_index_update_type expr in
-    ExpressionConverter.Convert.scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-    ExpressionConverter.Convert.linear_term_of_typed_boolean_expression variable_infos typed_expr
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Convert a parsed boolean expression to boolean expression for abstract model *)
-let convert_conditional variable_infos expr =
-    (* Check *)
-    let typed_expr = ExpressionConverter.TypeChecker.check_conditional variable_infos expr in
-    (* Convert *)
-    ExpressionConverter.Convert.bool_expression_of_typed_boolean_expression variable_infos typed_expr
-
 (* Convert a parsed function definition to function definition for abstract model *)
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
 

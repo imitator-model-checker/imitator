@@ -72,19 +72,6 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (*------------------------------------------------------------*)
 (* val compute_stopwatches : DiscreteState.global_location -> (Automaton.clock_index list * Automaton.clock_index list) *)
 
-
-(*------------------------------------------------------------------*)
-(* Get the list of updates from ONE transition                      *)
-(* Function by Jaime Arias (moved by Étienne André)                 *)
-(* original_location : the original location, needed to test the Boolean expressions*)
-(* updates           : the list of updates                          *)
-(*------------------------------------------------------------------*)
-(* Returns a pair of the list of clock updates and discrete updates *)
-(*------------------------------------------------------------------*)
-val get_updates : DiscreteExpressionEvaluator.variable_name_table option -> DiscreteExpressionEvaluator.functions_table option -> DiscreteState.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (DiscreteExpressions.discrete_update list)
-
-
-
 (*------------------------------------------------------------------*)
 (* Get the list of updates from a combined transition               *)
 (* Function by Étienne André                                        *)

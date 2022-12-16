@@ -10,10 +10,6 @@ val check_discrete_init : variable_infos -> variable_name -> parsed_boolean_expr
 val check_constant_expression : variable_infos -> variable_name * parsed_boolean_expression * DiscreteType.var_type -> typed_boolean_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
-(* Check that an update is well typed *)
-val check_update : variable_infos -> parsed_scalar_or_index_update_type -> ParsingStructure.parsed_boolean_expression -> typed_normal_update
-(* Check that a condition is well typed *)
-val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check that a discrete boolean expression is well typed *)

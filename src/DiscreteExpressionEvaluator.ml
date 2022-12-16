@@ -32,11 +32,6 @@ type eval_context = {
     updated_clocks_ordered : clock_updates_history_2;
 }
 
-(* Result returned on delayed update *)
-type delayed_update_result =
-    | Delayed_update_recorded
-    | Delayed_update_already_updated of discrete_index
-
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context (discrete_valuation, discrete_setter, local_discrete_valuation, local_discrete_setter) =
@@ -719,36 +714,6 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
     | Local_update variable_ref ->
         set_local_variable eval_context variable_ref new_value
 
-(* TODO benjamin CLEAN UPDATES *)
-(* Record an update into the updated_discrete hash table, then the updates can be made later  *)
-(* This function is used for non-sequential updates *)
-and delayed_update_with_context variable_names functions_table_opt eval_context updated_discrete update =
-
-    let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
-
-    match update_scope with
-    | Global_update discrete_index ->
-        (* Check if already updated *)
-        if Hashtbl.mem updated_discrete discrete_index then (
-            (* Find its value *)
-            let previous_new_value = Hashtbl.find updated_discrete discrete_index in
-            (* Compare with the new one *)
-            if AbstractValue.neq previous_new_value new_value then (
-                (* If different, return already update result *)
-                Delayed_update_already_updated discrete_index
-            ) else
-                Delayed_update_recorded
-
-        ) else (
-            (* Else keep it in memory for update *)
-            Hashtbl.add updated_discrete discrete_index new_value;
-            Delayed_update_recorded
-        )
-    | Local_update _ -> Delayed_update_recorded
-
-
-
-
 (* Wrap a scalar value to an array value according to the modified index of an old value *)
 (* For example: `old_value[0] = 1` with old value = [0, 1], would wrap new_value into an array `new_value = [1, 1]` *)
 (* This function is used to assign an element of an array at a given index *)
@@ -824,7 +789,6 @@ let try_eval_constant_rational_term functions_table_opt = eval_rational_term_wit
 let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor_with_context None functions_table_opt None
 
 let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
-let delayed_update variable_names functions_table_opt discrete_access = delayed_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 let eval_seq_code_bloc variable_names functions_table_opt discrete_access = eval_seq_code_bloc_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 
 (* Try to evaluate a constant global expression, if expression isn't constant, it return None *)

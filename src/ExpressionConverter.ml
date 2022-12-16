@@ -21,10 +21,6 @@ val check_discrete_init : variable_infos -> variable_name -> parsed_boolean_expr
 val check_constant_expression : variable_infos -> variable_name * parsed_boolean_expression * DiscreteType.var_type -> typed_boolean_expression
 (* Check that a guard is well typed *)
 val check_guard : variable_infos -> guard -> typed_guard
-(* Check that an update is well typed *)
-val check_update : variable_infos -> parsed_scalar_or_index_update_type -> ParsingStructure.parsed_boolean_expression -> typed_scalar_or_index_update_type * typed_boolean_expression
-(* Check that a condition is well typed *)
-val check_conditional : variable_infos -> ParsingStructure.parsed_boolean_expression -> typed_boolean_expression
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check whether a parsed sequential bloc definition is well typed *)
@@ -1062,74 +1058,6 @@ let check_nonlinear_constraint variable_infos nonlinear_constraint =
 (* return a tuple containing the expression uniformly typed and the resolved type of the expression *)
 let check_guard variable_infos =
     List.map (check_nonlinear_constraint variable_infos)
-
-
-
-
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Type check an update *)
-let check_update variable_infos parsed_scalar_or_index_update_type expr =
-
-    (* Get assigned variable name *)
-    let (variable_name, _) as variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-    (* Get assigned variable type *)
-    let var_type = VariableInfo.var_type_of_variable_or_constant variable_infos variable_ref in
-
-    (* Eventually get a number type to infer *)
-    let variable_number_type_opt =
-        match var_type with
-        | Var_type_clock
-        | Var_type_parameter -> None
-        | Var_type_discrete discrete_type -> Some (DiscreteType.extract_inner_type discrete_type)
-    in
-
-    (* Resolve typed expression *)
-    let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt expr in
-
-    let typed_parsed_scalar_or_index_update_type, l_value_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
-
-    (* Check var_type_discrete is compatible with expression type, if yes, convert expression *)
-     if not (DiscreteType.is_discrete_type_compatibles l_value_type expr_type) then (
-        raise (TypeError (
-            ill_typed_variable_message variable_name (DiscreteType.string_of_var_type var_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
-            )
-        )
-    );
-
-    (* Print type annotations *)
-    ImitatorUtilities.print_message Verbose_high (
-        "annot - updates - "
-        ^ variable_name
-        ^ " := "
-        ^ string_of_typed_boolean_expression variable_infos typed_expr
-    );
-
-    typed_parsed_scalar_or_index_update_type,
-    typed_expr
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Type check a conditional expression *)
-(* return a tuple containing the conditional expression uniformly typed and the resolved type of the expression *)
-let check_conditional variable_infos expr =
-
-    print_message Verbose_high "----------";
-    print_message Verbose_high ("Infer conditional expression: " ^ string_of_parsed_boolean_expression variable_infos expr);
-
-    let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos None expr in
-
-    (* Check that non-linear constraint is a Boolean expression *)
-    match expr_type with
-    | Dt_bool ->
-        typed_expr
-    | _ ->
-        raise (TypeError (
-            "Expression `"
-            ^ (string_of_parsed_boolean_expression variable_infos expr)
-            ^ "` in conditional statement, is not a Boolean expression"
-            )
-        )
 
 (* Check that a predicate is well typed *)
 let check_state_predicate variable_infos predicate =

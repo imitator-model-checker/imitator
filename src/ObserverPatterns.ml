@@ -45,12 +45,6 @@ let truec = LinearConstraint.pxd_true_constraint
 (** Useful (parameterized) constants *)
 (************************************************************)
 
-(** Creates a new update *)
-let create_update clock_updates discrete_updates conditional_updates =
-	{clock = clock_updates;
-	 discrete = discrete_updates;
-	 conditional = conditional_updates}
-
 (** Creates a transition without guards and updates *)
 let untimedt action_index target_index =
 	[{

@@ -64,15 +64,6 @@ let has_side_effects variable_infos = function
     | Leaf_variable _
     | Leaf_constant _ -> false
 
-(* TODO benjamin CLEAN UPDATES *)
-let has_side_effects_on_update variable_infos = function
-        | Leaf_update_variable ((variable_name, _), _) ->
-        (* TODO benjamin IMPORTANT below false is a wrong value, but This function tends to disapear when removing old updates
-           I just set this value because this function is used in context of continuous update
-           If I use the real expression below in comment it doesn't work, because we can update global variable in then *)
-        false
-
-
 (* Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
     | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
@@ -221,8 +212,6 @@ let has_side_effect_parsed_boolean_expression variable_infos = exists_in_parsed_
 let has_side_effect_parsed_discrete_boolean_expression variable_infos = exists_in_parsed_discrete_boolean_expression (has_side_effects variable_infos)
 (* Check if a parsed discrete arithmetic expression has side effects *)
 let has_side_effect_parsed_discrete_arithmetic_expression variable_infos = exists_in_parsed_discrete_arithmetic_expression (has_side_effects variable_infos)
-(* Check if a parsed normal update has side effects *)
-let has_side_effect_parsed_normal_update variable_infos = exists_in_parsed_normal_update (has_side_effects_on_update variable_infos) (has_side_effects variable_infos)
 (* Check if a parsed state predicate has side effects *)
 let has_side_effect_parsed_state_predicate variable_infos = exists_in_parsed_state_predicate (function _ -> false) (has_side_effects variable_infos)
 
@@ -317,13 +306,6 @@ let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_info
 (* Check that all variables in a parsed normal update are effectively be defined *)
 let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback expr =
     for_all_in_parsed_normal_update
-        (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
-        (is_variable_defined_with_callback variable_infos undefined_variable_callback)
-        expr
-
-(* Check that all variables in a parsed update are effectively be defined *)
-let all_variables_defined_in_parsed_update variable_infos undefined_variable_callback expr =
-    for_all_in_parsed_update
         (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
         expr
@@ -513,18 +495,6 @@ let get_variables_in_nonlinear_constraint_with_accumulator = get_variables_in_pa
 (* Gather all function names used in a non-linear constraint in a given accumulator *)
 let get_functions_in_nonlinear_constraint_with_accumulator = get_functions_in_parsed_discrete_boolean_expression_with_accumulator
 
-(* Gather all variable names used in an update in a given accumulator *)
-let get_variables_in_parsed_update_with_accumulator variables_used_ref =
-    iterate_parsed_update
-        (fun _ -> ())
-        (add_variable_of_discrete_boolean_expression variables_used_ref)
-
-(* Gather all function names used in an update in a given accumulator *)
-let get_functions_in_parsed_update_with_accumulator variables_used_ref =
-    iterate_parsed_update
-        (fun _ -> ())
-        (add_function_of_discrete_boolean_expression variables_used_ref)
-
 (* Gather all variable names used in a normal update in a given accumulator *)
 let get_variables_in_parsed_normal_update_with_accumulator variables_used_ref =
     iterate_parsed_normal_update
@@ -594,10 +564,6 @@ let get_variable_refs_in_parsed_discrete_arithmetic_expression =
 (* Gather all function names used in a parsed discrete arithmetic expression *)
 let get_functions_in_parsed_discrete_arithmetic_expression =
     wrap_accumulator get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator
-
-(* Gather all variable names used in a parsed update expression *)
-let get_variables_in_parsed_update =
-    wrap_accumulator get_variables_in_parsed_update_with_accumulator
 
 (* Gather all variable names used in a parsed normal update expression *)
 let get_variables_in_parsed_normal_update =

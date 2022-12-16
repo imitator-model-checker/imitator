@@ -607,21 +607,6 @@ let customized_string_of_scalar_or_index_update_type customized_string variable_
 let string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type =
     DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
 
-(* TODO benjamin CLEAN UPDATES *)
-(* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates ?(sep=", ") variable_names updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (DiscreteExpressions.string_of_discrete_update variable_names) updates)
-
-(* TODO benjamin CLEAN UPDATES *)
-(* Convert a list of discrete updates into a JSON-like string *)
-let json_of_discrete_updates ?(sep=", ") variable_names updates =
-	string_of_list_of_string_with_sep sep (List.rev_map (fun (scalar_or_index_update_type, expr) ->
-		(* Convert the variable name *)
-		(json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type))
-		^ ": "
-		^ (json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr))
-	) updates)
-
 let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 
     let json_of_instruction = function
@@ -653,59 +638,6 @@ let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
 	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
-
-(** Returns when add comma separators between clock and discrete updates and
-between discrete and conditional updates *)
-let separator_comma updates =
-	let no_clock_updates_ = no_clock_updates updates.clock in
-	let no_discrete_updates = updates.discrete = [] in
-	let no_conditional_updates = updates.conditional = [] in
-
-	let first_separator = not (no_clock_updates_ || no_discrete_updates) in
-	let second_separator = not (no_conditional_updates || (no_clock_updates_ && no_discrete_updates)) in
-	(first_separator, second_separator)
-
-(** Generic template to convert conditional updates into a string *)
-let string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
-	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
-		let if_separator, _ = separator_comma if_updates in
-		let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
-		(** Convert the Boolean expression *)
-		(wrap_if boolean_expr)
-		(** Convert the if updates *)
-		^ (string_of_clock_updates variable_names if_updates.clock)
-		^ (if if_separator then sep else "")
-		^ (string_of_discrete_updates variable_names if_updates.discrete)
-		(** Convert the else updates *)
-		^ (if empty_else then "" else
-			let else_separator, _ = separator_comma else_updates in
-			wrap_else
-			^ (string_of_clock_updates variable_names else_updates.clock)
-			^ (if else_separator then sep else "")
-			^ (string_of_discrete_updates variable_names else_updates.discrete))
-		^ wrap_end
-	) conditional_updates)
-
-(** Convert a list of conditional updates into a string *)
-let string_of_conditional_updates variable_names conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (DiscreteExpressions.string_of_boolean_expression variable_names boolean_expr) ^  ") then " in
-	let wrap_else = " else " in
-	let wrap_end = " end" in
-	let sep = ", " in
-	string_of_conditional_updates_template variable_names conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
-
-(* TODO benjamin CLEAN UPDATES *)
-(** Convert a list of conditional updates into a JSON-like string *)
-(*** WARNING: not really supported ***)
-let json_of_conditional_updates variable_names conditional_updates =
-	if conditional_updates <> [] then(
-		print_warning "Conditional updates not (really) supported in the JSON export!";
-		(* Do our best to still export something *)
-		""
-		^ "\n\t\t\t\t\t\t\t" ^ (json_of_string "conditional") ^ ": {"
-		^ "\n\t\t\t\t\t\t\t\t" ^ (json_of_string "update")  ^ ": " ^ (json_of_string (string_of_conditional_updates variable_names conditional_updates)) ^ ""
-		^ "\n\t\t\t\t\t\t\t}"
-	)else ""
 
 (* Convert a transition into a string *)
 let string_of_transition model automaton_index (transition : transition) =
