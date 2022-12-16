@@ -329,7 +329,6 @@ let count_instructions (* seq_code_bloc *) =
             + (match else_bloc_opt with None -> 0 | Some else_bloc -> 1 + count_instructions else_bloc)
         | Local_decl _
         | Assignment _
-        | Local_assignment _
         | Instruction _
         | Clock_assignment _ -> 1
     in
@@ -390,8 +389,7 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
             ^ str_else_bloc
             ^ tabs ^ "end\n"
 
-        | Assignment discrete_update
-        | Local_assignment discrete_update ->
+        | Assignment discrete_update ->
             tabs ^ DiscreteExpressions.string_of_discrete_update model.variable_names discrete_update ^ ";"
 
         | Instruction expr ->
@@ -627,8 +625,7 @@ let json_of_discrete_updates ?(sep=", ") variable_names updates =
 let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 
     let json_of_instruction = function
-        | Assignment (scalar_or_index_update_type, expr)
-        | Local_assignment (scalar_or_index_update_type, expr) ->
+        | Assignment (scalar_or_index_update_type, expr) ->
             json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type)
             ^ ": "
             ^ json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr)

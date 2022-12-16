@@ -2497,7 +2497,7 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
                     global_expression_of_typed_boolean_expression variable_infos typed_expr)
                 )
             | Ass_discrete_local ->
-                Local_assignment (
+                Assignment (
                     (local_scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
                     global_expression_of_typed_boolean_expression variable_infos typed_expr)
                 )

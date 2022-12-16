@@ -506,8 +506,7 @@ and string_of_instruction ?(sep=";") variable_names = function
             (string_of_seq_code_bloc ~sep:sep variable_names then_bloc)
             str_else_bloc
 
-    | Assignment discrete_update
-    | Local_assignment discrete_update ->
+    | Assignment discrete_update ->
         DiscreteExpressions.customized_string_of_discrete_update all_uppaal_strings variable_names discrete_update ^ sep
 
     | Clock_assignment (clock_index, expr) ->

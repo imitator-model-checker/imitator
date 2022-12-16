@@ -614,9 +614,6 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         | Assignment normal_update ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update
 
-        | Local_assignment local_update ->
-            direct_update_with_context variable_names functions_table_opt eval_context local_update
-
         | Clock_assignment (clock_index, linear_expr) ->
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
             let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in

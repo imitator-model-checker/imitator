@@ -210,7 +210,6 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
-    | Local_assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
     | Instruction of global_expression
     | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)

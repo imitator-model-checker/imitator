@@ -681,8 +681,7 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
     let string_of_instruction = function
 
-        | Assignment (scalar_or_index_update_type, expr)
-        | Local_assignment (scalar_or_index_update_type, expr) ->
+        | Assignment (scalar_or_index_update_type, expr) ->
             json_struct [|
                 json_property "ref" (json_quoted (ModelPrinter.string_of_scalar_or_index_update_type model.variable_names scalar_or_index_update_type));
                 json_property "value" (string_of_global_expression model.variable_names expr)
@@ -729,7 +728,6 @@ let string_of_custom_user_functions model =
                 ""
 
             | Assignment _
-            | Local_assignment _
             | Clock_assignment _ ->
                 print_warning ("Assignment found in function `" ^ fun_def.name ^ "`. Assignment are not supported by Jani and will not be translated.");
                 ""
