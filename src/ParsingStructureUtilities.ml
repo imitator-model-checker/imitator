@@ -809,8 +809,8 @@ let link_variables_in_parsed_model parsed_model =
             )
 
     and link_variables_in_parsed_discrete_factor local_variables = function
-        | Parsed_variable (variable_name, _) ->
-            (* Found variable id *)
+        | Parsed_variable (variable_name, _ (* init id *)) ->
+            (* Found variable id in local variables context *)
             let variable_id =
                 let variable_opt = Hashtbl.find_opt local_variables variable_name in
                 match variable_opt with
@@ -818,7 +818,8 @@ let link_variables_in_parsed_model parsed_model =
                 | Some (discrete_type, id) -> id
                 | None -> 0 (* global variable id *)
             in
-            ImitatorUtilities.print_standard_message ("link ref `" ^ variable_name ^ ":" ^ string_of_int variable_id ^ "`");
+            (* Print linking info *)
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy ("  link variable ref `(" ^ variable_name ^ "," ^ string_of_int variable_id ^ ")`"));
             Parsed_variable (variable_name, variable_id)
 
         | Parsed_constant _ as constant -> constant
@@ -861,7 +862,9 @@ let link_variables_in_parsed_model parsed_model =
                 | Some (discrete_type, id) -> id
                 | None -> 0 (* global variable id *)
             in
-            ImitatorUtilities.print_standard_message ("link assignment `" ^ variable_name ^ ":" ^ string_of_int variable_id ^ "`");
+            (* Print linking info *)
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy ("  link assigned variable `(" ^ variable_name ^ "," ^ string_of_int variable_id ^ ")`"));
+
             Parsed_scalar_update (variable_name, variable_id)
 
         | Parsed_indexed_update (parsed_scalar_or_index_update_type, expr) ->

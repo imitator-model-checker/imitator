@@ -3105,12 +3105,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Resolve dependencies between variables and functions *)
 	(*------------------------------------------------------------*)
 
+    ImitatorUtilities.print_message_lazy Verbose_high (lazy "\n*** Compute dependency graph.\n");
+
     (* Resolve dependency graph of the model *)
     let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove declarations_info parsed_model parsed_property_option in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph *)
+
     ImitatorUtilities.print_message_lazy Verbose_high str_dependency_graph;
+
+    ImitatorUtilities.print_message_lazy Verbose_high (lazy "\n*** Dependency graph computed. (copy/paste in new .dot file and use `dot -Tpng file.dot file.png` command to see it).\n");
+
 
     (* Get unused components and print warnings *)
     let unused_components = ParsingStructureGraph.unused_components_of_model dependency_graph in
