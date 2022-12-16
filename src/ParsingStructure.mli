@@ -16,11 +16,13 @@
 (****************************************************************)
 
 type variable_index = int
-type variable_name = string
 type automaton_name	= string
 type location_name	= string
 type sync_name		= string
+
+type variable_name = string
 type variable_id = int
+type variable_ref = variable_name * variable_id
 
 (****************************************************************)
 (** Operators *)
@@ -85,7 +87,7 @@ and parsed_product_quotient =
     | Parsed_div
 
 and parsed_discrete_factor =
-	| Parsed_variable of variable_name
+	| Parsed_variable of variable_ref
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
     | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
@@ -148,7 +150,7 @@ type invariant = convex_predicate
 
 (* Variable name or variable access (x or x[index]) *)
 type parsed_scalar_or_index_update_type =
-    | Parsed_scalar_update of variable_name
+    | Parsed_scalar_update of variable_ref
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
 
 (** basic updating *)
@@ -169,10 +171,10 @@ type parsed_loop_dir =
 (** Bloc of sequential code *)
 (****************************************************************)
 type parsed_seq_code_bloc =
-    | Parsed_local_decl of variable_name * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *) * int (* id *)
+    | Parsed_local_decl of variable_ref * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *)
     | Parsed_assignment of normal_update
     | Parsed_instruction of parsed_boolean_expression
-    | Parsed_for_loop of variable_name * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *) * int (* id *)
+    | Parsed_for_loop of variable_ref * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *)
     | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* inner bloc *)
     | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* then *) * parsed_seq_code_bloc_list option (* else *)
 
@@ -185,7 +187,7 @@ and parsed_seq_code_bloc_list = parsed_seq_code_bloc list
 (* Metadata of a function *)
 type function_metadata = {
     name : variable_name;
-    parameter_names : variable_name list;
+    parameter_refs : variable_ref list;
     signature_constraint : FunctionSig.signature_constraint;
     side_effect : bool;
 }
@@ -193,7 +195,7 @@ type function_metadata = {
 (* Parsed function definition *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : (variable_name * DiscreteType.var_type_discrete) list; (* parameter names and types *)
+    parameters : (variable_ref * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
     body : parsed_seq_code_bloc_list * parsed_boolean_expression option; (* body *)
 }
@@ -498,6 +500,7 @@ type declarations_info = {
     clock_names : variable_name list;
     parameter_names : variable_name list;
     discrete_names : variable_name list;
+    variable_refs : (variable_ref, DiscreteType.var_type) Hashtbl.t;
 }
 
 (************************************************************)
@@ -515,6 +518,7 @@ type variable_infos = {
 	type_of_variables : Automaton.variable_index -> DiscreteType.var_type;
 	removed_variable_names : variable_name list;
 	discrete : Automaton.variable_index list;
+	variable_refs : (variable_ref, DiscreteType.var_type) Hashtbl.t;
 	fun_meta : (Automaton.variable_name, function_metadata) Hashtbl.t;
 }
 

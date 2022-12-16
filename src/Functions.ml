@@ -71,17 +71,21 @@ let binary_log_signature =
 let metadata_of_function_definition (fun_def : AbstractModel.fun_definition) : ParsingStructure.function_metadata =
     {
         name = fun_def.name;
-        parameter_names = fun_def.parameter_names;
+        parameter_refs = fun_def.parameter_refs;
         signature_constraint = fun_def.signature_constraint;
         side_effect = fun_def.side_effect;
     }
+
+(* Get a variable ref for parameter of given name *)
+let variable_ref_of_name name = (name, -1)
+let variable_refs_of_names = List.map variable_ref_of_name
 
 (* Get builtin function implementations *)
 let builtin_function_bodies : AbstractModel.fun_definition list =
     [
         {
             name = "pow";
-            parameter_names = ["x"; "exp"];
+            parameter_refs = variable_refs_of_names ["x"; "exp"];
             signature_constraint = [
                 Defined_type_constraint (Number_constraint (Number_type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
@@ -92,7 +96,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "mod";
-            parameter_names = ["a"; "b"];
+            parameter_refs = variable_refs_of_names ["a"; "b"];
             signature_constraint = [
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
@@ -103,7 +107,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "int_div";
-            parameter_names = ["a"; "b"];
+            parameter_refs = variable_refs_of_names ["a"; "b"];
             signature_constraint = [
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
@@ -114,7 +118,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "rational_of_int";
-            parameter_names = ["r"];
+            parameter_refs = variable_refs_of_names ["r"];
             signature_constraint = [
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint Rat_constraint))
@@ -124,63 +128,63 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "shift_left";
-            parameter_names = ["b"; "i"];
+            parameter_refs = variable_refs_of_names ["b"; "i"];
             signature_constraint = shift_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_shift_left;
             side_effect = false
         };
         {
             name = "shift_right";
-            parameter_names = ["b"; "i"];
+            parameter_refs = variable_refs_of_names ["b"; "i"];
             signature_constraint = shift_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_shift_right;
             side_effect = false
         };
         {
             name = "fill_left";
-            parameter_names = ["b"; "i"];
+            parameter_refs = variable_refs_of_names ["b"; "i"];
             signature_constraint = fill_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_fill_left;
             side_effect = false
         };
         {
             name = "fill_right";
-            parameter_names = ["b"; "i"];
+            parameter_refs = variable_refs_of_names ["b"; "i"];
             signature_constraint = fill_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_fill_right;
             side_effect = false
         };
         {
             name = "logand";
-            parameter_names = ["b1"; "b2"];
+            parameter_refs = variable_refs_of_names ["b1"; "b2"];
             signature_constraint = binary_log_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_log_and;
             side_effect = false
         };
         {
             name = "logor";
-            parameter_names = ["b1"; "b2"];
+            parameter_refs = variable_refs_of_names ["b1"; "b2"];
             signature_constraint = binary_log_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_log_or;
             side_effect = false
         };
         {
             name = "logxor";
-            parameter_names = ["b1"; "b2"];
+            parameter_refs = variable_refs_of_names ["b1"; "b2"];
             signature_constraint = binary_log_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_log_xor;
             side_effect = false
         };
         {
             name = "lognot";
-            parameter_names = ["b1"];
+            parameter_refs = variable_refs_of_names ["b1"];
             signature_constraint = unary_log_signature;
             body = Fun_builtin DiscreteExpressionEvaluator.eval_log_not;
             side_effect = false
         };
         {
             name = "array_append";
-            parameter_names = ["a1"; "a2"];
+            parameter_refs = variable_refs_of_names ["a1"; "a2"];
             signature_constraint = [
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l1")));
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l2")));
@@ -191,7 +195,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "array_mem";
-            parameter_names = ["a"; "e"];
+            parameter_refs = variable_refs_of_names ["a"; "e"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
@@ -202,7 +206,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "array_length";
-            parameter_names = ["a"];
+            parameter_refs = variable_refs_of_names ["a"];
             signature_constraint = [
                 Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
@@ -212,7 +216,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_is_empty";
-            parameter_names = ["l"];
+            parameter_refs = variable_refs_of_names ["l"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
@@ -222,7 +226,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_cons";
-            parameter_names = ["l"; "e"];
+            parameter_refs = variable_refs_of_names ["l"; "e"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
@@ -233,7 +237,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_hd";
-            parameter_names = ["l"];
+            parameter_refs = variable_refs_of_names ["l"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a";
@@ -243,7 +247,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_tl";
-            parameter_names = ["l"];
+            parameter_refs = variable_refs_of_names ["l"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
@@ -253,7 +257,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_rev";
-            parameter_names = ["l"];
+            parameter_refs = variable_refs_of_names ["l"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
@@ -263,7 +267,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_mem";
-            parameter_names = ["e"; "l"];
+            parameter_refs = variable_refs_of_names ["e"; "l"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
@@ -274,7 +278,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "list_length";
-            parameter_names = ["l"];
+            parameter_refs = variable_refs_of_names ["l"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
@@ -284,7 +288,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_push";
-            parameter_names = ["s"; "e"];
+            parameter_refs = variable_refs_of_names ["s"; "e"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
@@ -295,7 +299,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_pop";
-            parameter_names = ["s"];
+            parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
@@ -305,7 +309,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_top";
-            parameter_names = ["s"];
+            parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
@@ -315,7 +319,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_clear";
-            parameter_names = ["s"];
+            parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
@@ -325,7 +329,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_is_empty";
-            parameter_names = ["s"];
+            parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
@@ -335,7 +339,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "stack_length";
-            parameter_names = ["s"];
+            parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
@@ -345,7 +349,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_push";
-            parameter_names = ["e"; "q"];
+            parameter_refs = variable_refs_of_names ["e"; "q"];
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
@@ -356,7 +360,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_pop";
-            parameter_names = ["q"];
+            parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
@@ -366,7 +370,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_top";
-            parameter_names = ["q"];
+            parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Type_name_constraint "a"
@@ -376,7 +380,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_clear";
-            parameter_names = ["q"];
+            parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
@@ -386,7 +390,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_is_empty";
-            parameter_names = ["q"];
+            parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint Bool_constraint
@@ -396,7 +400,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "queue_length";
-            parameter_names = ["q"];
+            parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
                 Defined_type_constraint (Number_constraint (Defined_type_number_constraint (Int_constraint Int_type_constraint)))
@@ -406,7 +410,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
         };
         {
             name = "fake";
-            parameter_names = ["e"];
+            parameter_refs = variable_refs_of_names ["e"];
             signature_constraint = [
                 Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
                 Defined_type_constraint (List_constraint (Defined_type_constraint (List_constraint (Type_name_constraint "a"))));
@@ -438,7 +442,7 @@ let metadata_of_parsed_function_definition builtin_functions_metadata_table user
     let signature = List.map second_of_tuple fun_def.parameters @ [fun_def.return_type] in
     {
         name = fun_def.name;
-        parameter_names = List.map first_of_tuple fun_def.parameters;
+        parameter_refs = List.map first_of_tuple fun_def.parameters;
         signature_constraint = FunctionSig.signature_constraint_of_signature signature;
         side_effect = ParsingStructureMeta.is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table fun_def;
     }

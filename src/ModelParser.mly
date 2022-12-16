@@ -288,8 +288,8 @@ fun_parameter_list:
 
 /* Function parameters list (separated by whitespace) */
 fun_parameter_nonempty_list:
-  | NAME COLON var_type_discrete { [($1, $3)] }
-  | fun_parameter_list COMMA NAME COLON var_type_discrete { ($3, $5) :: $1 }
+  | NAME COLON var_type_discrete { [(($1, Parsing.symbol_start ()), $3)] }
+  | fun_parameter_list COMMA NAME COLON var_type_discrete { (($3, Parsing.symbol_start ()), $5) :: $1 }
 ;
 
 seq_code_bloc_list:
@@ -317,7 +317,7 @@ semicolon_or_comma:
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl ($2, $4, $6, Parsing.symbol_start ()) }
+  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */
@@ -327,7 +327,7 @@ instruction:
 
 control_structure:
   /* for loop */
-  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop ($2, $4, $6, $5, $8, Parsing.symbol_start ()) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop (($2, Parsing.symbol_start ()), $4, $6, $5, $8) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_while_loop ($2, $4) }
   /* conditional */
@@ -580,7 +580,7 @@ end_opt:
 
 /* Variable or variable access */
 parsed_scalar_or_index_update_type:
-  | NAME { Parsed_scalar_update $1 }
+  | NAME { Parsed_scalar_update ($1, 0) }
   | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
 ;
 
@@ -589,18 +589,18 @@ update:
 	/*** NOTE: deprecated syntax ***/
 	| NAME APOSTROPHE OP_EQ boolean_expression {
 		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $4)
+		(Parsed_scalar_update ($1, 0), $4)
 		}
 
 		/** NOT ALLOWED FROM 3.2 (2021/10) */
 /*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
 		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $4)
+		(Parsed_scalar_update ($1, 0), $4)
 	}*/
 	/*** NOTE: deprecated syntax ***/
 	| NAME OP_EQ boolean_expression {
 		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update $1, $3)
+		(Parsed_scalar_update ($1, 0), $3)
 	}
 
 	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
@@ -640,7 +640,7 @@ sum_diff:
 arithmetic_term:
 	| arithmetic_factor { Parsed_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable $2, Parsed_mul) }
+	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable ($2, 0), Parsed_mul) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
 	| OP_MINUS arithmetic_factor { Parsed_factor(Parsed_unary_min $2) }
@@ -663,7 +663,7 @@ arithmetic_factor:
   | NAME LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
   | literal_scalar_constant { Parsed_constant $1 }
   | literal_non_scalar_constant { $1 }
-  | NAME { Parsed_variable $1 }
+  | NAME { Parsed_variable ($1, 0) }
   | LPAREN arithmetic_expression RPAREN { Parsed_nested_expr $2 }
 ;
 

@@ -22,7 +22,7 @@ open DiscreteType
 (** Utils **)
 
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
-
+val variable_ref_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_ref
 
 
 (* Try to get value of a discrete boolean expression, if directly a constant equals to false or true *)
@@ -97,6 +97,8 @@ val get_variables_in_parsed_simple_predicate_with_accumulator : StringSet.t ref 
 val get_variables_in_parsed_state_predicate_with_accumulator : StringSet.t ref -> parsed_state_predicate -> unit
 
 val get_variables_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
+val get_variable_refs_in_parsed_boolean_expression : parsed_boolean_expression -> VarSet.t
+
 val get_functions_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
 val get_variables_and_functions_in_parsed_boolean_expression : parsed_boolean_expression -> StringSet.t
 val get_clocks_and_parameters_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> StringSet.t
@@ -104,6 +106,7 @@ val get_clocks_and_parameters_in_parsed_boolean_expression : variable_infos -> p
 val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolean_expression -> StringSet.t
 
 val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
+val get_variable_refs_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> VarSet.t
 val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 
 val get_variables_in_parsed_update : update -> StringSet.t
@@ -118,7 +121,7 @@ val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> String
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
 (* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
-val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc_list -> (variable_name * variable_name list * parsed_boolean_expression) list
+val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc_list -> (variable_ref * variable_ref list * parsed_boolean_expression) list
 (* Check whether clock updates found in parsed sequential code bloc are only resets *)
 val is_only_resets_in_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> bool
 (* Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)

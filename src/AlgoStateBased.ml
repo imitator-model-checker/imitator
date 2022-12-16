@@ -285,7 +285,6 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				arbitrary_updates := true;
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun (clock_id, linear_term) ->
-				    (* TODO benjamin CLEAN message *)
                     ImitatorUtilities.print_standard_message ("The clock `" ^ (model.variable_names clock_id) ^ "` is updated NOW with: " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term);
 
 					(* Check if already updated *)
@@ -941,8 +940,6 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
 		(** Collecting the updates by evaluating the conditions, if there is any *)
         let _ (* no clock update for seq updates *), seq_code_bloc_update = transition.updates in
-        (* Reinit local variables *)
-        let eval_context = {eval_context with local_variables = [Hashtbl.create 0] } in
         eval_seq_code_bloc_with_context (Some model.variable_names) (Some model.functions_table) eval_context seq_code_bloc_update;
 
 	) combined_transition;
@@ -963,27 +960,6 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
     in
 
     let clock_updates = if has_updates then [clock_updates] else [] in
-
-    (* TODO benjamin CLEAN comments *)
-    (*
-	(* Update the location for the automata synchronized with 'action_index' *)
-	(* make all non-sequential updates and return the list of guards and updates *)
-	let automatically_gen_clock_updates = List.map (fun transition_index ->
-		(* Get the automaton concerned *)
-		(* Access the transition and get the components *)
-		let _, transition = automaton_and_transition_of_transition_index transition_index in
- 		let clock_updates, _ = transition.updates in
-        clock_updates
-
-	) combined_transition
-	in
-	*)
-
-(*    let clock_updates = rewritten_clock_update :: automatically_gen_clock_updates in*)
-
-
-
-
 
 	(* Update the location for the automata synchronized with 'action_index' *)
 	let guards = List.map (fun transition_index ->

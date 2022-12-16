@@ -15,24 +15,18 @@ open ParsingStructure
 open DiscreteType
 open CustomModules
 
-(* Map of declared local variables *)
-type local_variables_map = (variable_name, var_type_discrete * int) Hashtbl.t
 (**)
 type variable_callback = (variable_name -> unit) option
 
-type variable_leaf =
-    | Leaf_local_variable of variable_name * var_type_discrete * int
-    | Leaf_global_variable of variable_name
-
 (* Leaves of parsing structure *)
 type parsing_structure_leaf =
-    | Leaf_variable of variable_leaf
+    | Leaf_variable of variable_ref
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_leaf * parsed_boolean_expression
+    | Leaf_update_variable of variable_ref * parsed_boolean_expression
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -54,9 +48,9 @@ type state_predicate_leaf =
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
 (* Type of callback function called when reach a leaf of a discrete expression *)
-type 'a parsing_structure_leaf_callback = local_variables_map -> parsing_structure_leaf -> 'a
+type 'a parsing_structure_leaf_callback = parsing_structure_leaf -> 'a
 (* Type of callback function called when reach a leaf of a sequential code bloc *)
-type 'a seq_code_bloc_leaf_callback = local_variables_map -> parsed_seq_code_bloc_leaf -> 'a
+type 'a seq_code_bloc_leaf_callback = parsed_seq_code_bloc_leaf -> 'a
 (* Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
@@ -64,7 +58,7 @@ type 'a variable_declaration_callback = (variable_name * var_type_discrete * int
 
 val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> 'a
 val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_fun_definition -> 'a
-val fold_parsed_normal_update_with_local_variables : local_variables_map -> ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> normal_update -> 'a
+val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> normal_update -> 'a
 
 
 (** Check if all leaf of a parsing structure satisfy the predicate **)
@@ -195,3 +189,4 @@ val string_of_parsed_state_predicate_term : variable_infos -> parsed_state_predi
 val string_of_parsed_state_predicate : variable_infos -> parsed_state_predicate -> string
 
 val json_of_function_metadata : function_metadata -> JsonFormatter.json_element
+val link_variables_in_parsed_model : parsed_model -> parsed_model * (variable_name * variable_id, var_type) Hashtbl.t

@@ -3368,7 +3368,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Second get the discrete values from the former initial location *)	
 		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
 
-		DiscreteState.make_location initial_PTA_locations discrete_values
+		DiscreteState.make_location initial_PTA_locations discrete_values (Hashtbl.create 0)
 	in
 
 

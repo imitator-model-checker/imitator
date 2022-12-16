@@ -19,10 +19,6 @@ open CustomModules
 
 type inner_type = var_type_discrete
 
-type typed_variable_scope =
-    | Global
-    | Local
-
 type typed_assignment_scope =
     | Ass_discrete_global
     | Ass_discrete_local
@@ -66,7 +62,7 @@ and typed_product_quotient =
     | Typed_div
 
 and typed_discrete_factor =
-	| Typed_variable of variable_name * var_type_discrete * typed_variable_scope
+	| Typed_variable of variable_ref * var_type_discrete
 	| Typed_constant of ParsedValue.parsed_value * var_type_discrete
 	| Typed_sequence of typed_boolean_expression list * inner_type * typed_sequence_type
 	| Typed_nested_expr of typed_discrete_arithmetic_expression * var_type_discrete
@@ -75,7 +71,7 @@ and typed_discrete_factor =
 	| Typed_function_call of string * typed_boolean_expression list * var_type_discrete
 
 type typed_scalar_or_index_update_type =
-    | Typed_scalar_update of variable_name
+    | Typed_scalar_update of variable_ref
     | Typed_indexed_update of typed_scalar_or_index_update_type * typed_discrete_arithmetic_expression * var_type_discrete
 
 type typed_normal_update = typed_scalar_or_index_update_type * typed_boolean_expression
@@ -111,10 +107,10 @@ type typed_loop_dir =
     | Typed_for_loop_down
 
 type typed_seq_code_bloc =
-    | Typed_local_decl of variable_name * var_type_discrete * typed_boolean_expression
+    | Typed_local_decl of variable_ref * var_type_discrete * typed_boolean_expression
     | Typed_assignment of typed_normal_update * typed_assignment_scope
     | Typed_instruction of typed_boolean_expression
-    | Typed_for_loop of variable_name * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
+    | Typed_for_loop of variable_ref * typed_discrete_arithmetic_expression (* from *) * typed_discrete_arithmetic_expression (* to *) * typed_loop_dir (* up or down *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
 
@@ -122,7 +118,7 @@ and typed_seq_code_bloc_list = typed_seq_code_bloc list
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
-    parameters : variable_name list; (* parameter names *)
+    parameter_refs : variable_ref list; (* parameter names and ids *)
     signature : var_type_discrete list; (* signature *)
     body : typed_seq_code_bloc_list * typed_boolean_expression option; (* body *)
 }

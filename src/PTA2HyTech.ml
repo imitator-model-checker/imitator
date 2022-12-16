@@ -286,8 +286,6 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
             ^ "' = "
             ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term
 
-        | Local_assignment _ ->
-            print_warning ("Update contains local variable assignments, HyTech does not support such expressions."); ""
         | Local_decl _
         | Instruction _
         | For_loop _

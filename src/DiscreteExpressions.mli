@@ -48,7 +48,7 @@ type loop_dir =
 
 type update_scope =
     | Global_update of Automaton.discrete_index
-    | Local_update of variable_name
+    | Local_update of Automaton.variable_ref
 
 (****************************************************************)
 (** Global expression *)
@@ -81,13 +81,13 @@ and rational_term =
 
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
-	| Rational_local_variable of variable_name
+	| Rational_local_variable of Automaton.variable_ref
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
-    | Rational_function_call of variable_name * variable_name list * global_expression list
+    | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
@@ -103,13 +103,13 @@ and int_term =
 
 and int_factor =
 	| Int_variable of Automaton.variable_index
-	| Int_local_variable of variable_name
+	| Int_local_variable of Automaton.variable_ref
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
-    | Int_function_call of variable_name * variable_name list * global_expression list
+    | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 
 (************************************************************)
@@ -145,12 +145,12 @@ and discrete_boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	(** discrete variable in boolean expression *)
 	| Bool_variable of Automaton.variable_index
-	| Bool_local_variable of variable_name
+	| Bool_local_variable of Automaton.variable_ref
 	(** discrete constant in boolean expression *)
 	| Bool_constant of bool
     | Bool_array_access of expression_access_type * int_arithmetic_expression
 
-    | Bool_function_call of variable_name * variable_name list * global_expression list
+    | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
 (************************************************************)
@@ -163,44 +163,44 @@ and discrete_boolean_expression =
 and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
-	| Binary_word_local_variable of variable_name
+	| Binary_word_local_variable of Automaton.variable_ref
     | Binary_word_array_access of expression_access_type * int_arithmetic_expression
-    | Binary_word_function_call of variable_name * variable_name list * global_expression list
+    | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** Array expression **)
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
-    | Array_local_variable of variable_name
+    | Array_local_variable of Automaton.variable_ref
     | Array_array_access of expression_access_type * int_arithmetic_expression
-    | Array_function_call of variable_name * variable_name list * global_expression list
+    | Array_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** List expression **)
 and list_expression =
     | Literal_list of global_expression list
     | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
-    | List_local_variable of variable_name
+    | List_local_variable of Automaton.variable_ref
     | List_array_access of expression_access_type * int_arithmetic_expression
-    | List_function_call of variable_name * variable_name list * global_expression list
+    | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
-    | Stack_local_variable of variable_name
+    | Stack_local_variable of Automaton.variable_ref
     | Stack_array_access of expression_access_type * int_arithmetic_expression
-    | Stack_function_call of variable_name * variable_name list * global_expression list
+    | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
-    | Queue_local_variable of variable_name
+    | Queue_local_variable of Automaton.variable_ref
     | Queue_array_access of expression_access_type * int_arithmetic_expression
-    | Queue_function_call of variable_name * variable_name list * global_expression list
+    | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and void_expression =
-    | Void_function_call of variable_name * variable_name list * global_expression list
+    | Void_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and expression_access_type =
     | Expression_array_access of array_expression
@@ -208,12 +208,11 @@ and expression_access_type =
 
 (* Bloc of sequential code *)
 and seq_code_bloc =
-    | Local_decl of variable_name * DiscreteType.var_type_discrete * global_expression (* init expr *)
+    | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
-    | Local_assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
     | Instruction of global_expression
-    | For_loop of variable_name * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
+    | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
 

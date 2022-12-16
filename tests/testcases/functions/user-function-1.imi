@@ -155,9 +155,11 @@ automaton P
   loc l0: invariant True
   when
     True
+    (*
     & my_not(False)
     & not(my_not(True))
     & zero_left(bin, 2) = 0b0011
+    *)
 
   do {
       push_on_stack(s);

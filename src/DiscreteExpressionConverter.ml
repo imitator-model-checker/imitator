@@ -96,12 +96,12 @@ and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = fun
 (* Try to convert parsed discrete factor to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
 and try_convert_linear_term_of_parsed_discrete_factor = function
-        | Parsed_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_variable (variable_name, _) -> Variable(NumConst.one, variable_name)
         | Parsed_constant value -> Constant (ParsedValue.to_numconst_value value)
         | Parsed_unary_min parsed_discrete_factor ->
             (* Check for unary min, negate variable and constant *)
             (match parsed_discrete_factor with
-                | Parsed_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_variable (variable_name, _) -> Variable(NumConst.minus_one, variable_name)
                 | Parsed_constant value ->
                     let numconst_value = ParsedValue.to_numconst_value value in
                     Constant (NumConst.neg numconst_value)
@@ -172,11 +172,11 @@ let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq
 
         (* Check only discrete in, instruction, for loop bounds, while condition, if condition ... *)
         match instruction with
-        | Parsed_local_decl (_, _, expr, _)
+        | Parsed_local_decl (_, _, expr)
         | Parsed_instruction expr ->
             check_only_discrete expr
 
-        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc, _) ->
+        | Parsed_for_loop (_, from_expr, to_expr, _, inner_bloc) ->
             check_only_discrete_in_arithmetic from_expr
             && check_only_discrete_in_arithmetic to_expr
             && check_inner_expression_of_seq_code_bloc inner_bloc
@@ -207,28 +207,32 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
     let is_assignments_are_allowed =
         (* Check for variables (local and global) at the left and right side of an assignment *)
-        let left_right_variable_names = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
-        let left_variable_names = List.map first_of_triplet left_right_variable_names in
+        let left_right_variable_refs = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
+        let left_variable_refs = List.map first_of_triplet left_right_variable_refs in
 
         (* Check that no constants are updated *)
-        let assigned_constant_names = List.filter_map (fun variable_name ->
-            let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_name in
+        let assigned_constant_names = List.filter_map (fun variable_ref ->
+            let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_ref in
             match variable_kind_opt with
-            | Some (VariableInfo.Constant_kind _) -> Some variable_name
+            | Some (VariableInfo.Constant_kind _) ->
+                let variable_name, _ = variable_ref in
+                Some variable_name
             | _ -> None
-        ) left_variable_names in
+        ) left_variable_refs in
 
         (* Check that no params are updated *)
-        let assigned_param_names = List.filter_map (fun variable_name ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let assigned_param_names = List.filter_map (fun variable_ref ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
-            | Some Var_type_parameter -> Some variable_name
+            | Some Var_type_parameter ->
+                let variable_name, _ = variable_ref in
+                Some variable_name
             | _ -> None
-        ) left_variable_names in
+        ) left_variable_refs in
 
         (* Check that no discrete variable was updated by a param *)
-        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
-            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_name in
+        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
+            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_ref in
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
@@ -236,55 +240,61 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
-                    List.filter_map (fun right_variable_name ->
-                        let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
-                        match var_type_opt with
-                        | Some Var_type_parameter -> Some right_variable_name
-                        | _ -> None
-                    ) right_variable_names
+                    List.filter_map (fun right_variable_ref ->
+                        if VariableInfo.is_param variable_infos right_variable_ref then (
+                            let right_variable_name, _ = right_variable_ref in
+                            Some right_variable_name
+                        ) else
+                            None
+                    ) right_variable_refs
                 in
                 let has_right_params = List.length right_params > 0 in
+                let left_variable_name, _ = left_variable_ref in
                 if has_right_params then (left_variable_name, right_params) :: acc else acc
 
-        ) [] left_right_variable_names in
+        ) [] left_right_variable_refs in
 
         (* Get only discrete variable names *)
-        let left_discrete_variable_names = List.filter (fun (variable_name, _, _) ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let left_discrete_variable_refs = List.filter (fun (variable_ref, _, _) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
             | None
             | Some (Var_type_discrete _) -> true
             | Some _ -> false
-        ) left_right_variable_names in
+        ) left_right_variable_refs in
 
         (* Check that no discrete variable was updated by a clock *)
-        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_name, right_variable_names, _) ->
+        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_clocks =
-                List.filter_map (fun right_variable_name ->
-                    let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos right_variable_name in
-                    match var_type_opt with
-                    | Some Var_type_clock -> Some right_variable_name
-                    | _ -> None
-                ) right_variable_names
+                List.filter_map (fun right_variable_ref ->
+                    if VariableInfo.is_clock variable_infos right_variable_ref then (
+                        let right_variable_name, _ = right_variable_ref in
+                        Some right_variable_name
+                    ) else
+                        None
+                ) right_variable_refs
             in
             let has_right_clocks = List.length right_clocks > 0 in
+            let left_variable_name, _ = left_variable_ref in
             if has_right_clocks then (left_variable_name, right_clocks) :: acc else acc
 
-        ) [] left_discrete_variable_names in
+        ) [] left_discrete_variable_refs in
 
         (* Check that clock update is a linear expression *)
-        let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_name, _, expr) ->
-            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_name in
+        let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_ref, _, expr) ->
+            let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
             | Some Var_type_clock ->
                 let is_linear = ParsingStructureMeta.is_linear_parsed_boolean_expression variable_infos expr in
-                if not is_linear then
+                if not is_linear then (
+                    let variable_name, _ = variable_ref in
                     Some (variable_name, ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr)
+                )
                 else
                     None
             | _ -> None
-        ) left_right_variable_names in
+        ) left_right_variable_refs in
 
         (* Is any constant modifications found in user function ? *)
         let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
@@ -359,22 +369,8 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_clock_updated_with_non_linear)
     in
 
-    (*
-    (* TODO benjamin REFACTOR check that in type checking, not here *)
-    (* Check if there isn't any void typed variable or formal parameter *)
-    let is_any_void_local_variable =
-        (* Get local variables / formal parameters of parsed sequential code bloc *)
-        let local_variables = ParsingStructureMeta.local_variables_of_parsed_seq_code_bloc seq_code_bloc in
-        (* Check if exist any void variable *)
-        List.exists (fun (variable_name, discrete_type, _) ->
-            match discrete_type with
-            | Dt_void -> print_error ("Local variable or formal parameter `" ^ variable_name ^ "` " ^ str_location ^ " was declared as `void`. A variable cannot be declared as `void`."); true
-            | _ -> false
-        ) local_variables
-    in
-    *)
     (* Return *)
-    is_assignments_are_allowed (* && not is_any_void_local_variable *)
+    is_assignments_are_allowed
 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
@@ -472,7 +468,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         (* Check that each parameter have different name *)
         (* Group parameters by their names *)
-        let parameters_by_names = OCamlUtilities.group_by first_of_tuple fun_def.parameters in
+        let parameters_by_names = OCamlUtilities.group_by (fun ((variable_name, _), _) -> variable_name) fun_def.parameters in
         (* If for one parameter name, their is more than one parameter, there is duplicates *)
         let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
 
@@ -487,7 +483,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             if List.length group_without_duplicates = 1 then (
                 print_error (current_duplicate_parameter_message ^ ".");
             ) else (
-                let str_parameters_list = List.map (fun (parameter_name, discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
+                let str_parameters_list = List.map (fun ((parameter_name, _ (* id *)), discrete_type) -> parameter_name ^ " : " ^ DiscreteType.string_of_var_type_discrete discrete_type) group_without_duplicates in
                 let str_parameters = OCamlUtilities.string_of_list_of_string_with_sep ", " str_parameters_list in
                 print_error (current_duplicate_parameter_message ^ "` does not have consistent definitions: `" ^ str_parameters ^ "`.");
             )
@@ -546,6 +542,7 @@ let convert_discrete_constant initialized_constants (name, expr, var_type) =
         removed_variable_names = [];
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
         discrete = [];
+        variable_refs = Hashtbl.create 0;
         fun_meta = Hashtbl.create 0;
     }
     in

@@ -475,11 +475,11 @@ let rec string_of_seq_code_bloc ?(sep=";") variable_names seq_code_bloc =
 
 (* Convert an instruction into UPPAAL string *)
 and string_of_instruction ?(sep=";") variable_names = function
-    | Local_decl (variable_name, discrete_type, init_expr) ->
+    | Local_decl ((variable_name, _), discrete_type, init_expr) ->
         string_of_var_type_discrete discrete_type ^ " " ^ variable_name ^ " = "
         ^ DiscreteExpressions.customized_string_of_global_expression all_uppaal_strings variable_names init_expr ^ sep
 
-    | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+    | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
         string_of_for_loop
             variable_name
             (DiscreteExpressions.customized_string_of_int_arithmetic_expression all_uppaal_strings variable_names from_expr)
@@ -506,8 +506,7 @@ and string_of_instruction ?(sep=";") variable_names = function
             (string_of_seq_code_bloc ~sep:sep variable_names then_bloc)
             str_else_bloc
 
-    | Assignment discrete_update
-    | Local_assignment discrete_update ->
+    | Assignment discrete_update ->
         DiscreteExpressions.customized_string_of_discrete_update all_uppaal_strings variable_names discrete_update ^ sep
 
     | Clock_assignment (clock_index, expr) ->
@@ -533,7 +532,8 @@ let string_of_fun_definitions model =
         | Fun_builtin _ -> ""  (* Don't print builtin functions *)
         | Fun_user (seq_code_bloc, return_expr_opt) ->
             let parameters_signature, return_type_constraint = FunctionSig.split_signature fun_def.signature_constraint in
-            let parameter_names_with_constraints = List.combine fun_def.parameter_names parameters_signature in
+            let parameter_names = List.map first_of_tuple fun_def.parameter_refs in
+            let parameter_names_with_constraints = List.combine parameter_names parameters_signature in
             (* Convert parameters into a string *)
             let str_param_list = List.map (fun (param_name, type_constraint) -> string_of_type_constraint type_constraint ^ " " ^ param_name) parameter_names_with_constraints in
             let str_params = OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_list in

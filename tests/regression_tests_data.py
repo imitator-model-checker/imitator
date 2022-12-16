@@ -1225,10 +1225,10 @@ var
 	res, j, i
 		: int;
 
-fn f() : int begin
-var i1 : int = i + 1;
-var i2 : int = (i + 1) * 2;
-return i1 + i2
+function f() : int begin
+  var i1 : int = i + 1;
+  var i2 : int = (i + 1) * 2;
+  return i1 + i2
 end
 
 (************************************************************)
@@ -2909,7 +2909,21 @@ when  -(i * 2) = -2 * i
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
-when  i = 0 do {i := -(i * 2); i := -2 * i; i := -(i * -2); i := -(i / 2); i := (-i) / 2; i := -(i / -2); i := -(i + i); i := -(i - i); i := -(2 * i - i); i := -(-(i)); i := -(-(-(i))); i := -1 + 1; i := -1 - 1;}  sync a goto lend;
+when  i = 0 do {
+  i := -(i * 2);
+  i := -2 * i;
+  i := -(i * -2);
+  i := -(i / 2);
+  i := (-i) / 2;
+  i := -(i / -2);
+  i := -(i + i);
+  i := -(i - i);
+  i := -(2 * i - i);
+  i := -(-(i));
+  i := -(-(-(i)));
+  i := -1 + 1;
+  i := -1 - 1;
+}  sync a goto lend;
 		"""
 			 } # end result file
 			,

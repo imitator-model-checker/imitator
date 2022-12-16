@@ -118,10 +118,9 @@ type transition_index = int
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
-(* TODO benjamin CLEAN rename to fun_def *)
 type fun_definition = {
     name : variable_name;
-    parameter_names : variable_name list;
+    parameter_refs : Automaton.variable_ref list;
     signature_constraint : FunctionSig.signature_constraint;
     body : DiscreteExpressions.fun_type;
     side_effect : bool;

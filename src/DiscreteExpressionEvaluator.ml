@@ -9,16 +9,13 @@ open DiscreteExpressions
 open LinearConstraint
 open Exceptions
 
-type variable_table = (variable_name, AbstractValue.abstract_value) Hashtbl.t
-type functions_table = (variable_name, fun_definition) Hashtbl.t
 type variable_name_table = variable_index -> variable_name
+type functions_table = (variable_name, fun_definition) Hashtbl.t
 (* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
 type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
 type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
 
-type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
-type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
-type discrete_access = discrete_valuation * discrete_setter
+
 
 (* Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -26,8 +23,10 @@ type eval_context = {
     discrete_valuation : discrete_valuation;
     (* Setter of global variables at the context (current location) *)
     discrete_setter : discrete_setter;
-    (* Current local variables *)
-    local_variables : variable_table list;
+    (* Valuation of local variables at the context (current location) *)
+    local_discrete_valuation : local_discrete_valuation;
+    (* Setter of local variables at the context (current location) *)
+    local_discrete_setter : local_discrete_setter;
     (**)
     updated_clocks : clock_updates_history;
     updated_clocks_ordered : clock_updates_history_2;
@@ -40,8 +39,15 @@ type delayed_update_result =
 
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
-let [@inline] create_eval_context (discrete_valuation, discrete_setter) =
-    { discrete_valuation = discrete_valuation; discrete_setter = discrete_setter; local_variables = [Hashtbl.create 0]; updated_clocks = Hashtbl.create 0; updated_clocks_ordered = Queue.create () }
+let [@inline] create_eval_context (discrete_valuation, discrete_setter, local_discrete_valuation, local_discrete_setter) =
+    {
+        discrete_valuation = discrete_valuation;
+        discrete_setter = discrete_setter;
+        local_discrete_valuation = local_discrete_valuation;
+        local_discrete_setter = local_discrete_setter;
+        updated_clocks = Hashtbl.create 0;
+        updated_clocks_ordered = Queue.create ()
+    }
 
 (* Create an evaluation context with a discrete valuation function and a local variables table *)
 let [@inline] create_eval_context_opt = function
@@ -84,35 +90,25 @@ let try_eval_variable variable_index = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
-let try_eval_function function_name : functions_table option -> fun_definition = function
-    | Some functions_table -> Hashtbl.find functions_table function_name
-    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
-    | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
-
-let eval_local_variable eval_context variable_name =
-        (* Search variable through scopes from the bottom scope to the top scope *)
-        let var_scope = List.find (fun var_scope -> Hashtbl.mem var_scope variable_name) eval_context.local_variables in
-        Hashtbl.find var_scope variable_name
+let eval_local_variable eval_context = eval_context.local_discrete_valuation
 
 (* Try evaluating a local variable value if an eval context is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
 (* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
-let try_eval_local_variable variable_name = function
+let try_eval_local_variable variable_ref = function
     | Some eval_context ->
-        eval_local_variable eval_context variable_name
+        eval_local_variable eval_context variable_ref
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
-let set_local_variable eval_context variable_name value =
-    (* Search variable through scopes from the bottom scope to the top scope *)
-    let var_scope = List.find (fun var_scope -> Hashtbl.mem var_scope variable_name) eval_context.local_variables in
-    Hashtbl.replace var_scope variable_name value
+(* TODO benjamin CLEAN currify *)
+let set_local_variable eval_context variable_ref value =
+    eval_context.local_discrete_setter variable_ref value
 
-let add_local_variable eval_context variable_name value =
-    (* Get bottom scope *)
-    let var_scope = List.hd eval_context.local_variables in
-    (* Add variable to the scope *)
-    Hashtbl.replace var_scope variable_name value
+let try_eval_function function_name : functions_table option -> fun_definition = function
+    | Some functions_table -> Hashtbl.find functions_table function_name
+    (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
+    | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
 
 (* Replace discrete variable by their current value in a linear expression that update a clock *)
 let rewrite_clock_update variable_names eval_context (* linear_expr *) =
@@ -132,8 +128,8 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
                     IR_Var variable_index
                 )
             )
-        | IR_Local_var variable_name ->
-            let value = numconst_value (eval_local_variable eval_context variable_name) in
+        | IR_Local_var variable_ref ->
+            let value = numconst_value (eval_local_variable eval_context variable_ref) in
             IR_Coef value
 
         | IR_Coef _ as ir_coef -> ir_coef
@@ -154,13 +150,21 @@ let effective_clock_updates eval_context model =
     (* Get ordered clock updates from context *)
     let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
 
-    List.iter (fun (clock_index, l) ->
-        let s = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
-        ImitatorUtilities.print_standard_message ("updatus clock: " ^ model.variable_names clock_index ^ "," ^ string_of_int clock_index ^ ", expr: " ^ s);
-    ) updated_clocks;
+    (* Display clock updates found only if verbose=high *)
+    let lazy_str_clock_updates = lazy (
+        let str_clock_updates =
+            List.map (fun (clock_index, l) ->
+                let str_linear_expr = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
+                "`" ^ model.variable_names clock_index ^ "=" ^ str_linear_expr ^ "`"
+            ) updated_clocks
+        in
+        "Update clock(s): " ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_clock_updates
+    )
+    in
+    ImitatorUtilities.print_message_lazy Verbose_high lazy_str_clock_updates;
 
     if List.length updated_clocks = 0 then (
-        ImitatorUtilities.print_standard_message ("no updates");
+        ImitatorUtilities.print_message_lazy Verbose_high (lazy "No clock updates.");
         No_update
     ) else (
 
@@ -173,11 +177,11 @@ let effective_clock_updates eval_context model =
         in
 
         if is_all_resets then (
-            ImitatorUtilities.print_standard_message ("only resets");
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy "Only clock resets.");
             let clock_indexes = List.map first_of_tuple updated_clocks in
             Resets clock_indexes
         ) else (
-            ImitatorUtilities.print_standard_message ("updates: " ^ string_of_int (List.length updated_clocks));
+            ImitatorUtilities.print_message_lazy Verbose_high (lazy (string_of_int (List.length updated_clocks) ^ " clock updates found."));
             Updates updated_clocks
         )
     )
@@ -238,9 +242,9 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
         numconst_value (try_eval_variable variable_index eval_context_opt)
     | Rational_constant variable_value ->
         variable_value
-    | Rational_local_variable variable_name ->
+    | Rational_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         numconst_value discrete_value
     | Rational_nested_expression expr ->
         eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr
@@ -256,8 +260,8 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         numconst_value value
 
-    | Rational_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Rational_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         numconst_value result
 
 and eval_int_expression_with_context variable_names functions_table_opt eval_context_opt (* expr *) =
@@ -309,9 +313,9 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             int_value (try_eval_variable variable_index eval_context_opt)
         | Int_constant variable_value ->
             variable_value;
-        | Int_local_variable variable_name ->
+        | Int_local_variable variable_ref ->
                         (* Variable should exist as it was checked before *)
-            let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+            let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
             int_value discrete_value
 
         | Int_nested_expression expr ->
@@ -327,8 +331,8 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
             int_value value
 
-        | Int_function_call (function_name, param_names, expr_args) ->
-            let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+        | Int_function_call (function_name, param_refs, expr_args) ->
+            let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
             int_value result
 
     in
@@ -356,9 +360,9 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         bool_value (try_eval_variable variable_index eval_context_opt)
     | Bool_constant value ->
         value
-    | Bool_local_variable variable_name ->
+    | Bool_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         bool_value discrete_value
     (** Discrete arithmetic expression of the form Expr ~ Expr *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
@@ -410,25 +414,25 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         bool_value value
 
-    | Bool_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Bool_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         bool_value result
 
 and eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Binary_word_constant value -> value
     | Binary_word_variable (variable_index, _) ->
         binary_word_value (try_eval_variable variable_index eval_context_opt)
-    | Binary_word_local_variable variable_name ->
+    | Binary_word_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         binary_word_value discrete_value
 
     | Binary_word_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         binary_word_value value
 
-    | Binary_word_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Binary_word_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         binary_word_value result
 
 and eval_array_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -438,17 +442,17 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
         array_value (try_eval_variable variable_index eval_context_opt)
     | Array_constant values ->
         values
-    | Array_local_variable variable_name ->
+    | Array_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         array_value discrete_value
 
     | Array_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         array_value value
 
-    | Array_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Array_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         array_value result
 
 and eval_list_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -458,16 +462,16 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
         list_value (try_eval_variable variable_index eval_context_opt)
     | List_constant values ->
         values
-    | List_local_variable variable_name ->
+    | List_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         list_value discrete_value
     | List_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         list_value value
 
-    | List_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | List_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         list_value result
 
 and eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -476,17 +480,17 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
     | Stack_variable variable_index ->
         stack_value (try_eval_variable variable_index eval_context_opt)
 
-    | Stack_local_variable variable_name ->
-                (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+    | Stack_local_variable variable_ref ->
+        (* Variable should exist as it was checked before *)
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         stack_value discrete_value
 
     | Stack_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         stack_value value
 
-    | Stack_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Stack_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         stack_value result
 
 and eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt = function
@@ -495,22 +499,22 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
     | Queue_variable variable_index ->
         queue_value (try_eval_variable variable_index eval_context_opt)
 
-    | Queue_local_variable variable_name ->
+    | Queue_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
-        let discrete_value = try_eval_local_variable variable_name eval_context_opt in
+        let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         queue_value discrete_value
 
     | Queue_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         queue_value value
 
-    | Queue_function_call (function_name, param_names, expr_args) ->
-        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Queue_function_call (function_name, param_refs, expr_args) ->
+        let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         queue_value result
 
 and eval_void_expression_with_context variable_names functions_table_opt eval_context_opt = function
-    | Void_function_call (function_name, param_names, expr_args) ->
-        let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args in
+    | Void_function_call (function_name, param_refs, expr_args) ->
+        let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         Abstract_void_value
 
 and get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr =
@@ -553,24 +557,20 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         List.iter (eval_instruction eval_context) code_bloc
 
     and eval_instruction eval_context = function
-        | Local_decl (variable_name, _, expr) ->
+        | Local_decl (variable_ref, _, expr) ->
             let value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
-            (* Add new variable to eval context *)
-            add_local_variable eval_context variable_name value
+            (* Set local variable with initial value *)
+            set_local_variable eval_context variable_ref value
 
-        | For_loop (variable_name, from_expr, to_expr, loop_dir, inner_bloc) ->
+        | For_loop (variable_ref, from_expr, to_expr, loop_dir, inner_bloc) ->
             let from_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) from_expr in
             let to_value = eval_int_expression_with_context variable_names functions_table_opt (Some eval_context) to_expr in
 
             let execute_inner_bloc i =
-                let abs_value = AbstractValue.of_int (Int32.of_int i) in
-                (* Add loop variable to eval context *)
-                add_local_variable eval_context variable_name abs_value;
-                (* Create inner loop context by adding new scope *)
-                let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
+                let value = AbstractValue.of_int (Int32.of_int i) in
+                set_local_variable eval_context variable_ref value;
                 (* Don't get any value as it was evaluated as void expression *)
-                let _ = eval_seq_code_bloc inner_eval_context inner_bloc in ()
+                eval_seq_code_bloc eval_context inner_bloc
             in
 
             let i32_from_value, i32_to_value = Int32.to_int from_value, Int32.to_int to_value in
@@ -588,12 +588,9 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
         | While_loop (condition_expr, inner_bloc) ->
 
-            (* Create inner loop context by adding new scope *)
-            let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
             while (eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr) do
                 (* Don't get any value as it was evaluated as void expression *)
-                eval_seq_code_bloc inner_eval_context inner_bloc;
+                eval_seq_code_bloc eval_context inner_bloc;
             done
 
         | If (condition_expr, then_bloc, else_bloc_opt) ->
@@ -601,16 +598,13 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             (* Evaluation condition *)
             let condition_evaluated = eval_boolean_expression_with_context variable_names functions_table_opt (Some eval_context) condition_expr in
 
-            (* Create inner context by adding new scope *)
-            let inner_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-
             (* Execute then or else bloc (if defined) *)
             if condition_evaluated then (
-                let _ = eval_seq_code_bloc inner_eval_context then_bloc in ()
+                eval_seq_code_bloc eval_context then_bloc
             ) else (
                 match else_bloc_opt with
                 | Some else_bloc ->
-                    let _ = eval_seq_code_bloc inner_eval_context else_bloc in ()
+                    eval_seq_code_bloc eval_context else_bloc
                 | None -> ()
             );
 
@@ -620,24 +614,24 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         | Assignment normal_update ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update
 
-        | Local_assignment local_update ->
-            direct_update_with_context variable_names functions_table_opt eval_context local_update
-
         | Clock_assignment (clock_index, linear_expr) ->
-            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
+            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
+            (* Add clock update into table *)
             Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            (* Push clock update on queue *)
             Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
 
-
-            (match variable_names with
-            | Some variable_names ->
-            let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
-            let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
-            (* TODO benjamin CLEAN remove message, just for testing *)
-            ImitatorUtilities.print_standard_message (variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`")
-            | _ -> ()
-            );
+            let lazy_rewriting_message = lazy (
+                match variable_names with
+                | Some variable_names ->
+                    let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
+                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
+                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
+                | _ -> ""
+            )
+            in
+            ImitatorUtilities.print_message_lazy Verbose_high lazy_rewriting_message;
 
 
 
@@ -645,32 +639,29 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
     eval_seq_code_bloc eval_context seq_code_bloc
 
-and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_names expr_args =
+and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args =
 
     (* Get function definition *)
     let fun_def = try_eval_function function_name functions_table_opt in
     (* Compute arguments values *)
     let arg_values = List.map (eval_global_expression_with_context variable_names functions_table_opt eval_context_opt) expr_args in
     (* Associate each parameter with their value *)
-    let param_names_with_arg_values = List.combine param_names arg_values in
+    let param_refs_with_arg_values = List.combine param_refs arg_values in
 
     (* Eval function *)
     let eval_fun_type_with_context eval_context_opt = function
         | Fun_builtin builtin_f ->
             (* Execute built-in function given argument values *)
             let l_del, r_del = Constants.default_paren_delimiter in
+            (* Get formal parameter names *)
+            let param_names = List.map first_of_tuple param_refs in
             let str_fun_call = function_name ^ l_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names ^ r_del in
             builtin_f str_fun_call arg_values
 
         | Fun_user (code_bloc, return_expr_opt) ->
             let eval_context =
                 match eval_context_opt with
-                | Some eval_context ->
-                    (* Push scope of function body *)
-                    let new_eval_context = {eval_context with local_variables = (Hashtbl.create 0) :: eval_context.local_variables } in
-                    List.iter (fun (param_name, value) -> add_local_variable new_eval_context param_name value) param_names_with_arg_values;
-                    new_eval_context
-
+                | Some eval_context -> eval_context
                 | None -> raise (InternalError
                     "Trying to evaluate a function without `eval_context`.
                     Only constant expression can be evaluated without context
@@ -678,12 +669,16 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
                     Some checks may failed before."
                 )
             in
+
+            (* Set parameter values to computed argument values *)
+            List.iter (fun (param_ref, value) -> set_local_variable eval_context param_ref value) param_refs_with_arg_values;
+            (* Eval function body *)
             eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context code_bloc;
+
             match return_expr_opt with
             | Some return_expr ->
                 eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) return_expr
             | None -> Abstract_void_value
-
     in
     eval_fun_type_with_context eval_context_opt fun_def.body
 
@@ -702,8 +697,8 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
         match update_scope with
         | Global_update variable_index ->
             eval_context.discrete_valuation variable_index
-        | Local_update variable_name ->
-            eval_local_variable eval_context variable_name
+        | Local_update variable_ref ->
+            eval_local_variable eval_context variable_ref
     in
 
     (* Compute its new value *)
@@ -721,8 +716,8 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
     | Global_update discrete_index ->
         (* Direct update ! *)
         eval_context.discrete_setter discrete_index new_value
-    | Local_update variable_name ->
-        set_local_variable eval_context variable_name new_value
+    | Local_update variable_ref ->
+        set_local_variable eval_context variable_ref new_value
 
 (* TODO benjamin CLEAN UPDATES *)
 (* Record an update into the updated_discrete hash table, then the updates can be made later  *)
