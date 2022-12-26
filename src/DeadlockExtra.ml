@@ -85,7 +85,7 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
 
-(* TODO benjamin CLEAN UPDATES *)
+(* TODO CLEAN OLD UPDATES *)
 (*
 let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
 	(* Retrieve the model *)

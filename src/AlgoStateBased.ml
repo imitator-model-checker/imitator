@@ -875,7 +875,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	) combined_transition;
 
     (* Get clocks that were updated effectively in previous evaluation (just before at eval_seq_code_bloc...) *)
-    let clock_updates = DiscreteExpressionEvaluator.effective_clock_updates eval_context model in
+    let clock_updates = DiscreteExpressionEvaluator.effective_clock_updates eval_context model.variable_names in
 
     (* Update the update flag *)
     let has_updates =

@@ -5,10 +5,14 @@ open Automaton
 open AbstractModel
 open DiscreteState
 
+(* Table of variable name by index *)
 type variable_name_table = variable_index -> variable_name
-type functions_table = (variable_name, AbstractModel.fun_definition) Hashtbl.t
-type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
-type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
+(* Table of function (name, definition) *)
+type functions_table = (variable_name, fun_definition) Hashtbl.t
+(* Table of clock updates in (no order) *)
+type clock_updates_table = (clock_index, pxd_linear_term) Hashtbl.t
+(* Queue of ordered clock updates *)
+type clock_updates_history = (clock_index * pxd_linear_term) Queue.t
 
 (* Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -20,14 +24,15 @@ type eval_context = {
     local_discrete_valuation : local_discrete_valuation;
     (* Setter of local variables at the context (current location) *)
     local_discrete_setter : local_discrete_setter;
-    (**)
-    updated_clocks : clock_updates_history;
-    updated_clocks_ordered : clock_updates_history_2;
+    (* All clock updates *)
+    updated_clocks : clock_updates_table;
+    (* Ordered queue of clock updates *)
+    updated_clocks_ordered : clock_updates_history;
 }
 
 val create_eval_context : discrete_access -> eval_context
 (* Get clocks that were updated effectively (found in eval context) *)
-val effective_clock_updates : eval_context -> abstract_model -> clock_updates
+val effective_clock_updates : eval_context -> variable_name_table -> clock_updates
 
 val eval_global_expression : variable_name_table option -> functions_table option -> discrete_access option -> global_expression -> AbstractValue.abstract_value
 val eval_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> boolean_expression -> bool

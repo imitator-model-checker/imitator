@@ -9,11 +9,14 @@ open DiscreteExpressions
 open LinearConstraint
 open Exceptions
 
+(* Table of variable name by index *)
 type variable_name_table = variable_index -> variable_name
+(* Table of function (name, definition) *)
 type functions_table = (variable_name, fun_definition) Hashtbl.t
-(* TODO benjamin CLEAN rename types to clock_updates_table and clock_updates_history *)
-type clock_updates_history = (clock_index, pxd_linear_term) Hashtbl.t
-type clock_updates_history_2 = (clock_index * pxd_linear_term) Queue.t
+(* Table of clock updates in (no order) *)
+type clock_updates_table = (clock_index, pxd_linear_term) Hashtbl.t
+(* Queue of ordered clock updates *)
+type clock_updates_history = (clock_index * pxd_linear_term) Queue.t
 
 
 
@@ -27,9 +30,10 @@ type eval_context = {
     local_discrete_valuation : local_discrete_valuation;
     (* Setter of local variables at the context (current location) *)
     local_discrete_setter : local_discrete_setter;
-    (**)
-    updated_clocks : clock_updates_history;
-    updated_clocks_ordered : clock_updates_history_2;
+    (* All clock updates *)
+    updated_clocks : clock_updates_table;
+    (* Ordered queue of clock updates *)
+    updated_clocks_ordered : clock_updates_history;
 }
 
 
@@ -96,9 +100,7 @@ let try_eval_local_variable variable_ref = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
-(* TODO benjamin CLEAN currify *)
-let set_local_variable eval_context variable_ref value =
-    eval_context.local_discrete_setter variable_ref value
+let set_local_variable eval_context (* variable_ref value *) = eval_context.local_discrete_setter (* variable_ref value *)
 
 let try_eval_function function_name : functions_table option -> fun_definition = function
     | Some functions_table -> Hashtbl.find functions_table function_name
@@ -137,10 +139,8 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
     in
     rewrite_clock_update_rec (* linear_expr *)
 
-
-(* TODO benjamin CLEAN message for debug, remove model parameter *)
 (* Get clocks that were updated effectively (found in eval context) *)
-let effective_clock_updates eval_context model =
+let effective_clock_updates eval_context variable_names =
 
     (* Get ordered clock updates from context *)
     let updated_clocks = eval_context.updated_clocks_ordered |> Queue.to_seq |> List.of_seq in
@@ -149,8 +149,8 @@ let effective_clock_updates eval_context model =
     let lazy_str_clock_updates = lazy (
         let str_clock_updates =
             List.map (fun (clock_index, l) ->
-                let str_linear_expr = LinearConstraint.string_of_pxd_linear_term model.variable_names l in
-                "`" ^ model.variable_names clock_index ^ "=" ^ str_linear_expr ^ "`"
+                let str_linear_expr = LinearConstraint.string_of_pxd_linear_term variable_names l in
+                "`" ^ variable_names clock_index ^ "=" ^ str_linear_expr ^ "`"
             ) updated_clocks
         in
         "Update clock(s): " ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_clock_updates
