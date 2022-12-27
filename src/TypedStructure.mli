@@ -123,9 +123,6 @@ type typed_fun_definition = {
     body : typed_seq_code_bloc_list * typed_boolean_expression option; (* body *)
 }
 
-val label_of_typed_sequence_type : typed_sequence_type -> string
-val label_of_typed_factor_constructor : typed_discrete_factor -> string
-
 val string_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> string
 val string_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> string
 val string_of_typed_discrete_arithmetic_expression : variable_infos -> var_type_discrete -> typed_discrete_arithmetic_expression -> string

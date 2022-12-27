@@ -126,22 +126,6 @@ type typed_fun_definition = {
 
 (** Strings **)
 
-let label_of_typed_sequence_type = function
-	| Typed_array -> "array"
-	| Typed_list -> "list"
-	| Typed_stack -> Constants.stack_string
-	| Typed_queue -> "queue"
-
-let label_of_typed_factor_constructor = function
-	| Typed_variable _ -> "variable"
-	| Typed_constant _ -> "constant"
-	| Typed_sequence (_, _, seq_type) -> label_of_typed_sequence_type seq_type
-	| Typed_access _ -> "access"
-	| Typed_nested_expr _ -> "expression"
-	| Typed_unary_min _ -> "minus"
-    | Typed_function_call (function_name, _, _) -> function_name
-
-
 let string_format_typed_node str_node discrete_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete discrete_type ^ "}"
 

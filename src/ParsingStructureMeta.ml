@@ -700,16 +700,6 @@ let local_variables_of_parsed_fun_def (fun_def : parsed_fun_definition) =
         (fun _ -> [])
         fun_def
 
-(* Get local variables of a parsed sequential code bloc *)
-let local_variables_of_parsed_seq_code_bloc seq_code_bloc =
-    ParsingStructureUtilities.fold_parsed_seq_code_bloc
-        (@)
-        []
-        ~decl_callback:(Some (fun (variable_name, discrete_type, id) -> [variable_name, discrete_type, id]))
-        (fun _ -> [])
-        (fun _ -> [])
-        seq_code_bloc
-
 (* Infer whether a user function is subject to side effects *)
 let rec is_function_has_side_effects builtin_functions_metadata_table user_function_definitions_table (fun_def : parsed_fun_definition) =
 
@@ -741,3 +731,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         is_seq_code_bloc_leaf_has_side_effects (* Check if leaf of sequential code bloc has side effect *)
         is_leaf_has_side_effects (* Check if leaf has side effect *)
         fun_def
+
+
+
+
