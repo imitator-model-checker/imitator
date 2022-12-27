@@ -47,7 +47,9 @@ let discrete_boolean_expression_constant_value_opt = function
 let is_constant variable_infos = function
     | Leaf_variable (variable_name, _) -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
-    (* TODO benjamin IMPROVE not always true, a function can be constant if it's content is constant too *)
+    (* Note: It's not always true, a function can be constant if it's content is constant too *)
+    (* This can be improved by computing before whether a function is constant and put it in fun_meta of variable_infos.fun_meta *)
+    (* In the same manner as side_effects. We answer "false" by sake of simplicity here *)
     | Leaf_fun _ -> false
 
 (* Check if leaf is a function call *)

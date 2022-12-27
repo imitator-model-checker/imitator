@@ -202,6 +202,18 @@ let json_of_pval model pval =
 		^ "\n\t\t\t}"
 	)
 
+(* Convert a parameter valuation (PVal.pval) into a JSON-like string *)
+let json_of_pval_2 model pval =
+	(* Hack for empty model *)
+	if model.nb_parameters = 0 then
+	    JsonFormatter.Json_null
+	else
+	    JsonFormatter.Json_struct (
+            List.map (fun parameter ->
+                model.variable_names parameter, JsonFormatter.Json_string (NumConst.string_of_numconst (pval#get_value parameter))
+            ) model.parameters
+	    )
+
 (************************************************************)
 (** V0 *)
 (************************************************************)
@@ -334,8 +346,10 @@ let count_instructions (* seq_code_bloc *) =
     in
     count_instructions (* seq_code_bloc *)
 
+(* Convert loop direction into a string *)
+let string_of_loop_dir = function Loop_up -> " to " | Loop_down -> " downto "
 
-(* Convert a function expression into a string *)
+(* Convert a sequential code bloc into a string *)
 let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
 
     let rec string_of_seq_code_bloc level code_bloc =
@@ -357,10 +371,9 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
             ^ ";"
 
         | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
-            ImitatorUtilities.print_standard_message ("length of code bloc: " ^ string_of_int (List.length inner_bloc));
             tabs ^ "for " ^ variable_name ^ " from "
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names from_expr
-            ^ (match loop_dir with Loop_up -> " to " | Loop_down -> " downto ")
+            ^ string_of_loop_dir loop_dir
             ^ DiscreteExpressions.string_of_int_arithmetic_expression model.variable_names to_expr
             ^ " do\n"
             ^ string_of_seq_code_bloc (level + 1) inner_bloc ^ "\n"
@@ -594,46 +607,65 @@ let string_of_clock_updates variable_names clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names linear_term) in
 	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
 
-(** Convert a clock update into a JSON-like string *)
-let json_of_clock_updates variable_names clock_updates =
-	let sep = "," in
-	let wrap_reset variable_index = "\n\t\t\t\t\t\t\t" ^ (json_of_string (variable_names variable_index)) ^ ": " ^ (json_of_string "0") ^ "" in
-	let wrap_expr variable_index linear_term = "\n\t\t\t\t\t\t\t" ^ (json_of_string (variable_names variable_index)) ^ ": " ^ (json_of_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_term)) ^ "" in
-	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
-
 let customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type =
     DiscreteExpressions.customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type
 
 let string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type =
     DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type
 
-let json_of_seq_code_bloc variable_names (* seq_code_bloc *) =
+let json_of_seq_code_bloc_2 variable_names seq_code_bloc =
 
-    let json_of_instruction = function
+    let rec json_of_seq_code_bloc seq_code_bloc =
+        List.map json_of_instruction seq_code_bloc
+
+    and json_of_instruction = function
         | Assignment (scalar_or_index_update_type, expr) ->
-            json_of_string (DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type)
-            ^ ": "
-            ^ json_of_string (DiscreteExpressions.string_of_global_expression variable_names expr)
+            DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type, JsonFormatter.Json_string (DiscreteExpressions.string_of_global_expression variable_names expr)
 
         | Clock_assignment (clock_index, linear_expr) ->
-            "\n\t\t\t\t\t\t\t"
-            ^ json_of_string (variable_names clock_index)
-            ^ ": "
-            ^ json_of_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_expr)
+            variable_names clock_index, JsonFormatter.Json_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_expr)
 
-        | Local_decl ((variable_name, _), discrete_type, expr) -> ""
-        | Instruction expr -> ""
-        | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) -> ""
-        | While_loop (condition_expr, inner_bloc) -> ""
-        | If (condition_expr, then_bloc, else_bloc_opt) -> "" (* TODO benjamin IMPLEMENT ! *)
+        | Local_decl ((variable_name, _), discrete_type, expr) ->
+            "declaration", JsonFormatter.Json_struct [
+                "name", JsonFormatter.Json_string variable_name;
+                "type", JsonFormatter.Json_string (DiscreteType.string_of_var_type_discrete discrete_type);
+                "value", JsonFormatter.Json_string (DiscreteExpressions.string_of_global_expression variable_names expr)
+            ]
 
+        | Instruction expr ->
+            "expr", JsonFormatter.Json_string (DiscreteExpressions.string_of_global_expression variable_names expr)
+
+        | For_loop ((variable_name, _), from_expr, to_expr, loop_dir, inner_bloc) ->
+            "for", JsonFormatter.Json_struct [
+                "name", JsonFormatter.Json_string variable_name;
+                "from", JsonFormatter.Json_string (DiscreteExpressions.string_of_int_arithmetic_expression variable_names from_expr);
+                "to", JsonFormatter.Json_string (DiscreteExpressions.string_of_int_arithmetic_expression variable_names to_expr);
+                "dir", JsonFormatter.Json_string (string_of_loop_dir loop_dir);
+                "bloc", JsonFormatter.Json_struct (json_of_seq_code_bloc inner_bloc)
+            ]
+
+        | While_loop (condition_expr, inner_bloc) ->
+            "while", JsonFormatter.Json_struct [
+                "condition", JsonFormatter.Json_string (DiscreteExpressions.string_of_boolean_expression variable_names condition_expr);
+                "bloc", JsonFormatter.Json_struct (json_of_seq_code_bloc inner_bloc)
+            ]
+
+        | If (condition_expr, then_bloc, else_bloc_opt) ->
+            let json_if = [
+                "condition", JsonFormatter.Json_string (DiscreteExpressions.string_of_boolean_expression variable_names condition_expr);
+                "then", JsonFormatter.Json_struct (json_of_seq_code_bloc then_bloc);
+            ] in
+
+            let json_else =
+                match else_bloc_opt with
+                Some else_bloc -> ["else", JsonFormatter.Json_struct (json_of_seq_code_bloc else_bloc)]
+                | None -> []
+            in
+
+            "if", JsonFormatter.Json_struct (json_if @ json_else)
     in
+    JsonFormatter.Json_struct (List.map json_of_instruction seq_code_bloc)
 
-    let json_of_seq_code_bloc seq_code_bloc =
-        let str_instructions = List.map json_of_instruction seq_code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep ",\n" str_instructions
-    in
-    json_of_seq_code_bloc (* seq_code_bloc *)
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -696,34 +728,20 @@ let string_of_transition_for_runs model automaton_index (transition : transition
 	^ "] "
 
 (* Convert a transition into a JSON-like string *)
-let json_of_transition model automaton_index (transition : transition) =
+let json_of_transition_2 model automaton_index (transition : transition) =
 
     let _, seq_code_bloc_updates = transition.updates in
 
-	""
-	(* Begin transition *)
-	^ "\n\t\t\t\t\t{"
-	^ "\n\t\t\t\t\t" ^ (json_of_string "transition") ^ ": {"
-	
-	(* PTA name *)
-	^ "\n\t\t\t\t\t\t" ^ (json_of_string "PTA") ^ ": " ^ (json_of_string (model.automata_names automaton_index)) ^ ","
-	
-	(* Guard *)
-	^ "\n\t\t\t\t\t\t" ^ (json_of_string "guard") ^ ": " ^ (json_of_string (json_of_guard model.variable_names transition.guard)) ^ ","
-	
-	(* Updates *)
-	^ "\n\t\t\t\t\t\t" ^ (json_of_string "updates") ^ ": {"
-	(* Clock updates *)
-	^ json_of_seq_code_bloc model.variable_names seq_code_bloc_updates
-	^ "\n\t\t\t\t\t\t}"
-	
-(* 	(* Convert the target location *) *)
-(* 	^ " Target " ^ (model.location_names automaton_index transition.target) *)
-
-	(* end transition *)
-	^ "\n\t\t\t\t\t}"
-	^ "\n\t\t\t\t\t}"
-
+    JsonFormatter.Json_struct [
+        "transition", JsonFormatter.Json_struct [
+        	(* PTA name *)
+            "PTA", JsonFormatter.Json_string (model.automata_names automaton_index);
+        	(* Guard *)
+            "guard", JsonFormatter.Json_string (json_of_guard model.variable_names transition.guard);
+            (* Updates *)
+            "updates",  json_of_seq_code_bloc_2 model.variable_names seq_code_bloc_updates;
+        ]
+    ]
 
 
 (* Convert the transitions of a location into a string *)
@@ -1211,13 +1229,10 @@ let string_of_valuation variables variable_names valuation =
 	)
 
 (* Convert a valuation into a JSON-like string *)
-let json_of_valuation variables variable_names valuation =
-	string_of_list_of_string_with_sep "," (
+let json_of_valuation_2 variables variable_names valuation =
+    JsonFormatter.Json_struct (
 		List.map (fun variable ->
-			"\n\t\t\t\t\t"
-			^ (json_of_string (variable_names variable)) ^ ""
-			^ ": "
-			^ "" ^ (json_of_string (NumConst.string_of_numconst (valuation variable))) ^ ""
+		    variable_names variable, JsonFormatter.Json_string (NumConst.string_of_numconst (valuation variable))
 		) variables
 	)
 
@@ -1228,7 +1243,7 @@ let string_of_px_valuation model = string_of_valuation model.parameters_and_cloc
 let string_of_x_valuation model = string_of_valuation model.clocks model.variable_names
 
 (* Convert a px-valuation into a JSON-like string *)
-let json_of_px_valuation model = json_of_valuation model.parameters_and_clocks model.variable_names
+let json_of_px_valuation_2 model = json_of_valuation_2 model.parameters_and_clocks model.variable_names
 
 
 
@@ -1270,79 +1285,52 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	^ "]"
 
 (* Convert a global location into JSON-style string (locations, NO discrete variables valuations) *)
-let json_of_global_location model (global_location : DiscreteState.global_location) =
-	string_of_list_of_string_with_sep ", " (
+let json_of_global_location_2 model (global_location : DiscreteState.global_location) =
+    JsonFormatter.Json_struct (
 		List.map (fun automaton_index ->
 			(* Retrieve location for `automaton_index` *)
 			let location_index = DiscreteState.get_location global_location automaton_index in
-			
+
 			(* Get names *)
 			let automaton_name = model.automata_names automaton_index in
 			let location_name = model.location_names automaton_index location_index in
-			
+
 			(* Convert *)
-			"\n\t\t\t\t\t" ^ (json_of_string automaton_name) ^ ": " ^ (json_of_string location_name) ^ ""
+			automaton_name, JsonFormatter.Json_string location_name
 		) model.automata
 	)
 
 (* Convert the values of the discrete variables in a global location into JSON-style string *)
-let json_of_discrete_values model (global_location : DiscreteState.global_location) =
-	string_of_list_of_string_with_sep ", " (
+let json_of_discrete_values_2 model (global_location : DiscreteState.global_location) =
+    JsonFormatter.Json_struct (
 		List.map (fun discrete_index ->
 			(* Retrieve valuation for `discrete_index` *)
 			let variable_value = DiscreteState.get_discrete_value global_location discrete_index in
-			
+
 			(* Convert to strings *)
 			let variable_name = model.variable_names discrete_index in
 			let variable_valuation = AbstractValue.string_of_value variable_value in
-			
+
 			(* Convert *)
-			"\n\t\t\t\t\t" ^ (json_of_string variable_name) ^ ": " ^ (json_of_string variable_valuation) ^ ""
+			variable_name, JsonFormatter.Json_string variable_valuation
 		) model.discrete
 	)
 
-
-
 (* Convert a concrete state into JSON-style string (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
-let json_of_concrete_state model (state : State.concrete_state) =
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-	
-	""
-	
-	(* Begin state *)
-	^ "\n\t\t\t{"
-	^ "\n\t\t\t" ^ (json_of_string "state") ^ ": {"
+let json_of_concrete_state_2 model (state : State.concrete_state) =
+    let global_location = state.global_location in
+    let flows = compute_flows_list global_location in
+    "state", JsonFormatter.Json_struct [
+        "location", json_of_global_location_2 model state.global_location;
+        "discrete_variables", json_of_discrete_values_2 model state.global_location;
+        "continuous_variables", json_of_px_valuation_2 model state.px_valuation;
+        "flows", JsonFormatter.Json_struct (
+            List.map (fun (variable_index, flow) ->
+                model.variable_names variable_index, JsonFormatter.Json_string (NumConst.string_of_numconst flow)
+            ) flows
+        )
+    ]
 
-	(* Convert location *)
-	^ "\n\t\t\t\t" ^ (json_of_string "location") ^ ": {" ^ (json_of_global_location model state.global_location)
-	^ "\n\t\t\t\t}," (* end locations *)
-	
-	(* Convert discrete variables *)
-	^ "\n\t\t\t\t" ^ (json_of_string "discrete_variables") ^ ": {" ^ (json_of_discrete_values model state.global_location) (*** TODO: float? ***)
-	^ "\n\t\t\t\t}," (* end discrete *)
-	
-	(* Convert continuous variables valuations *)
-	^ "\n\t\t\t\t" ^ (json_of_string "continuous_variables") ^ ": {" ^ (json_of_px_valuation model state.px_valuation)
-	^ "\n\t\t\t\t}," (* end continuous variables *)
-
-	(* Convert rates *)
-	^ "\n\t\t\t\t" ^ (json_of_string "flows") ^ ": {"
-	^ (
-		let global_location : DiscreteState.global_location = state.global_location in
-		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
-		(* Iterate *)
-		string_of_list_of_string_with_sep ", " (
-			List.map (fun (variable_index, flow) ->
-				"\n\t\t\t\t\t" ^ (json_of_string (model.variable_names variable_index )) ^ ": " ^ (json_of_string (NumConst.string_of_numconst flow)) ^ ""
-			) flows
-		)
-	)
-	^ "\n\t\t\t\t}" (* end flows *)
-
-	(* End state *)
-	^ "\n\t\t\t}"
-	^ "\n\t\t\t}"
 
 
 (************************************************************)
@@ -1409,7 +1397,7 @@ let debug_string_of_impossible_concrete_step = debug_string_of_arbitrary_or_impo
 
 let debug_string_of_arbitrary_concrete_steps model impossible_concrete_steps =
 	(* Iterate on following steps *)
-	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
+	(string_of_list_of_string_with_sep ",\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
 		debug_string_of_arbitrary_or_impossible_concrete_step_gen "arbitrary" model impossible_concrete_step
 	) impossible_concrete_steps))
 
@@ -1461,142 +1449,119 @@ let debug_string_of_impossible_concrete_run model (impossible_concrete_run : Sta
 (** Runs conversion to JSON *)
 (************************************************************)
 
-
 (* Function to pretty-print combined transitions *)
-let json_of_combined_transition model combined_transition =
-	""
-	^ "\n\t\t\t\t" ^ (json_of_string "transitions") ^ ": ["
+let json_of_combined_transition_2 model combined_transition =
+    JsonFormatter.Json_array (
+        List.map (fun transition_index ->
+            (* Get automaton index *)
+            let automaton_index = model.automaton_of_transition transition_index in
 
-	^ (
-		string_of_list_of_string_with_sep ", " (
-			List.map (fun transition_index ->
-				(* Get automaton index *)
-				let automaton_index = model.automaton_of_transition transition_index in
-				
-				(* Get actual transition *)
-				let transition = model.transitions_description transition_index in
-				
-				(* Convert *)
-				json_of_transition model automaton_index transition
-			) combined_transition
-		)
-	)
-	^ "\n\t\t\t\t]"
+            (* Get actual transition *)
+            let transition = model.transitions_description transition_index in
+
+            (* Convert *)
+            json_of_transition_2 model automaton_index transition
+        ) combined_transition
+    )
 
 
+let json_of_model_transition_2 model (concrete_step : StateSpace.concrete_step) =
+    (* Get the action: a little tricky, as it is stored in *each* of transition of the combined transition *)
+    (*** NOTE: we get it arbitrarily from the first transition of the combined transition ***)
+    let first_transition_index : AbstractModel.transition_index = (List.hd (concrete_step.transition)) in
+    let first_transition : AbstractModel.transition = model.transitions_description first_transition_index in
+    let action_index : Automaton.action_index = first_transition.action in
+    (* Convert action to string *)
+    let action_name = json_of_action model action_index in
+    "transition", JsonFormatter.Json_struct [
+        "nature", JsonFormatter.Json_string "concrete";
+        "duration", JsonFormatter.Json_string (NumConst.string_of_numconst concrete_step.time);
+        "action", JsonFormatter.Json_string action_name;
+        "transitions", json_of_combined_transition_2 model concrete_step.transition
+    ]
 
-let json_of_concrete_steps model concrete_steps =
-	(* Iterate on following steps *)
-	(string_of_list_of_string_with_sep ", " (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
-		(* Get the action: a little tricky, as it is stored in *each* of transition of the combined transition *)
-		(*** NOTE: we get it arbitrarily from the first transition of the combined transition ***)
-		let first_transition_index : AbstractModel.transition_index = (List.hd (concrete_step.transition)) in
-		let first_transition : AbstractModel.transition = model.transitions_description first_transition_index in
-		let action_index : Automaton.action_index = first_transition.action in
-		(* Convert action to string *)
-		let action_name = json_of_action model action_index in
-		
-		""
-		
-		(* Begin transition *)
-		^ "\n\t\t\t{"
-		^ "\n\t\t\t" ^ (json_of_string "transition") ^ ": {"
-		^ "\n\t\t\t\t" ^ (json_of_string "nature") ^ ": " ^ (json_of_string ("concrete")) ^ ","
-		^ "\n\t\t\t\t" ^ (json_of_string "duration") ^ ": " ^ (json_of_string (NumConst.string_of_numconst concrete_step.time)) ^ ","
-		^ "\n\t\t\t\t" ^ (json_of_string "action") ^ ": " ^ (json_of_string action_name) ^ ","
-		^ (json_of_combined_transition model concrete_step.transition) ^ ""
-		(* End transition *)
-		^ "\n\t\t\t}"
-		^ "\n\t\t\t}"
-		
-		^ ","
-		
-		(* Target state *)
-		^ (json_of_concrete_state model concrete_step.target)
-	) concrete_steps))
+let json_of_concrete_steps_2 model concrete_steps =
+    List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+        JsonFormatter.Json_struct [json_of_model_transition_2 model concrete_step] ::
+        [JsonFormatter.Json_struct [json_of_concrete_state_2 model concrete_step.target]]
+    ) concrete_steps |> List.flatten
 
-let json_of_arbitrary_or_impossible_concrete_step_gen (step_description : string) model (impossible_concrete_step : StateSpace.impossible_concrete_step) =
+
+let json_of_arbitrary_or_impossible_concrete_step_gen_2 (step_description : string) model (impossible_concrete_step : StateSpace.impossible_concrete_step) =
 	(* Convert action to string *)
 	let action_name = json_of_action model impossible_concrete_step.action in
-	
-	""
-	
+
 	(* Begin transition *)
-	^ "\n\t\t\t{"
-	^ "\n\t\t\t" ^ (json_of_string "transition") ^ ": {"
-	^ "\n\t\t\t\t" ^ (json_of_string "nature") ^ ": " ^ (json_of_string step_description) ^ ","
-	^ "\n\t\t\t\t" ^ (json_of_string "duration") ^ ": " ^ (json_of_string (NumConst.string_of_numconst impossible_concrete_step.time)) ^ ","
-	^ "\n\t\t\t\t" ^ (json_of_string "action") ^ ": " ^ (json_of_string action_name)
-	(* End transition *)
-	^ "\n\t\t\t}"
-	^ "\n\t\t\t}"
-	
-	^ ","
-	
-	(* Target state *)
-	^ (json_of_concrete_state model impossible_concrete_step.target)
+	[
+        JsonFormatter.Json_struct [
+            "transition", JsonFormatter.Json_struct [
+                "nature", JsonFormatter.Json_string step_description;
+                "duration", JsonFormatter.Json_string (NumConst.string_of_numconst impossible_concrete_step.time);
+                "action", JsonFormatter.Json_string action_name;
+            ]
+        ];
+        JsonFormatter.Json_struct [
+            (* Target state *)
+            json_of_concrete_state_2 model impossible_concrete_step.target
+        ]
+    ]
 
-let json_of_impossible_concrete_step = json_of_arbitrary_or_impossible_concrete_step_gen "impossible"
+let json_of_impossible_concrete_step_2 = json_of_arbitrary_or_impossible_concrete_step_gen_2 "impossible"
 
-let json_of_arbitrary_concrete_steps model impossible_concrete_steps =
+let json_of_arbitrary_concrete_steps_2 model impossible_concrete_steps =
 	(* Iterate on following steps *)
-	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
-		json_of_arbitrary_or_impossible_concrete_step_gen "arbitrary" model impossible_concrete_step
-	) impossible_concrete_steps))
-
+	List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
+		json_of_arbitrary_or_impossible_concrete_step_gen_2 "arbitrary" model impossible_concrete_step
+	) impossible_concrete_steps |> List.flatten
 
 
 (** Convert a concrete run to a JSON-style string *)
-let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
-	(* First recall the parameter valuation *)
-	"{"
-	^ "\n\t" ^ (json_of_string "run") ^ ": {"
-	^ "\n\t\t" ^ (json_of_string "nature") ^ ": " ^ (json_of_string "concrete") ^ ","
-	^ "\n\t\t" ^ (json_of_string "valuation") ^ ": " ^ (json_of_pval model concrete_run.p_valuation) ^ ","
-	
-(* 	^ "\n" *)
-	^ "\n\t\t" ^ (json_of_string "steps") ^ ": ["
-	
-	(* Then convert the initial state *)
-	^ "" ^ (json_of_concrete_state model concrete_run.initial_state) ^ ","
-	
-	(* Iterate on following steps *)
-	^ (json_of_concrete_steps model concrete_run.steps)
-	
-	^ "\n\t\t]" (* end steps *)
-	^ "\n\t}" (* end run *)
-	^ "\n}" (* end *)
-	
+let json_of_concrete_run_2 model (concrete_run : StateSpace.concrete_run) =
 
+    (* Convert states and transition to JSON array *)
+    let json_init_state = JsonFormatter.Json_struct [json_of_concrete_state_2 model concrete_run.initial_state] in
+    let json_concrete_steps = json_of_concrete_steps_2 model concrete_run.steps in
+    let json_steps = JsonFormatter.Json_array (json_init_state :: json_concrete_steps) in
+
+    let json_concrete_run =
+        JsonFormatter.Json_struct [
+            "run", JsonFormatter.Json_struct [
+                "nature", JsonFormatter.Json_string "concrete";
+                "valuation", json_of_pval_2 model concrete_run.p_valuation;
+                "steps", json_steps;
+            ]
+        ]
+    in
+    JsonFormatter.to_string ~pretty:true json_concrete_run
 
 (** Convert an impossible_concrete_run to a JSON-style string *)
-let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
-	(* First recall the parameter valuation *)
-	"{"
-	^ "\n\t" ^ (json_of_string "run") ^ ": {"
-	^ "\n\t\t" ^ (json_of_string "nature") ^ ": " ^ (json_of_string "negative") ^ ","
-	^ "\n\t\t" ^ (json_of_string "valuation") ^ ": " ^ (json_of_pval model impossible_concrete_run.p_valuation) ^ ","
-	
-	^ "\n\t\t" ^ (json_of_string "steps") ^ ": ["
-	
-	(* Then convert the initial state *)
-	^ "" ^ (json_of_concrete_state model impossible_concrete_run.initial_state) ^ ","
-	
-	(* Iterate on following concrete steps *)
-	^ (json_of_concrete_steps model impossible_concrete_run.steps)
-	
+let json_of_impossible_concrete_run_2 model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+
+    (* Convert states and transition to JSON array *)
+    let json_init_state = JsonFormatter.Json_struct [json_of_concrete_state_2 model impossible_concrete_run.initial_state] in
+    let json_concrete_steps = json_of_concrete_steps_2 model impossible_concrete_run.steps in
+    let concrete_steps = json_init_state :: json_concrete_steps in
+
 	(*** NOTE: only the first step is impossible; others are "arbitrary" ***)
-	^ (match impossible_concrete_run.impossible_steps with
-	| [] -> ""
-	| first_step :: following_steps ->
-		(* Convert the first impossible step *)
-		(json_of_impossible_concrete_step model first_step)
+	let impossible_steps =
+        match impossible_concrete_run.impossible_steps with
+        | [] -> []
+        | first_step :: following_steps ->
+            (* Convert the first impossible step *)
+            (* And get following impossible steps *)
+            json_of_impossible_concrete_step_2 model first_step @
+            json_of_arbitrary_concrete_steps_2 model following_steps
+	in
 
-		(* Iterate on following impossible steps *)
-		^ (json_of_arbitrary_concrete_steps model following_steps)
-	)
+	let json_steps = JsonFormatter.Json_array (concrete_steps @ impossible_steps) in
 
-	^ "\n\t\t]" (* end steps *)
-	^ "\n\t}" (* end run *)
-	^ "\n}" (* end *)
-	
+	(* First recall the parameter valuation *)
+	let json_run = JsonFormatter.Json_struct [
+	    "run", JsonFormatter.Json_struct [
+	        "nature", JsonFormatter.Json_string "negative";
+	        "valuation", json_of_pval_2 model impossible_concrete_run.p_valuation;
+	        "steps", json_steps;
+	    ]
+	]
+	in
+    JsonFormatter.to_string ~pretty:true json_run
