@@ -60,9 +60,9 @@ val customized_string_of_guard : Constants.customized_string -> (Automaton.varia
 
 val debug_string_of_symbolic_run            : AbstractModel.abstract_model -> StateSpace.stateSpace -> StateSpace.symbolic_run -> string
 val debug_string_of_concrete_run            : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
-val json_of_concrete_run_2                    : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val json_of_concrete_run                    : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
 val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
-val json_of_impossible_concrete_run_2         : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
 
 (************************************************************)
