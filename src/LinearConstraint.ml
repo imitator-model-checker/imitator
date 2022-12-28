@@ -1131,6 +1131,14 @@ let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_ter
 				
 		| IR_Times (z, rterm) -> "Duary", "", rterm
 
+(* Negate a linear term *)
+let rec negate_linear_term = function
+    | IR_Var v -> IR_Times (NumConst.neg (NumConst.one), IR_Var v)
+    | IR_Coef c -> IR_Coef (NumConst.neg c)
+    | IR_Times (c, linear_term) -> IR_Times (NumConst.neg c, linear_term)
+    | IR_Plus (l_term, r_term) -> IR_Plus (negate_linear_term l_term, negate_linear_term r_term)
+    | IR_Minus (l_term, r_term) -> IR_Minus (negate_linear_term l_term, negate_linear_term r_term)
+
 let rec string_of_linear_term_for_jani variable_names linear_term = 
 	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
 	if (pxd_linear_term_is_unary linear_term)

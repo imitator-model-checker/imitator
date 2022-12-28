@@ -131,6 +131,8 @@ val rename_pxd_linear_term : (variable * variable) list -> pxd_linear_term -> px
 val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
 val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
 
+(* Negate a linear term *)
+val negate_linear_term : pxd_linear_term -> pxd_linear_term
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
