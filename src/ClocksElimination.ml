@@ -20,6 +20,7 @@ open ImitatorUtilities
 open Exceptions
 open Statistics
 open AbstractModel
+open DiscreteExpressions
 
 
 
@@ -56,15 +57,16 @@ let is_constrained_in_guard clock_index : guard -> bool = function
   | Continuous_guard continuous_guard -> LinearConstraint.pxd_is_constrained continuous_guard clock_index
   | Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_is_constrained discrete_continuous_guard.continuous_guard clock_index
 
-let clocks_in_update update =
+(* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
+let potential_clocks_in_update update =
     let clock_updates, _ = update in
     match clock_updates with
     (* No update at all *)
-    | No_update -> []
+    | No_potential_update -> []
     (* Reset to 0 only *)
-    | Resets clock_reset_list -> clock_reset_list
+    | Potential_resets clock_reset_list -> clock_reset_list
     (* Reset to arbitrary value (including discrete, parameters and clocks) *)
-    | Updates clock_update_list ->
+    | Potential_updates clock_update_list ->
       let result, _ = List.split clock_update_list in result
 
 (*------------------------------------------------------------*)
@@ -112,10 +114,10 @@ let find_local_clocks () =
                 let guard , updates = transition.guard, transition.updates in
 
                 let clocks_in_guards = get_clocks_in_guard model.clocks guard in
-                let clocks_in_updates = clocks_in_update updates in
+                let potential_clocks_in_updates = potential_clocks_in_update updates in
 
                 (* Add these 2 new lists to the current list *)
-                List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
+                List.rev_append (List.rev_append clocks_in_guards potential_clocks_in_updates) list_of_clocks_for_previous_transitions
               ) [] transitions_for_this_action in
 
             (* Add the list for this action to the one for previous actions *)
@@ -198,10 +200,10 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
             List.iter (fun transition ->
 
                 (* Get the clocks updated or reset *)
-                let reset_clocks = clocks_in_update transition.updates in
+                let potential_clock_resets = potential_clocks_in_update transition.updates in
 
                 (* Compute the local clocks updated or reset *)
-                let reset_local_clocks = list_inter reset_clocks local_clocks in
+                let reset_local_clocks = list_inter potential_clock_resets local_clocks in
                 (* Update the predecessors *)
                 predecessors.(transition.target) <- (location_index, reset_local_clocks) :: predecessors.(transition.target);
               ) transitions; (* end for each transition *)

@@ -50,7 +50,7 @@ let untimedt action_index target_index =
 	[{
 		guard		= True_guard;
 		action		= action_index;
-		updates = No_update, [];
+		updates = No_potential_update, [];
 		target		= target_index;
 	}]
 
@@ -399,7 +399,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-        		updates = No_update, [];
+        		updates = No_potential_update, [];
 				target		= location_nok;
 			}];
 		transitions.(location_ok) <- allow_all location_ok;
@@ -441,7 +441,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-                updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+                updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= location_inter;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -449,7 +449,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= location_inter;
 			}];
 		transitions.(location_inter).(a2) <-
@@ -457,14 +457,14 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_ok;
 			}
 			;
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_nok;
 			}
 			];
@@ -502,7 +502,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -510,7 +510,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= location_ok;
 			}];
 		transitions.(location_ok).(a2) <-
@@ -518,14 +518,14 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_init;
 			}
 			;
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_nok;
 			}
 			];
@@ -562,7 +562,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= location_ok;
 			}];
 		transitions.(location_init).(a2) <- untimedt a2 location_nok;
@@ -572,14 +572,14 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_init;
 			}
 			;
 			{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= location_nok;
 			}
 			];
@@ -615,7 +615,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -625,7 +625,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= 3;
 			}];
 		transitions.(2) <- allow_all 2;
@@ -660,7 +660,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -670,7 +670,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= 2;
 			}];
 		transitions.(2) <- allow_all 2;
@@ -705,7 +705,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates = Resets [observer_clock_index], [Clock_assignment (observer_clock_index, LinearConstraint.IR_Coef NumConst.zero)];
+				updates = Potential_resets [observer_clock_index], [Clock_assignment (observer_clock_index, DiscreteExpressions.zero_rational_expression)];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
@@ -715,7 +715,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 			[{
 				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
-				updates = No_update, [];
+				updates = No_potential_update, [];
 				target		= 2;
 			}];
 		transitions.(2) <- allow_all 2;

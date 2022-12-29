@@ -511,7 +511,7 @@ and string_of_instruction ?(sep=";") variable_names = function
 
     | Clock_assignment (clock_index, expr) ->
         let variable_name = variable_names clock_index in
-        variable_name ^ " = " ^ LinearConstraint.string_of_pxd_linear_term variable_names expr ^ sep
+        variable_name ^ " = " ^ DiscreteExpressions.string_of_rational_arithmetic_expression variable_names expr ^ sep
 
     | Instruction expr ->
         DiscreteExpressions.string_of_global_expression variable_names expr ^ sep

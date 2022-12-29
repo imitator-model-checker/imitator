@@ -687,10 +687,10 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
                 json_property "value" (string_of_global_expression model.variable_names expr)
             |]
 
-        | Clock_assignment (clock_index, linear_expr) ->
+        | Clock_assignment (clock_index, expr) ->
             json_struct [|
                 json_property "ref" (model.variable_names clock_index);
-                json_property "value" (LinearConstraint.string_of_pxd_linear_term_for_jani model.variable_names linear_expr)
+                json_property "value" (DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr)
             |]
 
         | Local_decl _

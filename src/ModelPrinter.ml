@@ -390,12 +390,12 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
         | Instruction expr ->
             tabs ^ DiscreteExpressions.string_of_global_expression model.variable_names expr ^ ";"
 
-        | Clock_assignment (clock_index, linear_expr) ->
+        | Clock_assignment (clock_index, expr) ->
             let clock_name = model.variable_names clock_index in
             tabs
             ^ clock_name
             ^ " := "
-            ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_expr
+            ^ DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr
             ^ ";"
     in
 
@@ -604,8 +604,8 @@ let json_of_seq_code_bloc variable_names seq_code_bloc =
         | Assignment (scalar_or_index_update_type, expr) ->
             DiscreteExpressions.string_of_scalar_or_index_update_type variable_names scalar_or_index_update_type, JsonFormatter.Json_string (DiscreteExpressions.string_of_global_expression variable_names expr)
 
-        | Clock_assignment (clock_index, linear_expr) ->
-            variable_names clock_index, JsonFormatter.Json_string (LinearConstraint.string_of_pxd_linear_term variable_names linear_expr)
+        | Clock_assignment (clock_index, expr) ->
+            variable_names clock_index, JsonFormatter.Json_string (DiscreteExpressions.string_of_rational_arithmetic_expression variable_names expr)
 
         | Local_decl ((variable_name, _), discrete_type, expr) ->
             "declaration", JsonFormatter.Json_struct [

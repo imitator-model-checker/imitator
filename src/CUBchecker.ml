@@ -812,11 +812,12 @@ let check_cub model =
 	                											^ ") ----" );
 	                			print_message Verbose_low ("\n");
 	                			*)
+                                (* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
                                 let clock_updates, _ = updates in
 	                        	let clock_updates = match clock_updates with
-	                        						  No_update -> []
-													| Resets clock_update -> clock_update
-													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
+	                        						  No_potential_update -> []
+													| Potential_resets clock_update -> clock_update
+													| Potential_updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
 
 	                			let (result, inequalities) = cub_check_2 model (continuous_part_of_guard invariant1) (continuous_part_of_guard guard) (continuous_part_of_guard invariant2) clock_updates in
@@ -2162,11 +2163,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 														^ (model.location_names automaton_index target_location_index) 
 														^ ") ----" );
 						print_message Verbose_low ("\n"); *)
+                        (* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
                         let clock_updates, _ = updates in
 						let clock_updates = match clock_updates with
-											No_update -> []
-											| Resets clock_update -> clock_update
-											| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
+											No_potential_update -> []
+											| Potential_resets clock_update -> clock_update
+											| Potential_updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! "));
 						in
 
 						(*add transitions*)
@@ -3172,7 +3174,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
-			updates = Resets clock_updates, update_seq_code_bloc;
+			updates = Potential_resets clock_updates, update_seq_code_bloc;
 			target		= target_location_index;
 		} in
 		

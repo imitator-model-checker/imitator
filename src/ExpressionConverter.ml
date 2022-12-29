@@ -1123,7 +1123,7 @@ val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typ
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val scalar_or_index_update_type_of_typed_scalar_or_index_update_type : variable_infos -> typed_scalar_or_index_update_type -> DiscreteExpressions.scalar_or_index_update_type
 val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> DiscreteExpressions.seq_code_bloc_list
-val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc_list -> AbstractModel.clock_updates
+val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc_list -> DiscreteExpressions.potential_clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct
@@ -1418,6 +1418,12 @@ and bool_expression_of_typed_factor variable_infos = function
 	    raise_conversion_error "Bool" (string_of_typed_discrete_factor variable_infos Dt_weak expr)
 
 (* Rational expression conversion *)
+and rational_arithmetic_expression_of_typed_boolean_expression variable_infos = function
+	| Typed_discrete_bool_expr (expr, _) ->
+	    rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos expr
+    | _ as expr ->
+        raise_conversion_error "rational" (string_of_typed_boolean_expression variable_infos expr)
+
 and rational_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
     | Typed_arithmetic_expr (expr, _) ->
         rational_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
@@ -2331,7 +2337,8 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
                 (* Get index of clock *)
                 let clock_index = VariableInfo.index_of_variable_name variable_infos clock_name in
                 (* Convert to update expression to a linear term *)
-                [clock_index, linear_term_of_typed_boolean_expression variable_infos expr]
+(*                [clock_index, linear_term_of_typed_boolean_expression variable_infos expr]*)
+                [clock_index, rational_arithmetic_expression_of_typed_boolean_expression variable_infos expr]
             | _ -> []
             )
         | Typed_for_loop (_, _, _, _, inner_bloc)
@@ -2357,17 +2364,17 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
     (* Differentiate between different kinds of clock updates *)
     (* Case 1: no update *)
     if converted_clock_updates = [] then (
-        No_update
+        No_potential_update
     )
     else (
         (* Case 2: resets only *)
         if is_only_resets then (
             (* Keep only the clock ids, not the linear terms *)
             let clocks_to_reset, _ = List.split converted_clock_updates in
-            Resets (List.rev clocks_to_reset)
+            Potential_resets (List.rev clocks_to_reset)
         ) else
             (* Case 3: complex with linear terms *)
-            Updates (List.rev converted_clock_updates)
+            Potential_updates (List.rev converted_clock_updates)
     )
 
 
@@ -2432,7 +2439,7 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
             | Ass_clock ->
                 Clock_assignment (
                     (clock_index_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
-                    linear_term_of_typed_boolean_expression variable_infos typed_expr)
+                    rational_arithmetic_expression_of_typed_boolean_expression variable_infos typed_expr)
                 )
             )
 

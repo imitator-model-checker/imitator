@@ -554,14 +554,23 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
             let rewrited_expr = rewrite_rational_arithmetic_expression expr in
             let rewrited_term = rewrite_rational_term term in
 
-            let sum_diff_f =
-                match sum_diff with
-                | Plus ->
-                    LinearConstraint.add_pxd_linear_terms
-                | Minus ->
-                    LinearConstraint.sub_pxd_linear_terms
-            in
-            sum_diff_f rewrited_expr rewrited_term
+            (match rewrited_expr, rewrited_term with
+            (* Compute coef *)
+            | IR_Coef c1, IR_Coef c2 ->
+                (match sum_diff with
+                | Plus -> IR_Coef (NumConst.add c1 c2)
+                | Minus -> IR_Coef (NumConst.sub c1 c2)
+                )
+            | l_expr, r_expr ->
+                let sum_diff_f =
+                    match sum_diff with
+                    | Plus ->
+                        LinearConstraint.add_pxd_linear_terms
+                    | Minus ->
+                        LinearConstraint.sub_pxd_linear_terms
+                in
+                sum_diff_f rewrited_expr rewrited_term
+            )
 
         | Rational_term term ->
             rewrite_rational_term term
@@ -592,7 +601,15 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
                 ))
             | IR_Coef c, linear_term
             | linear_term, IR_Coef c ->
-                IR_Times (c, linear_term)
+                (* Get coef according to requested operation *)
+                let times_coef =
+                    match product_quotient with
+                    (* If mul, multiply *)
+                    | Mul -> c
+                    (* If div, multiply by inverse *)
+                    | Div -> NumConst.div NumConst.one c
+                in
+                IR_Times (times_coef, linear_term)
             | _ ->
                 raise (InternalError (
                     "A clock update is not linear. It should be checked before."
@@ -711,21 +728,21 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         | Assignment normal_update ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update
 
-        | Clock_assignment (clock_index, linear_expr) ->
+        | Clock_assignment (clock_index, expr) ->
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
-            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
+            let rewritten_linear_expr = rewrite_clock_update_2 variable_names eval_context functions_table_opt expr in
             (* Add clock update into table *)
-            Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            Hashtbl.replace eval_context.updated_clocks clock_index rewritten_linear_expr;
             (* Push clock update on queue *)
-            Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
+            Queue.push (clock_index, rewritten_linear_expr) eval_context.updated_clocks_ordered;
 
             (* Prepare rewriting message, only computed if verbose >= Verbose_high *)
             let lazy_rewriting_message = lazy (
                 match variable_names with
                 | Some variable_names ->
-                    let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
-                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
-                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
+                    let str_expr_before = DiscreteExpressions.string_of_rational_arithmetic_expression variable_names expr in
+                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names rewritten_linear_expr in
+                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
                 | _ -> ""
             )
             in
