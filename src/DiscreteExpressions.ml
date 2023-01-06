@@ -84,6 +84,7 @@ and rational_factor =
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
+    (* TODO benjamin CLEAN rename to Rational_access *)
     | Rational_array_access of expression_access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 

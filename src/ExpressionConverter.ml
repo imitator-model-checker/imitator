@@ -669,27 +669,8 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
-            (* Resolve typed scalar or index update type *)
-            let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
-
-            (* Eventually get a number type to infer *)
-            let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
-
-            (* Resolve typed expression *)
-            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt expr in
-
-            let str_update_type = ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
-
-            (* Check compatibility between assignee variable type and it's assigned expression *)
-            if not (is_discrete_type_compatibles variable_type expr_type) then
-                raise (TypeError (
-                    ill_typed_variable_message str_update_type (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
-                ));
-
             (* Get assignment scope *)
             let variable_ref = ParsingStructureMeta.variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-
 
             let scope =
                 if VariableInfo.is_clock variable_infos variable_ref then
@@ -699,6 +680,34 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                 else
                     Ass_discrete_local
             in
+
+            (* Only reduce clock updates expressions *)
+            let reduced_expr =
+                match scope with
+                | Ass_clock ->
+                     ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr
+(*                    expr*)
+                | _ -> expr
+            in
+
+            (* Resolve typed scalar or index update type *)
+            let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
+
+            (* Eventually get a number type to infer *)
+            let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
+
+            (* Resolve typed expression *)
+            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt reduced_expr in
+
+
+            (* Check compatibility between assignee variable type and it's assigned expression *)
+            if not (is_discrete_type_compatibles variable_type expr_type) then (
+                let str_update_type = ParsingStructureUtilities.string_of_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
+
+                raise (TypeError (
+                    ill_typed_variable_message str_update_type (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_type
+                ))
+            );
 
             Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
 
@@ -2426,6 +2435,7 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
         | Typed_assignment ((typed_scalar_or_index_update_type, typed_expr), scope) ->
 
             (match scope with
+            (* TODO benjamin replace Ass_discrete_global and Ass_discrete_local by Ass_discrete no need to differentiate the two now *)
             | Ass_discrete_global ->
                 Assignment (
                     (scalar_or_index_update_type_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type,
