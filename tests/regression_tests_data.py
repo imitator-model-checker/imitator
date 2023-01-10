@@ -5035,13 +5035,38 @@ P: lend, s = stack([0]), i = 2, j = 0
 	#------------------------------------------------------------
 	{
         ## Test version             : 1.1
-        ## Test since               : 2022/03/17
-        ## Last modified            : 2022/08/30
+        ## Test since               : 2023/01/10
+        ## Last modified            : 2023/01/10
         ## Test for IMITATOR version: 3.3
         'author': 'lbinria',
-        'purpose'    : 'Evaluation order of discrete sequential and constraint updates',
+        'purpose'    : 'Evaluation order of updates (only 1 PTA)',
+        'input_files': ['updates/clock-discrete-order.imi'],
+		'tags': 'behavior, update, order',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-discrete-order-statespace.states' , 'content' : """
+  pta: lend, i = 1, j = 1 ==>
+& y >= 1
+& x + 1 = y
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1.1
+        ## Test since               : 2022/03/17
+        ## Last modified            : 2023/01/10
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Evaluation order of updates (1+ PTA)',
         'input_files': ['updates/compound-updates-order.imi'],
-		'tags': 'behavior, update',
+		'tags': 'behavior, update, order',
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'compound-updates-order-statespace.states' , 'content' : """

@@ -2,7 +2,7 @@
  *                                IMITATOR MODEL
  *
  * Title            : Evaluation order of discrete sequential and constraint updates
- * Description      : Test that sequential update is evaluated sequentially following the declaration order of PTAs, and finally all the constraints are updated at the same time
+ * Description      : Test that update is evaluated sequentially following the declaration order of PTAs
  * Correctness      : N/A
  * Scalable         : no
  * Generated        : no
@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2022/03/17
- * Last modified    : 2022/08/30
+ * Last modified    : 2023/01/10
  * Model version    : 1.1
  *
  * IMITATOR version : 3.3
