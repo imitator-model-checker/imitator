@@ -181,6 +181,12 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     (* As long as function can only return discrete and can't manipulate clocks and parameters *)
     | Leaf_fun _ -> true
 
+(* Check if leaf is a clock *)
+let is_clock variable_infos = function
+    | Leaf_variable variable_ref -> VariableInfo.is_clock variable_infos variable_ref
+    | Leaf_constant _ -> false
+    | Leaf_fun _ -> false
+
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
     | Leaf_linear_variable (_, variable_name) ->
@@ -382,6 +388,18 @@ let only_discrete_in_parsed_discrete_arithmetic_expression variable_infos clock_
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
+
+(* Check if a parsed arithmetic expression contains clock *)
+let has_clock_parsed_arithmetic_expression variable_infos =
+    for_all_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)
+
+(* Check if a parsed term contains clock *)
+let has_clock_parsed_discrete_term variable_infos =
+    for_all_in_parsed_discrete_term (is_clock variable_infos)
+
+(* Check if a parsed factor contains clock *)
+let has_clock_parsed_discrete_factor variable_infos =
+    for_all_in_parsed_discrete_factor (is_clock variable_infos)
 
 (* Check if there is no variables in a linear expression *)
 let no_variables_in_linear_expression variable_infos expr =
@@ -732,6 +750,37 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         is_leaf_has_side_effects (* Check if leaf has side effect *)
         fun_def
 
+let rec clock_factor_in_parsed_discrete_arithmetic_expression variable_infos = function
+    | Parsed_sum_diff (expr, term, parsed_sum_diff) ->
+        clock_factor_in_parsed_discrete_arithmetic_expression variable_infos expr ||
+        clock_factor_in_parsed_discrete_term variable_infos term
 
+	| Parsed_term term ->
+	    clock_factor_in_parsed_discrete_term variable_infos term
 
+and clock_factor_in_parsed_discrete_term variable_infos = function
+	| Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+	    let has_clock_left = has_clock_parsed_discrete_term variable_infos term in
+	    let has_clock_right = has_clock_parsed_discrete_factor variable_infos factor in
+	    (* If we reach left and right expressions that contains clock(s), there is a clock factor ! *)
+	    has_clock_left && has_clock_right
+
+	| Parsed_factor factor ->
+	    clock_factor_in_parsed_discrete_factor variable_infos factor
+
+and clock_factor_in_parsed_discrete_factor variable_infos = function
+	| Parsed_variable _
+	| Parsed_constant _
+	(* We consider: *)
+	(* sequence of clock is forbidden, so Parsed_sequence cannot hold any clock*)
+	| Parsed_sequence _
+	(* index of clock is forbidden, moreover clock type is rational and index only support integer *)
+    | Parsed_access _
+    (* Function call doesn't support clocks as arguments *)
+    | Parsed_function_call _ ->
+        false
+	| Parsed_nested_expr expr ->
+	    clock_factor_in_parsed_discrete_arithmetic_expression variable_infos expr
+	| Parsed_unary_min factor ->
+	    clock_factor_in_parsed_discrete_factor variable_infos factor
 
