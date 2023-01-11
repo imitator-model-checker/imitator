@@ -187,6 +187,18 @@ let is_clock variable_infos = function
     | Leaf_constant _ -> false
     | Leaf_fun _ -> false
 
+(* Check if leaf is a parameter *)
+let is_param variable_infos = function
+    | Leaf_variable variable_ref -> VariableInfo.is_param variable_infos variable_ref
+    | Leaf_constant _ -> false
+    | Leaf_fun _ -> false
+
+(* Check if leaf is a clock or parameter *)
+let is_clock_or_param variable_infos = function
+    | Leaf_variable variable_ref -> VariableInfo.is_clock_or_param variable_infos variable_ref
+    | Leaf_constant _ -> false
+    | Leaf_fun _ -> false
+
 (* Check if leaf isn't a variable *)
 let no_variables variable_infos = function
     | Leaf_linear_variable (_, variable_name) ->
@@ -389,17 +401,41 @@ let only_discrete_in_parsed_discrete_arithmetic_expression variable_infos clock_
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
 
-(* Check if a parsed arithmetic expression contains clock *)
+(* Check if a parsed arithmetic expression contains clocks *)
 let has_clock_parsed_arithmetic_expression variable_infos =
-    for_all_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)
+    exists_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)
 
-(* Check if a parsed term contains clock *)
+(* Check if a parsed term contains clocks *)
 let has_clock_parsed_discrete_term variable_infos =
-    for_all_in_parsed_discrete_term (is_clock variable_infos)
+    exists_in_parsed_discrete_term (is_clock variable_infos)
 
-(* Check if a parsed factor contains clock *)
+(* Check if a parsed factor contains clocks *)
 let has_clock_parsed_discrete_factor variable_infos =
-    for_all_in_parsed_discrete_factor (is_clock variable_infos)
+    exists_in_parsed_discrete_factor (is_clock variable_infos)
+
+(* Check if a parsed arithmetic expression contains parameters *)
+let has_param_parsed_arithmetic_expression variable_infos =
+    exists_in_parsed_discrete_arithmetic_expression (is_param variable_infos)
+
+(* Check if a parsed term contains parameters *)
+let has_param_parsed_discrete_term variable_infos =
+    exists_in_parsed_discrete_term (is_param variable_infos)
+
+(* Check if a parsed factor contains parameters *)
+let has_param_parsed_discrete_factor variable_infos =
+    exists_in_parsed_discrete_factor (is_param variable_infos)
+
+(* Check if a parsed arithmetic expression contains clocks or parameters *)
+let has_clock_or_param_parsed_arithmetic_expression variable_infos =
+    exists_in_parsed_discrete_arithmetic_expression (is_clock_or_param variable_infos)
+
+(* Check if a parsed term contains clocks or parameters *)
+let has_clock_or_param_parsed_discrete_term variable_infos =
+    exists_in_parsed_discrete_term (is_clock_or_param variable_infos)
+
+(* Check if a parsed factor contains clocks or parameters *)
+let has_clock_or_param_parsed_discrete_factor variable_infos =
+    exists_in_parsed_discrete_factor (is_clock_or_param variable_infos)
 
 (* Check if there is no variables in a linear expression *)
 let no_variables_in_linear_expression variable_infos expr =
@@ -750,25 +786,50 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         is_leaf_has_side_effects (* Check if leaf has side effect *)
         fun_def
 
-let rec clock_factor_in_parsed_discrete_arithmetic_expression variable_infos = function
+let rec nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos = function
+    | Parsed_conj_dis (l_expr, r_expr, _) ->
+        nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos l_expr
+        || nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos r_expr
+
+	| Parsed_discrete_bool_expr expr ->
+	    nonlinear_operation_on_continuous_in_parsed_discrete_boolean_expression variable_infos expr
+
+and nonlinear_operation_on_continuous_in_parsed_discrete_boolean_expression variable_infos = function
+    | Parsed_arithmetic_expr expr ->
+        nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos expr
+	| Parsed_comparison (l_expr, _, r_expr) ->
+	    nonlinear_operation_on_continuous_in_parsed_discrete_boolean_expression variable_infos l_expr
+	    || nonlinear_operation_on_continuous_in_parsed_discrete_boolean_expression variable_infos r_expr
+
+	| Parsed_comparison_in (lw_expr, md_expr, up_expr) ->
+	    nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos lw_expr
+	    || nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos md_expr
+	    || nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos up_expr
+
+	| Parsed_nested_bool_expr expr ->
+	    nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr
+	| Parsed_not expr ->
+	    nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr
+
+and nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos = function
     | Parsed_sum_diff (expr, term, parsed_sum_diff) ->
-        clock_factor_in_parsed_discrete_arithmetic_expression variable_infos expr ||
-        clock_factor_in_parsed_discrete_term variable_infos term
+        nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos expr ||
+        nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
 	| Parsed_term term ->
-	    clock_factor_in_parsed_discrete_term variable_infos term
+	    nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
-and clock_factor_in_parsed_discrete_term variable_infos = function
+and nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos = function
 	| Parsed_product_quotient (term, factor, parsed_product_quotient) ->
-	    let has_clock_left = has_clock_parsed_discrete_term variable_infos term in
-	    let has_clock_right = has_clock_parsed_discrete_factor variable_infos factor in
-	    (* If we reach left and right expressions that contains clock(s), there is a clock factor ! *)
-	    has_clock_left && has_clock_right
+	    let has_clock_or_param_left = has_clock_or_param_parsed_discrete_term variable_infos term in
+	    let has_clock_or_param_right = has_clock_or_param_parsed_discrete_factor variable_infos factor in
+	    (* If we reach left and right expressions that contains at least one clock or parameter, there is a continuous factor ! *)
+	    has_clock_or_param_left && has_clock_or_param_right
 
 	| Parsed_factor factor ->
-	    clock_factor_in_parsed_discrete_factor variable_infos factor
+	    nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos factor
 
-and clock_factor_in_parsed_discrete_factor variable_infos = function
+and nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos = function
 	| Parsed_variable _
 	| Parsed_constant _
 	(* We consider: *)
@@ -780,7 +841,7 @@ and clock_factor_in_parsed_discrete_factor variable_infos = function
     | Parsed_function_call _ ->
         false
 	| Parsed_nested_expr expr ->
-	    clock_factor_in_parsed_discrete_arithmetic_expression variable_infos expr
+	    nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos expr
 	| Parsed_unary_min factor ->
-	    clock_factor_in_parsed_discrete_factor variable_infos factor
+	    nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos factor
 

@@ -296,6 +296,17 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             | _ -> None
         ) left_right_variable_refs in
 
+        let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr) ->
+            let nonlinear_operation_on_continuous_found = ParsingStructureMeta.nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr in
+
+            if nonlinear_operation_on_continuous_found then (
+                let variable_name, _ = variable_ref in
+                Some (variable_name, ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr)
+            )
+            else
+                None
+        ) left_right_variable_refs in
+
         (* Is any constant modifications found in user function ? *)
         let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
         (* Is any param modifications found in user function ? *)
@@ -306,7 +317,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         let has_discrete_updated_with_clocks = List.length discrete_variable_names_updated_by_clocks > 0 in
         (* Is any clock was updated by non linear expression ? *)
         let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in
-
+        (* Is any non-linear operation found on continuous variables (clock / parameter) *)
+        let has_nonlinear_operation_on_continuous = List.length nonlinear_operation_on_continuous > 0 in
+        
         (* Print errors *)
 
         List.iter (fun variable_name ->
@@ -355,6 +368,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) discrete_variable_names_updated_by_clocks;
 
+        (* TODO benjamin CLEAN comment *)
         (*
         List.iter (fun (clock_name, str_expr) ->
             print_error (
@@ -366,8 +380,19 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) assigned_clocks_with_non_linear_expr;
         *)
+
+        List.iter (fun (variable_name, str_expr) ->
+            print_error (
+                "Non-linear operation was found on continuous variable at `"
+                ^ variable_name
+                ^ " := "
+                ^ str_expr
+                ^ "`. Linear operations are expected on clock / parameter variables."
+            );
+        ) nonlinear_operation_on_continuous;
+
         (* Return is assignment is allowed *)
-        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks (*|| has_clock_updated_with_non_linear*) )
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks (*|| has_clock_updated_with_non_linear*) (* TODO benjamin CLEAN comment *) || has_nonlinear_operation_on_continuous)
     in
 
     (* Return *)

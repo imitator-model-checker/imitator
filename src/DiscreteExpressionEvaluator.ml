@@ -549,6 +549,9 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
 (* TODO benjamin TEST, rewriting clock function for more complex expressions *)
 and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* expr *) =
 
+    (* Prepare error message when non-linear operation was found on continuous *)
+    let nonlinear_operation_message = lazy "A clock update contains non-linear operations on continuous clock / parameter variables. It should be checked before." in
+
     let rec rewrite_rational_arithmetic_expression = function
         | Rational_sum_diff (expr, term, sum_diff) ->
             let rewrited_expr = rewrite_rational_arithmetic_expression expr in
@@ -596,9 +599,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
                 )
             (* k / var or k / c*var *)
             | IR_Coef c, linear_term when product_quotient = Div ->
-                raise (InternalError (
-                    "A clock update is not linear. It should be checked before."
-                ))
+                raise (InternalError (Lazy.force nonlinear_operation_message))
             | IR_Coef c, linear_term
             | linear_term, IR_Coef c ->
                 (* Get coef according to requested operation *)
@@ -611,9 +612,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
                 in
                 IR_Times (times_coef, linear_term)
             | _ ->
-                raise (InternalError (
-                    "A clock update is not linear. It should be checked before."
-                ))
+                raise (InternalError (Lazy.force nonlinear_operation_message))
             )
 
         | Rational_factor factor ->
