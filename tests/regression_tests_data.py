@@ -2141,8 +2141,8 @@ DESCRIPTION OF THE TRANSITIONS
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
-  urgent loc idle: invariant True
-    when True do {i := (3 * i - 1) / (5 * i * i); x := x + 1/2*p + -7*i + -1; y := y + 1;}  sync a goto idle;
+urgent loc idle: invariant True
+	when True do {i := (3 * i - 1) / (5 * i * i); x := x + 1/2 * p - 7 * i - 1; y := y + 1;} sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -2798,13 +2798,21 @@ when  y + 7 > 2*x
 		## Test for IMITATOR version: 3.3
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'tags': 'parsing, arithmetic, linear',
+		'tags': 'parsing, arithmetic, linear, reduction',
 		'purpose'    : 'Test linear expression reduction is correct',
 		'input_files': ['linear_expressions/linear-expression-reduction.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
-x1 := 6*x + 10*y + -53; x2 := 6*x + 10*y + -53; x3 := y + 5*x + 5; x4 := x + -1; x5 := -6; x6 := 2*x + 11; x7 := -3*x + 23*y + 35; x8 := 12*x + 24; x9 := -12*y + 2*x + 4*z + 41;
+      x1 := 6 * x + 10 * y - 53;
+      x2 := 6 * x + 10 * y - 53;
+      x3 := y + 5 * x + 5;
+      x4 := x - 1;
+      x5 := -(6);
+      x6 := 2 * x + 11;
+      x7 := -(3 * x) + 23 * y + 35;
+      x8 := 24 + 12 * x;
+      x9 := -(12 * y) + 2 * x + 4 * z + 41;
 		"""
 			 } # end result file
 			,
@@ -7693,134 +7701,138 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 2",
-						"updates": {
-							"x": "5"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "5",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "3", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 8",
-						"updates": {
-							"x": "2*x"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "16",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "-1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "10",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 6",
-						"updates": {
-							"x": "x + -3"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lTarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "3",
-					"global_time": "13"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 2",
+                "updates": {
+                  "x": "5"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "5",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "3",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 8",
+                "updates": {
+                  "x": "2 * x"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "16",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "-1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "10",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 6",
+                "updates": {
+                  "x": "x - 3"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lTarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "3",
+            "global_time": "13"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -7862,154 +7874,156 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "0",
-					"swap": "-1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"y": "0",
-					"swap": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 2",
-						"updates": {
-							"y": "5"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "2",
-					"y": "5",
-					"swap": "1",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "3",
-					"y": "2",
-					"swap": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 5",
-						"updates": {
-							"swap": "x",
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
 
-							"x": "y",
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "0",
+            "swap": "-1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "0",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 2",
+                "updates": {
+                  "y": "5"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
 
-							"y": "swap"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "7",
-					"y": "5",
-					"swap": "5",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "-12",
-					"y": "1",
-					"swap": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {
-							"y": "y + -1*x"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lTarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "1",
-					"y": "9/2",
-					"swap": "11/2",
-					"global_time": "7/2"
-				},
-				"flows": {
-					"x": "1",
-					"y": "1",
-					"swap": "1",
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "x": "2",
+            "y": "5",
+            "swap": "1",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "3",
+            "y": "2",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 5",
+                "updates": {
+                  "swap": "x",
+                  "x": "y",
+                  "y": "swap"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "7",
+            "y": "5",
+            "swap": "5",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "-12",
+            "y": "1",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "y": "y - x"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lTarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "1",
+            "y": "9/2",
+            "swap": "11/2",
+            "global_time": "7/2"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
