@@ -686,7 +686,6 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                 match scope with
                 | Ass_clock ->
                      ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr
-(*                    expr*)
                 | _ -> expr
             in
 

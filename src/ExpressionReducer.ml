@@ -203,16 +203,8 @@ module RationalReducer = struct
 
     and reduce_parsed_discrete_arithmetic_expression variable_infos expr =
 
-        (* TODO benjamin CLEAN *)
-        (*
-        let string_of_term = function
-            | Cons_term c -> if NumConst.neq c NumConst.zero then NumConst.to_string c else ""
-            | Var_term (c, (vn, _)) -> if NumConst.neq c NumConst.zero then (NumConst.to_string c) ^ vn else ""
-            | Term_term (c, t) -> if NumConst.neq c NumConst.zero then (NumConst.to_string c) ^ "*" ^ ParsingStructureUtilities.string_of_parsed_term variable_infos t else ""
-        in
-        *)
-
         (* Convert term of terms list to parsed term of parsing structure *)
+        (* Get absolute value of coefficient, because operator + or - will be deduced by sign_of_term function *)
         let term_to_parsed_term = function
             | Cons_term c ->
                 Parsed_factor (Parsed_constant (Rat_value (NumConst.abs c)))
@@ -241,7 +233,6 @@ module RationalReducer = struct
         (* Function that create arithmetic expression from list of terms *)
         let rec parsed_discrete_arithmetic_expression_of_terms = function
             | x :: xs ->
-(*                Parsed_sum_diff (parsed_discrete_arithmetic_expression_of_terms xs, term_to_parsed_term x, Parsed_plus)*)
                 Parsed_sum_diff (parsed_discrete_arithmetic_expression_of_terms xs, term_to_parsed_term x, sign_of_term x)
             | [] -> Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero)))
         in
@@ -334,12 +325,29 @@ module RationalReducer = struct
         (* 3. Simplify reduced arithmetic expression *)
         let simplified_expr = simplify_parsed_discrete_arithmetic_expression reduced_expr in
 
-(*        let s = List.map string_of_term terms in*)
-(*        ImitatorUtilities.print_standard_message ("TERMS: " ^ OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings " + " s);*)
-        let str = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos simplified_expr in
-        ImitatorUtilities.print_standard_message ("EXPR: " ^ str);
 
+        let lazy_reduce_message = lazy (
+            (*
+            (* Convert term to string *)
+            let string_of_term = function
+                | Cons_term c -> if NumConst.neq c NumConst.zero then NumConst.to_string c else ""
+                | Var_term (c, (vn, _)) -> if NumConst.neq c NumConst.zero then (NumConst.to_string c) ^ vn else ""
+                | Term_term (c, t) -> if NumConst.neq c NumConst.zero then (NumConst.to_string c) ^ Constants.default_arithmetic_string.mul_string ^ ParsingStructureUtilities.string_of_parsed_term variable_infos t else ""
+            in
+
+            let str_terms_list = List.map string_of_term terms in
+            let str_terms = OCamlUtilities.string_of_list_of_string_with_sep_without_empty_strings " + " str_terms_list in
+            *)
+            let str_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos expr in
+            let str_reduced_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos reduced_expr in
+            let str_simplified_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos simplified_expr in
+
+            "Reduce expression `" ^ str_expr ^ "` -> `" ^ str_reduced_expr ^ "` -> `" ^ str_simplified_expr ^ "`."
+        ) in
+        (* Only compute string and print if verbose >= high *)
+        ImitatorUtilities.print_message_lazy Verbose_high lazy_reduce_message;
+
+        (* Return simplified expression *)
         simplified_expr
-(*        expr*)
 
 end
