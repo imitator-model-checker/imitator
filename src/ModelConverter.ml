@@ -1175,7 +1175,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
-	updates = No_update, [];
+	updates = No_potential_update, [];
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -3717,9 +3717,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	let transition_contains_complex_update (transition : AbstractModel.transition) : bool =
 		let is_clock_update_complex = function
-			| No_update
-			| Resets _ -> false
-			| Updates _ -> true
+			| No_potential_update
+			| Potential_resets _ -> false
+			| Potential_updates _ -> true
 		in
 
 		let is_updates_complex (clock_update, _) = is_clock_update_complex clock_update in

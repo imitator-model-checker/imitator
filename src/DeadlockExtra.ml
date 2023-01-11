@@ -54,6 +54,33 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 
     dl_instantiate_discrete_gen discrete constr
 
+(* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
+let dl_discrete_constraint_of_global_location (state_space : StateSpace.stateSpace) state_index transition =
+	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
+
+    (* Copy location where we perform the destructive sequential updates*)
+    let location = DiscreteState.copy_location glob_location in
+    let model = Input.get_model() in
+
+    (* Get functions that enable reading / writing global variables at a given location *)
+    let discrete_access = DiscreteState.discrete_access_of_location location in
+
+    (* Create context *)
+    let eval_context = DiscreteExpressionEvaluator.create_eval_context discrete_access in
+
+    (* Make all sequential update first ! *)
+	List.iter (fun transition_index ->
+		(* Get the automaton concerned *)
+		(* Access the transition and get the components *)
+		let transitions_description = model.transitions_description transition_index in
+
+        let _, update_seq_code_bloc = transitions_description.updates in
+        eval_seq_code_bloc_with_context (Some model.variable_names) (Some model.functions_table) eval_context update_seq_code_bloc;
+	) transition;
+
+    State.discrete_constraint_of_global_location model location,
+    DiscreteExpressionEvaluator.effective_clock_updates eval_context model.variable_names
+
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
 let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z updates transition =
@@ -64,7 +91,23 @@ let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z update
 
     let constr_px = dl_instantiate_discrete_after_seq state_space state_index constr_pxd transition in
 
+
+
     constr_px
+
+(* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
+(* This is probably incomplete, if there was also a discrete update *)
+let dl_inverse_update_ben_fix (state_space : StateSpace.stateSpace) state_index z transition =
+    let model = Input.get_model () in
+    let constr = px_copy z in
+    let constr_pxd = pxd_of_px_constraint constr in
+
+    let discrete_constr, effective_clock_updates = dl_discrete_constraint_of_global_location  state_space state_index transition in
+    State.apply_updates_assign_backward model constr_pxd [effective_clock_updates];
+    dl_instantiate_discrete_gen discrete_constr constr_pxd
+
+
+
 
 (* Apply past time operator *)
 let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
@@ -75,7 +118,7 @@ let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
 let dl_predecessor state_space state_index z1 guard updates z2 transition =
 (*     let model = Input.get_model () in (* only for printing *) *)
-    let constr = dl_inverse_update state_space state_index z2 updates transition in
+    let constr = dl_inverse_update_ben_fix state_space state_index z2 transition in
     px_intersection_assign constr [z1];
     let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
@@ -127,7 +170,7 @@ let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index trans
   (* Retrieve the model *)
 	let model = Input.get_model () in
 
-
+    (* TODO benjamin remove here dl_get_clock_updates *)
     let updates = dl_get_clock_updates state_space transition in
     let guard = state_space#get_guard model s1_index transition in
  

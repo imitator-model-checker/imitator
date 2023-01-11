@@ -78,6 +78,9 @@ val only_discrete_in_parsed_discrete_arithmetic_expression : variable_infos -> (
 (* Check that there is only discrete variables in a parsed discrete boolean expression *)
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 
+(* Check whether there is clock factors in arithmetic expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
+val clock_factor_in_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
+
 val no_variables_in_linear_expression : variable_infos -> linear_expression -> bool
 
 val is_parsed_linear_expression_constant : variable_infos -> linear_expression -> bool
@@ -122,7 +125,5 @@ val is_only_resets_in_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_b
 val is_only_resets_in_parsed_seq_code_bloc_deep : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc_list -> bool
 (* Get local variables of a parsed function definition *)
 val local_variables_of_parsed_fun_def : parsed_fun_definition -> (variable_name * var_type_discrete * int) list
-(* Get local variables of a parsed sequential code bloc *)
-val local_variables_of_parsed_seq_code_bloc : parsed_seq_code_bloc_list -> (variable_name * var_type_discrete * int) list
 (* Check if function has side effect recursively (through other function calls found in function body) *)
 val is_function_has_side_effects : functions_meta_table -> parsed_functions_table -> parsed_fun_definition -> bool

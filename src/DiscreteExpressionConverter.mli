@@ -27,6 +27,6 @@ val convert_discrete_constant : constants_table -> variable_name * parsed_boolea
 (* Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
 val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.guard
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
-val convert_seq_code_bloc : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc_list -> clock_updates * seq_code_bloc_list
+val convert_seq_code_bloc : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc_list -> potential_clock_updates * seq_code_bloc_list
 (* Convert a parsed function definition to function definition for abstract model *)
 val convert_fun_definition : variable_infos -> parsed_fun_definition -> fun_definition

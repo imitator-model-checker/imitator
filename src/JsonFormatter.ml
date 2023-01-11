@@ -18,6 +18,7 @@ type json_element =
     | Json_bool of bool
     | Json_int of int
     | Json_float of float
+    | Json_null
     | Json_raw of string
 
 and json_property = string * json_element
@@ -52,6 +53,7 @@ let to_string ?(pretty = false) json_element =
         | Json_bool b -> string_of_bool b
         | Json_int i -> string_of_int i
         | Json_float f -> string_of_float f
+        | Json_null -> "null"
         | Json_raw s -> s
     in
     to_pretty_string_rec 0 json_element

@@ -85,6 +85,7 @@ and rational_factor =
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
+	(* TODO benjamin CLEAN remove *)
 	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -107,6 +108,7 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
+	(* TODO benjamin CLEAN remove *)
     | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -210,7 +212,7 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
-    | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
+    | Clock_assignment of (Automaton.clock_index * rational_arithmetic_expression)
     | Instruction of global_expression
     | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
@@ -231,10 +233,21 @@ type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_user of seq_code_bloc_list * global_expression option
 
+type clock_index = int
+type clock_update = clock_index
+
+type potential_clock_updates =
+    | No_potential_update
+    | Potential_resets of clock_update list
+    | Potential_updates of (clock_update * rational_arithmetic_expression) list
+
 type nonlinear_constraint = discrete_boolean_expression list
 
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
 val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
+
+(**)
+val zero_rational_expression : rational_arithmetic_expression
 
 (* String *)
 
@@ -263,6 +276,9 @@ val string_of_arithmetic_expression : variable_name_table -> discrete_arithmetic
 
 val customized_string_of_int_arithmetic_expression : Constants.customized_string -> variable_name_table -> int_arithmetic_expression -> string
 val string_of_int_arithmetic_expression : variable_name_table -> int_arithmetic_expression -> string
+
+val customized_string_of_rational_arithmetic_expression : Constants.customized_string -> variable_name_table -> rational_arithmetic_expression -> string
+val string_of_rational_arithmetic_expression : variable_name_table -> rational_arithmetic_expression -> string
 
 val customized_string_of_boolean_expression : Constants.customized_string -> variable_name_table -> boolean_expression -> string
 val string_of_boolean_expression : variable_name_table -> boolean_expression -> string

@@ -335,15 +335,16 @@ let get_resets (model : AbstractModel.abstract_model) (state_index : State.state
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
 		let transition = model.transitions_description transition_index in
-        let clock_updates, _ = transition.updates in
+		(* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
+        let potential_clock_updates, _ = transition.updates in
 		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		match clock_updates with
+		match potential_clock_updates with
 			(* No update at all *)
-			| No_update -> current_resets
+			| No_potential_update -> current_resets
 			(* Reset to 0 only *)
-			| Resets clock_resets -> List.rev_append clock_resets current_resets
+			| Potential_resets clock_resets -> List.rev_append clock_resets current_resets
 			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
+			| Potential_updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
 	) [] combined_transition
 	in
 

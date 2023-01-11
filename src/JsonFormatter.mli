@@ -18,6 +18,7 @@ type json_element =
     | Json_bool of bool
     | Json_int of int
     | Json_float of float
+    | Json_null
     | Json_raw of string
 
 and json_property = string * json_element

@@ -84,6 +84,7 @@ and rational_factor =
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
     | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
+    (* TODO benjamin CLEAN rename to Rational_access *)
     | Rational_array_access of expression_access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
@@ -210,7 +211,7 @@ and expression_access_type =
 and seq_code_bloc =
     | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
-    | Clock_assignment of (Automaton.clock_index * LinearConstraint.pxd_linear_term)
+    | Clock_assignment of (Automaton.clock_index * rational_arithmetic_expression)
     | Instruction of global_expression
     | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
@@ -231,44 +232,13 @@ type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_user of seq_code_bloc_list * global_expression option
 
-type 'a my_expression =
-    (* A typed expression *)
-    | My_arithmetic_expression of 'a my_arithmetic_expression
-    | My_bool_expression of 'a my_boolean_expression
-    | Other_expression of 'a my_factor
+type clock_index = int
+type clock_update = clock_index
 
-and 'a my_boolean_expression =
-	| My_true_bool
-	| My_false_bool
-	(** Conjunction / Disjunction *)
-	| My_conj_dis of 'a my_boolean_expression * 'a my_boolean_expression * conj_dis
-	| My_discrete_boolean_expression of 'a my_discrete_boolean_expression
-
-and 'a my_discrete_boolean_expression =
-	(** Discrete expression of the form Expr ~ Expr *)
-	| My_comparison of 'a my_expression * relop * 'a my_expression
-	(** Discrete expression of the form 'Expr in [Expr, Expr ]' *)
-	| My_comparison_in of 'a my_arithmetic_expression * 'a my_arithmetic_expression * 'a my_arithmetic_expression
-	| My_not_bool of 'a my_boolean_expression
-	| Bool_factor of bool my_factor
-
-and 'a my_arithmetic_expression =
-    | Sum_diff of 'a my_arithmetic_expression * 'a my_term * sum_diff
-	| My_term of 'a my_term
-
-and 'a my_term =
-	| Product_quotient of 'a my_term * 'a my_factor * product_quotient
-	| My_factor of 'a my_factor
-
-and 'a my_factor =
-	| My_global_variable of Automaton.variable_index
-	| My_global_constant of 'a
-	| My_local_variable of Automaton.variable_ref
-	| My_expression of 'a my_arithmetic_expression
-	| My_unary_min of 'a my_factor
-    | My_rat_of of 'a my_arithmetic_expression
-    | My_pow of 'a my_arithmetic_expression * int my_arithmetic_expression
-    | My_function_call of variable_name * variable_name list * 'a my_expression list
+type potential_clock_updates =
+    | No_potential_update
+    | Potential_resets of clock_update list
+    | Potential_updates of (clock_update * rational_arithmetic_expression) list
 
 type nonlinear_constraint = discrete_boolean_expression list
 
@@ -342,6 +312,8 @@ and is_linear_rational_factor = function
 
 let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_expression
 
+
+let zero_rational_expression = Rational_term (Rational_factor (Rational_constant NumConst.zero))
 
 (****************************************************************)
 (** Strings *)
@@ -847,6 +819,7 @@ and customized_string_of_function_call customized_string variable_names function
 let string_of_global_expression = customized_string_of_global_expression Constants.global_default_string
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.global_default_string
 let string_of_int_arithmetic_expression = customized_string_of_int_arithmetic_expression Constants.global_default_string
+let string_of_rational_arithmetic_expression = customized_string_of_rational_arithmetic_expression Constants.global_default_string
 let string_of_boolean_expression = customized_string_of_boolean_expression Constants.global_default_string
 let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.global_default_string
 let string_of_array_expression = customized_string_of_array_expression Constants.global_default_string

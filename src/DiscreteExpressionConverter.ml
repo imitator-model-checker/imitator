@@ -355,6 +355,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) discrete_variable_names_updated_by_clocks;
 
+        (*
         List.iter (fun (clock_name, str_expr) ->
             print_error (
                 "Clock `"
@@ -364,9 +365,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                 ^ "`. A linear expression is expected for clock update."
             );
         ) assigned_clocks_with_non_linear_expr;
-
+        *)
         (* Return is assignment is allowed *)
-        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_clock_updated_with_non_linear)
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks (*|| has_clock_updated_with_non_linear*) )
     in
 
     (* Return *)

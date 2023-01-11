@@ -239,10 +239,10 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
             ^ "' = "
             ^ str_update_expr
 
-        | Clock_assignment (clock_index, linear_term) ->
+        | Clock_assignment (clock_index, expr) ->
             model.variable_names clock_index
             ^ "' = "
-            ^ LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term
+            ^ DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr
 
         | Local_decl _
         | Instruction _

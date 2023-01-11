@@ -273,6 +273,7 @@ let to_int_value = function
 let to_rat_value = function
     | Abstract_scalar_value (Abstract_number_value Abstract_rat_value v) -> v
     | Abstract_scalar_value (Abstract_number_value Abstract_int_value v) -> NumConst.numconst_of_int (Int32.to_int v)
+    | Abstract_scalar_value (Abstract_bool_value v) -> if v then NumConst.one else NumConst.zero
     | v -> raise (InternalError ("Unable to convert `" ^ string_of_value v ^ "` to NumConst.t value"))
 
 let rec of_parsed_value = function

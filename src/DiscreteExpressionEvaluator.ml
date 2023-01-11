@@ -545,6 +545,125 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
             (* Get element at index *)
             List.nth values int_index
 
+
+(* TODO benjamin TEST, rewriting clock function for more complex expressions *)
+and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* expr *) =
+
+    let rec rewrite_rational_arithmetic_expression = function
+        | Rational_sum_diff (expr, term, sum_diff) ->
+            let rewrited_expr = rewrite_rational_arithmetic_expression expr in
+            let rewrited_term = rewrite_rational_term term in
+
+            (match rewrited_expr, rewrited_term with
+            (* Compute coef *)
+            | IR_Coef c1, IR_Coef c2 ->
+                (match sum_diff with
+                | Plus -> IR_Coef (NumConst.add c1 c2)
+                | Minus -> IR_Coef (NumConst.sub c1 c2)
+                )
+            | l_expr, r_expr ->
+                let sum_diff_f =
+                    match sum_diff with
+                    | Plus ->
+                        LinearConstraint.add_pxd_linear_terms
+                    | Minus ->
+                        LinearConstraint.sub_pxd_linear_terms
+                in
+                sum_diff_f rewrited_expr rewrited_term
+            )
+
+        | Rational_term term ->
+            rewrite_rational_term term
+
+    and rewrite_rational_term = function
+        | Rational_product_quotient (term, factor, product_quotient) ->
+            (* Only cases rejected are var*var, var/var, k/var *)
+            let rewrited_term = rewrite_rational_term term in
+            let rewrited_factor = rewrite_rational_factor factor in
+
+            (match rewrited_term, rewrited_factor with
+            | IR_Coef c1, IR_Coef c2 ->
+                (* Two coef, compute mul or div *)
+                (match product_quotient with
+                | Mul -> IR_Coef (NumConst.mul c1 c2)
+                | Div ->
+                    (* Check for 0-denominator *)
+                    if NumConst.equal c2 NumConst.zero then(
+                        raise (Division_by_0 ("Division by 0 found when trying to perform " ^ NumConst.to_string c1 ^ " / " ^ NumConst.to_string c2 ^ "."))
+                    );
+                    (* Divide *)
+                    IR_Coef (NumConst.div c1 c2)
+                )
+            (* k / var or k / c*var *)
+            | IR_Coef c, linear_term when product_quotient = Div ->
+                raise (InternalError (
+                    "A clock update is not linear. It should be checked before."
+                ))
+            | IR_Coef c, linear_term
+            | linear_term, IR_Coef c ->
+                (* Get coef according to requested operation *)
+                let times_coef =
+                    match product_quotient with
+                    (* If mul, multiply *)
+                    | Mul -> c
+                    (* If div, multiply by inverse *)
+                    | Div -> NumConst.div NumConst.one c
+                in
+                IR_Times (times_coef, linear_term)
+            | _ ->
+                raise (InternalError (
+                    "A clock update is not linear. It should be checked before."
+                ))
+            )
+
+        | Rational_factor factor ->
+            rewrite_rational_factor factor
+
+    and rewrite_rational_factor = function
+        | Rational_variable variable_index ->
+            (* Check if the variable is a clock previously updated *)
+            if Hashtbl.mem eval_context.updated_clocks variable_index then (
+                (* If yes, we replace variable by the linear expression that updated the clock *)
+                Hashtbl.find eval_context.updated_clocks variable_index
+            )
+            else (
+                try (
+                    (* If no, it's a discrete variable and we replace variable by the current computed value of discrete value *)
+                    let value = numconst_value (eval_context.discrete_valuation variable_index) in
+                    IR_Coef value
+                ) with _ -> (
+                    IR_Var variable_index
+                )
+            )
+        | Rational_local_variable variable_ref ->
+            (* Variable should exist as it was checked before *)
+            let discrete_value = eval_local_variable eval_context variable_ref in
+            let value = numconst_value discrete_value in
+            IR_Coef value
+
+        | Rational_constant value ->
+            IR_Coef value
+
+        | Rational_nested_expression expr ->
+            rewrite_rational_arithmetic_expression expr
+
+        | Rational_unary_min factor ->
+            let rewrited_factor = rewrite_rational_factor factor in
+            LinearConstraint.negate_linear_term rewrited_factor
+
+        | Rational_array_access (access_type, index_expr) ->
+            let discrete_value = get_expression_access_value_with_context variable_names functions_table_opt (Some eval_context) access_type index_expr in
+            let value = numconst_value discrete_value in
+            IR_Coef value
+
+        | Rational_function_call (function_name, param_refs, expr_args) ->
+            let result = eval_user_function_with_context variable_names functions_table_opt (Some eval_context) function_name param_refs expr_args in
+            let value = numconst_value result in
+            IR_Coef value
+
+    in
+    rewrite_rational_arithmetic_expression (* expr *)
+
 (* Eval sequential code bloc *)
 and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc =
 
@@ -609,20 +728,21 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
         | Assignment normal_update ->
             direct_update_with_context variable_names functions_table_opt eval_context normal_update
 
-        | Clock_assignment (clock_index, linear_expr) ->
+        | Clock_assignment (clock_index, expr) ->
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
-            let updated_linear_expr = rewrite_clock_update variable_names eval_context linear_expr in
+            let rewritten_linear_expr = rewrite_clock_update_2 variable_names eval_context functions_table_opt expr in
             (* Add clock update into table *)
-            Hashtbl.replace eval_context.updated_clocks clock_index updated_linear_expr;
+            Hashtbl.replace eval_context.updated_clocks clock_index rewritten_linear_expr;
             (* Push clock update on queue *)
-            Queue.push (clock_index, updated_linear_expr) eval_context.updated_clocks_ordered;
+            Queue.push (clock_index, rewritten_linear_expr) eval_context.updated_clocks_ordered;
 
+            (* Prepare rewriting message, only computed if verbose >= Verbose_high *)
             let lazy_rewriting_message = lazy (
                 match variable_names with
                 | Some variable_names ->
-                    let str_linear_expr_before = LinearConstraint.string_of_pxd_linear_term variable_names linear_expr in
-                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names updated_linear_expr in
-                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_linear_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
+                    let str_expr_before = DiscreteExpressions.string_of_rational_arithmetic_expression variable_names expr in
+                    let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names rewritten_linear_expr in
+                    "Clock rewriting: `" ^ variable_names clock_index ^ " = " ^ str_expr_before ^ " => " ^ variable_names clock_index ^ " = " ^ str_linear_expr_after ^ "`"
                 | _ -> ""
             )
             in
