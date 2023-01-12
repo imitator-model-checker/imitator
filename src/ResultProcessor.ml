@@ -256,6 +256,13 @@ let add_custom_details_delimiters str =
 	(* end delimiter *)
 	^ "\nEND DETAILS\n"
 
+(* Add custom details only if verbose mode >= low *)
+let add_custom_details _ =
+    if ImitatorUtilities.verbose_mode_greater ImitatorUtilities.Verbose_low then
+        add_custom_details_delimiters (Logger.json_string_of_details ())
+    else
+        ""
+
 (************************************************************)
 (* I/O functions *)
 (************************************************************)
@@ -364,7 +371,7 @@ let export_to_file_errorresult error_type file_name =
 		| PropertyParsing_error msg		-> "property parsing error (" ^ msg ^ ")"
 		| Unsatisfiable_initial_conditions	-> "unsatisfiable initial conditions"
 	in
-	
+
 	(* Prepare the string to write *)
 	let file_content =
 
@@ -381,7 +388,7 @@ let export_to_file_errorresult error_type file_name =
 		^ "\n------------------------------------------------------------"
 
         (*  4) More info about the model *)
-        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
+        ^ add_custom_details ()
 	in
 	
 	(* Write to file *)
@@ -417,7 +424,7 @@ let export_to_file_unsatisfiableinitialstate file_name =
 		^ "\n------------------------------------------------------------"
 
         (*  4) More info about the model *)
-        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
+        ^ add_custom_details ()
 	in
 
 	(* Write to file *)
@@ -456,7 +463,7 @@ let export_to_file_noresult file_name =
 		^ "\n------------------------------------------------------------"
 
         (*  4) More info about the model *)
-        ^ add_custom_details_delimiters (Logger.json_string_of_details ())
+        ^ add_custom_details ()
 
 	in
 	
