@@ -40,7 +40,7 @@ let ill_typed_message_of_expressions str_expressions discrete_types str_outer_ex
     ^ str_expressions_with_type
     ^ " in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or incompatibles."
+    ^ "` are ill-typed or incompatible."
 
 (* Message when two members of an expression are not compatibles *)
 let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type =
@@ -54,7 +54,7 @@ let ill_typed_message str_left_expr str_right_expr str_outer_expr l_type r_type 
     ^ DiscreteType.string_of_var_type_discrete r_type
     ^ "` in `"
     ^ str_outer_expr
-    ^ "` are ill-typed or incompatibles."
+    ^ "` are ill-typed or incompatible."
 
 (* Message when variable type not compatible with assigned expression type *)
 let ill_typed_variable_message variable_name str_discrete_type str_expr expr_discrete_type =
@@ -681,15 +681,6 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                     Ass_discrete_local
             in
 
-            (* Only reduce clock updates expressions *)
-            let reduced_expr =
-                match scope with
-                | Ass_clock ->
-                     ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr
-(*                    expr*)
-                | _ -> expr
-            in
-
             (* Resolve typed scalar or index update type *)
             let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
 
@@ -697,8 +688,20 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
             let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
             (* Resolve typed expression *)
-            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt reduced_expr in
+            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt expr in
 
+            (* Only reduce well typed clock updates expressions (so rational clock updates) *)
+            let reduced_typed_expr =
+                match expr_type, scope with
+                | Dt_number Dt_rat, Ass_clock ->
+                    (* Reduce *)
+                    let reduced_expr = ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr in
+                    (* Get new reduced typed expression (Note: it's not the best practice because we make a type check a second time !) *)
+                    let typed_expr, _ = type_check_parsed_boolean_expression variable_infos variable_number_type_opt reduced_expr in
+                    typed_expr
+
+                | _ -> typed_expr
+            in
 
             (* Check compatibility between assignee variable type and it's assigned expression *)
             if not (is_discrete_type_compatibles variable_type expr_type) then (
@@ -709,7 +712,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                 ))
             );
 
-            Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
+            Typed_assignment ((typed_parsed_scalar_or_index_update_type, reduced_typed_expr), scope)
 
         | Parsed_instruction expr ->
             (* Resolve typed expression *)
@@ -1124,7 +1127,7 @@ and Convert : sig
 val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
 
-val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term
+(*val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term*)
 val global_expression_of_typed_boolean_expression_by_type : variable_infos -> typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
 val global_expression_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> DiscreteExpressions.global_expression
 val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> DiscreteExpressions.boolean_expression
@@ -1409,8 +1412,8 @@ and bool_expression_of_typed_factor variable_infos = function
         bool_expression_of_typed_factor variable_infos factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Bool_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Bool_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1501,8 +1504,8 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Rational_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Rational_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1590,8 +1593,8 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Int_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Int_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1644,8 +1647,8 @@ and binary_expression_of_typed_factor variable_infos length = function
         binary_expression_of_typed_factor variable_infos length factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Binary_word_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Binary_word_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1703,8 +1706,8 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         array_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Array_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Array_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1761,8 +1764,8 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         list_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        List_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        List_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1810,8 +1813,8 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             stack_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
-            Stack_array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            Stack_indexed_expr (
+                access_type_of_typed_factor variable_infos factor discrete_type,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
             )
 
@@ -1863,8 +1866,8 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             queue_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
-            Queue_array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            Queue_indexed_expr (
+                access_type_of_typed_factor variable_infos factor discrete_type,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
             )
 
@@ -1930,13 +1933,13 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
 (* Access conversion *)
 (* --------------------*)
 
-and expression_access_type_of_typed_factor variable_infos factor = function
+and access_type_of_typed_factor variable_infos factor = function
     | Dt_array (inner_type, _) ->
-        Expression_array_access (
+        Array_access (
             array_expression_of_typed_factor variable_infos inner_type factor
         )
     | Dt_list inner_type ->
-        Expression_list_access (
+        List_access (
             list_expression_of_typed_factor variable_infos inner_type factor
         )
     | _ ->
@@ -2155,6 +2158,7 @@ type linear_term_element =
     | Lt_cons of NumConst.t
 
 (* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
+(*
 let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
     (* Get message when conversion fail *)
@@ -2314,8 +2318,10 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
     ) weighted_variables_without_duplicates (LinearConstraint.IR_Coef constants_sum) (* Add constant term to the end of the expression *)
     in
     linear_term
+*)
 
 (* Convert typed boolean expression to a linear term, if possible, and reduce it *)
+(*
 let linear_term_of_typed_boolean_expression variable_infos = function
     | Typed_discrete_bool_expr (Typed_arithmetic_expr (expr, _), _) ->
         linear_term_of_typed_arithmetic_expression variable_infos expr
@@ -2327,7 +2333,7 @@ let linear_term_of_typed_boolean_expression variable_infos = function
                 ^ "` to a linear expression. Expression linearity should be checked before."
             )
         )
-
+*)
 
 let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_bloc =
 

@@ -4846,7 +4846,8 @@ END CONSTRAINT
       'input_files': ['functions/function-side-effects-detect.imi'],
       'tags': 'function, inference',
       'imitator-version': '3.4',
-      'options'    : '-no-var-autoremove',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-no-var-autoremove -verbose low',
       'expectations' : [
         {'file': 'function-side-effects-detect.res' , 'content' : """
   "function_metas": [
@@ -4897,7 +4898,8 @@ END CONSTRAINT
       'input_files': ['dependency_graph/simple-cycle-detection.imi'],
       'tags': 'behavior, function, cycle, dependency',
         'imitator-version': '3.4',
-      'options'    : '',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-verbose low',
       'expectations' : [
         {'file': 'simple-cycle-detection.res' , 'content' : """
   "cycles": [
@@ -4922,7 +4924,8 @@ END CONSTRAINT
       'input_files': ['dependency_graph/complex-cycle-detection.imi'],
       'tags': 'behavior, function, cycle, dependency',
       'imitator-version': '3.4',
-      'options'    : '',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-verbose low',
       'expectations' : [
         {'file': 'complex-cycle-detection.res' , 'content' : """
   "cycles": [

@@ -413,7 +413,7 @@ and string_of_discrete_boolean_expression variable_names = function
 
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value jani_strings.boolean_string value
 
-    | Bool_array_access (access_type, index_expr) ->
+    | Bool_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | Bool_function_call (function_name, _, args_expr) ->
@@ -465,13 +465,8 @@ and string_of_rational_arithmetic_expression variable_names =
 
 		| Rational_nested_expression expr ->
 			string_of_arithmetic_expression expr
-        | Rational_pow (expr, exp) as factor ->
-            jani_binary_operator
-                (label_of_rational_factor factor)
-                (string_of_arithmetic_expression expr)
-                (string_of_int_arithmetic_expression variable_names exp)
 
-        | Rational_array_access (access_type, index_expr) ->
+        | Rational_indexed_expr (access_type, index_expr) ->
             string_of_expression_access variable_names access_type index_expr
 
         | Rational_function_call (function_name, _, args_expr) ->
@@ -519,13 +514,8 @@ and string_of_int_arithmetic_expression variable_names =
 
 		| Int_nested_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression discrete_arithmetic_expression
-        | Int_pow (expr, exp) as factor ->
-            jani_binary_operator
-                (label_of_int_factor factor)
-                (string_of_int_arithmetic_expression expr)
-                (string_of_int_arithmetic_expression exp)
 
-        | Int_array_access (access_type, index_expr) ->
+        | Int_indexed_expr (access_type, index_expr) ->
             string_of_expression_access variable_names access_type index_expr
 
         | Int_function_call (function_name, _, args_expr) ->
@@ -539,7 +529,7 @@ and string_of_binary_word_expression variable_names = function
     | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
     | Binary_word_local_variable (variable_name, _) -> json_quoted variable_name
 
-    | Binary_word_array_access (access_type, index_expr) ->
+    | Binary_word_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | Binary_word_function_call (function_name, _, args_expr) ->
@@ -557,7 +547,7 @@ and string_of_array_expression variable_names = function
     | Array_variable variable_index -> json_quoted (variable_names variable_index)
     | Array_local_variable (variable_name, _) -> json_quoted variable_name
 
-    | Array_array_access (access_type, index_expr) ->
+    | Array_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | Array_function_call (function_name, _, args_expr) ->
@@ -574,7 +564,7 @@ and string_of_list_expression variable_names = function
 
     | List_variable variable_index -> json_quoted (variable_names variable_index)
     | List_local_variable (variable_name, _) -> json_quoted variable_name
-    | List_array_access (access_type, index_expr) ->
+    | List_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | List_function_call (function_name, _, args_expr) ->
@@ -589,7 +579,7 @@ and string_of_stack_expression variable_names = function
     | Stack_variable variable_index -> json_quoted (variable_names variable_index)
     | Stack_local_variable (variable_name, _) -> json_quoted variable_name
 
-    | Stack_array_access (access_type, index_expr) ->
+    | Stack_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | Stack_function_call (function_name, _, args_expr) ->
@@ -604,7 +594,7 @@ and string_of_queue_expression variable_names = function
     | Queue_variable variable_index -> json_quoted (variable_names variable_index)
     | Queue_local_variable (variable_name, _) -> json_quoted variable_name
 
-    | Queue_array_access (access_type, index_expr) ->
+    | Queue_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
 
     | Queue_function_call (function_name, _, args_expr) ->
@@ -615,9 +605,9 @@ and string_of_void_expression variable_names = function
         string_of_function_call variable_names function_name args_expr
 
 and string_of_expression_of_access variable_names = function
-    | Expression_array_access array_expr ->
+    | Array_access array_expr ->
         string_of_array_expression variable_names array_expr
-    | Expression_list_access list_expr ->
+    | List_access list_expr ->
         string_of_list_expression variable_names list_expr
 
 and string_of_expression_access variable_names access_type index_expr =

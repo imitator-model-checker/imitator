@@ -125,9 +125,6 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
                     IR_Var variable_index
                 )
             )
-        | IR_Local_var variable_ref ->
-            let value = numconst_value (eval_local_variable eval_context variable_ref) in
-            IR_Coef value
 
         | IR_Coef _ as ir_coef -> ir_coef
         | IR_Plus (l_linear_term, r_linear_term) ->
@@ -246,12 +243,7 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
     | Rational_unary_min factor ->
         NumConst.neg (eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor)
 
-    | Rational_pow (expr, exp) ->
-        let x = eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr in
-        let exponent = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt exp in
-        NumConst.pow x exponent
-
-    | Rational_array_access (access_type, index_expr) ->
+    | Rational_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         numconst_value value
 
@@ -317,12 +309,8 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             eval_int_expression_with_context_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor_with_context factor)
-        | Int_pow (expr, exp) ->
-            let x = eval_int_expression_with_context_rec expr in
-            let exponent = eval_int_expression_with_context_rec exp in
-            OCamlUtilities.pow x exponent
 
-        | Int_array_access (access_type, index_expr) ->
+        | Int_indexed_expr (access_type, index_expr) ->
             let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
             int_value value
 
@@ -405,7 +393,7 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt boolean_expression
     | Not_bool b ->
         not (eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt b) (* negation *)
-    | Bool_array_access (access_type, index_expr) ->
+    | Bool_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         bool_value value
 
@@ -422,7 +410,7 @@ and eval_binary_word_expression_with_context variable_names functions_table_opt 
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         binary_word_value discrete_value
 
-    | Binary_word_array_access (access_type, index_expr) ->
+    | Binary_word_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         binary_word_value value
 
@@ -442,7 +430,7 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         array_value discrete_value
 
-    | Array_array_access (access_type, index_expr) ->
+    | Array_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         array_value value
 
@@ -461,7 +449,7 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
                 (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         list_value discrete_value
-    | List_array_access (access_type, index_expr) ->
+    | List_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         list_value value
 
@@ -480,7 +468,7 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         stack_value discrete_value
 
-    | Stack_array_access (access_type, index_expr) ->
+    | Stack_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         stack_value value
 
@@ -499,7 +487,7 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         queue_value discrete_value
 
-    | Queue_array_access (access_type, index_expr) ->
+    | Queue_indexed_expr (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         queue_value value
 
@@ -525,7 +513,7 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
         in
 
         match access_type with
-        | Expression_array_access array_expr ->
+        | Array_access array_expr ->
             let values = eval_array_expression_with_context variable_names functions_table_opt eval_context_opt array_expr in
 
             if int_index >= Array.length values || int_index < 0 then (
@@ -535,7 +523,7 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
             (* Get element at index *)
             Array.get values int_index
 
-        | Expression_list_access list_expr ->
+        | List_access list_expr ->
             let values = eval_list_expression_with_context variable_names functions_table_opt eval_context_opt list_expr in
 
             if int_index >= List.length values || int_index < 0 then (
@@ -548,6 +536,9 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
 
 (* TODO benjamin TEST, rewriting clock function for more complex expressions *)
 and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* expr *) =
+
+    (* Prepare error message when non-linear operation was found on continuous *)
+    let nonlinear_operation_message = lazy "A clock update contains non-linear operations on continuous clock / parameter variables. It should be checked before." in
 
     let rec rewrite_rational_arithmetic_expression = function
         | Rational_sum_diff (expr, term, sum_diff) ->
@@ -596,9 +587,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
                 )
             (* k / var or k / c*var *)
             | IR_Coef c, linear_term when product_quotient = Div ->
-                raise (InternalError (
-                    "A clock update is not linear. It should be checked before."
-                ))
+                raise (InternalError (Lazy.force nonlinear_operation_message))
             | IR_Coef c, linear_term
             | linear_term, IR_Coef c ->
                 (* Get coef according to requested operation *)
@@ -611,9 +600,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
                 in
                 IR_Times (times_coef, linear_term)
             | _ ->
-                raise (InternalError (
-                    "A clock update is not linear. It should be checked before."
-                ))
+                raise (InternalError (Lazy.force nonlinear_operation_message))
             )
 
         | Rational_factor factor ->
@@ -651,7 +638,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
             let rewrited_factor = rewrite_rational_factor factor in
             LinearConstraint.negate_linear_term rewrited_factor
 
-        | Rational_array_access (access_type, index_expr) ->
+        | Rational_indexed_expr (access_type, index_expr) ->
             let discrete_value = get_expression_access_value_with_context variable_names functions_table_opt (Some eval_context) access_type index_expr in
             let value = numconst_value discrete_value in
             IR_Coef value

@@ -586,7 +586,7 @@ let check_init_definition parsed_model =
             )
             (* And that all variables in expr are defined *)
             else if not (ParsingStructureMeta.all_variables_defined_in_parsed_boolean_expression_without_callback variable_infos expr) then (
-                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr ^ "\" use undeclared variable(s)");
+                print_error ("Expression \"" ^ variable_name ^ " := " ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr ^ "\" uses undeclared variable(s)");
                 false
             )
             else
@@ -613,7 +613,7 @@ let check_init_definition parsed_model =
             print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
-                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s).");
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" uses undeclared variable(s).");
                 false
             )
             else
@@ -621,7 +621,7 @@ let check_init_definition parsed_model =
         (* General case: check *)
         | Parsed_linear_constraint _ as linear_constraint ->
             if not (ParsingStructureMeta.all_variables_defined_in_linear_constraint variable_infos undeclared_variable_in_linear_constraint_message linear_constraint) then (
-                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" use undeclared variable(s).");
+                print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" uses undeclared variable(s).");
                 false
             )
             else
@@ -2456,7 +2456,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
     print_message Verbose_high ("\n*** Link variables to declarations.");
-    (* Recompute model to link variables to their declarations, and return all local variables declarations *)
+    (* Recompute model to link variables to their declarations, and return all variables declarations *)
     let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
 
     print_message Verbose_high ("\n*** Linking variables finished.");
@@ -2545,7 +2545,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             print_error (
                 "Expression \""
                 ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
-                ^ "\" use undeclared variable or constant"
+                ^ "\" uses undeclared variable or constant"
             );
             raise InvalidModel;
         );
@@ -2693,12 +2693,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove declarations_info parsed_model parsed_property_option in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
-    (* Print dependency graph *)
-
+    (* Print dependency graph, if verbose mode >= high *)
     ImitatorUtilities.print_message_lazy Verbose_high str_dependency_graph;
-
     ImitatorUtilities.print_message_lazy Verbose_high (lazy "\n*** Dependency graph computed. (copy/paste in new .dot file and use `dot -Tpng file.dot file.png` command to see it).\n");
-
 
     (* Get unused components and print warnings *)
     let unused_components = ParsingStructureGraph.unused_components_of_model dependency_graph in
@@ -2709,7 +2706,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
             print_warning ("Function `" ^ function_name ^ "` is declared but never used.")
         | Variable_component ((variable_name, id) as variable_ref) when VariableInfo.is_local variable_ref ->
-            print_warning ("Local variable `" ^ variable_name ^ "` at `" ^ string_of_int id ^ "` is declared but never used.")
+            print_warning ("Local variable `" ^ variable_name ^ "` is declared but never used.")
 (*        | Param_component (param_name, function_name) ->*)
 (*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
         | _ -> ()

@@ -85,9 +85,7 @@ and rational_factor =
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
-	(* TODO benjamin CLEAN remove *)
-	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
-    | Rational_array_access of expression_access_type * int_arithmetic_expression
+    | Rational_indexed_expr of access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
@@ -108,9 +106,7 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-	(* TODO benjamin CLEAN remove *)
-    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
-    | Int_array_access of expression_access_type * int_arithmetic_expression
+    | Int_indexed_expr of access_type * int_arithmetic_expression
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 
@@ -150,7 +146,7 @@ and discrete_boolean_expression =
 	| Bool_local_variable of Automaton.variable_ref
 	(** discrete constant in boolean expression *)
 	| Bool_constant of bool
-    | Bool_array_access of expression_access_type * int_arithmetic_expression
+    | Bool_indexed_expr of access_type * int_arithmetic_expression
 
     | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
@@ -166,7 +162,7 @@ and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
     | Binary_word_variable of Automaton.variable_index * int
 	| Binary_word_local_variable of Automaton.variable_ref
-    | Binary_word_array_access of expression_access_type * int_arithmetic_expression
+    | Binary_word_indexed_expr of access_type * int_arithmetic_expression
     | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** Array expression **)
@@ -175,7 +171,7 @@ and array_expression =
     | Array_constant of AbstractValue.abstract_value array
     | Array_variable of Automaton.variable_index
     | Array_local_variable of Automaton.variable_ref
-    | Array_array_access of expression_access_type * int_arithmetic_expression
+    | Array_indexed_expr of access_type * int_arithmetic_expression
     | Array_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (** List expression **)
@@ -184,29 +180,29 @@ and list_expression =
     | List_constant of AbstractValue.abstract_value list
     | List_variable of Automaton.variable_index
     | List_local_variable of Automaton.variable_ref
-    | List_array_access of expression_access_type * int_arithmetic_expression
+    | List_indexed_expr of access_type * int_arithmetic_expression
     | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
     | Stack_local_variable of Automaton.variable_ref
-    | Stack_array_access of expression_access_type * int_arithmetic_expression
+    | Stack_indexed_expr of access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
     | Queue_local_variable of Automaton.variable_ref
-    | Queue_array_access of expression_access_type * int_arithmetic_expression
+    | Queue_indexed_expr of access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 and void_expression =
     | Void_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
-and expression_access_type =
-    | Expression_array_access of array_expression
-    | Expression_list_access of list_expression
+and access_type =
+    | Array_access of array_expression
+    | List_access of list_expression
 
 (* Bloc of sequential code *)
 and seq_code_bloc =
@@ -298,7 +294,7 @@ val string_of_discrete_update : variable_name_table -> discrete_update -> string
 val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> variable_name_table -> scalar_or_index_update_type -> string
 val string_of_scalar_or_index_update_type : variable_name_table -> scalar_or_index_update_type -> string
 
-val string_of_expression_access : variable_name_table -> expression_access_type -> int_arithmetic_expression -> string
+val string_of_expression_access : variable_name_table -> access_type -> int_arithmetic_expression -> string
 
 val customized_string_of_nonlinear_constraint : Constants.customized_string -> variable_name_table -> nonlinear_constraint -> string
 val string_of_nonlinear_constraint : variable_name_table -> nonlinear_constraint -> string

@@ -236,7 +236,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
-            | Some Var_type_clock -> []
+            | Some Var_type_clock -> acc
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
@@ -282,6 +282,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) [] left_discrete_variable_refs in
 
         (* Check that clock update is a linear expression *)
+        (*
         let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_ref, _, expr) ->
             let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
@@ -295,6 +296,18 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                     None
             | _ -> None
         ) left_right_variable_refs in
+        *)
+
+        let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr) ->
+            let nonlinear_operation_on_continuous_found = ParsingStructureMeta.nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr in
+
+            if nonlinear_operation_on_continuous_found then (
+                let variable_name, _ = variable_ref in
+                Some (variable_name, ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr)
+            )
+            else
+                None
+        ) left_right_variable_refs in
 
         (* Is any constant modifications found in user function ? *)
         let has_assigned_constant_modifications = List.length assigned_constant_names > 0 in
@@ -305,8 +318,10 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         (* Is any discrete was updated by a clock ? *)
         let has_discrete_updated_with_clocks = List.length discrete_variable_names_updated_by_clocks > 0 in
         (* Is any clock was updated by non linear expression ? *)
-        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in
-
+(*        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in*)
+        (* Is any non-linear operation found on continuous variables (clock / parameter) *)
+        let has_nonlinear_operation_on_continuous = List.length nonlinear_operation_on_continuous > 0 in
+        
         (* Print errors *)
 
         List.iter (fun variable_name ->
@@ -355,19 +370,18 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) discrete_variable_names_updated_by_clocks;
 
-        (*
-        List.iter (fun (clock_name, str_expr) ->
+        List.iter (fun (variable_name, str_expr) ->
             print_error (
-                "Clock `"
-                ^ clock_name
-                ^ "` was updated with a non-linear expression `"
+                "Non-linear operation was found on continuous variable at `"
+                ^ variable_name
+                ^ " := "
                 ^ str_expr
-                ^ "`. A linear expression is expected for clock update."
+                ^ "`. Linear operations are expected on clock / parameter variables."
             );
-        ) assigned_clocks_with_non_linear_expr;
-        *)
+        ) nonlinear_operation_on_continuous;
+
         (* Return is assignment is allowed *)
-        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks (*|| has_clock_updated_with_non_linear*) )
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_nonlinear_operation_on_continuous)
     in
 
     (* Return *)
@@ -619,7 +633,7 @@ let convert_guard variable_infos guard_convex_predicate =
             let discrete_guard = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
             let continuous_guard = linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate in
 
-            (* TODO benjamin, check if optimization is possible now *)
+            (* TODO, check if optimization is possible now *)
             (* NOTE : This optimization (below) was possible when discrete part use only rational-valued variables
                I don't think that it's possible anymore *)
 
@@ -670,7 +684,6 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
     (* Convert clock updates to linear terms *)
-    (* ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc *)
     ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
     (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
