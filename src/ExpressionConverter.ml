@@ -681,14 +681,6 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                     Ass_discrete_local
             in
 
-            (* Only reduce clock updates expressions *)
-            let reduced_expr =
-                match scope with
-                | Ass_clock ->
-                     ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr
-                | _ -> expr
-            in
-
             (* Resolve typed scalar or index update type *)
             let typed_parsed_scalar_or_index_update_type, variable_type = type_check_parsed_scalar_or_index_update_type variable_infos parsed_scalar_or_index_update_type in
 
@@ -696,8 +688,20 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
             let variable_number_type_opt = Some (DiscreteType.extract_inner_type variable_type) in
 
             (* Resolve typed expression *)
-            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt reduced_expr in
+            let typed_expr, expr_type = type_check_parsed_boolean_expression variable_infos variable_number_type_opt expr in
 
+            (* Only reduce well typed clock updates expressions (so rational clock updates) *)
+            let reduced_typed_expr =
+                match expr_type, scope with
+                | Dt_number Dt_rat, Ass_clock ->
+                    (* Reduce *)
+                    let reduced_expr = ExpressionReducer.RationalReducer.reduce_parsed_boolean_expression variable_infos expr in
+                    (* Get new reduced typed expression (Note: it's not the best practice because we make a type check a second time !) *)
+                    let typed_expr, _ = type_check_parsed_boolean_expression variable_infos variable_number_type_opt reduced_expr in
+                    typed_expr
+
+                | _ -> typed_expr
+            in
 
             (* Check compatibility between assignee variable type and it's assigned expression *)
             if not (is_discrete_type_compatibles variable_type expr_type) then (
@@ -708,7 +712,7 @@ let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_cod
                 ))
             );
 
-            Typed_assignment ((typed_parsed_scalar_or_index_update_type, typed_expr), scope)
+            Typed_assignment ((typed_parsed_scalar_or_index_update_type, reduced_typed_expr), scope)
 
         | Parsed_instruction expr ->
             (* Resolve typed expression *)

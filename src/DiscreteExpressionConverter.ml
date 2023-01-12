@@ -695,7 +695,6 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
     (* Convert clock updates to linear terms *)
-    (* ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc *)
     ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
     (* Convert sequential code bloc *)
     ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
