@@ -368,19 +368,6 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             );
         ) discrete_variable_names_updated_by_clocks;
 
-        (* TODO benjamin CLEAN comment *)
-        (*
-        List.iter (fun (clock_name, str_expr) ->
-            print_error (
-                "Clock `"
-                ^ clock_name
-                ^ "` was updated with a non-linear expression `"
-                ^ str_expr
-                ^ "`. A linear expression is expected for clock update."
-            );
-        ) assigned_clocks_with_non_linear_expr;
-        *)
-
         List.iter (fun (variable_name, str_expr) ->
             print_error (
                 "Non-linear operation was found on continuous variable at `"
@@ -392,7 +379,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) nonlinear_operation_on_continuous;
 
         (* Return is assignment is allowed *)
-        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks (*|| has_clock_updated_with_non_linear*) (* TODO benjamin CLEAN comment *) || has_nonlinear_operation_on_continuous)
+        not (has_assigned_constant_modifications || has_assigned_param_modifications || has_variable_updated_with_params || has_discrete_updated_with_clocks || has_nonlinear_operation_on_continuous)
     in
 
     (* Return *)
@@ -644,7 +631,7 @@ let convert_guard variable_infos guard_convex_predicate =
             let discrete_guard = nonlinear_constraint_of_convex_predicate variable_infos discrete_guard_convex_predicate in
             let continuous_guard = linear_constraint_of_convex_predicate variable_infos continuous_guard_convex_predicate in
 
-            (* TODO benjamin, check if optimization is possible now *)
+            (* TODO, check if optimization is possible now *)
             (* NOTE : This optimization (below) was possible when discrete part use only rational-valued variables
                I don't think that it's possible anymore *)
 
