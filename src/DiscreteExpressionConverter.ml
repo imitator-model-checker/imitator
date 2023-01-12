@@ -236,7 +236,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 
             match left_var_type with
             (* We are able to update a clock with a parameter *)
-            | Some Var_type_clock -> []
+            | Some Var_type_clock -> acc
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
