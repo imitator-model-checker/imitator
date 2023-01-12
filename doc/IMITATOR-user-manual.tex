@@ -343,7 +343,7 @@ Rational-valued variables are the only ones to be compared \emph{directly} to cl
 Further types of discrete variables (\eg{} integers, Booleans, arrays…)\ will be described in \cref{section:discrete}.
 These latter types cannot be directly compared to clocks or parameters.
 
-In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
+In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64~bits).
 %
 Rational variables are encoded in \imitator{} as \emph{exact rational arithmetics}, thanks to the GNU Multiple Precision Arithmetic (GMP) library.
 Therefore, neither floating-point approximation, nor overflow, can occur;
@@ -786,7 +786,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Conversion functions}
 
 \begin{itemize}
-    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} - convert an int number to a rational one
+    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} -- convert an int number to a rational one
 \end{itemize}
 
 %------------------------------------------------------------
@@ -815,6 +815,8 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 	%------------------------------------------------------------
 \end{remark}
 %------------------------------------------------------------
+
+The opposite function (int of rational) is \emph{not} allowed, as an overflow can occur: recall that rationals are \emph{exact} in \imitator{} while \styleIMI{int} are encoded using 32~bits.
 
 
 %------------------------------------------------------------
@@ -1659,14 +1661,17 @@ In addition to the built-in functions (see \cref{table:summary:builtin-functions
 \subsection{Declaration}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-A user-defined function is made of a (possibly empty) list of declarations of local variables, of a set of imperative instructions (modification of global variables) and may have one return expression.
+A user-defined function is made of a (possibly empty) list of declarations of local variables (introduced by \styleIMI{let}), of a set of imperative instructions (modification of global variables) and may have one \styleIMI{return} expression.
 
-Local variable declarations and imperative instructions can be written in any order. A function may or may not return a value.
-If a function return something, the last instruction should be an expression that is the return expression. If a function return nothing, it should be typed as \styleIMI{void} and doesn't have any return expression.
+Local variable declarations and imperative instructions can be written in any order.
+A function may or may not return a value.
+If a function returns something, the last instruction should be an expression that is the \styleIMI{return} expression.
+If a function returns nothing, it should be typed as \styleIMI{void} and does not have any \styleIMI{return} expression.
 
 Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side-effect, they can only be used in updates (not in guards nor in invariants).
 
-User-defined functions can have zero or more arguments, and must return one value. Note that all arguments are passed by value.
+User-defined functions can have zero or more arguments, and must return one value.
+Note that all arguments are passed by value.
 
 User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
 
