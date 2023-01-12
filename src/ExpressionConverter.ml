@@ -1412,8 +1412,8 @@ and bool_expression_of_typed_factor variable_infos = function
         bool_expression_of_typed_factor variable_infos factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Bool_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Bool_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1504,8 +1504,8 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Rational_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Rational_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1593,8 +1593,8 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
         )
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Int_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Int_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1647,8 +1647,8 @@ and binary_expression_of_typed_factor variable_infos length = function
         binary_expression_of_typed_factor variable_infos length factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Binary_word_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Binary_word_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1706,8 +1706,8 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
         array_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        Array_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        Array_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1764,8 +1764,8 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
         list_expression_of_typed_factor variable_infos discrete_type factor
 
     | Typed_access (factor, index_expr, discrete_type, _) ->
-        List_array_access (
-            expression_access_type_of_typed_factor variable_infos factor discrete_type,
+        List_indexed_expr (
+            access_type_of_typed_factor variable_infos factor discrete_type,
             int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
         )
 
@@ -1813,8 +1813,8 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             stack_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
-            Stack_array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            Stack_indexed_expr (
+                access_type_of_typed_factor variable_infos factor discrete_type,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
             )
 
@@ -1866,8 +1866,8 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             queue_expression_of_typed_factor factor
 
         | Typed_access (factor, index_expr, discrete_type, _) ->
-            Queue_array_access (
-                expression_access_type_of_typed_factor variable_infos factor discrete_type,
+            Queue_indexed_expr (
+                access_type_of_typed_factor variable_infos factor discrete_type,
                 int_arithmetic_expression_of_typed_arithmetic_expression variable_infos index_expr
             )
 
@@ -1933,13 +1933,13 @@ and void_expression_of_typed_boolean_expression variable_infos expr =
 (* Access conversion *)
 (* --------------------*)
 
-and expression_access_type_of_typed_factor variable_infos factor = function
+and access_type_of_typed_factor variable_infos factor = function
     | Dt_array (inner_type, _) ->
-        Expression_array_access (
+        Array_access (
             array_expression_of_typed_factor variable_infos inner_type factor
         )
     | Dt_list inner_type ->
-        Expression_list_access (
+        List_access (
             list_expression_of_typed_factor variable_infos inner_type factor
         )
     | _ ->
