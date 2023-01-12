@@ -246,11 +246,6 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
     | Rational_unary_min factor ->
         NumConst.neg (eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor)
 
-    | Rational_pow (expr, exp) ->
-        let x = eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr in
-        let exponent = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt exp in
-        NumConst.pow x exponent
-
     | Rational_array_access (access_type, index_expr) ->
         let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in
         numconst_value value
@@ -317,10 +312,6 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             eval_int_expression_with_context_rec expr
         | Int_unary_min factor ->
             Int32.neg (eval_int_factor_with_context factor)
-        | Int_pow (expr, exp) ->
-            let x = eval_int_expression_with_context_rec expr in
-            let exponent = eval_int_expression_with_context_rec exp in
-            OCamlUtilities.pow x exponent
 
         | Int_array_access (access_type, index_expr) ->
             let value = get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr in

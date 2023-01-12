@@ -465,11 +465,6 @@ and string_of_rational_arithmetic_expression variable_names =
 
 		| Rational_nested_expression expr ->
 			string_of_arithmetic_expression expr
-        | Rational_pow (expr, exp) as factor ->
-            jani_binary_operator
-                (label_of_rational_factor factor)
-                (string_of_arithmetic_expression expr)
-                (string_of_int_arithmetic_expression variable_names exp)
 
         | Rational_array_access (access_type, index_expr) ->
             string_of_expression_access variable_names access_type index_expr
@@ -519,11 +514,6 @@ and string_of_int_arithmetic_expression variable_names =
 
 		| Int_nested_expression discrete_arithmetic_expression ->
 			string_of_int_arithmetic_expression discrete_arithmetic_expression
-        | Int_pow (expr, exp) as factor ->
-            jani_binary_operator
-                (label_of_int_factor factor)
-                (string_of_int_arithmetic_expression expr)
-                (string_of_int_arithmetic_expression exp)
 
         | Int_array_access (access_type, index_expr) ->
             string_of_expression_access variable_names access_type index_expr

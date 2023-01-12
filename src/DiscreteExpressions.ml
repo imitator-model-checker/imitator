@@ -83,7 +83,6 @@ and rational_factor =
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
-    | Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     (* TODO benjamin CLEAN rename to Rational_access *)
     | Rational_array_access of expression_access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -106,7 +105,6 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
@@ -437,7 +435,6 @@ let label_of_rational_factor = function
 	| Rational_constant _ -> "rational constant"
 	| Rational_nested_expression _ -> "rational expression"
 	| Rational_unary_min _ -> "rational minus"
-	| Rational_pow _ -> "pow"
 	| Rational_array_access _ -> "array_get"
 	| Rational_function_call (function_name, _, _) -> function_name
 
@@ -447,7 +444,6 @@ let label_of_int_factor = function
 	| Int_constant _ -> "int constant"
 	| Int_nested_expression _ -> "int expression"
 	| Int_unary_min _ -> "int minus"
-	| Int_pow _ -> "pow"
 	| Int_array_access _ -> "array_get"
 	| Int_function_call (function_name, _, _) -> function_name
 
@@ -562,13 +558,6 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 		    add_parenthesis_to_unary_minus (
 		         (string_of_factor customized_string discrete_factor)
 		    ) discrete_factor
-        | Rational_pow (expr, exp) as factor ->
-            print_function
-                (label_of_rational_factor factor)
-                [
-                    string_of_arithmetic_expression customized_string expr;
-                    customized_string_of_int_arithmetic_expression customized_string variable_names exp
-                ]
 
         | Rational_array_access (access_type, index_expr) ->
             customized_string_of_expression_access customized_string variable_names access_type index_expr
@@ -624,13 +613,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		    ) factor
 		| Int_nested_expression expr ->
 			string_of_int_arithmetic_expression customized_string expr
-        | Int_pow (expr, exp) as func ->
-            print_function
-                (label_of_int_factor func)
-                [
-                    string_of_int_arithmetic_expression customized_string expr;
-                    string_of_int_arithmetic_expression customized_string exp
-                ]
+
         | Int_array_access (access_type, index_expr) ->
             customized_string_of_expression_access customized_string variable_names access_type index_expr
         | Int_function_call (function_name, _, args_expr) ->

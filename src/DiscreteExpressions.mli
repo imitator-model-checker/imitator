@@ -85,8 +85,6 @@ and rational_factor =
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
 	| Rational_unary_min of rational_factor
-	(* TODO benjamin CLEAN remove *)
-	| Rational_pow of rational_arithmetic_expression * int_arithmetic_expression
     | Rational_array_access of expression_access_type * int_arithmetic_expression
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
@@ -108,8 +106,6 @@ and int_factor =
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
 	| Int_unary_min of int_factor
-	(* TODO benjamin CLEAN remove *)
-    | Int_pow of int_arithmetic_expression * int_arithmetic_expression
     | Int_array_access of expression_access_type * int_arithmetic_expression
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
