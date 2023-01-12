@@ -42,7 +42,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a;
+actions: a;
 
 loc l1: invariant True
 	when x = 1 sync a do {x := p/2, i := i+1, r := r*r} goto l1;
