@@ -1127,7 +1127,7 @@ and Convert : sig
 val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
 
-val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term
+(*val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term*)
 val global_expression_of_typed_boolean_expression_by_type : variable_infos -> typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
 val global_expression_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> DiscreteExpressions.global_expression
 val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> DiscreteExpressions.boolean_expression
@@ -2158,6 +2158,7 @@ type linear_term_element =
     | Lt_cons of NumConst.t
 
 (* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
+(*
 let linear_term_of_typed_arithmetic_expression variable_infos expr =
 
     (* Get message when conversion fail *)
@@ -2317,8 +2318,10 @@ let linear_term_of_typed_arithmetic_expression variable_infos expr =
     ) weighted_variables_without_duplicates (LinearConstraint.IR_Coef constants_sum) (* Add constant term to the end of the expression *)
     in
     linear_term
+*)
 
 (* Convert typed boolean expression to a linear term, if possible, and reduce it *)
+(*
 let linear_term_of_typed_boolean_expression variable_infos = function
     | Typed_discrete_bool_expr (Typed_arithmetic_expr (expr, _), _) ->
         linear_term_of_typed_arithmetic_expression variable_infos expr
@@ -2330,7 +2333,7 @@ let linear_term_of_typed_boolean_expression variable_infos = function
                 ^ "` to a linear expression. Expression linearity should be checked before."
             )
         )
-
+*)
 
 let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_bloc =
 

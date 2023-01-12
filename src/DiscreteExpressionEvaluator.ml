@@ -125,9 +125,6 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
                     IR_Var variable_index
                 )
             )
-        | IR_Local_var variable_ref ->
-            let value = numconst_value (eval_local_variable eval_context variable_ref) in
-            IR_Coef value
 
         | IR_Coef _ as ir_coef -> ir_coef
         | IR_Plus (l_linear_term, r_linear_term) ->

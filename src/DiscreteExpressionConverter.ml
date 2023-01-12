@@ -282,6 +282,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) [] left_discrete_variable_refs in
 
         (* Check that clock update is a linear expression *)
+        (*
         let assigned_clocks_with_non_linear_expr = List.filter_map (fun (variable_ref, _, expr) ->
             let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
@@ -295,6 +296,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                     None
             | _ -> None
         ) left_right_variable_refs in
+        *)
 
         let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr) ->
             let nonlinear_operation_on_continuous_found = ParsingStructureMeta.nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr in
@@ -316,7 +318,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         (* Is any discrete was updated by a clock ? *)
         let has_discrete_updated_with_clocks = List.length discrete_variable_names_updated_by_clocks > 0 in
         (* Is any clock was updated by non linear expression ? *)
-        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in
+(*        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in*)
         (* Is any non-linear operation found on continuous variables (clock / parameter) *)
         let has_nonlinear_operation_on_continuous = List.length nonlinear_operation_on_continuous > 0 in
         
