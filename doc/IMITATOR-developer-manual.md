@@ -46,6 +46,42 @@ This module contains all higher order level function on parsing structure. Like:
 Of course, this module use `ParsingStructureUtilities`.
 ____________
 
+## Linking of variables
+
+In order to recognize each variable in a unique way, we have to use its name. But it's not sufficient. For example, a local variable, can be defined many times with the same name, it's also possible to have global and local variable with the same name, or it's possible to have a formal parameter with the same name of a global variable. For this reason, in addition to its name, we choose to add an identifier to each variable.
+
+A variable can be seen internally as a tuple `(variable_name * id)`. This tuple represent variable in a unique way.
+
+On the parsing step, more precisely, on the parsing of declarations (global or local) we construct tuple by getting the variable name, and the first character position of the variable name for its identifier.
+
+For example:
+```
+var i : int = 0;
+var j : int = 1;
+```
+Construct the following tuples: `(i, 5)`, `(j, 22)`. Because `i` was found at the 5th position and `j` at the 22th position in the model.
+
+Now we have to associate variable reference to their declaration. For example in the code bloc below, we have a reference to variables `i`, `k` and `j`. In order to compute the return statement, we have to know of which `i`, `j` and `k` we talk about.
+
+```
+function f(i : int) : int 
+begin 
+    var k : int = 10;
+    var k : int = 0;
+    return i + k + j;
+end
+```
+
+In the previous example, `i` should be associated to formal parameter `i`, `k` to just previously declared local variable and `j` to global variable. This is the aim of variable linking.
+
+Variable linking was made by calling the function `link_variables_in_parsed_model`. It take a `parsed_model` as parameter and return a new `parsed_model` with all variables linked to their declarations (each variable have an id set). 
+
+As you can see, this function is used directly at the beginning of the `abstract_structures_of_parsing_structures` function in `ModelConverter` module to generate the new parsed model with all variables linked.
+
+__Note:__ 
+
+If you want to see variable linking in action, you could use the following command: `imitator model.imi -no-var-autoremove -verbose high | grep "link"`.
+
 ## ParsingStructureGraph module (graph dependency resolver)
 
 When the user making a model, he declares some automatons, global variables, user defined functions, local variables, etc. Each of them (called a "component" of the model) have relations. The only relation described is `use`. For example, `pta1` use `i`.
