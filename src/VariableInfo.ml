@@ -202,7 +202,6 @@ let is_param variable_infos variable_ref =
 let [@inline] is_clock_or_param variable_infos variable_ref =
     is_clock variable_infos variable_ref || is_param variable_infos variable_ref
 
-
 (* Get function meta given it's name, raise an error if the function doesn't exists *)
 let function_metadata_by_name variable_infos function_name =
     let fun_definition_opt = Hashtbl.find_opt variable_infos.fun_meta function_name in

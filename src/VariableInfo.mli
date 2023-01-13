@@ -73,7 +73,7 @@ val is_discrete_global_variable : variable_infos -> variable_name -> bool
 
 (* Check whether variable is a clock *)
 val is_clock : variable_infos -> variable_ref -> bool
-(* Check whether variable is a clock *)
+(* Check whether variable is a parameter *)
 val is_param : variable_infos -> variable_ref -> bool
 (* Check (if variable is defined) whether variable is a clock*)
 val is_clock_or_param : variable_infos -> variable_ref -> bool

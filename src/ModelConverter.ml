@@ -1276,23 +1276,24 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		(* Check if the left part is only a variable name *)
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			(* First check whether it was removed *)
-			if List.mem variable_name removed_variable_names then false
+			if List.mem variable_name removed_variable_names then
+			    false
 			else
-			let is_discrete =
-				(* Try to get the variable index *)
-				if (Hashtbl.mem index_of_variables variable_name) then (
-				let variable_index =  Hashtbl.find index_of_variables variable_name in
-				(* Keep if this is a discrete *)
-				DiscreteType.is_discrete_type (type_of_variables variable_index)
-				) else (
-				(* Case constant *)
-				if (Hashtbl.mem constants variable_name) then false
-				else (
-					(* Otherwise: problem! *)
-					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
-				))
-			in not is_discrete
-        (* Do not care about discrete boolean inits for constraint initalization ! *)
+			    let is_discrete =
+                    (* variable should be global because we search variable ref with id=0 (variable_name, id=0) *)
+                    let variable_ref = variable_name, 0 in
+                    (* Get kind of variable *)
+                    let variable_kind_opt = VariableInfo.variable_kind_of_variable_name_opt variable_infos variable_ref in
+                    (* If a variable, it should be discrete, otherwise, not discrete, if None => variable not found *)
+                    match variable_kind_opt with
+                    | Some Variable_kind -> VariableInfo.is_discrete_variable variable_infos variable_ref
+                    | Some Constant_kind _ -> false
+                    | None ->
+                        (* Otherwise: problem! *)
+                        raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
+			    in
+			    not is_discrete
+        (* Do not care about discrete boolean init for constraint initialization ! *)
         | Parsed_discrete_predicate _ -> false
 		| _ -> true
 		) linear_predicates in
@@ -1682,11 +1683,12 @@ let check_parameter_name suffix_explanation_string variable_infos parameter_name
 		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
 		false
 	) else(
-		let parameter_index = VariableInfo.index_of_variable_name variable_infos parameter_name in
-		if not(variable_infos.type_of_variables parameter_index = DiscreteType.Var_type_parameter) then(
+	    (* Note: By using VariableInfo.is_param, we consider that global variable parameter_name exist ! *)
+	    (* It should be check before *)
+		if not (VariableInfo.is_param variable_infos (parameter_name, 0)) then (
 			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
 			false
-		)else true
+		) else true
 	)
 
 (*------------------------------------------------------------*)

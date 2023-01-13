@@ -199,15 +199,21 @@ let is_clock_or_param variable_infos = function
     | Leaf_constant _ -> false
     | Leaf_fun _ -> false
 
-(* Check if leaf isn't a variable *)
+(* Check that leaf isn't a variable *)
 let no_variables variable_infos = function
     | Leaf_linear_variable (_, variable_name) ->
+        (* Note: we only consider global variable (variable_name, id=0) *)
+        (* It means that variable existence should be checked before *)
+        let variable_ref = variable_name, 0 in
+        (* Get variable kind of global variable *)
+        let var_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
+        (match var_kind with
         (* Constants are allowed *)
-        (is_constant_is_defined variable_infos variable_name)
+        (* TODO benjamin this value is not checked by any regression test ! *)
+        | Constant_kind _ -> true
         (* Or parameter *)
-        ||
-        let variable_index = index_of_variable_name variable_infos variable_name in
-        variable_infos.type_of_variables variable_index = Var_type_parameter
+        | Variable_kind -> VariableInfo.is_param variable_infos variable_ref
+        )
 
     | Leaf_linear_constant _
     | Leaf_false_linear_constraint
