@@ -2554,7 +2554,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
         (* TYPE CHECKING *)
         let constant = name, expr, var_type in
-        let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_discrete_constant initialized_constants constant in
+        let typed_expr(*, expr_type *) = DiscreteExpressionConverter.convert_constant_init initialized_constants constant in
 
         (* Note: If we want use functions for constant initialization, we has to replace None by the function table *)
         (* It meant that function table should be initialized before constant, if possible. *)

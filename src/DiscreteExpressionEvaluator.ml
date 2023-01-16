@@ -1,13 +1,34 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: This module allows to evaluate guards, invariants, user defined functions and update code blocs
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/11/20
+ *
+ ************************************************************)
+
+(* Utils modules *)
 open CustomModules
 open OCamlUtilities
-open Automaton
-open DiscreteState
+open Exceptions
+
+(* Abstract model modules *)
 open AbstractModel
 open AbstractProperty
 open AbstractValue
 open DiscreteExpressions
 open LinearConstraint
-open Exceptions
+
+(* Execution modules *)
+open Automaton
+open DiscreteState
+
 
 (* Table of variable name by index *)
 type variable_name_table = variable_index -> variable_name
@@ -17,8 +38,6 @@ type functions_table = (variable_name, fun_definition) Hashtbl.t
 type clock_updates_table = (clock_index, pxd_linear_term) Hashtbl.t
 (* Queue of ordered clock updates *)
 type clock_updates_history = (clock_index * pxd_linear_term) Queue.t
-
-
 
 (* Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
@@ -74,11 +93,17 @@ let eval_if_not_empty eval_length_function eval_function collection fail_message
     else
         eval_function collection
 
+(* Eval list_hd *)
 let try_eval_list_hd seq (* fail_message *) = eval_if_not_empty List.length List.hd seq (* fail_message *)
+(* Eval list_tl *)
 let try_eval_list_tl seq (* fail_message *) = eval_if_not_empty List.length List.tl seq (* fail_message *)
+(* Eval stack_pop *)
 let try_eval_stack_pop seq (* fail_message *) = eval_if_not_empty Stack.length Stack.pop seq (* fail_message *)
+(* Eval stack_top *)
 let try_eval_stack_top seq (* fail_message *) = eval_if_not_empty Stack.length Stack.top seq (* fail_message *)
+(* Eval queue_pop *)
 let try_eval_queue_pop seq (* fail_message *) = eval_if_not_empty Queue.length Queue.pop seq (* fail_message *)
+(* Eval queue_top *)
 let try_eval_queue_top seq (* fail_message *) = eval_if_not_empty Queue.length Queue.top seq (* fail_message *)
 
 (* Try evaluating a global variable value if an eval context is given *)
@@ -89,6 +114,7 @@ let try_eval_variable variable_index = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
+(* Get local variable value of a given variable in the given eval_context *)
 let eval_local_variable eval_context = eval_context.local_discrete_valuation
 
 (* Try evaluating a local variable value if an eval context is given *)
@@ -100,14 +126,22 @@ let try_eval_local_variable variable_ref = function
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
+(* Set local variable value of a given variable in the given eval_context *)
 let set_local_variable eval_context (* variable_ref value *) = eval_context.local_discrete_setter (* variable_ref value *)
 
+(* Try evaluating a function if a function table is given *)
+(* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
+(* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
 let try_eval_function function_name : functions_table option -> fun_definition = function
     | Some functions_table -> Hashtbl.find functions_table function_name
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
 
+(* TODO benjamin CLEAN remove comments, old version when clock updates are pure linear expression *)
+(* Now we use more complex expression for clock updates, so rewriting is made on more larger arithmetic expressions *)
+
 (* Replace discrete variable by their current value in a linear expression that update a clock *)
+(*
 let rewrite_clock_update variable_names eval_context (* linear_expr *) =
     let rec rewrite_clock_update_rec = function
         | IR_Var variable_index ->
@@ -135,8 +169,9 @@ let rewrite_clock_update variable_names eval_context (* linear_expr *) =
             IR_Times (coef, rewrite_clock_update_rec linear_term)
     in
     rewrite_clock_update_rec (* linear_expr *)
+*)
 
-(* Get clocks that were updated effectively (found in eval context) *)
+(* Get clocks that were updated effectively (clock are found in eval context after a code bloc evaluation) *)
 let effective_clock_updates eval_context variable_names =
 
     (* Get ordered clock updates from context *)
@@ -155,11 +190,13 @@ let effective_clock_updates eval_context variable_names =
     in
     ImitatorUtilities.print_message_lazy Verbose_high lazy_str_clock_updates;
 
+    (* No clock updates found *)
     if List.length updated_clocks = 0 then (
         ImitatorUtilities.print_message_lazy Verbose_high (lazy "No clock updates.");
         No_update
     ) else (
 
+        (* Check whether all clock updates are resets *)
         let is_all_resets =
             List.for_all (fun (_, linear_expr) ->
                 match linear_expr with
@@ -168,10 +205,12 @@ let effective_clock_updates eval_context variable_names =
             ) updated_clocks
         in
 
+        (* Only clock resets found *)
         if is_all_resets then (
             ImitatorUtilities.print_message_lazy Verbose_high (lazy "Only clock resets.");
             let clock_indexes = List.map first_of_tuple updated_clocks in
             Resets clock_indexes
+        (* Else, some updates *)
         ) else (
             ImitatorUtilities.print_message_lazy Verbose_high (lazy (string_of_int (List.length updated_clocks) ^ " clock updates found."));
             Updates updated_clocks
@@ -190,12 +229,14 @@ let rec eval_global_expression_with_context variable_names functions_table_opt e
     | Stack_expression expr -> Abstract_container_value (Abstract_stack_value (eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Queue_expression expr -> Abstract_container_value (Abstract_queue_value (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt expr))
 
+(* Evaluate an arithmetic expression *)
 and eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_arithmetic_expression expr ->
         Abstract_number_value (Abstract_rat_value (eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt expr))
     | Int_arithmetic_expression expr ->
         Abstract_number_value (Abstract_int_value (eval_int_expression_with_context variable_names functions_table_opt eval_context_opt expr))
 
+(* Evaluate a rational arithmetic expression *)
 and eval_rational_expression_with_context variable_names functions_table_opt eval_context_opt = function
         | Rational_sum_diff (expr, term, sum_diff) ->
             let sum_function =
@@ -210,6 +251,7 @@ and eval_rational_expression_with_context variable_names functions_table_opt eva
         | Rational_term term ->
             eval_rational_term_with_context variable_names functions_table_opt eval_context_opt term
 
+(* Evaluate a rational term *)
 and eval_rational_term_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_product_quotient (term, factor, product_quotient) ->
         let a = eval_rational_term_with_context variable_names functions_table_opt eval_context_opt term in
@@ -229,6 +271,7 @@ and eval_rational_term_with_context variable_names functions_table_opt eval_cont
     | Rational_factor factor ->
         eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt factor
 
+(* Evaluate a rational factor *)
 and eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt = function
     | Rational_variable variable_index ->
         numconst_value (try_eval_variable variable_index eval_context_opt)
@@ -251,7 +294,10 @@ and eval_rational_factor_with_context variable_names functions_table_opt eval_co
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         numconst_value result
 
+(* Evaluate a int arithmetic expression *)
 and eval_int_expression_with_context variable_names functions_table_opt eval_context_opt (* expr *) =
+
+    (* Evaluate a int arithmetic expression *)
     let rec eval_int_expression_with_context_rec = function
         | Int_sum_diff (expr, term, sum_diff) ->
             let sum_function =
@@ -266,6 +312,7 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
         | Int_term term ->
             eval_int_term_with_context term
 
+    (* Evaluate a int term *)
     and eval_int_term_with_context = function
         | Int_product_quotient (term, factor, product_quotient) ->
             let a = eval_int_term_with_context term in
@@ -295,6 +342,7 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
         | Int_factor factor ->
             eval_int_factor_with_context factor
 
+    (* Evaluate a int factor *)
     and eval_int_factor_with_context = function
         | Int_variable variable_index ->
             int_value (try_eval_variable variable_index eval_context_opt)
@@ -319,9 +367,10 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             int_value result
 
     in
+    (* Call top-level *)
     eval_int_expression_with_context_rec
 
-(** Check if a boolean expression is satisfied *)
+(* Evaluate a boolean expression *)
 and eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | True_bool -> true
     | False_bool -> false
@@ -337,7 +386,7 @@ and eval_boolean_expression_with_context variable_names functions_table_opt eval
 
     | Discrete_boolean_expression dbe -> eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt dbe
 
-(** Check if a discrete boolean expression is satisfied *)
+(* Evaluate a discrete boolean expression *)
 and eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Bool_variable variable_index ->
         bool_value (try_eval_variable variable_index eval_context_opt)
@@ -401,6 +450,7 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         bool_value result
 
+(* Evaluate a binary word expression *)
 and eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Binary_word_constant value -> value
     | Binary_word_variable (variable_index, _) ->
@@ -418,6 +468,7 @@ and eval_binary_word_expression_with_context variable_names functions_table_opt 
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         binary_word_value result
 
+(* Evaluate an array expression *)
 and eval_array_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_array array ->
         Array.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) array
@@ -438,6 +489,7 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         array_value result
 
+(* Evaluate a list expression *)
 and eval_list_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_list list ->
         List.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) list
@@ -457,6 +509,7 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         list_value result
 
+(* Evaluate a stack expression *)
 and eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_stack -> Stack.create ()
 
@@ -476,6 +529,7 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         stack_value result
 
+(* Evaluate a queue expression *)
 and eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_queue -> Queue.create ()
 
@@ -495,13 +549,16 @@ and eval_queue_expression_with_context variable_names functions_table_opt eval_c
         let result = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         queue_value result
 
+(* Evaluate a void expression *)
 and eval_void_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Void_function_call (function_name, param_refs, expr_args) ->
         let _ = eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args in
         Abstract_void_value
 
+(* Evaluate an access to an array / list *)
 and get_expression_access_value_with_context variable_names functions_table_opt eval_context_opt access_type index_expr =
 
+        (* Compute index *)
         let index = eval_int_expression_with_context variable_names functions_table_opt eval_context_opt index_expr in
         let int_index = Int32.to_int index in
 
@@ -512,6 +569,7 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
             | None -> lazy ""
         in
 
+        (* Check access type (array or list ?) *)
         match access_type with
         | Array_access array_expr ->
             let values = eval_array_expression_with_context variable_names functions_table_opt eval_context_opt array_expr in
@@ -534,8 +592,10 @@ and get_expression_access_value_with_context variable_names functions_table_opt 
             List.nth values int_index
 
 
-(* TODO benjamin TEST, rewriting clock function for more complex expressions *)
-and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* expr *) =
+(* Rewrite a clock update arithmetic expression by evaluating all discrete variables and replacing all clock variables by their previously updated expression *)
+(* e.g : for init y >= 0; z >= 0 and i = 1, the updates `x := y + z; w := x + i * i + 2` will be rewritten to `x := y + z; w := y + z + 1 + 2` *)
+(* This function transform an arithmetic clock update expression to a linear expression that can be evaluated after by PPL *)
+and rewrite_clock_update variable_names eval_context functions_table_opt (* expr *) =
 
     (* Prepare error message when non-linear operation was found on continuous *)
     let nonlinear_operation_message = lazy "A clock update contains non-linear operations on continuous clock / parameter variables. It should be checked before." in
@@ -651,7 +711,7 @@ and rewrite_clock_update_2 variable_names eval_context functions_table_opt (* ex
     in
     rewrite_rational_arithmetic_expression (* expr *)
 
-(* Eval sequential code bloc *)
+(* Evaluate sequential code bloc given an eval context *)
 and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_context seq_code_bloc =
 
     let rec eval_seq_code_bloc eval_context code_bloc =
@@ -717,7 +777,7 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
         | Clock_assignment (clock_index, expr) ->
             (* Rewrite the clock's update according to previous clock updates and current discrete value (context) *)
-            let rewritten_linear_expr = rewrite_clock_update_2 variable_names eval_context functions_table_opt expr in
+            let rewritten_linear_expr = rewrite_clock_update variable_names eval_context functions_table_opt expr in
             (* Add clock update into table *)
             Hashtbl.replace eval_context.updated_clocks clock_index rewritten_linear_expr;
             (* Push clock update on queue *)
@@ -738,9 +798,10 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
 
 
     in
-
+    (* Call top-level *)
     eval_seq_code_bloc eval_context seq_code_bloc
 
+(* Evaluate a user function given an eval context *)
 and eval_user_function_with_context variable_names functions_table_opt eval_context_opt function_name param_refs expr_args =
 
     (* Get function definition *)
@@ -784,7 +845,7 @@ and eval_user_function_with_context variable_names functions_table_opt eval_cont
     in
     eval_fun_type_with_context eval_context_opt fun_def.body
 
-
+(* Set variable with computed expression *)
 and compute_update_value_opt_with_context variable_names functions_table_opt eval_context (scalar_or_index_update_type, expr) =
 
     let rec update_scope_of_parsed_scalar_or_index_update_type = function
@@ -805,8 +866,10 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
 
     (* Compute its new value *)
     let new_value = eval_global_expression_with_context variable_names functions_table_opt (Some eval_context) expr in
+    (* Pack value (e.g: x[0] := 1 for x = [0,1] before update will pack value to [1,1]) *)
     let new_value = pack_value variable_names functions_table_opt (Some eval_context) old_value new_value scalar_or_index_update_type in
 
+    (* Return *)
     update_scope, new_value
 
 (* Directly update a discrete variable *)
@@ -876,19 +939,20 @@ and pack_value variable_names functions_table_opt eval_context_opt old_value new
 let check_nonlinear_constraint_with_context variable_names functions_table_opt eval_context_opt =
   List.for_all (eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt)
 
-(**)
+(* Evaluate an expression *)
 let eval_global_expression variable_names functions_table_opt discrete_access_opt = eval_global_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
-(**)
+(* Evaluate a boolean expression *)
 let eval_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
-(**)
+(* Evaluate a discrete boolean expression *)
 let eval_discrete_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint variable_names functions_table_opt discrete_access =
   List.for_all (eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access))
 
-(* Try to evaluate a constant global expression, if expression isn't constant, it raise an error *)
+(* Try to evaluate a constant expression, if expression isn't constant, it raise an error *)
 let try_eval_constant_global_expression functions_table_opt = eval_global_expression_with_context None functions_table_opt None
-(* Try to evaluate a constant global non linear constraint, if expression isn't constant, it raise an error *)
+(* Try to evaluate a constant non linear constraint, if expression isn't constant, it raise an error *)
 let try_eval_nonlinear_constraint functions_table_opt = check_nonlinear_constraint_with_context None functions_table_opt None
 (* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_term functions_table_opt = eval_rational_term_with_context None functions_table_opt None
@@ -898,7 +962,7 @@ let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor
 let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 let eval_seq_code_bloc variable_names functions_table_opt discrete_access = eval_seq_code_bloc_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 
-(* Try to evaluate a constant global expression, if expression isn't constant, it return None *)
+(* Try to evaluate a constant expression, if expression isn't constant, it return None *)
 let eval_constant_global_expression_opt functions_table_opt expr = try Some (try_eval_constant_global_expression functions_table_opt expr) with _ -> None
 (* Try to evaluate a constant non linear constraint, if expression isn't constant, it return None *)
 let eval_nonlinear_constraint_opt functions_table_opt expr = try Some (try_eval_nonlinear_constraint functions_table_opt expr) with _ -> None
@@ -907,7 +971,13 @@ let eval_constant_rational_term_opt functions_table_opt expr = try Some (try_eva
 (* Try to evaluate a constant rational factor, if expression isn't constant, it return None *)
 let eval_constant_rational_factor_opt functions_table_opt expr = try Some (try_eval_constant_rational_factor functions_table_opt expr) with _ -> None
 
-
+(* Tricky function to know if an expression is constant *)
+let is_global_expression_constant functions_table_opt expr =
+    try (
+        let _ = try_eval_constant_global_expression functions_table_opt expr in
+        true
+    )
+    with _ -> false
 
 (************************************************************)
 (** Matching state predicates with a global location *)
@@ -967,6 +1037,10 @@ let match_state_predicate variable_names functions_table_opt discrete_access (lo
             match_state_predicate state_predicate
     in
     match_state_predicate
+
+(* --- Builtin-function evaluations --- *)
+
+(* Note: builtin-function eval are not ideal, because we do checking of parameter values at runtime *)
 
 let bad_arguments_message str_expr =
     "Bad arguments on `" ^ str_expr ^ "`. Expected types or number of arguments doesn't match with actual."
@@ -1137,11 +1211,3 @@ let eval_stack_length str_expr = function
     | Abstract_container_value (Abstract_queue_value s) :: _ ->
         Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (Queue.length s))))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
-
-(* Tricky function to know if an expression is constant *)
-let is_global_expression_constant functions_table_opt expr =
-    try (
-        let _ = try_eval_constant_global_expression functions_table_opt expr in
-        true
-    )
-    with _ -> false
