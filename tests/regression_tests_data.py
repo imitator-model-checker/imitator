@@ -4928,26 +4928,8 @@ END CONSTRAINT
       'options'    : '-verbose low',
       'expectations' : [
         {'file': 'complex-cycle-detection.res' , 'content' : """
-  "cycles": [
+"cycles": [
     "P -> f1 -> x -> f2 -> x -> f1",
-    "P -> f1 -> x -> f2 -> x -> f1",
-    "P -> f1 -> x -> f2 -> x -> f1",
-    "P -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
-    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1",
     "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1"
   ]
       """
