@@ -5147,6 +5147,144 @@ Has complex updates?                    : true
 
 	#------------------------------------------------------------
 	{
+        ## Test version             : 1.0
+        ## Test since               : 2023/01/17
+        ## Last modified            : 2023/01/17
+        ## Test for IMITATOR version: 3.4
+        'author': 'lbinria',
+        'purpose'    : 'Check clock rewriting is correct',
+        'input_files': ['updates/clock-rewriting.imi'],
+		'tags': 'update, rewriting, clock',
+		'options'    : '-no-var-autoremove -mode statespace -states-description -verbose high',
+		'expectations' : [
+			{'file': 'clock-rewriting.res' , 'content' : """
+"clock_rewriting": [
+    {
+      "x1": {
+        "expr": "0",
+        "rewritten_expr": "0"
+      }
+    },
+    {
+      "x1": {
+        "expr": "x1 + rational_of_int(a[1] * 2)",
+        "rewritten_expr": "5 + p1 + 1 + 8"
+      }
+    },
+    {
+      "x1": {
+        "expr": "x1 + p1 + rational_of_int(inc(0))",
+        "rewritten_expr": "5 + p1 + 1"
+      }
+    },
+    {
+      "x1": {
+        "expr": "clock_value",
+        "rewritten_expr": "5"
+      }
+    },
+    {
+      "w": {
+        "expr": "2 * w + rational_of_int(loc_i)",
+        "rewritten_expr": "2 * (w + 5 + 6 + 7 + 8 + 9 + 10) + 100"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1 + 2 + 3"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1 + 2"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8 + 9 + 10"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8 + 9"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5"
+      }
+    },
+    {
+      "y": {
+        "expr": "x + z",
+        "rewritten_expr": "2 * (x + 1) + 2 + w + 4"
+      }
+    },
+    {
+      "z": {
+        "expr": "w + rational_of_int(i1 * i1)",
+        "rewritten_expr": "w + 4"
+      }
+    },
+    {
+      "x": {
+        "expr": "2 * x + rational_of_int(i1)",
+        "rewritten_expr": "2 * (x + 1) + 2"
+      }
+    },
+    {
+      "x": {
+        "expr": "x + 1",
+        "rewritten_expr": "x + 1"
+      }
+    }
+  ]
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2020/09/14
 		# Last modified            : 2020/09/14

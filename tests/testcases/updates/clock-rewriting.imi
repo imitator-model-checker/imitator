@@ -1,0 +1,137 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Check clock rewriting is correct
+ * Description      : Check clock rewriting is correct 
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Rewriting, Clock, Semantic
+ * Source           :
+ * bibkey           :
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/01/17
+ * Last modified    : 2023/01/17
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4.0
+ ************************************************************)
+var
+
+  (* Clocks / Parameters *)
+  x, y, z, w, x1, x2 : clock;
+  p1, p2 : parameter;
+
+  (* Discretes *)
+  r1, r2 : rat;
+  i1, i2 : int;
+  a : int array(2);
+
+  (* Constants *)
+  k = 0 : int;
+  
+function modify_x1(clock_value : rat) : void 
+begin 
+  x1 := clock_value;
+end
+
+function inc(i : int) : int 
+begin 
+  return i + 1
+end 
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+synclabs: a;
+loc l1: invariant True
+
+	when x = 0 do {
+
+    x := x + 1; (* x = x + 1 *)
+    i1 := 2;
+    x := 2x + rational_of_int(i1); (* x = 2 * (x + 1) + 2 *)
+    z := rational_of_int(i1 * i1) + w; (* z = 4 + w *)
+    y := x + z; (* y = 2 * (x + 1) + 2 + 4 + w *)
+
+    (* We add i 6 times to w *)
+    for i from 5 to 10 do 
+      w := w + rational_of_int(i);
+    done
+
+    (* We add loc_j 3 times to z *)
+    var loc_j : int = 0;
+    while loc_j < 4 do 
+      z := z + rational_of_int(loc_j);
+      loc_j := loc_j + 1;
+    done 
+
+    var loc_i : int = 2i2 + 16; (* 100 *)
+    w := 2w + rational_of_int(loc_i);
+
+    modify_x1(5); (* x1 = 5 *)
+    x1 := x1 + rational_of_int(inc(0)) + p1; (* x1 = 5 + (0 + 1) = 6 + p1 *)
+    x1 := x1 + rational_of_int(a[1] * 2); (* x1 = 6 + p1 + 8 = 14 + p1 *)
+
+    i2 := 1;
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+synclabs: a;
+loc l1: invariant True
+
+	when x = 0 do {
+    
+    x1 := 0;
+    i2 := 2;
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    continuous =
+      z = 0 & w = 1
+    ;
+
+    discrete =
+        loc[pta1] := l1,
+        loc[pta2] := l1,
+        i2 := 42,
+        a := [2, 4]
+    ;
+
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
