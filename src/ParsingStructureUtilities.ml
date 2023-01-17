@@ -488,11 +488,19 @@ and string_of_parsed_factor variable_infos = function
         )
     | Parsed_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
-    | Parsed_nested_expr arithmetic_expr ->
+    | Parsed_nested_expr expr ->
         let l_paren, r_paren = Constants.default_paren_delimiter in
-        l_paren ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ r_paren
+        l_paren ^ string_of_parsed_arithmetic_expression variable_infos expr ^ r_paren
+
     | Parsed_unary_min factor ->
-        "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
+        (* Only add parenthesis if factor is a nested expression *)
+        let l_paren, r_paren =
+            match factor with
+            | Parsed_nested_expr _ -> Constants.default_paren_delimiter
+            | _ -> "", ""
+        in
+        "-" ^ l_paren ^ string_of_parsed_factor variable_infos factor ^ r_paren
+
     | Parsed_function_call (_, argument_expressions) as func ->
         let str_arguments_list = List.map (string_of_parsed_boolean_expression variable_infos) argument_expressions in
         let str_arguments = OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments_list in

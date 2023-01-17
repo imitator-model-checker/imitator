@@ -255,7 +255,7 @@ module RationalReducer = struct
                     Parsed_term (Parsed_factor (Parsed_unary_min (Parsed_nested_expr (Parsed_term term))))
                 (* v + 0 = v *)
                 | expr, Parsed_factor (Parsed_constant (Rat_value c)) when NumConst.equal c NumConst.zero ->
-                    Parsed_term (Parsed_factor (Parsed_nested_expr expr))
+                    expr
                 (* a . b = a . b *)
                 | expr, term ->
                     Parsed_sum_diff (expr, term, parsed_sum_diff)
@@ -304,7 +304,12 @@ module RationalReducer = struct
 
         and simplify_parsed_discrete_factor = function
             | Parsed_nested_expr expr ->
-                Parsed_nested_expr (simplify_parsed_discrete_arithmetic_expression expr)
+                let simplified_expr = simplify_parsed_discrete_arithmetic_expression expr in
+                (match simplified_expr with
+                | Parsed_term (Parsed_factor factor) -> factor
+                | _ ->
+                    Parsed_nested_expr simplified_expr
+                )
 
             | Parsed_unary_min factor ->
                 Parsed_unary_min (simplify_parsed_discrete_factor factor)
