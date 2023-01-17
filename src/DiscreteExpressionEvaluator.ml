@@ -793,9 +793,23 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
                 | _ -> ""
             )
             in
+            (* Prepare log element, only computed if verbose >= Verbose_high *)
+            let lazy_json_element = lazy (
+                match variable_names with
+                | Some variable_names ->
+                let str_expr_before = DiscreteExpressions.string_of_rational_arithmetic_expression variable_names expr in
+                let str_linear_expr_after = LinearConstraint.string_of_pxd_linear_term variable_names rewritten_linear_expr in
+                JsonFormatter.Json_struct [
+                    variable_names clock_index, JsonFormatter.Json_struct [
+                        "expr", JsonFormatter.Json_string str_expr_before;
+                        "rewritten_expr", JsonFormatter.Json_string str_linear_expr_after;
+                    ]
+                ]
+                | None -> JsonFormatter.Json_struct []
+            )
+            in
             ImitatorUtilities.print_message_lazy Verbose_high lazy_rewriting_message;
-
-
+            ImitatorUtilities.log_detail_in_array_lazy "clock_rewriting" lazy_json_element;
 
     in
     (* Call top-level *)

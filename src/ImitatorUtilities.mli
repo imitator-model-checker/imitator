@@ -149,7 +149,10 @@ val print_contributors : unit -> unit
 
 val print_header_string : unit -> unit
 
-
+(* Log custom details in .res file given a json struct : details at key : key, if verbose mode >= high *)
+val log_detail_lazy : string -> JsonFormatter.json_element Lazy.t -> unit
+(* Log custom details in .res file pushing a json element : lazy_json_element to an array at key : key, if verbose mode >= high *)
+val log_detail_in_array_lazy : string -> JsonFormatter.json_element Lazy.t -> unit
 
 (************************************************************)
 (** Terminating functions *)

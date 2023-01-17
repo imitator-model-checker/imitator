@@ -18,6 +18,7 @@ open JsonFormatter
 val custom_details : (string, json_element) Hashtbl.t
 (* Add a property to custom details json struct *)
 val add_custom_detail_property : string -> json_element -> unit
+
 (* Add a property to custom details json struct *)
 val add_custom_detail_array : string -> json_element -> unit
 
