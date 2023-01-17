@@ -71,7 +71,7 @@ val make_location : (automaton_index * location_index) list -> (discrete_index *
 (*val update_discrete_with : discrete_index * AbstractValue.abstract_value -> global_location -> unit*)
 
 (** Side-effet version of update_location. *)
-val update_location_with : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> unit
+val update_location_with : (automaton_index * location_index) list -> global_location -> unit
 
 (** 'copy_location location' creates a fresh location identical to location. *)
 val copy_location : global_location -> global_location

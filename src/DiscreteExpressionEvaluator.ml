@@ -137,40 +137,6 @@ let try_eval_function function_name : functions_table option -> fun_definition =
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate an expression containing function calls without a functions table."))
 
-(* TODO benjamin CLEAN remove comments, old version when clock updates are pure linear expression *)
-(* Now we use more complex expression for clock updates, so rewriting is made on more larger arithmetic expressions *)
-
-(* Replace discrete variable by their current value in a linear expression that update a clock *)
-(*
-let rewrite_clock_update variable_names eval_context (* linear_expr *) =
-    let rec rewrite_clock_update_rec = function
-        | IR_Var variable_index ->
-            (* Check if the variable is a clock previously updated *)
-            if Hashtbl.mem eval_context.updated_clocks variable_index then (
-                (* If yes, we replace variable by the linear expression that updated the clock *)
-                Hashtbl.find eval_context.updated_clocks variable_index
-            )
-            else (
-                try (
-                    (* If no, it's a discrete variable and we replace variable by the current computed value of discrete value *)
-                    let value = numconst_value (eval_context.discrete_valuation variable_index) in
-                    IR_Coef value
-                ) with _ -> (
-                    IR_Var variable_index
-                )
-            )
-
-        | IR_Coef _ as ir_coef -> ir_coef
-        | IR_Plus (l_linear_term, r_linear_term) ->
-            LinearConstraint.add_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
-        | IR_Minus (l_linear_term, r_linear_term) ->
-            LinearConstraint.sub_pxd_linear_terms (rewrite_clock_update_rec l_linear_term) (rewrite_clock_update_rec r_linear_term)
-        | IR_Times (coef, linear_term) ->
-            IR_Times (coef, rewrite_clock_update_rec linear_term)
-    in
-    rewrite_clock_update_rec (* linear_expr *)
-*)
-
 (* Get clocks that were updated effectively (clock are found in eval context after a code bloc evaluation) *)
 let effective_clock_updates eval_context variable_names =
 

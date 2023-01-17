@@ -899,7 +899,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 		let guard, target_index = transition.guard, transition.target in
 
         (* Update the global location *)
-        DiscreteState.update_location_with [automaton_index, target_index] [] location;
+        DiscreteState.update_location_with [automaton_index, target_index] location;
 
         (* Keep the guard  *)
         guard
@@ -908,7 +908,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	in
 
 	(* Update the global location *)
-	DiscreteState.update_location_with [] [] location;
+	DiscreteState.update_location_with [] location;
 
 	(* Split guards between discrete and continuous *)
 	let discrete_guards, continuous_guards = AbstractModelUtilities.split_guards_into_discrete_and_continuous guards in

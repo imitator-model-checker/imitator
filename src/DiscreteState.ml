@@ -183,38 +183,11 @@ let copy_location location =
 	(* Return the new location *)
 	cpy_locations, cpy_discrete, local_variables_table
 
-(* TODO benjamin CLEAN see with Etienne, not used anymore below in comment *)
-(*
-(** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
-let update_location locations_per_automaton discrete_values location =
-	(* Create an array for locations *)
-	let locations = Array.copy (get_locations location) in
-	(* Create an array for discrete *)
-	let discrete = Array.copy (get_discrete location) in
-	(* Iterate on locations *)
-	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
-	(* Iterate on discrete *)
-	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values;
-	(* Return the new location *)
-	locations, discrete
-*)
 
-
-(*
-(* Side-effect function for updating a discrete variable given a value at given location *)
-let update_discrete_with (discrete_index, value) (_, discrete) =
-    discrete.(discrete_index - !min_discrete_index) <- value
-*)
-
-(* TODO benjamin REFAC, see with Etienne, just used for location update now... *)
 (** Side-effect version of 'update_location'. *)
-let update_location_with locations_per_automaton discrete_values (locations, discrete, _) =
+let update_location_with locations_per_automaton (locations, _, _) =
 	(* Iterate on locations *)
-	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
-	(* Iterate on discrete *)
-	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values
-
-
+	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

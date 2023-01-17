@@ -450,15 +450,17 @@ let string_of_let_in variable_name str_discrete_type str_init_expr =
 
 let rec string_of_parsed_arithmetic_expression variable_infos = function
     | Parsed_sum_diff (arithmetic_expr, term, sum_diff) ->
-            string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
-            ^ string_of_parsed_sum_diff sum_diff
-            ^ string_of_parsed_term variable_infos term
+        string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
+        ^ string_of_parsed_sum_diff sum_diff
+        ^ string_of_parsed_term variable_infos term
 
     | Parsed_term term ->
         string_of_parsed_term variable_infos term
 
 and string_of_parsed_term variable_infos = function
     | Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+        (* TODO benjamin IMPROVE Check if there is not only product or quotient in term add parenthesis *)
+        (* TODO benjamin IMPROVE Check if there is not only product or quotient in factor add parenthesis *)
         string_of_parsed_term variable_infos term
         ^ string_of_parsed_product_quotient parsed_product_quotient
         ^ string_of_parsed_factor variable_infos factor
@@ -509,9 +511,9 @@ and string_of_parsed_factor variable_infos = function
 
 and string_of_parsed_boolean_expression variable_infos = function
     | Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) ->
-            string_of_parsed_boolean_expression variable_infos l_expr
-            ^ string_of_parsed_conj_dis parsed_conj_dis
-            ^ string_of_parsed_boolean_expression variable_infos r_expr
+        string_of_parsed_boolean_expression variable_infos l_expr
+        ^ string_of_parsed_conj_dis parsed_conj_dis
+        ^ string_of_parsed_boolean_expression variable_infos r_expr
 
     | Parsed_discrete_bool_expr expr ->
         string_of_parsed_discrete_boolean_expression variable_infos expr

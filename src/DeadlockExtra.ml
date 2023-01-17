@@ -116,7 +116,7 @@ let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
-let dl_predecessor state_space state_index z1 guard updates z2 transition =
+let dl_predecessor state_space state_index z1 guard z2 transition =
 (*     let model = Input.get_model () in (* only for printing *) *)
     let constr = dl_inverse_update_ben_fix state_space state_index z2 transition in
     px_intersection_assign constr [z1];
@@ -127,25 +127,8 @@ let dl_predecessor state_space state_index z1 guard updates z2 transition =
     (* result *)
 
 (* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
-
-(* TODO CLEAN OLD UPDATES *)
+(* TODO CLEAN, unused now we are using effective clock updates to know which clocks are updated EFFECTIVELY *)
 (*
-let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
-	(* For all transitions involved in the combined transition *)
-	let updates = List.fold_left (fun current_updates transition_index ->
-		(* Get the actual transition *)
-		let transition = model.transitions_description transition_index in
-        transition.updates.clock :: current_updates
-	) [] combined_transition
-	in
-
-	(* Keep each update once *)
-    (* TODO: check for inconsistent updates? *)
-	OCamlUtilities.list_only_once updates
-*)
 let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
@@ -162,6 +145,7 @@ let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transiti
 	(* Keep each update once *)
     (* TODO: check for inconsistent updates? see with new sequential updates and rewritten clocks ! *)
 	OCamlUtilities.list_only_once updates
+*)
 
 let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index transition s2_index =
     let z1 = (state_space#get_state s1_index).px_constraint in
@@ -170,8 +154,6 @@ let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index trans
   (* Retrieve the model *)
 	let model = Input.get_model () in
 
-    (* TODO benjamin remove here dl_get_clock_updates *)
-    let updates = dl_get_clock_updates state_space transition in
     let guard = state_space#get_guard model s1_index transition in
  
-    dl_predecessor state_space s1_index z1 guard updates z2 transition
+    dl_predecessor state_space s1_index z1 guard z2 transition

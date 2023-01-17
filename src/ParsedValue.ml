@@ -23,7 +23,6 @@ open DiscreteType
 type parsed_value =
     | Weak_number_value of NumConst.t
     | Rat_value of NumConst.t
-    (* TODO benjamin make literal int to have the use of this variant *)
     | Int_value of Int32.t
     | Bool_value of bool
     | Bin_value of BinaryWord.t

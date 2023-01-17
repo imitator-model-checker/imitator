@@ -126,8 +126,7 @@ and boolean_expression =
 
 and discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	(* TODO benjamin REFACTOR create another type regrouping all comparisons *)
-    (* TODO benjamin look for Arithmetic_comparison because even if it was type checked before it's structure can potentially compare different type *)
+	(* TODO create another type regrouping all comparisons ? *)
 	| Arithmetic_comparison of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
     | Binary_comparison of binary_word_expression * relop * binary_word_expression
