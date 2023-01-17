@@ -343,9 +343,26 @@ module RationalReducer = struct
             let str_simplified_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos simplified_expr in
 
             "Reduce expression `" ^ str_expr ^ "` -> `" ^ str_reduced_expr ^ "` -> `" ^ str_simplified_expr ^ "`."
-        ) in
+        )
+        in
+
+        let lazy_reduce_struct = lazy (
+            let str_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos expr in
+            let str_reduced_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos reduced_expr in
+            let str_simplified_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos simplified_expr in
+
+            JsonFormatter.Json_struct [
+                "expr", JsonFormatter.Json_string str_expr;
+                "reduced_expr", JsonFormatter.Json_string str_reduced_expr;
+                "simplified_expr", JsonFormatter.Json_string str_simplified_expr
+            ]
+        )
+        in
+
         (* Only compute string and print if verbose >= high *)
         ImitatorUtilities.print_message_lazy Verbose_high lazy_reduce_message;
+        (* TODO create special verbose mode for logging *)
+        ImitatorUtilities.log_detail_in_array_lazy Verbose_high "expr_reducing" lazy_reduce_struct;
 
         (* Return simplified expression *)
         simplified_expr

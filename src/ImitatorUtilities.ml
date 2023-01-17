@@ -327,17 +327,15 @@ let print_error message =
 	(* Print *)
 	print_message_generic prerr_string stderr formatted_message
 
-(* Log custom details in res file given a json struct : lazy_details at key : key, if verbose mode >= high *)
-let log_detail_lazy key lazy_details =
-    (* TODO create special verbose mode for logging *)
-	if verbose_mode_greater Verbose_high then (
+(* Log custom details (if global_verbose_mode >= message_verbose_mode) in res file given a json struct : lazy_details at key : key *)
+let log_detail_lazy verbose_mode key lazy_details =
+	if verbose_mode_greater verbose_mode then (
 		Logger.add_custom_detail_property key (Lazy.force lazy_details)
 	)
 
-(* Log custom details in res file pushing a json element : lazy_json_element to an array at key : key, if verbose mode >= high *)
-let log_detail_in_array_lazy key lazy_json_element =
-    (* TODO create special verbose mode for logging *)
-	if verbose_mode_greater Verbose_high then (
+(* Log custom details (if global_verbose_mode >= message_verbose_mode) in res file pushing a json element : lazy_json_element to an array at key : key *)
+let log_detail_in_array_lazy verbose_mode key lazy_json_element =
+	if verbose_mode_greater verbose_mode then (
         Logger.add_custom_detail_array key (Lazy.force lazy_json_element)
     )
 

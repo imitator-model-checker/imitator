@@ -809,7 +809,8 @@ and eval_seq_code_bloc_with_context variable_names functions_table_opt eval_cont
             )
             in
             ImitatorUtilities.print_message_lazy Verbose_high lazy_rewriting_message;
-            ImitatorUtilities.log_detail_in_array_lazy "clock_rewriting" lazy_json_element;
+            (* TODO create special verbose mode for logging *)
+            ImitatorUtilities.log_detail_in_array_lazy Verbose_high "clock_rewriting" lazy_json_element;
 
     in
     (* Call top-level *)
