@@ -488,7 +488,9 @@ and string_of_parsed_factor variable_infos = function
         )
     | Parsed_access (factor, expr) ->
         string_of_parsed_factor variable_infos factor ^ "[" ^ string_of_parsed_arithmetic_expression variable_infos expr ^ "]"
-    | Parsed_nested_expr arithmetic_expr -> string_of_parsed_arithmetic_expression variable_infos arithmetic_expr
+    | Parsed_nested_expr arithmetic_expr ->
+        let l_paren, r_paren = Constants.default_paren_delimiter in
+        l_paren ^ string_of_parsed_arithmetic_expression variable_infos arithmetic_expr ^ r_paren
     | Parsed_unary_min factor ->
         "-(" ^ (string_of_parsed_factor variable_infos factor) ^ ")"
     | Parsed_function_call (_, argument_expressions) as func ->
