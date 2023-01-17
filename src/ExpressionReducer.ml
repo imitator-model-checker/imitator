@@ -278,7 +278,8 @@ module RationalReducer = struct
                     | term, Parsed_constant (Rat_value c) when NumConst.equal c NumConst.one ->
                         term
                     (* 0 * v = 0 *)
-                    | Parsed_factor (Parsed_constant (Rat_value c)), _
+                    | Parsed_factor (Parsed_constant (Rat_value c)), _ when NumConst.equal c NumConst.zero ->
+                        Parsed_factor (Parsed_constant (Rat_value NumConst.zero))
                     (* v * 0 = 0 *)
                     | _, Parsed_constant (Rat_value c) when NumConst.equal c NumConst.zero ->
                         Parsed_factor (Parsed_constant (Rat_value NumConst.zero))
