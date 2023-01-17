@@ -30,22 +30,27 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (************************************************************)
 (************************************************************)
 
+(* Conjonction / Disjonction operators *)
 type conj_dis =
     | And
     | Or
 
+(* Sum / Diff operators *)
 type sum_diff =
     | Plus
     | Minus
 
+(* Product / Quotient operators *)
 type product_quotient =
     | Mul
     | Div
 
+(* For loop direction *)
 type loop_dir =
     | Loop_up
     | Loop_down
 
+(* Global or Local update *)
 type update_scope =
     | Global_update of Automaton.discrete_index
     | Local_update of Automaton.variable_ref
@@ -64,6 +69,7 @@ type global_expression =
     | Stack_expression of stack_expression
     | Queue_expression of queue_expression
 
+(* Arithmetic expression *)
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
@@ -91,7 +97,6 @@ and rational_factor =
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
 (************************************************************)
-(************************************************************)
 and int_arithmetic_expression =
     | Int_sum_diff  of int_arithmetic_expression * int_term * sum_diff
 	| Int_term of int_term
@@ -109,19 +114,15 @@ and int_factor =
     | Int_indexed_expr of access_type * int_arithmetic_expression
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
-
-(************************************************************)
-(************************************************************)
 (************************************************************)
 (** Boolean expressions for discrete variables *)
-(************************************************************)
 (************************************************************)
 
 (** Boolean expression *)
 and boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-    | Conj_dis of boolean_expression * boolean_expression * conj_dis (** Conjunction / Disjunction *)
+	| True_bool
+	| False_bool
+    | Conj_dis of boolean_expression * boolean_expression * conj_dis
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
@@ -150,10 +151,7 @@ and discrete_boolean_expression =
     | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(************************************************************)
-(************************************************************)
 (** Binary word expressions for discrete variables *)
-(************************************************************)
 (************************************************************)
 
 (** Binary word expression *)
@@ -182,6 +180,7 @@ and list_expression =
     | List_indexed_expr of access_type * int_arithmetic_expression
     | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Stack expression **)
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
@@ -189,6 +188,7 @@ and stack_expression =
     | Stack_indexed_expr of access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Queue expression **)
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
@@ -196,9 +196,11 @@ and queue_expression =
     | Queue_indexed_expr of access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Void expression **)
 and void_expression =
     | Void_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Type of the access **)
 and access_type =
     | Array_access of array_expression
     | List_access of list_expression
@@ -213,8 +215,10 @@ and seq_code_bloc =
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
 
+(* A bloc of sequential code *)
 and seq_code_bloc_list = seq_code_bloc list
 
+(* Update expression *)
 and discrete_update = scalar_or_index_update_type * global_expression
 
 (* Update type *)
@@ -224,6 +228,7 @@ and scalar_or_index_update_type =
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
+(* Type of function (built-in mean internal defined function) *)
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_user of seq_code_bloc_list * global_expression option
@@ -231,20 +236,27 @@ type fun_type =
 type clock_index = int
 type clock_update = clock_index
 
+(* Potential clock update type (clock update that can be arise, but not necessary *)
+(* e.g: if False then x:=0 else y:=1 end, in previous expression x, y can be update but only y will be updated effectively *)
 type potential_clock_updates =
     | No_potential_update
     | Potential_resets of clock_update list
     | Potential_updates of (clock_update * rational_arithmetic_expression) list
 
+(* A non linear constraint (list of predicates => list of discrete boolean expression *)
 type nonlinear_constraint = discrete_boolean_expression list
 
+(* --- Useful functions --- *)
+
+(* Check whether a discrete boolean expression is linear *)
 val is_linear_discrete_boolean_expression : discrete_boolean_expression -> bool
+(* Check whether a non linear constraint holds only linear expressions *)
 val is_linear_nonlinear_constraint : nonlinear_constraint -> bool
 
-(**)
+(* Get a rational expression representing zero value *)
 val zero_rational_expression : rational_arithmetic_expression
 
-(* String *)
+(* --- String --- *)
 
 (* Constructors strings *)
 val label_of_bool_factor : discrete_boolean_expression -> string

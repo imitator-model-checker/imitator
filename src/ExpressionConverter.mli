@@ -1,3 +1,19 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: Type checker module aims to type check expressions
+ * Module description: Convert module aims to convert typed expressions to abstract model expressions
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/11/20
+ *
+ ************************************************************)
+
 module rec TypeChecker : sig
 
 open ParsingStructure
@@ -28,10 +44,12 @@ open DiscreteExpressions
 open TypedStructure
 open AbstractModel
 
-(** Linear part **)
+(* --- Linear part --- *)
 
 val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
+
+(* --- Discrete part --- *)
 
 (*val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term*)
 val global_expression_of_typed_boolean_expression_by_type : variable_infos -> typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
@@ -41,8 +59,10 @@ val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typ
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 
 val scalar_or_index_update_type_of_typed_scalar_or_index_update_type : variable_infos -> typed_scalar_or_index_update_type -> DiscreteExpressions.scalar_or_index_update_type
+(* Convert typed sequential code bloc to sequential code bloc for abstract model *)
 val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> seq_code_bloc_list
 val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc_list -> DiscreteExpressions.potential_clock_updates
+(* Convert typed function to function for abstract model *)
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> fun_definition
 
 end

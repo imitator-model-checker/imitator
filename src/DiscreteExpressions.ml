@@ -21,29 +21,33 @@ type variable_name_table = Automaton.variable_index -> variable_name
 (****************************************************************)
 
 (** Boolean operators *)
-
 type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 (****************************************************************)
 (** Valuation *)
 (****************************************************************)
 
+(* Conjonction / Disjonction operators *)
 type conj_dis =
     | And
     | Or
 
+(* Sum / Diff operators *)
 type sum_diff =
     | Plus
     | Minus
 
+(* Product / Quotient operators *)
 type product_quotient =
     | Mul
     | Div
 
+(* For loop direction *)
 type loop_dir =
     | Loop_up
     | Loop_down
 
+(* Global or Local update *)
 type update_scope =
     | Global_update of Automaton.discrete_index
     | Local_update of Automaton.variable_ref
@@ -62,6 +66,7 @@ type global_expression =
     | Stack_expression of stack_expression
     | Queue_expression of queue_expression
 
+(* Arithmetic expression *)
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
@@ -114,9 +119,9 @@ and int_factor =
 
 (** Boolean expression *)
 and boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Conj_dis of boolean_expression * boolean_expression * conj_dis (** Conjunction / Disjunction *)
+	| True_bool
+	| False_bool
+	| Conj_dis of boolean_expression * boolean_expression * conj_dis
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
@@ -142,11 +147,9 @@ and discrete_boolean_expression =
     | Bool_indexed_expr of access_type * int_arithmetic_expression
     | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
-(************************************************************)
-(************************************************************)
+
 (************************************************************)
 (** Binary word expressions for discrete variables *)
-(************************************************************)
 (************************************************************)
 
 (** Binary word expression *)
@@ -158,10 +161,7 @@ and binary_word_expression =
     | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(************************************************************)
-(************************************************************)
 (** Array expressions for discrete variables *)
-(************************************************************)
 (************************************************************)
 
 (** Array expression *)
@@ -182,6 +182,7 @@ and list_expression =
     | List_indexed_expr of access_type * int_arithmetic_expression
     | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Stack expression **)
 and stack_expression =
     | Literal_stack
     | Stack_variable of Automaton.variable_index
@@ -189,6 +190,7 @@ and stack_expression =
     | Stack_indexed_expr of access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Queue expression **)
 and queue_expression =
     | Literal_queue
     | Queue_variable of Automaton.variable_index
@@ -196,9 +198,11 @@ and queue_expression =
     | Queue_indexed_expr of access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Void expression **)
 and void_expression =
     | Void_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
+(** Type of the access **)
 and access_type =
     | Array_access of array_expression
     | List_access of list_expression
@@ -213,6 +217,7 @@ and seq_code_bloc =
     | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
 
+(* A bloc of sequential code *)
 and seq_code_bloc_list = seq_code_bloc list
 
 (* Update type *)
@@ -222,8 +227,10 @@ and scalar_or_index_update_type =
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
+(* Update expression *)
 and discrete_update = scalar_or_index_update_type * global_expression
 
+(* Type of function (built-in mean internal defined function) *)
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     | Fun_user of seq_code_bloc_list * global_expression option
@@ -231,15 +238,17 @@ type fun_type =
 type clock_index = int
 type clock_update = clock_index
 
+(* Potential clock update type (clock update that can be arise, but not necessary *)
+(* e.g: if False then x:=0 else y:=1 end, in previous expression x, y can be update but only y will be updated effectively *)
 type potential_clock_updates =
     | No_potential_update
     | Potential_resets of clock_update list
     | Potential_updates of (clock_update * rational_arithmetic_expression) list
 
+(* A non linear constraint (list of predicates => list of discrete boolean expression *)
 type nonlinear_constraint = discrete_boolean_expression list
 
-
-(** Check linearity of a discrete expression **)
+(* --- Useful functions --- *)
 
 let rec is_variable_rational_arithmetic_expression = function
     | Rational_sum_diff _ -> false
@@ -256,11 +265,13 @@ and is_variable_rational_factor = function
     | Rational_nested_expression expr -> is_variable_rational_arithmetic_expression expr
     | _ -> false
 
+(* Check whether an expression is linear *)
 let rec is_linear_global_expression = function
     | Arithmetic_expression expr -> is_linear_arithmetic_expression expr
     | Bool_expression expr -> is_linear_boolean_expression expr
     | _ -> false
 
+(* Check whether a boolean expression is linear *)
 and is_linear_boolean_expression = function
 	| True_bool
 	| False_bool
@@ -269,6 +280,7 @@ and is_linear_boolean_expression = function
 	| Discrete_boolean_expression expr ->
 		is_linear_discrete_boolean_expression expr
 
+(* Check whether a discrete boolean expression is linear *)
 and is_linear_discrete_boolean_expression = function
 	| Arithmetic_comparison (l_expr, _, r_expr) ->
 	    is_linear_arithmetic_expression l_expr &&
@@ -281,6 +293,7 @@ and is_linear_discrete_boolean_expression = function
     | Bool_constant _ -> true
     | _ -> false
 
+(* Check whether a arithmetic expression is linear *)
 and is_linear_arithmetic_expression = function
     | Rational_arithmetic_expression expr -> is_linear_rational_arithmetic_expression expr
     | Int_arithmetic_expression expr -> false
@@ -292,6 +305,7 @@ and is_linear_rational_arithmetic_expression = function
     | Rational_term term ->
         is_linear_rational_term term
 
+(* Check whether a term is linear *)
 and is_linear_rational_term = function
     | Rational_product_quotient (term, factor, Mul) ->
         (* Two variable ? false, otherwise true *)
@@ -299,6 +313,7 @@ and is_linear_rational_term = function
     | Rational_product_quotient (_, _, Div) -> false
     | Rational_factor factor -> is_linear_rational_factor factor
 
+(* Check whether a factor is linear *)
 and is_linear_rational_factor = function
     | Rational_variable _
     | Rational_constant _ -> true
@@ -306,14 +321,13 @@ and is_linear_rational_factor = function
     | Rational_nested_expression expr -> is_linear_rational_arithmetic_expression expr
     | _ -> false
 
+(* Check whether a non linear constraint holds only linear expressions *)
 let is_linear_nonlinear_constraint = List.for_all is_linear_discrete_boolean_expression
 
-
+(* Get a rational expression representing zero value *)
 let zero_rational_expression = Rational_term (Rational_factor (Rational_constant NumConst.zero))
 
-(****************************************************************)
-(** Strings *)
-(****************************************************************)
+(* --- Strings --- *)
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
@@ -358,11 +372,6 @@ let add_right_parenthesis str expr =
 let add_parenthesis_to_unary_minus str = function
     | Rational_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
-
-
-
-
-
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_int_factor_has_parenthesis = function

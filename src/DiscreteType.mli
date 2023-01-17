@@ -81,8 +81,7 @@ val is_discrete_type_int_type : var_type_discrete -> bool
 val is_discrete_type_bool_type : var_type_discrete -> bool
 (* Check if discrete type is a binary word *)
 val is_discrete_type_binary_word_type : var_type_discrete -> bool
-(* Get discrete type of a var type *)
-(* Note : clocks / parameter are of rational type *)
+(* Extract discrete type of var type, note that: clocks and parameter are rational *)
 val discrete_type_of_var_type : var_type -> var_type_discrete
 
 (* Check if two discrete number types are compatible *)
@@ -95,11 +94,3 @@ val is_discrete_type_compatibles : var_type_discrete -> var_type_discrete -> boo
 val stronger_discrete_number_type_of : var_type_discrete_number -> var_type_discrete_number -> var_type_discrete_number
 (* Get the stronger type between two given types, see stronger_discrete_number_type_of *)
 val stronger_discrete_type_of : var_type_discrete -> var_type_discrete -> var_type_discrete
-
-(*
-val default_number_type_if_needed : var_type_discrete_number -> var_type_discrete_number
-val default_type_if_needed : var_type_discrete -> var_type_discrete
-val replace_unknown_number : var_type_discrete_number -> var_type_discrete -> var_type_discrete
-*)
-val extract_number_of_discrete_type : var_type_discrete -> var_type_discrete_number option
-val extract_number_of_type : var_type -> var_type_discrete_number option

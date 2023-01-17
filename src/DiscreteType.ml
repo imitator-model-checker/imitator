@@ -163,6 +163,7 @@ let is_discrete_type_binary_word_type = function
     | Dt_bin _ -> true
     | _ -> false
 
+(* Extract discrete type of var type, note that: clocks and parameter are rational *)
 let discrete_type_of_var_type = function
     | Var_type_clock
     | Var_type_parameter -> Dt_number Dt_rat
@@ -221,16 +222,3 @@ let rec stronger_discrete_type_of discrete_type_a discrete_type_b =
         Dt_queue (stronger_discrete_type_of inner_type_a inner_type_b)
     | _ ->
         discrete_type_a
-
-
-let rec extract_number_of_discrete_type = function
-    | Dt_number discrete_number_type -> Some discrete_number_type
-    | Dt_array (inner_type, _)
-    | Dt_list inner_type
-    | Dt_stack inner_type
-    | Dt_queue inner_type -> extract_number_of_discrete_type inner_type
-    | _ -> None
-
-let extract_number_of_type = function
-    | Var_type_discrete discrete_type -> extract_number_of_discrete_type discrete_type
-    | _ -> None

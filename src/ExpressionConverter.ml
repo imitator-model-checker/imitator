@@ -1,15 +1,37 @@
-open ParsingStructure
-open VariableInfo
-open ParsingStructureUtilities
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: Type checker module aims to type check expressions
+ * Module description: Convert module aims to convert typed expressions to abstract model expressions
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2021/11/20
+ *
+ ************************************************************)
+
+(* Utils modules *)
 open ImitatorUtilities
 open OCamlUtilities
 open Exceptions
+open CustomModules
+open Constants
+
+(* Parsing structure modules *)
+open ParsingStructure
+open VariableInfo
+open ParsingStructureUtilities
 open FunctionSig
 open TypeConstraintResolver
-open CustomModules
 open DiscreteType
+
+(* Typed model modules *)
 open TypedStructure
-open Constants
+
 
 (* Type checking module *)
 (* This module aim to type check expressions and create a typed tree from a parsed tree *)
@@ -29,6 +51,8 @@ val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> typed_s
 val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
 end = struct
+
+(* --- Messages --- *)
 
 (* Message when many members of an expression are not compatibles *)
 let ill_typed_message_of_expressions str_expressions discrete_types str_outer_expr =
@@ -67,6 +91,8 @@ let ill_typed_variable_message variable_name str_discrete_type str_expr expr_dis
     ^ "` of type "
     ^ DiscreteType.string_of_var_type_discrete expr_discrete_type
     ^ "."
+
+(* --- Type checking --- *)
 
 (* Get inner type of a collection analysing types of it's elements *)
 (* If the collection is empty, it's type will be inferred by the context *)
@@ -494,6 +520,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
             match type_constraint with
             | Defined_type_constraint (Number_constraint (Defined_type_number_constraint Int_constraint (Int_name_constraint constraint_name))) ->
 
+                (* Convert and TypeChecker module are recursive, just because of this ! *)
                 let converted_expr = Convert.global_expression_of_typed_boolean_expression variable_infos expr in
 
                 if not (DiscreteExpressionEvaluator.is_global_expression_constant None converted_expr) then (
@@ -587,7 +614,6 @@ let rec type_check_parsed_scalar_or_index_update_type variable_infos = function
     | Parsed_scalar_update variable_ref ->
         (* Get assigned variable type *)
         let discrete_type = VariableInfo.discrete_type_of_variable_or_constant variable_infos variable_ref in
-
         Typed_scalar_update variable_ref, discrete_type
 
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) as indexed_update ->
@@ -1006,14 +1032,6 @@ let check_discrete_init variable_infos variable_name expr =
         ^ " := "
         ^ string_of_typed_boolean_expression variable_infos typed_expr
     );
-    (*
-    ResultProcessor.add_custom_details (
-        "annot - inits - "
-        ^ variable_name
-        ^ " := "
-        ^ string_of_typed_boolean_expression variable_infos typed_expr
-    );
-    *)
 
     typed_expr
 
@@ -1120,12 +1138,12 @@ end
 (* It use TypeChecker module *)
 and Convert : sig
 
-
-
-(** Linear part **)
+(* --- Linear part --- *)
 
 val linear_term_of_linear_expression : variable_infos -> ParsingStructure.linear_expression -> LinearConstraint.pxd_linear_term
 val linear_constraint_of_convex_predicate : variable_infos -> ParsingStructure.linear_constraint list -> LinearConstraint.pxd_linear_constraint
+
+(* --- Discrete part --- *)
 
 (*val linear_term_of_typed_boolean_expression : variable_infos -> typed_boolean_expression -> LinearConstraint.pxd_linear_term*)
 val global_expression_of_typed_boolean_expression_by_type : variable_infos -> typed_boolean_expression -> DiscreteType.var_type_discrete -> DiscreteExpressions.global_expression
@@ -1188,7 +1206,6 @@ let conj_dis_of_typed_conj_dis = function
 let loop_dir_of_typed_loop_dir = function
     | Typed_for_loop_up -> Loop_up
     | Typed_for_loop_down -> Loop_down
-
 
 (* Raise internal error when expected typed expression doesn't match with target abstract model expression *)
 let raise_conversion_error str_structure_name str_expr =
@@ -2392,7 +2409,7 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
             Potential_updates (List.rev converted_clock_updates)
     )
 
-
+(* Convert typed sequential code bloc to sequential code bloc for abstract model *)
 let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc =
 
     let rec seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc =
@@ -2466,7 +2483,9 @@ let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc 
     in
     seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc
 
+(* Convert typed function to function for abstract model *)
 let fun_definition_of_typed_fun_definition variable_infos (typed_fun_def : typed_fun_definition) : fun_definition =
+
     let typed_code_bloc, typed_return_expr_opt = typed_fun_def.body in
 
     (* Convert return expr if needed *)
