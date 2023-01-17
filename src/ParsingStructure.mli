@@ -163,7 +163,7 @@ type parsed_loop_dir =
 (****************************************************************)
 (** Bloc of sequential code *)
 (****************************************************************)
-type parsed_seq_code_bloc =
+type parsed_instruction =
     | Parsed_local_decl of variable_ref * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *)
     | Parsed_assignment of normal_update
     | Parsed_instruction of parsed_boolean_expression
@@ -171,7 +171,7 @@ type parsed_seq_code_bloc =
     | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* inner bloc *)
     | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* then *) * parsed_seq_code_bloc_list option (* else *)
 
-and parsed_seq_code_bloc_list = parsed_seq_code_bloc list
+and parsed_seq_code_bloc_list = parsed_instruction list
 
 (****************************************************************)
 (** User functions *)

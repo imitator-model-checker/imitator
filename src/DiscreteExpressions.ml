@@ -208,7 +208,7 @@ and access_type =
     | List_access of list_expression
 
 (* Bloc of sequential code *)
-and seq_code_bloc =
+and instruction =
     | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * rational_arithmetic_expression)
@@ -218,7 +218,7 @@ and seq_code_bloc =
     | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
 
 (* A bloc of sequential code *)
-and seq_code_bloc_list = seq_code_bloc list
+and seq_code_bloc_list = instruction list
 
 (* Update type *)
 and scalar_or_index_update_type =

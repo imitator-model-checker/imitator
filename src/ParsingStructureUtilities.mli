@@ -162,7 +162,7 @@ val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
 val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> string
-val string_of_parsed_instruction : variable_infos -> parsed_seq_code_bloc -> string
+val string_of_parsed_instruction : variable_infos -> parsed_instruction -> string
 
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string
 val string_of_parsed_clock_update : variable_infos -> normal_update -> string

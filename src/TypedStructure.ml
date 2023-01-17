@@ -107,7 +107,7 @@ type typed_loop_dir =
     | Typed_for_loop_up
     | Typed_for_loop_down
 
-type typed_seq_code_bloc =
+type typed_instruction =
     | Typed_local_decl of variable_ref * var_type_discrete * typed_boolean_expression
     | Typed_assignment of typed_normal_update * typed_assignment_scope
     | Typed_instruction of typed_boolean_expression
@@ -115,7 +115,7 @@ type typed_seq_code_bloc =
     | Typed_while_loop of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* inner bloc *)
     | Typed_if of typed_boolean_expression (* condition *) * typed_seq_code_bloc_list (* then bloc *) * typed_seq_code_bloc_list option (* else bloc *)
 
-and typed_seq_code_bloc_list = typed_seq_code_bloc list
+and typed_seq_code_bloc_list = typed_instruction list
 
 type typed_fun_definition = {
     name : variable_name; (* function name *)
