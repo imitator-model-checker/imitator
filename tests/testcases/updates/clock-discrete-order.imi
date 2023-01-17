@@ -1,0 +1,66 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Evaluation order of clock and discrete updates
+ * Description      : Test that updates are evaluated sequentially
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/01/10
+ * Last modified    : 2023/01/10
+ * Model version    : 1.1
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+var
+
+  i, j : discrete;
+  x, y : clock;
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+synclabs : a;
+
+loc l1: invariant x <= 0 & y <= 0
+	when
+    & True
+  do {
+    x := i, (* x should be equals to 0 *)
+    i := i + 1,
+    j := j + 1,
+    y := j (* y should be equals to 1 *)
+  }
+  sync a
+  goto lend;
+
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+      loc[pta] = l1
+      & x >= 0
+      & y >= 0
+      & i = 0
+      & j = 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
