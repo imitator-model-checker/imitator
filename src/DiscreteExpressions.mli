@@ -211,12 +211,12 @@ and instruction =
     | Assignment of discrete_update
     | Clock_assignment of (Automaton.clock_index * rational_arithmetic_expression)
     | Instruction of global_expression
-    | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc_list (* inner bloc *)
-    | While_loop of boolean_expression (* condition *) * seq_code_bloc_list (* inner bloc *)
-    | If of boolean_expression (* condition *) * seq_code_bloc_list (* then bloc *) * seq_code_bloc_list option (* else bloc *)
+    | For_loop of Automaton.variable_ref * int_arithmetic_expression (* from *) * int_arithmetic_expression (* to *) * loop_dir (* up or down *) * seq_code_bloc (* inner bloc *)
+    | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *)
+    | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *)
 
 (* A bloc of sequential code *)
-and seq_code_bloc_list = instruction list
+and seq_code_bloc = instruction list
 
 (* Update expression *)
 and discrete_update = scalar_or_index_update_type * global_expression
@@ -231,7 +231,7 @@ and scalar_or_index_update_type =
 (* Type of function (built-in mean internal defined function) *)
 type fun_type =
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
-    | Fun_user of seq_code_bloc_list * global_expression option
+    | Fun_user of seq_code_bloc * global_expression option
 
 type clock_index = int
 type clock_update = clock_index

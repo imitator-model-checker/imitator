@@ -167,11 +167,11 @@ type parsed_instruction =
     | Parsed_local_decl of variable_ref * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *)
     | Parsed_assignment of normal_update
     | Parsed_instruction of parsed_boolean_expression
-    | Parsed_for_loop of variable_ref * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc_list (* inner bloc *)
-    | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* inner bloc *)
-    | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc_list (* then *) * parsed_seq_code_bloc_list option (* else *)
+    | Parsed_for_loop of variable_ref * parsed_discrete_arithmetic_expression (* from *) * parsed_discrete_arithmetic_expression (* to *) * parsed_loop_dir (* up or down *) * parsed_seq_code_bloc (* inner bloc *)
+    | Parsed_while_loop of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc (* inner bloc *)
+    | Parsed_if of parsed_boolean_expression (* condition *) * parsed_seq_code_bloc (* then *) * parsed_seq_code_bloc option (* else *)
 
-and parsed_seq_code_bloc_list = parsed_instruction list
+and parsed_seq_code_bloc = parsed_instruction list
 
 (****************************************************************)
 (** User functions *)
@@ -190,7 +190,7 @@ type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_ref * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
     return_type : DiscreteType.var_type_discrete; (* return type *)
-    body : parsed_seq_code_bloc_list * parsed_boolean_expression option; (* body *)
+    body : parsed_seq_code_bloc * parsed_boolean_expression option; (* body *)
 }
 
 (* Parsed function definition list *)
@@ -204,7 +204,7 @@ type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 type parsed_flow = (variable_name * NumConst.t) list
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = guard * parsed_seq_code_bloc_list * sync * location_name
+type transition = guard * parsed_seq_code_bloc * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {

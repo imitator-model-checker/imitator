@@ -81,7 +81,7 @@ val string_of_boolean_expression : (Automaton.discrete_index -> Automaton.variab
 val customized_string_of_scalar_or_index_update_type : Constants.customized_string -> DiscreteExpressions.variable_name_table -> scalar_or_index_update_type -> string
 val string_of_scalar_or_index_update_type : DiscreteExpressions.variable_name_table -> scalar_or_index_update_type -> string
 
-val string_of_seq_code_bloc : abstract_model -> int -> ?sep:string -> seq_code_bloc_list -> string
+val string_of_seq_code_bloc : abstract_model -> int -> ?sep:string -> seq_code_bloc -> string
 
 (************************************************************)
 (** Points and hyperrectangles *)

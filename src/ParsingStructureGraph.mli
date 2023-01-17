@@ -60,7 +60,7 @@ val used_global_variables_of_model : dependency_graph -> StringSet.t
 val unused_global_variables_of_model : dependency_graph -> StringSet.t
 
 (* Remove all unused assignments in sequential code bloc *)
-val remove_unused_assignments_in_updates : declarations_info -> dependency_graph -> parsed_seq_code_bloc_list -> parsed_seq_code_bloc_list
+val remove_unused_assignments_in_updates : declarations_info -> dependency_graph -> parsed_seq_code_bloc -> parsed_seq_code_bloc
 (* Remove all unused assignments in function definition *)
 val remove_unused_assignments_in_fun_def : declarations_info -> dependency_graph -> parsed_fun_definition -> parsed_fun_definition
 (* Filter a init_definition (init_state_predicate list) to keep only init definition of used variables *)

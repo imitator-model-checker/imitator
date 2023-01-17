@@ -46,7 +46,7 @@ val check_guard : variable_infos -> guard -> typed_guard
 (* Check that a predicate is well typed *)
 val check_state_predicate : variable_infos -> parsed_state_predicate -> typed_state_predicate
 (* Check whether a parsed sequential bloc definition is well typed *)
-val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> typed_seq_code_bloc_list
+val check_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> typed_seq_code_bloc
 (* Check whether a function definition is well typed *)
 val check_fun_definition : variable_infos -> parsed_fun_definition -> typed_fun_definition
 
@@ -1152,8 +1152,8 @@ val bool_expression_of_typed_boolean_expression : variable_infos -> typed_boolea
 val bool_expression_of_typed_discrete_boolean_expression : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val nonlinear_constraint_of_typed_nonlinear_constraint : variable_infos -> typed_discrete_boolean_expression -> DiscreteExpressions.discrete_boolean_expression
 val scalar_or_index_update_type_of_typed_scalar_or_index_update_type : variable_infos -> typed_scalar_or_index_update_type -> DiscreteExpressions.scalar_or_index_update_type
-val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc_list -> DiscreteExpressions.seq_code_bloc_list
-val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc_list -> DiscreteExpressions.potential_clock_updates
+val seq_code_bloc_of_typed_seq_code_bloc : variable_infos -> typed_seq_code_bloc -> DiscreteExpressions.seq_code_bloc
+val clock_update_of_typed_seq_code_bloc : variable_infos -> bool -> typed_seq_code_bloc -> DiscreteExpressions.potential_clock_updates
 val fun_definition_of_typed_fun_definition : variable_infos -> typed_fun_definition -> AbstractModel.fun_definition
 
 end = struct

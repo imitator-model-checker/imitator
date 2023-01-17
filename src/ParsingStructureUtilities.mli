@@ -56,7 +56,7 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
-val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> 'a
+val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc -> 'a
 val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_fun_definition -> 'a
 val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> normal_update -> 'a
 
@@ -80,7 +80,7 @@ val for_all_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callbac
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
 val for_all_in_parsed_normal_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
-val for_all_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> bool
+val for_all_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
 val for_all_in_parsed_fun_def : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
@@ -114,7 +114,7 @@ val exists_in_parsed_state_predicate : (state_predicate_leaf -> bool) -> bool pa
 
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
-val exists_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> bool
+val exists_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
 val exists_in_parsed_function_definition : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
@@ -145,7 +145,7 @@ val iterate_parsed_nonlinear_constraint : unit parsing_structure_leaf_callback -
 val iterate_parsed_nonlinear_convex_predicate : unit parsing_structure_leaf_callback -> convex_predicate -> unit
 
 (** Iterate over a parsed sequential code bloc definition **)
-val iterate_in_parsed_seq_code_bloc : ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc_list -> unit
+val iterate_in_parsed_seq_code_bloc : ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit
 (** Iterate over a parsed function definition **)
 val iterate_in_parsed_function_definition :  ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_fun_definition -> unit
 
@@ -161,7 +161,7 @@ val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
 val string_of_parsed_relop : parsed_relop -> string -> string -> string
 val string_of_parsed_fun_def : variable_infos -> parsed_fun_definition -> string
-val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc_list -> string
+val string_of_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> string
 val string_of_parsed_instruction : variable_infos -> parsed_instruction -> string
 
 val string_of_parsed_normal_update : variable_infos -> normal_update -> string

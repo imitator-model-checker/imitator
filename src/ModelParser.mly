@@ -265,7 +265,7 @@ decl_fun_nonempty_list:
 
 /* Function definition */
 decl_fun_def:
-  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc_list return_opt CT_END
+  | CT_FUN NAME LPAREN fun_parameter_list RPAREN COLON var_type_discrete CT_BEGIN seq_code_bloc return_opt CT_END
   {
     {
       name = $2;
@@ -292,7 +292,7 @@ fun_parameter_nonempty_list:
   | fun_parameter_list COMMA NAME COLON var_type_discrete { (($3, Parsing.symbol_start ()), $5) :: $1 }
 ;
 
-seq_code_bloc_list:
+seq_code_bloc:
   | { [] }
   | seq_code_bloc_nonempty_list { $1 }
 ;
@@ -327,14 +327,14 @@ instruction:
 
 control_structure:
   /* for loop */
-  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_for_loop (($2, Parsing.symbol_start ()), $4, $6, $5, $8) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE { Parsed_for_loop (($2, Parsing.symbol_start ()), $4, $6, $5, $8) }
   /* while loop */
-  | CT_WHILE boolean_expression CT_DO seq_code_bloc_list CT_DONE { Parsed_while_loop ($2, $4) }
+  | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE { Parsed_while_loop ($2, $4) }
   /* conditional */
-  | CT_IF boolean_expression CT_THEN seq_code_bloc_list CT_END { Parsed_if ($2, $4, None) }
-  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc_list RPAREN CT_END { Parsed_if ($2, $5, None) }
-  | CT_IF boolean_expression CT_THEN seq_code_bloc_list CT_ELSE seq_code_bloc_list CT_END { Parsed_if ($2, $4, Some $6) }
-  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc_list RPAREN CT_ELSE LPAREN seq_code_bloc_list RPAREN CT_END { Parsed_if ($2, $5, Some $9) }
+  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_END { Parsed_if ($2, $4, None) }
+  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc RPAREN CT_END { Parsed_if ($2, $5, None) }
+  | CT_IF boolean_expression CT_THEN seq_code_bloc CT_ELSE seq_code_bloc CT_END { Parsed_if ($2, $4, Some $6) }
+  | CT_IF boolean_expression CT_THEN LPAREN seq_code_bloc RPAREN CT_ELSE LPAREN seq_code_bloc RPAREN CT_END { Parsed_if ($2, $5, Some $9) }
 ;
 
 loop_dir:
@@ -566,7 +566,7 @@ update_synchronization:
 /************************************************************/
 
 updates:
-  | CT_DO LBRACE seq_code_bloc_list RBRACE { $3 }
+  | CT_DO LBRACE seq_code_bloc RBRACE { $3 }
 ;
 
 /************************************************************/

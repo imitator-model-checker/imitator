@@ -97,7 +97,7 @@ type invariant = guard
 type transition = {
     guard : guard;
     action : action_index;
-    updates : DiscreteExpressions.potential_clock_updates (* clock updates that may happen *) * DiscreteExpressions.seq_code_bloc_list;
+    updates : DiscreteExpressions.potential_clock_updates (* clock updates that may happen *) * DiscreteExpressions.seq_code_bloc;
     target : location_index;
 }
 

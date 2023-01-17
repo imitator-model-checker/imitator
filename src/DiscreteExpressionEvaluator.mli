@@ -62,9 +62,9 @@ val eval_boolean_expression : variable_name_table option -> functions_table opti
 (* Evaluate a discrete boolean expression *)
 val eval_discrete_boolean_expression : variable_name_table option -> functions_table option -> discrete_access option -> discrete_boolean_expression -> bool
 (* Evaluate sequential code bloc *)
-val eval_seq_code_bloc : variable_name_table option -> functions_table option -> discrete_access -> seq_code_bloc_list -> unit
+val eval_seq_code_bloc : variable_name_table option -> functions_table option -> discrete_access -> seq_code_bloc -> unit
 (* Evaluate sequential code bloc given an eval context *)
-val eval_seq_code_bloc_with_context : variable_name_table option -> functions_table option -> eval_context -> seq_code_bloc_list -> unit
+val eval_seq_code_bloc_with_context : variable_name_table option -> functions_table option -> eval_context -> seq_code_bloc -> unit
 
 (* Check if a nonlinear constraint is satisfied *)
 val check_nonlinear_constraint : variable_name_table option -> functions_table option -> discrete_access -> nonlinear_constraint -> bool
