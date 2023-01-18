@@ -1,3 +1,16 @@
+(************************************************************
+ *
+ *                       IMITATOR
+ *
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
+ * Module description: Module that aims to reduce and simplify parsed expressions, this module is only used to reduce clock updates
+ *
+ * File contributors : Benjamin L.
+ * Created           : 2023/01/06
+ *
+ ************************************************************)
+
 open DiscreteExpressions
 open ParsingStructure
 open ParsingStructureUtilities
@@ -8,17 +21,29 @@ open Extensions
 (* Only reduce rational expression *)
 module RationalReducer = struct
 
+(* Reducing arithmetic expression is made by executing the following steps: *)
+(* 1. Converting a parsed arithmetic expression into a list of terms that can be added (e.g: 1+x+5+2x => [1; (1,x); 5; (2,x)]) *)
+(* 2. Reduce progressively the terms list (e.g: [1; (1,x); 5; (2,x)] => [6; (3, x)]) *)
+(* 3. Convert back to parsed arithmetic expression: 6 + 3x *)
+(* 4. Eventually simplify expression (if there is multiplication by one, or addition of 0, ...) *)
+
     (* Term element *)
     type term_element =
+        (* Constant term (e.g: 1) *)
         | Cons_term of NumConst.t
+        (* Variable term weighted by a coef (e.g: (4, x) mean 4x) *)
         | Var_term of NumConst.t * variable_ref
+        (* Term term is non reducible term weighted by a coef (e.g: f(0) * 2) *)
         | Term_term of NumConst.t * parsed_discrete_term
 
     (* Combine left and right terms when multiplying a list of terms by another *)
     (* e.g: (1 + 2 - 3) * (4 + 5) = 1*4 + 1*5 + 2*4 + 2*5 + -3*4 + -3*5 = 0 *)
     let combine_mul l_terms r_terms =
+
+        (* Make combination of two list of terms (e.g: list_combination [x; 1] [y; 5; 2] = [(x, y); (x, 5); (x, 2); (1, y); (1; 5), (1; 2)] )*)
         let terms_combination = OCamlUtilities.list_combination_2 l_terms r_terms in
 
+        (* Mul pair of terms and produce new term *)
         let compute (a, b) = match a, b with
             | Cons_term c1, Cons_term c2 -> Cons_term (NumConst.mul c1 c2)
             | Cons_term c1, Var_term (c2, v)
@@ -57,7 +82,7 @@ module RationalReducer = struct
                     )
                 )
         in
-
+        (* For each combination between two list of terms compute mul of each pair *)
         List.map compute terms_combination
 
     (* Inverse a term (e.g: inverse (2a) = 1 / 2a ) *)
@@ -109,7 +134,7 @@ module RationalReducer = struct
         (* Return *)
         weighted_vars_without_duplicates @ ce_without_duplicates @ [Cons_term constants_sum]
 
-    (* Convert an arithmetic expression to a list of terms *)
+    (* Convert an arithmetic expression to a list of terms (e.g: (4 + 2) * x = [4x; 2x] *)
     (* This function progressively (recursively) reduce list of terms *)
     let rec terms_of_discrete_arithmetic_expression = function
         | Parsed_sum_diff (expr, term, parsed_sum_diff) ->
@@ -128,9 +153,11 @@ module RationalReducer = struct
                     )
             in
 
+            (* Reduce terms list and return *)
             reduce_terms (l_terms @ r_terms)
 
-        | Parsed_term term -> terms_of_discrete_term term
+        | Parsed_term term ->
+            terms_of_discrete_term term
 
     and terms_of_discrete_term = function
         | Parsed_product_quotient (term, factor, parsed_product_quotient) as pq ->
@@ -157,14 +184,18 @@ module RationalReducer = struct
         | Parsed_constant value -> [Cons_term (ParsedValue.to_numconst_value value)]
         | Parsed_nested_expr expr ->
             let terms = terms_of_discrete_arithmetic_expression expr in
+            (* Reduce terms list and return *)
             reduce_terms terms
 
         | Parsed_unary_min factor ->
+            (* Negate terms *)
             List.map negate (terms_of_discrete_factor factor)
 
         | Parsed_sequence _
         | Parsed_access _
-        | Parsed_function_call _ as factor -> [Term_term (NumConst.one, Parsed_factor factor)]
+        | Parsed_function_call _ as factor ->
+            (* These terms are not reducible directly *)
+            [Term_term (NumConst.one, Parsed_factor factor)]
 
     (* Reduce inner arithmetic expressions of an expression *)
     let rec reduce_parsed_boolean_expression variable_infos = function
@@ -331,7 +362,7 @@ module RationalReducer = struct
         (* 3. Simplify reduced arithmetic expression *)
         let simplified_expr = simplify_parsed_discrete_arithmetic_expression reduced_expr in
 
-
+        (* Create a message to print, only if verbose mode >= high *)
         let lazy_reduce_message = lazy (
             (*
             (* Convert term to string *)
@@ -351,7 +382,7 @@ module RationalReducer = struct
             "Reduce expression `" ^ str_expr ^ "` -> `" ^ str_reduced_expr ^ "` -> `" ^ str_simplified_expr ^ "`."
         )
         in
-
+        (* Create a JSON log to print into res file, only if verbose mode >= high *)
         let lazy_reduce_struct = lazy (
             let str_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos expr in
             let str_reduced_expr = ParsingStructureUtilities.string_of_parsed_arithmetic_expression variable_infos reduced_expr in

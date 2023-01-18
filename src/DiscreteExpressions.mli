@@ -228,9 +228,11 @@ and scalar_or_index_update_type =
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
-(* Type of function (built-in mean internal defined function) *)
+(* Type of function *)
 type fun_type =
+    (* Built-in are IMITATOR internal function *)
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
+    (* User function are function defined in a model by user *)
     | Fun_user of seq_code_bloc * global_expression option
 
 type clock_index = int
@@ -258,7 +260,7 @@ val zero_rational_expression : rational_arithmetic_expression
 
 (* --- String --- *)
 
-(* Constructors strings *)
+(* --- Constructors strings --- *)
 val label_of_bool_factor : discrete_boolean_expression -> string
 val label_of_rational_factor : rational_factor -> string
 val label_of_int_factor : int_factor -> string
@@ -273,7 +275,7 @@ val customized_string_of_bool_value : Constants.customized_boolean_string -> boo
 (* String representation of boolean operations according to customized string *)
 val customized_string_of_boolean_operations : Constants.customized_boolean_string -> relop -> string
 
-(* Expressions strings *)
+(* --- Expressions strings --- *)
 
 val customized_string_of_global_expression : Constants.customized_string -> variable_name_table -> global_expression -> string
 val string_of_global_expression : variable_name_table -> global_expression -> string

@@ -230,9 +230,11 @@ and scalar_or_index_update_type =
 (* Update expression *)
 and discrete_update = scalar_or_index_update_type * global_expression
 
-(* Type of function (built-in mean internal defined function) *)
+(* Type of function *)
 type fun_type =
+    (* Built-in are IMITATOR internal function *)
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
+    (* User function are function defined in a model by user *)
     | Fun_user of seq_code_bloc * global_expression option
 
 type clock_index = int
@@ -298,6 +300,7 @@ and is_linear_arithmetic_expression = function
     | Rational_arithmetic_expression expr -> is_linear_rational_arithmetic_expression expr
     | Int_arithmetic_expression expr -> false
 
+(* Check whether a rational expression is linear *)
 and is_linear_rational_arithmetic_expression = function
     | Rational_sum_diff (expr, term, _) ->
         is_linear_rational_arithmetic_expression expr &&
@@ -417,8 +420,9 @@ let add_parenthesis_to_unary_minus_int str = function
     | Int_nested_expression _ -> "(" ^ str ^ ")"
     | _ -> str
 
-(* Constructors strings *)
+(* --- Constructors strings --- *)
 
+(* Get string label representing a bool factor *)
 let label_of_bool_factor = function
 	| Arithmetic_comparison _
     | Boolean_comparison _
@@ -436,6 +440,7 @@ let label_of_bool_factor = function
 	| Bool_indexed_expr _ -> "array_get"
     | Bool_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing a rational factor *)
 let label_of_rational_factor = function
 	| Rational_variable _ -> "rational variable"
 	| Rational_local_variable (variable_name, _) -> variable_name
@@ -445,6 +450,7 @@ let label_of_rational_factor = function
 	| Rational_indexed_expr _ -> "array_get"
 	| Rational_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing a int factor *)
 let label_of_int_factor = function
 	| Int_variable _ -> "int variable"
 	| Int_local_variable (variable_name, _) -> variable_name
@@ -454,7 +460,7 @@ let label_of_int_factor = function
 	| Int_indexed_expr _ -> "array_get"
 	| Int_function_call (function_name, _, _) -> function_name
 
-
+(* Get string label representing a binary word factor *)
 let label_of_binary_word_expression = function
     | Binary_word_constant _ -> "binary word constant"
     | Binary_word_variable _ -> "binary word variable"
@@ -462,6 +468,7 @@ let label_of_binary_word_expression = function
 	| Binary_word_indexed_expr _ -> "array_get"
     | Binary_word_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing an array factor *)
 let label_of_array_expression = function
     | Literal_array _ -> "array"
     | Array_constant _ -> "array"
@@ -470,6 +477,7 @@ let label_of_array_expression = function
 	| Array_indexed_expr _ -> "array_get"
 	| Array_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing a list factor *)
 let label_of_list_expression = function
     | Literal_list _ -> "list"
     | List_constant _ -> "list"
@@ -478,6 +486,7 @@ let label_of_list_expression = function
 	| List_indexed_expr _ -> "array_get"
 	| List_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing a stack factor *)
 let label_of_stack_expression = function
     | Literal_stack -> Constants.stack_string
     | Stack_variable _ -> Constants.stack_string
@@ -485,6 +494,7 @@ let label_of_stack_expression = function
 	| Stack_indexed_expr _ -> "array_get"
 	| Stack_function_call (function_name, _, _) -> function_name
 
+(* Get string label representing a queue factor *)
 let label_of_queue_expression = function
     | Literal_queue -> "queue"
     | Queue_variable _ -> "queue"
@@ -500,22 +510,27 @@ let print_binary_word_overflow_warning_if_needed expr length = function
         if length > 31 then
             ImitatorUtilities.print_warning ("Encoding a `" ^ label_of_binary_word_expression expr ^ "` of length `" ^ string_of_int length ^ "` on an integer can leads to an overflow.")
 
-(* Expressions strings *)
+(* --- Expressions strings --- *)
 
+(* Convert function call to string *)
 let print_function function_name str_arguments = function_name ^ "(" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments ^ ")"
 
+(* Convert sum / diff operator to string *)
 let string_of_sum_diff = function
     | Plus -> Constants.default_arithmetic_string.plus_string
     | Minus -> Constants.default_arithmetic_string.minus_string
 
+(* Convert product / quotient operator to string *)
 let string_of_product_quotient = function
     | Mul -> Constants.default_arithmetic_string.mul_string
     | Div -> Constants.default_arithmetic_string.div_string
 
+(* Convert conjunction / disjunction operator to string *)
 let string_of_conj_dis = function
     | And -> Constants.default_string.and_operator
     | Or -> Constants.default_string.or_operator
 
+(* Convert a global expression into a string *)
 let rec customized_string_of_global_expression customized_string variable_names = function
     | Void_expression expr -> customized_string_of_void_expression customized_string variable_names expr
     | Arithmetic_expression expr -> customized_string_of_arithmetic_expression customized_string variable_names expr
@@ -527,12 +542,15 @@ let rec customized_string_of_global_expression customized_string variable_names 
     | Queue_expression expr -> customized_string_of_queue_expression customized_string variable_names expr
 
 (* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
 and customized_string_of_arithmetic_expression customized_string variable_names = function
     | Rational_arithmetic_expression expr -> customized_string_of_rational_arithmetic_expression customized_string variable_names expr
     | Int_arithmetic_expression expr -> customized_string_of_int_arithmetic_expression customized_string variable_names expr
 
+(* Convert a rational arithmetic expression into a string *)
+(* Note: we consider more cases than the strict minimum in order to improve readability a bit *)
 and customized_string_of_rational_arithmetic_expression customized_string variable_names =
+
+    (* Convert a rational arithmetic expression into a string *)
     let rec string_of_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
         | Rational_sum_diff (discrete_arithmetic_expression, Rational_factor (Rational_constant c), _) when NumConst.equal c NumConst.zero ->
@@ -545,6 +563,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 
         | Rational_term discrete_term -> string_of_term customized_string discrete_term
 
+    (* Convert a rational term into a string *)
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
 		| Rational_product_quotient (Rational_factor (Rational_constant c), discrete_factor, Mul) when NumConst.equal c NumConst.one ->
@@ -556,6 +575,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 
 		| Rational_factor discrete_factor -> string_of_factor customized_string discrete_factor
 
+    (* Convert a rational factor into a string *)
 	and string_of_factor customized_string = function
 		| Rational_variable discrete_index -> variable_names discrete_index
 		| Rational_local_variable (variable_name, _) -> variable_name
@@ -579,10 +599,11 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 	(* Call top-level *)
 	in string_of_arithmetic_expression customized_string
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+(* Convert a int arithmetic expression into a string *)
+(* Note: we consider more cases than the strict minimum in order to improve readability a bit *)
 and customized_string_of_int_arithmetic_expression customized_string variable_names =
 
+    (* Convert a int arithmetic expression into a string *)
     let rec string_of_int_arithmetic_expression customized_string = function
         (* Shortcut: Remove the "+0" / -"0" cases *)
         | Int_sum_diff (expr, Int_factor (Int_constant c), _) when Int32.equal c Int32.zero ->
@@ -596,6 +617,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
         | Int_term term ->
             string_of_int_term customized_string term
 
+    (* Convert a int term into a string *)
 	and string_of_int_term customized_string = function
 		(* Eliminate the '1' coefficient *)
 		| Int_product_quotient (Int_factor (Int_constant c), factor, Mul) when Int32.equal c Int32.one ->
@@ -609,6 +631,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 		| Int_factor factor ->
 		    string_of_int_factor customized_string factor
 
+    (* Convert a int factor into a string *)
 	and string_of_int_factor customized_string = function
 		| Int_variable i -> variable_names i
 		| Int_local_variable (variable_name, _) -> variable_name
@@ -629,7 +652,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 	(* Call top-level *)
 	in string_of_int_arithmetic_expression customized_string
 
-(** Convert a Boolean expression into a string *)
+(* Convert a Boolean expression into a string *)
 and customized_string_of_boolean_expression customized_string variable_names = function
 	| True_bool -> customized_string.boolean_string.true_string
 	| False_bool -> customized_string.boolean_string.false_string
@@ -640,59 +663,71 @@ and customized_string_of_boolean_expression customized_string variable_names = f
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		customized_string_of_discrete_boolean_expression customized_string variable_names discrete_boolean_expression
 
-(** Convert a discrete_boolean_expression into a string *)
+(* Convert a discrete_boolean_expression into a string *)
 and customized_string_of_discrete_boolean_expression customized_string variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Arithmetic_comparison (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
-		^ (customized_string_of_boolean_operations customized_string.boolean_string relop)
-		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
+
+	| Arithmetic_comparison (l_expr, relop, r_expr) ->
+		customized_string_of_arithmetic_expression customized_string variable_names l_expr
+		^ customized_string_of_boolean_operations customized_string.boolean_string relop
+		^ customized_string_of_arithmetic_expression customized_string variable_names r_expr
+
     | Boolean_comparison (l_expr, relop, r_expr) ->
-		(customized_string_of_discrete_boolean_expression customized_string variable_names l_expr)
-		^ (customized_string_of_boolean_operations customized_string.boolean_string relop)
-		^ (customized_string_of_discrete_boolean_expression customized_string variable_names r_expr)
+		customized_string_of_discrete_boolean_expression customized_string variable_names l_expr
+		^ customized_string_of_boolean_operations customized_string.boolean_string relop
+		^ customized_string_of_discrete_boolean_expression customized_string variable_names r_expr
+
     | Binary_comparison (l_expr, relop, r_expr) ->
-		(customized_string_of_binary_word_expression customized_string variable_names l_expr)
-		^ (customized_string_of_boolean_operations customized_string.boolean_string relop)
-		^ (customized_string_of_binary_word_expression customized_string variable_names r_expr)
+		customized_string_of_binary_word_expression customized_string variable_names l_expr
+		^ customized_string_of_boolean_operations customized_string.boolean_string relop
+		^ customized_string_of_binary_word_expression customized_string variable_names r_expr
+
     | Array_comparison (l_expr, relop, r_expr) ->
         customized_string_of_array_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_array_expression customized_string variable_names r_expr
+
     | List_comparison (l_expr, relop, r_expr) ->
         customized_string_of_list_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_list_expression customized_string variable_names r_expr
+
     | Stack_comparison (l_expr, relop, r_expr) ->
         customized_string_of_stack_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_stack_expression  customized_string variable_names r_expr
+
     | Queue_comparison (l_expr, relop, r_expr) ->
         customized_string_of_queue_expression customized_string variable_names l_expr
         ^ customized_string_of_boolean_operations customized_string.boolean_string relop
         ^ customized_string_of_queue_expression  customized_string variable_names r_expr
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1
+
+	| Expression_in (lw_expr, md_expr, up_expr) ->
+		customized_string_of_arithmetic_expression customized_string variable_names lw_expr
 		^ customized_string.boolean_string.in_operator
 		^ "["
-		^ customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2
+		^ customized_string_of_arithmetic_expression customized_string variable_names md_expr
 		^ " , "
-		^ customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3
+		^ customized_string_of_arithmetic_expression customized_string variable_names up_expr
 		^ "]"
-    | Boolean_expression boolean_expression ->
-        "(" ^ customized_string_of_boolean_expression customized_string variable_names boolean_expression ^ ")"
+
+    | Boolean_expression expr ->
+        "(" ^ customized_string_of_boolean_expression customized_string variable_names expr ^ ")"
+
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
+
     | Bool_variable discrete_index -> variable_names discrete_index
     | Bool_local_variable (variable_name, _) -> variable_name
-    | Bool_constant value -> customized_string_of_bool_value customized_string.boolean_string value
+    | Bool_constant value ->
+        customized_string_of_bool_value customized_string.boolean_string value
+
     | Bool_indexed_expr (access_type, index_expr) ->
         customized_string_of_expression_access customized_string variable_names access_type index_expr
 
     | Bool_function_call (function_name, _, args_expr) ->
         customized_string_of_function_call customized_string variable_names function_name args_expr
 
+(* Convert a comparison operator into a string using customized strings *)
 and customized_string_of_boolean_operations customized_string = function
 	| OP_L		-> customized_string.l_operator
 	| OP_LEQ	-> customized_string.le_operator
@@ -701,6 +736,7 @@ and customized_string_of_boolean_operations customized_string = function
 	| OP_GEQ	-> customized_string.ge_operator
 	| OP_G		-> customized_string.g_operator
 
+(* Convert a Bool value into a string using customized strings *)
 and customized_string_of_bool_value customized_string = function
     | true -> customized_string.true_string
     | false -> customized_string.false_string
