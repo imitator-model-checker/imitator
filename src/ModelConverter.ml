@@ -2768,6 +2768,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     if has_void_variables then
         raise InvalidModel;
 
+    (* Hack!!! Sort rational at first, for PPL *)
+    let discrete_names_by_type, discrete_names =
+        let sorted_discrete_names_by_type = List.stable_sort (fun (var_type_a, variable_name_a) (var_type_b, variable_name_b) ->
+            match var_type_a, var_type_b with
+            | Var_type_discrete (Dt_number Dt_rat), Var_type_discrete (Dt_number Dt_rat) -> 0
+            | Var_type_discrete (Dt_number Dt_rat), _ -> -1
+            | _, Var_type_discrete (Dt_number Dt_rat) -> 1
+            | _, _ -> 0
+        ) discrete_names_by_type
+        in
+        sorted_discrete_names_by_type, List.map OCamlUtilities.second_of_tuple sorted_discrete_names_by_type
+    in
+
     (* Group variable names by types *)
 	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, var_name) -> var_type) (fun (var_type, var_name) -> var_name) discrete_names_by_type in
 
@@ -2821,8 +2834,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions		    = List.length action_names in
 	let nb_clocks		    = List.length clock_names in
 	let nb_discrete		    = List.length discrete_names in
+	let nb_rationals        = discrete_names_by_type |> List.filter (fun (var_type, variable_name) -> match var_type with Var_type_discrete (Dt_number Dt_rat) -> true | _ -> false) |> List.length in
 	let nb_parameters	    = List.length parameter_names in
 	let nb_variables	    = List.length variable_names in
+	let nb_continuous_variables = nb_clocks + nb_parameters + nb_rationals in
 
 	(* Compute the index for the observer automaton *)
 	let observer_automaton_index_option = match observer_automaton with
@@ -2841,7 +2856,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Print some information *)
 	print_message Verbose_high ("\nSetting dimensions…");
-	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_rationals;
 	
 	
 	
@@ -2929,7 +2944,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
 	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
 	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
+    let discrete_rationals                  = list_of_interval first_discrete_index (nb_continuous_variables - 1) in
 
+(*    ImitatorUtilities.print_standard_message ("FIRST DISCRETE INDEX: " ^ string_of_int first_discrete_index);*)
+(*    ImitatorUtilities.print_standard_message ("NB DISCRETE: " ^ string_of_int nb_discrete);*)
+(*    ImitatorUtilities.print_standard_message ("NB RATIONALS: " ^ string_of_int nb_rationals);*)
+(*    ImitatorUtilities.print_standard_message ("NB VARIABLES: " ^ string_of_int nb_variables);*)
+(*    ImitatorUtilities.print_standard_message ("NB CONTINUOUS VARIABLES: " ^ string_of_int nb_continuous_variables);*)
+(*    ImitatorUtilities.print_standard_message ("DISCRETE INDEXES: [" ^ OCamlUtilities.string_of_list_of_string_with_sep "," (List.map string_of_int discrete) ^ "].");*)
+(*    ImitatorUtilities.print_standard_message ("DISCRETE RATIONALS INDEXES: [" ^ OCamlUtilities.string_of_list_of_string_with_sep "," (List.map string_of_int discrete_rationals) ^ "].");*)
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteType.Var_type_clock) with Invalid_argument _ ->  false) in
@@ -4010,8 +4033,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_actions     = nb_actions;
 	nb_clocks      = nb_clocks;
 	nb_discrete    = nb_discrete;
+	nb_rationals   = nb_rationals;
 	nb_parameters  = nb_parameters;
 	nb_variables   = nb_variables;
+	nb_continuous_variables = nb_continuous_variables;
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 
@@ -4053,6 +4078,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	clocks_without_special_reset_clock = clocks_without_special_reset_clock;
 	(* The list of discrete indexes *)
 	discrete = discrete;
+	(* The list of rational indexes *)
+	discrete_rationals = discrete_rationals;
 	(* True for discrete, false otherwise *)
 	is_discrete = is_discrete;
 	(* The list of parameter indexes *)
@@ -4060,7 +4087,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* The non parameters (clocks and discrete) *)
 	clocks_and_discrete = list_append clocks discrete;
 	(* The non clocks (parameters and discrete) *)
-	parameters_and_discrete = list_append parameters discrete;
+	parameters_and_discrete = list_append parameters discrete_rationals;
 	(* The non discrete (clocks and parameters) *)
 	parameters_and_clocks = list_append parameters clocks;
 	(* The function : variable_index -> variable name *)

@@ -1,3 +1,10 @@
+# New modules
+
+ - ParsedValue : Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Parsed values are only used on parsing structure.
+ - AbstractValue: Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Abstract values are only used on abstract model. The difference between Parsed values and Abstract values is that abstract values are subset of Parsed values that eliminating some Weak typed values.
+ - BinaryWord: Hold binary word type (Bool array) and some function on it.
+ - DiscreteExpressionConverter: use ExpressionConverter module to convert parsing structure element to abstract model element. It makes some extra checking on the structure
+
 # I. Parsing structure tools
 
 ## ParsingStructureUtilities module

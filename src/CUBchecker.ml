@@ -3577,8 +3577,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		nb_actions = new_nb_actions;
 		nb_clocks = model.nb_clocks;
 		nb_discrete = model.nb_discrete;
+		nb_rationals = model.nb_rationals;
 		nb_parameters = model.nb_parameters;
 		nb_variables = model.nb_variables;
+		nb_continuous_variables = model.nb_continuous_variables;
 		nb_locations = new_nb_locations;
 		nb_transitions = new_nb_transitions;
 		
@@ -3624,6 +3626,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		global_time_clock = model.global_time_clock;
 		(* The list of discrete indexes *)
 		discrete = model.discrete;
+	    (* The list of rational indexes *)
+		discrete_rationals = model.discrete_rationals;
 		(* True for discrete, false otherwise *)
 		is_discrete = model.is_discrete;
 		(* The list of parameter indexes *)

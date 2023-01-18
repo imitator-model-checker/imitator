@@ -230,13 +230,11 @@ let is_constraint_and_continuous_guard_satisfiable (pxd_linear_constraint : Line
 (** Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
 let discrete_constraint_of_global_location (model : AbstractModel.abstract_model) (global_location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value global_location discrete_index)) model.discrete in
 
-    (* TODO check with étienne, maybe can use all numeric as constraint ??? *)
-    (* Get only rational discrete for constraint encoding *)
-    let only_discrete_rational_values = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) discrete_values in
-    (* map to num const *)
-    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
+    (* Get discrete rational (can be encoded as constraint) *)
+	let discrete_rational_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value global_location discrete_index)) model.discrete_rationals in
+    (* Map to num const *)
+    let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) discrete_rational_values in
 
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_rational_numconst_values
@@ -448,7 +446,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			(* CASE 3, step 1: Compute the correspondance between clocks X_i and renamed clocks X_i' *)
 			let prime_of_variable = Hashtbl.create (List.length updates) in
 			let variable_of_prime = Hashtbl.create (List.length updates) in
-			let clock_prime_id = ref model.nb_variables in
+			let clock_prime_id = ref model.nb_continuous_variables in
 			List.iter (fun (clock_id, _) ->
 				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
 				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
@@ -461,10 +459,10 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				()
 			) updates;
 			let new_max_dimension = !clock_prime_id in
-			let extra_dimensions = new_max_dimension - model.nb_variables in
+			let extra_dimensions = new_max_dimension - model.nb_continuous_variables in
 			print_message Verbose_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
-			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_discrete;
+			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_rationals;
 			LinearConstraint.pxd_add_dimensions extra_dimensions linear_constraint;
 
 			(* Compute pairs (X_i', X_i) *)
@@ -503,7 +501,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			let print_constraint c =
 				if verbose_mode_greater Verbose_total then(
 					let all_variable_names = fun variable_id ->
-						if variable_id < model.nb_variables then
+						if variable_id < model.nb_continuous_variables then
 							model.variable_names variable_id
 						else
 							(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
@@ -545,8 +543,8 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			);
 
 			(* Go back to the original number of dimensions *)
-			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
-			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
+			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_continuous_variables) ^ ".");
+			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_rationals;
 			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
