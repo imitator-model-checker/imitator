@@ -2708,7 +2708,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
             print_warning ("Function `" ^ function_name ^ "` is declared but never used.")
         | Variable_component ((variable_name, id) as variable_ref) when VariableInfo.is_local variable_ref ->
-            print_warning ("Local variable `" ^ variable_name ^ "` is declared but never used.")
+            print_warning ("Local variable `" ^ variable_name ^ "` is declared but never tested in a guard nor invariant.")
 (*        | Param_component (param_name, function_name) ->*)
 (*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
         | _ -> ()
