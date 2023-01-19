@@ -2925,7 +2925,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	done;
 
     (* Print some information *)
-    print_message Verbose_high ("\nSetting discretes variables types…");
+    print_message Verbose_high ("\nSetting discretes variables types…\n");
 
 	for i = first_discrete_index to nb_variables - 1 do
 	    (* Get specific var_type of discrete variable *)
@@ -2934,7 +2934,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         (* Convert var_type from ParsingStructure to AbstractModel *)
 		type_of_variables.(i) <- var_type;
         (* Print type infos *)
-		print_message Verbose_high ("set type variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
+		print_message Verbose_high ("  set type variable " ^ v ^ " : " ^ (DiscreteType.string_of_var_type type_of_variables.(i)))
 	done;
 
 	(* Functional representation *)
@@ -3109,10 +3109,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Print some info on side effects resolution *)
     let str_fun_side_effects = lazy (
         let str_fun_side_effects_info_list = List.map (fun (fm : function_metadata) ->
-            "`" ^ fm.name ^ "`: " ^ string_of_bool fm.side_effect
+            "  `" ^ fm.name ^ "`: " ^ string_of_bool fm.side_effect
         ) all_functions_metadata
         in
-        "*** Functions side effects:\n"
+        "\n*** Functions side effects:\n\n"
         ^ OCamlUtilities.string_of_list_of_string_with_sep "\n" str_fun_side_effects_info_list
     ) in
 
@@ -3575,9 +3575,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
 			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
-			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
+			^ (string_of_int nb_rationals) ^ " rational variable" ^ (s_of_int nb_rationals) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
+			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
 			^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
+			^ (string_of_int nb_continuous_variables) ^ " ppl variable" ^ (s_of_int nb_continuous_variables) ^ ", "
 			^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
 		);
 	);
