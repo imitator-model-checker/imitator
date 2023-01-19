@@ -446,7 +446,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			(* CASE 3, step 1: Compute the correspondance between clocks X_i and renamed clocks X_i' *)
 			let prime_of_variable = Hashtbl.create (List.length updates) in
 			let variable_of_prime = Hashtbl.create (List.length updates) in
-			let clock_prime_id = ref model.nb_continuous_variables in
+			let clock_prime_id = ref model.nb_ppl_variables in
 			List.iter (fun (clock_id, _) ->
 				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
 				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
@@ -459,7 +459,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				()
 			) updates;
 			let new_max_dimension = !clock_prime_id in
-			let extra_dimensions = new_max_dimension - model.nb_continuous_variables in
+			let extra_dimensions = new_max_dimension - model.nb_ppl_variables in
 			print_message Verbose_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
 			(* Extend the number of dimensions *)
 			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_rationals;
@@ -501,7 +501,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			let print_constraint c =
 				if verbose_mode_greater Verbose_total then(
 					let all_variable_names = fun variable_id ->
-						if variable_id < model.nb_continuous_variables then
+						if variable_id < model.nb_ppl_variables then
 							model.variable_names variable_id
 						else
 							(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
@@ -543,7 +543,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			);
 
 			(* Go back to the original number of dimensions *)
-			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_continuous_variables) ^ ".");
+			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_ppl_variables) ^ ".");
 			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_rationals;
 			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
 			(* Print some information *)

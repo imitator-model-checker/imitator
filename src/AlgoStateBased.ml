@@ -4969,7 +4969,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	method run () =
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
-		let nb_continuous_variables = model.nb_continuous_variables in
+		let nb_ppl_variables = model.nb_ppl_variables in
 		let nb_automata = model.nb_automata in
 
 		(* Time counter for the algorithm *)
@@ -5004,7 +5004,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
 		print_message Verbose_low (ModelPrinter.string_of_state model init_state);
 		(* Guess the number of reachable states *)
-		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_continuous_variables) in
+		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_ppl_variables) in
 		let guessed_nb_transitions = guessed_nb_states * nb_actions in
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 

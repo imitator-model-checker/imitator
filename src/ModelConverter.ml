@@ -2837,7 +2837,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_rationals        = discrete_names_by_type |> List.filter (fun (var_type, variable_name) -> match var_type with Var_type_discrete (Dt_number Dt_rat) -> true | _ -> false) |> List.length in
 	let nb_parameters	    = List.length parameter_names in
 	let nb_variables	    = List.length variable_names in
-	let nb_continuous_variables = nb_clocks + nb_parameters + nb_rationals in
+	let nb_ppl_variables = nb_clocks + nb_parameters + nb_rationals in
 
 	(* Compute the index for the observer automaton *)
 	let observer_automaton_index_option = match observer_automaton with
@@ -2944,15 +2944,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
 	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
 	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
-    let discrete_rationals                  = list_of_interval first_discrete_index (nb_continuous_variables - 1) in
-
-(*    ImitatorUtilities.print_standard_message ("FIRST DISCRETE INDEX: " ^ string_of_int first_discrete_index);*)
-(*    ImitatorUtilities.print_standard_message ("NB DISCRETE: " ^ string_of_int nb_discrete);*)
-(*    ImitatorUtilities.print_standard_message ("NB RATIONALS: " ^ string_of_int nb_rationals);*)
-(*    ImitatorUtilities.print_standard_message ("NB VARIABLES: " ^ string_of_int nb_variables);*)
-(*    ImitatorUtilities.print_standard_message ("NB CONTINUOUS VARIABLES: " ^ string_of_int nb_continuous_variables);*)
-(*    ImitatorUtilities.print_standard_message ("DISCRETE INDEXES: [" ^ OCamlUtilities.string_of_list_of_string_with_sep "," (List.map string_of_int discrete) ^ "].");*)
-(*    ImitatorUtilities.print_standard_message ("DISCRETE RATIONALS INDEXES: [" ^ OCamlUtilities.string_of_list_of_string_with_sep "," (List.map string_of_int discrete_rationals) ^ "].");*)
+    let discrete_rationals                  = list_of_interval first_discrete_index (nb_ppl_variables - 1) in
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = DiscreteType.Var_type_clock) with Invalid_argument _ ->  false) in
@@ -3579,7 +3571,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
 			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
 			^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
-			^ (string_of_int nb_continuous_variables) ^ " ppl variable" ^ (s_of_int nb_continuous_variables) ^ ", "
+			^ (string_of_int nb_ppl_variables) ^ " ppl variable" ^ (s_of_int nb_ppl_variables) ^ ", "
 			^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
 		);
 	);
@@ -4038,7 +4030,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_rationals   = nb_rationals;
 	nb_parameters  = nb_parameters;
 	nb_variables   = nb_variables;
-	nb_continuous_variables = nb_continuous_variables;
+	nb_ppl_variables = nb_ppl_variables;
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 

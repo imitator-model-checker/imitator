@@ -158,7 +158,8 @@ type abstract_model = {
 	nb_rationals   : int;
 	nb_parameters : int;
 	nb_variables  : int;
-	nb_continuous_variables : int;
+	(* Nb of variables used in PPL constraint: clocks + parameters + rationals *)
+	nb_ppl_variables : int;
 	nb_locations  : int;
 	nb_transitions: int;
 

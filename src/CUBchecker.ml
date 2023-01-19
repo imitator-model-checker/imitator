@@ -3580,7 +3580,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		nb_rationals = model.nb_rationals;
 		nb_parameters = model.nb_parameters;
 		nb_variables = model.nb_variables;
-		nb_continuous_variables = model.nb_continuous_variables;
+		nb_ppl_variables = model.nb_ppl_variables;
 		nb_locations = new_nb_locations;
 		nb_transitions = new_nb_transitions;
 		
