@@ -16,7 +16,6 @@ open ParsingStructure
 open ParsingStructureUtilities
 open ParsedValue
 open Exceptions
-open Extensions
 
 (* Only reduce rational expression *)
 module RationalReducer = struct

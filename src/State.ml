@@ -349,16 +349,6 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 				arbitrary_updates := true;
 				(* Iterate on the clocks, for a given automaton *)
 				List.iter (fun (clock_id, linear_term) ->
-					(* Check if already updated *)
-					if Hashtbl.mem clocks_hash clock_id then (
-						(* Find its previous value *)
-						let previous_update = Hashtbl.find clocks_hash clock_id in
-						(* Compare with the new one *)
-						if previous_update <> linear_term then (
-						(* If different: warning *)
-							print_warning ("The clock `" ^ (model.variable_names clock_id) ^ "` is updated several times with different values for the same synchronized action. The behavior of the system is now unspecified.");
-						)
-					);
 					(* Update the update *)
 					Hashtbl.replace clocks_hash clock_id linear_term;
 				) list_of_clocks_lt;
