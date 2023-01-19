@@ -1000,6 +1000,7 @@ Examples of list definitions are given below:
 \paragraph{List functions}
 
 \begin{itemize}
+	\item \styleIMI{list([]):'a list} with \styleIMI{'a:any} - return an empty list
 	\item \styleIMI{l[i:int]:'a} with \styleIMI{'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
 	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list} with \styleIMI{'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
 	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
@@ -1064,6 +1065,7 @@ Examples of stack definitions are given below:
 \paragraph{Stack functions}
 
 \begin{itemize}
+	\item \styleIMI{stack():'a stack} with \styleIMI{'a:any} - return an empty stack
 	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack---the stack is modified, this function is subject to side-effects
 	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} with \styleIMI{'a:any} - Get and remove the element at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a} with \styleIMI{'a:any} - Get the element at the top of stack~\styleIMI{s}---the stack is left unchanged
@@ -1147,6 +1149,7 @@ Examples of queue definitions are given below:
 \paragraph{Queue functions}
 
 \begin{itemize}
+	\item \styleIMI{queue():'a stack} with \styleIMI{'a:any} - return an empty queue
 	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue---the queue is modified, this function is subject to side-effects
 	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} with \styleIMI{'a:any} - Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
 	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} with \styleIMI{'a:any} - Get the last element of the queue \styleIMI{q}---the queue is left unmodified
@@ -1214,7 +1217,7 @@ Examples of queue definitions are given below:
 We summarize in \cref{table:summary:builtin-functions} the built-in functions for discrete variables.
 
 \begin{table}[h!]
-	\caption{Built-in functions summary}
+	\caption{Summary of the built-in functions}
 	{\centering
 		\small
 		\begin{tabular}{ | l | l | }
