@@ -65,71 +65,59 @@ rule token = parse
  	(* All keywords *)
  	| "accepting"      { CT_ACCEPTING }
 	| "actions"        { CT_ACTIONS }
-	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
+  	| "array"          { CT_ARRAY }
 	| "automaton"      { CT_AUTOMATON }
- 	| "before"         { CT_BEFORE }
+	| "begin"          { CT_BEGIN }
+	| "binary"         { CT_BINARY_WORD }
+	| "bool"           { CT_BOOL }
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
+	| "continuous"     { CT_CONTINUOUS }
 	| "controllable"   { CT_CONTROLLABLE }
-  	| "void"           { CT_VOID }
 	| "discrete"       { CT_DISCRETE }
-	| "rational"       { CT_DISCRETE }
-  	| "rat"            { CT_DISCRETE }
-	| "int"            { CT_INT }
-	| "bool"           { CT_BOOL }
-	| "binary"         { CT_BINARY_WORD }
-  	| "array"          { CT_ARRAY }
 	| "do"             { CT_DO }
-	| "seq"            { CT_SEQ }
-	| "begin"          { CT_BEGIN }
-	| "in"             { CT_IN }
+	| "done"           { CT_DONE }
+	| "downto"         { CT_DOWNTO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
-  	| "inside"         { CT_INSIDE }
- 	| "eventually"     { CT_EVENTUALLY }
- 	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
 	| "flow"           { CT_FLOW }
+	| "fn"             { CT_FUN   }
+	| "for"            { CT_FOR }
+	| "from"           { CT_FROM }
+	| "function"       { CT_FUN   }
 	| "goto"           { CT_GOTO }
- 	| "happened"       { CT_HAPPENED }
- 	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
-	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
-	| "continuous"     { CT_CONTINUOUS }
 	| "initially"      { CT_INITIALLY }
+	| "int"            { CT_INT }
+  	| "inside"         { CT_INSIDE }
 	| "invariant"      { CT_INVARIANT }
+	| "is"             { CT_IS }
+	| "list"           { CT_LIST }
 	| "loc"            { CT_LOC }
-	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
- 	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
-	| "sequence"       { CT_SEQUENCE }
+	| "queue"          { CT_QUEUE }
+  	| "rat"            { CT_DISCRETE }
+	| "rational"       { CT_DISCRETE }
+	| "return"         { CT_RETURN }
+	| "stack"          { CT_STACK }
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
  	| "then"           { CT_THEN }
+	| "to"             { CT_TO }
 	| "True"           { CT_TRUE }
  	| "urgent"         { CT_URGENT }
 	| "var"            { CT_VAR }
+  	| "void"           { CT_VOID }
 	| "wait"           { CT_WAIT }
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
-	| "within"         { CT_WITHIN }
-	| "list"           { CT_LIST }
-	| "stack"          { CT_STACK }
-	| "queue"          { CT_QUEUE }
-	| "function"       { CT_FUN   }
-	| "fn"             { CT_FUN   }
-	| "return"         { CT_RETURN }
-	| "for"            { CT_FOR }
-	| "from"           { CT_FROM }
-	| "to"             { CT_TO }
-	| "downto"         { CT_DOWNTO }
-	| "done"           { CT_DONE }
 
 
 
