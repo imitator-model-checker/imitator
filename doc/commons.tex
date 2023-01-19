@@ -526,7 +526,26 @@
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		accepting, and, array, automaton, binary, bool, clock, constant, continuous, discrete, do, seq, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, rat, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while, fn
+		accepting, actions, and, array, array_append, array_length, array_mem, automaton,
+		binary, bool,
+		clock, constant, continuous,
+		discrete, do,
+		end,
+		False, fill_left, fill_right, flow, fn, from, function,
+		goto,
+		if, in, init, initially, int, int_div, invariant,
+		list, list_cons, list_hd, list_is_empty, list_length, list_mem, list_rev, list_tl, loc, logand, lognot, logor, logxor,
+		mod,
+		not,
+		or,
+		parameter, pow, projectresult,
+		queue, queue_clear, queue_is_empty, queue_length, queue_pop, queue_push, queue_top,
+		rat, rational,
+		shift_left, shift_right, stack, stack_clear, stack_is_empty, stack_length, stack_pop, stack_push, stack_top, stop, sync, synclabs,
+		True,
+		urgent,
+		var,
+		when, while,
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code
