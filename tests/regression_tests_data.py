@@ -15758,7 +15758,7 @@ END CONSTRAINT
 		# Test since               : 2022
 		# Last modified            : 2022
 		# Test for IMITATOR version: 3.2
-		'purpose'    : '"Updated Deadlock Test 6"',
+		'purpose'    : 'Updated Deadlock Test 6',
 		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
