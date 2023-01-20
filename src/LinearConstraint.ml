@@ -349,7 +349,7 @@ type d_valuation = (variable -> coef)
 (* Dimensions by type *)
 let nb_parameters	= ref 0
 let nb_clocks		= ref 0
-let nb_discrete		= ref 0
+let nb_rationals = ref 0
 (* Total numbers of dimensions *)
 let p_dim			= ref 0
 let px_dim			= ref 0
@@ -1586,7 +1586,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 
 	(* Second, iterate on discrete to check that none appear (otherwise not a well-formed guard) *)
 	
-	for discrete_index = !nb_parameters + !nb_clocks to !nb_parameters + !nb_clocks + !nb_discrete - 1 do
+	for discrete_index = !nb_parameters + !nb_clocks to !nb_parameters + !nb_clocks + !nb_rationals - 1 do
 		(* Find the coefficient of the discrete in the linear term *)
 		let discrete_coeff_option = get_variable_coef_in_linear_term discrete_index linear_term in
 		match discrete_coeff_option with
@@ -1703,7 +1703,7 @@ let substitute_variables sub linear_inequality =
 let set_dimensions nb_p nb_c nb_d =
 	nb_parameters	:= nb_p;
 	nb_clocks 		:= nb_c;
-	nb_discrete		:= nb_d;
+	nb_rationals		:= nb_d;
 	p_dim			:= nb_p;
 	px_dim			:= nb_p + nb_c;
 	pxd_dim			:= nb_p + nb_c + nb_d;
@@ -1711,7 +1711,7 @@ let set_dimensions nb_p nb_c nb_d =
 		print_message Verbose_high ("\nDimensions set");
 		print_message Verbose_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
 		print_message Verbose_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
-		print_message Verbose_high ("  nb_discrete := " ^ (string_of_int !nb_discrete));
+		print_message Verbose_high ("  nb_rationals := " ^ (string_of_int !nb_rationals));
 		print_message Verbose_high ("  p_dim := " ^ (string_of_int !p_dim));
 		print_message Verbose_high ("  px_dim := " ^ (string_of_int !px_dim));
 		print_message Verbose_high ("  pxd_dim := " ^ (string_of_int !pxd_dim));

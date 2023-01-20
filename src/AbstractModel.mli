@@ -155,8 +155,11 @@ type abstract_model = {
 	nb_actions    : int;
 	nb_clocks     : int;
 	nb_discrete   : int;
+	nb_rationals   : int;
 	nb_parameters : int;
 	nb_variables  : int;
+	(* Nb of variables used in PPL constraint: clocks + parameters + rationals *)
+	nb_ppl_variables : int;
 	nb_locations  : int;
 	nb_transitions: int;
 
@@ -195,6 +198,8 @@ type abstract_model = {
 	global_time_clock : clock_index option;
 	(* The list of discrete indexes *)
 	discrete : discrete_index list;
+	(* The list of rational indexes *)
+	discrete_rationals : discrete_index list;
 	(* True for discrete, false otherwise *)
 	is_discrete : variable_index -> bool;
 	(* The list of parameter indexes *)

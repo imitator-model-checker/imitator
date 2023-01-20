@@ -3307,8 +3307,8 @@ Error                                   : invalid model
   /************************************************************/
   STATE 1:
   pta: l2, b1 = False, b2 = True ==> 
-& x > 5 + p
 & p >= 0
+& x > 5 + p
 
   Projection onto the parameters:
    p >= 0
@@ -3817,7 +3817,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'stack-statespace.states' , 'content' : """
-  pta: lend, i = 3, r = 1, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
+  pta: lend, r = 1, i = 3, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3848,7 +3848,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'queue-statespace.states' , 'content' : """
-  pta: lend, i = 2, r = 1, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+  pta: lend, r = 1, i = 2, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -4085,7 +4085,7 @@ Error                                   : invalid model
 			{'file': 'complex-type-checking-statespace.states' , 'content' : """
   INITIAL
   STATE 0:
-  pta: l1, b1 = True, b2 = False, k = 0, j = 1, i = 0 ==> 
+  pta: l1, k = 0, j = 1, b1 = True, b2 = False, i = 0 ==>
 & x >= 0
 & p >= 0
 
@@ -4096,7 +4096,7 @@ Error                                   : invalid model
 			,
 			{'file': 'complex-type-checking-statespace.states' , 'content' : """
   STATE 23:
-  pta: l2, b1 = False, b2 = True, k = 10, j = 0, i = 1 ==> 
+  pta: l2, k = 10, j = 0, b1 = False, b2 = True, i = 1 ==>
 & x >= 0
 & p > 10
 
@@ -4274,7 +4274,7 @@ Error                                   : invalid model
 		'expectations' : [
 			{'file': 'init-expression-complex-statespace.states' , 'content' : """
   STATE 1:
-  pta: lend, b = True, r2 = 7/3 ==> 
+  pta: lend, r2 = 7/3, b = True ==>
 & 3*p > 7
 
   Projection onto the parameters:
@@ -4763,7 +4763,7 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'builtin-functions-statespace.states' , 'content' : """
   STATE 1:
-  P: lend, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1, r = 5, r_pow = 25 ==> 
+  P: lend, r = 5, r_pow = 25, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1 ==>
 &True
 		"""
 			 } # end result file
@@ -4817,7 +4817,7 @@ END CONSTRAINT
         {'file': 'user-function-1-statespace.states' , 'content' : """
   INITIAL
   STATE 0:
-  P: l0, top_stack = 0, top_queue = 0, r_result = 0, lerp_result = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], r_global = 0, i_global = 0, bin = 0b1011, q = queue(), s = stack(), r1 = 1, i1 = 1 ==>
+  P: l0, r_result = 0, lerp_result = 0, r_global = 0, r1 = 1, top_stack = 0, top_queue = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], i_global = 0, bin = 0b1011, q = queue(), s = stack(), i1 = 1 ==>
 &True
 
   Projection onto the parameters:
@@ -4825,7 +4825,7 @@ END CONSTRAINT
 
   /************************************************************/
   STATE 1:
-  P: lend, top_stack = 2, top_queue = 0, r_result = 4, lerp_result = 1583/200, i_result = 3, i_result_2 = 3, a_global = [0, 1], r_global = 15, i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), r1 = 1, i1 = 1 ==>
+  P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
 &True
       """
          } # end result file
@@ -20918,29 +20918,30 @@ end
 		'expectations' : [
 			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
 var 
+	i, j
+		: rational;
+
 	b
 		: bool;
 
 	k, l
 		: int;
 
-	i, j
-		: rational;
 
 
 (************************************************************)
  automaton pta
 (************************************************************)
  synclabs: ;
- 
-loc l1: invariant True 
-	when  b
+
+loc l1: invariant True
+	when b
 & i = 0
 & j = 0
 & k = 0
-& l = 0 do {}  (* sync nosync_1*)  goto lend;
- 
-accepting loc lend: invariant True 
+& l = 0 do {} (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
  end (* pta *)
 (************************************************************)
 
@@ -20949,15 +20950,15 @@ accepting loc lend: invariant True
  automaton pta2
 (************************************************************)
  synclabs: ;
- 
-loc l2: invariant True 
-	when  b
+
+loc l2: invariant True
+	when b
 & i = 0
 & j = 0
 & k = 0
-& l = 0 do {}  (* sync nosync_2*)  goto lend2;
- 
-accepting loc lend2: invariant True 
+& l = 0 do {} (* sync nosync_2*)  goto lend2;
+
+accepting loc lend2: invariant True
  end (* pta2 *)
 (************************************************************)
 
@@ -20968,20 +20969,20 @@ accepting loc lend2: invariant True
 
 init := {
 
-	discrete = 
+	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] := l1, 
+		loc[pta] := l1,
 		loc[pta2] := l2,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		b := False, 
-		k := 0, 
-		l := 0, 
-		i := 1, 
-		j := 2
+		i := 1,
+		j := 2,
+		b := False,
+		k := 0,
+		l := 0
 	;
 
 	(*------------------------------------------------------------*)

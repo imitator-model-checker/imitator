@@ -1006,7 +1006,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 
 		print_message Verbose_total ("\nEliminate the discrete variables in C(X) and g(X)");
 		(* Remove the discrete variables (Exists D_i : D_i = d_i and g(X)) *)
-		LinearConstraint.pxd_hide_assign model.discrete current_constraint;
+		LinearConstraint.pxd_hide_assign model.discrete_rationals current_constraint;
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
@@ -4969,7 +4969,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	method run () =
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
-		let nb_variables = model.nb_variables in
+		let nb_ppl_variables = model.nb_ppl_variables in
 		let nb_automata = model.nb_automata in
 
 		(* Time counter for the algorithm *)
@@ -5004,7 +5004,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
 		print_message Verbose_low (ModelPrinter.string_of_state model init_state);
 		(* Guess the number of reachable states *)
-		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in
+		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_ppl_variables) in
 		let guessed_nb_transitions = guessed_nb_states * nb_actions in
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
