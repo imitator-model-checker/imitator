@@ -377,7 +377,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             )
         in
 
-        ParsingStructureMeta.all_variables_defined_in_parsed_fun_def variable_infos (Some print_function_in_fun_not_declared) fun_def
+        ParsingStructureMeta.all_functions_defined_in_parsed_fun_def variable_infos (Some print_function_in_fun_not_declared) fun_def
 
     in
 
