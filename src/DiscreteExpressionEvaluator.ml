@@ -1146,9 +1146,9 @@ let eval_list_length str_expr = function
 
 let eval_stack_push str_expr = function
     | e :: Abstract_container_value (Abstract_stack_value s) :: _ ->
-        Stack.push e s; Abstract_container_value (Abstract_stack_value s)
+        Stack.push e s; Abstract_void_value
     | e :: Abstract_container_value (Abstract_queue_value s) :: _ ->
-        Queue.push e s; Abstract_container_value (Abstract_queue_value s)
+        Queue.push e s; Abstract_void_value
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_pop str_expr = function
@@ -1171,9 +1171,9 @@ let eval_stack_top str_expr = function
 
 let eval_stack_clear str_expr = function
     | Abstract_container_value (Abstract_stack_value s) :: _ ->
-        Stack.clear s; Abstract_container_value (Abstract_stack_value s)
+        Stack.clear s; Abstract_void_value
     | Abstract_container_value (Abstract_queue_value s) :: _ ->
-        Queue.clear s; Abstract_container_value (Abstract_queue_value s)
+        Queue.clear s; Abstract_void_value
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_is_empty str_expr = function

@@ -292,7 +292,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
-                Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
+                Defined_type_constraint Void_constraint
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_push;
             side_effect = true
@@ -322,7 +322,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             parameter_refs = variable_refs_of_names ["s"];
             signature_constraint = [
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
-                Defined_type_constraint (Stack_constraint (Type_name_constraint "a"))
+                Defined_type_constraint Void_constraint
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_clear;
             side_effect = true
@@ -353,7 +353,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             signature_constraint = [
                 Type_name_constraint "a";
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
-                Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
+                Defined_type_constraint Void_constraint
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_push;
             side_effect = true
@@ -383,7 +383,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             parameter_refs = variable_refs_of_names ["q"];
             signature_constraint = [
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
-                Defined_type_constraint (Queue_constraint (Type_name_constraint "a"))
+                Defined_type_constraint Void_constraint
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_clear;
             side_effect = true
