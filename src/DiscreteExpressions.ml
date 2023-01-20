@@ -49,7 +49,7 @@ type loop_dir =
 
 (* Global or Local update *)
 type update_scope =
-    | Global_update of Automaton.discrete_index
+    | Global_update of Automaton.variable_ref
     | Local_update of Automaton.variable_ref
 
 (****************************************************************)
@@ -83,7 +83,7 @@ and rational_term =
 	| Rational_factor of rational_factor
 
 and rational_factor =
-	| Rational_variable of Automaton.variable_index
+	| Rational_variable of Automaton.variable_index * Automaton.variable_ref
 	| Rational_local_variable of Automaton.variable_ref
 	| Rational_constant of NumConst.t
 	| Rational_nested_expression of rational_arithmetic_expression
@@ -104,7 +104,7 @@ and int_term =
 	| Int_factor of int_factor
 
 and int_factor =
-	| Int_variable of Automaton.variable_index
+	| Int_variable of Automaton.variable_ref
 	| Int_local_variable of Automaton.variable_ref
 	| Int_constant of Int32.t
 	| Int_nested_expression of int_arithmetic_expression
@@ -140,7 +140,7 @@ and discrete_boolean_expression =
 	(** Boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
 	| Not_bool of boolean_expression (** Negation *)
 	(** Discrete boolean variable *)
-	| Bool_variable of Automaton.variable_index
+	| Bool_variable of Automaton.variable_ref
     | Bool_local_variable of Automaton.variable_ref
 	(** Discrete boolean constant *)
 	| Bool_constant of bool
@@ -155,7 +155,7 @@ and discrete_boolean_expression =
 (** Binary word expression *)
 and binary_word_expression =
     | Binary_word_constant of BinaryWord.t
-    | Binary_word_variable of Automaton.variable_index * int
+    | Binary_word_variable of Automaton.variable_ref * int
     | Binary_word_local_variable of Automaton.variable_ref
     | Binary_word_indexed_expr of access_type * int_arithmetic_expression
     | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -168,7 +168,7 @@ and binary_word_expression =
 and array_expression =
     | Literal_array of global_expression array
     | Array_constant of AbstractValue.abstract_value array
-    | Array_variable of Automaton.variable_index
+    | Array_variable of Automaton.variable_ref
     | Array_local_variable of Automaton.variable_ref
     | Array_indexed_expr of access_type * int_arithmetic_expression
     | Array_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -177,7 +177,7 @@ and array_expression =
 and list_expression =
     | Literal_list of global_expression list
     | List_constant of AbstractValue.abstract_value list
-    | List_variable of Automaton.variable_index
+    | List_variable of Automaton.variable_ref
     | List_local_variable of Automaton.variable_ref
     | List_indexed_expr of access_type * int_arithmetic_expression
     | List_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -185,7 +185,7 @@ and list_expression =
 (** Stack expression **)
 and stack_expression =
     | Literal_stack
-    | Stack_variable of Automaton.variable_index
+    | Stack_variable of Automaton.variable_ref
     | Stack_local_variable of Automaton.variable_ref
     | Stack_indexed_expr of access_type * int_arithmetic_expression
     | Stack_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -193,7 +193,7 @@ and stack_expression =
 (** Queue expression **)
 and queue_expression =
     | Literal_queue
-    | Queue_variable of Automaton.variable_index
+    | Queue_variable of Automaton.variable_ref
     | Queue_local_variable of Automaton.variable_ref
     | Queue_indexed_expr of access_type * int_arithmetic_expression
     | Queue_function_call of variable_name * Automaton.variable_ref list * global_expression list
@@ -577,7 +577,7 @@ and customized_string_of_rational_arithmetic_expression customized_string variab
 
     (* Convert a rational factor into a string *)
 	and string_of_factor customized_string = function
-		| Rational_variable discrete_index -> variable_names discrete_index
+		| Rational_variable (_ (* index *), (variable_name, _ (* id *))) -> variable_name
 		| Rational_local_variable (variable_name, _) -> variable_name
 		| Rational_constant value -> NumConst.to_string value
 		| Rational_unary_min discrete_factor ->
@@ -633,7 +633,7 @@ and customized_string_of_int_arithmetic_expression customized_string variable_na
 
     (* Convert a int factor into a string *)
 	and string_of_int_factor customized_string = function
-		| Int_variable i -> variable_names i
+		| Int_variable (variable_name, _) -> variable_name
 		| Int_local_variable (variable_name, _) -> variable_name
 		| Int_constant value -> Int32.to_string value
 		| Int_unary_min factor ->
@@ -716,7 +716,7 @@ and customized_string_of_discrete_boolean_expression customized_string variable_
 	| Not_bool b ->
 	    customized_string.boolean_string.not_operator ^ " (" ^ (customized_string_of_boolean_expression customized_string variable_names b) ^ ")"
 
-    | Bool_variable discrete_index -> variable_names discrete_index
+    | Bool_variable (variable_name, _) -> variable_name
     | Bool_local_variable (variable_name, _) -> variable_name
     | Bool_constant value ->
         customized_string_of_bool_value customized_string.boolean_string value
@@ -752,9 +752,9 @@ and customized_string_of_binary_word_expression customized_string variable_names
         | Binary_word_representation_int -> string_of_int (BinaryWord.to_int value)
         )
 
-    | Binary_word_variable (variable_index, length) as binary_word_expression ->
+    | Binary_word_variable ((variable_name, _), length) as binary_word_expression ->
         print_binary_word_overflow_warning_if_needed binary_word_expression length customized_string.binary_word_representation;
-        variable_names variable_index
+        variable_name
     | Binary_word_local_variable (variable_name, _) ->
         variable_name
     | Binary_word_indexed_expr (access_type, index_expr) ->
@@ -771,7 +771,7 @@ and customized_string_of_array_expression customized_string variable_names = fun
         let str_values = Array.map AbstractValue.string_of_value values in
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         l_delimiter ^ OCamlUtilities.string_of_array_of_string_with_sep ", " str_values ^ r_delimiter
-    | Array_variable variable_index -> variable_names variable_index
+    | Array_variable (variable_name, _) -> variable_name
     | Array_local_variable (variable_name, _) -> variable_name
 
     | Array_indexed_expr (access_type, index_expr) ->
@@ -791,7 +791,7 @@ and customized_string_of_list_expression customized_string variable_names = func
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         label_of_list_expression list_expr
         ^ "(" ^ l_delimiter ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_values ^ r_delimiter ^ ")"
-    | List_variable variable_index -> variable_names variable_index
+    | List_variable (variable_name, _) -> variable_name
     | List_local_variable (variable_name, _) -> variable_name
 
     | List_indexed_expr (access_type, index_expr) ->
@@ -802,7 +802,7 @@ and customized_string_of_list_expression customized_string variable_names = func
 
 and customized_string_of_stack_expression customized_string variable_names = function
     | Literal_stack -> "stack()"
-    | Stack_variable variable_index -> variable_names variable_index
+    | Stack_variable (variable_name, _) -> variable_name
     | Stack_local_variable (variable_name, _) -> variable_name
 
     | Stack_indexed_expr (access_type, index_expr) ->
@@ -813,7 +813,7 @@ and customized_string_of_stack_expression customized_string variable_names = fun
 
 and customized_string_of_queue_expression customized_string variable_names = function
     | Literal_queue -> "queue()"
-    | Queue_variable variable_index -> variable_names variable_index
+    | Queue_variable (variable_name, _) -> variable_name
     | Queue_local_variable (variable_name, _) -> variable_name
 
     | Queue_indexed_expr (access_type, index_expr) ->
@@ -855,7 +855,7 @@ let string_of_queue_expression = customized_string_of_queue_expression Constants
 let string_of_expression_access = customized_string_of_expression_access Constants.global_default_string
 
 let customized_string_of_update_scope variable_names = function
-    | Global_update variable_index -> variable_names variable_index
+    | Global_update (variable_name, _) -> variable_name
     | Local_update (variable_name, _) -> variable_name
 
 (* Customized string representation of a variable update *)

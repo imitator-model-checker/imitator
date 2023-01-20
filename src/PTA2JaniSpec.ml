@@ -408,7 +408,7 @@ and string_of_discrete_boolean_expression variable_names = function
 	        jani_strings.boolean_string.not_operator
 	        (string_of_boolean_expression variable_names b)
 
-    | Bool_variable discrete_index -> json_quoted (variable_names discrete_index)
+    | Bool_variable (variable_name, _) -> json_quoted variable_name
     | Bool_local_variable (variable_name, _) -> json_quoted variable_name
 
     | Bool_constant value -> DiscreteExpressions.customized_string_of_bool_value jani_strings.boolean_string value
@@ -452,7 +452,7 @@ and string_of_rational_arithmetic_expression variable_names =
 		    string_of_factor discrete_factor
 
 	and string_of_factor = function
-		| Rational_variable discrete_index -> json_quoted (variable_names discrete_index)
+		| Rational_variable (_ (* index *), (variable_name, _ (* id *))) -> json_quoted variable_name
         | Rational_local_variable (variable_name, _) -> json_quoted variable_name
 
 		| Rational_constant value -> NumConst.jani_string_of_numconst value
@@ -502,7 +502,7 @@ and string_of_int_arithmetic_expression variable_names =
 		| Int_factor discrete_factor -> string_of_int_factor discrete_factor
 
 	and string_of_int_factor = function
-		| Int_variable discrete_index -> json_quoted (variable_names discrete_index)
+		| Int_variable (variable_name, _) -> json_quoted variable_name
         | Int_local_variable (variable_name, _) -> json_quoted variable_name
 
 		| Int_constant value -> Int32.to_string value
@@ -526,7 +526,7 @@ and string_of_int_arithmetic_expression variable_names =
 
 and string_of_binary_word_expression variable_names = function
     | Binary_word_constant value -> string_of_value (Abstract_scalar_value (Abstract_bin_value value))
-    | Binary_word_variable (variable_index, _) -> json_quoted (variable_names variable_index)
+    | Binary_word_variable ((variable_name, _), _) -> json_quoted variable_name
     | Binary_word_local_variable (variable_name, _) -> json_quoted variable_name
 
     | Binary_word_indexed_expr (access_type, index_expr) ->
@@ -544,7 +544,7 @@ and string_of_array_expression variable_names = function
         let str_values = Array.map string_of_value values in
         jani_array_value str_values
 
-    | Array_variable variable_index -> json_quoted (variable_names variable_index)
+    | Array_variable (variable_name, _) -> json_quoted variable_name
     | Array_local_variable (variable_name, _) -> json_quoted variable_name
 
     | Array_indexed_expr (access_type, index_expr) ->
@@ -562,7 +562,7 @@ and string_of_list_expression variable_names = function
         let str_values = List.map string_of_value values in
         jani_array_value (Array.of_list str_values)
 
-    | List_variable variable_index -> json_quoted (variable_names variable_index)
+    | List_variable (variable_name, _) -> json_quoted variable_name
     | List_local_variable (variable_name, _) -> json_quoted variable_name
     | List_indexed_expr (access_type, index_expr) ->
         string_of_expression_access variable_names access_type index_expr
@@ -576,7 +576,7 @@ and string_of_stack_expression variable_names = function
         let label = label_of_stack_expression expr_stack in
         jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
 
-    | Stack_variable variable_index -> json_quoted (variable_names variable_index)
+    | Stack_variable (variable_name, _) -> json_quoted variable_name
     | Stack_local_variable (variable_name, _) -> json_quoted variable_name
 
     | Stack_indexed_expr (access_type, index_expr) ->
@@ -591,7 +591,7 @@ and string_of_queue_expression variable_names = function
         let label = label_of_queue_expression expr_queue in
         jani_function_call label [||] ~str_comment:(undeclared_function_warning label)
 
-    | Queue_variable variable_index -> json_quoted (variable_names variable_index)
+    | Queue_variable (variable_name, _) -> json_quoted variable_name
     | Queue_local_variable (variable_name, _) -> json_quoted variable_name
 
     | Queue_indexed_expr (access_type, index_expr) ->

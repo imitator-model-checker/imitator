@@ -1419,8 +1419,7 @@ and bool_expression_of_typed_factor variable_infos = function
             (match variable_kind with
             | Constant_kind value -> Bool_constant (AbstractValue.bool_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                Bool_variable discrete_index
+                Bool_variable variable_ref
             )
         )
 	| Typed_constant (value, _) ->
@@ -1499,6 +1498,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 
 	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
 	    let scope = VariableInfo.variable_scope_of variable_ref in
+        let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
 
 	    (match scope with
 	    | Local ->
@@ -1508,8 +1508,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
             (match variable_kind with
             | Constant_kind value -> Rational_constant (AbstractValue.numconst_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                Rational_variable discrete_index
+                Rational_variable (discrete_index, variable_ref)
             )
         )
 
@@ -1597,8 +1596,7 @@ and int_arithmetic_expression_of_typed_factor variable_infos = function
             (match variable_kind with
             | Constant_kind value -> Int_constant (AbstractValue.to_int_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                Int_variable discrete_index
+                Int_variable variable_ref
             )
         )
 
@@ -1653,8 +1651,7 @@ and binary_expression_of_typed_factor variable_infos length = function
             (match variable_kind with
             | Constant_kind value -> Binary_word_constant (AbstractValue.binary_word_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                Binary_word_variable (discrete_index, length)
+                Binary_word_variable (variable_ref, length)
             )
         )
 
@@ -1707,8 +1704,7 @@ and array_expression_of_typed_factor variable_infos discrete_type = function
             (match variable_kind with
             | Constant_kind value -> Array_constant (AbstractValue.array_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                Array_variable discrete_index
+                Array_variable variable_ref
             )
         )
 
@@ -1767,8 +1763,7 @@ and list_expression_of_typed_factor variable_infos discrete_type = function
             (match variable_kind with
             | Constant_kind value -> List_constant (AbstractValue.list_value value)
             | Variable_kind ->
-                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                List_variable discrete_index
+                List_variable variable_ref
             )
         )
 
@@ -1822,8 +1817,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
                 (match variable_kind with
                 | Constant_kind value -> Literal_stack
                 | Variable_kind ->
-                    let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                    Stack_variable discrete_index
+                    Stack_variable variable_ref
                 )
             )
 
@@ -1875,8 +1869,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
                 (match variable_kind with
                 | Constant_kind value -> Literal_queue
                 | Variable_kind ->
-                    let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-                    Queue_variable discrete_index
+                    Queue_variable variable_ref
                 )
             )
 
@@ -1976,8 +1969,7 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
         (match variable_kind with
         | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
         | Variable_kind ->
-            let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
-            Scalar_update (Global_update discrete_index)
+            Scalar_update (Global_update variable_ref)
         )
 
     | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->

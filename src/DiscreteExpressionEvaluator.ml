@@ -109,8 +109,8 @@ let try_eval_queue_top seq (* fail_message *) = eval_if_not_empty Queue.length Q
 (* Try evaluating a global variable value if an eval context is given *)
 (* Otherwise, it means that we are trying to evaluate an expression that should have to be constant (without variable) *)
 (* For example in constant declaration, in this case trying to evaluate a variable raise an error *)
-let try_eval_variable variable_index = function
-    | Some eval_context -> eval_context.discrete_valuation variable_index
+let try_eval_variable variable_ref = function
+    | Some eval_context -> eval_context.discrete_valuation variable_ref
     (* If error below is raised, it mean that you doesn't check that expression is constant before evaluating it *)
     | None -> raise (InternalError ("Unable to evaluate a non-constant expression without a discrete valuation."))
 
@@ -239,8 +239,8 @@ and eval_rational_term_with_context variable_names functions_table_opt eval_cont
 
 (* Evaluate a rational factor *)
 and eval_rational_factor_with_context variable_names functions_table_opt eval_context_opt = function
-    | Rational_variable variable_index ->
-        numconst_value (try_eval_variable variable_index eval_context_opt)
+    | Rational_variable (_, variable_ref) ->
+        numconst_value (try_eval_variable variable_ref eval_context_opt)
     | Rational_constant variable_value ->
         variable_value
     | Rational_local_variable variable_ref ->
@@ -310,8 +310,8 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
 
     (* Evaluate a int factor *)
     and eval_int_factor_with_context = function
-        | Int_variable variable_index ->
-            int_value (try_eval_variable variable_index eval_context_opt)
+        | Int_variable variable_ref ->
+            int_value (try_eval_variable variable_ref eval_context_opt)
         | Int_constant variable_value ->
             variable_value;
         | Int_local_variable variable_ref ->
@@ -354,8 +354,8 @@ and eval_boolean_expression_with_context variable_names functions_table_opt eval
 
 (* Evaluate a discrete boolean expression *)
 and eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
-    | Bool_variable variable_index ->
-        bool_value (try_eval_variable variable_index eval_context_opt)
+    | Bool_variable variable_ref ->
+        bool_value (try_eval_variable variable_ref eval_context_opt)
     | Bool_constant value ->
         value
     | Bool_local_variable variable_ref ->
@@ -419,8 +419,8 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
 (* Evaluate a binary word expression *)
 and eval_binary_word_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Binary_word_constant value -> value
-    | Binary_word_variable (variable_index, _) ->
-        binary_word_value (try_eval_variable variable_index eval_context_opt)
+    | Binary_word_variable (variable_ref, _) ->
+        binary_word_value (try_eval_variable variable_ref eval_context_opt)
     | Binary_word_local_variable variable_ref ->
                 (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
@@ -438,8 +438,8 @@ and eval_binary_word_expression_with_context variable_names functions_table_opt 
 and eval_array_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_array array ->
         Array.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) array
-    | Array_variable variable_index ->
-        array_value (try_eval_variable variable_index eval_context_opt)
+    | Array_variable variable_ref ->
+        array_value (try_eval_variable variable_ref eval_context_opt)
     | Array_constant values ->
         values
     | Array_local_variable variable_ref ->
@@ -459,8 +459,8 @@ and eval_array_expression_with_context variable_names functions_table_opt eval_c
 and eval_list_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_list list ->
         List.map (fun expr -> eval_global_expression_with_context variable_names functions_table_opt eval_context_opt expr) list
-    | List_variable variable_index ->
-        list_value (try_eval_variable variable_index eval_context_opt)
+    | List_variable variable_ref ->
+        list_value (try_eval_variable variable_ref eval_context_opt)
     | List_constant values ->
         values
     | List_local_variable variable_ref ->
@@ -479,8 +479,8 @@ and eval_list_expression_with_context variable_names functions_table_opt eval_co
 and eval_stack_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_stack -> Stack.create ()
 
-    | Stack_variable variable_index ->
-        stack_value (try_eval_variable variable_index eval_context_opt)
+    | Stack_variable variable_ref ->
+        stack_value (try_eval_variable variable_ref eval_context_opt)
 
     | Stack_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
@@ -499,8 +499,8 @@ and eval_stack_expression_with_context variable_names functions_table_opt eval_c
 and eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Literal_queue -> Queue.create ()
 
-    | Queue_variable variable_index ->
-        queue_value (try_eval_variable variable_index eval_context_opt)
+    | Queue_variable variable_ref ->
+        queue_value (try_eval_variable variable_ref eval_context_opt)
 
     | Queue_local_variable variable_ref ->
         (* Variable should exist as it was checked before *)
@@ -633,7 +633,7 @@ and rewrite_clock_update variable_names eval_context functions_table_opt (* expr
             rewrite_rational_factor factor
 
     and rewrite_rational_factor = function
-        | Rational_variable variable_index ->
+        | Rational_variable (variable_index, variable_ref) ->
             (* Check if the variable is a clock previously updated *)
             if Hashtbl.mem eval_context.updated_clocks variable_index then (
                 (* If yes, we replace variable by the linear expression that updated the clock *)
@@ -642,7 +642,7 @@ and rewrite_clock_update variable_names eval_context functions_table_opt (* expr
             else (
                 try (
                     (* If no, it's a discrete variable and we replace variable by the current computed value of discrete value *)
-                    let value = numconst_value (eval_context.discrete_valuation variable_index) in
+                    let value = numconst_value (eval_context.discrete_valuation variable_ref) in
                     IR_Coef value
                 ) with _ -> (
                     IR_Var variable_index
@@ -839,8 +839,8 @@ and compute_update_value_opt_with_context variable_names functions_table_opt eva
     (* Get value before update as old value *)
     let old_value =
         match update_scope with
-        | Global_update variable_index ->
-            eval_context.discrete_valuation variable_index
+        | Global_update variable_ref ->
+            eval_context.discrete_valuation variable_ref
         | Local_update variable_ref ->
             eval_local_variable eval_context variable_ref
     in
@@ -859,9 +859,9 @@ and direct_update_with_context variable_names functions_table_opt eval_context u
 
     let update_scope, new_value = compute_update_value_opt_with_context variable_names functions_table_opt eval_context update in
     match update_scope with
-    | Global_update discrete_index ->
+    | Global_update variable_ref ->
         (* Direct update ! *)
-        eval_context.discrete_setter discrete_index new_value
+        eval_context.discrete_setter variable_ref new_value
     | Local_update variable_ref ->
         set_local_variable eval_context variable_ref new_value
 

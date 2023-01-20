@@ -700,13 +700,13 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
             false
         | Variable_kind ->
 
-            (* Get the variable index *)
-            let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
+            (* Get the variable ref of global variable *)
+            let variable_ref = variable_name, 0 in
             (* Convert init to abstract model *)
             let converted_expr = DiscreteExpressionConverter.convert_discrete_init variable_infos variable_name expr in
 
             (* Check if it was already declared *)
-            if Hashtbl.mem init_values_for_discrete discrete_index then (
+            if Hashtbl.mem init_values_for_discrete variable_ref then (
                 print_error (
                     "The discrete variable `"
                     ^ variable_name
@@ -727,7 +727,7 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
                 false
             ) else (
                 let value = DiscreteExpressionEvaluator.try_eval_constant_global_expression (Some functions_table) converted_expr in
-                Hashtbl.add init_values_for_discrete discrete_index value;
+                Hashtbl.add init_values_for_discrete variable_ref value;
                 true
             )
         )
@@ -774,31 +774,24 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
     if not well_formed then
         raise InvalidModel;
 
+
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
-	let init_values_for_discrete = Hashtbl.create (List.length variable_infos.discrete) in
+    (* TODO benjamin HERE global_variable_refs *)
+	let init_values_for_discrete = Hashtbl.create (Hashtbl.length variable_infos.variable_refs) in
 
     (* Compute discrete init values and add to init hash table *)
     let discrete_initialization_well_formed = List.for_all (check_discrete_inits functions_table variable_infos init_values_for_discrete) discrete_inits in
 
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
-	List.iter (fun discrete_index ->
-		if not (Hashtbl.mem init_values_for_discrete discrete_index) then (
-		    let variable_name = VariableInfo.variable_name_of_index variable_infos discrete_index in
-		    let variable_type = VariableInfo.var_type_of_global_variable_name variable_infos variable_name in
-		    let default_value = AbstractValue.default_value variable_type in
-
+	Hashtbl.iter (fun (variable_name, _ (* id *) as variable_ref) var_type ->
+		if not (Hashtbl.mem init_values_for_discrete variable_ref) then (
+		    let default_value = AbstractValue.default_value var_type in
 			print_warning ("The discrete variable `" ^ variable_name ^ "` was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
-			Hashtbl.add init_values_for_discrete discrete_index default_value
+			Hashtbl.add init_values_for_discrete variable_ref default_value
 		);
-    ) variable_infos.discrete;
-
-	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
-	let discrete_values_pairs =
-		List.map (fun discrete_index ->
-			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
-		) variable_infos.discrete
-	in
+    (* TODO benjamin HERE global_variable_refs *)
+    ) variable_infos.variable_refs;
 
     (* Check init constraints section : continuous *)
 
@@ -839,7 +832,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
         raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_pairs, discrete_initialization_well_formed
+	init_values_for_discrete, discrete_initialization_well_formed
 
 (* Check if a constant or a variable is typed as a void, print error when one found *)
 let has_void_constant_or_variable str_var_kind name var_type =
