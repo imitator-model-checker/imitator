@@ -561,7 +561,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
                 ^ "} which is not compatible with function parameters signature of `"
                 ^ function_name
                 ^ "` "
-                ^ FunctionSig.string_of_signature_constraint function_parameter_signature_constraint
+                ^ FunctionSig.string_of_signature_constraint function_signature_constraint
             ))
         );
 
