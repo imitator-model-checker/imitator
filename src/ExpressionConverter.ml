@@ -479,7 +479,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         let type_checks = List.map (type_check_parsed_boolean_expression variable_infos None (* None: mean no inference for arguments *)) argument_expressions in
         (* Get arguments discrete types  *)
         let call_signature = List.map (fun (_, discrete_type) -> discrete_type) type_checks in
-        (* Convert to typed arguments expressions *)
+        (* Get typed arguments expressions *)
         let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
 
         (* Get function signature *)
@@ -565,7 +565,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
             ))
         );
 
-        (* If an infer type is given, infer `number` constraints to infer type *)
+        (* If an infer type is given, infer `weak number` constraints to infer type *)
         let infer_resolved_constraints =
             List.map (fun (constraint_name, resolved_constraint) ->
 
@@ -608,6 +608,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         (* Get typed arguments expressions *)
         let typed_expressions = List.map (fun (typed_expr, _) -> typed_expr) type_checks in
 
+        (* Return *)
         Typed_function_call (function_name, typed_expressions, return_type), return_type
 
 let rec type_check_parsed_scalar_or_index_update_type variable_infos = function

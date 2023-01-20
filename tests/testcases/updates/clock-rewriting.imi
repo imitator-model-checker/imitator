@@ -47,7 +47,7 @@ end
 (************************************************************)
  automaton pta1
 (************************************************************)
-synclabs: a;
+actions: a;
 loc l1: invariant True
 
 	when x = 0 do {
@@ -91,7 +91,7 @@ accepting loc lend: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
-synclabs: a;
+actions: a;
 loc l1: invariant True
 
 	when x = 0 do {
@@ -117,14 +117,20 @@ accepting loc lend: invariant True
 init := {
 
     continuous =
-      z = 0 & w = 1
+      z = 0 
+      & w = 1
+      & p1 >= 0
+      & p2 >= 0
     ;
 
     discrete =
         loc[pta1] := l1,
         loc[pta2] := l1,
         i2 := 42,
-        a := [2, 4]
+        a := [2, 4],
+        r1 := 0,
+        r2 := 0,
+        i1 := 0
     ;
 
 }

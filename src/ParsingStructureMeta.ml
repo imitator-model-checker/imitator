@@ -543,6 +543,10 @@ let get_variable_refs_in_parsed_discrete_arithmetic_expression_with_accumulator 
 let get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator functions_used_ref =
     iterate_parsed_discrete_arithmetic_expression (add_function_of_discrete_boolean_expression functions_used_ref)
 
+(* Gather all function names used in a parsed sequential code bloc in a given accumulator *)
+let get_functions_in_parsed_seq_code_bloc_with_accumulator variables_used_ref =
+    iterate_in_parsed_seq_code_bloc (fun _ -> ()) (add_function_of_discrete_boolean_expression variables_used_ref)
+
 (* Gather all variable names used in a linear expression in a given accumulator *)
 let get_variables_in_linear_expression_with_accumulator variables_used_ref =
     iterate_parsed_linear_expression (add_variable_of_linear_expression variables_used_ref)
@@ -626,6 +630,10 @@ let get_variable_refs_in_parsed_discrete_arithmetic_expression =
 (* Gather all function names used in a parsed discrete arithmetic expression *)
 let get_functions_in_parsed_discrete_arithmetic_expression =
     wrap_accumulator get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator
+
+(* Gather all function names used in a parsed sequential code bloc *)
+let get_functions_in_parsed_seq_code_bloc variables_used_ref =
+    wrap_accumulator get_functions_in_parsed_seq_code_bloc_with_accumulator
 
 (* Gather all variable names used in a parsed normal update expression *)
 let get_variables_in_parsed_normal_update =

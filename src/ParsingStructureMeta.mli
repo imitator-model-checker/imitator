@@ -108,6 +108,7 @@ val get_variables_in_parsed_discrete_boolean_expression : parsed_discrete_boolea
 val get_variables_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
 val get_variable_refs_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> VarSet.t
 val get_functions_in_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> StringSet.t
+val get_functions_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> StringSet.t
 
 val get_variables_in_parsed_normal_update : normal_update -> StringSet.t
 val get_variables_in_linear_expression : linear_expression -> StringSet.t

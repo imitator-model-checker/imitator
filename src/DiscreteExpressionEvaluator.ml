@@ -1048,9 +1048,6 @@ let eval_int_div str_expr = function
 
 let eval_rational_of_int str_expr = function
     | Abstract_scalar_value (Abstract_number_value (Abstract_int_value (i))) :: _ ->
-        ImitatorUtilities.print_warning
-            "Conversion of an int expression to a rational expression
-            may cause overflow if your platform doesn't manage `int` as an exact 32 bits integer.";
         Abstract_scalar_value (Abstract_number_value (Abstract_rat_value (NumConst.numconst_of_int (Int32.to_int i))))
 
     | _ -> raise (InternalError (bad_arguments_message str_expr))
