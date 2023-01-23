@@ -1066,10 +1066,10 @@ Examples of stack definitions are given below:
 
 \begin{itemize}
 	\item \styleIMI{stack():'a stack} with \styleIMI{'a:any} - return an empty stack
-	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s} and return the stack---the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} with \styleIMI{'a:any} - Get and remove the element at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a} with \styleIMI{'a:any} - Get the element at the top of stack~\styleIMI{s}---the stack is left unchanged
-	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack)} with \styleIMI{'a:any} - Remove all elements of the stack \styleIMI{s} and return the stack---the stack is modified, this function is subject to side-effects
+	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack)} with \styleIMI{'a:any} - Remove all elements of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} with \styleIMI{'a:any} - Check if the stack \styleIMI{s} is empty
 	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int} with \styleIMI{'a:any} - Get the number of elements in the stack \styleIMI{s}
 \end{itemize}
@@ -1152,10 +1152,10 @@ Examples of queue definitions are given below:
 
 \begin{itemize}
 	\item \styleIMI{queue():'a stack} with \styleIMI{'a:any} - return an empty queue
-	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q} and return the queue---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
 	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} with \styleIMI{'a:any} - Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
 	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} with \styleIMI{'a:any} - Get the last element of the queue \styleIMI{q}---the queue is left unmodified
-	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} with \styleIMI{'a:any} - Remove all elements of the queue \styleIMI{q} and return the queue---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} with \styleIMI{'a:any} - Remove all elements of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
 	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} with \styleIMI{'a:any} - Check if the queue \styleIMI{q} is empty
 	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} with \styleIMI{'a:any} - Get the number of elements in the queue \styleIMI{q}
 \end{itemize}
