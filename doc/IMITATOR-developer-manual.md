@@ -1,11 +1,33 @@
+_________
+# Quick developer manual
+_________
+
 # New modules
 
- - ParsedValue : Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Parsed values are only used on parsing structure.
- - AbstractValue: Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Abstract values are only used on abstract model. The difference between Parsed values and Abstract values is that abstract values are subset of Parsed values that eliminating some Weak typed values.
- - BinaryWord: Hold binary word type (Bool array) and some function on it.
- - DiscreteExpressionConverter: use ExpressionConverter module to convert parsing structure element to abstract model element. It makes some extra checking on the structure
+ - `ParsedValue` : Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Parsed values are only used on parsing structure.
+ - `AbstractValue`: Hold a type used to wrap different type of value (Int_value, Rat_value, etc). Abstract values are only used on abstract model. The difference between Parsed values and Abstract values is that abstract values are subset of Parsed values that eliminating some Weak typed values.
+ - `BinaryWord`: Hold binary word type (Bool array) and some function on it.
+ - `DiscreteExpressionConverter`: use `ExpressionConverter` module to convert parsing structure element to abstract model element. It makes some extra checking on the structure
+ - `DiscreteExpressionEvaluator`: Allow evaluation of discrete expressions, clock rewriting.
+ - `DiscreteType`: Hold variable types (`var_type`) and discrete types `var_type_discrete` and some usefuls functions on it.
+ - `ExpressionConverter`: Compound of two recursive sub-modules `TypeChecker` and `Converter`
+ - `TypeChecker`: Allow expression type checking and type inference. Transform parsing structure to a typed structure
+ - `Converter`: Allow conversion of typed expression from typed structure into discrete expression of abstract model.
+ - `ExpressionReducer`: Allow reducing and simplification of discrete arithmetic expressions (especially rational discrete arithmetic expressions).
+ - `Functions`: Hold all built-in functions metadata and implementation (name, signatures, bodies). Contains some useful functions on IMITATOR functions.
+ - `FunctionSig`: Hold type signature of IMITATOR functions. Contains some useful function on IMITATOR function signatures, and some functions that check compatibility signature type and discrete types...
+ - `JsonFormatter`: Allow construction of JSON structure with dedicated variants. Contains a to_string function to convert JSON to pretty / ugly string.
+ - `Logger`: Allow to log some results into res file in the JSON format. Useful for checking some behavior, properties in non-regression tests. It should not be used directly, there is functions that allow the use of lazy logging in `ImitatorUtilities` module taking into account the verbose mode.
+ - `ParsingStructureGraph`: Allow to create a graph of dependency of the component of IMITATOR. This module aims to find used / not used variables by creating a graph of dependencies.
+ - `ParsingStructureMeta`: Higher level module containing some useful functions on parsing structure. It use lower-level module `ParsingStructureUtilities`.
+ - `ParsingStructureUtilities`: Low-level module containing some useful functions on parsing structure tree. It allows folding of parsing structure tree and `exists`, `forall` function on it.
+ - `PropertyConverter`: Same as `ExpressionConverter` but for IMITATOR properties.
+ - `TypedStructure`: Quasi-same structure as `ParsingStructure` but containing typing information. A typed structure is intermediate between parsing structure and abstract model.
+ - `VariableInfo`: Contains some useful functions on the `variable_info` type (e.g: is variable exist ? get variable type ? ...)
 
-# I. Parsing structure tools
+_____________
+
+# Some useful modules
 
 ## ParsingStructureUtilities module
 
@@ -19,7 +41,6 @@ type parsing_structure_leaf =
     | Leaf_variable of variable_name
     | Leaf_constant of DiscreteValue.discrete_value
     | Leaf_fun of variable_name
-    | Leaf_update_variable of variable_name
 ```
 
 
@@ -33,13 +54,11 @@ let is_constant variable_infos = function
     | Leaf_variable variable_name -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
     | Leaf_fun _
-    | Leaf_update_variable _ -> false
     
 (* Check if a parsed boolean expression is constant *)
 let is_parsed_boolean_expression_constant variable_infos =
     for_all_in_parsed_boolean_expression (is_constant variable_infos)
 ```
-____________
 
 ## ParsingStructureMeta module
 
@@ -53,9 +72,13 @@ This module contains all higher order level function on parsing structure. Like:
 Of course, this module use `ParsingStructureUtilities`.
 ____________
 
-## Linking of variables
+# Some important algorithms
 
-In order to recognize each variable in a unique way, we have to use its name. But it's not sufficient. For example, a local variable, can be defined many times with the same name, it's also possible to have global and local variable with the same name, or it's possible to have a formal parameter with the same name of a global variable. For this reason, in addition to its name, we choose to add an identifier to each variable.
+## 1. Linking of variables
+
+### Variable reference (variable_ref)
+
+In order to recognize each variable in a unique way, we have to use its name. But it's not sufficient. For example, a local variable, can be defined many times with the same name, it's also possible to have global and local variable with the same name, or it's possible to have a formal parameter with the same name as a global variable. For this reason, in addition to its name, we choose to add an identifier to each variable.
 
 A variable can be seen internally as a tuple `(variable_name * id)`. This tuple represent variable in a unique way.
 
@@ -68,7 +91,9 @@ var j : int = 1;
 ```
 Construct the following tuples: `(i, 5)`, `(j, 22)`. Because `i` was found at the 5th position and `j` at the 22th position in the model.
 
-Now we have to associate variable reference to their declaration. For example in the code bloc below, we have a reference to variables `i`, `k` and `j`. In order to compute the return statement, we have to know of which `i`, `j` and `k` we talk about.
+## Association between a variable reference variable uses (variable linking)
+
+Now we have to associate each variable used by their reference (set in declaration). For example in the code bloc below, we have the use of variables `i`, `k` and `j` in `i + k + j`. In order to compute the return statement, we have to know of which `i`, `j` and `k` we talk about.
 
 ```
 function f(i : int) : int 
@@ -79,9 +104,9 @@ begin
 end
 ```
 
-In the previous example, `i` should be associated to formal parameter `i`, `k` to just previously declared local variable and `j` to global variable. This is the aim of variable linking.
+In the case above, `i` should be associated to formal parameter `i`, `k` to just previously declared local variable and `j` to global variable. This is the aim of variable linking.
 
-Variable linking was made by calling the function `link_variables_in_parsed_model`. It take a `parsed_model` as parameter and return a new `parsed_model` with all variables linked to their declarations (each variable have an id set). 
+Variable linking was made by calling the function `link_variables_in_parsed_model`. It takes a `parsed_model` as parameter and return a tuple containing a new `parsed_model`, as first component, with all variables linked to their declarations (each variable have an id set) and a list of variable references as second component.
 
 As you can see, this function is used directly at the beginning of the `abstract_structures_of_parsing_structures` function in `ModelConverter` module to generate the new parsed model with all variables linked.
 
@@ -89,7 +114,9 @@ __Note:__
 
 If you want to see variable linking in action, you could use the following command: `imitator model.imi -no-var-autoremove -verbose high | grep "link"`.
 
-## ParsingStructureGraph module (graph dependency resolver)
+## 2. Graph dependency resolution
+
+  - Module: `ParsingStructureGraph`
 
 When the user making a model, he declares some automatons, global variables, user defined functions, local variables, etc. Each of them (called a "component" of the model) have relations. The only relation described is `use`. For example, `pta1` use `i`.
 
@@ -189,40 +216,6 @@ If you want to generate a visual view of graph dependency of the model, you can 
 
 It's possible that `dot` file contains some illegal characters. In this case you have to manually remove it before executing the second command. You need to have [DOT](https://graphviz.org/docs/layouts/dot/) installed on your computer.
 
-
-
-### Relation creation rules
-
-Below, the list of rules describing when a relation is created between two components according to their type.
-
-__system -> automatons__
-
-Each declared automatons are considered as used by the system. Relation between these two components are always created. There is only one system (it's the representation of the model).
-
-__automaton -> global variable__
-
-Create:
-- A global variable is used in a guard / invariant
-- A global variable is assigned in a sequential update
-
-Don't create:
-- A global variable is assigned in a non sequential update
-
-__automaton -> function__
-
-Create:
-
-- A function is used in a guard / invariant
-- A function is used in an update
-
-__variable -> variable__
-
-- A l-value variable is assigned by right member variables
-
-#### Between functions and local variables
-
-Local variables are always considered as used. They are all reachable from system through their relation with the function (where they are declared).
-
 ### Unused components
 
 We consider as __used__ all components reachable from `system` (`sys` as you can see on the picture above). In order to find unused components of the model, we just get the dependency graph of the model, and make difference between all declared components of the model and all components reachable from `system`. It means `all_components - used_components`.
@@ -233,10 +226,8 @@ We consider as __used__ all components reachable from `system` (`sys` as you can
 - Unused user defined functions are always removed from the model.
 - Unused function parameter are only reported as a warning.
 - There is no unused local variables possible (see rules), so they will never be removed.
-____________
-____________
 
-# II. Type checking / type inference
+# 3. Type checking / type inference
 
  - Module: `ExpressionConverter`
  - Functions: `type_check_{variant_type}`
@@ -419,8 +410,6 @@ If the expression remains weak typed after type checking it's not a problem. Whe
 - `[]` will be deduced as `weak array(0)` and converted to `rational array(0)`.
 - `[2, 4]` will be deduced as `weak number array(2)` and converted to `rational array(2)`.
 
-____________
-
 ## Type constraint resolver (function signature inference)
 
 In order to resolve type signature of built-in and user defined function, there is a module called `TypeConstraintResolver` that use `DiscreteType` and `FunctionSig` module to resolve the effective signature of a function according to the arguments passed when call it.
@@ -463,7 +452,7 @@ Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_cons
 
 which mean: `'a array(l1) -> 'a array(l2) -> 'a array(l1 + l2)`. In other words, the function has an array of type `a` and length `l1`, an array of type `a` and length `l2` as arguments, and return an array of type `a` and length `l1` + `l2`.
 
-# III. Conversion
+# 4. Conversion
 
  - Module: `ExpressionConverter.Convert`, `DiscreteExpressionConverter`
  - Functions: `{abstract_expression}_of_{typed_expression}`
@@ -474,39 +463,23 @@ The functions that makes the conversion just traverse the typed tree and look at
 
 For example the typed tree: `{i : int} + {2 : int} * {5 : int}` will be converted to an int arithmetic expression.
 
-____________
+# 5. Updates
 
-# IV. Updates
-
-## Sequential and continuous updates
+ - Modules: `AlgoStateBased`, `DiscreteExpressionEvaluator`
 
 All updates are triggered from the `AlgoStateBased` module, by using the `DiscreteExpressionEvaluator` module.
 
-There is two types of update:
-
- - Sequential update (Direct update)
- - Delayed update
-
-Updates are makes at `AlgoStateBased.compute_new_location_guards_updates`.
-
-### Sequential
-
-TODO
-
-____________
 
 ## Assignment mode
 
 ### Assignment by copy
 
-In an update, in both sequential or not-sequential, variables are assigned by copy. It means that when we make an assignment of one variable `x` to another `y`, the value of `x` is copied to `y`. The two variables are independent. Therefore, modifying the value of one of these doesn't impact the value of the other.
+In an update, variables are assigned by copy. It means that when we make an assignment of one variable `x` to another `y`, the value of `x` is copied to `y`. The two variables are independent. Therefore, modifying the value of one of these doesn't impact the value of the other.
 
 For example in the update `a := b`, `b` is copied and assigned to `a`. This behavior is valid whatever the type of the variable.
 The described copy is a deep copy.
 
-Why ? because as a function can be executed many time in a given transition, using reference instead of a copy of a variable make unpredictable results. Especially when update is make through a user function used in a guard or invariant (as they may be called many time given one transition).
-
-The function that make the copy can be found at `Location.copy_discrete`.
+The function that make the copy can be found at `DiscreteState.copy_discrete`.
 
 ### Assignment by reference
 
@@ -530,9 +503,15 @@ The functions that return reference can be found at:
 
  - `DiscreteExpressionEvaluator.eval_stack_expression_with_context`
  - `DiscreteExpressionEvaluator.eval_queue_expression_with_context`
-
-____________
-
+ 
 ## Value packing
 
-TODO
+When user make an indexed assignment of an array in IMITATOR, this assignment cannot be managed in the same way in the code behind. For example: 
+
+```
+a[0] := 0; (* with a = [1,2,3] *)
+```
+
+Is managed behind as following : `a := [0, 2, 3]`.
+
+You can find `pack_value` function in `DiscreteExpressionEvaluator`. This function allow to "pack" an assigned value (found in an indexed assignment) into an array of the same shape as the previous array. Once the value is "packed", code behind makes a simple non-indexed assignment.
