@@ -15780,15 +15780,15 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Mikael Bisgaard Dahlsen-Jensen
 		# Test since               : 2022
-		# Last modified            : 2022
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2023/01/23
+		# Test for IMITATOR version: 3.4-beta
 		'purpose'    : 'Updated Deadlock Test 7',
 		'input_files': ['deadlock/deadlock7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
 			{'file': 'deadlock7.res' , 'content' : """
 BEGIN CONSTRAINT
- q >= p
+ q >= 4
 & p >= 4
 END CONSTRAINT
 		"""
