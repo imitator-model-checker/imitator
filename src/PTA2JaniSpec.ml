@@ -833,17 +833,13 @@ let string_of_discrete model =
 
 	if model.nb_discrete > 0 then(
 		(string_of_list_of_string_with_sep_without_empty_strings jani_separator
-			(List.map (fun discrete_index ->
-				(* Get the name *)
-				let discrete_name = model.variable_names discrete_index in
-                (* Get the type *)
-                let discrete_type = DiscreteType.discrete_type_of_var_type (model.type_of_variables discrete_index) in
+			(List.map (fun ((discrete_name, _ (* id *)) as variable_ref, discrete_type) ->
                 (* Get str for the type*)
                 let str_discrete_type = string_of_var_type_discrete discrete_type in
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 
-				let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
+				let initial_value = DiscreteState.get_discrete_value inital_global_location variable_ref in
 
 				let str_initial_value = string_of_value initial_value in
 
@@ -854,7 +850,7 @@ let string_of_discrete model =
                     json_property "initial-value" str_initial_value
                 |]
 
-            ) model.discrete
+            ) model.discrete_refs
 			)
 		)
 	) else ""

@@ -2046,7 +2046,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (predeces
 			| DiscreteType.Var_type_clock
 			| DiscreteType.Var_type_parameter -> valuation_n variable_index
 			(* Here we should have only rational discrete value, so we don't make any check as they were made before *)
-			| DiscreteType.Var_type_discrete _ -> DiscreteState.get_discrete_rational_value location_n variable_index
+			| DiscreteType.Var_type_discrete _ ->
+			    (* Get name of variable *)
+			    let variable_name = model.variable_names variable_index in
+			    (* Get discrete rational value of GLOBAL variable *)
+			    DiscreteState.get_discrete_rational_value_by_name location_n variable_name
 		in
 
 		(* Add the valuation to the list, and replace n+1 with n *)

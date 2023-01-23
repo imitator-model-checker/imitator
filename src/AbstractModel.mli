@@ -200,6 +200,8 @@ type abstract_model = {
 	discrete : discrete_index list;
 	(* The list of rational indexes *)
 	discrete_rationals : discrete_index list;
+	(* List of discrete refs *)
+	discrete_refs : (variable_ref * DiscreteType.var_type_discrete) list;
 	(* True for discrete, false otherwise *)
 	is_discrete : variable_index -> bool;
 	(* The list of parameter indexes *)

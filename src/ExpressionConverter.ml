@@ -1498,7 +1498,6 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
 
 	| Typed_variable ((variable_name, _ (* id*)) as variable_ref, _) ->
 	    let scope = VariableInfo.variable_scope_of variable_ref in
-        let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
 
 	    (match scope with
 	    | Local ->
@@ -1508,6 +1507,7 @@ and rational_arithmetic_expression_of_typed_factor variable_infos = function
             (match variable_kind with
             | Constant_kind value -> Rational_constant (AbstractValue.numconst_value value)
             | Variable_kind ->
+                let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
                 Rational_variable (discrete_index, variable_ref)
             )
         )

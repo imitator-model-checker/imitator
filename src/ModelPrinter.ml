@@ -833,14 +833,17 @@ let string_of_new_initial_locations ?indent_level:(i=1) model =
 (* Convert initial state of discrete variables to string *)
 let string_of_new_initial_discretes ?indent_level:(i=1) model =
 	let initial_discrete = List.map
-	(fun discrete_index ->
+
+	(fun ((discrete_name, _ (* id*)) as variable_ref, _ (* discrete_type *)) ->
 		(* Finding the initial value for this discrete *)
-		let initial_value = DiscreteState.get_discrete_value model.initial_location discrete_index in
+		(* Get discrete value of GLOBAL variable by variable name *)
+		let initial_value = DiscreteState.get_discrete_value model.initial_location variable_ref in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
-	) model.discrete
-	in string_of_list_of_string_with_sep ", \n" initial_discrete
+		tabulations ^ discrete_name ^ " := " ^ (AbstractValue.string_of_value initial_value)
+	) model.discrete_refs
+	in
+	string_of_list_of_string_with_sep ", \n" initial_discrete
 
 (************************************************************)
 (** Initial state *)
@@ -884,9 +887,13 @@ let string_of_old_initial_state model =
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^
 	let initial_discrete = List.map
+	(* TODO benjamin NOW *)
 	(fun discrete_index ->
+        (* Get variable name *)
+		let variable_name = model.variable_names discrete_index in
 		(* Finding the initial value for this discrete *)
-		let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
+		(* Get discrete value of GLOBAL variable by variable name *)
+		let initial_value = DiscreteState.get_discrete_value_by_name inital_global_location variable_name in
 		(* '& var = val' *)
 		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
@@ -1285,17 +1292,15 @@ let json_of_global_location model (global_location : DiscreteState.global_locati
 (* Convert the values of the discrete variables in a global location into JSON-style string *)
 let json_of_discrete_values model (global_location : DiscreteState.global_location) =
     JsonFormatter.Json_struct (
-		List.map (fun discrete_index ->
+
+		List.map (fun ((discrete_name, _ (* id *)) as variable_ref, _ (* discrete_type *)) ->
 			(* Retrieve valuation for `discrete_index` *)
-			let variable_value = DiscreteState.get_discrete_value global_location discrete_index in
-
+			let variable_value = DiscreteState.get_discrete_value global_location variable_ref in
 			(* Convert to strings *)
-			let variable_name = model.variable_names discrete_index in
 			let variable_valuation = AbstractValue.string_of_value variable_value in
-
 			(* Convert *)
-			variable_name, JsonFormatter.Json_string variable_valuation
-		) model.discrete
+			discrete_name, JsonFormatter.Json_string variable_valuation
+		) model.discrete_refs
 	)
 
 (* Convert a concrete state into JSON-style string (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)

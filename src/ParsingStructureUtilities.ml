@@ -717,7 +717,7 @@ let json_of_function_metadata (fm : function_metadata) =
 let link_variables_in_parsed_model parsed_model =
 
     (* Accumulator that will contains all local declared variables *)
-    let local_variables_accumulator = Hashtbl.create 0 in
+    let variables_accumulator = Hashtbl.create 0 in
 
     let rec link_variables_in_parsed_boolean_expression local_variables = function
         | Parsed_conj_dis (l_expr, r_expr, parsed_conj_dis) ->
@@ -862,7 +862,7 @@ let link_variables_in_parsed_model parsed_model =
             | Parsed_local_decl ((variable_name, id) as variable_ref, discrete_type, expr) ->
                 let linked_expr = link_variables_in_parsed_boolean_expression local_variables expr in
                 Hashtbl.replace local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator variable_ref (Var_type_discrete discrete_type);
+                Hashtbl.replace variables_accumulator variable_ref (Var_type_discrete discrete_type);
                 Parsed_local_decl (variable_ref, discrete_type, linked_expr)
 
             | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
@@ -880,7 +880,7 @@ let link_variables_in_parsed_model parsed_model =
                 let inner_local_variables = Hashtbl.copy local_variables in
                 let discrete_type = Dt_number Dt_int in
                 Hashtbl.replace inner_local_variables variable_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator variable_ref (Var_type_discrete discrete_type);
+                Hashtbl.replace variables_accumulator variable_ref (Var_type_discrete discrete_type);
                 let linked_inner_bloc = link_variables_in_parsed_seq_code_bloc inner_local_variables inner_bloc in
                 Parsed_for_loop (variable_ref, linked_from_expr, linked_to_expr, parsed_loop_dir, linked_inner_bloc)
 
@@ -910,7 +910,8 @@ let link_variables_in_parsed_model parsed_model =
 
     (* Link variables in function definition *)
     let link_variables_in_fun_defs fun_defs =
-        let link_variables_in_fun_def fun_def =
+        let link_variables_in_fun_def (fun_def : parsed_fun_definition) =
+            ImitatorUtilities.print_standard_message ("LINK IN: " ^ fun_def.name);
 
             let code_bloc, return_expr_opt = fun_def.body in
 
@@ -918,8 +919,10 @@ let link_variables_in_parsed_model parsed_model =
             let local_variables = Hashtbl.create (List.length fun_def.parameters) in
             (* Add parameters to local variables *)
             List.iter (fun (((parameter_name, id) as variable_ref), discrete_type) ->
+                ImitatorUtilities.print_standard_message ("ADD PARAM: " ^ parameter_name);
                 Hashtbl.replace local_variables parameter_name (discrete_type, id);
-                Hashtbl.add local_variables_accumulator variable_ref (Var_type_discrete discrete_type);
+                Hashtbl.replace variables_accumulator variable_ref (Var_type_discrete discrete_type);
+
             ) fun_def.parameters;
 
             (* Link variables in sequential code bloc *)
@@ -967,7 +970,10 @@ let link_variables_in_parsed_model parsed_model =
 
     (* Add global declared variables to *)
     List.iter (fun (var_type, variables_list) ->
-        List.iter (fun (variable_name, _) -> Hashtbl.add local_variables_accumulator (variable_name, 0) var_type) variables_list
+        List.iter (fun (variable_name, _) ->
+            Hashtbl.replace variables_accumulator (variable_name, 0) var_type;
+
+        ) variables_list
     ) parsed_model.variable_declarations;
 
     (* Link variables to their declaration in automata and function definitions *)
@@ -975,4 +981,4 @@ let link_variables_in_parsed_model parsed_model =
         parsed_model with
         automata = link_variables_in_automata parsed_model.automata;
         fun_definitions = link_variables_in_fun_defs parsed_model.fun_definitions;
-    } , local_variables_accumulator
+    } , variables_accumulator

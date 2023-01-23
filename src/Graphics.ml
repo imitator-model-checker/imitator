@@ -809,7 +809,10 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
 				| DiscreteType.Var_type_discrete _ ->
-					DiscreteState.get_discrete_value initial_state.global_location variable_index
+				    (* Get variable name *)
+				    let variable_name = model.variable_names variable_index in
+				    (* Get discrete value of GLOBAL variable *)
+					DiscreteState.get_discrete_value_by_name initial_state.global_location variable_name
 				| DiscreteType.Var_type_clock ->
 				    let rational_value = initial_state.px_valuation variable_index in
 				    Abstract_scalar_value (Abstract_number_value (Abstract_rat_value rational_value))
@@ -858,9 +861,11 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 					
 				(* If discrete: the previous value is still valid right before the current transition *)
 					| DiscreteType.Var_type_discrete _ ->
-					
-						(* Get the discrete value *)
-						let value = DiscreteState.get_discrete_value step_target.global_location variable_index in
+
+                        (* Get variable name *)
+                        let variable_name = model.variable_names variable_index in
+                        (* Get discrete value of GLOBAL variable *)
+						let value = DiscreteState.get_discrete_value_by_name step_target.global_location variable_name in
 						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
@@ -1650,16 +1655,15 @@ let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : st
 				let label_discrete = 
 					if model.nb_discrete > 0 then (
 						"|" ^ (string_of_list_of_string_with_sep "|" (
-							List.map (fun discrete_index -> 
-	(* 						let loc_index = DiscreteState.get_location global_location aut_index in *)
+							List.map (fun ((variable_name, _ (* id *)) as variable_ref, _ (* discrete type *)) ->
 								"v("
 								(* Variable name *)
-								^ (model.variable_names discrete_index)
+								^ variable_name
 								(* Equal *)
 								^ ")="
-								(* Variable value *)
-								^ (AbstractValue.string_of_value (DiscreteState.get_discrete_value global_location discrete_index))
-							) model.discrete
+								(* Get value of GLOBAL variable *)
+								^ AbstractValue.string_of_value (DiscreteState.get_discrete_value global_location variable_ref)
+							) model.discrete_refs
 						))
 					) else ""
 				in

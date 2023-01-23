@@ -575,6 +575,7 @@ let convert_constant_init initialized_constants (name, expr, var_type) =
         type_of_variables = (fun _ -> raise (TypeError "oops!"));
         discrete = [];
         variable_refs = Hashtbl.create 0;
+        discrete_refs = Hashtbl.create 0;
         fun_meta = Hashtbl.create 0;
     }
     in

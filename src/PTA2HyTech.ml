@@ -397,12 +397,12 @@ let string_of_initial_state () =
 	^ "\n" ^ "\t------------------------------------------------------------"
 	^
 	let initial_discrete = List.map
-	(fun discrete_index ->
+	(fun ((variable_name, _ (* id *)) as variable_ref, _ (* discrete_type *)) ->
 		(* Finding the initial value for this discrete *)
-		let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
+		let initial_value = DiscreteState.get_discrete_value inital_global_location variable_ref in
 		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
-	) model.discrete
+		"\n\t& " ^ variable_name ^ " = " ^ (AbstractValue.string_of_value initial_value)
+	) model.discrete_refs
 	in string_of_list_of_string initial_discrete
 
 	(* Initial constraint *)

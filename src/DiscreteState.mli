@@ -93,8 +93,13 @@ val get_location : global_location -> automaton_index -> location_index
 
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> variable_ref -> AbstractValue.abstract_value
+(** Get the value associated to some global discrete variable *)
+val get_discrete_value_by_name : global_location -> variable_name -> AbstractValue.abstract_value
 (** Get the NumConst value associated to some discrete variable *)
 val get_discrete_rational_value : global_location -> variable_ref -> NumConst.t
+(** Get the NumConst value associated to some global discrete variable *)
+val get_discrete_rational_value_by_name : global_location -> variable_name -> NumConst.t
+
 (** Set the value associated to some discrete variable *)
 val set_discrete_value : global_location -> variable_ref -> AbstractValue.abstract_value -> unit
 (** Get a tuple of functions for reading / writing a global variable at a given location *)

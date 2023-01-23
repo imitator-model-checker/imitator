@@ -61,7 +61,7 @@ let location_equal loc1 loc2 =
 			try (
 			    Hashtbl.iter (fun variable_ref d1 ->
 			        let d2 = Hashtbl.find discr2 variable_ref in
-			        if d1 <> d2 then
+			        if not (d1 = d2) then
 			            raise NotEqual;
 			    ) discr1;
 			    true
@@ -168,9 +168,12 @@ let copy_discrete_values_at_location location =
 	(* Get discrete variables *)
 	let global_variables_table = get_discrete location in
 	(* Copy discrete variables *)
-	let cpy_global_variables_table = Hashtbl.copy global_variables_table in
+(*	let cpy_global_variables_table = Hashtbl.copy global_variables_table in*)
     (* Deep copy (recursive) of abstract values *)
-	Hashtbl.filter_map_inplace (fun variable_ref value -> Some (AbstractValue.deep_copy value)) cpy_global_variables_table;
+(*	Hashtbl.filter_map_inplace (fun variable_ref value -> Some (AbstractValue.deep_copy value)) cpy_global_variables_table;*)
+    let l = global_variables_table |> Hashtbl.to_seq |> List.of_seq in
+    let cpy_l = List.map (fun (vr, v) -> vr, AbstractValue.deep_copy v) l in
+    let cpy_global_variables_table = cpy_l |> List.to_seq |> Hashtbl.of_seq in
 	(* Return copy array of discrete variables *)
 	cpy_global_variables_table
 
@@ -207,10 +210,20 @@ let get_discrete_value location variable_ref =
 	let global_variables_table = get_discrete location in
 	Hashtbl.find global_variables_table variable_ref
 
+(** Get the value associated to some global discrete variable *)
+let get_discrete_value_by_name location variable_name =
+    let variable_ref = variable_name, 0 (* id = 0 mean global variable *) in
+    get_discrete_value location variable_ref
+
 (** Get the NumConst value associated to some discrete variable *)
 let get_discrete_rational_value location discrete_index =
     let value = get_discrete_value location discrete_index in
     AbstractValue.numconst_value value
+
+(** Get the NumConst value associated to some global discrete variable *)
+let get_discrete_rational_value_by_name location variable_name =
+    let variable_ref = variable_name, 0 (* id = 0 mean global variable *) in
+    get_discrete_rational_value location variable_ref
 
 (** Set the value associated to some discrete variable *)
 let set_discrete_value location variable_ref value =
@@ -260,7 +273,7 @@ let string_of_location automata_names location_names discrete_names rational_dis
 	(* Convert the discrete *)
 	let discrete = global_variables_table |> Hashtbl.to_seq |> List.of_seq in
 
-	let string_list = List.map (fun ((variable_name, _ (* id *)) as variable_ref, value) ->
+	let string_list = List.map (fun ((variable_name, _ (* id *)), value) ->
 		variable_name
 		^ " = "
 		^ AbstractValue.string_of_value value
@@ -274,6 +287,7 @@ let string_of_location automata_names location_names discrete_names rational_dis
 
 	let discrete_string = string_of_list_of_string_with_sep ", " string_list in
 	(* Return the string *)
+	(* TODO benjamin NOW replace by length of table *)
 	location_string ^ (if !nb_discrete > 0 then ", " else "") ^ discrete_string
 	
 

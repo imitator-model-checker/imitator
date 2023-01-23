@@ -232,7 +232,13 @@ let is_constraint_and_continuous_guard_satisfiable (pxd_linear_constraint : Line
 let discrete_constraint_of_global_location (model : AbstractModel.abstract_model) (global_location : DiscreteState.global_location) : LinearConstraint.pxd_linear_constraint =
 
     (* Get discrete rational (can be encoded as constraint) *)
-	let discrete_rational_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value global_location discrete_index)) model.discrete_rationals in
+	let discrete_rational_values = List.map (fun discrete_index ->
+	    (* Get variable name of by index *)
+	    let variable_name = model.variable_names discrete_index in
+	    (* Get value of GLOBAL variable variable_name *)
+	    let value = DiscreteState.get_discrete_value_by_name global_location variable_name in
+	    discrete_index, value
+    ) model.discrete_rationals in
     (* Map to num const *)
     let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) discrete_rational_values in
 

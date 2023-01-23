@@ -845,7 +845,15 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Compute constraint for assigning a (constant) value to discrete variables *)
 		print_message Verbose_high ("Computing constraint for discrete variables");
 		(* Only use rational discrete values for preparing constraint, this behavior was checked with Etienne A. *)
-		let only_discrete_rational_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value location discrete_index)) model.discrete_rationals in
+		let only_discrete_rational_values =
+            List.map (fun discrete_index ->
+                (* Get variable name of by index *)
+                let variable_name = model.variable_names discrete_index in
+                (* Get value of GLOBAL variable variable_name *)
+                let value = DiscreteState.get_discrete_value_by_name location variable_name in
+                discrete_index, value
+            ) model.discrete_rationals
+        in
         (* Get numconst values *)
 		let discrete_rational_numconst_values = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) only_discrete_rational_values in
 

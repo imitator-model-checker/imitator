@@ -3367,10 +3367,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			automaton_index, initial_location_index
 		) model.automata in
 
-		(* Second get the discrete values from the former initial location *)	
-		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
+		(* Second get the discrete values from the former initial location *)
+		let discrete_values = List.map (fun ((variable_name, _ (* id *)) as variable_ref, _ (* discrete type *)) ->
+		    variable_ref , DiscreteState.get_discrete_value former_initial_location variable_ref
+        ) model.discrete_refs in
+        (* Convert to table *)
+        let discrete_values_table = discrete_values |> List.to_seq |> Hashtbl.of_seq in
 
-		DiscreteState.make_location initial_PTA_locations discrete_values (Hashtbl.create 0)
+		DiscreteState.make_location initial_PTA_locations discrete_values_table (Hashtbl.create 0)
 	in
 
 
@@ -3628,6 +3632,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		discrete = model.discrete;
 	    (* The list of rational indexes *)
 		discrete_rationals = model.discrete_rationals;
+        (* List of variable_refs *)
+        discrete_refs = model.discrete_refs;
 		(* True for discrete, false otherwise *)
 		is_discrete = model.is_discrete;
 		(* The list of parameter indexes *)

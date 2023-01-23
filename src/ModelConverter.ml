@@ -775,23 +775,35 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
         raise InvalidModel;
 
 
+
     (* Check init discrete section : discrete *)
 	(* Check that every discrete variable is given only one (rational) initial value *)
-    (* TODO benjamin HERE global_variable_refs *)
-	let init_values_for_discrete = Hashtbl.create (Hashtbl.length variable_infos.variable_refs) in
+	let init_values_for_discrete = Hashtbl.create (Hashtbl.length variable_infos.discrete_refs) in
 
     (* Compute discrete init values and add to init hash table *)
     let discrete_initialization_well_formed = List.for_all (check_discrete_inits functions_table variable_infos init_values_for_discrete) discrete_inits in
-
 	(* Check that every discrete variable is given at least one initial value (if not: warns) *)
-	Hashtbl.iter (fun (variable_name, _ (* id *) as variable_ref) var_type ->
+	Hashtbl.iter (fun (variable_name, _ (* id *) as variable_ref) discrete_type ->
 		if not (Hashtbl.mem init_values_for_discrete variable_ref) then (
-		    let default_value = AbstractValue.default_value var_type in
+		    let default_value = AbstractValue.default_value_of_discrete_type discrete_type in
 			print_warning ("The discrete variable `" ^ variable_name ^ "` was not given an initial value in the init definition: it will be assigned to " ^ AbstractValue.string_of_value default_value ^ ".");
 			Hashtbl.add init_values_for_discrete variable_ref default_value
 		);
-    (* TODO benjamin HERE global_variable_refs *)
-    ) variable_infos.variable_refs;
+
+    ) variable_infos.discrete_refs;
+
+	(* Get init values of rational discrete variables *)
+	let init_values_for_rationals =
+	    List.filter_map (fun discrete_index ->
+            let variable_name = VariableInfo.variable_name_of_index variable_infos discrete_index in
+            let value = Hashtbl.find init_values_for_discrete (variable_name, 0 (* we search global variable, so we can use 0 as id *)) in
+            (* TODO benjamin NOW no need to be checked when variable_infos.discrete will only contains rationals *)
+            if AbstractValue.is_rational_value value then
+                Some (discrete_index, value)
+            else
+                None
+        ) variable_infos.discrete
+    in
 
     (* Check init constraints section : continuous *)
 
@@ -832,7 +844,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
         raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
-	init_values_for_discrete, discrete_initialization_well_formed
+	init_values_for_discrete, init_values_for_rationals, discrete_initialization_well_formed
 
 (* Check if a constant or a variable is typed as a void, print error when one found *)
 let has_void_constant_or_variable str_var_kind name var_type =
@@ -1241,7 +1253,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_rational_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -1298,11 +1310,9 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 
 	let initial_constraint : LinearConstraint.px_linear_constraint =
 
-		(* Create pairs of (index , value) for discrete variables *)
-		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value initial_location discrete_index)) model.discrete in *)
-
         (* Get only rational discrete for constraint encoding *)
-        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
+        (* TODO benjamin NOW no need to filter because should be rationals all *)
+        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_rational_pairs in
         (* map to num const *)
         let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) init_discrete_rational_pairs in
 
@@ -2452,7 +2462,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     print_message Verbose_high ("\n*** Link variables to declarations.");
     (* Recompute model to link variables to their declarations, and return all variables declarations *)
-    let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+    let parsed_model, variable_refs_table = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+    let variable_refs = variable_refs_table |> Hashtbl.to_seq |> List.of_seq in
 
     print_message Verbose_high ("\n*** Linking variables finished.");
 
@@ -2516,6 +2527,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         removed_variable_names = [];
         discrete = [];
         variable_refs = Hashtbl.create 0;
+        discrete_refs = Hashtbl.create 0;
         fun_meta = Hashtbl.create 0;
         type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat);
     }
@@ -2675,7 +2687,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         clock_names = single_clock_names;
         parameter_names = single_parameter_names;
         discrete_names = single_discrete_names;
-        variable_refs = variable_refs;
+        variable_refs = variable_refs_table;
     }
     in
 	(*------------------------------------------------------------*)
@@ -2950,6 +2962,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		else None
 	in
 
+    (* Some mapping on variable refs *)
+
+    (* Get only discrete variables, not removed *)
+    let discrete_refs_list =
+        List.filter_map (fun ((variable_name, id) as variable_ref, var_type) ->
+            let var_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
+            match var_kind, var_type with
+            | Variable_kind, Var_type_discrete discrete_type
+            when id = 0 && not (List.mem variable_name removed_variable_names) -> Some ((variable_name, id), discrete_type)
+            | _, _ -> None
+        ) variable_refs
+    in
+    ImitatorUtilities.print_standard_message ("YOP: " ^ OCamlUtilities.string_of_list_of_string_with_sep "," (List.map (fun ((v, _),_) -> v) discrete_refs_list));
+
+    let discrete_refs_table = discrete_refs_list |> List.to_seq |> Hashtbl.of_seq in
+
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
@@ -3125,8 +3153,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         variables					= variables;
         variable_names				= variable_names;
         removed_variable_names		= removed_variable_names;
-        variable_refs             = variable_refs;
-        fun_meta                   = functions_metadata_table;
+        variable_refs               = variable_refs_table;
+        discrete_refs               = discrete_refs_table;
+        fun_meta                    = functions_metadata_table;
     }
     in
 
@@ -3195,7 +3224,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             ParsingStructureGraph.remove_unused_inits dependency_graph parsed_model.init_definition
     in
 
-	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information init_definition observer_automaton_index_option in
+	let init_discrete_pairs, init_rational_pairs, well_formed_init = check_init functions_table useful_parsing_model_information init_definition observer_automaton_index_option in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
@@ -3764,18 +3793,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 
     (* Extract only local variable references and init values *)
-    let variable_refs_list = variable_refs |> Hashtbl.to_seq |> List.of_seq in
     let local_variables_list =
         List.filter_map (fun ((variable_name, id), var_type) ->
             if id <> 0 then Some ((variable_name, id), AbstractValue.default_value var_type) else None
-        ) variable_refs_list
+        ) variable_refs
     in
-
+    (* Convert to table *)
     let local_variables_table = local_variables_list |> List.to_seq |> Hashtbl.of_seq in
 
 
 	let (initial_location, initial_constraint) =
-		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_rational_pairs init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
@@ -4070,6 +4098,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	discrete = discrete;
 	(* The list of rational indexes *)
 	discrete_rationals = discrete_rationals;
+	(* List of discrete refs *)
+	discrete_refs = discrete_refs_list;
 	(* True for discrete, false otherwise *)
 	is_discrete = is_discrete;
 	(* The list of parameter indexes *)

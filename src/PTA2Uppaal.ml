@@ -184,12 +184,6 @@ and string_of_container_value = function
 
 (* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
 (* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
-let rec string_of_discrete_name_from_var_type discrete_name = function
-    | Var_type_discrete discrete_type -> string_of_discrete_name_from_var_type_discrete discrete_name discrete_type
-    | _ -> discrete_name
-
-(* Get the UPPAAL string representation of a variable name according to it's IMITATOR var type *)
-(* For example a variable name `x` is translated to `x[l]` if the given type is an array of length l *)
 and string_of_discrete_name_from_var_type_discrete discrete_name = function
     | Dt_array (inner_type, length) ->
         string_of_discrete_name_from_var_type_discrete discrete_name inner_type
@@ -305,22 +299,19 @@ let string_of_discrete model =
 		"\n\n/* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */"
 		^
 		(string_of_list_of_string_with_sep "\n"
-			(List.map (fun discrete_index ->
-				(* Get the name *)
-				let discrete_name = model.variable_names discrete_index in
-                let discrete_type = model.type_of_variables discrete_index in
+			(List.map (fun ((discrete_name, _ (* id *)) as variable_ref, discrete_type) ->
 				(* Get the initial value *)
 				let initial_global_location  = model.initial_location in
-				let initial_value = DiscreteState.get_discrete_value initial_global_location discrete_index in
+				let initial_value = DiscreteState.get_discrete_value initial_global_location variable_ref in
 
                 let str_initial_value = string_of_value initial_value in
-                let str_type = string_of_var_type discrete_type in
+                let str_type = string_of_var_type_discrete discrete_type in
                 (* case of arrays: format name with length of array *)
-                let format_discrete_name = string_of_discrete_name_from_var_type discrete_name discrete_type in
+                let format_discrete_name = string_of_discrete_name_from_var_type_discrete discrete_name discrete_type in
 
 				(* Assign *)
 				"\n" ^ str_type ^ " " ^ format_discrete_name ^ " = " ^ str_initial_value ^ ";"
-			) model.discrete
+			) model.discrete_refs
 			)
 		)
 
