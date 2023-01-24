@@ -1,0 +1,59 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Check that returning clock is forbidden
+ * Description      : Check that returning clock is forbidden
+ * Correctness      : No error
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/01/24
+ * Last modified    : 2023/01/24
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+
+  x : clock;
+
+fn get_one() : int 
+begin 
+  return 1 
+end
+
+fn get_clock() : rat 
+begin 
+  var i : rat = 1 + 1;
+  x := 1 + i (* + get_one() *);
+  return x;
+end
+
+automaton P
+
+  loc l0: invariant True
+  when
+    True
+
+  do {
+	get_clock();
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init := {
+    discrete =
+      loc[P] := l0,
+    ;
+}

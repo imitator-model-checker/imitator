@@ -4880,6 +4880,52 @@ END CONSTRAINT
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/24
+      ## Last modified            : 2023/01/24
+      'author': 'lbinria',
+      'purpose'    : 'Check that returning clock is forbidden',
+      'input_files': ['functions/return-clock.imi'],
+      'tags': 'function, clock, return',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'return-clock.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/24
+      ## Last modified            : 2023/01/24
+      'author': 'lbinria',
+      'purpose'    : 'Check that returning parameter is forbidden',
+      'input_files': ['functions/return-param.imi'],
+      'tags': 'function, parameter, return',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'return-param.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test user defined function
 	#------------------------------------------------------------
