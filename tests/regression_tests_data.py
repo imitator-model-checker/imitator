@@ -5285,6 +5285,85 @@ Has complex updates?                    : true
 
 	#------------------------------------------------------------
 	{
+        ## Test version             : 1.0
+        ## Test since               : 2023/01/17
+        ## Last modified            : 2023/01/17
+        ## Test for IMITATOR version: 3.4
+        'author': 'lbinria',
+        'purpose'    : 'Check expression reduce on clock updates',
+        'input_files': ['updates/expr-reduce.imi'],
+		'tags': 'update, reducing, expression',
+		'options'    : '-no-var-autoremove -verbose high',
+		'expectations' : [
+			{'file': 'expr-reduce.res' , 'content' : """
+  "expr_reducing": [
+    {
+      "expr": "(2 * x - 3 * y) - (4 * x - 2 * y)",
+      "reduced_expr": "0 - 2 * x - 1 * y + 0",
+      "simplified_expr": "-((2 * x)) - y"
+    },
+    {
+      "expr": "(2 * x + 3 * y) - (4 * x + 2 * y)",
+      "reduced_expr": "0 - 2 * x + 1 * y + 0",
+      "simplified_expr": "-((2 * x)) + y"
+    },
+    {
+      "expr": "2 * (2 * (4 * x + 2 * y) - 3 * (4 * x + 2 * y)) + 1 * x + 1 * y",
+      "reduced_expr": "0 - 7 * x - 3 * y + 0",
+      "simplified_expr": "-((7 * x)) - 3 * y"
+    },
+    {
+      "expr": "2 * (a * b) + 2 * (a * b)",
+      "reduced_expr": "0 + 4 * (a * b) + 0",
+      "simplified_expr": "4 * (a * b)"
+    },
+    {
+      "expr": "(2 * a * b) * (2 * c * d)",
+      "reduced_expr": "0 + 0 + 0 * (c * d) + 0 * (a * b) + 4 * ((a * b) * (c * d))",
+      "simplified_expr": "4 * ((a * b) * (c * d))"
+    },
+    {
+      "expr": "2 * (-2 - r1)",
+      "reduced_expr": "0 - 4 - 2 * r1",
+      "simplified_expr": "-((4)) - 2 * r1"
+    },
+    {
+      "expr": "1 / (r1 * r2)",
+      "reduced_expr": "0 + 1 * (1 / (r1 * r2))",
+      "simplified_expr": "(1 / (r1 * r2))"
+    },
+    {
+      "expr": "rational_of_int(i1) / 2",
+      "reduced_expr": "0 + 1/2 * (rational_of_int(i1))",
+      "simplified_expr": "1/2 * rational_of_int(i1)"
+    },
+    {
+      "expr": "2 / rational_of_int(i1)",
+      "reduced_expr": "0 + 2 * (1 / (rational_of_int(i1)))",
+      "simplified_expr": "2 * (1 / rational_of_int(i1))"
+    },
+    {
+      "expr": "1 - 1 + 2 * x + 1 * x + 1 * y - 1 * y",
+      "reduced_expr": "0 + 3 * x + 0",
+      "simplified_expr": "3 * x"
+    },
+    {
+      "expr": "2 * (rational_of_int(i1 * i1) + 3) + 3 * (y + 4 + 2 * (1 + 3 + 2 * y))",
+      "reduced_expr": "0 + 15 * y + 2 * (rational_of_int(i1 * i1)) + 42",
+      "simplified_expr": "15 * y + 2 * rational_of_int(i1 * i1) + 42"
+    }
+  ]
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2020/09/14
 		# Last modified            : 2020/09/14
