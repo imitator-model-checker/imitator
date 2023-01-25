@@ -330,10 +330,7 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
     let function_names = ParsingStructureMeta.get_functions_in_parsed_seq_code_bloc seq_code_bloc in
     if StringSet.mem "rational_of_int" function_names then
         print_warning (
-            "The function `rational_of_int` (used " ^ str_location ^ ") transforms an `int` (with a 32-bit limit) into a `rational`
-            (encoded exactly, i.e., without any approximation nor overflow).
-            Be aware that, if your `int` is subject to an overflow prior to its conversion into a `rational`,
-            then the result may be wrong."
+            "The function `rational_of_int` (used " ^ str_location ^ ") transforms an `int` (with a 32-bit limit) into a `rational` (encoded exactly, i.e., without any approximation nor overflow). Be aware that, if your `int` is subject to an overflow prior to its conversion into a `rational`, then the result may be wrong."
         );
 
     (* Check whether there is only discrete in following control structures: if / while condition, for, etc. *)
