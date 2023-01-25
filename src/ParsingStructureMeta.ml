@@ -30,7 +30,8 @@ let rec variable_name_of_parsed_scalar_or_index_update_type = function
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_name_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
 (* Get variable ref (variable_name * variable_id) from a variable access *)
-(* ex : my_var[0][0] -> my_var *)let rec variable_ref_of_parsed_scalar_or_index_update_type = function
+(* ex : my_var[0][0] -> my_var *)
+let rec variable_ref_of_parsed_scalar_or_index_update_type = function
     | Parsed_scalar_update variable_ref -> variable_ref
     | Parsed_indexed_update (parsed_scalar_or_index_update_type, _) -> variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type
 
@@ -707,10 +708,10 @@ let left_right_member_of_assignments_in_parsed_seq_code_bloc (* parsed_seq_code_
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
-            let right_variable_names = get_variable_refs_in_parsed_boolean_expression expr |> VarSet.to_seq |> List.of_seq in
-            let left_variable_name = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+            let right_variable_refs = get_variable_refs_in_parsed_boolean_expression expr |> VarSet.to_seq |> List.of_seq in
+            let left_variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
-            [left_variable_name, right_variable_names, expr]
+            [left_variable_ref, right_variable_refs, expr]
 
         | Parsed_instruction _
         | Parsed_local_decl _ -> []

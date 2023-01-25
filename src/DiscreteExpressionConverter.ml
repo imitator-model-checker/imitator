@@ -131,12 +131,12 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_variable_refs in
 
         (* Check that no discrete variable was updated by a param *)
-        let variable_names_updated_by_params = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
-            let left_var_type = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_ref in
+        let variable_names_updated_by_params = List.filter_map (fun (left_variable_ref, right_variable_refs, _) ->
+            let left_var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_ref in
 
-            match left_var_type with
+            match left_var_type_opt with
             (* We are able to update a clock with a parameter *)
-            | Some Var_type_clock -> acc
+            | Some Var_type_clock -> None
             | _ ->
                 (* Get eventual var type (or none if variable was not declared or removed) *)
                 let right_params =
@@ -150,9 +150,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                 in
                 let has_right_params = List.length right_params > 0 in
                 let left_variable_name, _ = left_variable_ref in
-                if has_right_params then (left_variable_name, right_params) :: acc else acc
+                if has_right_params then Some (left_variable_name, right_params) else None
 
-        ) [] left_right_variable_refs in
+        ) left_right_variable_refs in
 
         (* Get only discrete variable names *)
         let left_discrete_variable_refs = List.filter (fun (variable_ref, _, _) ->
@@ -164,7 +164,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_right_variable_refs in
 
         (* Check that no discrete variable was updated by a clock *)
-        let discrete_variable_names_updated_by_clocks = List.fold_left (fun acc (left_variable_ref, right_variable_refs, _) ->
+        let discrete_variable_names_updated_by_clocks = List.filter_map (fun (left_variable_ref, right_variable_refs, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_clocks =
                 List.filter_map (fun right_variable_ref ->
@@ -177,9 +177,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
             in
             let has_right_clocks = List.length right_clocks > 0 in
             let left_variable_name, _ = left_variable_ref in
-            if has_right_clocks then (left_variable_name, right_clocks) :: acc else acc
+            if has_right_clocks then Some (left_variable_name, right_clocks) else None
 
-        ) [] left_discrete_variable_refs in
+        ) left_discrete_variable_refs in
 
         (* Check that clock update is a linear expression *)
         (*
@@ -198,6 +198,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_right_variable_refs in
         *)
 
+        (* Check that clock update doesn't contains nonlinear operation on continuous variables (clocks or parameters) (e.g: x:=x*x*i, x:=p*i*(1+p), ...) *)
         let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr) ->
             let nonlinear_operation_on_continuous_found = ParsingStructureMeta.nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr in
 
