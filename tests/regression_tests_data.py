@@ -4926,6 +4926,121 @@ Error                                   : invalid model
 
     ,
 
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/25
+      ## Last modified            : 2023/01/25
+      'author': 'lbinria',
+      'purpose'    : 'Check that update a constant is forbidden',
+      'input_files': ['functions/seq-code-bloc-update-constant.imi'],
+      'tags': 'code, bloc, constant, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-constant.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that update of a parameter is forbidden in code bloc',
+      'input_files': ['functions/seq-code-bloc-update-parameter.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-parameter.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that update of a discrete with parameter is forbidden in code bloc',
+      'input_files': ['functions/seq-code-bloc-update-discrete-with-parameter.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-discrete-with-parameter.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that update of a discrete with clock is forbidden in code bloc',
+      'input_files': ['functions/seq-code-bloc-update-discrete-with-clock.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-discrete-with-clock.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that nonlinear continuous (on clock or parameter) operation is forbidden',
+      'input_files': ['functions/seq-code-bloc-nonlinear-op-continuous.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-nonlinear-op-continuous.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
 	#------------------------------------------------------------
 	# END : Test user defined function
 	#------------------------------------------------------------

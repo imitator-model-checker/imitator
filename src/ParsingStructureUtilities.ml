@@ -29,7 +29,7 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_ref * parsed_boolean_expression
+    | Leaf_update_variable of variable_ref * parsed_boolean_expression * update_mode
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =
@@ -121,7 +121,6 @@ and fold_parsed_discrete_factor operator base leaf_fun = function
 
 and fold_parsed_seq_code_bloc operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (* parsed_seq_code_bloc *) =
 
-
     let rec fold_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
         List.fold_left (fun acc instruction -> operator (fold_parsed_instruction instruction) acc) base parsed_seq_code_bloc
 
@@ -180,11 +179,14 @@ and fold_parsed_seq_code_bloc operator base ?(decl_callback=None) seq_code_bloc_
 
 and fold_parsed_normal_update operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun (parsed_scalar_or_index_update_type, expr) =
 
+    let update_mode = ref Scalar_update_mode in
+
     let rec fold_parsed_scalar_or_index_update_type_with_local_variables operator base ?(decl_callback=None) seq_code_bloc_leaf_fun leaf_fun = function
         | Parsed_scalar_update variable_ref ->
-            seq_code_bloc_leaf_fun (Leaf_update_variable (variable_ref, expr))
+            seq_code_bloc_leaf_fun (Leaf_update_variable (variable_ref, expr, !update_mode))
 
         | Parsed_indexed_update (parsed_scalar_or_index_update_type, index_expr) ->
+            update_mode := Indexed_update_mode;
             operator
                 (fold_parsed_scalar_or_index_update_type_with_local_variables operator base ~decl_callback:decl_callback seq_code_bloc_leaf_fun leaf_fun parsed_scalar_or_index_update_type)
                 (fold_parsed_discrete_arithmetic_expression operator base leaf_fun index_expr)

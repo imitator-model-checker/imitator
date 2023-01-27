@@ -26,7 +26,7 @@ type parsing_structure_leaf =
 
 (* Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
-    | Leaf_update_variable of variable_ref * parsed_boolean_expression
+    | Leaf_update_variable of variable_ref * parsed_boolean_expression * update_mode
 
 (* Leaf of linear expression *)
 type linear_expression_leaf =

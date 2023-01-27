@@ -93,7 +93,7 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
     | Leaf_constant _ -> true
 
 let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt = function
-        | Leaf_update_variable ((variable_name, _) as variable_ref, _) ->
+        | Leaf_update_variable ((variable_name, _) as variable_ref, _, _) ->
 
         let is_defined = is_variable_or_constant_declared variable_infos variable_ref in
 
@@ -684,46 +684,29 @@ let get_variables_in_parsed_simple_predicate =
 let get_variables_in_parsed_state_predicate =
     wrap_accumulator get_variables_in_parsed_state_predicate_with_accumulator
 
+(* Update info tuple *)
+type update_info = variable_ref (* assigned variable *) * variable_ref list (* assignee *) * parsed_boolean_expression (* update expression *) * update_mode (* mode: indexed or scalar *)
+
 (* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
-let left_right_member_of_assignments_in_parsed_seq_code_bloc (* parsed_seq_code_bloc *) =
-
-    let rec left_right_member_of_assignments_in_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
-        let left_right_members_nested = List.map left_right_member_of_assignments_in_instruction parsed_seq_code_bloc in
-        List.concat left_right_members_nested
-
-    and left_right_member_of_assignments_in_instruction = function
-        | Parsed_for_loop (_, _, _, _, inner_bloc)
-        | Parsed_while_loop (_, inner_bloc) ->
-            left_right_member_of_assignments_in_parsed_seq_code_bloc_rec inner_bloc
-
-        | Parsed_if (_, then_bloc, else_bloc_opt) ->
-            let then_bloc_results = left_right_member_of_assignments_in_parsed_seq_code_bloc_rec then_bloc in
-
-            let else_bloc_results =
-                match else_bloc_opt with
-                | Some else_bloc -> left_right_member_of_assignments_in_parsed_seq_code_bloc_rec else_bloc
-                | None -> []
-            in
-            then_bloc_results @ else_bloc_results
-
-        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
-
+let left_right_member_of_assignments_in_parsed_seq_code_bloc parsed_seq_code_bloc =
+    (* Accumulator *)
+    let update_info_ref = ref [] in
+    (* Iterate through parsed seq code bloc *)
+    ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc (function
+        | Leaf_update_variable (left_variable_ref, expr, update_mode) ->
+            (* Get variable refs on the right side of assignment *)
             let right_variable_refs = get_variable_refs_in_parsed_boolean_expression expr |> VarSet.to_seq |> List.of_seq in
-            let left_variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
-
-            [left_variable_ref, right_variable_refs, expr]
-
-        | Parsed_instruction _
-        | Parsed_local_decl _ -> []
-    in
-    left_right_member_of_assignments_in_parsed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
+            (* Add tuple to list *)
+            update_info_ref := (left_variable_ref, right_variable_refs, expr, update_mode) :: !update_info_ref
+    ) (fun _ -> ()) parsed_seq_code_bloc;
+    !update_info_ref
 
 (* Check whether clock updates found in parsed sequential code bloc are only resets *)
 let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
     ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
         (function
             (* If found clock update and assigned value is not zero so there is not only resets *)
-            | Leaf_update_variable ((variable_name, _) as variable_ref, update_expr) ->
+            | Leaf_update_variable ((variable_name, _) as variable_ref, update_expr, _) ->
 
                 let is_clock = VariableInfo.is_clock variable_infos variable_ref in
                 let is_reset_value =
@@ -791,7 +774,7 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
     in
 
     let is_seq_code_bloc_leaf_has_side_effects = function
-        | Leaf_update_variable (variable_ref, _) ->
+        | Leaf_update_variable (variable_ref, _, _) ->
             (* Side effect occurs only when update a global variable *)
             VariableInfo.is_global variable_ref
     in

@@ -103,12 +103,12 @@ let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq
 let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc =
 
     (* If code bloc is named, we put name of location in messages *)
-    let str_location =  " in `" ^ code_bloc_name ^ "`" in
+    let str_location =  "in `" ^ code_bloc_name ^ "`" in
 
     let is_assignments_are_allowed =
         (* Check for variables (local and global) at the left and right side of an assignment *)
         let left_right_variable_refs = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc seq_code_bloc in
-        let left_variable_refs = List.map first_of_triplet left_right_variable_refs in
+        let left_variable_refs = List.map (fun (variable_ref, _, _, _) -> variable_ref) left_right_variable_refs in
 
         (* Check that no constants are updated *)
         let assigned_constant_names = List.filter_map (fun variable_ref ->
@@ -131,7 +131,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_variable_refs in
 
         (* Check that no discrete variable was updated by a param *)
-        let variable_names_updated_by_params = List.filter_map (fun (left_variable_ref, right_variable_refs, _) ->
+        let variable_names_updated_by_params = List.filter_map (fun (left_variable_ref, right_variable_refs, _, _) ->
             let left_var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos left_variable_ref in
 
             match left_var_type_opt with
@@ -155,7 +155,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_right_variable_refs in
 
         (* Get only discrete variable names *)
-        let left_discrete_variable_refs = List.filter (fun (variable_ref, _, _) ->
+        let left_discrete_variable_refs = List.filter (fun (variable_ref, _, _, _) ->
             let var_type_opt = VariableInfo.var_type_of_variable_or_constant_opt variable_infos variable_ref in
             match var_type_opt with
             | None
@@ -164,7 +164,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         ) left_right_variable_refs in
 
         (* Check that no discrete variable was updated by a clock *)
-        let discrete_variable_names_updated_by_clocks = List.filter_map (fun (left_variable_ref, right_variable_refs, _) ->
+        let discrete_variable_names_updated_by_clocks = List.filter_map (fun (left_variable_ref, right_variable_refs, _, _) ->
             (* Get eventual var type (or none if variable was not declared or removed) *)
             let right_clocks =
                 List.filter_map (fun right_variable_ref ->
@@ -199,7 +199,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
         *)
 
         (* Check that clock update doesn't contains nonlinear operation on continuous variables (clocks or parameters) (e.g: x:=x*x*i, x:=p*i*(1+p), ...) *)
-        let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr) ->
+        let nonlinear_operation_on_continuous = List.filter_map (fun (variable_ref, _, expr, _) ->
             let nonlinear_operation_on_continuous_found = ParsingStructureMeta.nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr in
 
             if nonlinear_operation_on_continuous_found then (
@@ -250,9 +250,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                 "Trying to update variable `"
                 ^ variable_name
                 ^ "` with parameter(s) "
-                ^ " `"
-                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names
                 ^ "`"
+                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " param_names
+                ^ "` "
                 ^ str_location
                 ^ ". Parameters cannot be used for updating variable."
             );
@@ -263,9 +263,9 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
                 "Trying to update discrete variable `"
                 ^ variable_name
                 ^ "` with clock(s) "
-                ^ " `"
-                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " clock_names
                 ^ "`"
+                ^ OCamlUtilities.string_of_list_of_string_with_sep ", " clock_names
+                ^ "` "
                 ^ str_location
                 ^ ". Clocks cannot be used for updating discrete variable."
             );
@@ -292,7 +292,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
     (* If code bloc is named, we put name of location in messages *)
-    let str_location =  " in `" ^ code_bloc_name ^ "`" in
+    let str_location =  "in `" ^ code_bloc_name ^ "`" in
 
     (* Check if all variables in function definition are defined *)
     let is_all_variables_defined =
@@ -302,6 +302,7 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
             print_error (
                 "Variable `"
                 ^ variable_name
+                ^ "` "
                 ^ str_location
                 ^ " was not declared."
             )
@@ -318,6 +319,7 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
             print_error (
                 "Function `"
                 ^ variable_name
+                ^ "` "
                 ^ str_location
                 ^ " was not declared."
             )
@@ -327,6 +329,7 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
     in
 
+    (* Check uses of rational_of_int *)
     let function_names = ParsingStructureMeta.get_functions_in_parsed_seq_code_bloc seq_code_bloc in
     if StringSet.mem "rational_of_int" function_names then
         print_warning (
@@ -343,6 +346,9 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+
+    (* Get code bloc and return expression of the function *)
+    let code_bloc, return_expr_opt = fun_def.body in
 
     (* Check if all variables in function definition are defined *)
     let is_all_variables_defined =
@@ -384,7 +390,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
 
         (* Message to display when duplicate parameters found *)
         let duplicate_parameter_message parameter_name =
-            "Duplicate parameter `"
+            "Duplicate formal parameter `"
             ^ parameter_name
             ^ "` in function `"
             ^ fun_def.name
@@ -414,13 +420,53 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
             )
         ) duplicate_parameters;
 
+        (* Search for formal parameter update (when scalar update only) (e.g: you can do a[0] := 0 for a formal parameter, but can't do a := [0, 0]) *)
+        (* A formal parameter is immutable, but its contents can be mutated ! *)
+
+        (*
+        let assigned_formal_parameters_ref = ref [] in
+        ParsingStructureUtilities.iterate_in_parsed_seq_code_bloc (function
+            | Leaf_update_variable ((variable_name, _ (* id *)) as variable_ref, _, Scalar_update_mode) ->
+                (* If variable updated is a formal parameter, add to list of assigned formal parameters *)
+                if List.exists (fun (parameter_ref, _) -> variable_ref = parameter_ref) fun_def.parameters then
+                    assigned_formal_parameters_ref := variable_name :: !assigned_formal_parameters_ref
+                else
+                    ()
+            | _ -> ()
+        ) (fun _ -> ()) code_bloc;
+
+        let assigned_formal_parameters = !assigned_formal_parameters_ref in
+        *)
+
+        let left_right_variable_refs = ParsingStructureMeta.left_right_member_of_assignments_in_parsed_seq_code_bloc code_bloc in
+        let left_variable_refs = List.filter_map (fun (variable_ref, _, _, update_mode) ->
+            match update_mode with
+            | Scalar_update_mode -> Some variable_ref
+            | Indexed_update_mode -> None
+        ) left_right_variable_refs in
+
+        let assigned_formal_parameters = List.filter_map (fun ((parameter_name, _) as parameter_ref, _) ->
+            if List.mem parameter_ref left_variable_refs then
+                Some parameter_name
+            else
+                None
+        ) fun_def.parameters in
+
+        let has_assigned_formal_parameters = List.length assigned_formal_parameters > 0 in
+
+        List.iter (fun parameter_name ->
+            print_error (
+                "Formal parameter assignment `"
+                ^ parameter_name
+                ^ "` found in `"
+                ^ fun_def.name
+                ^ "`."
+            )
+        ) assigned_formal_parameters;
+
         (* Check if it exist duplicate parameters *)
-        List.length duplicate_parameters = 0
+        List.length duplicate_parameters = 0 && not has_assigned_formal_parameters
     in
-
-
-    (* Get code bloc and return expression of the function *)
-    let code_bloc, return_expr_opt = fun_def.body in
 
     (* Check that function doesn't return any clock or parameter *)
     let returned_clock_and_param_names =

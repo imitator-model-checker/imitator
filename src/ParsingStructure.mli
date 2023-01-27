@@ -153,6 +153,8 @@ type parsed_scalar_or_index_update_type =
     | Parsed_scalar_update of variable_ref
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
 
+type update_mode = Scalar_update_mode | Indexed_update_mode
+
 (** basic updating *)
 type normal_update = parsed_scalar_or_index_update_type * parsed_boolean_expression
 

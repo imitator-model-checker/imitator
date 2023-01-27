@@ -259,7 +259,7 @@ let check_normal_update variable_infos automaton_name normal_update =
         ParsingStructureUtilities.fold_parsed_normal_update
             (@)
             []
-            (function Leaf_update_variable (variable_ref, _) -> [variable_ref])
+            (function Leaf_update_variable (variable_ref, _, _) -> [variable_ref])
             (fun _ -> []) normal_update
             |> List.nth
         ) 0

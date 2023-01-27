@@ -120,8 +120,11 @@ val get_functions_in_nonlinear_convex_predicate : nonlinear_constraint list -> S
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
+(* Update info tuple *)
+type update_info = variable_ref (* assigned variable *) * variable_ref list (* assignee *) * parsed_boolean_expression (* update expression *) * update_mode (* mode: indexed or scalar *)
+
 (* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
-val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> (variable_ref * variable_ref list * parsed_boolean_expression) list
+val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> update_info list
 (* Check whether clock updates found in parsed sequential code bloc are only resets *)
 val is_only_resets_in_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> bool
 (* Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)
