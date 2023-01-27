@@ -818,11 +818,23 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression v
 	    nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
 and nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos = function
-	| Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+	| Parsed_product_quotient (term, factor, parsed_product_quotient) as e ->
 	    let has_clock_or_param_left = has_clock_or_param_parsed_discrete_term variable_infos term in
 	    let has_clock_or_param_right = has_clock_or_param_parsed_discrete_factor variable_infos factor in
 	    (* If we reach left and right expressions that contains at least one clock or parameter, there is a continuous factor ! *)
-	    has_clock_or_param_left && has_clock_or_param_right
+	    let has_nonlinear_op_on_clock_or_param = has_clock_or_param_left && has_clock_or_param_right in
+
+        (* Non linear operation found between clock or param ? Just return the result ! *)
+        let has_nonlinear_op_on_clock_or_param =
+            if has_nonlinear_op_on_clock_or_param then
+                has_nonlinear_op_on_clock_or_param
+            else (
+                (* Else, continue to search recursively *)
+                nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
+                || nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos factor
+            )
+        in
+        has_nonlinear_op_on_clock_or_param
 
 	| Parsed_factor factor ->
 	    nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos factor
@@ -831,7 +843,7 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos =
 	| Parsed_variable _
 	| Parsed_constant _
 	(* We consider: *)
-	(* sequence of clock is forbidden, so Parsed_sequence cannot hold any clock*)
+	(* sequence of clock is forbidden, so Parsed_sequence cannot hold any clock *)
 	| Parsed_sequence _
 	(* index of clock is forbidden, moreover clock type is rational and index only support integer *)
     | Parsed_access _
