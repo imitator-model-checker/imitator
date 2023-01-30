@@ -773,10 +773,13 @@ let rec is_function_has_side_effects builtin_functions_metadata_table user_funct
         | _ -> false
     in
 
+    (* Side effects occurs when modifying external variables *)
     let is_seq_code_bloc_leaf_has_side_effects = function
         | Leaf_update_variable (variable_ref, _, _) ->
-            (* Side effect occurs only when update a global variable *)
+            (* Side effect occurs when a global variable is updated *)
             VariableInfo.is_global variable_ref
+            (* Side effect occurs when the content of a parameter is updated *)
+            || List.exists (fun (param_ref, _) -> param_ref = variable_ref) fun_def.parameters
     in
 
     ParsingStructureUtilities.exists_in_parsed_function_definition
@@ -818,7 +821,7 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression v
 	    nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
 and nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos = function
-	| Parsed_product_quotient (term, factor, parsed_product_quotient) as e ->
+	| Parsed_product_quotient (term, factor, parsed_product_quotient) ->
 	    let has_clock_or_param_left = has_clock_or_param_parsed_discrete_term variable_infos term in
 	    let has_clock_or_param_right = has_clock_or_param_parsed_discrete_factor variable_infos factor in
 	    (* If we reach left and right expressions that contains at least one clock or parameter, there is a continuous factor ! *)
