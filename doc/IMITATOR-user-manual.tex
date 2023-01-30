@@ -1676,7 +1676,7 @@ If a function returns nothing, it should be typed as \styleIMI{void} and does no
 Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side-effect, they can only be used in updates (not in guards nor in invariants).
 
 User-defined functions can have zero or more arguments, and must return one value.
-Note that all arguments are passed by value.
+Note that all arguments are passed by value except arrays, stacks and queues which are passed by reference.
 
 User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
 
@@ -1794,6 +1794,7 @@ We give below some examples of incorrect user function definitions:
 
 \begin{itemize}
 \item As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
+\item Array are passed by reference, as soon as the content of an array passed by reference is modified, the function is labeled internally as a ``side-effect function'';
 \item Shadowing an argument of the user function or shadowing a global / local variable with a local one is possible (local variable with the same name as another variable);
 \item Calls of another functions are possible;
 \end{itemize}
@@ -1809,6 +1810,14 @@ We give below some examples of user function definitions:
 		(* Modification of a global variable lead to label the function internally as a ``side-effect function'' *)
 		my_global_i := 0;
 		return 0
+	end
+
+	(* This function modify the content of an array passed by reference *)
+	function side_effect_function_2(a : int array(2)) : int
+	begin
+		(* Modification of the content of an array lead to label the function internally as a ``side-effect function'' *)
+		a[1] := 0;
+		return a[0]
 	end
 
 	(* This function shadow a local, a global variable and an argument *)
