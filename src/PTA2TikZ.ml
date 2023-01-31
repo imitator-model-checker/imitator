@@ -102,7 +102,81 @@ let string_of_sync model action_index =
 	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
-let string_of_seq_code_bloc variable_names seq_code_bloc = "" (* TODO benjamin IMPLEMENT !*)
+let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
+
+    let begin_line = "\n\t\t & $" in
+    let end_line = "$\\\\% \\n" in
+
+    let rec string_of_seq_code_bloc seq_code_bloc =
+        (*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
+        let str_seq_code_bloc = List.map (fun instruction -> begin_line ^ string_of_instruction instruction ^ "$\\\\% ") seq_code_bloc in
+        OCamlUtilities.string_of_list_of_string_with_sep "\\n" str_seq_code_bloc
+
+    and string_of_instruction = function
+        | Local_decl ((variable_name, _ (* id *)), discrete_type, expr) ->
+            "\\styledisc{" ^ escape_latex variable_name ^ "}"
+            ^ ":"
+            ^ DiscreteType.string_of_var_type_discrete discrete_type
+            ^ "="
+            ^ escape_latex (DiscreteExpressions.string_of_global_expression variable_names_with_style expr)
+
+        | Assignment (scalar_or_index_update_type, expr) ->
+			ModelPrinter.string_of_scalar_or_index_update_type variable_names_with_style scalar_or_index_update_type
+			^ ":="
+			(* Convert the arithmetic_expression *)
+			^ escape_latex (ModelPrinter.string_of_global_expression variable_names_with_style expr)
+
+        | Clock_assignment (clock_index, expr) ->
+			variable_names clock_index
+			^ ":="
+			(* Convert the arithmetic_expression *)
+			^ escape_latex (DiscreteExpressions.string_of_rational_arithmetic_expression variable_names_with_style expr)
+
+        | Instruction expr ->
+            escape_latex (DiscreteExpressions.string_of_global_expression variable_names_with_style expr)
+
+        | For_loop ((variable_name, _ (* id *)), from_expr, to_expr, loop_dir, inner_bloc) ->
+            "for " ^ escape_latex variable_name ^ " from "
+            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression variable_names_with_style from_expr)
+            ^ " to "
+            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression variable_names_with_style to_expr)
+            ^ " do"
+            ^ end_line
+            ^ string_of_seq_code_bloc inner_bloc
+            ^ begin_line
+            ^ "done"
+
+        | While_loop (condition_expr, inner_bloc) ->
+            "while "
+            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression variable_names_with_style condition_expr)
+            ^ " do"
+            ^ end_line
+            ^ string_of_seq_code_bloc inner_bloc
+            ^ begin_line
+            ^ "done"
+
+        | If (condition_expr, then_bloc, else_bloc_opt) ->
+            let str_else_bloc =
+                match else_bloc_opt with
+                | Some else_bloc ->
+                    "else"
+                    ^ end_line
+                    ^ string_of_seq_code_bloc else_bloc
+                    ^ begin_line
+                | None -> ""
+            in
+            "if "
+            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression variable_names_with_style condition_expr)
+            ^ " then"
+            ^ end_line
+            ^ string_of_seq_code_bloc then_bloc
+            ^ begin_line
+            ^ str_else_bloc
+            ^ " end"
+
+
+    in
+    string_of_seq_code_bloc (* seq_code_bloc *)
 
 
 (* Convert a transition of a location into a string *)
