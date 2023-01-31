@@ -63,7 +63,7 @@ type flow = (clock_index * NumConst.t)
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index
-
+(* TODO benjamin NOT USED anymore ? *)
 type clock_updates =
 	(* No update at all *)
 	| No_update
