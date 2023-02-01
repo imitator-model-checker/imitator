@@ -1,3 +1,6 @@
+diff --git a/Makefile b/Makefile
+index 2e54a3c..b357aa7 100644
+--- a/Makefile
 +++ b/Makefile
 @@ -5,7 +5,7 @@ OCAML_LIBDIR:= $(shell ocamlc -where)
  # GMP_INCLUDES= -I/opt/gmp-4.1.2/include -I/users/absint2/local/include -I$(HOME)/packages/gmp/include
@@ -8,8 +11,12 @@
 
  #RLIBFLAGS= -cclib "-Wl,-rpath $(GMP_LIBDIR)" # Linux, FreeBSD
  #RLIBFLAGS= -cclib "-Wl,-R $(GMP_LIBDIR)" # Solaris
-@@ -16,7 +16,7 @@ DESTDIR= $(OCAML_LIBDIR)/gmp
- LIBFLAGS = -cclib -L$(shell pwd) -cclib -lgmp -cclib -lmpfr
+@@ -13,10 +13,10 @@ DESTDIR= $(OCAML_LIBDIR)/gmp
+
+ # LIBFLAGS= -cclib -L. -cclib -L$(GMP_LIBDIR) $(RLIBFLAGS) \
+ #	-cclib -lmpfr -cclib -lgmp -cclib -L$(DESTDIR)
+-LIBFLAGS = -cclib -L$(shell pwd) -cclib -lgmp -cclib -lmpfr
++LIBFLAGS = -cclib -L. -cclib -lgmp -cclib -lmpfr
 
  #CC= icc
 -CFLAGS_MISC= -Wall -Wno-unused -Werror -g -O3
