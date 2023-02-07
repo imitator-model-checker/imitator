@@ -1,5 +1,5 @@
 # Ubuntu Docker image
-FROM ubuntu:latest
+FROM ubuntu:focal
 LABEL maintainer="Jaime Arias <arias@lipn.univ-paris13.fr>"
 
 # PPL version to be installed
@@ -30,6 +30,7 @@ COPY . /imitator/
 
 # Compiling imitator
 RUN cd /imitator && \
+  sed -i 's/# directory/directory/' METAS/META.ppl && \
   cp METAS/META.ppl /usr/lib/ocaml/METAS/ && \
   sh build.sh && \
   rm -rf _build IMITATOR.native _oasis _tags
