@@ -92,12 +92,12 @@ The complete syntax is given in \cref{chapter:grammar}.
 \section{Generalities}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
-An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
+An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}), with numerous extensions.
 \IPTA{} and \NIPTA{} are formalized in \cref{section:NIPTA}.
 
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
 %
-Still nowadays, the syntax of \hytech{} (and \phaverLite{}, reusing itself in part the \hytech{}) models is remarkably close to \imitator{}.
+Still nowadays, the syntax of \hytech{} (and \phaverLite{}, reusing itself in part the \hytech{} syntax) models is relatively close to the syntax of \imitator{}.
 % Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{ACHH92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
 Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
@@ -151,7 +151,9 @@ This model contains two parameters: \styleIMI{delta} is the parametric duration 
 
 Two integer-valued variables (\ie{} global, discrete variables, see \cref{section:discrete}) are used:
 \styleIMI{turn} checks which process is attempting to enter the critical section;
-\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
+\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification\footnote{%
+	Actually \imitator{} detects this automatically, and a warning is triggered.
+}, but was used in the original \pat{} model, and we choose to keep it).
 % TODO: use it for verification since IMITATOR supports global variables in properties
 
 Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in the original \pat{} model), and encodes that no process is attempting to enter the critical section.
@@ -192,7 +194,7 @@ Process~2 is identical to process~1, except that \styleIMI{x1} is replaced with 
 The observer is in charge to check that no more than one process is in critical section at the same time.\footnote{%
 	This observer is not really necessary to check the correctness of this protocol;
 	instead of adding this observer and checking \styleIMI{unreachable loc[observer] = obs\_violation}, one could just check either \styleIMI{counter > 1} or \styleIMI{loc[proc1] = CS1 \& loc[proc2] = CS2}.
-	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since \imitator{}~2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98}).
+	However, this example comes from an earlier version of \imitator{} (that did not support checking global variables or more that one location in the \styleIMI{unreachable} property --- which has been fixed since \imitator{}~2.7); furthermore, introducing an observer is also useful, as it is often used for the verification of more complex properties (see, \eg{} \cite{ABL98,ABBL98,Andre13ICECCS}).
 }
 This observer will detect that this situation happens if an action \styleIMI{enter\_1} is followed by an action \styleIMI{enter\_2} without an action \styleIMI{exit\_1} in between (or symmetrically if an action \styleIMI{enter\_2} is followed by an action \styleIMI{enter\_1} without an action \styleIMI{exit\_2} in between).
 Note that the observer simply observes the system state, and synchronizes on the actions used by \styleIMI{proc1} and \styleIMI{proc2}; it does not use any clock nor variable.
@@ -202,9 +204,10 @@ A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{
 
 \paragraph{Initial state definition}
 
-The initial state is defined by the part of the file following \styleIMI{init :=}.
+The initial state is defined by the part of the file following ``\styleIMI{init :=}''.
 
-Since \imitator{} 3.1, the initial definition section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
+% Since \imitator{} 3.1,
+The initial state section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
 
 % This new section introduce a more powerful initialization system allowing initialization of discrete variables by constant expressions. It mean that it is possible to initialize any discrete variables of any type (proposed by \imitator{}) with an expression that can be resolved at compile time (use of variables is forbbiden). It is also the only way to initialize discrete integer and discrete boolean variables.
 
@@ -260,7 +263,7 @@ We give below the whole property file:
 
 \paragraph{Parameter synthesis}
 Finally, let us run \imitator{} on this case study.
-Quite naturally, what we would be interested in is knowing for which parameter valuations this protocol is correct, \ie{} no more than one process can be present in the critical section at one time.
+Quite naturally, what we would be interested in is knowing for which parameter valuations this protocol is correct, \ie{} no more than one process can be present in the critical section at anytime.
 Assuming this model is input in file \stylePath{fischer.imi} and the property is in file \stylePath{fischer.imiprop}, the command calling \imitator{} is as follows:
 
 
@@ -306,6 +309,7 @@ This chapter formally introduces the input model of \imitator{}.
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 % A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
 \IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete variables which can be simple (\eg{} integer, rational, Boolean variables) or more complex (lists, arrays…), complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), multi-rate clocks (\ie{} the speed of a clock is not necessarily~1, and can be defined to any rational) and arbitrary clock updates (\ie{} not necessarily to~0, but also to rationals, other clock valuations or even parameters).
+In addition, built-in and user-defined functions can be used in guards, invariants and resets.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -315,8 +319,8 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 \emph{Clocks} are real-valued variables.
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
-$\clockval : \Clock \rightarrow \setRplus$.
-By default, all clocks are evolving at the same rate (1), but this rate can be defined to any rational value in \imitator{}.
+$\clockval : \Clock \rightarrow \setR$.
+By default, all clocks are evolving at the same rate~1, but this rate can be defined to any rational value in \imitator{}.
 Clocks can also be \emph{stopped} in \imitator{}, \ie{} their rate can be zero.
 
 \emph{Parameters} are rational-valued variables, that act as unknown constants.
