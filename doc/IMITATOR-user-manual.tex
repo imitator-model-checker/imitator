@@ -414,7 +414,7 @@ We can now give a formal definition of \IPTA{}.
 	In the subsequent formal definition, we use for discrete variables the sole set of rational-valued variables instead of other types (int-valued variables, Boolean variables and binary words, lists, arrays, etc.), for sake of simplicity.
 	These more complex types can be used in a straightforward manner.
 	That is, guards (and invariants) can also include operations on such variables.
-	See the section dedicated to discrete variables (\cref{section:discrete}) and the grammar in \cref{chapter:grammar} for the exact behavior allowed by \imitator{}.
+	See the section dedicated to discrete variables (\cref{section:discrete}) and the grammar in \cref{chapter:grammar} for the exact syntax and semantics supported by \imitator{}.
 \end{remark}
 %------------------------------------------------------------
 
@@ -443,7 +443,20 @@ Let $\unobs$ denote the unobservable action.
 \end{definition}
 %------------------------------------------------------------
 
-In the following, we explain this definition.
+Given a parameter valuation~$\pval$, we denote by $\valuate{\A}{\pval}$ the non-parametric structure where all occurrences of a parameter~$\param_i$ have been replaced by~$\pval(\param_i)$.
+% If $\param$ is an integer valuation (\ie{} $\forall \param_i : \pval(\param_i) \in \setN$), and all flows of~$\A$ are~A, then $\valuate{\A}{\pval}$
+Note that, whenever
+	all rates are~1 ($\forall \loc \in \Loc, \forall \clock \in \Clock, \flow(\loc, \clock) = 1$),
+	all guards and invariants are of the form $\clock \bowtie d$, $d \in \setQplus$,
+	and
+	all variables are initially~0, % (\ie{} $\forall \clock \in \Clock : \VariablesInit(\clock) = \{ 0 \}$),
+then
+the resulting structure is a \emph{timed automaton}~\cite{AD94}.\footnote{%
+	Strictly speaking, a TA requires $d \in \setN$; however, using an appropriate rescaling of the constants (by multiplying all constants in $\valuate{\A}{\pval}$ by the least common multiple of their denominators), we obtain an equivalent (integer-valued) TA.
+}
+
+
+Let us explain \cref{definition:IPTA} in the following.
 
 \paragraph{Guards and invariants}
 Guards and invariants in \imitator{} are linear constraints over all variables.
@@ -465,7 +478,8 @@ A non-silent transition is said to be \emph{observable}; and it can be synchroni
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete rational variables.
 This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
 In fact, the \imitator{} includes (more than just) the updatable timed automata of~\cite{BDFP04}, as well as the reset-to-parameter (parametric) timed automata of~\cite{ALR18PresetTA}.
-If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
+% NOTE (2023/02/24): perhaps not true anymore since 3.4
+% If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
 % TODO: nice box with a ``tip'' title
 
 \paragraph{Discrete updates}
@@ -475,9 +489,9 @@ Notably, rational variables can be assigned to rational arithmetic expressions o
 On the one hand, this is more restrictive than clock updates, because discrete rational variables cannot be assigned to a clock or to a parameter (in contrast to clocks, that \emph{can} be assigned to linear expressions over clocks, parameters and discrete rational variables).
 On the other hand, arithmetic expressions are richer than linear constraints, as they notably allow multiplication or division of rational variables with each other.
 
-Since \imitator{}~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
-In addition, while by default updates are \emph{not} sequential in \imitator{}, we also allow sequential updates since \imitator{}~3.3.
-See \cref{ss:updates} for details on updates.
+% % Since \imitator{}~2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
+% In addition, while by default updates are \emph{not} sequential in \imitator{}, we also allow sequential updates since \imitator{}~3.3.
+Since \imitator{} 3.4, clock and discrete updates are now fully sequential: see \cref{ss:updates} for details on updates.
 
 Finally note that, by definition, parameters (that are unknown timing \emph{constants}) cannot be updated.
 
@@ -520,7 +534,7 @@ Note that the explicit flows can also encode (a parametric timed version of) \em
 	\noindent
 	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
 
-	Alternatively, in an \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
+	Alternatively, in a \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
 
 	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
 \end{remark}
@@ -566,7 +580,7 @@ The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init})
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value).
 
 
-In an \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
+In a \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
 % TODO
 
 Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
@@ -577,13 +591,13 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 
 
 \paragraph{Determinism}
-\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of a \NIPTA{} is detected by \imitator{}.
 In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
 Let us precisely define what it means:
 
 %------------------------------------------------------------
 \begin{definition}[strong determinism]
-	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \RVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$.
+	Let $\A$ be a \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \RVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \setN$.
 
 	$\A$ is \emph{strongly-deterministic} if
 	for all automaton $\A_i$,
@@ -602,21 +616,10 @@ Once more, the notion of strong determinism in \imitator{} is \emph{not} used in
 \paragraph{Validity}
 We define the \emph{validity} of a TA as the ability to satisfy its initial state; in other words, a TA is valid iff its state space is not empty.
 
-Given a parameter valuation~$\pval$, we denote by $\valuate{\A}{\pval}$ the non-parametric structure where all occurrences of a parameter~$\param_i$ have been replaced by~$\pval(\param_i)$.
-% If $\param$ is an integer valuation (\ie{} $\forall \param_i : \pval(\param_i) \in \setN$), and all flows of~$\A$ are~A, then $\valuate{\A}{\pval}$
-Note that, whenever
-	all rates are~1 ($\forall \loc \in \Loc, \forall \clock \in \Clock, \flow(\loc, \clock) = 1$),
-	all guards and invariants are of the form $\clock \bowtie d$, $d \in \setQplus$,
-	and
-	all variables are initially~0, % (\ie{} $\forall \clock \in \Clock : \VariablesInit(\clock) = \{ 0 \}$),
-then
-the resulting structure is a \emph{timed automaton}~\cite{AD94}.\footnote{%
-	Strictly speaking, a TA requires $d \in \setN$; however, using an appropriate rescaling of the constants (by multiplying all constants in $\valuate{\A}{\pval}$ by the least common multiple of their denominators), we obtain an equivalent (integer-valued) TA.
-}
 
 %------------------------------------------------------------
 \begin{definition}[validity]\label{definition:validity}
-	Let $\A$ be an \NIPTA{}, let $\pval$ be a parameter valuation.
+	Let $\A$ be a \NIPTA{}, let $\pval$ be a parameter valuation.
 
 	% TODO: redefine using a proper TTS!
 	$\valuate{\A}{\pval}$ is \emph{valid} iff its state space is not empty.
@@ -630,11 +633,11 @@ the resulting structure is a \emph{timed automaton}~\cite{AD94}.\footnote{%
 \section{Initial state and initialization of variables}\label{section:init}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-For each \IPTA{}, a unique initial location must be defined.
+For each \IPTA{}, a unique discrete initial location must be defined.
 
-For variables, the definition of the initial value is very permissive in \imitator{}.
+For continuous variables (clocks and parameters), the definition of the initial value is very permissive in \imitator{}.
 Clocks are not necessarily equal to~0, and parameters are not even necessarily positive.
-
+%
 Parameters and clocks can be initially bound by any linear constraint over parameters, clocks, and discrete variables.
 That is, we can define initial constraints such as:
 
@@ -642,7 +645,7 @@ That is, we can define initial constraints such as:
 x1 + x2 <= 2 p1 + 0.5 p2 - i
 \end{IMITATORmodel}
 
-However, discrete variables must be initialized to a \emph{constant} compatible with their type.
+However, all discrete variables must be initialized to a \emph{constant} compatible with their type.
 See \cref{ss:initial} for details.
 Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
 
@@ -764,20 +767,20 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Arithmetic functions}
 
 \begin{itemize}
-	\item \label{item:lbl-int_div} \styleIMI{int\_div(a:int, b:int):int} - compute the int division of a by b
+	\item \label{item:lbl-int_div} \styleIMI{int\_div(a:int, b:int):int} -- Computes the integer division of \styleIMI{a} by~\styleIMI{b}
 \end{itemize}
 
 \begin{itemize}
-	\item \label{item:lbl-mod} \styleIMI{mod(a:int, b:int):int} - compute the modulo of a by b
+	\item \label{item:lbl-mod} \styleIMI{mod(a:int, b:int):int} -- Computes the remainder of the division of \styleIMI{a} by~\styleIMI{b}
 \end{itemize}
 
 \begin{itemize}
-    \item \label{item:lbl-pow} \styleIMI{pow(x:'a number, e:int):'a} with \styleIMI{'a number:[rational|int]} - compute the power of a (rational or integer) number
+    \item \label{item:lbl-pow} \styleIMI{pow(x:number, e:int):number} with \styleIMI{number} being either \styleIMI{rational} or \styleIMI{int} -- Computes $x^e$
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate this operation, note that the following guard in the model fragment below will evaluate to true:
+	To illustrate these operations, note that the following guard in the model fragment below will evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -790,7 +793,7 @@ an integer variable valuation is a function $\ival : \IVar \rightarrow \setZ \ca
 \paragraph{Conversion functions}
 
 \begin{itemize}
-    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} -- convert an int number to a rational one
+    \item \label{item:lbl-rational_of_int} \styleIMI{rational\_of\_int(x:int):rational} -- Converts an \styleIMI{int} number to a \styleIMI{rational} one
 \end{itemize}
 
 %------------------------------------------------------------
@@ -828,13 +831,27 @@ The opposite function (int of rational) is \emph{not} allowed, as an overflow ca
 %------------------------------------------------------------
 
 % \emph{Boolean variables} are boolean-valued variables.
-\imitator{} also features Boolean-valued variables.
-The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
-a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
+\imitator{} features Boolean-valued variables and Boolean operators 	.
+% BEGIN USELESS ?
+% The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
+% a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
+% END USELESS ?
+
+\paragraph{Boolean operators}
+
+\begin{itemize}
+	\item \styleIMI{b1 | b2} -- Disjunction
+	\item \styleIMI{b1 \& b2} -- Conjunction
+	\item \styleIMI{not(b)} -- Negation
+	\item \styleIMI{b1 = b2} -- Comparison (equality)
+	\item \styleIMI{b1 <> b2} -- Comparison (inequality)
+\end{itemize}
+
+
 
 %------------------------------------------------------------
 \begin{example}
-	To illustrate Boolean variables, note that the following guards in the dummy model fragment below will all evaluate to true:
+	To illustrate Boolean operators, note that the following guards in the dummy model fragment below will all evaluate to true:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
@@ -882,21 +899,28 @@ Note that binary words are of fixed length, and operations can only be applied t
 
 % The set of Binary word variables is $\WVar = \{ \wvar_1, \dots, \wvar_\WVarCard \} $;
 % a Binary word variable valuation is a function $\wval : \WVar \rightarrow \setW(l)$, where $\setW(l)$ is an ordered set of length $l$ and $\setW(l) = \{b_1, ..., b_l \}$ with $b_l = \{0, 1\}$.
-We denote by~$\WVar$ the set of binary word variables.
+% We denote by~$\WVar$ the set of binary word variables.
 
 
 
 \paragraph{Binary word functions}
 
 \begin{itemize}
-    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to left
-		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} - shift a binary word of length \styleIMI{l} to right
-		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to left (non destructive)
-		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} - shift a binary word of length \styleIMI{l} to right (non destructive)
-		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply AND bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply OR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} - apply XOR bitwise operation to two binary words of length \styleIMI{l}
-		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} - apply NOT bitwise operation to a binary word of length \styleIMI{l}
+    \item \label{item:lbl-shift_left} \styleIMI{shift\_left(b:binary\_word(l), i:int):binary\_word(l)} -- Shifts a binary word of length \styleIMI{l} to the left
+
+		\item \label{item:lbl-shift_right} \styleIMI{shift\_right(b:binary\_word(l), i:int):binary\_word(l)} -- Shifts a binary word of length \styleIMI{l} to the right
+
+		\item \label{item:lbl-fill_left} \styleIMI{fill\_left(b:binary\_word(l), i:const int):binary\_word(l + i)} -- Shifts a binary word of length \styleIMI{l} to the left (non destructive)
+
+		\item \label{item:lbl-fill_right} \styleIMI{fill\_right(b:binary\_word(l), i:const int):binary\_word(l + i)} -- Shifts a binary word of length \styleIMI{l} to the right (non destructive)
+
+		\item \label{item:lbl-logand} \styleIMI{logand(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} -- Applies AND bitwise operator to two binary words of length \styleIMI{l}
+
+		\item \label{item:lbl-logor} \styleIMI{logor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} -- Applies OR bitwise operator to two binary words of length \styleIMI{l}
+
+		\item \label{item:lbl-logxor} \styleIMI{logxor(b1:binary\_word(l), b2:binary\_word(l)):binary\_word(l)} -- Applies XOR bitwise operator to two binary words of length \styleIMI{l}
+
+		\item \label{item:lbl-lognot} \styleIMI{lognot(b:binary\_word(l)):binary\_word(l)} -- Applies NOT bitwise operator to a binary word of length \styleIMI{l}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -925,10 +949,11 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \subsubsection{Arrays}
 %------------------------------------------------------------
 
-Array variables are fixed-length collections of indexed elements.
-Array elements can be accessed or updated using an integer-valued arithmetic expression as index.
-An array variable always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
+Arrays are fixed-length collections of indexed elements.
+An array always has a fixed length and an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare an array of integers, or an array of Booleans, or an array of arrays of arrays of Booleans---which can be seen as a multidimensional array.
+%
+Array elements can be accessed or updated using an integer-valued arithmetic expression as index (the first index of an array is~0, as in most programming languages).
 
 Examples of array definitions are given below:
 
@@ -950,11 +975,21 @@ Examples of array definitions are given below:
 
 \paragraph{Array functions}
 
+In the following, unless otherwise specified, \styleIMI{'a} denotes any possible type (primitive or not).
+Following a convention used, \eg{} in OCaml, we denote by \styleIMI{'a array} an array of elements of type \styleIMI{'a}.
+The same notation applies to subsequent types (lists, etc.).
+
+Array functions are never subject to side effects, \ie{} they do not modify the array passed as arguments.
+However, an array can be indirectly modified through one of its elements, using the (usual) syntax, \eg{} \styleIMI{myArray[1] := 32;}.
+
 \begin{itemize}
-	\item \styleIMI{a[i:int]:'a} with \styleIMI{'a:any} - access to element of array \styleIMI{a} at index \styleIMI{i}
-	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2)} with \styleIMI{'a:any} - concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
-	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1} with \styleIMI{'a:any} - length of the array \styleIMI{a1}
-	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool} with \styleIMI{'a:any} - true if \styleIMI{e} is in the array~\styleIMI{a1}
+	\item \styleIMI{a[i:int]:'a} -- Returns the element of array \styleIMI{a} at index \styleIMI{i}
+
+	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2)} -- Concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
+
+	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1} -- Returns the length of array~\styleIMI{a1}
+
+	\item \label{item:lbl-array_mem} \styleIMI{array\_mem(a1:'a, l:'a array(l1)):bool} -- Returns \styleIMI{True} if \styleIMI{e} is in array~\styleIMI{a1}, and \styleIMI{False} otherwise
 \end{itemize}
 
 %------------------------------------------------------------
@@ -963,6 +998,7 @@ Examples of array definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+(* assume my_const_rational_array = [1, 2, 3] : rational array(3) *)
 		when
 			& my_const_rational_array[0] = 1
 			& array_append([1, 2, 3], [4, 5, 6]) = [1, 2, 3, 4, 5, 6]
@@ -983,9 +1019,12 @@ Examples of array definitions are given below:
 
 Lists are collections of variable length.
 Contrarily to arrays, the type of a list does not include its length; it is therefore possible to compare two lists of different lengths.
-List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
-A list variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
+A list always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a list of integers, or a list of Booleans, or a list of lists of arrays of Booleans.
+%
+List elements can only be accessed---not updated---using an integer-valued arithmetic expression as index.
+As usual, the first index is~0.
+
 
 Examples of list definitions are given below:
 
@@ -1003,16 +1042,27 @@ Examples of list definitions are given below:
 
 \paragraph{List functions}
 
+List functions are never subject to side effects.
+
 \begin{itemize}
-	\item \styleIMI{list([]):'a list} with \styleIMI{'a:any} - return an empty list
-	\item \styleIMI{l[i:int]:'a} with \styleIMI{'a:any} - access to element of list \styleIMI{l} at index \styleIMI{i}
-	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list} with \styleIMI{'a:any} - construct a list by inserting a new element \styleIMI{e} at the beginning of \styleIMI{l}
-	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} with \styleIMI{'a:any} - head element of a list \styleIMI{l}
-	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} with \styleIMI{'a:any} - Check if the list \styleIMI{l} is empty
-	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list):int} with \styleIMI{'a:any} - length of the list \styleIMI{l}
-	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} with \styleIMI{'a:any} - true if \styleIMI{e} belongs to the list~\styleIMI{l}
-	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} with \styleIMI{'a:any} - reverse the list~\styleIMI{l}
-	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} with \styleIMI{'a:any} - tail of the list \styleIMI{l}
+	\item \styleIMI{list([]):'a list} -- Returns an empty list
+
+	\item \styleIMI{l[i:int]:'a} -- Returns the element of list \styleIMI{l} at index \styleIMI{i}
+
+	\item \label{item:lbl-list_cons} \styleIMI{list\_cons(e:'a, l:'a list):'a list} -- Returns a new list made of element \styleIMI{e} followed by \styleIMI{l}
+
+	\item \label{item:lbl-list_hd} \styleIMI{list\_hd(l:'a list):'a} -- Returns the first element of list~\styleIMI{l}
+
+	\item \label{item:lbl-list_is_empty} \styleIMI{list\_is\_empty(l:'a list):bool} -- Returns \styleIMI{True} iff the list \styleIMI{l} is empty
+
+	\item \label{item:lbl-list_length} \styleIMI{list\_length(l:'a list):int} -- Returns the length of the list \styleIMI{l}
+
+	\item \label{item:lbl-list_mem} \styleIMI{list\_mem(e:'a, l:'a list):bool} -- Returns \styleIMI{True} iff \styleIMI{e} belongs to list~\styleIMI{l}
+
+	\item \label{item:lbl-list_rev} \styleIMI{list\_rev(l:'a list):'a list} -- Returns a new list which contains all elements of~\styleIMI{l} in reverse order
+
+	\item \label{item:lbl-list_tl} \styleIMI{list\_tl(l:'a list):'a list} -- Returns a new list made of all elements of list~\styleIMI{l} except its first element.
+		% TODO: what happens if l is empty? Runtime exception?
 \end{itemize}
 
 %------------------------------------------------------------
@@ -1021,6 +1071,7 @@ Examples of list definitions are given below:
 
 %------------------------------------------------------------
 	\begin{IMITATORmodel}
+(* Assume my_int_list = list([1, 2, 3]) *)
 		when
 			& my_int_list[0] = 1
 			& list_cons(1, list([2, 3])) = list([1, 2, 3])
@@ -1043,9 +1094,11 @@ Examples of list definitions are given below:
 
 Stacks are LIFO collections (Last In First Out) of variable length.
 It is possible to compare two stacks of different lengths.
-Stack elements can only be accessed---not updated---using pop or top functions.
-A stack variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
+A stack always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a stack of integers, or a stack of Booleans, or a stack of arrays of lists of binary words of length~5.
+%
+Stack elements can be accessed or updated using pop or top functions.
+
 
 \begin{remark}
 A literal stack value can only be an empty stack.
@@ -1068,14 +1121,22 @@ Examples of stack definitions are given below:
 
 \paragraph{Stack functions}
 
+Some stack functions are subject to side effects, \ie{} they modify the stack.
+
 \begin{itemize}
-	\item \styleIMI{stack():'a stack} with \styleIMI{'a:any} - return an empty stack
-	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} with \styleIMI{'a:any} - Get and remove the element at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a} with \styleIMI{'a:any} - Get the element at the top of stack~\styleIMI{s}---the stack is left unchanged
-	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack)} with \styleIMI{'a:any} - Remove all elements of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
-	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} with \styleIMI{'a:any} - Check if the stack \styleIMI{s} is empty
-	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int} with \styleIMI{'a:any} - Get the number of elements in the stack \styleIMI{s}
+	\item \styleIMI{stack():'a stack} -- Returns an empty stack
+
+	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} -- Adds an element \styleIMI{e} at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} -- Removes the element at the top of the stack \styleIMI{s} and returns it---the stack is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-stack_top} \styleIMI{stack\_top(s:'a stack):'a} -- Returns the element at the top of stack~\styleIMI{s}---the stack is left unchanged
+
+	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack)} -- Removes all elements from the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} -- Returns \styleIMI{True} iff \styleIMI{s} is empty
+
+	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int} -- Returns the number of elements in the stack \styleIMI{s}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -1155,13 +1216,13 @@ Examples of queue definitions are given below:
 \paragraph{Queue functions}
 
 \begin{itemize}
-	\item \styleIMI{queue():'a stack} with \styleIMI{'a:any} - return an empty queue
-	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} with \styleIMI{'a:any} - Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} with \styleIMI{'a:any} - Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} with \styleIMI{'a:any} - Get the last element of the queue \styleIMI{q}---the queue is left unmodified
-	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} with \styleIMI{'a:any} - Remove all elements of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} with \styleIMI{'a:any} - Check if the queue \styleIMI{q} is empty
-	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} with \styleIMI{'a:any} - Get the number of elements in the queue \styleIMI{q}
+	\item \styleIMI{queue():'a stack} -- return an empty queue
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} -- Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} -- Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} -- Get the last element of the queue \styleIMI{q}---the queue is left unmodified
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} -- Remove all elements of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} -- Check if the queue \styleIMI{q} is empty
+	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} -- Get the number of elements in the queue \styleIMI{q}
 \end{itemize}
 
 %------------------------------------------------------------
@@ -1286,13 +1347,13 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions fo
 			\hline
 			\multicolumn{2}{|c|}{\textbf{Stack}} \\
 			\hline
-			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Push an element on the top of a stack - the stack is modified \\
+			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Push an element on the top of a stack---the stack is modified \\
 			\hline
-			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Get and remove the element on the top of a stack - the stack is modified \\
+			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Get and remove the element on the top of a stack---the stack is modified \\
 			\hline
 			\hyperref[item:lbl-stack_top]{\styleIMI{stack\_top}} & Get the element on the top of a stack without modifying it \\
 			\hline
-			\hyperref[item:lbl-stack_clear]{\styleIMI{stack\_clear}} & Remove all elements of a stack - the stack is modified \\
+			\hyperref[item:lbl-stack_clear]{\styleIMI{stack\_clear}} & Remove all elements of a stack---the stack is modified \\
 			\hline
 			\hyperref[item:lbl-stack_is_empty]{\styleIMI{stack\_is\_empty}} & Check if the stack has elements  \\
 			\hline
@@ -1300,13 +1361,13 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions fo
 			\hline
 			\multicolumn{2}{|c|}{\textbf{Queues}} \\
 			\hline
-			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Add an element at the beginning of a queue - the queue is modified \\
+			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Add an element at the beginning of a queue---the queue is modified \\
 			\hline
-			\hyperref[item:lbl-queue_pop]{\styleIMI{queue\_pop}} & Get and remove the last element of a queue - the queue is modified \\
+			\hyperref[item:lbl-queue_pop]{\styleIMI{queue\_pop}} & Get and remove the last element of a queue---the queue is modified \\
 			\hline
 			\hyperref[item:lbl-queue_top]{\styleIMI{queue\_top}} & Get the last element of a queue without modifying it \\
 			\hline
-			\hyperref[item:lbl-queue_clear]{\styleIMI{queue\_clear}} & Remove all elements of a queue - the queue is modified \\
+			\hyperref[item:lbl-queue_clear]{\styleIMI{queue\_clear}} & Remove all elements of a queue---the queue is modified \\
 			\hline
 			\hyperref[item:lbl-queue_is_empty]{\styleIMI{queue\_is\_empty}} & Check if the queue has elements  \\
 			\hline
@@ -1681,6 +1742,7 @@ Note that, due to the possibility to modify global variables, user-defined funct
 
 User-defined functions can have zero or more arguments, and must return one value.
 Note that all arguments are passed by value except arrays, stacks and queues which are passed by reference.
+% TODO: explain more carefully with an example
 
 User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
 
@@ -2268,7 +2330,7 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 \section{Validity synthesis}\label{ss:mode:validity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, validity-synthesis computes the parameter constraint such that, for any parameter valuation in that constraint, the system is valid (as per \cref{definition:validity}).
+Given a \NIPTA{}, validity-synthesis computes the parameter constraint such that, for any parameter valuation in that constraint, the system is valid (as per \cref{definition:validity}).
 
 The property syntax is as follows:
 
@@ -2285,7 +2347,7 @@ This ``algorithm'' is trivial: it simply generates the initial state, and projec
 \section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
+Given a \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
 
 The property syntax is as follows:
 
@@ -2307,7 +2369,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting cycle synthesis}\label{ss:accepting-loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
 This can be seen as a liveness property, or more precisely Büchi acceptance condition.
 
@@ -2479,7 +2541,7 @@ A cycle is accepting if it contains:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run (this is notably discussed in~\cite{ALime17}).
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run (this is notably discussed in~\cite{ALime17}).
 
 The property syntax is as follows:
 
@@ -2505,7 +2567,7 @@ property := #synth CycleThrough(True);
 \section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
 That is, only parameter valuations yielding at least one non-Zeno cycle are synthesized.
 Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 
@@ -2561,7 +2623,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 \section{Inverse method: Trace preservation and robustness}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
 This problem is known as the trace-preservation synthesis, and formalized in~\cite{ALM20}.
 The trace-preservation emptiness problem being undecidable~\cite{ALM20}, the analysis is not guaranteed to terminate (although it often does in practice).
 
@@ -2602,7 +2664,7 @@ a result in an external text file (\stylePath{model.res}) and formatted using a 
 \section{Behavioral cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable~\cite{ALM20}, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
 
 The property syntax is of the following form:
@@ -5976,9 +6038,11 @@ Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \up
 %
 Benjamin~Loillier significantly enhanced the syntax, notably allowing new primitive types (Boolean, int, binary words), and composite types (arrays, lists, stacks, queues).
 %
-Dylan~Marinho reformatted the library of benchmarks~\cite{AMP21} and implemented the translation to~\jani{}.
+Johan~Arcile implemented a parametric timed extrapolation~\cite{AA22}.
 %
-Johan~Arcile implemented the extrapolation~\cite{AA22}.
+Jaco van de Pol and Mikael Bisgaard Dahlsen-Jensen proposed several interesting enhancements, notably the new fully sequential updates system.
+%
+Dylan~Marinho reformatted the library of benchmarks~\cite{AMP21} and implemented the translation to~\jani{}.
 
 We acknowledge the help of the PPL~\cite{BHZ08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
