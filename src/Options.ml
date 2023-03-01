@@ -1235,6 +1235,20 @@ class imitator_options =
 					);
 			end;
 
+			(*------------------------------------------------------------*)
+			(* Warns if exemplification + merge or inclusion *)
+			(*------------------------------------------------------------*)
+			begin
+			match property_option with
+				| None -> ()
+				| Some property ->
+					if property.synthesis_type = Exemplification && self#merge_algorithm <> Merge_none then(
+						print_warning ("The mode #exemplification may be invalid when merging is enabled. It is highly recommended to disable merging.");
+					);
+					if property.synthesis_type = Exemplification && self#comparison_operator <> Equality_check && self#comparison_operator <> No_check then(
+						print_warning ("The mode #exemplification may be invalid when inclusion check is enabled instead of equality check (between symbolic states). It is highly recommended to disable inclusion check.");
+					);
+			end;
 
 			(*------------------------------------------------------------*)
 			(* No cart options if not in cartography *)
