@@ -2020,7 +2020,8 @@ let linear_term_of_array array_of_coef constant =
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
 (*------------------------------------------------------------*)
-let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
+let array_of_coef_of_linear_expression variable_infos linear_expression =
+  let index_of_variables, constants = variable_infos.index_of_variables, variable_infos.constants in
   (* Create an array of coef *)
   let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
   (* Create a zero constant *)
@@ -2032,6 +2033,17 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
     | Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
       (* Case variables -> update the array with the coef  *)
     | Variable (coef, variable_name) ->
+
+      (* TODO benjamin REFAC Type check should not be here, we should check linear expression in ExpressionConverter.TypeCheck module *)
+      let discrete_type = VariableInfo.discrete_type_of_global_variable_or_constant variable_infos variable_name in
+      (match discrete_type with
+      | Dt_number Dt_rat
+      | Dt_number Dt_weak_number -> ()
+      | _ ->
+        let str_expr = ParsingStructureUtilities.string_of_linear_expression variable_infos linear_expression in
+        raise (Exceptions.TypeError ("Variable `" ^ variable_name ^ "` found in linear expression `" ^ str_expr ^ "` is not a rational one. Linear expression only hold rational variables."))
+      );
+
       (* Try to find the variable_index *)
       if Hashtbl.mem index_of_variables variable_name then (
         let variable_index = Hashtbl.find index_of_variables variable_name in
@@ -2073,10 +2085,10 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
 (*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
+let linear_inequality_of_linear_constraint variable_infos (linexpr1, relop, linexpr2) =
     (* Get the array of variables and constant associated to the linear terms *)
-    let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
-    let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
+    let array1, constant1 = array_of_coef_of_linear_expression variable_infos linexpr1 in
+    let array2, constant2 = array_of_coef_of_linear_expression variable_infos linexpr2 in
     (* Consider the operator *)
     match relop with
     (* a < b <=> b - a > 0 *)
@@ -2154,7 +2166,7 @@ let linear_constraint_of_convex_predicate variable_infos convex_predicate : Line
            match linear_inequality with
            | Parsed_true_constraint -> linear_inequalities
            | Parsed_false_constraint -> raise False_exception
-           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint variable_infos.index_of_variables variable_infos.constants (linexpr1, relop, linexpr2)) :: linear_inequalities
+           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint variable_infos (linexpr1, relop, linexpr2)) :: linear_inequalities
         ) [] convex_predicate
     in LinearConstraint.make_pxd_constraint linear_inequalities
     (* Stop if any false constraint is found *)
@@ -2164,10 +2176,7 @@ let linear_constraint_of_convex_predicate variable_infos convex_predicate : Line
 (* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
 (*------------------------------------------------------------*)
 let linear_term_of_linear_expression variable_infos linear_expression =
-    let index_of_variables = variable_infos.index_of_variables in
-    let constants = variable_infos.constants in
-
-    let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
+    let array_of_coef, constant = array_of_coef_of_linear_expression variable_infos linear_expression in
     linear_term_of_array array_of_coef constant
 
 
