@@ -391,6 +391,11 @@ A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
 In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete rational-valued variables).
 
+\begin{becareful}
+	Clocks can only be compared to parameters and rational-valued variables.
+	Other types are not allowed in clock constraints.
+	Notably, ``int''-valued variables (see \cref{sss:int}) cannot be compared to a clock.
+\end{becareful}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -745,7 +750,7 @@ We review in the following these various types, together with their associated b
 \emph{Rational variables} are (exact, unbounded) rational-valued variables, and were described in \cref{subsection:rational}.
 
 %------------------------------------------------------------
-\subsubsection{``Int''-valued variables}
+\subsubsection{``Int''-valued variables}\label{sss:int}
 %------------------------------------------------------------
 
 \emph{Int variables} are bounded signed integer-valued variables encoded using 32~bits (which is architecture independent).
@@ -1134,51 +1139,38 @@ Some stack functions are subject to side effects, \ie{} they modify the stack.
 
 	\item \label{item:lbl-stack_clear} \styleIMI{stack\_clear(s:'a stack)} -- Removes all elements from the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 
-	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} -- Returns \styleIMI{True} iff \styleIMI{s} is empty
+	\item \label{item:lbl-stack_is_empty} \styleIMI{stack\_is\_empty(s:'a stack):bool} -- Returns \styleIMI{True} iff stack~\styleIMI{s} is empty
 
 	\item \label{item:lbl-stack_length} \styleIMI{stack\_length(s:'a stack):int} -- Returns the number of elements in the stack \styleIMI{s}
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	The following code fragment illustrates some possibilities offered by the stacks operations:
+	The following code fragment illustrates some possibilities offered by the operations on stacks:
 
-% NOTE: TODO: all seq-then should be removed from examples and explanations!
-
+% NOTE: this is file ./examples/stacks.imi
 %------------------------------------------------------------
-	\begin{IMITATORmodel}
-		loc l0: invariant True
-		when
-			& True
-			do {
-				seq
-					stack_push(1, s);
-					stack_push(2, s);
-					i := stack_top(s);
-					j := stack_pop(s);
-			}
-		goto l1;
+\begin{IMITATORmodel}
+loc l0: invariant True
+	when True do {
+		stack_push(1, s);
+		stack_push(2, s);
+		i := stack_top(s);
+		j := stack_pop(s);
+	}
+	goto l1;
 
-		loc l1: invariant
-			i = j
-			& i = 2
-			& stack_length(s) = 1
-			& not(stack_is_empty(s))
-		when
-			& True
-		do {
-			seq
-				stack_clear(s);
-		}
-		goto l2;
+loc l1: invariant
+	i = j
+	& i = 2
+	& stack_length(s) = 1
+	& not(stack_is_empty(s))
+	when True do { stack_clear(s); }
+	goto l2;
 
-		loc l2: invariant stack_is_empty(s)
-
-	\end{IMITATORmodel}
+loc l2: invariant stack_is_empty(s)
+\end{IMITATORmodel}
 %------------------------------------------------------------
-
-The \styleIMI{seq} keyword denotes a sequential update (see \cref{section:seq_then_form_updates}).
-Side-effect functions can only be used in such sequential updates.
 
 \end{example}
 %------------------------------------------------------------
@@ -1190,6 +1182,7 @@ Side-effect functions can only be used in such sequential updates.
 %------------------------------------------------------------
 
 Queues are FIFO collections (First In First Out) of variable length.
+Addition of an element is always at the end of the queue, while removal is performed at the beginning.
 It is possible to compare two queues of different lengths.
 Queue elements can only be accessed---not updated---using pop or top functions.
 A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
@@ -1216,49 +1209,45 @@ Examples of queue definitions are given below:
 \paragraph{Queue functions}
 
 \begin{itemize}
-	\item \styleIMI{queue():'a stack} -- return an empty queue
-	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} -- Add an element \styleIMI{e} at the beginning of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} -- Get and remove the last element of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} -- Get the last element of the queue \styleIMI{q}---the queue is left unmodified
-	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} -- Remove all elements of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
-	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} -- Check if the queue \styleIMI{q} is empty
-	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} -- Get the number of elements in the queue \styleIMI{q}
+	\item \styleIMI{queue():'a queue} -- Returns an empty queue
+
+	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} -- Adds an element \styleIMI{e} at the end of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-queue_pop} \styleIMI{queue\_pop(q:'a queue):'a} -- Removes the first element of the queue \styleIMI{q} and returns it---the queue is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-queue_top} \styleIMI{queue\_top(q:'a queue):'a} -- Returns the first element of the queue \styleIMI{q}---the queue is left unmodified
+
+	\item \label{item:lbl-queue_clear} \styleIMI{queue\_clear(q:'a queue)} -- Removes all elements from the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
+
+	\item \label{item:lbl-queue_is_empty} \styleIMI{queue\_is\_empty(q:'a queue):bool} -- Returns \styleIMI{True} iff queue~\styleIMI{q} is empty
+
+	\item \label{item:lbl-queue_length} \styleIMI{queue\_length(q:'a queue):int} -- Returns the number of elements in the queue \styleIMI{q}
 \end{itemize}
 
 %------------------------------------------------------------
 \begin{example}
-	The following code fragment illustrates some possibilities offered by the queues operations:
+	The following code fragment illustrates some possibilities offered by the operations on queues:
 
+% NOTE: this is file ./examples/stacks.imi
 %------------------------------------------------------------
-	\begin{IMITATORmodel}
-		loc l0: invariant True
-		when
-			& True
-			do {
-				seq
-					queue_push(1, q);
-					queue_push(2, q);
-					i := queue_top(q);
-					j := queue_pop(q);
-			}
-		goto l1;
+\begin{IMITATORmodel}
+loc l0: invariant True
+	when True do {
+		queue_push(1, q);
+		queue_push(2, q);
+		i := queue_top(q);
+		j := queue_pop(q);
+	} goto l1;
 
-		loc l1: invariant
-			i = j
-			& i = 1
-			& queue_length(q) = 1
-			& not(queue_is_empty(q))
-		when
-			& True
-		do {
-			seq
-				queue_clear(q);
-		}
-		goto l2;
+loc l1: invariant
+	i = j
+	& i = 1
+	& queue_length(q) = 1
+	& not(queue_is_empty(q))
+	when True do { queue_clear(q); } goto l2;
 
-		loc l2: invariant queue_is_empty(q)
-
-	\end{IMITATORmodel}
+loc l2: invariant queue_is_empty(q)
+\end{IMITATORmodel}
 %------------------------------------------------------------
 
 \end{example}
@@ -1281,97 +1270,97 @@ Examples of queue definitions are given below:
 \subsubsection{Built-in functions over discrete variables}\label{section:builtin-functions}
 %------------------------------------------------------------
 
-We summarize in \cref{table:summary:builtin-functions} the built-in functions for discrete variables.
+We summarize in \cref{table:summary:builtin-functions} the built-in functions over discrete variables of various types.
 
 \begin{table}[h!]
+	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
 	\caption{Summary of the built-in functions}
 	{\centering
 		\small
-		\begin{tabular}{ | l | l | }
+		\begin{tabular}{ | l | l | l |}
 
-			% Non-nested CTL
 			\hline
-			\rowHeader{} \textbf{Name} & \textbf{Description} \\
+			\rowHeader{} \textbf{Name} & \textbf{Description} & \textbf{Side-effects} \\
 			\hline
-		 	\multicolumn{2}{|c|}{\textbf{Arithmetic}} \\
+		 	\multicolumn{3}{|c|}{\textbf{Arithmetic}} \\
 			\hline
-			\hyperref[item:lbl-int_div]{\styleIMI{int\_div}} & Int division        \\
+			\hyperref[item:lbl-int_div]{\styleIMI{int\_div}} & Integer division over int & \cellNA{}\\
 			\hline
-			\hyperref[item:lbl-mod]{\styleIMI{mod}} & Modulo of two int        \\
+			\hyperref[item:lbl-mod]{\styleIMI{mod}} & Modulo over int & \cellNA{}\\
 			\hline
-			\hyperref[item:lbl-pow]{\styleIMI{pow}} & Pow a number        \\
+			\hyperref[item:lbl-pow]{\styleIMI{pow}} & Power & \cellNA{}\\
 			\hline
-			\hyperref[item:lbl-rational_of_int]{\styleIMI{rational\_of\_int}} & Convert an int expression to a rational one        \\
+			\hyperref[item:lbl-rational_of_int]{\styleIMI{rational\_of\_int}} & Converts an int expression to a rational one  & \cellNo{}\\
 			\hline
-		 	\multicolumn{2}{|c|}{\textbf{Binary words}} \\
+		 	\multicolumn{3}{|c|}{\textbf{Binary words}} \\
 			\hline
-			\hyperref[item:lbl-shift_left]{\styleIMI{shift\_left}} & Shift a binary to the left (truncate to the binary word length) \\
+			\hyperref[item:lbl-shift_left]{\styleIMI{shift\_left}} & Shifts a binary to the left (truncate to the binary word length) & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-shift_right]{\styleIMI{shift\_right}} & Shift a binary to the right (truncate to the binary word length) \\
+			\hyperref[item:lbl-shift_right]{\styleIMI{shift\_right}} & Shifts a binary to the right (truncate to the binary word length) & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-fill_left]{\styleIMI{fill\_left}} & Shift a binary to the left (no truncate) \\
+			\hyperref[item:lbl-fill_left]{\styleIMI{fill\_left}} & Shifts a binary to the left (no truncate) & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-fill_right]{\styleIMI{fill\_right}} & Shift a binary to the right (no truncate) \\
+			\hyperref[item:lbl-fill_right]{\styleIMI{fill\_right}} & Shifts a binary to the right (no truncate) & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-logand]{\styleIMI{logand}} & And bitwise on binary numbers \\
+			\hyperref[item:lbl-logand]{\styleIMI{logand}} & And bitwise on binary numbers & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-logor]{\styleIMI{logor}} & Or bitwise on binary numbers \\
+			\hyperref[item:lbl-logor]{\styleIMI{logor}} & Or bitwise on binary numbers & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-logxor]{\styleIMI{logxor}} & Xor bitwise on binary numbers \\
+			\hyperref[item:lbl-logxor]{\styleIMI{logxor}} & Xor bitwise on binary numbers & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-lognot]{\styleIMI{lognot}} & Not bitwise on a binary number \\
+			\hyperref[item:lbl-lognot]{\styleIMI{lognot}} & Not bitwise on a binary number & \cellNo{}\\
 			\hline
-			\multicolumn{2}{|c|}{\textbf{Arrays}} \\
+			\multicolumn{3}{|c|}{\textbf{Arrays}} \\
 			\hline
-			\hyperref[item:lbl-array_append]{\styleIMI{array\_append}} & Concatenate two arrays \\
+			\hyperref[item:lbl-array_append]{\styleIMI{array\_append}} & Concatenates two arrays & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-array_length]{\styleIMI{array\_length}} & Get length of an array \\
+			\hyperref[item:lbl-array_length]{\styleIMI{array\_length}} & Returns the length of an array & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-array_mem]{\styleIMI{array\_mem}} & Search existence of an element in an array \\
+			\hyperref[item:lbl-array_mem]{\styleIMI{array\_mem}} & Checks the existence of an element in an array & \cellNo{}\\
 			\hline
-			\multicolumn{2}{|c|}{\textbf{Lists}} \\
+			\multicolumn{3}{|c|}{\textbf{Lists}} \\
 			\hline
-			\hyperref[item:lbl-list_cons]{\styleIMI{list\_cons}} & Construct a list by adding an element to the beginning \\
+			\hyperref[item:lbl-list_cons]{\styleIMI{list\_cons}} & Constructs a list by adding an element to the beginning & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_hd]{\styleIMI{list\_hd}} & Get head of a list \\
+			\hyperref[item:lbl-list_hd]{\styleIMI{list\_hd}} & Returns the head of a list & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_is_empty]{\styleIMI{list\_is\_empty}} & Check if a list has elements \\
+			\hyperref[item:lbl-list_is_empty]{\styleIMI{list\_is\_empty}} & Checks emptiness & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_length]{\styleIMI{list\_length}} & Get length of a list \\
+			\hyperref[item:lbl-list_length]{\styleIMI{list\_length}} & Returns the length of a list & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_rev]{\styleIMI{list\_rev}} & Reverse a list \\
+			\hyperref[item:lbl-list_rev]{\styleIMI{list\_rev}} & Reverses a list & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_mem]{\styleIMI{list\_mem}} & Search existence of an element in a list \\
+			\hyperref[item:lbl-list_mem]{\styleIMI{list\_mem}} & Checks the existence of an element in a list & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-list_tl]{\styleIMI{list\_tl}} & Get tail of a list \\
+			\hyperref[item:lbl-list_tl]{\styleIMI{list\_tl}} & Returns the tail of a list & \cellNo{}\\
 			\hline
-			\multicolumn{2}{|c|}{\textbf{Stack}} \\
+			\multicolumn{3}{|c|}{\textbf{Stack}} \\
 			\hline
-			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Push an element on the top of a stack---the stack is modified \\
+			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Pushes an element on the top of a stack & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Get and remove the element on the top of a stack---the stack is modified \\
+			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Removes and returns the element on the top of a stack & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-stack_top]{\styleIMI{stack\_top}} & Get the element on the top of a stack without modifying it \\
+			\hyperref[item:lbl-stack_top]{\styleIMI{stack\_top}} & Returns the element on the top of a stack without modifying it & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-stack_clear]{\styleIMI{stack\_clear}} & Remove all elements of a stack---the stack is modified \\
+			\hyperref[item:lbl-stack_clear]{\styleIMI{stack\_clear}} & Removes all elements from a stack & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-stack_is_empty]{\styleIMI{stack\_is\_empty}} & Check if the stack has elements  \\
+			\hyperref[item:lbl-stack_is_empty]{\styleIMI{stack\_is\_empty}} & Checks emptiness & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-stack_length]{\styleIMI{stack\_length}} & Get the number of elements of a stack \\
+			\hyperref[item:lbl-stack_length]{\styleIMI{stack\_length}} & Returns the number of elements in a stack & \cellNo{}\\
 			\hline
-			\multicolumn{2}{|c|}{\textbf{Queues}} \\
+			\multicolumn{3}{|c|}{\textbf{Queues}} \\
 			\hline
-			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Add an element at the beginning of a queue---the queue is modified \\
+			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Adds an element at the end of a queue & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-queue_pop]{\styleIMI{queue\_pop}} & Get and remove the last element of a queue---the queue is modified \\
+			\hyperref[item:lbl-queue_pop]{\styleIMI{queue\_pop}} & Removes and returns the first element of a queue & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-queue_top]{\styleIMI{queue\_top}} & Get the last element of a queue without modifying it \\
+			\hyperref[item:lbl-queue_top]{\styleIMI{queue\_top}} & Returns the first element of a queue without modifying it & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-queue_clear]{\styleIMI{queue\_clear}} & Remove all elements of a queue---the queue is modified \\
+			\hyperref[item:lbl-queue_clear]{\styleIMI{queue\_clear}} & Removes all elements from a queue & \cellYes{}\\
 			\hline
-			\hyperref[item:lbl-queue_is_empty]{\styleIMI{queue\_is\_empty}} & Check if the queue has elements  \\
+			\hyperref[item:lbl-queue_is_empty]{\styleIMI{queue\_is\_empty}} & Checks emptiness & \cellNo{}\\
 			\hline
-			\hyperref[item:lbl-queue_length]{\styleIMI{queue\_length}} & Get the number of elements of a queue \\
+			\hyperref[item:lbl-queue_length]{\styleIMI{queue\_length}} & Returns the number of elements of a queue & \cellNo{}\\
 			\hline
 		\end{tabular}
 
@@ -1386,7 +1375,7 @@ The parameters of a function are evaluated from left to right.
 
 \begin{remark}
 	Some functions, called ``Side-effects functions'' can modify the value of some input variables and therefore are subject to side-effects.
-	Side-effects functions can only be used in updates, more precisely in the body of the \styleIMI{seq} block of an update (see \cref{ss:updates}).
+	Side-effects functions can only be used in updates, and not in guards and invariants.
 \end{remark}
 
 
@@ -1412,8 +1401,8 @@ The initial default value of composite types is as follows:
 \begin{tabular}{l l}
 	Array & \styleIMI{[]}\\
 	List & \styleIMI{list([])}\\
-	Stack & \styleIMI{stack([])}\\
-	Queue & \styleIMI{queue([])}\\
+	Stack & \styleIMI{stack()}\\
+	Queue & \styleIMI{queue()}\\
 \end{tabular}
 
 
@@ -1421,48 +1410,36 @@ The initial default value of composite types is as follows:
 \subsection{Updates}\label{ss:updates}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The presence of clocks, parameters, discrete variables, and structures (such as arrays) requires a particular handling of the updates, which we describe in the following.
+The paradigm is that variables are first tested in guards, then updated in updates.
+And the updated value is then tested in the target invariant.
 
-In any case, the paradigm is that discrete variables are first tested in guards, then updated in updates.
+Since \imitator{}~3.4, updates are strictly \emph{sequential}.
+Side-effects functions are allowed in updated.
+
+In case of composition of different \IPTA{} in parallel firing a transition on a common action, the updates are performed sequentially for each \IPTA{}, starting from the top-most automaton in the input file.
+That is, the updates of the transition of the first \IPTA{} involved in the synchronization are processed, followed by the updates of the second \IPTA{}, and so on.
 
 %------------------------------------------------------------
-\subsubsection{Conflicts in updates}
+\begin{becareful}
+	The paradigm of updates until \imitator{}~3.3 was not strictly sequential (discrete variables were updated first, and then clocks using a non-sequential partial function---see the user manuals dedicated to the former versions).
+	It may happen that, for elaborate models, the behavior starting from \imitator{}~3.4 is not backward-compatible with versions $\leq$~3.3.
+\end{becareful}
 %------------------------------------------------------------
 
-Conflicts can arise in standard updates due to the modular nature of \NIPTA{}.
-If two \IPTA{} in parallel update the same variable on the same synchronized action~\styleIMI{a} (\eg{} an \IPTA{} performs \styleIMI{i := 2} on a transition labeled with~\styleIMI{a}, while another one performs \styleIMI{i := 3} on a transition labeled with~\styleIMI{a}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
+
+% TODO: example!
+
+%%%
+
+
 
 %------------------------------------------------------------
 \subsubsection{Standard updates}\label{sss:standard-updates}
 %------------------------------------------------------------
 
-By default, updates are not sequential in \imitator{}, but rather define a partial function on variables (including clocks).
-That is, in the following block:
-
-\begin{IMITATORmodel}
-	when x = 0 & i = 1 do {i := i+1, i := 5, x := i}
-\end{IMITATORmodel}
-
-\noindent{}after the update, \styleIMI{x} is equal to~0 (because \styleIMI{x := i} implies that the new value of \styleIMI{x} becomes the value of \styleIMI{i} \emph{before} the update), while the value of \styleIMI{i} is unspecified due to a non-deterministic assignment, \ie{} \styleIMI{i} is updated to two different values in the update (this is an ill-formed behavior, and a warning will be triggered).
-
-Since \imitator{} 3.3, we also allow for some sequential updates on the discrete variables, as explained in the following.
-
-%------------------------------------------------------------
-\subsubsection{\styleIMI{seq-then} updates}\label{section:seq_then_form_updates}
-%------------------------------------------------------------
-
-\styleIMI{seq-then} updates are more complex updates, allowing first a set of sequential updates (on the discrete variables only, including side-effects functions), called the ``\styleIMI{seq} block'' , followed by ``standard updates'' (non-sequential), called the \styleIMI{then} block.
 
 \paragraph{The \styleIMI{seq} block}
 
-A \styleIMI{seq} block can be used to define sequential updates on any discrete variable of any type.
-Contrary to the \styleIMI{then} block (or to the standard updates), it is possible to make modifications of data structures (such as stacks and queues) using side-effects functions.
-The \styleIMI{seq} block can be seen as an imperative update part that is processed before the \styleIMI{then} block.
-It is not possible to update clocks in a \styleIMI{seq} block.
-
-In a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks (all sequential updates) in all \IPTA{} are processed as follows:
-the updates are performed sequentially starting from the top-most \IPTA{} in the input model file (\ie{} following the definition order of \IPTA{}).
-That is, all the sequential updates of the first of the \IPTA{} are processed, followed by all  the sequential updates of the second \IPTA{}, and so on.
 
 
 % \paragraph{}

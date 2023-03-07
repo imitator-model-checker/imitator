@@ -29,7 +29,7 @@ var
 	i,
 	j,
 		: int;
-	s :int stack;
+	s	: int stack;
 
 (* Parameters *)
 
@@ -54,8 +54,7 @@ loc l1: invariant
 	& i = 2
 	& stack_length(s) = 1
 	& not(stack_is_empty(s))
-	when True do { stack_clear(s); }
-	goto l2;
+	when True do { stack_clear(s); } goto l2;
 
 loc l2: invariant stack_is_empty(s)
 
