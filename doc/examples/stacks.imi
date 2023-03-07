@@ -1,0 +1,102 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying stack functions
+ * Description      : Small example for exemplifying stack functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Benjamin Loillier and Étienne André
+ * Modeling         : ME
+ * Input by         : ME
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+
+(* Discrete *)
+	i,
+	j,
+		: int;
+	s :int stack;
+
+(* Parameters *)
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l0: invariant True
+	when True do {
+		stack_push(1, s);
+		stack_push(2, s);
+		i := stack_top(s);
+		j := stack_pop(s);
+	}
+	goto l1;
+
+loc l1: invariant
+	i = j
+	& i = 2
+	& stack_length(s) = 1
+	& not(stack_is_empty(s))
+	when True do { stack_clear(s); }
+	goto l2;
+
+loc l2: invariant stack_is_empty(s)
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l0,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+		j := 0,
+		s := stack(),
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
