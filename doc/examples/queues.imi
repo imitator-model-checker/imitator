@@ -1,0 +1,99 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying queue functions
+ * Description      : Small example for exemplifying queue functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Benjamin Loillier and Étienne André
+ * Modeling         : ME
+ * Input by         : ME
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+
+(* Discrete *)
+	i,
+	j,
+		: int;
+	q	: int queue;
+
+(* Parameters *)
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l0: invariant True
+	when True do {
+		queue_push(1, q);
+		queue_push(2, q);
+		i := queue_top(q);
+		j := queue_pop(q);
+	} goto l1;
+
+loc l1: invariant
+	i = j
+	& i = 1
+	& queue_length(q) = 1
+	& not(queue_is_empty(q))
+	when True do { queue_clear(q); } goto l2;
+
+loc l2: invariant queue_is_empty(q)
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l0,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+		j := 0,
+		q := queue(),
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
