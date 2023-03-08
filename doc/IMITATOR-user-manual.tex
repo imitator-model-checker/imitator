@@ -520,7 +520,7 @@ It is resumed when leaving the location---unless the target location again stops
 \item [Using explicit flows]
 \imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
 That is, it is possible to specify the \emph{speed} of a clock in a location.
-This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch~\cite{CL00}) or a negative number.
+This value is an arbitrary rational number, including~0 (in which case it is equivalent to a stopwatch~\cite{CL00}) or a negative number.
 This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
 A clock for which no flow is explicitly defined has of course flow~1.
 A stopwatch has flow~0.
@@ -1518,263 +1518,81 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 %------------------------------------------------------------
 
 
-%%%
 
 
-
-%------------------------------------------------------------
-\subsubsection{Standard updates}\label{sss:standard-updates}
-%------------------------------------------------------------
-
-
-\paragraph{The \styleIMI{seq} block}
-
-
-
-% \paragraph{}
-Examples of a \styleIMI{seq} update expression:
-
-\begin{IMITATORmodel}
-	do {
-
-		(* only do expression *)
-		seq
-			i := 1; (* after this update: i = 1 *)
-			i := i + 1; (* after this update: i = 2 *)
-		end
-
-	}
-\end{IMITATORmodel}
-
-\begin{IMITATORmodel}
-	do {
-
-		(* only do expression *)
-		seq
-			(* modification of stack s (with side-effet) *)
-			stack_push(1, s);
-			(* modification of stack s (with side-effet) *)
-			stack_push(2, s);
-		end
-
-	}
-\end{IMITATORmodel}
-
-\paragraph{The \styleIMI{then} block}
-
-The \styleIMI{then} block can be used to update clocks or discrete variables.
-These updates are not sequential so, as described before, in case of multiple updates of the same variable, a warning is issued, and the behavior of the \NIPTA{} becomes unspecified.
-The \styleIMI{then} block is essentially the same as a standard update (see \cref{sss:standard-updates}).
-This kind of update was the only one in \imitator{} until \imitator{}~3.3.
-
-Below is an example of a \styleIMI{then} update expression:
-
-\begin{IMITATORmodel}
-	(* Assume initially i = 1, j = 2, x = 2046 *)
-
-	do {
-		(* only "then" expression *)
-		i := j + 3,
-		j := i * 3,
-		x := i - j
-	}
-	(* Now: i=5, j=3, x=-1 *)
-\end{IMITATORmodel}
-
-
-Below is an example of a \styleIMI{then} update expression, that is ill-formed and will trigger a warning:
-
-\begin{IMITATORmodel}
-	(* Assume initially i = 1 *)
-
-	do {
-		(* only "then" expression *)
-		i := 3,
-		i := 4,
-		x := i
-	}
-	(* Now, x = 1, while i = 3 OR i = 4 (unspecified!) *)
-\end{IMITATORmodel}
-
-% BEGIN OLD EXAMPLE
-% 		(* only "then" expression *)
-% 		i := 1; (* i = 1 *)
-% 		(* multiple updates of i below (not taken into account) *)
-% 		(* i will still be equal to 1 *)
-% 		i := i + 1;
-% 		(* below j = i, as initial value of i = 0 for this state, j = 0 *)
-% 		(* keep in mind that it is not a sequential update *)
-% 		(* but an update based on the initial variable values of the current state *)
-% 		j := i
-% END OLD EXAMPLE
-
-\paragraph{The \styleIMI{seq-then} block}
-
-In one given transition, the \styleIMI{seq} block is executed \emph{before} the \styleIMI{then} block.
-
-Recall that, in a model that contains multiple synchronized \IPTA{}, given a transition, all \styleIMI{seq} blocks are performed sequentially starting from the top-most \IPTA{} in the input model file.
-Only once all \styleIMI{seq} blocks are computed (sequentially), all \styleIMI{then} blocks are then executed (at once).
-Keep in mind that, contrarily to the \styleIMI{seq} blocks, updates contained in \styleIMI{then} blocks are \emph{not} computed sequentially.
-
-The value of the variables used in the right-hand part of an update in the \styleIMI{then} block is the value computed \emph{after} executing the \styleIMI{seq} block updates.
-
+%
+% %------------------------------------------------------------
+% \begin{IMITATORmodel}
+% (************************************************************)
+% automaton pta1
+% (************************************************************)
+% 	actions : a;
+%
+% 	loc l1: invariant x <= 0
+% 	when True
+% 	do {
+% 		seq
+% 			stack_push(0, s);
+% 			i := 1;
+% 		then
+% 			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
+% 			r1 := stack_top(s),
+% 			x := i
+% 		end
+% 	}
+% 	sync a goto lend;
+%
+% 	accepting loc lend: invariant True
+% 	end (* pta *)
+% 	(************************************************************)
+%
+% 	(************************************************************)
+% 	automaton pta2
+% 	(************************************************************)
+% 	actions : a;
+% 	loc l1: invariant True
+% 	when
+% 	& True
+% 	do {
+% 		seq
+% 			i := 2;
+% 			stack_push(1, s);
+% 		then
+% 			(* r2 = 1, because all seq updates in all IPTA are made before *)
+% 			r2 := stack_top(s)
+% 		end
+% 	}
+% 	sync a goto lend;
+%
+% 	accepting loc lend: invariant True
+% 	end (* pta *)
+% 	(************************************************************)
+%
+% 	(************************************************************)
+% 	automaton pta3
+% 	(************************************************************)
+% 	actions : a;
+% 	loc l1: invariant True
+% 	when
+% 	& True
+% 	do {
+% 		(* r3 = 1, because all seq updates in all IPTA are made before *)
+% 		r3 := stack_top(s)
+% 	}
+% 	sync a goto lend;
+%
+% 	accepting loc lend: invariant True
+% 	end (* pta *)
+% \end{IMITATORmodel}
+% %------------------------------------------------------------
 
 
 %------------------------------------------------------------
-\begin{remark}
-	Note the use of semicolon in the sequential block (\styleIMI{seq} block), in contrast to the comma in the declarative block (\styleIMI{then} block).
-\end{remark}
+\subsubsection{Runtime errors}\label{ss:runtime-errors}
 %------------------------------------------------------------
-
-\cref{table:summary:blocks-characteristics} summarizes what is allowed in the \styleIMI{seq} and \styleIMI{then} blocks.
-``Side effects'' refers to side-effect functions, while ``variable auto remove'' denotes the fact that any variable used in the \styleIMI{seq} block is considered useful and will not be automatically removed (see option \styleOption{-no-var-autoremove} in \cref{chapter:options} for more explanations on \imitator{} automatic variable deletion).
-
-
-%------------------------------------------------------------
-\begin{table}[tb]
-	\caption{Blocks features summary}
-	{\centering
-	\small
-	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
-		\begin{tabular}{ | l | c | c | c | c | c | }
-			% Non-nested CTL
-			\hline
-			\rowHeader{} \textbf{Block} & \textbf{Sequential behavior} & \textbf{Clock update} & \textbf{Discrete update} & \textbf{Side effects} & \textbf{Variable auto remove} \\
-			\hline
-			\styleIMI{seq} & \cellYes{} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{}        \\
-			\hline
-			\styleIMI{then} & \cellNo{} & \cellYes{} & \cellYes{} & \cellNo{} & \cellYes{}        \\
-			\hline
-		\end{tabular}
-
-	}
-
-	\label{table:summary:blocks-characteristics}
-\end{table}
-%------------------------------------------------------------
-
-Examples of a \styleIMI{seq-then} update expression:
-
-%------------------------------------------------------------
-\begin{IMITATORmodel}
-	do {
-
-		seq
-			i := 0; (* i = 0 *)
-			i := i + 1; (* now, i = 1 *)
-		then
-			i := 3, j := i (* now, i = 3 and j = 1 *)
-		end
-
-	}
-\end{IMITATORmodel}
-%------------------------------------------------------------
-
-%------------------------------------------------------------
-\begin{IMITATORmodel}
-	do {
-
-		seq
-			(* modification of stack s using side-effects *)
-			stack_push(1, s);
-			(* modification of stack s using side-effects *)
-			stack_push(2, s);
-			(* set i to 0 *)
-			i := 0;
-			(* i = 1, below *)
-			i := i + 1;
-			(* below, updating a clock is forbidden in a do block *)
-			(* x := 0 *)
-		then
-			x := i,
-			j := stack_top(s),
-			(* below, r is update several time *)
-			(* as these constraints updates are not sequential *)
-			(* the value of r will be unspecified *)
-			r := 0,
-			r := 1
-			(* using side-effects functions is forbidden in a then block *)
-			(* r := stack_pop(s) *)
-		end
-
-	}
-\end{IMITATORmodel}
-%------------------------------------------------------------
-
-Examples of a \styleIMI{seq-then} update expression with multiple synchronized transitions:
-
-%------------------------------------------------------------
-\begin{IMITATORmodel}
-(************************************************************)
-automaton pta1
-(************************************************************)
-	actions : a;
-
-	loc l1: invariant x <= 0
-	when True
-	do {
-		seq
-			stack_push(0, s);
-			i := 1;
-		then
-			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
-			r1 := stack_top(s),
-			x := i
-		end
-	}
-	sync a goto lend;
-
-	accepting loc lend: invariant True
-	end (* pta *)
-	(************************************************************)
-
-	(************************************************************)
-	automaton pta2
-	(************************************************************)
-	actions : a;
-	loc l1: invariant True
-	when
-	& True
-	do {
-		seq
-			i := 2;
-			stack_push(1, s);
-		then
-			(* r2 = 1, because all seq updates in all IPTA are made before *)
-			r2 := stack_top(s)
-		end
-	}
-	sync a goto lend;
-
-	accepting loc lend: invariant True
-	end (* pta *)
-	(************************************************************)
-
-	(************************************************************)
-	automaton pta3
-	(************************************************************)
-	actions : a;
-	loc l1: invariant True
-	when
-	& True
-	do {
-		(* r3 = 1, because all seq updates in all IPTA are made before *)
-		r3 := stack_top(s)
-	}
-	sync a goto lend;
-
-	accepting loc lend: invariant True
-	end (* pta *)
-\end{IMITATORmodel}
-%------------------------------------------------------------
-
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Runtime errors}\label{ss:runtime-errors}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Runtime errors can be encountered during updates.
-For a example, during an update, a division by zero can be encountered: in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0, the result becomes undefined.
+For a example, during an update, a division by zero can be encountered: \eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0.
 
 When a runtime error is encountered, an exception is raised and \imitator{} terminates with an error.
 
@@ -1794,26 +1612,52 @@ The possible runtime errors include:
 In addition to the built-in functions (see \cref{table:summary:builtin-functions}), users have the ability to declare their own functions, called \emph{user-defined functions}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Declaration}
+\subsection{Structure}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-A user-defined function is made of a (possibly empty) list of declarations of local variables (introduced by \styleIMI{let}), of a set of imperative instructions (modification of global variables) and may have one \styleIMI{return} expression.
+User-defined functions must be declared directly after the variable declarations on the top of the input model.
+
+A user-defined function is made of
+\begin{enumerate}
+	\item a (possibly empty) list of declarations of local variables (introduced by \styleIMI{var}),
+	\item a set of imperative instructions (modification of global variables), and
+	\item one or zero \styleIMI{return} expression.
+\end{enumerate}
 
 Local variable declarations and imperative instructions can be written in any order.
-A function may or may not return a value.
-If a function returns something, the last instruction should be an expression that is the \styleIMI{return} expression.
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Return type}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+A function may or may not return a value (if it does not, the function return type is \styleIMI{void}).
+If a function returns something, the last instruction should be the \styleIMI{return} expression.
 If a function returns nothing, it should be typed as \styleIMI{void} and does not have any \styleIMI{return} expression.
 
-Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side-effect, they can only be used in updates (not in guards nor in invariants).
 
-User-defined functions can have zero or more arguments, and must return one value.
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Arguments}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+User-defined functions can have zero or more arguments, and must return a value if they are not \styleIMI{void}.
+
+%%%
 Note that all arguments are passed by value except arrays, stacks and queues which are passed by reference.
 % TODO: explain more carefully with an example
 
-User functions must be declared directly after the variable declarations and are global to all \IPTA{} in the \NIPTA{}.
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Side-effects}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+User-defined functions are global to all \IPTA{} in the \NIPTA{}.
+
+Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
+
+
+
 
 \begin{example}
-We give below some examples of user function definitions:
+We give below some examples of definitions of user-defined functions:
 
 \begin{IMITATORmodel}
 	var
@@ -1885,7 +1729,7 @@ We give below some examples of user function definitions:
 \end{itemize}
 
 \begin{example}
-We give below some examples of incorrect user function definitions:
+We give below some examples of definitions of incorrect user-defined functions:
 
 \begin{IMITATORmodel}
 	var
@@ -1927,12 +1771,12 @@ We give below some examples of incorrect user function definitions:
 \begin{itemize}
 \item As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
 \item Array are passed by reference, as soon as the content of an array passed by reference is modified, the function is labeled internally as a ``side-effect function'';
-\item Shadowing an argument of the user function or shadowing a global / local variable with a local one is possible (local variable with the same name as another variable);
+\item Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is possible (local variable with the same name as another variable);
 \item Calls of another functions are possible;
 \end{itemize}
 
 \begin{example}
-We give below some examples of user function definitions:
+We give below some examples of definitions of user-defined function:
 
 \begin{IMITATORmodel}
 
@@ -2009,7 +1853,7 @@ These blocs can sometimes be nested and define a level hierarchy of lexical scop
 This simple rule is followed: every inner level can access its outer levels.
 
 For example, a variable \styleIMI{x} declared at the top most of the model, a global variable, is accessible at any level of the model.
-We can access \styleIMI{x} in any user functions, loops, conditions.
+We can access \styleIMI{x} in any user-defined functions, loops, conditions.
 
 \begin{example}
 	To illustrate example above:
@@ -4504,7 +4348,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{let} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \styleIMI{=} \nt{expression} \styleIMI{in} \nt{fun\_body} \\
+	$|$ & \styleIMI{var} \nt{<name>} \styleIMI{:} \nt{var\_type\_discrete} \styleIMI{=} \nt{expression} \styleIMI{in} \nt{fun\_body} \\
 \end{longtable}
 
 %------------------------------------------------------------
@@ -5920,7 +5764,6 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{int\_div} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
-	\styleIMI{let} \\
 	\styleIMI{list\_cons} \\
 	\styleIMI{list\_hd} \\
 	\styleIMI{list\_is\_empty} \\
@@ -5950,7 +5793,6 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{queue\_push} \\
 	\styleIMI{queue\_top} \\
 	\styleIMI{rational\_of\_int} \\
-    \styleIMI{seq} \\
 	\styleIMI{sequence} \\
 	\styleIMI{shift\_left} \\
 	\styleIMI{shift\_right} \\
@@ -5993,7 +5835,7 @@ We enumerate in the following what seems to us to be the ``most missing'' featur
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ASAP (as soon as possible) transitions are transitions that can be taken as soon as all \IPTA{} synchronizing with this transition can execute their local transition.
-This is different from urgent transitions, that must be taken in 0 time.
+This is different from urgent transitions, that must be taken in 0-time.
 Here, time can elapse, but not after all \IPTA{} are ready to execute their local transition.
 
 This is not supported by \imitator{}. %, and we do not see a way to simulate it easily in the current implementation.
@@ -6038,7 +5880,7 @@ This can be easily simulated using dedicated discrete variables, that would be r
 
 Discrete variables must be set to a constant rational in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
 Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
-This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
+This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0-time so as to not disturb the model.
 % TODO: example
 
 
