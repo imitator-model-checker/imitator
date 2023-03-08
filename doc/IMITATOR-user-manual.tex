@@ -673,7 +673,9 @@ If an \IPTA{} declares an action \styleIMI{act} that is never used in this \IPTA
 	In this case, \imitator{} will detect this situation and will entirely delete this action from the model, while issuing a warning.
 }
 
-Also note that, when synchronizing transitions, the order in which the associated updates are executed is described in \cref{ss:updates}.
+Also note that, when synchronizing transitions, the order in which the associated updates are executed is described in details in \cref{ss:updates}.
+
+An example showing the synchronization mechanism of \imitator{} will be given in \cref{example:sync-model-updates} \pageref{example:sync-model-updates}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1188,9 +1190,11 @@ Queue elements can only be accessed---not updated---using pop or top functions.
 A queue variable always has an underlying type, which can be any of the available types of \imitator{} (including arrays, lists, stacks and queues).
 For example, it is possible to declare a queue of integers, a queue of Booleans, or a queue of stacks of binary words of length~3.
 
+%------------------------------------------------------------
 \begin{remark}
 A literal queue value can only be an empty queue.
 \end{remark}
+%------------------------------------------------------------
 
 Examples of queue definitions are given below:
 
@@ -1427,7 +1431,92 @@ That is, the updates of the transition of the first \IPTA{} involved in the sync
 %------------------------------------------------------------
 
 
-% TODO: example!
+%------------------------------------------------------------
+\begin{example}[Synchronization model and updates]\label{example:sync-model-updates}
+Consider the following \imitator{} model fragment.
+
+% NOTE: file examples/updates.imi
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+var
+	x : clock;
+	i : int;
+	r : rational;
+
+(************************************************************)
+  automaton A1
+(************************************************************)
+actions: a, b;
+
+loc l1: invariant x = 0
+	when x = 0 do {r := 3; x := r; i := 2} sync a goto l2;
+	when True do {i := i + 2} sync b goto l2;
+
+loc l2: invariant i >= 2
+	when True do {i := i * i} sync b goto l2;
+end (* A1 *)
+
+(************************************************************)
+  automaton A2
+(************************************************************)
+actions: b;
+
+loc l1: invariant True
+	when x <= 3r do {r := r*r; x := x+1; i := i - 2} sync b goto l2;
+
+loc l2: invariant True
+end (* A2 *)
+
+
+(************************************************************)
+  automaton A3
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when True do {x := 2x; i := pow(i, 3)} sync a goto l2;
+
+loc l2: invariant True
+end (* A3 *)
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+Assume all three variables are initially~0, and all \IPTA{} are in their initial \styleIMI{l1} location.
+
+Transition~\styleIMI{b} can fire in the \NIPTA{} from the initial state only if all \IPTA{} declaring \styleIMI{b} as an action (here: \styleIMI{A1} and \styleIMI{A2}) are ready to fire: this is the case, since both guards associated to action~\styleIMI{b} are verified (\ie{} ``\styleIMI{True}'' in~\styleIMI{A1}, and ``\styleIMI{x <= 3r}'' in~\styleIMI{A2}).
+Then, the updates are applied, first in~\styleIMI{A1} (giving \styleIMI{i = 2}), then in~\styleIMI{A2} (giving \styleIMI{r = 0, x = 1, i = 0});
+but then, when checking for the invariant of the target location, the invariant of~\styleIMI{l2} in~\styleIMI{A1} (``\styleIMI{i >= 2}'') is not satisfied.
+Therefore this transition cannot be taken.
+
+Transition~\styleIMI{a} can fire in the \NIPTA{} from the initial state only if all \IPTA{} declaring \styleIMI{a} as an action (here: \styleIMI{A1} and \styleIMI{A3}) are ready to fire: this is the case, since both guards associated to action~\styleIMI{a} are verified.
+Then, the updates are applied, first in~\styleIMI{A1} (giving \styleIMI{r = 3, x = 3, i = 2}), then in~\styleIMI{A3} (giving \styleIMI{r = 3, x = 6, i = 8}.
+The target invariant being satisfied, the automaton can enter location \styleIMI{loc[A1] = l2, loc[A2] = l1, loc[A3] = l2}.
+The zone associated to this location is \styleIMI{x >= 6}, as time can elapse (no invariant).
+
+From this latter location, action~\styleIMI{b} can be taken:
+both guards in~\styleIMI{A1} and~\styleIMI{A2} (resp.\ ``\styleIMI{True}'' and ``\styleIMI{x <= 3r}'') are satisfied, and the updates are applied sequentially:
+updates in~\styleIMI{A1} give \styleIMI{r = 3, x >= 6, i = 64};
+then, updates in~\styleIMI{A2} give \styleIMI{r = 9, x >= 7, i = 62}.
+The target invariant being trivially satisfied, the automaton can enter location \styleIMI{loc[A1] = l2, loc[A2] = l2, loc[A3] = l2}.
+
+From this latter location, no more transition is possible: while there is an outgoing transition labeled with~\styleIMI{b} from \styleIMI{loc[A1] = l2}, it cannot be taken as the synchronization model of \imitator{} is that \emph{all} \IPTA{} declaring an action \emph{must} fire it together---this is not the case of \styleIMI{A3}, which declares~\styleIMI{b} as a synchronization action, but has no available \styleIMI{b}-transition from the current state.
+
+The full parametric zone graph of this example is given in \cref{example:sync-model-updates-PZG}.
+
+\end{example}
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+\begin{figure}
+	\centering
+	\includegraphics[width=.5\textwidth]{examples/updates-statespace-PZG.pdf}
+
+	\caption{Parametric zone graph of \cref{example:sync-model-updates}}
+	\label{example:sync-model-updates-PZG}
+\end{figure}
+%------------------------------------------------------------
+
 
 %%%
 
@@ -3095,7 +3184,9 @@ imitator fischer.imi fischer.imiprop -depth-limit 4 -draw-statespace normal
 
 	(where \styleOption{normal} should be replaced with \styleOption{undetailed} or \styleOption{full}, respectively)
 \end{example}
+%------------------------------------------------------------
 
+%------------------------------------------------------------
 \begin{figure}
 	\centering
 	\begin{subfigure}[b]{.48\textwidth}
@@ -3120,6 +3211,7 @@ imitator fischer.imi fischer.imiprop -depth-limit 4 -draw-statespace normal
 
 	\caption{Examples of graphical state space}
 \end{figure}
+%------------------------------------------------------------
 
 
 
