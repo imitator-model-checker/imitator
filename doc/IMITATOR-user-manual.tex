@@ -1626,6 +1626,9 @@ A user-defined function is made of
 
 Local variable declarations and imperative instructions can be written in any order.
 
+A function can call another function, but not itself---that is to say, recursion is not allowed (multiple recursion, \ie{} \styleIMI{f} calling \styleIMI{g} calling itself \styleIMI{f}, isn't allowed either).
+
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Return type}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1641,17 +1644,41 @@ If a function returns nothing, it should be typed as \styleIMI{void} and does no
 
 User-defined functions can have zero or more arguments, and must return a value if they are not \styleIMI{void}.
 
+Clocks and parameters cannot be passed as arguments.
+
+Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
+
+
 %%%
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Scope and modification of global variables}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+User-defined functions are global to all \IPTA{} in the \NIPTA{}.
+
+\begin{itemize}
+	\item Updating a function argument in a function body is forbidden;
+	\item Updating a parameter is obviously forbidden inside a function (as in the rest of \imitator{});
+	\item Updating a global variable so that it takes the value of a clock or a parameter is forbidden (as in the rest of \imitator{}).
+\end{itemize}
+
 Note that all arguments are passed by value except arrays, stacks and queues which are passed by reference.
 % TODO: explain more carefully with an example
+
+
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Side-effects}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-User-defined functions are global to all \IPTA{} in the \NIPTA{}.
-
 Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
+
+Array are passed by reference, as soon as the content of an array passed by reference is modified, the function is labeled internally as a ``side-effect function'';
+
+As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
+
 
 
 
@@ -1716,20 +1743,10 @@ We give below some examples of definitions of user-defined functions:
 \end{IMITATORmodel}
 \end{example}
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Some rules}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-\begin{itemize}
-	\item Modification of a clock or a parameter is forbidden inside a function;
-	\item Modification of a function argument is forbidden;
-	\item Modification of a local variable value is forbidden;
-	\item Updating a global variable by a clock or a parameter is forbidden;
-	\item Recursive calls are forbidden (including mutually recursive calls).
-\end{itemize}
 
-\begin{example}
-We give below some examples of definitions of incorrect user-defined functions:
+\begin{example}[bad definitions]
+We give below some examples of definitions of \emph{incorrect} user-defined functions:
 
 \begin{IMITATORmodel}
 	var
@@ -1767,13 +1784,6 @@ We give below some examples of definitions of incorrect user-defined functions:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Some other practices}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-\begin{itemize}
-\item As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
-\item Array are passed by reference, as soon as the content of an array passed by reference is modified, the function is labeled internally as a ``side-effect function'';
-\item Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is possible (local variable with the same name as another variable);
-\item Calls of another functions are possible;
-\end{itemize}
 
 \begin{example}
 We give below some examples of definitions of user-defined function:
@@ -1822,6 +1832,9 @@ We give below some examples of definitions of user-defined function:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Calling a user-defined function}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+% TODO: move elsewhere?
+Recursive calls are forbidden (including mutually recursive calls).
 
 User-defined functions can be called in guards, invariants or updates in the same manner as the built-in functions.
 However, side-effect user-defined functions can only be used in updates.
