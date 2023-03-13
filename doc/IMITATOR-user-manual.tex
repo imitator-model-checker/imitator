@@ -1628,6 +1628,8 @@ Local variable declarations and imperative instructions can be written in any or
 
 A function can call another function, but not itself---that is to say, recursion is not allowed (multiple recursion, \ie{} \styleIMI{f} calling \styleIMI{g} calling itself \styleIMI{f}, isn't allowed either).
 
+Recursive calls are forbidden (including mutually recursive calls).
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Return type}
@@ -1646,12 +1648,15 @@ User-defined functions can have zero or more arguments, and must return a value 
 
 Clocks and parameters cannot be passed as arguments.
 
+Arguments of a function can be any well-typed expression (including made of local and global variables) as well as the result of another function call.
+
 Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
 
 
 \begin{example}
 We give below some examples of definitions of user-defined functions:
 
+% NOTE: examples/functions_examples.imi
 \begin{IMITATORmodel}
 (* This function has no argument, and returns 2 *)
 function two() : int
@@ -1675,20 +1680,33 @@ begin
 end
 
 (* Linear interpolation example with some local variables *)
-function lerp(a : rat, b : rat, x : rat) : rat
+function lerp(a : rat, b : rat, c : rat) : rat
 begin
 	var length : rat = b - a;
-	var pos : rat = length * x;
+	var pos : rat = length * c;
 	return a + pos
 end
 
 (* Returns the last element of a list *)
-function last(l : rat list)
+function last(l : int list) : int
 begin
 	var n : int = list_length(l);
 	return l[n - 1]
 end
 
+automaton A1
+
+loc l1: invariant True
+	(* All guards below evaluate to true and keep i=0 *)
+	when add_one(5) = 6                                            goto l2;
+	when add(1, 2) = two() + 1                                     goto l2;
+	when add(1, two()) = 3                                         goto l2;
+	when lerp(0, 5, 1 / 2) = 2.5                                   goto l2;
+	(* The update below yields i=6 *)
+	when True do {i := add(add_one(last(list([1,2,3]))), two()); } goto l2;
+
+loc l2: invariant True
+end
 \end{IMITATORmodel}
 \end{example}
 
@@ -1745,6 +1763,7 @@ In addition, as soon as the content of a data structure passed as argument is mo
 %%%
 
 
+%------------------------------------------------------------
 \begin{example}
 We give below some examples of definitions of user-defined functions:
 
@@ -1768,49 +1787,10 @@ We give below some examples of definitions of user-defined functions:
 
 \end{IMITATORmodel}
 \end{example}
+%------------------------------------------------------------
 
 
-
-\begin{example}[bad definitions]
-We give below some examples of definitions of \emph{incorrect} user-defined functions:
-
-\begin{IMITATORmodel}
-	var
-	my_global_i, my_global_j : int;
-	x, y : clock;
-	p1, p2 : parameter;
-
-	(* This function try to modify a clock, parameter and argument value *)
-	function modify_clock_param_arg() : int
-	begin
-		(* Modification of a clock is forbidden, an error will be raised *)
-		x := 0;
-		(* Modification of a parameter is forbidden, an error will be raised *)
-		p1 := 0;
-		(* Modification of a function argument is forbidden, an error will be raised *)
-		i := 0;
-		return 0
-	end
-
-	(* Recursive calls are forbidden, an error will be raised *)
-	function mutual_rec_f2() : int
-	begin
-		return mutual_rec_f1()
-	end
-
-	function mutual_rec_f1() : int
-	begin
-		var a : int = mutual_rec_f2();
-		return a + 1
-	end
-
-\end{IMITATORmodel}
-\end{example}
-
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Some other practices}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
+%------------------------------------------------------------
 \begin{example}
 We give below some examples of definitions of user-defined function:
 
@@ -1854,29 +1834,50 @@ We give below some examples of definitions of user-defined function:
 
 \end{IMITATORmodel}
 \end{example}
+%------------------------------------------------------------
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Calling a user-defined function}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-% TODO: move elsewhere?
-Recursive calls are forbidden (including mutually recursive calls).
-
-User-defined functions can be called in guards, invariants or updates in the same manner as the built-in functions.
-However, side-effect user-defined functions can only be used in updates.
-
-Arguments of a function can be any well-typed expression as well as other function calls.
-
-\begin{example}
-To illustrate the use of user-defined functions, note that the following guard in the model fragment below will evaluate to true:
+%------------------------------------------------------------
+\begin{example}[bad definitions]
+We give below some examples of definitions of \emph{incorrect} user-defined functions:
 
 \begin{IMITATORmodel}
-	when add_one(5) = 6 goto lend;
-	when add(1, 2) = two() + 1 goto lend;
-	when add(1, two()) = 3 goto lend;
-	when lerp(0, 5, 1 / 2) = 2.5 goto lend;
+	var
+	my_global_i, my_global_j : int;
+	x, y : clock;
+	p1, p2 : parameter;
+
+	(* This function try to modify a clock, parameter and argument value *)
+	function modify_clock_param_arg() : int
+	begin
+		(* Modification of a clock is forbidden, an error will be raised *)
+		x := 0;
+		(* Modification of a parameter is forbidden, an error will be raised *)
+		p1 := 0;
+		(* Modification of a function argument is forbidden, an error will be raised *)
+		i := 0;
+		return 0
+	end
+
+	(* Recursive calls are forbidden, an error will be raised *)
+	function mutual_rec_f2() : int
+	begin
+		return mutual_rec_f1()
+	end
+
+	function mutual_rec_f1() : int
+	begin
+		var a : int = mutual_rec_f2();
+		return a + 1
+	end
+
 \end{IMITATORmodel}
 \end{example}
+%------------------------------------------------------------
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical scope}\label{section:variable_scope}

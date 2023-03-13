@@ -1,0 +1,124 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Simple examples for functions
+ * Description      : Simple examples for functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Benjamin Loillier and Étienne André
+ * Modeling         : Benjamin Loillier and Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/13
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+
+(* Discrete *)
+	i : int;
+
+(* Parameters *)
+
+
+(************************************************************)
+(*Functions *)
+(************************************************************)
+(* This function has no argument, and returns 2 *)
+function two() : int
+begin
+	(* Return 2 *)
+	return 1 + 1
+end
+
+(* Returns the value of the integer argument plus 1 *)
+function add_one(i : int) : int
+begin
+	(* Add one to i *)
+	return i + 1
+end
+
+(* Returns the sum of two integer arguments *)
+function add(a : int, b : int) : int
+begin
+	(* Add a to b *)
+	return a + b
+end
+
+(* Linear interpolation example with some local variables *)
+function lerp(a : rat, b : rat, c : rat) : rat
+begin
+	var length : rat = b - a;
+	var pos : rat = length * c;
+	return a + pos
+end
+
+(* Returns the last element of a list *)
+function last(l : int list) : int
+begin
+	var n : int = list_length(l);
+	return l[n - 1]
+end
+
+(************************************************************)
+  automaton A
+(************************************************************)
+loc l1: invariant True
+	(* All guards below evaluate to true and keep i=0 *)
+	when add_one(5) = 6                                            goto l2;
+	when add(1, 2) = two() + 1                                     goto l2;
+	when add(1, two()) = 3                                         goto l2;
+	when lerp(0, 5, 1 / 2) = 2.5                                   goto l2;
+	(* The update below yields i=6 *)
+	when True do {i := add(add_one(last(list([1,2,3]))), two()); } goto l2;
+
+loc l2: invariant True
+end (* A *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
