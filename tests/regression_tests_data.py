@@ -4955,7 +4955,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/25
       ## Last modified            : 2023/01/25
       'author': 'lbinria',
-      'purpose'    : 'Check that update a constant is forbidden',
+      'purpose'    : 'Check that updating a constant is forbidden',
       'input_files': ['functions/seq-code-bloc-update-constant.imi'],
       'tags': 'code, bloc, constant, update',
       'imitator-version': '3.4',
@@ -4978,7 +4978,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that update of a parameter is forbidden in code bloc',
+      'purpose'    : 'Check that updating a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -5001,7 +5001,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that update of a discrete with parameter is forbidden in code bloc',
+      'purpose'    : 'Check that updating a discrete to a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -5024,7 +5024,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that update of a discrete with clock is forbidden in code bloc',
+      'purpose'    : 'Check that updating a discrete with a clock is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-clock.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -5047,7 +5047,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that nonlinear continuous (on clock or parameter) operation is forbidden',
+      'purpose'    : 'Check that nonlinear expressions over clocks of parameters are forbidden',
       'input_files': ['functions/seq-code-bloc-nonlinear-op-continuous.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -5155,7 +5155,7 @@ Error                                   : invalid model
       ## Test since               : 2022/07/21
       ## Last modified            : 2022/07/21
       'author': 'lbinria',
-      'purpose'    : 'Test auto-remove management on sequential updates and user defined functions',
+      'purpose'    : 'Test auto-remove management on updates and user-defined functions',
       'input_files': ['dependency_graph/variable-autoremove-on-seq-update.imi'],
       'tags': 'variable, function, auto-remove, dependency',
       'imitator-version': '3.4',
