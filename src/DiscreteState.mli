@@ -38,7 +38,7 @@ type local_discrete_valuation = variable_ref -> AbstractValue.abstract_value
 type local_discrete_setter = variable_ref -> AbstractValue.abstract_value -> unit
 type discrete_access = discrete_valuation * discrete_setter * local_discrete_valuation * local_discrete_setter
 
-(** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
+(** Should the float be displayed using exact rationals or (possibly approximated) floats? *)
 type rational_display =
 	| Exact_display
 	| Float_display
@@ -112,5 +112,5 @@ val is_accepting : (automaton_index -> location_index -> bool) -> global_locatio
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
+(** 'string_of_location automata_names location_names discrete_names rational_display location' converts a location to a string. *)
 val string_of_location : (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (discrete_index -> variable_name) -> rational_display -> global_location -> string
