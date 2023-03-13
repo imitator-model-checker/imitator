@@ -1,0 +1,92 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying functions with arguments modification
+ * Description      : Small example for exemplifying functions with arguments modification
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/03/13
+ * Last modified    : 2023/03/13
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+	t: int array (4);
+	s: int stack;
+
+
+(************************************************************)
+(*Functions *)
+(************************************************************)
+function f(i : int, t : int array(4), s : int stack) : void
+begin
+	(* Forbidden *)
+(* 	i := 4; *)
+	(* Forbidden *)
+(* 	t := [1,2,3,4]; *)
+
+	(* Allowed *)
+	t[0] := 9;
+	(* Allowed *)
+	stack_clear(s);
+	stack_push(i, s);
+end
+
+(************************************************************)
+  automaton A
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+	when True do {f(3, t, s)} goto l1;
+
+end (* A *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		t := [1,2,3,4],
+		s := stack(),
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

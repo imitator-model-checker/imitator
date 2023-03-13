@@ -1649,7 +1649,50 @@ Clocks and parameters cannot be passed as arguments.
 Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
 
 
-%%%
+\begin{example}
+We give below some examples of definitions of user-defined functions:
+
+\begin{IMITATORmodel}
+(* This function has no argument, and returns 2 *)
+function two() : int
+begin
+	(* Return 2 *)
+	return 1 + 1
+end
+
+(* Returns the value of the integer argument plus 1 *)
+function add_one(i : int) : int
+begin
+	(* Add one to i *)
+	return i + 1
+end
+
+(* Returns the sum of two integer arguments *)
+function add(a : int, b : int) : int
+begin
+	(* Add a to b *)
+	return a + b
+end
+
+(* Linear interpolation example with some local variables *)
+function lerp(a : rat, b : rat, x : rat) : rat
+begin
+	var length : rat = b - a;
+	var pos : rat = length * x;
+	return a + pos
+end
+
+(* Returns the last element of a list *)
+function last(l : rat list)
+begin
+	var n : int = list_length(l);
+	return l[n - 1]
+end
+
+\end{IMITATORmodel}
+\end{example}
+
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Scope and modification of global variables}
@@ -1663,8 +1706,27 @@ User-defined functions are global to all \IPTA{} in the \NIPTA{}.
 	\item Updating a global variable so that it takes the value of a clock or a parameter is forbidden (as in the rest of \imitator{}).
 \end{itemize}
 
-Note that all arguments are passed by value except arrays, stacks and queues which are passed by reference.
-% TODO: explain more carefully with an example
+All arguments are passed by value except arrays, stacks and queues which are passed by reference.
+Put it differently, it is not allowed to \emph{replace} an argument with another value, but it is possible to update some of its content.
+
+% NOTE: examples/functions_arguments.imi
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+function f(i : int, t : int array(4), s : int stack) : void
+begin
+	(* Forbidden *)
+ 	i := 4;
+	(* Forbidden *)
+ 	t := [1,2,3,4];
+
+	(* Allowed *)
+	t[0] := 9;
+	(* Allowed *)
+	stack_clear(s);
+	stack_push(i, s);
+end
+\end{IMITATORmodel}
+%------------------------------------------------------------
 
 
 
@@ -1673,14 +1735,14 @@ Note that all arguments are passed by value except arrays, stacks and queues whi
 \subsection{Side-effects}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Note that, due to the possibility to modify global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
+Note that, due to the possibility to modify arguments or global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
 
-Array are passed by reference, as soon as the content of an array passed by reference is modified, the function is labeled internally as a ``side-effect function'';
-
-As soon as a global variable is modified, the function is labeled internally as a ``side-effect function'', and can only be used in updates (not in guards neither in invariants);
-
+Obviously, if a global variable is modified in a function, it becomes a side-effect function.
+In addition, as soon as the content of a data structure passed as argument is modified, the function is labeled internally as a ``side-effect function''.
 
 
+
+%%%
 
 
 \begin{example}
@@ -1689,42 +1751,6 @@ We give below some examples of definitions of user-defined functions:
 \begin{IMITATORmodel}
 	var
 		my_global_i, my_global_j : int;
-
-	(* This function has no argument, and return 2 *)
-	function two() : int
-	begin
-		(* Return 2 *)
-		return 1 + 1
-	end
-
-	(* This function adds 1 to the integer argument *)
-	function add_one(i : int) : int
-	begin
-		(* Add one to i *)
-		return i + 1
-	end
-
-	(* This function sums the two integer arguments *)
-	function add(a : int, b : int) : int
-	begin
-		(* Add a to b *)
-		return a + b
-	end
-
-	(* Linear interpolation example with some local variables *)
-	function lerp(a : rat, b : rat, x : rat) : rat
-	begin
-		var length : rat = b - a;
-		var pos : rat = length * x;
-		return a + pos
-	end
-
-	(* Get last element of a list *)
-	function last(l : rat list)
-	begin
-		var n : int = list_length(l);
-		return l[n - 1]
-	end
 
 	(* This function has side-effects *)
 	function side_effect(i : int, j : int) : int

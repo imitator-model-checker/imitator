@@ -1,0 +1,126 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying functions and side-effects
+ * Description      : Small example for exemplifying functions and side-effects
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/03/08
+ * Last modified    : 2023/03/08
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	x, y,
+
+(* Discrete *)
+	i, j,
+		: int;
+	r,
+		: rational;
+
+(* Parameters *)
+
+
+(************************************************************)
+(*Functions *)
+(************************************************************)
+(* Dummy function incrementing the value of global variable i *)
+function incr_i() : void
+begin
+	i := i+1
+end
+
+(* Dummy function summing up an int and a rat *)
+function sum_int_rat(a : int, b : rat) : rat
+begin
+	var sum : rat = b;
+	sum := sum + rational_of_int(a);
+	return sum
+end
+
+(************************************************************)
+  automaton A1
+(************************************************************)
+actions: ;
+
+loc l1: invariant sum_int_rat(i, r) < rational_of_int(j)
+
+end (* A1 *)
+
+
+(************************************************************)
+  automaton A2
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+
+end (* A2 *)
+
+
+(************************************************************)
+  automaton A3
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+
+end (* A3 *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A1] := l1,
+		loc[A2] := l1,
+		loc[A3] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+		j := 0,
+		r := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+		& y = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
