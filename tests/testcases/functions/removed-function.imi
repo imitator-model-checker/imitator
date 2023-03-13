@@ -1,0 +1,86 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that a potentially removed variable (because unused) doesn't crash the analysis
+ * Description      : Test that a potentially removed variable (because unused), here t, doesn't crash the analysis
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/03/09
+ * Last modified    : 2023/03/13
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Discrete *)
+	t : int array(4);
+
+(* Parameters *)
+
+(************************************************************)
+  function no_side_effect() : bool
+(************************************************************)
+begin
+	return t[0] = 0;
+end
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when True goto l2;
+
+loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		t := [1,2,3,4],
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

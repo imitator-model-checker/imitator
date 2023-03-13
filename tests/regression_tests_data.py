@@ -6,7 +6,7 @@
 #
 #             Data for non-regression tests
 #
-# Université Paris 13, LIPN, CNRS, France
+# Université Sorbonne Paris Nord, LIPN, CNRS, France
 # Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
 # File description  : non-regression tests data
@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2022/02/09
+# Last modified     : 2023/03/13
 #************************************************************
 
 
@@ -684,7 +684,30 @@ END CONSTRAINT
 
 	,
 
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/09
+		# Last modified            : 2023/03/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test auto-removed variable doesn’t crash a function return',
+		'input_files': ['functions/removed-function.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'removed-function.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: strange way to check valid syntax
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+
+	,
+
+#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON UNSATISFIABLE INITIAL STATE
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
