@@ -5065,6 +5065,30 @@ Error                                   : invalid model
     ,
 
 	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/13
+		# Last modified            : 2023/03/13
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test functions: with/without side-effects, and clock updates allowed in functions',
+		'input_files': ['functions/side-effects.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'side-effects-statespace.states' , 'content' : """
+  STATE 2:
+  pta: l3, t = [10, 10, 3, 4], i = 0, j = 1 ==>
+& p >= 0
+& x >= 10*p
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
 	# END : Test user defined function
 	#------------------------------------------------------------
 
