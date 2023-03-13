@@ -396,30 +396,30 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(* Create initial state space *)
 	let initial_state_space =
-	(* Create a Hashtbl : state_index -> (location_index, linear_constraint) for the reachable states *)
-	let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
-	(* Create a hashtable : location -> location_index for the locations *)
-	let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
-	(* Create a DynArray : location_index -> location for the locations *)
-	let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
-	(* Create an empty lookup table : hash -> state_index *)
-	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
-	(* Create a hashtable for the state space *)
-	let transitions_table = Hashtbl.create guessed_nb_transitions in
+		(* Create a hashtable : state_index -> State.abstract_state for the reachable states *)
+		let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		(* Create a hashtable : location -> location_index for the locations *)
+		let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		(* Create a DynArray : location_index -> location for the locations *)
+		let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
+		(* Create an empty lookup table : hash -> state_index *)
+		let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		(* Create a hashtable for the state space *)
+		let transitions_table = Hashtbl.create guessed_nb_transitions in
 
-	print_message Verbose_high ("Creating empty state space with an initial guessed number of " ^ (string_of_int Constants.guessed_nb_states_for_hashtable) ^ " state" ^ (s_of_int Constants.guessed_nb_states_for_hashtable) ^ " and " ^ (string_of_int guessed_nb_transitions) ^ " transition" ^ (s_of_int guessed_nb_transitions) ^ ".");
+		print_message Verbose_high ("Creating empty state space with an initial guessed number of " ^ (string_of_int Constants.guessed_nb_states_for_hashtable) ^ " state" ^ (s_of_int Constants.guessed_nb_states_for_hashtable) ^ " and " ^ (string_of_int guessed_nb_transitions) ^ " transition" ^ (s_of_int guessed_nb_transitions) ^ ".");
 
-	(* Create the state space *)
-	{
-		nb_generated_states   = ref 0;
-		all_states            = states;
-		initial               = None;
-		index_of_locations    = index_of_locations;
-		locations             = locations;
-		states_for_comparison = states_for_comparison;
-		transitions_table     = transitions_table;
-		next_state_index      = ref 0;
-	}
+		(* Create the state space *)
+		{
+			nb_generated_states   = ref 0;
+			all_states            = states;
+			initial               = None;
+			index_of_locations    = index_of_locations;
+			locations             = locations;
+			states_for_comparison = states_for_comparison;
+			transitions_table     = transitions_table;
+			next_state_index      = ref 0;
+		}
 	in
 	(*------------------------------------------------------------*)
 	object (self)
@@ -628,6 +628,40 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* Methods computing things from the state space without modifications *)
 	(************************************************************)
 	(************************************************************)
+
+	(*------------------------------------------------------------*)
+	(** Pretty-printing method for debug *)
+	(*------------------------------------------------------------*)
+	method private debug_string : string =
+		(* Retrieve model *)
+		let model = Input.get_model() in
+		"BEGIN state space: "
+
+		^ "\n\n  States:"
+		^ (Hashtbl.fold (fun state_index abstract_state current_string ->
+			current_string
+			^ "\n    " ^ (string_of_int state_index) ^ " => " ^ "(locindex=" ^ (string_of_int abstract_state.global_location_index) ^ " , constr=" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names abstract_state.px_constraint) ^ ")"
+			) state_space.all_states "")
+
+		^ "\n\n  Index of locations (Hashtbl):"
+		^ (Hashtbl.fold (fun global_location location_index current_string ->
+			current_string
+			^ "\n    " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location) ^ " => " ^ "" ^ (string_of_int location_index) ^ ""
+			) state_space.index_of_locations "")
+
+		^ "\n\n  Locations (DynArray):"
+		^ (let i = ref 0 in DynArray.fold_left (fun current_string global_location ->
+			incr(i);
+			current_string
+			^ "\n    " ^ (string_of_int (!i-1) ^ ": " ^ "" ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location) ^ "")
+			) "" state_space.locations
+			)
+
+			(*** TODO ***)
+(*	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+	let transitions_table = Hashtbl.create guessed_nb_transitions in *)
+
+		^ "\n\nEND STATE SPACE"
 
 	(*------------------------------------------------------------*)
 	(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
@@ -1319,13 +1353,27 @@ class stateSpace (guessed_nb_transitions : int) =
 		state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
-	method private new_location_index location =
+	(* Return a new location_index for a given location, unless it is already stored in the location indexes hashtable *)
+	method private new_location_index (location : DiscreteState.global_location) : location_index =
 		let new_index = try (
-			Hashtbl.find state_space.index_of_locations location
+(*			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Trying to find global location index in `index_of_locations`");
+				print_message Verbose_total ("Current state space:");
+				print_message Verbose_total (self#debug_string);
+			);*)
+
+			(* Try to find *)
+			let location_index = Hashtbl.find state_space.index_of_locations location in
+
+(* 			print_message Verbose_total ("Global location index " ^ (string_of_int location_index) ^ " found in `index_of_locations`"); *)
+
+			(* Return *)
+			location_index
 		) with Not_found -> (
+(* 			print_message Verbose_total ("Global location index not found in `index_of_locations`"); *)
 			(* If not found: add it *)
 			(* Find new index *)
-			let new_index = Hashtbl.length state_space.index_of_locations in
+			let new_index : location_index = Hashtbl.length state_space.index_of_locations in
 			(* Add to hash table *)
 			Hashtbl.add state_space.index_of_locations location new_index;
 			(* Add to Dyn Array *)
@@ -1407,6 +1455,8 @@ class stateSpace (guessed_nb_transitions : int) =
 				if verbose_mode_greater Verbose_total then (
 					let nb_old = List.length old_states in
 					print_message Verbose_total ("The list of states with the same location has length " ^ (string_of_int nb_old));
+
+(* 					print_message Verbose_total (self#debug_string); *)
 				);
 
 				(* Statistics *)
