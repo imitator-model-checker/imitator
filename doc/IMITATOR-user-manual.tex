@@ -1764,7 +1764,7 @@ Shadowing an argument of the user-defined function or shadowing a global / local
 
 
 %------------------------------------------------------------
-\begin{example}
+\begin{example}\label{example:shadowing}
 We give below an examples of variable shadowing:
 
 % NOTE: from examples/functions-sideeffects-shadowing.imi
@@ -1786,6 +1786,28 @@ end
 \end{example}
 %------------------------------------------------------------
 
+
+% \begin{example}
+% 	To illustrate variable shadowing:
+%
+% \begin{IMITATORmodel}
+% (* Formal parameter `i` is shadowing global variable i *)
+% function f(i : int) : int
+% begin
+%
+% 	var j : int = i; (* `i` here is the formal parameter `i` *)
+% 	var i : int = 1;
+%
+% 	for i from 0 to 10 do
+% 		j := j + i; (* `i` here is the `i` from for *)
+% 	done
+%
+% 	j := j + i; (* `i` here is the local declared variable *)
+%
+% 	return j;
+% end
+% \end{IMITATORmodel}
+% \end{example}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1924,59 +1946,55 @@ end
 
 
 
-
-%%%
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Lexical scope}\label{section:variable_scope}
+\section{Blocks and lexical scope}\label{section:variable_scope}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Blocs and lexical scope}
+% \subsection{Blocks and lexical scope}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Some structure as \styleIMI{function}, \styleIMI{for}, \styleIMI{while}, \styleIMI{if} works as blocs.
-Each bloc define a lexical scope containing all the variables defined within it.
-These blocs can sometimes be nested and define a level hierarchy of lexical scopes.
-This simple rule is followed: every inner level can access its outer levels.
+Structures such as \styleIMI{function}, \styleIMI{for}, \styleIMI{while}, \styleIMI{if} work as blocks.
+Each block defines a lexical scope containing all the variables defined within it.
+These blocks can be nested and define a hierarchy of lexical scopes.
+This simple rule is followed: every inner level can access its outer levels, but not conversely.
 
-For example, a variable \styleIMI{x} declared at the top most of the model, a global variable, is accessible at any level of the model.
-We can access \styleIMI{x} in any user-defined functions, loops, conditions.
+For example, a variable \styleIMI{i} declared at the top-most level of the model (a global variable) is accessible at any level of the model.
+We can access \styleIMI{i} in any user-defined functions, loops, conditions.
 
 \begin{example}
-	To illustrate example above:
+	To illustrate the example above:
 
+% NOTE: examples/scope.imi
 \begin{IMITATORmodel}
 (* Declare a global variable `i` *)
-var i : rat;
+var i : int;
 
 function f() : int
 begin
-
-	(* In this bloc: *)
-	(* We can access to higher level lexical scope containing: `i` *)
-	(* We can access to current scope containing `j` *)
-	(* We cannot access to lower level scopes *)
+	(* In this block: *)
+	(* We have access to higher level lexical scope containing: `i` *)
+	(* We have access to current scope containing `j` *)
+	(* We do not have access to lower level scopes *)
 
 	var j : int = i;
 
 	if j = 0 then
-		(* In this bloc: *)
-		(* We can access to higher level lexical scope containing: `i`, `j` *)
-		(* We can access to current scope containing `k` *)
+		(* In this block: *)
+		(* We have access to higher level lexical scope containing: `i`, `j` *)
+		(* We have access to current scope containing `k` *)
 
 		var k : int = 1;
 		j := i + 1;
 		if True then
-			(* In this bloc: *)
-			(* We can access to higher level lexical scope containing: `i`, `j`, `k` *)
+			(* In this block: *)
+			(* We have access to higher level lexical scope containing: `i`, `j`, `k` *)
 			j := j + i + k;
 		end
 	else
-		(* In this bloc: *)
-		(* We can access to higher level lexical scope containing: `i`, `j` *)
-		(* We cannot access to variable `k` because it was defined in another separated bloc *)
+		(* In this block: *)
+		(* We have access to higher level lexical scope containing: `i`, `j` *)
+		(* We do not have access to variable `k` because it was defined in another separated block *)
 		j := 2 * i;
 	end
 
@@ -1985,35 +2003,17 @@ end
 \end{IMITATORmodel}
 \end{example}
 
-Note: lexical scope in \imitator{} is a static scope, each variable membership is deduced at compile-time.
+The lexical scope in \imitator{} is a static scope; each variable membership is deduced at compile-time.
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Variable shadowing}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% \subsection{Variable shadowing}
+% %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-If a variable declared at lower level have the same name as a variable declared at a higher level, the second one is shadowed by the first one.
+If a variable declared at lower level have the same name as a variable declared at a higher level, the latter one is shadowed by the former one.
+See an example of variable shadowing in \cref{example:shadowing}.
 
-\begin{example}
-	To illustrate variable shadowing:
+%%%
 
-\begin{IMITATORmodel}
-(* Formal parameter `i` is shadowing global variable i *)
-function f(i : int) : int
-begin
-
-	var j : int = i; (* `i` here is the formal parameter `i` *)
-	var i : int = 1;
-
-	for i from 0 to 10 do
-		j := j + i; (* `i` here is the `i` from for *)
-	done
-
-	j := j + i; (* `i` here is the local declared variable *)
-
-	return j;
-end
-\end{IMITATORmodel}
-\end{example}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
