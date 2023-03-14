@@ -14,73 +14,43 @@
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created          : 2023/03/08
- * Last modified    : 2023/03/08
+ * Created          : 2022?
+ * Last modified    : 2023/03/14
  * Model version    : 0.1
  *
  * IMITATOR version : 3.4-beta
  ************************************************************)
 
 var
-
-(* Clocks *)
-	x, y,
-
-(* Discrete *)
-	i, j,
-		: int;
-	r,
-		: rational;
-
-(* Parameters *)
-
+	my_global_i, my_global_j : int;
 
 (************************************************************)
 (*Functions *)
 (************************************************************)
-(* Dummy function incrementing the value of global variable i *)
-function incr_i() : void
+
+(* This function has side-effects *)
+function side_effect(i : int, j : int) : int
 begin
-	i := i+1
+	(* Modify some global variables *)
+	my_global_i := i * 2;
+	my_global_j := j * my_global_i;
+	return my_global_i + my_global_j
 end
 
-(* Dummy function summing up an int and a rat *)
-function sum_int_rat(a : int, b : rat) : rat
+function side_effect_without_return_type(i : int, j : int) : void
 begin
-	var sum : rat = b;
-	sum := sum + rational_of_int(a);
-	return sum
+	(* NOTE: the value returned by side_effect is lost *)
+	side_effect(i, j);
 end
 
-(************************************************************)
-  automaton A1
-(************************************************************)
-actions: ;
-
-loc l1: invariant sum_int_rat(i, r) < rational_of_int(j)
-
-end (* A1 *)
-
 
 (************************************************************)
-  automaton A2
+  automaton A
 (************************************************************)
-actions: ;
-
 loc l1: invariant True
+	when True do {side_effect_without_return_type(1, 2)} goto l1;
 
-end (* A2 *)
-
-
-(************************************************************)
-  automaton A3
-(************************************************************)
-actions: ;
-
-loc l1: invariant True
-
-end (* A3 *)
-
+end (* A *)
 
 
 (************************************************************)
@@ -93,16 +63,13 @@ init := {
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[A1] := l1,
-		loc[A2] := l1,
-		loc[A3] := l1,
+		loc[A] := l1,
 
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i := 0,
-		j := 0,
-		r := 0,
+		my_global_i := 0,
+		my_global_j := 0,
     ;
 
     continuous =
@@ -110,8 +77,6 @@ init := {
 		(*------------------------------------------------------------*)
 		(* Initial clock constraints *)
 		(*------------------------------------------------------------*)
-		& x = 0
-		& y = 0
 
 		(*------------------------------------------------------------*)
 		(* Parameter constraints *)

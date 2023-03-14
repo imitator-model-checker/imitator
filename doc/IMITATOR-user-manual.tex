@@ -1639,6 +1639,16 @@ A function may or may not return a value (if it does not, the function return ty
 If a function returns something, the last instruction should be the \styleIMI{return} expression.
 If a function returns nothing, it should be typed as \styleIMI{void} and does not have any \styleIMI{return} expression.
 
+It is possible to call a non-void function without ``storing'' its value in a variable, for example:
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+function_non_void();
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+See a concrete example in \cref{example:functions-side-effects-void} (the value returned by \styleIMI{side\_effect} is lost).
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Arguments}
@@ -1653,6 +1663,7 @@ Arguments of a function can be any well-typed expression (including made of loca
 Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
 
 
+%------------------------------------------------------------
 \begin{example}
 We give below some examples of definitions of user-defined functions:
 
@@ -1675,7 +1686,7 @@ end
 (* Returns the sum of two integer arguments *)
 function add(a : int, b : int) : int
 begin
-	(* Add a to b *)
+	(* Returns the sum of a and b *)
 	return a + b
 end
 
@@ -1709,6 +1720,7 @@ loc l2: invariant True
 end
 \end{IMITATORmodel}
 \end{example}
+%------------------------------------------------------------
 
 
 
@@ -1760,35 +1772,50 @@ In addition, as soon as the content of a data structure passed as argument is mo
 
 
 
-%%%
 
 
 %------------------------------------------------------------
-\begin{example}
-We give below some examples of definitions of user-defined functions:
+\begin{example}\label{example:functions-side-effects-void}
+We give below some examples of definitions of user-defined functions with side-effects:
 
+% NOTE: from examples/functions_sideeffects.imi
 \begin{IMITATORmodel}
-	var
-		my_global_i, my_global_j : int;
+var
+	my_global_i, my_global_j : int;
 
-	(* This function has side-effects *)
-	function side_effect(i : int, j : int) : int
-	begin
-		(* Modify some global variables *)
-		my_global_i := i * 2;
-		my_global_j := j * 3;
-		return my_global_i + my_global_j
-	end
+(* This function has side-effects *)
+function side_effect(i : int, j : int) : int
+begin
+	(* Modify some global variables *)
+	my_global_i := i * 2;
+	my_global_j := j * my_global_i;
+	return my_global_i + my_global_j
+end
 
-	function side_effect_without_return_type(i : int, j : int) : void
-	begin
-		return side_effect(i, j);
-	end
+function side_effect_without_return_type(i : int, j : int) : void
+begin
+	(* NOTE: the value returned by side_effect is lost *)
+	side_effect(i, j);
+end
 
+automaton A
+loc l1: invariant True
+	when True do {side_effect_without_return_type(1, 2)} goto l1;
+
+end (* A *)
 \end{IMITATORmodel}
 \end{example}
 %------------------------------------------------------------
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Some examples}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+%------------------------------------------------------------
+\subsubsection{Well-defined examples}
+%------------------------------------------------------------
+
+%%%
 
 %------------------------------------------------------------
 \begin{example}
@@ -1836,6 +1863,9 @@ We give below some examples of definitions of user-defined function:
 \end{example}
 %------------------------------------------------------------
 
+%------------------------------------------------------------
+\subsubsection{Wrong examples}
+%------------------------------------------------------------
 
 %------------------------------------------------------------
 \begin{example}[bad definitions]

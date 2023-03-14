@@ -51,7 +51,7 @@ end
 (* Returns the sum of two integer arguments *)
 function add(a : int, b : int) : int
 begin
-	(* Add a to b *)
+	(* Returns the sum of a and b *)
 	return a + b
 end
 
