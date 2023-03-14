@@ -35,29 +35,28 @@ begin
 	return 0
 end
 
-(* This function modify the content of an array passed by reference *)
+(* This function modifies the content of an array passed as an argument: it is side-effect  *)
 function modif_array(a : int array(2)) : int
 begin
-	(* Modification of the content of an array lead to label the function internally as a ``side-effect function'' *)
 	a[1] := 0;
 	return a[0]
 end
 
-(* This function shadow a local, a global variable and an argument *)
+(* This function shadows a local variable, a global variable and a function argument *)
 function shadow_variables(i : rat) : int
 begin
-	(* Local variable my_global_i shadow global variable of the same name *)
+	(* Local variable my_global_i shadows global variable of the same name *)
 	var my_global_i : int = 4;
 	var a : int = 0;
-	(* a shadow previous declaration and will now be equal to 5 *)
+	(* a shadows previous declaration and is now equal to 5 *)
 	var a : int = 5;
-	(* i shadow argument i *)
+	(* i (int) shadows argument i (rat) *)
 	var i : int = 3;
-	(* Return 3 + 5 + 4 = 12 *)
+	(* Returns 3 + 5 + 4 = 12 *)
 	return i + a + my_global_i
 end
 
-(* This function call another function *)
+(* This function calls another function *)
 function call_other_function() : int
 begin
 	return shadow_variables(0) + shadow_variables(1)
@@ -67,7 +66,7 @@ end
   automaton A
 (************************************************************)
 loc l1: invariant True
-	when True do {call_other_function()} goto l1;
+	when my_global_i < 1 do {modif_global(); modif_array([1,2]); call_other_function(); my_global_i := my_global_i + 1} goto l1;
 
 end (* A *)
 

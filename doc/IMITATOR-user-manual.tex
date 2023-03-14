@@ -1696,9 +1696,6 @@ Clocks and parameters cannot be passed as arguments.
 
 Arguments of a function can be any well-typed expression (including made of local and global variables) as well as the result of another function call.
 
-Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
-
-
 %------------------------------------------------------------
 \begin{example}
 We give below some examples of definitions of user-defined functions:
@@ -1759,6 +1756,37 @@ end
 %------------------------------------------------------------
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Shadowing variables or arguments}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Shadowing an argument of the user-defined function or shadowing a global / local variable with a local one is allowed (local variable with the same name as another variable).
+
+
+%------------------------------------------------------------
+\begin{example}
+We give below an examples of variable shadowing:
+
+% NOTE: from examples/functions-sideeffects-shadowing.imi
+\begin{IMITATORmodel}
+(* This function shadows a local variable, a global variable and a function argument *)
+function shadow_variables(i : rat) : int
+begin
+	(* Local variable my_global_i shadows global variable of the same name *)
+	var my_global_i : int = 4;
+	var a : int = 0;
+	(* a shadows previous declaration and is now equal to 5 *)
+	var a : int = 5;
+	(* i (int) shadows argument i (rat) *)
+	var i : int = 3;
+	(* Returns 3 + 5 + 4 = 12 *)
+	return i + a + my_global_i
+end
+\end{IMITATORmodel}
+\end{example}
+%------------------------------------------------------------
+
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Scope and modification of global variables}
@@ -1801,7 +1829,7 @@ end
 \subsection{Side-effects}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-Note that, due to the possibility to modify arguments or global variables, user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
+Due to the possibility to modify global variables (whatever their type) or function arguments (for arrays, lists, queues and stacks), user-defined functions may become \emph{side-effect} functions; if the functions have indeed side effects, they can only be used in updates (not in guards nor in invariants).
 
 Obviously, if a global variable is modified in a function, it becomes a side-effect function.
 In addition, as soon as the content of a data structure passed as argument is modified, the function is labeled internally as a ``side-effect function''.
@@ -1844,54 +1872,29 @@ end (* A *)
 %------------------------------------------------------------
 
 
-%%%
-
 %------------------------------------------------------------
 \begin{example}
-We give below some more examples of definitions of user-defined function with side-effects and shadowing:
+We give below some more examples of definitions of user-defined functions with side-effects:
 
 % NOTE: from examples/functions-sideeffects-shadowing.imi
 \begin{IMITATORmodel}
+(* This function modifies a global variable: it is side-effect *)
+function modif_global() : int
+begin
+	my_global_i := 0;
+	return 0
+end
 
-	(* This function modify a global variable *)
-	function side_effect_function() : int
-	begin
-		(* Modification of a global variable lead to label the function internally as a ``side-effect function'' *)
-		my_global_i := 0;
-		return 0
-	end
-
-	(* This function modify the content of an array passed by reference *)
-	function side_effect_function_2(a : int array(2)) : int
-	begin
-		(* Modification of the content of an array lead to label the function internally as a ``side-effect function'' *)
-		a[1] := 0;
-		return a[0]
-	end
-
-	(* This function shadow a local, a global variable and an argument *)
-	function shadow_variables(i : int) : int
-	begin
-		(* Local variable my_global_i shadow global variable of the same name *)
-		var my_global_i : int = 4;
-		var a : int = 0;
-		(* a shadow previous declaration and will now be equal to 5 *)
-		var a : int = 5;
-		(* i shadow argument i *)
-		var i : rat = 3;
-		(* Return 3 + 5 + 4 = 12 *)
-		return i + a + my_global_i
-	end
-
-	(* This function call another function *)
-	function call_other_function() : int
-	begin
-		return shadow_variables(0) + shadow_variables(1)
-	end
-
+(* This function modifies the content of an array passed as an argument: it is side-effect  *)
+function modif_array(a : int array(2)) : int
+begin
+	a[1] := 0;
+	return a[0]
+end
 \end{IMITATORmodel}
 \end{example}
 %------------------------------------------------------------
+
 
 % %------------------------------------------------------------
 % \begin{example}[bad definitions]
@@ -1921,6 +1924,8 @@ We give below some more examples of definitions of user-defined function with si
 
 
 
+
+%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
