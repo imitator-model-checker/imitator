@@ -162,7 +162,14 @@ module StateIndexSet = Set.Make(StateStruct)
 (************************************************************)
 (** State space structure *)
 (************************************************************)
-
+(* Ugly Fix*)
+module LocationHash = Hashtbl.Make (
+    struct
+      type t = DiscreteState.global_location
+      let equal = DiscreteState.location_equal
+      let hash = DiscreteState.hash_code
+    end
+)
 
 type state_space = {
 	(** The number of generated states (even not added to the state space) *)
@@ -176,7 +183,7 @@ type state_space = {
 	mutable initial : State.state_index option;
 
 	(** A hashtable location -> location_index *)
-	index_of_locations : (DiscreteState.global_location, location_index) Hashtbl.t;
+	index_of_locations : (location_index) LocationHash.t;
 
 	(** A DynArray location_index -> location *)
 	locations : DiscreteState.global_location DynArray.t;
@@ -399,7 +406,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Create a hashtable : state_index -> State.abstract_state for the reachable states *)
 		let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 		(* Create a hashtable : location -> location_index for the locations *)
-		let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		let index_of_locations = LocationHash.create Constants.guessed_nb_states_for_hashtable in
 		(* Create a DynArray : location_index -> location for the locations *)
 		let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
 		(* Create an empty lookup table : hash -> state_index *)
@@ -644,7 +651,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			) state_space.all_states "")
 
 		^ "\n\n  Index of locations (Hashtbl):"
-		^ (Hashtbl.fold (fun global_location location_index current_string ->
+		^ (LocationHash.fold (fun global_location location_index current_string ->
 			current_string
 			^ "\n    " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display global_location) ^ " => " ^ "" ^ (string_of_int location_index) ^ ""
 			) state_space.index_of_locations "")
@@ -1363,7 +1370,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			);*)
 
 			(* Try to find *)
-			let location_index = Hashtbl.find state_space.index_of_locations location in
+			let location_index = LocationHash.find state_space.index_of_locations location in
 
 (* 			print_message Verbose_total ("Global location index " ^ (string_of_int location_index) ^ " found in `index_of_locations`"); *)
 
@@ -1373,9 +1380,9 @@ class stateSpace (guessed_nb_transitions : int) =
 (* 			print_message Verbose_total ("Global location index not found in `index_of_locations`"); *)
 			(* If not found: add it *)
 			(* Find new index *)
-			let new_index : location_index = Hashtbl.length state_space.index_of_locations in
+			let new_index : location_index = LocationHash.length state_space.index_of_locations in
 			(* Add to hash table *)
-			Hashtbl.add state_space.index_of_locations location new_index;
+			LocationHash.add state_space.index_of_locations location new_index;
 			(* Add to Dyn Array *)
 			DynArray.add state_space.locations location;
 			(* Check length (COULD BE REMOVED) *)
