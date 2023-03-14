@@ -3,11 +3,13 @@
 *******************************************************
 ## release 3.4 (202x-xx-xx) Cheese Durian
 
-### Syntax improvement
+### Major features
+* Updates are now fully sequential in the model, including clock updates; WARNING: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
+* New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
 
 ### Syntax changes in the model
 * Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
-* Terminate backward-compatibility on assignment syntax: updates are now only defined using the `:=` operator
+* Terminate backward-compatibility on updates syntax: updates are now only defined using the `var := expr` syntax
 * Both `;` and `,` instruction separators accepted
 
 
@@ -19,7 +21,7 @@
 
 ### Major features
 * New: extrapolation for parametric zones [[AA22](https://www.doi.org/10.1007/978-3-031-06773-0_24)]
-* Refactoring of merging functions, with more efficient heuristics [AMPP22]
+* Refactoring of merging functions, with more efficient heuristics [[AMPP22](https://www.doi.org/10.1007/978-3-031-15839-1_12)]
 * Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [[AWUH22](https://www.doi.org/10.1007/978-3-031-06773-0_25)] (slightly experimental)
 
 
@@ -41,8 +43,8 @@
 ## release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
-* New types for discrete global variables: Boolean variables (`bool`), integer (`int`, over 32 bits) variables
-* `discrete` become `rational` (still encoded using exact arithmetics, as opposed to the new `int` type)
+* New types for discrete global variables: Boolean variables (`bool`), integer variables (`int`, over 32 bits)
+* `discrete` become `rational` (still encoded using exact arithmetic, as opposed to the new `int` type)
 * New power operator `pow(v, i)` over discrete variables, with `v` an integer or rational expression, and `i` an integer expression (possibly involving integer variables)
 
 ### Result
@@ -79,7 +81,6 @@ The property syntax is entirely new.
 
 ### Major features
 * New variants of the NDFS-based accepting cycle synthesis with several exploration strategies [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17)
-
 
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z' = -3/5}`
