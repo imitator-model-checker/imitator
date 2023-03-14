@@ -127,7 +127,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		) (* end if pi-incompatible *)
 		else(
 			(* Update K := K ^ s *)
-			LinearConstraint.p_nnconvex_intersection_assign k_result p_constraint;
+			LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(

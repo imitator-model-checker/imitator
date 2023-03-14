@@ -367,7 +367,7 @@ class algoAFsynth (model : AbstractModel.abstract_model) =
 					
 				(* Update the target constraint using the current constraint *)
 				(*** TODO: not the right operation here ***)
-				LinearConstraint.p_nnconvex_intersection_assign af_constraint p_constraint;
+				LinearConstraint.p_nnconvex_p_intersection_assign af_constraint p_constraint;
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(

@@ -123,7 +123,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 
 		self#print_algo_message_newline Verbose_total ("adding the initial constraint to the result");
-		LinearConstraint.p_nnconvex_intersection_assign result p_constraint;
+		LinearConstraint.p_nnconvex_p_intersection_assign result p_constraint;
 		
 		
 		self#print_algo_message_newline Verbose_standard (

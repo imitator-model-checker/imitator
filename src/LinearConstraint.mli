@@ -723,6 +723,7 @@ val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constrain
 
 (** Check if a nnconvex_constraint is equal to another one *)
 val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
+val px_nnconvex_constraint_is_equal : px_nnconvex_constraint -> px_nnconvex_constraint -> bool
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
@@ -742,8 +743,12 @@ val px_nnconvex_exhibit_point : px_nnconvex_constraint -> px_valuation
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-val p_nnconvex_intersection_assign  : p_nnconvex_constraint -> p_linear_constraint -> unit
-val px_nnconvex_intersection_assign  : px_nnconvex_constraint -> px_linear_constraint -> unit
+val p_nnconvex_p_intersection_assign  : p_nnconvex_constraint -> p_linear_constraint -> unit
+val px_nnconvex_px_intersection_assign  : px_nnconvex_constraint -> px_linear_constraint -> unit
+
+(** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not **)
+val p_nnconvex_intersection_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
+val px_nnconvex_intersection_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 val p_nnconvex_p_union_assign : p_nnconvex_constraint -> p_linear_constraint -> unit
@@ -751,6 +756,7 @@ val px_nnconvex_px_union_assign : px_nnconvex_constraint -> px_linear_constraint
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
 val p_nnconvex_union_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
+val px_nnconvex_union_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
 val p_nnconvex_difference_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
@@ -772,7 +778,7 @@ val px_nnconvex_hide_nonparameters_and_collapse : px_nnconvex_constraint -> p_nn
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
 val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint -> p_linear_constraint list
-
+val px_linear_constraint_list_of_px_nnconvex_constraint : px_nnconvex_constraint -> px_linear_constraint list
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to string} *)
