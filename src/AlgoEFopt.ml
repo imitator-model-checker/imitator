@@ -570,7 +570,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 						let equality_constraint = LinearConstraint.p_constraint_of_point [(parameter_index, coefficient)] in
 						
 						(* Intersect with the optimum valuations *)
-						LinearConstraint.p_nnconvex_intersection_assign current_optimum_valuations equality_constraint;
+						LinearConstraint.p_nnconvex_p_intersection_assign current_optimum_valuations equality_constraint;
 					);
 					
 					(* Return the constraint *)

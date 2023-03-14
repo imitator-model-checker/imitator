@@ -170,7 +170,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		);
 		
 		(* Ensure clocks and parameters are not negative *)
-		LinearConstraint.px_nnconvex_intersection_assign nnconvex_s all_clocks_and_parameters_nonnegative;
+		LinearConstraint.px_nnconvex_px_intersection_assign nnconvex_s all_clocks_and_parameters_nonnegative;
 		
 		
 		(* Print some information *)

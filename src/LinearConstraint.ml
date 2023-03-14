@@ -232,6 +232,8 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 	let ppl_nncc_difference_assign = create_hybrid_counter_and_register "nncc_difference_assign" PPL_counter Verbose_low
 
+	let ppl_nncc_intersection_assign = create_hybrid_counter_and_register "nncc_intersection_assign" PPL_counter Verbose_low
+
 	let ppl_nncc_remove_higher_space_dimensions = create_hybrid_counter_and_register "nncc_remove_higher_space_dimensions" PPL_counter Verbose_low
 
 
@@ -630,6 +632,9 @@ let ippl_nncc_remove_higher_space_dimensions nnconvex_constraint new_dimensions 
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_remove_higher_space_dimensions nnconvex_constraint new_dimensions) ppl_nncc_remove_higher_space_dimensions
 
 
+let ippl_nncc_intersection_assign nnconvex_constraint nnconvex_constraint' =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_intersection_assign nnconvex_constraint nnconvex_constraint') ppl_nncc_intersection_assign
+	
 (*** TODO: more PPL interfaces ***)
 
 
@@ -4082,6 +4087,9 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 (** Check if a nnconvex_constraint is equal to another one *)
 let p_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 
+(** Check if a nnconvex_constraint is equal to another one *)
+let px_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Simplification} *)
@@ -4134,7 +4142,7 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering `LinearConstraint.p_nnconvex_intersection_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
+			"Entering `LinearConstraint.p_nnconvex_p_intersection_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
 	);
 
 	(* First retrieve inequalities *)
@@ -4149,9 +4157,8 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	()
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_nnconvex_intersection_assign c = nnconvex_intersection_assign !p_dim c
-let px_nnconvex_intersection_assign c = nnconvex_intersection_assign !px_dim c
-
+let p_nnconvex_p_intersection_assign c = nnconvex_intersection_assign !p_dim c
+let px_nnconvex_px_intersection_assign c = nnconvex_intersection_assign !px_dim c
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
@@ -4196,6 +4203,8 @@ let p_nnconvex_union_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* Add each of them as a union *)
 	List.iter (p_nnconvex_p_union_assign p_nnconvex_constraint) disjuncts
 
+let px_nnconvex_union_assign = p_nnconvex_union_assign
+
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
 let p_nnconvex_difference_assign p_nnconvex_constraint p_nnconvex_constraint' =
@@ -4212,6 +4221,17 @@ let p_nnconvex_difference_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* The end *)
 	()
 
+(** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
+let p_nnconvex_intersection_assign p_nnconvex_constraint p_nnconvex_constraint' =
+
+	(* Execute *)
+	ippl_nncc_intersection_assign p_nnconvex_constraint p_nnconvex_constraint';
+
+	(* Simplify the constraint (avoids identical disjuncts) *)
+	p_nn_simplify p_nnconvex_constraint;
+	()	
+
+let px_nnconvex_intersection_assign = p_nnconvex_intersection_assign
 
 let px_nnconvex_difference_assign = p_nnconvex_difference_assign
 let x_nnconvex_difference_assign = p_nnconvex_difference_assign
@@ -4501,7 +4521,9 @@ let p_linear_constraint_list_of_p_nnconvex_constraint =
 	(* Get the disjuncts *)
 	get_disjuncts
 
-
+let px_linear_constraint_list_of_px_nnconvex_constraint =
+	(* Get the disjuncts *)
+	get_disjuncts
 	
 	
 	
