@@ -1626,9 +1626,45 @@ A user-defined function is made of
 
 Local variable declarations and imperative instructions can be written in any order.
 
+%------------------------------------------------------------
+\begin{example}
+We give below a simple example of a user-defined function:
+
+% NOTE: one of the functions from examples/functions_examples.imi
+\begin{IMITATORmodel}
+(* Returns the last element of a list *)
+function last(l : int list) : int
+begin
+	var n : int = list_length(l);
+	return l[n - 1]
+end
+\end{IMITATORmodel}
+\end{example}
+%------------------------------------------------------------
+
+
 A function can call another function, but not itself---that is to say, recursion is not allowed (multiple recursion, \ie{} \styleIMI{f} calling \styleIMI{g} calling itself \styleIMI{f}, isn't allowed either).
 
 Recursive calls are forbidden (including mutually recursive calls).
+
+
+%------------------------------------------------------------
+\begin{IMITATORmodel}
+(* Recursive calls are forbidden, an error will be raised *)
+function mutual_rec_f2() : int
+begin
+	return mutual_rec_f1()
+end
+
+function mutual_rec_f1() : int
+begin
+	var a : int = mutual_rec_f2();
+	return a + 1
+end
+\end{IMITATORmodel}
+%------------------------------------------------------------
+
+
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1807,20 +1843,14 @@ end (* A *)
 \end{example}
 %------------------------------------------------------------
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Some examples}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-%------------------------------------------------------------
-\subsubsection{Well-defined examples}
-%------------------------------------------------------------
 
 %%%
 
 %------------------------------------------------------------
 \begin{example}
-We give below some examples of definitions of user-defined function:
+We give below some more examples of definitions of user-defined function with side-effects and shadowing:
 
+% NOTE: from examples/functions-sideeffects-shadowing.imi
 \begin{IMITATORmodel}
 
 	(* This function modify a global variable *)
@@ -1863,47 +1893,31 @@ We give below some examples of definitions of user-defined function:
 \end{example}
 %------------------------------------------------------------
 
-%------------------------------------------------------------
-\subsubsection{Wrong examples}
-%------------------------------------------------------------
-
-%------------------------------------------------------------
-\begin{example}[bad definitions]
-We give below some examples of definitions of \emph{incorrect} user-defined functions:
-
-\begin{IMITATORmodel}
-	var
-	my_global_i, my_global_j : int;
-	x, y : clock;
-	p1, p2 : parameter;
-
-	(* This function try to modify a clock, parameter and argument value *)
-	function modify_clock_param_arg() : int
-	begin
-		(* Modification of a clock is forbidden, an error will be raised *)
-		x := 0;
-		(* Modification of a parameter is forbidden, an error will be raised *)
-		p1 := 0;
-		(* Modification of a function argument is forbidden, an error will be raised *)
-		i := 0;
-		return 0
-	end
-
-	(* Recursive calls are forbidden, an error will be raised *)
-	function mutual_rec_f2() : int
-	begin
-		return mutual_rec_f1()
-	end
-
-	function mutual_rec_f1() : int
-	begin
-		var a : int = mutual_rec_f2();
-		return a + 1
-	end
-
-\end{IMITATORmodel}
-\end{example}
-%------------------------------------------------------------
+% %------------------------------------------------------------
+% \begin{example}[bad definitions]
+% We give below some examples of definitions of \emph{incorrect} user-defined functions:
+%
+% \begin{IMITATORmodel}
+% 	var
+% 	my_global_i, my_global_j : int;
+% 	x, y : clock;
+% 	p1, p2 : parameter;
+%
+% 	(* This function try to modify a clock, parameter and argument value *)
+% 	function modify_clock_param_arg() : int
+% 	begin
+% 		(* Modification of a clock is forbidden, an error will be raised *)
+% 		x := 0;
+% 		(* Modification of a parameter is forbidden, an error will be raised *)
+% 		p1 := 0;
+% 		(* Modification of a function argument is forbidden, an error will be raised *)
+% 		i := 0;
+% 		return 0
+% 	end
+%
+% \end{IMITATORmodel}
+% \end{example}
+% %------------------------------------------------------------
 
 
 

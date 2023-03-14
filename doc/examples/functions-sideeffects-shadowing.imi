@@ -1,0 +1,109 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying functions, side-effects and shadowing
+ * Description      : Small example for exemplifying functions, side-effects and shadowing
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Benjamin Loillier, Étienne André
+ * Modeling         : Benjamin Loillier, Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/14
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+	my_global_i : int;
+
+(************************************************************)
+(*Functions *)
+(************************************************************)
+
+(* This function modifies a global variable: it is side-effect *)
+function modif_global() : int
+begin
+	my_global_i := 0;
+	return 0
+end
+
+(* This function modify the content of an array passed by reference *)
+function modif_array(a : int array(2)) : int
+begin
+	(* Modification of the content of an array lead to label the function internally as a ``side-effect function'' *)
+	a[1] := 0;
+	return a[0]
+end
+
+(* This function shadow a local, a global variable and an argument *)
+function shadow_variables(i : rat) : int
+begin
+	(* Local variable my_global_i shadow global variable of the same name *)
+	var my_global_i : int = 4;
+	var a : int = 0;
+	(* a shadow previous declaration and will now be equal to 5 *)
+	var a : int = 5;
+	(* i shadow argument i *)
+	var i : int = 3;
+	(* Return 3 + 5 + 4 = 12 *)
+	return i + a + my_global_i
+end
+
+(* This function call another function *)
+function call_other_function() : int
+begin
+	return shadow_variables(0) + shadow_variables(1)
+end
+
+(************************************************************)
+  automaton A
+(************************************************************)
+loc l1: invariant True
+	when True do {call_other_function()} goto l1;
+
+end (* A *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		my_global_i := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
