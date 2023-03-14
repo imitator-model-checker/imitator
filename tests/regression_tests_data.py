@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/03/13
+# Last modified     : 2023/03/14
 #************************************************************
 
 
@@ -32,9 +32,9 @@ tests = [
 	#{
 		## Test version             : 1
 		## Test author              : XXXXXXXXXX
-		## Test since               : 2021/03/33
-		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3.2
+		## Test since               : 2023/03/33
+		## Last modified            : 2023/03/33
+		## Test for IMITATOR version: 3.4
 		#'purpose'    : 'Test something',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax',
@@ -4925,6 +4925,29 @@ Error                                   : invalid model
     #------------------------------------------------------------
 
     ,
+
+	#-------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/14
+		# Last modified            : 2023/03/14
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that a non-void function can be called as a void function',
+		'input_files': ['functions/functions-sideeffects-nonvoid.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'functions-sideeffects-nonvoid-statespace.states' , 'content' : """
+  STATE 1:
+  A: l1, my_global_i = 2, my_global_j = 4
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
     #------------------------------------------------------------
     {
