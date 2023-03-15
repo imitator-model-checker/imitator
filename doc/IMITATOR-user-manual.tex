@@ -3365,8 +3365,7 @@ Binary words are somehow supported by our translation to \jani{}, but not the bu
 
 Arrays are only partially supported by our translation to \jani{}.
 %
-Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \jani{}.
-But not the built-in functions.
+Array variables, array literals, arrays element access (read / write) and arrays comparisons are supported by our translation into \jani{}, but not the built-in functions.
 
 \paragraph{Lists}
 
@@ -3390,7 +3389,7 @@ The only \imitator{} built-in function fully supported by our translation is the
 
 \paragraph{User-defined functions}
 
-As Jani does not seem to have a scheme that enable the declaration of local variables in user-defined functions, for the moment, only the user-defined functions containing one expression as a body are correctly translated.
+As Jani does not seem to have a scheme that enables the declaration of local variables in user-defined functions, for the moment, only the user-defined functions containing a single expression as a body are correctly translated.
 
 \paragraph{Properties}
 Properties are so far not translated to \jani{}.
@@ -3523,7 +3522,7 @@ Recall from \cref{section:discrete} that they can be declared with the following
 	\item Binary word: \styleIMI{binary(l)} with \styleIMI{l} the length of the word
 \end{itemize}
 
-These types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
+These primitive types are divided into three categories: numerical (for \styleIMI{rational} and \styleIMI{int}), Booleans (for \styleIMI{bool}) and Binary (for \styleIMI{binary(l)}).
 
 \imitator{} models are statically typed, in the sense of their variables and expressions types are resolved prior to the algorithms execution.
 
@@ -3538,11 +3537,11 @@ In order to verify the model type consistency, a step called \emph{type checking
 Type checking does the following :
 
 \begin{itemize}
-	\item It checks type consistency within the expressions;
-	\item It resolves the types of the expressions;
-	\item It applies a numerical type to literal numbers according to the numerical type held by their outer expression;
-	\item It checks consistency between an expression type and variable type, in case of an assignment;
-	\item It checks the consistency between an expression type and its grammar rule.
+	\item Check type consistency within the expressions;
+	\item Resolve the types of the expressions;
+	\item Apply a numerical type to literal numbers according to the numerical type held by their outer expression;
+	\item Check consistency between an expression type and variable type, in case of an assignment;
+	\item Check the consistency between an expression type and its grammar rule.
 \end{itemize}
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -3551,7 +3550,7 @@ Type checking does the following :
 
 The expression tree is traversed (in a depth-first search manner) in order to deduce its type.
 As soon as a variable, constant or literal is found, the expression takes its type.
-If the expression only contains numbers (\eg{} \styleIMI{2 + 3 * 4}), the inferred type will be a \emph{rational} arithmetic expression (and not the \styleIMI{int} type).
+If the expression only contains numbers (\eg{} \styleIMI{2 + 3 * 4}), the default inferred type will be a \emph{rational} arithmetic expression (and not the \styleIMI{int} type).
 
 % All variables, constants or literals types must be in accordance with each other. In other words, an expression doesn't support the mixing of different types because \imitator{} model language doesn't support implicit conversion.
 \imitator{} does not support implicit conversion.
@@ -3574,7 +3573,10 @@ For example, in the following update expression \styleIMI{b := True \& i < 3 + 1
 \subsection{Type conversion}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-As said previously, there is no implicit conversion of variables, constants or literals from one type to another type. All expressions hold exactly one type and cannot mix different types. However, it is possible to convert an expression to another type using built-in conversion functions:
+As said previously, there is no implicit conversion of variables, constants or literals from one type to another type.
+All expressions hold exactly one type and cannot mix different types.
+However, it is possible to convert an expression to another type using built-in conversion functions;
+so far, the only such function is \styleIMI{rational\_of\_int}, converting an integer to a rational:
 
 \begin{itemize}
 	\item \styleIMI{rational\_of\_int}: converts an \styleIMI{int} expression to a rational one.
