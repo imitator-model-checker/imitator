@@ -846,9 +846,11 @@ let has_void_constant_or_variable str_var_kind name var_type =
 
     let str_var_kind_capitalized = String.capitalize_ascii str_var_kind in
 
-    match var_type with
-    | Var_type_discrete Dt_void -> print_error (str_var_kind_capitalized ^ " `" ^ name ^ "` was declared as `void`. A " ^ str_var_kind ^ " cannot be declared as `void`."); true
-    | _ -> false
+    if is_var_type_holding_void_type var_type then (
+        print_error (str_var_kind_capitalized ^ " `" ^ name ^ "` was declared as `void`. A " ^ str_var_kind ^ " cannot be declared as `void`.");
+        true
+    ) else
+        false
 
 (************************************************************)
 (** Converting the model *)

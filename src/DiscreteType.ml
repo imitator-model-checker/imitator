@@ -125,6 +125,18 @@ let rec is_discrete_type_holding_number_type = function
     | Dt_queue inner_type -> is_discrete_type_holding_number_type inner_type
     | _ -> false
 
+let rec is_discrete_type_holding_void_type = function
+    | Dt_void -> true
+    | Dt_array (inner_type, _)
+    | Dt_list inner_type
+    | Dt_stack inner_type
+    | Dt_queue inner_type -> is_discrete_type_holding_void_type inner_type
+    | _ -> false
+
+let rec is_var_type_holding_void_type = function
+	| Var_type_discrete discrete_type -> is_discrete_type_holding_void_type discrete_type
+    | _ -> false
+
 let rec extract_inner_type = function
     | Dt_array (inner_type, _)
     | Dt_list inner_type
