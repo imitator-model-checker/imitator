@@ -962,22 +962,22 @@ class imitator_options =
 				("-no-var-autoremove", Unit (fun () -> no_variable_autoremove <- true), " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: enabled (auto-remove).
 				");
 
-				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].
-				");
-
-				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: disabled.
-				");
-
-(* 				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
-				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): enabled, i.e., result is written.
-				");
-
 				("-nz-method", String set_nz_method, " Method for non-Zeno CUB-PTA algorithms [ANPS17].
         Use `check`     to try to synthesize loops only for the valuations for which the PTA is already CUB.
         Use `transform` to transform the PTA into an equivalent CUB-PTA, and then to look for loops.
         Default: `transform`.
 				");
 (* 				NOTE: hidden value `already`, to assume the PTA is already a CUB-PTA *)
+
+				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: disabled.
+				");
+
+				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].
+				");
+
+(* 				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
+				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): enabled, i.e., result is written.
+				");
 
 				("-pending-order", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
         Use `accepting` for a layered NDFS where pending list has accepting states first.
