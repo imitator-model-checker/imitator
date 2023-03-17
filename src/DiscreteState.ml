@@ -55,6 +55,7 @@ let location_equal loc1 loc2 =
 	let (locs1, discr1, _) = loc1 in
 	let (locs2, discr2, _) = loc2 in
 	(* can use polymorphic = here *)
+	let loc_equals =
 	if not (locs1 = locs2) then false else (
 		if not ((Array.length discr1) = (Array.length discr2)) then false else (
 			try (
@@ -66,6 +67,9 @@ let location_equal loc1 loc2 =
 			(* all entries equal *)			
 		) 
 	)
+	in
+	ImitatorUtilities.print_standard_message ("Loc equals: " ^ string_of_bool loc_equals);
+	loc_equals
 
 
 (** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
