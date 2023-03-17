@@ -3247,14 +3247,15 @@ Queues are not supported by our translation to \uppaal{}.
 The only \imitator{} built-in function fully supported by our translation is the \styleIMI{pow} function.
 
 Partially supported \imitator{} built-in functions are the following: \styleIMI{shift\_left}, \styleIMI{shift\_right}, \styleIMI{fill\_left}, \styleIMI{fill\_right}.
-Because of binary words are encoded into integer variables, these functions could have a unspecified behaviors.
+Because of binary words are encoded into integer variables, these functions could have unspecified behaviors.
 
 \paragraph{User-defined functions}
 
 We make the best effort to translate user-defined functions into the \uppaal{} formalism, if possible.
 
 \begin{becareful}
-	Unsupported \imitator{} built-in / user-defined functions will not be declared (and implemented) in \uppaal{} translation, resulting to a bad program when trying to call one. The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows it, is the responsibility of the user.
+	Unsupported \imitator{} built-in / user-defined functions will not be declared (nor implemented) in \uppaal{} translation, resulting most probably in an ill-defined \uppaal{} model.
+	The declaration and implementation of these functions in \uppaal{}, if the \uppaal{} input syntax allows for it, is the responsibility of the model developer.
 \end{becareful}
 
 \paragraph{Strong broadcast synchronization}
@@ -3263,8 +3264,8 @@ None of them match \imitator{}'s semantics.
 Our translation tries to preserve \imitator{} semantics, using the following scheme:
 \begin{itemize}
 	\item Unnamed actions (necessarily used in a single \IPTA{}) remain unnamed in \uppaal{}.
-	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action \styleFileContent{a!}.
-	\item An action \styleFileContent{a} used in exactly two \IPTA{} is implemented in \uppaal{} using a binary action \styleFileContent{a}, where the first (\ie{} declared first in the \imitator{} file) uses \styleFileContent{a!} while the second uses \styleFileContent{a?}.
+	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action~\styleFileContent{a!}.
+	\item An action \styleFileContent{a} used in exactly two \IPTA{} is implemented in \uppaal{} using a binary action \styleFileContent{a}, where the first (\ie{} declared first in the \imitator{} file) uses \styleFileContent{a!} while the second uses~\styleFileContent{a?}.
 	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
 	      \begin{itemize}
 		      \item all invariants contain \styleFileContent{nb\_\_a = n}
@@ -3397,7 +3398,7 @@ The corresponding input in the \jani{} file exists but remains empty.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Export to graphics}
+\section{Export to graphics}\label{section:export:dot}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To generate a graphic representation of the \NIPTA{} model without performing any analysis, use:
@@ -3421,6 +3422,13 @@ imitator model.imi -imi2PNG
 %------------------------------------------------------------
 
 \imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
+It is also possible to only generate the dot source file without the actual graphics:
+
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi -imi2DOT
+\end{terminal}
+%------------------------------------------------------------
 
 Colored transitions are synchronized transitions (\ie{} shared by at least two \IPTA{}), black transitions are local transitions, while dotted transitions are unnamed local transitions (often referred to as $\epsilon$-transitions in the literature).
 
@@ -3919,6 +3927,12 @@ Keep file(s) used for generating graphical output (\eg{} state space, cartograph
 
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-imi2DOT} (default: disabled)}
+%------------------------------------------------------------
+Translates the input model to a \gdot{} input file, and exits.
+See \cref{section:export:dot} for details.
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-imi2HyTech} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a \hytech{} model, and exits.
@@ -3934,18 +3948,21 @@ Regenerates the model into an \imitator{} model, and exits.
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
 % TODO add the graphics of the coffee machine
+See \cref{section:export:dot} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2PDF} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
 % TODO add the graphics of the coffee machine
+See \cref{section:export:dot} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2PNG} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
 % TODO add the graphics of the coffee machine
+See \cref{section:export:dot} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2TikZ} (default: disabled)}
@@ -4075,6 +4092,18 @@ Otherwise, by default, the algorithm checks whether a new state parameter constr
 This can save time by cutting branches, but can also slow down the analysis for very complex constraints with dozens or hundreds of disjunctions.
 This option was designed when using \imitator{} for \emph{monitoring} or \emph{parametric timed pattern matching}, when constraints can contain up to thousands of disjunctions~\cite{AHW18}.
 
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-global-time-clock-in-comparison} (default: disabled)}
+%------------------------------------------------------------
+Eliminate the global time clock (if any) when performing a state comparison; expensive due to variable elimination.
+Default: disabled, \ie{} does not eliminate the global time clock.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-green} (default: disabled)}
+%------------------------------------------------------------
+In NDFS, Do not use green color in NDFS. Default: enabled (i.e., green).
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-lookahead} (default: disabled)}
