@@ -250,8 +250,7 @@ This is input in the property as follows:
 \end{IMITATORproperty}
 
 Here, \styleIMI{AGnot} stands for safety.
-More elaborate properties are detailed in \cref{ss:mode:prop}.
-% (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+More elaborate properties are detailed in \cref{chapter:synthesis}.
 
 We give below the whole property file:
 
@@ -1276,7 +1275,7 @@ loc l2: invariant queue_is_empty(q)
 
 We summarize in \cref{table:summary:builtin-functions} the built-in functions over discrete variables of various types.
 
-\begin{table}[h!]
+\begin{table}[ht!]
 	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
 	\caption{Summary of the built-in functions}
 	{\centering
@@ -2017,7 +2016,7 @@ See an example of variable shadowing in \cref{example:shadowing}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Parameter synthesis using \imitator{}}
+\chapter{Parameter synthesis using \imitator{}}\label{chapter:synthesis}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2040,11 +2039,12 @@ imitator model.imi property.imiprop
 %------------------------------------------------------------
 
 \paragraph{Synthesis and emptiness}
-\imitator{} features two modes for properties:
+\imitator{} features three modes for properties:
 
 \begin{itemize}
 	\item synthesis (\styleIMI{\#synth}): synthesizing all valuations such that a property holds;
-	\item witness (\styleIMI{\#exhibit} or \styleIMI{\#witness}, both equivalent): find (at least) one valuation such that a property holds.
+	\item witness (\styleIMI{\#exhibit} or \styleIMI{\#witness}, both equivalent): find (at least) one valuation such that a property holds;
+	\item exemplification (\styleIMI{\#exemplify}), only for reachability properties (and rather experimental): generates concrete runs satisfying and not satisfying a reachability property (see \cref{section:algorithm:EFexemplify} and~\cite{AWUH22} for details).
 \end{itemize}
 
 While the ``witness'' mode is close to (the contrary of) emptiness-checking, the ``witness'' mode is not strictly speaking an emptiness check: rather, the algorithm stops as soon as it finds some valuations, but there may be more than one, so the result can still be symbolic.
@@ -2056,7 +2056,7 @@ While all properties implement synthesis, not all of them implement emptiness; a
 In the following, we now describe the algorithms implemented in \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Reachability}\label{ss:mode:EFsynth}
+\section{Reachability}\label{section:algorithm:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
@@ -2138,7 +2138,7 @@ property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Safety}\label{ss:mode:EF}
+\section{Safety}\label{section:algorithm:EF}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
@@ -2153,11 +2153,11 @@ Internally, this algorithm works exactly the same as the reachability-synthesis,
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-minimization}\label{ss:mode:EFmin}
+\section{EF-minimization}\label{section:algorithm:EFmin}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
-% The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+% The property must be specified as for \EFsynth{} (see \cref{section:algorithm:EFsynth}).
 This algorithm is briefly mentioned in~\cite{ABPV19}.
 
 The property syntax is as follows:
@@ -2171,10 +2171,10 @@ where \styleIMI{p} is the parameter the value of which must be minimized.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-maximization}\label{ss:mode:EFmax}
+\section{EF-maximization}\label{section:algorithm:EFmax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
+This algorithm is the dual of EF-minimization (see \cref{section:algorithm:EFmin}).
 
 The property syntax is as follows:
 
@@ -2184,11 +2184,11 @@ property := #synth EFpmax(state_predicate, p);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF with minimal time reachability}\label{ss:mode:EFopt}
+\section{EF with minimal time reachability}\label{section:algorithm:EFopt}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the parameter valuations for which a given location is reachable in minimal time~\cite{ABPV19}.
-% The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+% The property must be specified as for \EFsynth{} (see \cref{section:algorithm:EFsynth}).
 
 Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
 
@@ -2210,11 +2210,10 @@ This algorithm requires a clock named \styleIMI{global\_time} to be defined in t
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameter synthesis using patterns}\label{ss:mode:prop}
+\section{Parameter synthesis using patterns}\label{section:algorithm:patterns}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
-However, many correctness properties can reduce to reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
+Many correctness properties can reduce to reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
 
 Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness property patterns commonly met in the literature.
 
@@ -2325,8 +2324,48 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 \imitator{} then translates the selected pattern into an additional observer automaton, and performs some safety or reachability synthesis.
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Validity synthesis}\label{ss:mode:validity}
+\section{Reachability-exemplification}\label{section:algorithm:EFexemplify}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\imitator{} offers some support to exemplify a concrete run for reachability properties.
+In fact, \imitator{} offers a bit more with this algorithm:
+given a reachability condition, it generates several concrete runs satisfying a reachability properties \emph{and} attempts to generate several concrete runs \emph{not} satisfying the reachability property.
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #exemplify EF(state_predicate);
+\end{IMITATORproperty}
+
+The algorithm (detailed in~\cite{AWUH22}) is rather experimental but supports the whole \imitator{} syntax (clocks, multiple rates, discrete variables, etc.).
+A main drawback is that the merging and inclusion heuristics must be disabled, as constructing a concrete run in a backward manner creates some difficulties when using these heuristics.
+Therefore, the following options are highly advised:
+
+%------------------------------------------------------------
+\begin{terminal}
+imitator model.imi property.imiprop -comparison equality -merge none
+\end{terminal}
+%------------------------------------------------------------
+
+The output is given in the result file, using a JSON syntax, which can be easily parsed using external tools.
+In addition, \imitator{} also generates graphical outputs showing the evolution of the clock variables over time for each generated concrete run (recall that clock rates are non-necessarily $=1$).
+See an example in \cref{figure:figex2signals2:1} (coming from~\cite{AWUH22}).
+
+%------------------------------------------------------------
+\begin{figure}[tb]
+	\centering
+	\includegraphics[width=.4\textwidth]{images/ex-nonparam-2signals-2_ex_1_pos.pdf}
+	\caption{Exemplifying concrete runs for reachability properties: graphical output}
+	\label{figure:figex2signals2:1}
+\end{figure}
+%------------------------------------------------------------
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Validity synthesis}\label{section:algorithm:validity}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{}, validity-synthesis computes the parameter constraint such that, for any parameter valuation in that constraint, the system is valid (as per \cref{definition:validity}).
@@ -2343,7 +2382,7 @@ This ``algorithm'' is trivial: it simply generates the initial state, and projec
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
+\section{Parametric deadlock-freeness checking}\label{section:algorithm:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
@@ -2361,7 +2400,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric cycle synthesis}\label{ss:mode:LoopSynth}
+\section{Parametric cycle synthesis}\label{section:algorithm:LoopSynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -2563,7 +2602,7 @@ property := #synth CycleThrough(True);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
+\section{Parametric non-Zeno cycle synthesis}\label{section:algorithm:Zeno}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
@@ -2619,7 +2658,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Inverse method: Trace preservation and robustness}\label{ss:mode:IM}
+\section{Inverse method: Trace preservation and robustness}\label{section:algorithm:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
@@ -2660,7 +2699,7 @@ a result in an external text file (\stylePath{model.res}) and formatted using a 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Behavioral cartography}\label{ss:mode:BC}
+\section{Behavioral cartography}\label{section:algorithm:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
@@ -2701,7 +2740,7 @@ In addition, state spaces and separate graphical cartographies for each tile can
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Behavioral cartography with random coverage}\label{sss:mode:BC:random}
+\subsection*{Behavioral cartography with random coverage}\label{section:algorithm:BC:random}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An alternative to the behavioral cartography is a random coverage~\cite{AF10}; it can be seen as a kind of sampling.
@@ -2722,7 +2761,7 @@ This algorithm is mostly interesting when distributed (see \cite{ACE14,ACN15}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Behavioral cartography with shuffle enumeration}\label{sss:mode:BC:shuffle}
+\subsection*{Behavioral cartography with shuffle enumeration}\label{section:algorithm:BC:shuffle}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A second alternative to the behavioral cartography is an enumeration of all integer points in a random fashion.
@@ -2739,7 +2778,7 @@ property := #synth BCshuffle(hyper_rectangle);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parametric reachability preservation}\label{ss:mode:PRP}
+\section{Parametric reachability preservation}\label{section:algorithm:PRP}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} implements an algorithm solving the following problem:
@@ -2755,7 +2794,7 @@ property := #synth PRP(state_predicate , parameter_valuation);
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection*{Parametric reachability preservation cartography}\label{sss:mode:PRPC}
+\subsection*{Parametric reachability preservation cartography}\label{section:algorithm:PRPC}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
@@ -2770,7 +2809,7 @@ property := #synth PRPC(state_predicate , hyper_rectangle);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Summary}\label{ss:mode:summary}
+\section{Summary}\label{section:algorithm:summary}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic syntax, and specifying whether they support the \styleIMI{\#witness} mode that stops as soon as (at least) one parameter valuation is witnessed.
@@ -2778,74 +2817,76 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 \begin{table}[h!]
 	\caption{Summary of the algorithms syntax}
 	{\centering
-		\begin{tabular}{ | l | l | c | c | }
+	\setlength{\tabcolsep}{2pt} % . The default value is 6pt.
+	\footnotesize
+		\begin{tabular}{ | l | l | c | c | c | }
 
 			% Non-nested CTL
 			\hline
-			\rowHeader{} Algorithm & Syntax                                           & Synth      & Witness    \\
+			\rowHeader{} Algorithm & Syntax                                           & Synth      & Witness    & Exemplification    \\
 			\hline
-			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{} \\
+			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{}  & \cellYes{} \\
 			\hline
-			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{} \\
+			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 
 			% Optimized reachability
 
 			\hline
-			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \cellYes{}  & \cellNo{} \\
 			\hline
-			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{}  & \cellNo{} \\
 			\hline
-			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{} \\
+			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{}  & \cellYes{} \\
 
 			% Cycles
 
 			\hline
-			Cycle                  & \styleIMI{Cycle}                            & \cellYes{} & \cellYes{}  \\
+			Cycle                  & \styleIMI{Cycle}                            & \cellYes{} & \cellYes{}  & \cellNo{} \\
 			\hline
-			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellYes{} & \cellYes{}  \\
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellYes{} & \cellYes{} & \cellNo{} \\
 			\hline
-			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellYes{} & \cellYes{}  \\
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicates)} & \cellYes{} & \cellYes{} & \cellNo{} \\
 			\hline
-			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
+			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
 			% Validity
 
 			\hline
-			Validity      & \styleIMI{Validy}                          & \cellYes{} & \cellNo{}  \\
+			Validity      & \styleIMI{Validy}                          & \cellYes{} & \cellNo{} & \cellNo{} \\
 
 			% Deadlock-freeness
 
 			\hline
-			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \cellNo{}  \\
+			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \cellNo{} & \cellNo{} \\
 
 			% Inverse method
 
 			\hline
-			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellYes{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellYes{} & \cellNo{} & \cellNo{} \\
 			\hline
-			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellYes{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellYes{} & \cellNo{} & \cellNo{} \\
 			\hline
-			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellYes{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
 			% Cartography
 
 			\hline
-			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellYes{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellYes{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellYes{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellYes{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellYes{} & \cellNo{} & \cellNo{} \\
+			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellYes{} & \cellNo{} & \cellNo{} \\
+			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellYes{} & \cellNo{} & \cellNo{} \\
 
 			% PRP, PRPC
 
 			\hline
-			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \cellNo{}  \\
+			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \cellNo{} & \cellNo{} \\
 			\hline
-			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellNo{}  \\
+			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellNo{} & \cellNo{} \\
 
 			% Observer patterns
 
 			\hline
-			Patterns                    & \styleIMI{pattern(<pattern>)}      & \cellYes{} & \cellYes{}  \\
+			Patterns                    & \styleIMI{pattern(<pattern>)}      & \cellYes{} & \cellYes{}   & \cellYes{} \\
 
 			\hline
 		\end{tabular}
@@ -2952,7 +2993,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Symbolic state space computation}\label{ss:mode:statespace}
+\section{Symbolic state space computation}\label{section:algorithm:statespace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Finally, instead of synthesizing parameter valuations or checking for emptiness,
@@ -3707,7 +3748,7 @@ It seems that, although less states are computed, this value is \emph{less} effi
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:EF,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
@@ -3732,7 +3773,7 @@ Print the list of contributors and exits.
 %------------------------------------------------------------
 \paragraph{\styleOption{-cycle-algo} (default: NDFS)}
 %------------------------------------------------------------
-For cycle synthesis algorithms (\cref{ss:mode:LoopSynth}), call either \styleOption{BFS} (breadth-first search) or \styleOption{NDFS} (nested depth-first search), with some additional options in the latter case.
+For cycle synthesis algorithms (\cref{section:algorithm:LoopSynth}), call either \styleOption{BFS} (breadth-first search) or \styleOption{NDFS} (nested depth-first search), with some additional options in the latter case.
 See
 	\styleOption{-layer},
 	\styleOption{-subsumption},
@@ -4071,10 +4112,10 @@ The possible values for this option are:
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{checksyntax} & Simple syntax check and no analysis.\\
 	% Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
-	% 		(see \cref{ss:mode:statespace}) %TODO?
+	% 		(see \cref{section:algorithm:statespace}) %TODO?
 
 	\styleOption{statespace}  & Generation of the entire parametric state space \\
-	                          & (see \cref{ss:mode:statespace})                 \\
+	                          & (see \cref{section:algorithm:statespace})                 \\
 \end{longtable}
 
 %------------------------------------------------------------
@@ -4132,7 +4173,7 @@ Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically r
 %------------------------------------------------------------
 \paragraph{\styleOption{-nz-method} (default: transform)}
 %------------------------------------------------------------
-For non-Zeno cycle synthesis (\cref{ss:mode:Zeno}), choose to either:
+For non-Zeno cycle synthesis (\cref{section:algorithm:Zeno}), choose to either:
 \begin{itemize}
 	\item synthesize valuations only for the subset of valuations for which the \NIPTA{} already satisfies the CUB assumption (\styleOption{-nz-method check}), or
 	\item transform the \NIPTA{} into an equivalent CUB-\NIPTA{} (\styleOption{-nz-method transform}).
@@ -5379,6 +5420,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt}   \\
 	$|$ & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 	$|$ & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
+	$|$ & \styleIMI{\#exemplify} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 \end{longtable}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5390,11 +5432,6 @@ We define each of those two components below.
 	% 	Non-nested CTL
 	$|$ & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
-
-	% 	Reachability and specification illustration
-
-	% NOTE: hidden for now
-	% 	$|$  & \styleIMI{EFexemplify} \nt{state\_predicate} \\
 
 	% Optimized reachability
 
@@ -5880,7 +5917,6 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{if} \\
 	\styleIMI{in} \\
 	\styleIMI{init} \\
-	\styleIMI{initially} \\
 	\styleIMI{int\_div} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
