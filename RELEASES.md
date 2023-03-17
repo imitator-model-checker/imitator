@@ -10,6 +10,7 @@
 ### Syntax changes in the model
 * Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
 * Terminate backward-compatibility on updates syntax: updates are now only defined using the `var := expr` syntax
+* Terminate backward-compatibility on the permissive `initially: ` declarations in automata (already not taken into account in the semantics)
 * Both `;` and `,` instruction separators accepted
 
 

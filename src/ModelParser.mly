@@ -79,7 +79,7 @@ let unzip l = List.fold_left
 	CT_ELSE CT_END
 	CT_FALSE CT_FLOW
 	CT_GOTO
-	CT_IF CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
+	CT_IF CT_INIT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_OR
@@ -148,18 +148,6 @@ end_opt:
 ;
 
 
-/************************************************************
-	INCLUDES
-************************************************************/
-include_file:
-	| INCLUDE SEMICOLON { $1 }
-;
-
-include_file_list:
-	| include_file include_file_list  { $1 :: $2 }
-	| { [] }
-;
-
 
 
 /************************************************************
@@ -183,6 +171,19 @@ variables_declarations:
 ;
 
 
+/************************************************************
+	INCLUDES
+************************************************************/
+include_file_list:
+	| include_file include_file_list  { $1 :: $2 }
+	| { [] }
+;
+
+include_file:
+	| INCLUDE SEMICOLON { $1 }
+;
+
+
 /************************************************************/
 
 /************************************************************/
@@ -196,10 +197,10 @@ decl_var_lists:
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ init_value_expression comma_opt { [($1, Some $3)] }
+	| NAME OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
 
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ init_value_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /************************************************************/
@@ -303,11 +304,6 @@ semicolon_or_comma_opt:
   | semicolon_or_comma {}
 ;
 
-semicolon_or_comma:
-  | SEMICOLON {}
-  | COMMA {}
-;
-
 instruction:
   /* local declaration */
   | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
@@ -317,6 +313,20 @@ instruction:
   | boolean_expression { (Parsed_instruction $1) }
 
 ;
+
+
+
+/** Normal updates without deprecated (avoid parsing errors on function)*/
+update_without_deprecated:
+	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
+;
+
+/* Variable or variable access */
+parsed_scalar_or_index_update_type:
+  | NAME { Parsed_scalar_update ($1, 0) }
+  | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
+;
+
 
 control_structure:
   /* for loop */
@@ -349,6 +359,8 @@ automata:
 	| { [] }
 ;
 
+
+
 /************************************************************/
 
 automaton:
@@ -361,31 +373,12 @@ automaton:
 /************************************************************/
 
 prolog:
-	/* Initialization is NOT taken into account, and is only allowed for backward-compatibility with HyTech */
-	| initialization sync_labels { $2 }
-	| sync_labels initialization { $1 }
 	| sync_labels { $1 }
-	| initialization { [] }
 	| { [] }
 ;
 
 /************************************************************/
 
-/* WARNING: deprecated syntax */
-initialization:
-	| CT_INITIALLY NAME state_initialization SEMICOLON {
-		(* Print a warning because this syntax is deprecated and not taken into account! *)
-		print_warning ("The syntax `initially " ^ $2 ^ "` is deprecated and is NOT taken into account. Initial locations must be defined in the initial state definition.");
-		()
-	}
-;
-
-/************************************************************/
-
-state_initialization:
-	| AMPERSAND convex_predicate {}
-	| {}
-;
 
 /************************************************************/
 
@@ -420,16 +413,6 @@ locations:
 
 /************************************************************/
 
-while_or_invariant_or_nothing:
-	/* From 2018/02/22, "while" may be be replaced with invariant */
-	/* From 2019/12, "while" should be be replaced with invariant */
-	| CT_WHILE {
-		print_warning ("The syntax `while [invariant]` is deprecated; you should use `invariant [invariant]` instead.");
-		()
-		}
-	| CT_INVARIANT {}
-	| {}
-;
 
 location:
 	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
@@ -457,6 +440,7 @@ location:
 	}
 ;
 
+
 loc_urgency_accepting_type:
 	| CT_LOC { Parsed_location_nonurgent, Parsed_location_nonaccepting }
 	| CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_nonaccepting }
@@ -468,6 +452,17 @@ loc_urgency_accepting_type:
 location_name_and_costs:
 	| NAME { $1, None }
 	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
+;
+
+while_or_invariant_or_nothing:
+	/* From 2018/02/22, "while" may be be replaced with invariant */
+	/* From 2019/12, "while" should be be replaced with invariant */
+	| CT_WHILE {
+		print_warning ("The syntax `while [invariant]` is deprecated; you should use `invariant [invariant]` instead.");
+		()
+		}
+	| CT_INVARIANT {}
+	| {}
 ;
 
 wait_opt:
@@ -551,9 +546,9 @@ transition:
 update_synchronization:
 	| { [], NoSync }
 	| updates { $1, NoSync }
-	| syn_label { [], (Sync $1) }
-	| updates syn_label { $1, (Sync $2) }
-	| syn_label updates { $2, (Sync $1) }
+	| sync_label { [], (Sync $1) }
+	| updates sync_label { $1, (Sync $2) }
+	| sync_label updates { $2, (Sync $1) }
 ;
 
 /************************************************************/
@@ -564,56 +559,127 @@ updates:
 
 /************************************************************/
 
-end_opt:
-  | CT_END {}
-  | {}
-;
-
-/************************************************************/
-
-/* Variable or variable access */
-parsed_scalar_or_index_update_type:
-  | NAME { Parsed_scalar_update ($1, 0) }
-  | parsed_scalar_or_index_update_type LSQBRA arithmetic_expression RSQBRA { Parsed_indexed_update ($1, $3) }
-;
-
-/** Normal updates */
-update:
-	/*** NOTE: deprecated syntax ***/
-	| NAME APOSTROPHE OP_EQ boolean_expression {
-		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update ($1, 0), $4)
-		}
-
-		/** NOT ALLOWED FROM 3.2 (2021/10) */
-/*	| NAME APOSTROPHE OP_ASSIGN boolean_expression {
-		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update ($1, 0), $4)
-	}*/
-	/*** NOTE: deprecated syntax ***/
-	| NAME OP_EQ boolean_expression {
-		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
-		(Parsed_scalar_update ($1, 0), $3)
-	}
-
-	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
-;
-
-/** Normal updates without deprecated (avoid parsing errors on function)*/
-update_without_deprecated:
-	| parsed_scalar_or_index_update_type OP_ASSIGN boolean_expression { $1, $3 }
-;
-
-boolean_expression_par_opt:
-	 | boolean_expression { $1 }
-	 | LPAREN boolean_expression RPAREN { $2 }
-;
-
-/************************************************************/
-
-syn_label:
+sync_label:
 	CT_SYNC NAME { $2 }
 ;
+
+
+
+/************************************************************/
+/** INIT DEFINITION */
+/************************************************************/
+
+init_definition_option:
+    | old_init_definition {
+		(* Print a warning because this syntax is deprecated *)
+		print_warning ("Old syntax detected for the initial state definition. You are advised to use the new syntax (from 3.1).");
+		$1
+		}
+    | init_definition { $1 }
+    | { [ ] }
+;
+
+/************************************************************/
+/** OLD INIT DEFINITION SECTION <= 3.0: DISCRETE AND CONTINUOUS mixed together */
+/************************************************************/
+
+/* Old init style (until 3.0), kept for backward-compatibility */
+old_init_definition:
+	| CT_INIT OP_ASSIGN old_init_expression SEMICOLON { $3 }
+;
+
+
+/* We allow here an optional "&" at the beginning and at the end */
+old_init_expression:
+	| ampersand_opt old_init_expression_fol ampersand_opt { $2 }
+	| { [ ] }
+;
+
+old_init_expression_fol:
+	| old_init_state_predicate { [ $1 ] }
+	| LPAREN old_init_expression_fol RPAREN { $2 }
+	| old_init_expression_fol AMPERSAND old_init_expression_fol { $1 @ $3 }
+;
+
+/* Used in the init definition */
+old_init_state_predicate:
+	| old_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+    | linear_constraint { Parsed_linear_predicate $1 }
+;
+
+old_init_loc_predicate:
+	/* loc[my_pta] = my_loc */
+	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
+	/* my_pta IS IN my_loc */
+	| NAME CT_IS CT_IN NAME { ($1, $4) }
+;
+
+
+
+
+/************************************************************/
+/** NEW INIT DEFINITION SECTION from 3.1: SEPARATION OF DISCRETE AND CONTINUOUS */
+/************************************************************/
+
+init_definition:
+	| CT_INIT OP_ASSIGN LBRACE init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
+;
+
+init_discrete_continuous_definition:
+    | init_discrete_definition { $1 }
+    | init_continuous_definition { $1 }
+    | init_discrete_definition init_continuous_definition { $1 @ $2 }
+    | init_continuous_definition init_discrete_definition { $2 @ $1 }
+;
+
+init_discrete_definition:
+    | CT_DISCRETE OP_EQ init_discrete_expression SEMICOLON { $3 }
+;
+
+init_continuous_definition:
+    | CT_CONTINUOUS OP_EQ init_continuous_expression SEMICOLON { $3 }
+;
+
+
+init_discrete_expression:
+	| comma_opt init_discrete_expression_nonempty_list { $2 }
+	| { [ ] }
+;
+
+init_discrete_expression_nonempty_list :
+	| init_discrete_state_predicate COMMA init_discrete_expression_nonempty_list  { $1 :: $3 }
+	| init_discrete_state_predicate comma_opt { [ $1 ] }
+;
+
+init_discrete_state_predicate:
+	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| LPAREN init_discrete_state_predicate  RPAREN { $2 }
+	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
+;
+
+init_continuous_expression:
+	| ampersand_opt init_continuous_expression_nonempty_list { $2 }
+	| { [ ] }
+;
+
+init_continuous_expression_nonempty_list :
+	| init_continuous_state_predicate AMPERSAND init_continuous_expression_nonempty_list  { $1 :: $3 }
+	| init_continuous_state_predicate ampersand_opt { [ $1 ] }
+;
+
+init_continuous_state_predicate:
+    | LPAREN init_continuous_state_predicate RPAREN { $2 }
+    | linear_constraint { Parsed_linear_predicate $1 }
+;
+
+init_loc_predicate:
+	/* loc[my_pta] = my_loc */
+	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
+	/* my_pta IS IN my_loc */
+	| NAME CT_IS CT_IN NAME { ($1, $4) }
+;
+
+
 
 /************************************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -707,16 +773,6 @@ binary_word:
 /************************************************************/
 
 /* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
-convex_predicate:
-	| ampersand_opt convex_predicate_fol { $2 }
-;
-
-convex_predicate_fol:
-	| linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
-	| linear_constraint { [$1] }
-;
-
-/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
 nonlinear_convex_predicate:
 	| ampersand_opt nonlinear_convex_predicate_fol { $2 }
 ;
@@ -726,20 +782,6 @@ nonlinear_convex_predicate_fol:
 	| discrete_boolean_expression { [$1] }
 ;
 
-linear_constraint:
-	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
-	| CT_TRUE { Parsed_true_constraint }
-	| CT_FALSE { Parsed_false_constraint }
-;
-
-relop:
-	| OP_L { PARSED_OP_L }
-	| OP_LEQ { PARSED_OP_LEQ }
-	| OP_EQ { PARSED_OP_EQ }
-	| OP_NEQ { PARSED_OP_NEQ }
-	| OP_GEQ { PARSED_OP_GEQ }
-	| OP_G { PARSED_OP_G }
-;
 
 /* Linear expression over variables and rationals */
 linear_expression:
@@ -758,10 +800,6 @@ linear_term:
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
-/* Init expression for variable */
-init_value_expression:
-    | boolean_expression { $1 }
-;
 
 /* Linear expression over rationals only */
 rational_linear_expression:
@@ -778,6 +816,51 @@ rational_linear_term:
 	| OP_MINUS rational_linear_term { NumConst.neg $2 }
 	| LPAREN rational_linear_expression RPAREN { $2 }
 ;
+
+linear_constraint:
+	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Parsed_true_constraint }
+	| CT_FALSE { Parsed_false_constraint }
+;
+
+
+/************************************************************/
+/** BOOLEAN EXPRESSIONS */
+/************************************************************/
+
+/** NOTE: more general than a Boolean expression!! notably includes all expressions */
+boolean_expression:
+	| discrete_boolean_expression { Parsed_discrete_bool_expr $1 }
+	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+  | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+;
+
+discrete_boolean_expression:
+	| arithmetic_expression { Parsed_arithmetic_expr $1 }
+	/* Discrete arithmetic expression of the form Expr ~ Expr */
+	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
+	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	/* allowed for convenience */
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
+	| LPAREN boolean_expression RPAREN { Parsed_nested_bool_expr $2 }
+	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_not $3 }
+;
+
+relop:
+	| OP_L { PARSED_OP_L }
+	| OP_LEQ { PARSED_OP_LEQ }
+	| OP_EQ { PARSED_OP_EQ }
+	| OP_NEQ { PARSED_OP_NEQ }
+	| OP_GEQ { PARSED_OP_GEQ }
+	| OP_G { PARSED_OP_G }
+;
+
+
+/************************************************************/
+/** NUMBERS */
+/************************************************************/
 
 rational:
 	| integer { $1 }
@@ -806,138 +889,13 @@ pos_float:
 ;
 
 /************************************************************/
-/** BOOLEAN EXPRESSIONS */
-/************************************************************/
-
-boolean_expression:
-	| discrete_boolean_expression { Parsed_discrete_bool_expr $1 }
-	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
-  | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
-;
-
-discrete_boolean_expression:
-	| arithmetic_expression { Parsed_arithmetic_expr $1 }
-	/* Discrete arithmetic expression of the form Expr ~ Expr */
-	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
-	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
-	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	/* allowed for convenience */
-	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
-	| LPAREN boolean_expression RPAREN { Parsed_nested_bool_expr $2 }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_not $3 }
-;
-
-/************************************************************/
-/** INIT DEFINITION */
-/************************************************************/
-
-init_definition_option:
-    | old_init_definition {
-		(* Print a warning because this syntax is deprecated *)
-		print_warning ("Old syntax detected for the initial state definition. You are advised to use the new syntax (from 3.1).");
-		$1
-		}
-    | init_definition { $1 }
-    | { [ ] }
-;
-
-/* Old init style (until 3.0), kept for backward-compatibility */
-old_init_definition:
-	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
-;
-
-
-/* We allow here an optional "&" at the beginning and at the end */
-init_expression:
-	| ampersand_opt init_expression_fol ampersand_opt { $2 }
-	| { [ ] }
-;
-
-init_expression_fol:
-	| init_state_predicate { [ $1 ] }
-	| LPAREN init_expression_fol RPAREN { $2 }
-	| init_expression_fol AMPERSAND init_expression_fol { $1 @ $3 }
-;
-
-/* Used in the init definition */
-init_state_predicate:
-	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-    | linear_constraint { Parsed_linear_predicate $1 }
-;
-
-init_loc_predicate:
-	/* loc[my_pta] = my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
-	/* my_pta IS IN my_loc */
-	| NAME CT_IS CT_IN NAME { ($1, $4) }
-;
-
-new_init_loc_predicate:
-	/* loc[my_pta] = my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
-	/* my_pta IS IN my_loc */
-	| NAME CT_IS CT_IN NAME { ($1, $4) }
-;
-
-/************************************************************/
-/** NEW INIT DEFINITION SECTION from 3.1: SEPARATION OF DISCRETE AND CONTINUOUS */
-/************************************************************/
-
-init_definition:
-	| CT_INIT OP_ASSIGN LBRACE new_init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
-;
-
-new_init_discrete_continuous_definition:
-    | new_init_discrete_definition { $1 }
-    | new_init_continuous_definition { $1 }
-    | new_init_discrete_definition new_init_continuous_definition { $1 @ $2 }
-    | new_init_continuous_definition new_init_discrete_definition { $2 @ $1 }
-;
-
-new_init_discrete_definition:
-    | CT_DISCRETE OP_EQ new_init_discrete_expression SEMICOLON { $3 }
-;
-
-new_init_continuous_definition:
-    | CT_CONTINUOUS OP_EQ new_init_continuous_expression SEMICOLON { $3 }
-;
-
-
-new_init_discrete_expression:
-	| comma_opt init_discrete_expression_nonempty_list { $2 }
-	| { [ ] }
-;
-
-init_discrete_expression_nonempty_list :
-	| new_init_discrete_state_predicate COMMA init_discrete_expression_nonempty_list  { $1 :: $3 }
-	| new_init_discrete_state_predicate comma_opt { [ $1 ] }
-;
-
-new_init_discrete_state_predicate:
-	| new_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| LPAREN new_init_discrete_state_predicate  RPAREN { $2 }
-	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
-;
-
-new_init_continuous_expression:
-	| ampersand_opt init_continuous_expression_nonempty_list { $2 }
-	| { [ ] }
-;
-
-init_continuous_expression_nonempty_list :
-	| new_init_continuous_state_predicate AMPERSAND init_continuous_expression_nonempty_list  { $1 :: $3 }
-	| new_init_continuous_state_predicate ampersand_opt { [ $1 ] }
-;
-
-new_init_continuous_state_predicate:
-    | LPAREN new_init_continuous_state_predicate RPAREN { $2 }
-    | linear_constraint { Parsed_linear_predicate $1 }
-;
-
-/************************************************************/
 /** MISC. */
 /************************************************************/
+
+semicolon_or_comma:
+  | SEMICOLON {}
+  | COMMA {}
+;
 
 comma_opt:
 	| COMMA { }
