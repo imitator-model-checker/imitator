@@ -224,22 +224,18 @@ var_type_discrete:
 
 var_type_discrete_array:
   | var_type_discrete CT_ARRAY LPAREN pos_integer RPAREN { Dt_array ($1, NumConst.to_bounded_int $4) }
-  | var_type_discrete_array CT_ARRAY LPAREN pos_integer RPAREN { Dt_array ($1, NumConst.to_bounded_int $4) }
 ;
 
 var_type_discrete_list:
   | var_type_discrete CT_LIST { Dt_list $1 }
-  | var_type_discrete_list CT_LIST { Dt_list $1 }
 ;
 
 var_type_discrete_stack:
   | var_type_discrete CT_STACK { Dt_stack $1 }
-  | var_type_discrete_stack CT_STACK { Dt_stack $1 }
 ;
 
 var_type_discrete_queue:
   | var_type_discrete CT_QUEUE { Dt_queue $1 }
-  | var_type_discrete_queue CT_QUEUE { Dt_queue $1 }
 ;
 
 var_type_discrete_number:
