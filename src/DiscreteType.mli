@@ -70,6 +70,8 @@ val is_discrete_type_known_number_type : var_type_discrete -> bool
 val is_discrete_type_holding_number_type : var_type_discrete -> bool
 val is_discrete_type_holding_unknown_number_type : var_type_discrete -> bool
 val is_discrete_type_holding_known_number_type : var_type_discrete -> bool
+val is_discrete_type_holding_void_type : var_type_discrete -> bool
+val is_var_type_holding_void_type : var_type -> bool
 
 val extract_inner_type : var_type_discrete -> var_type_discrete
 
