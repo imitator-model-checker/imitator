@@ -211,7 +211,7 @@ class imitator_options =
 		(* do not put accepting states at the head of successors list in NDFS *)
 		val mutable no_acceptfirst					= false
 
-		(* do not use green colour in NDFS *)
+		(* do not use green color in NDFS *)
 		val mutable no_green						= false
 
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
@@ -950,7 +950,7 @@ class imitator_options =
 				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test and pruning).
 				");
 
-				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green colour in NDFS. Default: enabled (i.e., green).
+				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green color in NDFS. Default: enabled (i.e., green).
 				");
 
 				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled (i.e., lookahead).
@@ -1536,9 +1536,9 @@ class imitator_options =
 				print_message Verbose_medium ("Lookahead for successors closing accepting cycles in NDFS (default).");
 
 			if no_green then
-				print_message Verbose_standard ("No green colours in NDFS search.")
+				print_message Verbose_standard ("No green colors in NDFS search.")
 			else
-				print_message Verbose_medium ("Green colour used in NDFS (default).");
+				print_message Verbose_medium ("Green color used in NDFS (default).");
 
 			if recompute_green then
 				print_message Verbose_standard ("Re-processing green states in NDFS.")
