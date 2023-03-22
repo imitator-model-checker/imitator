@@ -4203,7 +4203,10 @@ let p_nnconvex_union_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* Add each of them as a union *)
 	List.iter (p_nnconvex_p_union_assign p_nnconvex_constraint) disjuncts
 
-let px_nnconvex_union_assign = p_nnconvex_union_assign
+(** Performs the union of a px_nnconvex_constraint with another px_nnconvex_constraint; the first px_nnconvex_constraint is modified, the second is not *)
+let px_nnconvex_union_assign px_nnconvex_constraint px_nnconvex_constraint' = 
+	let disjuncts = get_disjuncts px_nnconvex_constraint' in
+	List.iter (px_nnconvex_px_union_assign px_nnconvex_constraint) disjuncts
 
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
