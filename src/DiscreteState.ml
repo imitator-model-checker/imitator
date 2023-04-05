@@ -68,7 +68,7 @@ let location_equal loc1 loc2 =
 		) 
 	)
 	in
-	ImitatorUtilities.print_standard_message ("Loc equals: " ^ string_of_bool loc_equals);
+(* 	ImitatorUtilities.print_standard_message ("Loc equals: " ^ string_of_bool loc_equals); *)
 	loc_equals
 
 
