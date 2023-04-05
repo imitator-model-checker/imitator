@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/03/14
+# Last modified     : 2023/04/05
 #************************************************************
 
 
@@ -4188,13 +4188,57 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undeclared variables in continuous init',
+		'input_files': ['test-wrong-continuous-init-var.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-wrong-continuous-init-var.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undeclared variables in discrete init',
+		'input_files': ['test-wrong-discrete-init-var.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-wrong-discrete-init-var.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		## Test version             : 1
 		## Test since               : 2021/05/28
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot be ill-typed',
+		'purpose'    : 'Test that an init expression cannot be ill-typed',
 		'input_files': ['type_checking/inits/init-discrete-expression-bad-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -4218,7 +4262,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot mix different types',
+		'purpose'    : 'Test that an init expression cannot mix different types',
 		'input_files': ['type_checking/inits/init-discrete-expression-mixin-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -4242,7 +4286,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s)',
+		'purpose'    : 'Test that an init constraint on clock cannot use non rational valued variable(s) or constant(s)',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-clock-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4266,7 +4310,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
+		'purpose'    : 'Test that an init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
 		'tags':'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-parameter-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4520,7 +4564,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot compute on a bad type',
+		'purpose'    : 'Test that an "in" expression cannot compute on a bad type',
 		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -4544,7 +4588,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot mix different types',
+		'purpose'    : 'Test that an "in" expression cannot mix different types',
 		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -4707,6 +4751,50 @@ END CONSTRAINT
 	,
 
 	# END : Type checking on guards tests
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test void var isn’t allowed',
+		'input_files': ['test-void.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-void.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test void array isn’t allowed',
+		'input_files': ['test-void-array.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-void-array.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	# END : Test type checking
@@ -5111,6 +5199,51 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that local variables do not duplicate discrete states',
+		'input_files': ['functions/nonduplicated-states.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'nonduplicated-states-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  A: l1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  A: l2 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+  s_0 -> s_1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	# END : Test user defined function
 	#------------------------------------------------------------
