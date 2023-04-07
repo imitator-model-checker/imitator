@@ -363,7 +363,8 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			print_message Verbose_total ("\n -- No resets to handle here");
 
 		(* CASE 2: only resets *)
-		)else(if not !arbitrary_updates then(
+		(*** WARNING/BUG (2023/04/07, ÉA): there is most probably a bug in the "simple reset" computation for BACKWARD computation; as a safe net, we only do the optimization for simple resets when time_direction = Time_forward ***)
+		)else(if not !arbitrary_updates && time_direction = LinearConstraint.Time_forward then(
 
 			(* Print some information *)
 			print_message Verbose_total ("\n -- Case only resets");
