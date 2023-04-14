@@ -27,8 +27,86 @@ open AlgoStateBased
 open Statistics
 open State
 
+(* Notation and shorthands *)
+let (>>) f g x = g(f(x)) 
+let (>>>) f g x y = g(f x y) 
+
+let nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint
+let project_params = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse 
+let is_empty =  LinearConstraint.px_nnconvex_constraint_is_false 
+let (#!=) = LinearConstraint.px_nnconvex_constraint_is_equal >>> not
+let (#<-) queue elem = Queue.add elem queue   
+let (#<--) queue1 queue2 = Queue.transfer queue2 queue1
+let bot = LinearConstraint.false_px_nnconvex_constraint
+
+let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
+let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
+let print_PTG = print_message Verbose_medium
+
+type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
+module type Default = sig  
+	type elem
+	type key
+	val str_of_elem : elem -> string
+	val str_of_key : key -> string
+	val tbl : (key, elem) Hashtbl.t
+	val default : key -> elem
+	val model : AbstractModel.abstract_model option ref
+end
+
+module DefaultHashtbl (D : Default) = struct 
+	let model = D.model
+	let str_of_elem = D.str_of_elem
+	let tbl = D.tbl
+	let find key = 
+		try Hashtbl.find tbl key with
+			Not_found -> D.default key
+	let replace = Hashtbl.replace tbl
+	let to_str () = "[" ^ 
+		Seq.fold_left 
+			(fun acc (key, elem) -> Printf.sprintf "%s, %s -> %s\n" acc (D.str_of_key key) (D.str_of_elem elem)) 
+			("")
+			(Hashtbl.to_seq tbl) 
+		^ "]"
+end
 
 
+
+let edge_to_str = fun ({state; action; state';_} : edge) model -> 	
+	let action_str = model.action_names action in 
+	Printf.sprintf "%d --%s-> %d" state action_str state'
+
+let edge_seq_to_str seq model = "[" ^ 
+	Seq.fold_left 
+		(fun acc edge -> Printf.sprintf "%s, %s" acc (edge_to_str edge model))
+		("") (
+		seq) 
+	^ "]"
+
+module WinningZone = DefaultHashtbl (struct 
+	let model = ref None
+	type elem = LinearConstraint.px_nnconvex_constraint
+	type key = state_index
+	let tbl = Hashtbl.create 100
+	let default = fun _ -> LinearConstraint.false_px_nnconvex_constraint()
+	let str_of_elem zone = match !model with 
+		| Some model -> LinearConstraint.string_of_px_nnconvex_constraint model.variable_names zone
+		| None -> "No model provided"
+	let str_of_key = string_of_int >> (^) ("s")
+end)  
+
+
+module Depends = DefaultHashtbl (struct 
+	let model = ref None
+	type elem = edge Queue.t 
+	type key = state_index
+	let tbl = Hashtbl.create 100
+	let default = fun idx -> let q = Queue.create () in Hashtbl.add tbl idx q; q
+	let str_of_elem queue = match !model with 
+		| Some model -> edge_seq_to_str (Queue.to_seq queue) model
+		| None -> "No model provided"
+	let str_of_key = string_of_int
+end)
 
 (************************************************************)
 (************************************************************)
@@ -552,6 +630,168 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		()
 	(*** END WARNING (2022/11, ÉA): copied from AlgoStateBased ***)
 
+	(* Initialize the Winning and Depend tables with our model - only affects printing information in terminal *)
+	method private initialize_tables () = 
+		WinningZone.model := Some model;
+		Depends.model := Some model
+
+	(* Edges from a symbolic state *)
+	method private get_edges state = 
+		let successors = state_space#get_successors_with_combined_transitions state in
+		let action_state_list = List.map (fun (transition, state') ->
+			let action = StateSpace.get_action_from_combined_transition model transition in
+			{state; action; transition; state'}
+			) successors in
+		action_state_list
+
+	(* Edges from a symbolic state as a queue *)
+	method private get_edge_queue state_index =
+		let queue = Queue.create () in 
+		let add elem = Queue.add elem queue in 
+		List.iter add @@ self#get_edges state_index;
+		queue
+
+	(* Zone of a symbolic state *)		
+	method private constr_of_state_index i = (state_space#get_state i).px_constraint
+
+	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
+	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> (model.action_names e.action).[0] = 'c')
+	method private get_uncontrollable_edges = self#get_edges >> List.filter (fun e -> (model.action_names e.action).[0] = 'u')
+
+	(* TODO: Support multiple automata in PTG? *)
+	(* Whether or not a state is accepting  *)
+	method private accepting state_index = 		
+		assert (model.nb_automata = 1);
+		let loc = ((state_space#get_state state_index).global_location) in
+		let loc_id =  DiscreteState.get_location loc 0 in
+		model.is_accepting 0 loc_id 
+
+	(* Losing part of a symbolic state *)
+	method private losing_zone state_index = 
+			let zone = (self#constr_of_state_index >> nn) state_index in 
+			LinearConstraint.px_nnconvex_difference_assign zone (WinningZone.find state_index);
+			zone
+		
+	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
+	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
+
+	(* Computes the predecessor zone of current_zone into symbolic state: (target_state, target_zone) using transition *)
+	method private predecessor_nnconvex target_state_index target_zone current_zone transition = 
+		let guard = state_space#get_guard model target_state_index transition in
+		(* TODO: Limit to predecessors in S? *)
+		let constraints = List.map (fun z -> 
+			let pxd_pred = DeadlockExtra.dl_predecessor state_space target_state_index target_zone guard z transition in 	
+			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
+			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
+			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
+		List.fold_left (|||) (bot ()) constraints
+
+		
+	(* Computes the safe timed predecessors of (nn_convex) zone g avoiding (nn_convex) zone b coming from a state *)
+	method private safe_timed_pred (g : LinearConstraint.px_nnconvex_constraint) (b:  LinearConstraint.px_nnconvex_constraint) (state : state_index)  = 
+		let nn_of_linear = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint in  
+		let (||) = fun a b -> LinearConstraint.px_nnconvex_px_union_assign a b; a in  
+		let (--) = fun a b -> LinearConstraint.px_nnconvex_difference_assign a b; a in 
+		let (&&) = fun a b -> LinearConstraint.px_intersection_assign a [b]; a in
+		let global_location = state_space#get_location (state_space#get_global_location_index state) in
+
+		let backward (x : LinearConstraint.px_linear_constraint) =
+			let constr_d = LinearConstraint.pxd_of_px_constraint x in 
+			apply_time_past global_location constr_d;  
+			LinearConstraint.pxd_hide_discrete_and_collapse constr_d
+		in
+
+		let safe_time_pred_conv g b = 
+			let g_past = backward g in 
+			let b_past = backward b in 
+			let g_constr = LinearConstraint.px_copy g in
+			let b_constr = LinearConstraint.px_copy b in 
+			let g_past_minus_b_past = nn_of_linear g_past -- nn_of_linear b_past in 
+			let g_intersect_b_past_minus_b = nn_of_linear (g_constr && b_past) -- nn_of_linear b_constr in 
+			List.fold_left (||) g_past_minus_b_past  
+							(List.map (backward) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g_intersect_b_past_minus_b)
+		in
+		List.fold_left (fun acc i -> acc ||| i) (bot ())
+			(List.map (fun g_i -> 
+				let t = List.fold_left (&&&) (nn @@ backward g_i)
+					(List.map (fun b_j -> safe_time_pred_conv g_i b_j) @@
+					LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint b) in 
+				t
+			) @@
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g)
+
+	(* Explores forward in order to discover winning states *)
+	method private forward_exploration e waiting passed= 
+		let {state';_} = e in 
+		print_PTG ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
+		passed#add state';
+		(Depends.find state') #<- e;
+
+		if self#accepting state' then WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
+		waiting #<-- (self#get_edge_queue state') ;
+
+		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model); 
+		if not @@ is_empty (WinningZone.find state') then waiting #<- e;
+
+	(* Backtracks in order to update winning zones in the simulation graph *)	
+	method private backtrack e waiting = 
+		let {state; state';_}= e in 
+		begin
+			print_PTG ("\tI've seen state " ^ (string_of_int state') ^ " before. Reevaluating winning zone.");
+			let get_pred_from_edges default edges zone = 
+				List.fold_left (|||) default @@
+					List.map (fun {state; transition; state';_} -> 
+						self#predecessor_nnconvex state (self#constr_of_state_index state) (zone state') transition
+					)
+				edges
+			in
+
+			let g_init = LinearConstraint.px_nnconvex_copy @@ WinningZone.find state in 
+			let g = get_pred_from_edges g_init (self#get_controllable_edges state) (WinningZone.find) in
+			let b = get_pred_from_edges (bot ()) (self#get_uncontrollable_edges state) (self#losing_zone) in 
+
+			let win = self#safe_timed_pred g b state in	
+			print_PTG (Printf.sprintf "\tPred_t(G, B) = %s" @@ LinearConstraint.string_of_px_nnconvex_constraint model.variable_names win);
+			if (WinningZone.find state) #!= win then
+				begin
+					waiting #<-- (Depends.find state);
+					WinningZone.replace state win;
+					print_PTG "Updating winning zones to:";
+					print_PTG (WinningZone.to_str ())
+				end;
+			(Depends.find state') #<- e
+		end
+
+	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
+	method private compute_PTG = 
+		self#initialize_tables();
+
+		(* === ALGORITHM INITIALIZATION === *)
+		let init = state_space#get_initial_state_index in 
+		
+		let passed = new State.stateIndexSet in 
+		passed#add init;
+		let waiting = self#get_edge_queue init in 
+
+		(* If goal is init then initial winning zone is it's own constraint*)
+		if self#accepting init then
+			WinningZone.replace init @@ (self#constr_of_state_index >> nn) init;
+
+		(* === ALGORITHM MAIN LOOP === *)
+		while (is_empty(self#initial_constraint () &&& WinningZone.find init) && not (Queue.is_empty waiting)) do
+			print_PTG ("\nEntering main loop with waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model);
+			let e = Queue.pop waiting in 			
+			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str e model));
+			if not @@ passed#mem e.state' then  
+				self#forward_exploration e waiting passed
+			else
+				self#backtrack e waiting
+		done;
+		print_PTG "After running AlgoPTG I found winning these zones:";
+		print_PTG (WinningZone.to_str ());
+
+		let winning_parameters = project_params (self#initial_constraint () &&& WinningZone.find init) in
+		synthesized_constraint <- winning_parameters
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
@@ -561,7 +801,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
-
+		self#compute_PTG; 
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
