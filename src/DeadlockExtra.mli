@@ -18,4 +18,6 @@ val dl_inverse_time : StateSpace.stateSpace -> State.state_index -> pxd_linear_c
 
 val dl_weakest_precondition: StateSpace.stateSpace -> State.state_index -> combined_transition -> State.state_index -> pxd_linear_constraint
 
+val dl_predecessor : StateSpace.stateSpace -> State.state_index -> px_linear_constraint -> pxd_linear_constraint -> px_linear_constraint -> combined_transition -> pxd_linear_constraint
+
 val dl_instantiate_discrete: StateSpace.stateSpace -> State.state_index -> pxd_linear_constraint -> px_linear_constraint
