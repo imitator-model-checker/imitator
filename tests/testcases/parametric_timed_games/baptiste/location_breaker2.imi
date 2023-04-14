@@ -1,0 +1,39 @@
+(* Mikael, Aarhus, March 24, 2023 
+	Simple PTG
+    Expected constraint: TODO
+
+*)
+var
+ 	x : clock;
+    y : clock;
+
+automaton ptg
+
+actions: c_1, c_2, c_3, c_x, c_y, u_1, u_2;
+
+loc Li: invariant True
+	when True do {x:=0} sync c_x goto Li;
+	when True do {y:=0} sync c_y goto Li;
+    when 2 <= x & x <= 4 & 4 < y & y <= 6 sync c_1 goto L1;
+    when 1 <= x & x <= 3 & 5 <= y & y <= 7 sync u_1 goto L2;
+
+loc L1: invariant True
+    when True sync c_2 goto L2;
+
+loc L2: invariant True
+    when 2 <= x & x <= 3 & 5 <= y & y <= 6 sync c_3 goto Win;
+    when 2 <= x & x <= 3 & 4 <= y & y <= 5 sync u_2 goto Lose;
+ 
+accepting loc Win: invariant True
+
+loc Lose: invariant True
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = Li
+	& x = 0
+    & y = 0
+;
+
+end
