@@ -601,6 +601,7 @@ val px_of_p_constraint   : p_linear_constraint  -> px_linear_constraint
 val pxd_of_p_constraint  : p_linear_constraint  -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 val pxd_of_x_constraint  : x_linear_constraint  -> pxd_linear_constraint
+val px_of_x_constraint : x_linear_constraint -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -710,6 +711,7 @@ val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> 
 
 (** Check if a nnconvex_constraint is false *)
 val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
+val px_nnconvex_constraint_is_false : px_nnconvex_constraint -> bool
 val x_nnconvex_constraint_is_false : x_nnconvex_constraint -> bool
 
 (** Check if a nnconvex_constraint is true *)

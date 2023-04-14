@@ -1911,7 +1911,7 @@ let pxd_of_px_constraint c =
 (*** NOTE: conversion OK because x are actually px ***)
 let pxd_of_x_constraint = pxd_of_px_constraint
 
-
+let px_of_x_constraint = identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
@@ -4061,6 +4061,7 @@ let get_disjuncts p_nnconvex_constraint =
 
 (** Check if a nnconvex_constraint is false *)
 let p_nnconvex_constraint_is_false = ippl_nncc_is_empty
+let px_nnconvex_constraint_is_false = ippl_nncc_is_empty
 let x_nnconvex_constraint_is_false = ippl_nncc_is_empty
 
 
