@@ -855,15 +855,22 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
         model.transitions_description transition_index
     in
 
-	(* Make a copy of the location *)
-	let location = DiscreteState.copy_location source_location in
+    (*** BEGIN code with local variables ***)
+
+    (* Create a fresh copy of the local variables table *)
+    let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
+
+	(* Create an extended location *)
+	let copied_location : DiscreteState.global_location = DiscreteState.copy_location source_location in
+	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables copied_location local_variables_table in
+
     (* Get functions that enable reading / writing global variables at a given location *)
-    let discrete_access = DiscreteState.discrete_access_of_location location in
+    let discrete_access : DiscreteState.discrete_access = DiscreteState.discrete_access_of_location_and_local_variables global_location_and_local_variables in
 
     (* Create context *)
     let eval_context = DiscreteExpressionEvaluator.create_eval_context discrete_access in
 
-	(* Make update first ! *)
+	(* Apply update first! *)
 	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
@@ -874,8 +881,13 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 
 	) combined_transition;
 
-    (* Get clocks that were updated effectively in previous evaluation (just before at eval_seq_code_bloc...) *)
+    (* Get clocks that were updated effectively in previous evaluation (just before at eval_seq_code_bloc…) *)
     let clock_updates = DiscreteExpressionEvaluator.effective_clock_updates eval_context model.variable_names in
+
+	(* Keep only the location (without the local variables table) *)
+	let target_location : DiscreteState.global_location = DiscreteState.get_global_location global_location_and_local_variables in
+
+    (*** END code with local variables ***)
 
     (* Update the update flag *)
     let has_updates =
@@ -899,7 +911,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 		let guard, target_index = transition.guard, transition.target in
 
         (* Update the global location *)
-        DiscreteState.update_location_with [automaton_index, target_index] location;
+        DiscreteState.update_location_with [automaton_index, target_index] target_location;
 
         (* Keep the guard  *)
         guard
@@ -908,13 +920,13 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	in
 
 	(* Update the global location *)
-	DiscreteState.update_location_with [] location;
+	DiscreteState.update_location_with [] target_location;
 
 	(* Split guards between discrete and continuous *)
 	let discrete_guards, continuous_guards = AbstractModelUtilities.split_guards_into_discrete_and_continuous guards in
 
 	(* Return the new location, the guards, unit updates, and the clock updates (if any!) *)
-	location, discrete_guards, continuous_guards, clock_updates
+	target_location, discrete_guards, continuous_guards, clock_updates
 
 
 

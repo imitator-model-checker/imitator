@@ -38,8 +38,13 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
     let location = DiscreteState.copy_location glob_location in
     let model = Input.get_model() in 
 
+    (* Create a fresh copy of the local variables table *)
+    let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
+
+	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables location local_variables_table in
+
     (* Get functions that enable reading / writing global variables at a given location *)
-    let discrete_access = DiscreteState.discrete_access_of_location location in
+    let discrete_access = DiscreteState.discrete_access_of_location_and_local_variables global_location_and_local_variables in
     (* Make all sequential update first ! *)
 	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)
@@ -62,8 +67,13 @@ let dl_discrete_constraint_of_global_location (state_space : StateSpace.stateSpa
     let location = DiscreteState.copy_location glob_location in
     let model = Input.get_model() in
 
+    (* Create a fresh copy of the local variables table *)
+    let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
+
+	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables location local_variables_table in
+
     (* Get functions that enable reading / writing global variables at a given location *)
-    let discrete_access = DiscreteState.discrete_access_of_location location in
+    let discrete_access = DiscreteState.discrete_access_of_location_and_local_variables global_location_and_local_variables in
 
     (* Create context *)
     let eval_context = DiscreteExpressionEvaluator.create_eval_context discrete_access in

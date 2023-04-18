@@ -41,7 +41,11 @@ type discrete = AbstractValue.abstract_value array
 type local_variables_table = (variable_ref, AbstractValue.abstract_value) Hashtbl.t
 
 (* Global location: location for each automaton + value of the discrete *)
-type global_location = locations * discrete * local_variables_table
+type global_location = locations * discrete
+
+(* Extended global location: location for each automaton + value of the discrete and local variables *)
+(*** NOTE (ÉA, 2013/04/14): might be one day deleted with the local variables table made independent ***)
+type global_location_and_local_variables = global_location * local_variables_table
 
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
@@ -51,9 +55,9 @@ type discrete_access = discrete_valuation * discrete_setter * local_discrete_val
 
 exception NotEqual
 
-let location_equal loc1 loc2 =
-	let (locs1, discr1, _) = loc1 in
-	let (locs2, discr2, _) = loc2 in
+let location_equal (loc1 : global_location) (loc2 : global_location) : bool =
+	let (locs1, discr1) = loc1 in
+	let (locs2, discr2) = loc2 in
 	(* can use polymorphic = here *)
 	let loc_equals =
 	if not (locs1 = locs2) then false else (
@@ -105,11 +109,13 @@ let nb_automata = ref 0
 (** Useful functions *)
 (************************************************************)
 
-let get_locations ((locations, _, _) : global_location) : locations = locations
+let get_locations ((locations, _) : global_location) : locations = locations
 
-let get_discrete ((_, discrete, _) : global_location) : discrete = discrete
+let get_discrete ((_, discrete) : global_location) : discrete = discrete
 
-let get_local_variables ((_, _, local_variables_table) : global_location) : local_variables_table = local_variables_table
+let get_local_variables ((_, local_variables_table) : global_location_and_local_variables) : local_variables_table = local_variables_table
+(* Get the global_location component of a global_location_and_local_variables *)
+let get_global_location ((global_location, _) : global_location_and_local_variables) : global_location = global_location
 
 (*let location_hash_code location =
 	let locations = get_locations location in
@@ -117,7 +123,7 @@ let get_local_variables ((_, _, local_variables_table) : global_location) : loca
 		7919 * h + loc
 	) 0 locations*)
 
-let hash_code ((locations, discrete, _) : global_location) : int =
+let hash_code ((locations, discrete) : global_location) : int =
 	let loc_hash = Array.fold_left (fun h loc -> 2*h + loc) 0 locations in
 	let discr_hash = Array.fold_left (fun h q -> 
 		2*h + (AbstractValue.hash q)
@@ -148,7 +154,7 @@ let initialize nb_auto min_discrete max_discrete =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
-let make_location locations_per_automaton discrete_values local_variables_table : global_location =
+let make_location locations_per_automaton discrete_values : global_location =
 	(* Create an array for locations *)
 	let locations = Array.make !nb_automata 0 in
 	(* Create an array for discrete *)
@@ -158,7 +164,11 @@ let make_location locations_per_automaton discrete_values local_variables_table 
 	(* Iterate on discrete *)
 	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values;
 	(* Return the new location *)
-	locations, discrete, local_variables_table
+	locations, discrete
+
+let make_global_location_and_local_variables (global_location : global_location) (local_variables_table : local_variables_table) : global_location_and_local_variables =
+    (* Return the new location *)
+    global_location, local_variables_table
 
 (* We have to copy discrete values of arrays and stacks *)
 (* Because of array and stack are references in OCaml, if we don't copy their content *)
@@ -167,7 +177,7 @@ let make_location locations_per_automaton discrete_values local_variables_table 
 (* as it was the same references. *)
 (* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
 (* List isn't concerned because we doesn't have ability to modify it's content in IMITATOR. *)
-let copy_discrete_values_at_location (location  : global_location) =
+let copy_discrete_values_at_location (location : global_location) =
 	(* Get discrete variables *)
 	let discrete_values = get_discrete location in
 	(* Copy discrete variables *)
@@ -181,14 +191,12 @@ let copy_location (location : global_location) : global_location =
 	let cpy_locations = Array.copy (get_locations location) in
 	(* Copy the array of discrete values *)
 	let cpy_discrete = copy_discrete_values_at_location location in
-	(* Copy the table of local variables and reinit values of local variables *)
-	let local_variables_table = Hashtbl.copy (get_local_variables location) in
 	(* Return the new location *)
-	cpy_locations, cpy_discrete, local_variables_table
+	cpy_locations, cpy_discrete
 
 
 (** Side-effect version of 'update_location'. *)
-let update_location_with locations_per_automaton (locations, _, _) =
+let update_location_with locations_per_automaton (locations, _) =
 	(* Iterate on locations *)
 	List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton
 
@@ -221,19 +229,23 @@ let set_discrete_value (location : global_location) discrete_index value =
     discrete.(discrete_index - !min_discrete_index) <- value
 
 (* Get the value associated to some discrete local variable *)
-let get_local_discrete_value (location : global_location) variable_ref =
-    let local_variables_table = get_local_variables location in
+let get_local_discrete_value (global_location_and_local_variables : global_location_and_local_variables) variable_ref =
+    let local_variables_table = get_local_variables global_location_and_local_variables in
     Hashtbl.find local_variables_table variable_ref
 
 (* Set the value associated to some discrete local variable *)
-let set_local_discrete_value (location : global_location) variable_ref value =
-    let local_variables_table = get_local_variables location in
+let set_local_discrete_value (global_location_and_local_variables : global_location_and_local_variables) variable_ref value =
+    let local_variables_table = get_local_variables global_location_and_local_variables in
     Hashtbl.replace local_variables_table variable_ref value
 
 (** Get a tuple of functions for reading / writing a global variable at a given location *)
 (* A discrete access enable to read or write a value of a variable at a given discrete index *)
-let discrete_access_of_location location =
-    get_discrete_value location, set_discrete_value location, get_local_discrete_value location, set_local_discrete_value location
+let discrete_access_of_location_and_local_variables (global_location_and_local_variables : global_location_and_local_variables) =
+    let global_location : global_location = get_global_location global_location_and_local_variables in
+    get_discrete_value global_location,
+    set_discrete_value global_location,
+    get_local_discrete_value global_location_and_local_variables,
+    set_local_discrete_value global_location_and_local_variables
 
 
 (************************************************************)

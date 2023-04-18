@@ -69,7 +69,7 @@ val eval_seq_code_bloc_with_context : variable_name_table option -> functions_ta
 (* Check if a nonlinear constraint is satisfied *)
 val check_nonlinear_constraint : variable_name_table option -> functions_table option -> discrete_access -> nonlinear_constraint -> bool
 (* Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : variable_name_table option -> functions_table option -> discrete_access -> (automaton_index -> location_index -> bool) -> DiscreteState.global_location -> AbstractProperty.state_predicate-> bool
+val match_state_predicate : variable_name_table option -> functions_table option -> (automaton_index -> location_index -> bool) -> DiscreteState.global_location -> AbstractProperty.state_predicate-> bool
 
 (* Try to evaluate a constant expression, if expression isn't constant, it raise an error *)
 val try_eval_constant_global_expression : functions_table option -> global_expression -> AbstractValue.abstract_value

@@ -3370,7 +3370,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Second get the discrete values from the former initial location *)	
 		let discrete_values = List.map (fun discrete_index -> discrete_index , (DiscreteState.get_discrete_value former_initial_location discrete_index)) model.discrete in
 
-		DiscreteState.make_location initial_PTA_locations discrete_values (Hashtbl.create 0)
+		DiscreteState.make_location initial_PTA_locations discrete_values
 	in
 
 
@@ -3684,7 +3684,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		is_controllable_action = (fun action_index -> List.mem action_index model.controllable_actions);
 
         (* The list of declared functions *)
-        functions_table = Hashtbl.create 0;
+        functions_table = Hashtbl.copy model.functions_table;
+
+      (* Local variables table type *)
+      (*** WARNING (ÉA, 2023/04/14): probably has nothing to do here ***)
+        local_variables_table = Hashtbl.copy model.local_variables_table;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)

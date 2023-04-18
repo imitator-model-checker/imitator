@@ -965,7 +965,17 @@ let is_global_expression_constant functions_table_opt expr =
 (************************************************************)
 
 (***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
-let match_state_predicate variable_names functions_table_opt discrete_access (locations_acceptance_condition : automaton_index -> location_index -> bool) global_location =
+let match_state_predicate variable_names functions_table_opt (locations_acceptance_condition : automaton_index -> location_index -> bool) (global_location : DiscreteState.global_location) =
+
+    (*** WARNING: horrible HACK to patch the issue with local/global variables: create a "fake" 'discrete access' ***)
+    let partial_discrete_access : DiscreteState.discrete_access =
+        DiscreteState.get_discrete_value global_location,
+        DiscreteState.set_discrete_value global_location,
+        (*** HACK: here, we create fake functions ***)
+        (fun _ -> raise (InternalError "fake local discrete setter should not be called in DiscreteExpressionEvaluator.match_state_predicate")),
+        (fun _ -> raise (InternalError "fake local discrete setter should not be called in DiscreteExpressionEvaluator.match_state_predicate"))
+    in
+
 
     (* Match loc predicate *)
     let match_loc_predicate = function
@@ -978,7 +988,7 @@ let match_state_predicate variable_names functions_table_opt discrete_access (lo
     (* Match simple predicate *)
     let match_simple_predicate = function
         | State_predicate_discrete_boolean_expression expr ->
-            eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access) expr
+            eval_discrete_boolean_expression variable_names functions_table_opt (Some partial_discrete_access) expr
 
         | Loc_predicate loc_predicate ->
             match_loc_predicate loc_predicate

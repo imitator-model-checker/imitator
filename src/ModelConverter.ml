@@ -1250,7 +1250,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -1271,7 +1271,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		) initial_locations in
 
 	(* Construct the initial location *)
-	let initial_location = DiscreteState.make_location locations init_discrete_pairs local_variables_table in
+	let initial_location = DiscreteState.make_location locations init_discrete_pairs in
 
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
@@ -3783,7 +3783,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	let (initial_location, initial_constraint) =
-		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names local_variables_table init_discrete_pairs init_definition in
+		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
@@ -4143,6 +4143,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* The list of declared functions *)
     functions_table = functions_table;
+
+    (* Local variables table type *)
+    (*** WARNING (ÉA, 2023/04/14): probably has nothing to do here ***)
+    local_variables_table = local_variables_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

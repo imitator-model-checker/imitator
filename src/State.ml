@@ -172,8 +172,9 @@ let match_state_predicate state_predicate state =
 
 (* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
 let match_state_predicate (model : AbstractModel.abstract_model) (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
-    let discrete_access = DiscreteState.discrete_access_of_location state.global_location in
-	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) discrete_access locations_acceptance_condition state.global_location state_predicate
+    (* let discrete_access = DiscreteState.discrete_access_of_location state.global_location in *)
+    (*** NOTE: removed by ÉA (2023/04/14) ***)
+	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) (* discrete_access *) locations_acceptance_condition state.global_location state_predicate
 
 
 
@@ -183,8 +184,20 @@ let match_state_predicate (model : AbstractModel.abstract_model) (locations_acce
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
 let evaluate_d_nonlinear_constraint_in_location (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (discrete_guard : AbstractModel.discrete_guard) : bool =
-    let discrete_access = DiscreteState.discrete_access_of_location location in
-    DiscreteExpressionEvaluator.check_nonlinear_constraint (Some model.variable_names) (Some model.functions_table) discrete_access discrete_guard
+	(*** HACK (ÉA, 2023/04/18): create a fake global_location_and_local_variables to be able to call the DiscreteExpressionEvaluator functions :( ***)
+	(*** BEGIN HORRIBLE HACK ***)
+	(* Create a fresh copy of the local variables table *)
+	(*** HACK in the HACK: we do not copy the table, but pass the "real" one from the model: this saves time and (presumably!!) doesn't harm as the table should not be modified here…***)
+(*     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in *)
+	let local_variables_table : DiscreteState.local_variables_table = model.local_variables_table in
+
+    let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables location local_variables_table in
+
+    let discrete_access = DiscreteState.discrete_access_of_location_and_local_variables global_location_and_local_variables in
+	(*** END HORRIBLE HACK ***)
+
+	(* Call dedicated function *)
+	DiscreteExpressionEvaluator.check_nonlinear_constraint (Some model.variable_names) (Some model.functions_table) discrete_access discrete_guard
 
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
 let is_discrete_guard_satisfied (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (guard : AbstractModel.guard) : bool =

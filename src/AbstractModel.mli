@@ -268,6 +268,10 @@ type abstract_model = {
     (* The list of declared functions *)
     functions_table : (variable_name, fun_definition) Hashtbl.t;
 
+      (* Local variables table type *)
+      (*** WARNING (ÉA, 2023/04/14): probably has nothing to do here ***)
+    local_variables_table : (variable_ref, AbstractValue.abstract_value) Hashtbl.t;
+
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;
 	(* Initial location of the model *)
