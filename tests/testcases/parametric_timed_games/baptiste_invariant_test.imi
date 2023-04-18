@@ -1,0 +1,32 @@
+(* Mikael, Aarhus, March 24, 2023 
+    Expected constraint: TODO
+
+*)
+var
+ 	x : clock;
+    y : clock;
+
+automaton ptg
+
+actions: c_1, c_2, u_1;
+
+loc li: invariant True
+	when True do {y:=0} sync c_1 goto li;
+    when y>=3 & y <= 4 & x >= 5 sync c_2 goto win2;
+    when y <=2 & x >= 2 sync u_1 goto win;
+
+accepting loc win: invariant y <= 1
+accepting loc win2: invariant True
+
+
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = li
+	& x = 0
+    & y = 0
+;
+
+end

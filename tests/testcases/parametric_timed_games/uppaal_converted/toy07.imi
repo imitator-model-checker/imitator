@@ -1,0 +1,22 @@
+(* Automatically generated from TIGA tests *)
+var
+	x_Test : clock;
+
+automaton Test
+
+actions: c_0, u_0;
+
+loc id0: invariant x_Test<=10		(* fail *)
+	when True sync c_0 goto id1;
+	when x_Test<1 do {x_Test:=0} sync u_0 goto id0;
+
+accepting loc id1: invariant True		(* safe *)
+
+end
+
+init :=
+	& loc[Test] = id0
+	& x_Test = 0
+;
+
+end
