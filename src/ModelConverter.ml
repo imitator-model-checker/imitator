@@ -910,12 +910,28 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
 (* Creating the list of controllable actions indexes *)
 (*------------------------------------------------------------*)
 (* Convert the list of controllable action names into a list of (unique) controllable action indices *)
-let make_controllable_actions (controllable_actions_names : action_name list) (variable_infos : ParsingStructure.variable_infos) : action_index list =
+let make_controllable_actions (controllable_actions_names : action_name list) index_of_actions : action_index list =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Non-necessarily unique controllable action names: " ^ (string_of_list_of_string_with_sep ", " controllable_actions_names) ^ ".");
+	);
+
 	(* Remove duplicates *)
 	(*** NOTE (ÉA, 2022/11): sort-of duplicate operation from check_controllable_actions, but let us assume the number of actions remains reasonable *)
 	let unique_controllable_actions_names : action_name list = list_only_once controllable_actions_names in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Unique controllable action names: " ^ (string_of_list_of_string_with_sep ", " unique_controllable_actions_names) ^ ".");
+	);
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Index of actions: " ^ (Hashtbl.fold (fun action_name action_index current_string -> current_string ^ "; " ^ action_name ^ "=>" ^ (string_of_int action_index)) index_of_actions "") ^ ".");
+	);
+
 	(* Convert *)
-	List.map (Hashtbl.find variable_infos.index_of_variables) unique_controllable_actions_names
+	List.map (Hashtbl.find index_of_actions) unique_controllable_actions_names
 
 
 (*------------------------------------------------------------*)
@@ -3388,7 +3404,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
-	let controllable_actions_indices = make_controllable_actions parsed_model.controllable_actions variable_infos in
+	let controllable_actions_indices = make_controllable_actions parsed_model.controllable_actions index_of_actions in
 
 	(* Is an action controllable? *)
 	let is_controllable_action action_index = List.mem action_index controllable_actions_indices in
