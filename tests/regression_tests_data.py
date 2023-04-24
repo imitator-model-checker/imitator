@@ -22606,6 +22606,769 @@ Constraint nature                       : good
 	,
 
 	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 1',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy01.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy01.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 2',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy02.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy02.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 3',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy03.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy03.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 4',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy04.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy04.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 5',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy05.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy05.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+	
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 6',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy06.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy06.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 7',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy07.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy07.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 8',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy08.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy08.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 9',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy09.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy09.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 10',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy10.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy10.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 11',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy11.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy11.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 12',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy12.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy12.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 13',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy13.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy13.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 14',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy14.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy14.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 15',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy15.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy15.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 16',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy16.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy16.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Check that we cannot force uncontrolled actions',
+		'input_files': ['parametric_timed_games/actions_test.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'actions_test.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 1',
+		'input_files': ['parametric_timed_games/simple_ptg1.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 2',
+		'input_files': ['parametric_timed_games/simple_ptg2.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 3',
+		'input_files': ['parametric_timed_games/simple_ptg3.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg3.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 4',
+		'input_files': ['parametric_timed_games/simple_ptg4.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg4.res' , 'content' : """
+BEGIN CONSTRAINT
+2 > p
+ & p >= 0
+ & q >= 5 + p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 5',
+		'input_files': ['parametric_timed_games/simple_ptg5.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg5.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p > 0
+ & q >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 6',
+		'input_files': ['parametric_timed_games/simple_ptg6.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg6.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 1',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated1.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated1.res' , 'content' : """
+BEGIN CONSTRAINT
+5 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 2',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated2.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated2.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 3',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated3.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated3.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 4',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated4.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated4.res' , 'content' : """
+BEGIN CONSTRAINT
+10 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 5',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated5.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated5.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 6',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated6.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated6.res' , 'content' : """
+BEGIN CONSTRAINT
+10 >= p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 7',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated7.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated7.res' , 'content' : """
+BEGIN CONSTRAINT
+4 > p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
 		#'input_files': ['XXXX.imi', 'XXXX.pi0'],
