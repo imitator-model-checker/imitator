@@ -1,4 +1,7 @@
 (* Automatically generated from TIGA tests *)
+
+controllable actions: c_0, c_1;
+
 var
 	x_Test : clock;
 

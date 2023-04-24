@@ -3,6 +3,8 @@
     5 >= p
     & p >= 1
 *)
+controllable actions: c_1;
+
 var
     x : clock;
     y : clock;

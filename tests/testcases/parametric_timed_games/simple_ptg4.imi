@@ -5,6 +5,9 @@
         & p >= 0
         & q >= 5 + p
 *)
+
+controllable actions: c_1;
+
 var
  	x : clock;
     p : parameter;

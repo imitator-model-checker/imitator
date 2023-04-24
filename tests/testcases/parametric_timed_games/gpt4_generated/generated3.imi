@@ -2,6 +2,8 @@
     Expected constraint: 
     p >= 5
 *)
+controllable actions: c_1;
+
 var
     x : clock;
     y : clock;

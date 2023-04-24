@@ -2,6 +2,9 @@
 	Simple PTG
     Expected constraint: p > 0
 *)
+
+controllable actions: c_1;
+
 var
  	x : clock;
 	p : parameter;

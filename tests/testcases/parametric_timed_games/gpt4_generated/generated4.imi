@@ -4,6 +4,8 @@
     & p >= 1
     & q >= p
 *)
+controllable actions: c_1;
+
 var
     x : clock;
     y : clock;

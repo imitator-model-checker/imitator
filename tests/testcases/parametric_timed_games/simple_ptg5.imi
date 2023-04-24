@@ -1,7 +1,13 @@
 (* Mikael, Aarhus, March 24, 2023 
 	Simple PTG - No parameters
-    Expected constraint: TODO
+    Expected constraint: 	
+ 5 >= p
+ & p > 0
+ & q >= 0
 *)
+
+controllable actions: c_1;
+
 var
  	x : clock;
     p : parameter;

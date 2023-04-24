@@ -16,6 +16,9 @@
     | goal |
     +------+	
 *)
+
+controllable actions: c_1;
+
 var
  	x : clock;
     p : parameter;

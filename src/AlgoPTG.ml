@@ -655,8 +655,8 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	method private constr_of_state_index i = (state_space#get_state i).px_constraint
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
-	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> (model.action_names e.action).[0] = 'c')
-	method private get_uncontrollable_edges = self#get_edges >> List.filter (fun e -> (model.action_names e.action).[0] = 'u')
+	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> model.is_controllable_action e.action)
+	method private get_uncontrollable_edges = self#get_edges >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
 
 	(* TODO: Support multiple automata in PTG? *)
 	(* Whether or not a state is accepting  *)
