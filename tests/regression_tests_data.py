@@ -23184,6 +23184,190 @@ Constraint nature                       : good
 	##------------------------------------------------------------]
 
 	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 1',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated1.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated1.res' , 'content' : """
+BEGIN CONSTRAINT
+5 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 2',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated2.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated2.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 3',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated3.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated3.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 4',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated4.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated4.res' , 'content' : """
+BEGIN CONSTRAINT
+10 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 5',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated5.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated5.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 6',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated6.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated6.res' , 'content' : """
+BEGIN CONSTRAINT
+10 >= p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 7',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated7.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated7.res' , 'content' : """
+BEGIN CONSTRAINT
+4 > p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
