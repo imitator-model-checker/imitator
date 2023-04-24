@@ -660,6 +660,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 
 	(* TODO: Support multiple automata in PTG? *)
 	(* Whether or not a state is accepting  *)
+	(*** TODO (ÉA, 2023/04/24): use State.match_state_predicate plus an acceptance condition in the property, e.g., Win(state_predicate) ***)
 	method private accepting state_index = 		
 		assert (model.nb_automata = 1);
 		let loc = ((state_space#get_state state_index).global_location) in
