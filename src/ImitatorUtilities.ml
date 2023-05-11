@@ -379,33 +379,34 @@ let print_header_string () =
 
 (* Print the name of the contributors *)
 let print_contributors()  = 
-	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
-	print_string ("    * Étienne André       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
-	print_string ("    * Johan Arcile        (2021 - 2022)\n");
-	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string ("    * Vincent Bloemen     (2018)\n");
-	print_string ("    * Camille Coti        (2014)\n");
-	print_string ("    * Daphne Dussaud      (2010)\n");
-	print_string ("    * Sami Evangelista    (2014)\n");
-	print_string ("    * Ulrich Kühne        (2010 - 2011)\n");
-	print_string ("    * Benjamin Loillier   (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string ("    * Dylan Marinho       (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string ("    * Nguyễn Hoàng Gia    (2014 - 2016)\n");
-	print_string ("    * Laure Petrucci      (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string ("    * Jaco van de Pol     (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string ("    * Romain Soulat       (2010 - 2013)\n");
+	print_string (" " ^ Constants.program_name ^ " has been developed by:\n");
+	print_string (" * Étienne André                  (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string (" * Johan Arcile                   (2021 - 2022)\n");
+	print_string (" * Jaime Arias                    (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Mikael Bisgaard Dahlsen-Jensen (2022 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Vincent Bloemen                (2018)\n");
+	print_string (" * Camille Coti                   (2014)\n");
+	print_string (" * Daphne Dussaud                 (2010)\n");
+	print_string (" * Sami Evangelista               (2014)\n");
+	print_string (" * Ulrich Kühne                   (2010 - 2011)\n");
+	print_string (" * Benjamin Loillier              (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Dylan Marinho                  (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Nguyễn Hoàng Gia               (2014 - 2016)\n");
+	print_string (" * Laure Petrucci                 (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Jaco van de Pol                (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Romain Soulat                  (2010 - 2013)\n");
 	print_string "\n";
-	print_string "    Compiling, testing and packaging:\n";
-	print_string "    * Corentin Guillevic  (2015)\n";
-	print_string "    * Sarah Hadbi         (2015)\n";
-	print_string "    * Fabrice Kordon      (2015)\n";
-	print_string "    * Alban Linard        (2014 - 2015)\n";
-	print_string "    * Stéphane Rosse      (2017)\n";
+	print_string " Compiling, testing and packaging:\n";
+	print_string " * Corentin Guillevic             (2015)\n";
+	print_string " * Sarah Hadbi                    (2015)\n";
+	print_string " * Fabrice Kordon                 (2015)\n";
+	print_string " * Alban Linard                   (2014 - 2015)\n";
+	print_string " * Stéphane Rosse                 (2017)\n";
 	print_string "\n";
-	print_string "    Suggestions by:\n";
-	print_string "    * Emmanuelle Encrenaz\n";
-	print_string "    * Laurent Fribourg\n";
-	print_string "    * Giuseppe Lipari\n";
+	print_string " Suggestions by:\n";
+	print_string " * Emmanuelle Encrenaz\n";
+	print_string " * Laurent Fribourg\n";
+	print_string " * Giuseppe Lipari\n";
 	()
 
 
