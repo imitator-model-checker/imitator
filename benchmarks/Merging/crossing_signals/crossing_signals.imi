@@ -1,14 +1,14 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Small example to demonstrate EFexemplify
+ * Title            : Small example to demonstrate EFexemplify; interesting to demonstrate the use of merging
  * Description      : Property: "if s_1 and s_2 cross each other NB times, then after exactly p time units we have s_1 = 3 s_2"
- * Correctness      : TODO
- * Scalable         : no
+ * Correctness      : reachability property
+ * Scalable         : yes
  * Generated        : no
- * Categories       : TBD
- * Source           : Own work
- * bibkey           : 
+ * Categories       : Toy
+ * Source           : Own work; inspired by models from "Étienne André, Masaki Waga, Natsuki Urabe and Ichiro Hasuo. Exemplifying parametric timed specifications over signals with bounded behavior. In Klaus Havelund, Jyotirmoy V. Deshmukh and Ivan Perez (eds.), NFM’22, Springer LNCS 13260, pages 470-488, May 2022. DOI: 10.1007/978-3-031-06773-0_25"
+ * bibkey           : AWUH22
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
@@ -16,15 +16,14 @@
  *
  * Created          : 2021/06/04
  * Last modified    : 2023/05/12
- * Model version    : 0.1
+ * Model version    : 0.2
  *
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.4
  ************************************************************)
 
 var
 
 (* Clocks *)
-	(*global_time,*)
  	x,
  	s_1, s_2,
 		: clock;
@@ -44,7 +43,7 @@ var
 (************************************************************)
   automaton spec
 (************************************************************)
-synclabs: satisfied, greater, smaller;
+actions: satisfied, greater, smaller;
 
 loc l1: invariant True
 	when s_1 > s_2 do {} sync greater goto l2;
@@ -66,7 +65,7 @@ end (* spec *)
 (************************************************************)
   automaton signal_1
 (************************************************************)
-synclabs: decrease_slow_1, stabilize_1, increase_slow_1;
+actions: decrease_slow_1, stabilize_1, increase_slow_1;
 
 loc increasing_slow: invariant True flow {s_1' = 1}
 	when True sync stabilize_1 goto stabilized;
@@ -84,7 +83,7 @@ end (* signal_1 *)
 (************************************************************)
   automaton signal_2
 (************************************************************)
-synclabs: decrease_slow_2, stabilize_2, increase_slow_2;
+actions: decrease_slow_2, stabilize_2, increase_slow_2;
 
 loc increasing_slow: invariant True flow {s_2' = 1}
 	when True sync stabilize_2 goto stabilized;
@@ -125,7 +124,6 @@ init := {
 		(*------------------------------------------------------------*)
 		(* Initial clock constraints *)
 		(*------------------------------------------------------------*)
-		(*global_time = 0*)
 		& x = 0
 		(*------------------------------------------------------------*)
 		(* Parameter constraints *)
