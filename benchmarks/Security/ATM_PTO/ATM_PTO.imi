@@ -6,7 +6,7 @@
  * Correctness      : Timed opacity, i.e., valuation of the (unique) timing parameter `p_total` for which the system is timed-opaque  for the execution time also denoted by `p_total`
  * Scalable         : no
  * Generated        : no
- * Categories       : Education  ;  Security  ;  Toy
+ * Categories       : Education ; Security ; Toy
  * Source           : Own work
  * bibkey           : [ABLM22]
  * Author           : Étienne André
