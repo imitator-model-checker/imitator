@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2022/10/17
+#  Last modified:  2023/05/17
 ###############################################################
 
 OASISFormat: 0.4
@@ -21,7 +21,7 @@ License:     GPL-3.0
 # Handling build number (using Python)
 PreBuildCommand: python gen_build_info.py
 # strip: considerably reduces the size!
-PostBuildCommand: echo "Copying main binary file to bin/imitator …" ; cp _build/src/IMITATOR.native bin/imitator ; strip bin/imitator
+PostBuildCommand: echo "Copying main binary file to bin/imitator …" ; cp _build/src/bin/IMITATOR.native bin/imitator ; strip bin/imitator
 
 Flag "dev"
   Description: Build imitator with development options 
@@ -31,7 +31,7 @@ Executable imitator
   Path:           .
   Build$:         !flag(dev)
   BuildTools:     ocamlbuild
-  MainIs:         src/IMITATOR.ml
+  MainIs:         src/bin/IMITATOR.ml
   BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
 # CCLib:          -lstdc++
   CCLib:          -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
@@ -44,7 +44,7 @@ Executable "imitator_dev"
   Path:           .
   Build$:         flag(dev)
   BuildTools:     ocamlbuild
-  MainIs:         src/IMITATOR.ml
+  MainIs:         src/bin/IMITATOR.ml
   BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
   CompiledObject: best
   NativeOpt:      '-opaque'
