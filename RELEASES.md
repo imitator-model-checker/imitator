@@ -13,6 +13,9 @@
 * Terminate backward-compatibility on the permissive `initially: ` declarations in automata (already not taken into account in the semantics)
 * Both `;` and `,` instruction separators accepted
 
+### Internal
+* Source code entirely moved and restructured as a more standard tree
+
 
 *******************************************************
 ## release 3.3 (2022-07-21) Cheese Caramel au beurre salé
