@@ -20,6 +20,7 @@
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends
+  (alcotest :with-test)
   (ocaml
    (>= 4.08))
   dune

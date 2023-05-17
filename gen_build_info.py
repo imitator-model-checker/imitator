@@ -26,7 +26,7 @@ from time import gmtime, strftime
 # ************************************************************
 # CONSTANTS
 # ************************************************************
-folder = "" if (os.path.basename(os.getcwd()) == "src") else "src/"
+folder = "" if (os.path.basename(os.getcwd()) == "lib") else "src/lib/"
 ml_file_name = folder + "BuildInfo.ml"
 mli_file_name = folder + "BuildInfo.mli"
 

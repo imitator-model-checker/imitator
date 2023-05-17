@@ -1,12 +1,6 @@
 (executable
  (name IMITATOR)
- (libraries gmp ppl extlib fileutils str unix threads)
- (modules_without_implementation
-  abstractModel
-  abstractProperty
-  automaton
-  parsingStructure
-  result)
+ (libraries lib)
  (link_flags
   (:include link_flags.%{system})
   (:standard
@@ -19,18 +13,12 @@
    -cclib
    -lgmp
    -cclib
-   -lgmpxx))
- (modes native))
+   -lgmpxx)))
+
 
 (install
  (section bin)
  (files imitator))
-
-(ocamllex
- (modules ModelLexer PropertyLexer))
-
-(ocamlyacc
- (modules ModelParser PropertyParser))
 
 (rule
  (with-stdout-to
@@ -47,19 +35,13 @@
   (flags
    (:standard -warn-error -A))))
 
-(rule
- (targets BuildInfo.ml BuildInfo.mli)
- (deps
-  (:gen ../gen_build_info.py))
- (action
-  (run python %{gen})))
 
 (rule
  (target imitator)
  (deps IMITATOR.exe)
  (mode
   (promote
-   (into ../bin)))
+   (into ../../bin)))
  (action
   (progn
    (echo "\nCopying main binary file to bin/imitator \226\128\166")
