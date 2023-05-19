@@ -51,7 +51,7 @@ fi
 docker_container=$(echo $([ ! -f /.dockerenv ]) $?)
 [[ "${docker_container}" = '0' ]] && opam init -a || opam init -a --disable-sandboxing
 
-opam install -y extlib fileutils oasis
+opam install -y extlib fileutils oasis alcotest
 eval $(opam env)
 
 # install mlgmp
@@ -66,7 +66,7 @@ if [[ "$RUNNER_OS" = "macOS" ]]; then
 fi
 
 # Build IMITATOR
-bash build.sh
+dune build
 
 # rename artefact
 if [ ! -z "${GITHUB_WORKSPACE}" ]; then
