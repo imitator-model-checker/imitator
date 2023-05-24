@@ -45,7 +45,7 @@ elif [[ "$RUNNER_OS" = "macOS" ]]; then
 fi
 
 # python fix
-[ ! -x "$(command -v python)" ] && ln -s $(which python3) "/usr/bin/python"
+[ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/bin/python"
 
 # install opam and ocaml libraries
 docker_container=$(echo $([ ! -f /.dockerenv ]) $?)
