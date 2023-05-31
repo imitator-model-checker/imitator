@@ -630,6 +630,34 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		()
 	(*** END WARNING (2022/11, ÉA): copied from AlgoStateBased ***)
 
+
+	
+	(* === BEGIN API FOR REFACTORING === *)
+	
+	method private compute_symbolic_successors state = state_space#get_successors_with_combined_transitions state
+	
+
+	method private constr_of_state_index state = (state_space#get_state state).px_constraint
+	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
+	method private get_initial_state_index = state_space#get_initial_state_index
+
+	(* Computes the predecessor zone of current_zone using edge *)
+	method private predecessor_nnconvex edge current_zone = 
+		let {state; transition; _} = edge in 
+		let guard = state_space#get_guard model state transition in
+		let pred_zone = self#constr_of_state_index state in 
+		let constraints = List.map (fun z -> 
+			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
+			let pxd_pred = DeadlockExtra.dl_predecessor state_space state pred_zone guard z transition in 	
+			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
+			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
+			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
+		List.fold_left (|||) (bot ()) constraints
+
+
+
+	(* === END API FOR REFACTORING === *)
+	
 	(* Initialize the Winning and Depend tables with our model - only affects printing information in terminal *)
 	method private initialize_tables () = 
 		WinningZone.model := Some model;
@@ -637,7 +665,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 
 	(* Edges from a symbolic state *)
 	method private get_edges state = 
-		let successors = state_space#get_successors_with_combined_transitions state in
+		let successors = self#compute_symbolic_successors state in
 		let action_state_list = List.map (fun (transition, state') ->
 			let action = StateSpace.get_action_from_combined_transition model transition in
 			{state; action; transition; state'}
@@ -649,10 +677,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		let queue = Queue.create () in 
 		let add elem = Queue.add elem queue in 
 		List.iter add @@ self#get_edges state_index;
-		queue
-
-	(* Zone of a symbolic state *)		
-	method private constr_of_state_index i = (state_space#get_state i).px_constraint
+		queue	
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
 	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> model.is_controllable_action e.action)
@@ -676,16 +701,6 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
 	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
 
-	(* Computes the predecessor zone of current_zone into symbolic state: (target_state, target_zone) using transition *)
-	method private predecessor_nnconvex target_state_index target_zone current_zone transition = 
-		let guard = state_space#get_guard model target_state_index transition in
-		(* TODO: Limit to predecessors in S? *)
-		let constraints = List.map (fun z -> 
-			let pxd_pred = DeadlockExtra.dl_predecessor state_space target_state_index target_zone guard z transition in 	
-			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
-			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
-			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
-		List.fold_left (|||) (bot ()) constraints
 
 		
 	(* Computes the safe timed predecessors of (nn_convex) zone g avoiding (nn_convex) zone b coming from a state *)
@@ -694,7 +709,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		let (||) = fun a b -> LinearConstraint.px_nnconvex_px_union_assign a b; a in  
 		let (--) = fun a b -> LinearConstraint.px_nnconvex_difference_assign a b; a in 
 		let (&&) = fun a b -> LinearConstraint.px_intersection_assign a [b]; a in
-		let global_location = state_space#get_location (state_space#get_global_location_index state) in
+		let global_location = self#get_global_location state in
 
 		let backward (x : LinearConstraint.px_linear_constraint) =
 			let constr_d = LinearConstraint.pxd_of_px_constraint x in 
@@ -741,8 +756,8 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			print_PTG ("\tI've seen state " ^ (string_of_int state') ^ " before. Reevaluating winning zone.");
 			let get_pred_from_edges default edges zone = 
 				List.fold_left (|||) default @@
-					List.map (fun {state; transition; state';_} -> 
-						self#predecessor_nnconvex state (self#constr_of_state_index state) (zone state') transition
+					List.map (fun edge -> 
+						self#predecessor_nnconvex edge (zone edge.state')
 					)
 				edges
 			in
@@ -768,7 +783,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		self#initialize_tables();
 
 		(* === ALGORITHM INITIALIZATION === *)
-		let init = state_space#get_initial_state_index in 
+		let init = self#get_initial_state_index in 
 		
 		let passed = new State.stateIndexSet in 
 		passed#add init;
