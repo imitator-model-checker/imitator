@@ -108,6 +108,8 @@ module Depends = DefaultHashtbl (struct
 	let str_of_key = string_of_int
 end)
 
+let complete_synthesis = true 
+
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -782,6 +784,14 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			(Depends.find state') #<- e
 		end
 
+	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
+	method private termination_criteria waiting init = 
+		let queue_empty = Queue.is_empty waiting in
+		if complete_synthesis then 
+			queue_empty
+		else
+			not @@ is_empty(self#initial_constraint () &&& WinningZone.find init) || queue_empty
+
 	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
 	method private compute_PTG = 
 		self#initialize_tables();
@@ -798,7 +808,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			WinningZone.replace init @@ (self#constr_of_state_index >> nn) init;
 
 		(* === ALGORITHM MAIN LOOP === *)
-		while (is_empty(self#initial_constraint () &&& WinningZone.find init) && not (Queue.is_empty waiting)) do
+		while (not @@ self#termination_criteria waiting init) do
 			print_PTG ("\nEntering main loop with waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model);
 			let e = Queue.pop waiting in 			
 			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str e model));
