@@ -686,11 +686,15 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* TODO: Support multiple automata in PTG? *)
 	(* Whether or not a state is accepting  *)
 	(*** TODO (ÉA, 2023/04/24): use State.match_state_predicate plus an acceptance condition in the property, e.g., Win(state_predicate) ***)
-	method private accepting state_index = 		
-		assert (model.nb_automata = 1);
+	method private accepting state_index =
 		let loc = ((state_space#get_state state_index).global_location) in
-		let loc_id =  DiscreteState.get_location loc 0 in
-		model.is_accepting 0 loc_id 
+		(* All automata should accept or just one is fine? *)
+		let rec is_accepting i =
+			if i = -1 then false else 
+			let loc_id =  DiscreteState.get_location loc i in
+			if model.is_accepting i loc_id then true else is_accepting (i-1) in
+
+		is_accepting @@ model.nb_automata-1
 
 	(* Losing part of a symbolic state *)
 	method private losing_zone state_index = 

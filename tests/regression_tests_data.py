@@ -23366,6 +23366,33 @@ Constraint nature                       : good
 	} # end test case
 	##------------------------------------------------------------]
 
+,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Multiple Automata',
+		'input_files': ['parametric_timed_games/multiple_automata.imi', 'basic-properties/synth-parametric-win-strat.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'multiple_automata.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 >= p
+ & p >= 0
+ & q = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
 	,
     
 	##------------------------------------------------------------
