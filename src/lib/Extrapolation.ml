@@ -73,13 +73,13 @@ let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Finite _, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.mul a b)
 
-(* Inversion of a (i.e., 1 divided by a) *)
+(*(* Inversion of a (i.e., 1 divided by a) *)
 let inv_inf (a : numconst_or_infinity) =
 	match a with
 	| Finite a -> Finite (NumConst.div (NumConst.numconst_of_int 1) a )
 	| _ -> Finite (NumConst.numconst_of_int 0)
 
-(*(* Division of a by b*)
+(* Division of a by b*)
 let div_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	mul_inf a (inv_inf b)*)
 	
@@ -270,7 +270,7 @@ let compute_gmax (_, _, coefs) bounds =
 (* Returns an array with the greatest non parametric constants compared to each clock (cf. "c_x" paper) *)	
 let compute_greatest_nonparametric_constants guards h=
 	let greatest_const = Array.make h (Finite (NumConst.numconst_of_int 0)) in
-	let f (clock, operator, coefs) =
+	let f (clock, _, coefs) =
 		greatest_const.(clock) <- max_inf coefs.((Array.length coefs) - 1) greatest_const.(clock);
 	in
 	List.iter f guards;
