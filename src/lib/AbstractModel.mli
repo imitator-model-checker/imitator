@@ -67,16 +67,6 @@ type flow = (clock_index * NumConst.t)
 (** update: variable_index := linear_term *)
 type clock_update = clock_index
 
-(* TODO benjamin NOT USED anymore ? *)
-type clock_updates =
-	(* No update at all *)
-	| No_update
-	(* Reset to 0 only *)
-	| Resets of clock_update list
-	(*** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
-	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
-
 (** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
 type discrete_guard = DiscreteExpressions.nonlinear_constraint
