@@ -229,7 +229,7 @@ let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
 (* Returns a boolean array indicating for each clock if it is a parametric one *)
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h false in
-	let f (_, _, coefs) =
+	let f (clock, _, coefs) =
 		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
 			if not (eq_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then parametric_clocks_array.(clock) <- true;
