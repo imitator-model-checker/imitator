@@ -541,15 +541,15 @@ class imitator_options =
 
 			(* Get the method for NZ algorithms *)
 			and set_nz_method nz_method_string =
-				(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
+				(* Method by checking whether the PTA is already a CUB-PTA for some valuation *)
 				if nz_method_string = "check" then
 					nz_method <- Some NZ_check
 
-				(** Method by transforming the PTA into a CUB-PTA *)
+				(* Method by transforming the PTA into a CUB-PTA *)
 				else if nz_method_string = "transform" then
 					nz_method <- Some NZ_transform
 
-				(** Method assuming the PTA is already a CUB-PTA *)
+				(* Method assuming the PTA is already a CUB-PTA *)
 				else if nz_method_string = "already" then
 					nz_method <- Some NZ_already
 
@@ -1152,9 +1152,9 @@ class imitator_options =
 			end;
 
 
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: options with threats on the result correctness *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 			(*------------------------------------------------------------*)
 			(* Inclusion *)
@@ -1192,11 +1192,11 @@ class imitator_options =
 			
 			
 			
-			(** TODO: check compatibility between merge algorithms ***)
+			(* TODO: check compatibility between merge algorithms ***)
 
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 			if acyclic && comparison_operator = Some No_check then (
 				acyclic <- false;
@@ -1284,9 +1284,9 @@ class imitator_options =
 					| EFpmax _
 					(* Reachability with minimal-time *)
 					| EFtmin _
-					(** Accepting infinite-run (cycle) through a state predicate *)
+					(* Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through _
-					(** Accepting infinite-run (cycle) through a state predicate *)
+					(* Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through_generalized _
 					(* Parametric reachability preservation *)
 (* 					| PRP _ *)
@@ -1338,7 +1338,7 @@ class imitator_options =
 			(*------------------------------------------------------------*)
 			if imitator_mode = Algorithm then(
 				match (get_property()).property with
-					(** Accepting infinite-run (cycle) through a state predicate *)
+					(* Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through_generalized _ ->
 						begin
 						match cycle_algorithm with
@@ -1354,9 +1354,9 @@ class imitator_options =
 			);
 
 
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Recall modes *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 			(* Does the model contain clocks with a non-1 rate? *)
 			if model.has_non_1rate_clocks then
@@ -1731,9 +1731,9 @@ class imitator_options =
 		(* Force some options when the mode is cartography *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_options_for_cartography is_cartography =
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Force options *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
 			if is_cartography && carto_time_limit <> None && time_limit = None then(

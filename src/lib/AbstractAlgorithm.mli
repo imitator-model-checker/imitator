@@ -14,7 +14,7 @@
 
 
 (************************************************************)
-(** Available translations *)
+(* Available translations *)
 (************************************************************)
 
 type translation =
@@ -30,72 +30,72 @@ type translation =
 
 
 (************************************************************)
-(** Synthesis *)
+(* Synthesis *)
 (************************************************************)
 
 
 (** Mode for IMITATOR *)
 type imitator_mode =
-	(** No analysis, syntactic check only *)
+	(* No analysis, syntactic check only *)
 	| Syntax_check
 
-	(** Translation to another language: no analysis *)
+	(* Translation to another language: no analysis *)
 	| Translation of translation
 
-	(** Full state space computation, until fully explored or some preliminary termination *)
+	(* Full state space computation, until fully explored or some preliminary termination *)
 	| State_space_computation
 
-	(** Synthesis algorithm *)
+	(* Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)
 
 
 
 (************************************************************)
-(** Options *)
+(* Options *)
 (************************************************************)
 
 type distribution_mode =
-	(** Normal mode *)
+	(* Normal mode *)
 	| Non_distributed
 
-	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
+	(* Distributed mode: static distribution mode (each node has its own part with no communication) *)
 	| Distributed_static
 
-	(** Distributed mode: Master slave with sequential pi0 *)
+	(* Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential
-	(** Distributed mode: Master slave with sequential pi0 shuffled *)
+	(* Distributed mode: Master slave with sequential pi0 shuffled *)
 	| Distributed_ms_shuffle
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	(* Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
 	| Distributed_ms_random of int
-	(** Distributed mode: Master slave with subpart distribution *)
+	(* Distributed mode: Master slave with subpart distribution *)
 	| Distributed_ms_subpart
 
-	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
+	(*  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
 	| Distributed_unsupervised
-	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
+	(*  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
 	| Distributed_unsupervised_multi_threaded
 
 
 type exploration_order =
-	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)
+	(* Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)
 	| Exploration_layer_BFS
-	(** Queue-BFS: basic queue, independent of the depth [ANP17] *)
+	(* Queue-BFS: basic queue, independent of the depth [ANP17] *)
 	| Exploration_queue_BFS
-	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state [ANP17] *)
+	(* Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_RS
-	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
+	(* Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
-(*	(** NDFS: standard Nested Depth-First Search **)
+(*	(* NDFS: standard Nested Depth-First Search **)
 	| Exploration_NDFS
-	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	(* NDFSsub: NDFS with subsumption [NPvdP18] **)
 	| Exploration_NDFS_sub
-	(** layerNDFS: NDFS with layers [NPvdP18] **)
+	(* layerNDFS: NDFS with layers [NPvdP18] **)
 	| Exploration_layer_NDFS
-	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	(* layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
 	| Exploration_layer_NDFS_sub*)
 
 type pending_order =
-	(** NDFS with layers: order in the pending list exploration **)
+	(* NDFS with layers: order in the pending list exploration **)
 	(* no particular order *)
 	| Pending_none
 	(* biggest parametric projection of zone first *)
@@ -106,46 +106,46 @@ type pending_order =
 	| Pending_zone
 
 
-(* Merging heuristic for EFsynthminpq *)
+(** Merging heuristic for EFsynthminpq *)
 type merge_EFsynthminpq_heuristic =
-	(** Merge_always: merge after every processed state *)
+	(* Merge_always: merge after every processed state *)
 	| Merge_EFsynthminpq_always
-	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
+	(* Merge_always: merge after every processed state for which the target state is a successor of the current state *)
 	| Merge_EFsynthminpq_targetseen
-	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
+	(* Merge_always: merge after every processed state, for every 10th added state to PQ *)
 	| Merge_EFsynthminpq_pq10
-	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
+	(* Merge_always: merge after every processed state, for every 100th added state to PQ *)
 	| Merge_EFsynthminpq_pq100
-	(** Merge_always: merge after every 10th processed state *)
+	(* Merge_always: merge after every 10th processed state *)
 	| Merge_EFsynthminpq_iter10
-	(** Merge_always: merge after every 100th processed state *)
+	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
-(* Undefined value for n1/n2 merge heuristics *)
+(** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
 
-(* Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
+(** Merge heuristics for reachability analysis: try to jump some merge attemps (approx 2021) *)
 type merge_jump_algorithm =
-	(** None *)
+	(* None *)
 	| Merge_jump_none
-	(** TODO: description *)
+	(* TODO: description *)
 	| Merge_jump_static of int * int
-	(** TODO: description *)
+	(* TODO: description *)
 	| Merge_jump_static_per_location of int * int
-    (** TODO: description *)
+    (* TODO: description *)
 	| Merge_jump_exponentialbackoff of int * int
 
 				(*** DISCONTINUED as of 3.3 ***)
 (*type merge_dev =
-	(** merge(queue,visited) *)
+	(* merge(queue,visited) *)
 	| Merge_visited
-	(** merge(queue,queue) *)
+	(* merge(queue,queue) *)
 	| Merge_queue
-    (** merge(queue,queue);merge(queue,visited) *)
+    (* merge(queue,queue);merge(queue,visited) *)
 	| Merge_ordered*)
 
 
-(* Main merge algorithms from IMITATOR 3.3 *)
+(** Main merge algorithms from IMITATOR 3.3 *)
 type merge_algorithm =
 	(* No merge *)
 	| Merge_none
@@ -159,13 +159,13 @@ type merge_algorithm =
 val default_merge_algorithm : merge_algorithm
 
 
-(* Main merge algorithms from IMITATOR 3.3 *)
+(** Main merge algorithms from IMITATOR 3.3 *)
 type merge_candidates =
 	| Merge_candidates_ordered
 	| Merge_candidates_queue
 	| Merge_candidates_visited
 
-(* Main merge algorithms from IMITATOR 3.3 *)
+(** Main merge algorithms from IMITATOR 3.3 *)
 type merge_update =
 	| Merge_update_merge
     | Merge_update_candidates
@@ -192,13 +192,13 @@ type cycle_algorithm =
 
 (** Infinite-run (cycle) with non-Zeno assumption: method *)
 type nz_method =
-	(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	(* Method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZ_check
 
-	(** Method by transforming the PTA into a CUB-PTA *)
+	(* Method by transforming the PTA into a CUB-PTA *)
 	| NZ_transform
 
-	(** Method assuming the PTA is already a CUB-PTA *)
+	(* Method assuming the PTA is already a CUB-PTA *)
 	| NZ_already
 
 
@@ -213,7 +213,7 @@ type extrapolation =
 
 
 (************************************************************)
-(** Check when adding a new state *)
+(* Check when adding a new state *)
 (************************************************************)
 type state_comparison_operator =
 	(* Does not check whether the state is present, add directly *)
@@ -230,7 +230,7 @@ type state_comparison_operator =
 
 
 (************************************************************)
-(** Predicates on mode *)
+(* Predicates on mode *)
 (************************************************************)
 
 (* Does the algorithm require a second (property) file in addition to the model? *)
@@ -244,7 +244,7 @@ val cartography_drawing_possible : imitator_mode -> bool
 
 
 (************************************************************)
-(** Conversions of modes to string *)
+(* Conversions of modes to string *)
 (************************************************************)
 
 val string_of_mode						: imitator_mode						-> string

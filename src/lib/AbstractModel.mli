@@ -27,7 +27,7 @@ type v0 = HyperRectangle.hyper_rectangle
 
 
 (************************************************************)
-(** Types *)
+(** Actions *)
 (************************************************************)
 
 (** Type of sync actions *)
@@ -41,19 +41,22 @@ type action_type =
 (************************************************************)
 (** Locations *)
 (************************************************************)
+
+(** Accepting location type *)
 type location_accepting =
 	(* accepting location *)
 	| Location_accepting
 	(* Non-accepting location *)
 	| Location_nonaccepting
 
+(** Location urgency *)
 type location_urgency =
 	(* Urgent location *)
 	| Location_urgent
 	(* Non-urgent location *)
 	| Location_nonurgent
 
-(* Special non-necessary 1 flow (i.e., speed, or rate) for a clock in a location *)
+(** Special non-necessary 1 flow (i.e., speed, or rate) for a clock in a location *)
 type flow = (clock_index * NumConst.t)
 
 
@@ -63,13 +66,14 @@ type flow = (clock_index * NumConst.t)
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index
+
 (* TODO benjamin NOT USED anymore ? *)
 type clock_updates =
 	(* No update at all *)
 	| No_update
 	(* Reset to 0 only *)
 	| Resets of clock_update list
-	(** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
+	(*** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
 	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
@@ -149,7 +153,7 @@ type lu_status =
 (** The abstract model *)
 (************************************************************)
 type abstract_model = {
-	(** General information **)
+	(* General information **)
 	(* Cardinality *)
 	nb_automata   : int;
 	nb_actions    : int;
@@ -181,7 +185,7 @@ type abstract_model = {
 	(* Function returning the bounds of each parameter *)
 	parameters_bounds : parameter_index -> bounds;
 
-	(** Content of the PTA **)
+	(* Content of the PTA **)
 	(* The observer *)
 	observer_pta : automaton_index option;
 	is_observer : automaton_index -> bool;
