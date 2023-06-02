@@ -17,8 +17,8 @@
 
 (package
  (name IMITATOR)
- (synopsis "A short synopsis")
- (description "A longer description")
+ (synopsis "A parametric timed model checker performing synthesis of timing parameters for distributed real-time systems")
+ (description "IMITATOR is a software tool for parametric verification and robustness analysis of real-time systems with parameters. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features.")
  (depends
   (alcotest :with-test)
   (ocaml
