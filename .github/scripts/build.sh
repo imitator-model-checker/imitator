@@ -37,7 +37,7 @@ fi
 if [[ "$RUNNER_OS" = "Linux" ]]; then
     DEBIAN_FRONTEND=noninteractive
     sudo apt-get update -qq
-    sudo apt-get install -qq wget unzip curl build-essential g++ m4 opam python3 \
+    sudo apt-get install -qq wget unzip curl build-essential libtinfo-dev g++ m4 opam python3 \
         libgmp-dev libmpfr-dev libppl-dev \
         graphviz plotutils
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
