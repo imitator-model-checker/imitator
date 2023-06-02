@@ -21,7 +21,6 @@ open ImitatorUtilities
 
 open AbstractModel
 open LinearConstraint
-open Options
 
 
 (************************************************************)
@@ -49,29 +48,29 @@ let neg_inf (a : numconst_or_infinity) =
 let add_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, Infinity -> Infinity
-	| Infinity, Finite b -> Infinity
-	| Finite a, Infinity -> Infinity
+	| Infinity, Finite _ -> Infinity
+	| Finite _, Infinity -> Infinity
 	| Minus_infinity, Minus_infinity -> Minus_infinity
-	| Minus_infinity, Finite b -> Minus_infinity
-	| Finite a, Minus_infinity -> Minus_infinity
+	| Minus_infinity, Finite _ -> Minus_infinity
+	| Finite _, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.add a b)
 	| _ -> raise (InternalError "Case infinity-infinity in `add_inf`")
 
-(* Substraction of b from a*)
+(*(* Substraction of b from a*)
 let sub_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	add_inf a (neg_inf b)
+	add_inf a (neg_inf b)*)
 
 (* Multiplication of a and b*)	
 let mul_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	match a, b with
 	| Infinity, Infinity -> Infinity
 	| Minus_infinity, Minus_infinity -> Infinity
-	| Infinity, Finite b -> Infinity
-	| Finite a, Infinity -> Infinity
+	| Infinity, Finite _ -> Infinity
+	| Finite _, Infinity -> Infinity
 	| Infinity, Minus_infinity -> Minus_infinity
 	| Minus_infinity, Infinity -> Minus_infinity
-	| Minus_infinity, Finite b -> Minus_infinity
-	| Finite a, Minus_infinity -> Minus_infinity
+	| Minus_infinity, Finite _ -> Minus_infinity
+	| Finite _, Minus_infinity -> Minus_infinity
 	| Finite a, Finite b -> Finite (NumConst.mul a b)
 
 (* Inversion of a (i.e., 1 divided by a) *)
@@ -80,9 +79,9 @@ let inv_inf (a : numconst_or_infinity) =
 	| Finite a -> Finite (NumConst.div (NumConst.numconst_of_int 1) a )
 	| _ -> Finite (NumConst.numconst_of_int 0)
 
-(* Division of a by b*)
+(*(* Division of a by b*)
 let div_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	mul_inf a (inv_inf b)
+	mul_inf a (inv_inf b)*)
 	
 (* Comparison : a = b*)
 let eq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
@@ -98,25 +97,25 @@ let lesser_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	| Infinity, _ -> false
 	| _, Minus_infinity -> false
 	| Minus_infinity, Infinity -> true
-	| Minus_infinity, Finite b -> true
-	| Finite a, Infinity -> true
+	| Minus_infinity, Finite _ -> true
+	| Finite _, Infinity -> true
 	| Finite a, Finite b -> a < b
 
-(* Comparison : a <= b*)
+(*(* Comparison : a <= b*)
 let leq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	(eq_inf a b) || (lesser_inf a b)
+	(eq_inf a b) || (lesser_inf a b)*)
 
 (* Comparison : a > b*)
 let greater_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
 	lesser_inf b a
 
 (* Comparison : a >= b*)
-let geq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	leq_inf b a
+(*let geq_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
+	leq_inf b a*)
 
-(* Minimum between a  b*)
+(*(* Minimum between a  b*)
 let min_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
-	if greater_inf a b then b else a
+	if greater_inf a b then b else a*)
 
 (* Maximum between a  b*)
 let max_inf (a : numconst_or_infinity) (b : numconst_or_infinity) =
@@ -207,7 +206,7 @@ let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
 	let is_lpta = ref(true) in
 	let is_upta = ref(true) in
 	List.iter (
-	fun (clock, operator, coefs) -> 
+	fun (_, operator, coefs) ->
 		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
 			if (greater_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then begin
@@ -230,7 +229,7 @@ let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
 (* Returns a boolean array indicating for each clock if it is a parametric one *)
 let compute_parametric_clocks_array guards h =
 	let parametric_clocks_array = Array.make h false in
-	let f (clock, operator, coefs) =
+	let f (_, _, coefs) =
 		let k = (Array.length coefs) - 1 in
 		for i = 0 to k-1 do
 			if not (eq_inf coefs.(i) (Finite (NumConst.numconst_of_int 0))) then parametric_clocks_array.(clock) <- true;
@@ -257,7 +256,7 @@ let set_bounds bounds n =
 	
 	
 (* Computes the maximal value (cf. "g_max" paper) of a guard *)	
-let compute_gmax (clock, operator, coefs) bounds =
+let compute_gmax (_, _, coefs) bounds =
 	let k = (Array.length coefs) - 1 in
 	let gmax = ref(coefs.(k)) in
 	for i = 0 to k-1 do
@@ -397,22 +396,22 @@ let nb_parameters : int ref = ref 0
 (* set of clocks of the PTA*)
 let clocks : Automaton.variable_index list ref = ref []
 
-
+(*
 (************************************************************)
 (* Utilities *)
 (************************************************************)
 
-(* Returns true if elem is not in List set *)	
+(* Returns true if elem is not in List set *)
 let not_in elem set =
 	let result = ref(true) in
 	List.iter (fun e -> if elem = e then result := false) set;
 	!result
 
-(* Returns true if each element in l1 is included in l2*)	
+(* Returns true if each element in l1 is included in l2*)
 let includes l1 l2 =
 	let result = ref(true) in
 	List.iter (fun e -> if not_in e l2 then result := false) l1;
-	!result
+	!result*)
 
 
 (************************************************************)
@@ -427,13 +426,13 @@ let get_p_bounds p_bounds =
 	(* Check if unbounded below *)
 	match p_bounds.lower with
 	| Unbounded -> Minus_infinity
-	| Bounded (bound, is_closed) -> Finite bound
+	| Bounded (bound, _) -> Finite bound
 	in
 	let max = 
 	(* Check if unbounded above *)
 	match p_bounds.upper with
 	| Unbounded -> Infinity
-	| Bounded (bound, is_closed) -> Finite bound
+	| Bounded (bound, _) -> Finite bound
 	in (min,max)
 	
 	
