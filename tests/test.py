@@ -11,7 +11,6 @@
 #
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2020/03/20
 # ************************************************************
 
 # ************************************************************
@@ -370,7 +369,7 @@ print_to_screen(
 print_to_log(' TESTATOR                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
-print_to_screen_and_log(' Université Paris 13, LIPN, CNRS, France')
+print_to_screen_and_log(' Université Sorbonne Paris Nord, LIPN, CNRS, France')
 print_to_screen_and_log(
     ' Université de Lorraine, CNRS, Inria, LORIA, Nancy, France')
 print_to_screen_and_log(
