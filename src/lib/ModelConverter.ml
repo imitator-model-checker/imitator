@@ -15,43 +15,40 @@
 
 (************************************************************)
 (************************************************************)
-(** Modules *)
+(* Modules *)
 (************************************************************)
 (************************************************************)
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-open Options
 open Automaton
 open DiscreteExpressions
-open DiscreteExpressionEvaluator
 open AbstractModel
 open ParsingStructure
 open VariableInfo
 open AbstractProperty
-open ParsingStructureUtilities
-open ParsingStructureMeta
 open ParsingStructureGraph
 open DiscreteType
 open CustomModules
 open JsonFormatter
-open Logger
+
 
 (************************************************************)
 (************************************************************)
-(** Exceptions *)
+(* Exceptions *)
 (************************************************************)
 (************************************************************)
 
-(* For detecting strongly deterministic PTAs *)
+(** Exception for detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
+
 exception InvalidProperty
 
 (*------------------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
 (*------------------------------------------------------------*)
 
-let get_clocks_in_linear_constraint clocks =
+(*let get_clocks_in_linear_constraint clocks =
   (* Get a long list with duplicates, and then simplify *)
   (*	(* Should not be too inefficient, because our linear constraints are relatively small *)
     	let list_of_clocks = List.fold_left (fun current_list_of_clocks linear_inequality ->
@@ -60,26 +57,26 @@ let get_clocks_in_linear_constraint clocks =
     	in
     	(* Simplify *)
     	list_only_once list_of_clocks*)
-  LinearConstraint.pxd_find_variables clocks
+  LinearConstraint.pxd_find_variables clocks*)
 
 (************************************************************)
-(** Print error messages *)
+(* Print error messages *)
 (************************************************************)
 
-(* Print variable not declared in linear constraint *)
+(** Print variable not declared in linear constraint *)
 let undeclared_variable_in_linear_constraint_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a linear constraint was not declared.")
 
-(* Print variable not declared in bool expression *)
+(** Print variable not declared in bool expression *)
 let undeclared_variable_in_boolean_expression_message variable_name =
     print_error ("The variable `" ^ variable_name ^ "` used in a boolean expression was not declared.")
 
 (************************************************************)
-(** Getting variables *)
+(* Getting variables *)
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Get all (possibly identical) names of variables in the header *)
+(** Get all (possibly identical) names of variables in the header *)
 (*------------------------------------------------------------*)
 let get_variables_and_constants var_type =
     List.fold_left (fun (current_list, constants) (name, possible_value) ->
@@ -108,12 +105,12 @@ let get_declared_variable_names variable_declarations =
   (* Do not reverse lists *)
   (clocks, discrete_rational, parameters, constants, unassigned_constants)
 
-(* Only get declared discrete variables with their specific types *)
+(** Only get declared discrete variables with their specific types *)
 let get_declared_discrete_variables_by_type variable_declarations =
     let get_discrete_variables_in_variable_declaration discretes_by_type (var_type, list_of_names) =
-        let new_list, new_constants = get_variables_and_constants var_type list_of_names in
+        let new_list, _ = get_variables_and_constants var_type list_of_names in
         match var_type with
-            | Var_type_discrete var_type_discrete ->
+            | Var_type_discrete _ ->
                 let new_list_discretes_by_type = List.map (fun variable_names -> var_type, variable_names) new_list in
                 List.rev_append new_list_discretes_by_type discretes_by_type
             | _ ->
@@ -122,23 +119,23 @@ let get_declared_discrete_variables_by_type variable_declarations =
         List.fold_left get_discrete_variables_in_variable_declaration [] variable_declarations
 
 (*------------------------------------------------------------*)
-(* Get all (possibly identical) names of automata *)
+(** Get all (possibly identical) names of automata *)
 (*------------------------------------------------------------*)
 let get_declared_automata_names =
   List.map (fun (automaton_name, _, _) -> automaton_name)
 
 (*------------------------------------------------------------*)
-(* Get all (all different) names of synclabs *)
+(** Get all (all different) names of synclabs *)
 (*------------------------------------------------------------*)
 let get_declared_synclabs_names =
   List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
 (************************************************************)
-(** Checking the model *)
+(* Checking the model *)
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Check that all controllable actions were declared; also warn for multiply declared names *)
+(** Check that all controllable actions were declared; also warn for multiply declared names *)
 (*------------------------------------------------------------*)
 let check_controllable_actions (controllable_actions : string list) (all_actions : string list) : bool =
 	(* 1. Check duplicates (no big deal) *)
@@ -160,7 +157,7 @@ let check_controllable_actions (controllable_actions : string list) (all_actions
 
 
 (*------------------------------------------------------------*)
-(* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
+(** Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
 let check_variable_names clock_names discrete_names parameters_names constants =
 	(* Warn if a variable is defined twice as the same type *)
@@ -202,7 +199,7 @@ let check_variable_names clock_names discrete_names parameters_names constants =
 
 
 (*------------------------------------------------------------*)
-(* Check that the names of automata are all different; return false otherwise *)
+(** Check that the names of automata are all different; return false otherwise *)
 (*------------------------------------------------------------*)
 let check_declared_automata_names automata_names =
 	(* Compute the multiply defined variables *)
@@ -214,7 +211,7 @@ let check_declared_automata_names automata_names =
 
 
 (*------------------------------------------------------------*)
-(* Check that all locations of a given automaton are different *)
+(** Check that all locations of a given automaton are different *)
 (*------------------------------------------------------------*)
 let all_locations_different =
 	(* Check for every automaton *)
@@ -231,9 +228,9 @@ let all_locations_different =
 		true
 
 (*------------------------------------------------------------*)
-(* Check that a normal update is well formed *)
+(** Check that a normal update is well formed *)
 (*------------------------------------------------------------*)
-let check_normal_update variable_infos automaton_name normal_update =
+(*let check_normal_update variable_infos automaton_name normal_update =
 
     (* Extract update expression *)
     let _, update_expr = normal_update in
@@ -301,10 +298,10 @@ let check_normal_update variable_infos automaton_name normal_update =
         all_variables_declared && not (is_constant || is_parameter || is_trying_to_assign_a_clock_or_param)
     else (
         all_variables_declared
-    )
+    )*)
 
 (*------------------------------------------------------------*)
-(* Check that a sync is well formed *)
+(** Check that a sync is well formed *)
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
 	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
@@ -313,7 +310,7 @@ let check_sync sync_name_list automaton_name = function
 	| NoSync -> true
 
 (*------------------------------------------------------------*)
-(* Check that a sync is used in all the automata where it is declared *)
+(** Check that a sync is used in all the automata where it is declared *)
 (*------------------------------------------------------------*)
 let synclab_used_everywhere automata synclab_name =
 	(* Try to find the synclab in all the automaton where it is declared *)
@@ -341,7 +338,7 @@ let synclab_used_everywhere automata synclab_name =
 
 
 (*------------------------------------------------------------*)
-(* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
+(** Check that all variables mentioned in a list of stopwatches exist and are clocks *)
 (*------------------------------------------------------------*)
 let check_stopwatches variable_infos location_name stopwatches =
 
@@ -361,7 +358,7 @@ let check_stopwatches variable_infos location_name stopwatches =
 
 
 (*------------------------------------------------------------*)
-(* Check that all variables mentioned in a list of flows exist and are clocks *)
+(** Check that all variables mentioned in a list of flows exist and are clocks *)
 (*------------------------------------------------------------*)
 let check_flows_2 variable_infos location_name flows =
 
@@ -370,7 +367,7 @@ let check_flows_2 variable_infos location_name flows =
     let is_clocks_declared = check_stopwatches variable_infos location_name clock_names in
 
     (* Group flow values by clock name *)
-    let clock_names_by_flow_values = OCamlUtilities.group_by (fun (clock_name, flow_value) -> clock_name) flows in
+    let clock_names_by_flow_values = OCamlUtilities.group_by (fun (clock_name, _) -> clock_name) flows in
 
     (* For each clocks *)
     let is_no_flow_value_discrepancies = List.map (fun (clock_name, flow_values) ->
@@ -399,7 +396,7 @@ let check_flows_2 variable_infos location_name flows =
 
     is_clocks_declared && is_no_flow_value_discrepancies
 
-let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
+(*let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
 	(* Create a hash table variable_index => flow value *)
 	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
 
@@ -439,10 +436,10 @@ let check_flows nb_clocks index_of_variables type_of_variables location_name flo
 			ok := false;
 			);
 		) flows;
-	!ok
+	!ok*)
 
 (*------------------------------------------------------------*)
-(* Check that the automata are well-formed *)
+(** Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
 let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata =
 
@@ -497,7 +494,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
-			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+			List.iter (fun (convex_predicate, _, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
 				if not (ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate variable_infos (Some undeclared_variable_in_boolean_expression_message) convex_predicate) then well_formed := false;
@@ -517,7 +514,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 (* CHECK INIT *)
 
-(* Check whether an automaton has exactly one initial location *)
+(** Check whether an automaton has exactly one initial location *)
 let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_index_option =
 
 	(* Check that every automaton is given at most one initial location *)
@@ -642,7 +639,7 @@ let is_inequality_has_left_hand_removed_variable removed_variable_names = functi
 
 
 
-(* Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_boolean_expression) *)
+(** Convert discrete linear constraint predicate to a discrete init (tuple variable_name * parsed_boolean_expression) *)
 let discrete_init_of_discrete_linear_predicate variable_infos = function
     | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, updated_variable_name)), op , expression))
     when VariableInfo.is_discrete_global_variable variable_infos updated_variable_name ->
@@ -734,7 +731,7 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
 
 
 (*------------------------------------------------------------*)
-(* Check that the init_definition are well-formed *)
+(** Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
 let check_init functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
 
@@ -857,7 +854,7 @@ let has_void_constant_or_variable str_var_kind name var_type =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Create the hash table of constants ; check the validity on-the-fly *)
+(** Create the hash table of constants ; check the validity on-the-fly *)
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
@@ -884,9 +881,9 @@ let make_constants constants =
 
 
 (*------------------------------------------------------------*)
-(* Get all the declared actions for every automaton *)
+(** Get all the declared actions for every automaton *)
 (*------------------------------------------------------------*)
-let make_actions_per_automaton index_of_actions index_of_automata automata =
+(*let make_actions_per_automaton index_of_actions index_of_automata automata =
   (* Create an empty array for every automaton *)
   let actions_per_automaton = Array.make (List.length automata) [] in
   (* Fill it *)
@@ -903,11 +900,11 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
           ) sync_name_list;
     ) automata;
   (* Return the array *)
-  actions_per_automaton
+  actions_per_automaton*)
 
 
 (*------------------------------------------------------------*)
-(* Creating the list of controllable actions indexes *)
+(** Creating the list of controllable actions indexes *)
 (*------------------------------------------------------------*)
 (* Convert the list of controllable action names into a list of (unique) controllable action indices *)
 let make_controllable_actions (controllable_actions_names : action_name list) index_of_actions : action_index list =
@@ -935,7 +932,7 @@ let make_controllable_actions (controllable_actions_names : action_name list) in
 
 
 (*------------------------------------------------------------*)
-(* Get all the locations for every automaton *)
+(** Get all the locations for every automaton *)
 (*------------------------------------------------------------*)
 let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   (* Create an empty array for every automaton *)
@@ -958,7 +955,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 
 
 (*------------------------------------------------------------*)
-(* Get all the possible actions for every location of every automaton *)
+(** Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
 let make_automata (useful_parsing_model_information : useful_parsing_model_information) parsed_automata (with_observer_action : bool) =
 
@@ -1157,7 +1154,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 
 
 (*------------------------------------------------------------*)
-(* Get the automata for every action *)
+(** Get the automata for every action *)
 (*------------------------------------------------------------*)
 let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   (* Create an empty array for actions *)
@@ -1176,7 +1173,7 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   fun automaton_index -> automata_per_action.(automaton_index)
 
 (*------------------------------------------------------------*)
-(* Convert the transitions *)
+(** Convert the transitions *)
 (*------------------------------------------------------------*)
 
 (* TODO factorise parameters ! so many parameters ! maybe we can remove some, or use structure, etc *)
@@ -1264,9 +1261,9 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 
 
 (*------------------------------------------------------------*)
-(* Create the initial state *)
+(** Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state variable_infos index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
+let make_initial_state variable_infos index_of_automata index_of_locations parameters removed_variable_names variable_names init_discrete_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -1327,7 +1324,7 @@ let make_initial_state variable_infos index_of_automata locations_per_automaton 
 		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (DiscreteState.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
         (* Get only rational discrete for constraint encoding *)
-        let init_discrete_rational_pairs = List.filter (fun (discrete_index, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
+        let init_discrete_rational_pairs = List.filter (fun (_, discrete_value) -> AbstractValue.is_rational_value discrete_value) init_discrete_pairs in
         (* map to num const *)
         let init_discrete_rational_numconst_pairs = List.map (fun (discrete_index, discrete_value) -> discrete_index, AbstractValue.numconst_value discrete_value) init_discrete_rational_pairs in
 
@@ -1737,7 +1734,7 @@ let check_projection_definition variable_infos = function
 
 
 (*------------------------------------------------------------*)
-(* Check the parsed_pval w.r.t. the model parameters *)
+(** Check the parsed_pval w.r.t. the model parameters *)
 (*------------------------------------------------------------*)
 let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) =
 	(* Compute the list of variable names *)
@@ -1778,7 +1775,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 
 
 (*------------------------------------------------------------*)
-(* Check the parsed_pval w.r.t. the model parameters *)
+(** Check the parsed_pval w.r.t. the model parameters *)
 (*------------------------------------------------------------*)
 let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) =
 	(* Compute the list of variable names *)
@@ -1832,7 +1829,7 @@ let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_
 
 
 (*------------------------------------------------------------*)
-(* Check the correctness property declaration       *)
+(** Check the correctness property declaration       *)
 (*------------------------------------------------------------*)
 let check_property_option (useful_parsing_model_information : useful_parsing_model_information) (parsed_property_option : ParsingStructure.parsed_property option) =
 
@@ -1889,11 +1886,11 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* Cycles *)
 		(*------------------------------------------------------------*)
 		
-		(** Accepting infinite-run (cycle) through a state predicate *)
+		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
-		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
 			(* Do a fold_left to check everything even in case of failure *)
 			List.fold_left (fun current_result parsed_state_predicate ->
@@ -1902,7 +1899,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 				current_result && check
 				) true parsed_state_predicate_list
 
-		(** Infinite-run (cycle) with non-Zeno assumption *)
+		(* Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> true
 
 
@@ -1943,13 +1940,13 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		
 		(* Cartography *)
 		| Parsed_Cover_cartography (parsed_hyper_rectangle, step)
-		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step)
-		(** Look for the border using the cartography*)
+		(* Look for the border using the cartography*)
 		| Parsed_Border_cartography (parsed_hyper_rectangle, step)
-		(** Randomly pick up values for a given number of iterations *)
+		(* Randomly pick up values for a given number of iterations *)
 		| Parsed_Random_cartography (parsed_hyper_rectangle, _, step)
-		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, step)
 			->
 			evaluate_and
@@ -1957,7 +1954,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 				(NumConst.g step NumConst.zero)
 				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
 	
-		(** Cover the whole cartography using learning-based abstractions *)
+		(* Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step)
 		(* Parametric reachability preservation *)
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step)
@@ -2062,7 +2059,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 
 (*------------------------------------------------------------*)
-(* Convert the parsed parsed_pval into a valid parsed_pval *)
+(** Convert the parsed parsed_pval into a valid parsed_pval *)
 (*------------------------------------------------------------*)
 let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) : PVal.pval =
 	let pval = new PVal.pval in
@@ -2080,7 +2077,7 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 
 
 (*------------------------------------------------------------*)
-(* Convert the parsed hyper_rectangle into a valid hyper_rectangle *)
+(** Convert the parsed hyper_rectangle into a valid hyper_rectangle *)
 (*------------------------------------------------------------*)
 let convert_parsed_hyper_rectangle variable_infos (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : HyperRectangle.hyper_rectangle =
 	
@@ -2216,20 +2213,20 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Cycles *)
 		(*------------------------------------------------------------*)
 		
-		(** Accepting infinite-run (cycle) through a state predicate *)
+		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			Cycle_through (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		
-		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
 			Cycle_through_generalized (List.map (PropertyConverter.convert_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
 			,
 			None
 
 		
-		(** Infinite-run (cycle) with non-Zeno assumption *)
+		(* Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> NZ_Cycle, None
 		
 
@@ -2286,31 +2283,31 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 		
-		(** Cover the whole cartography using learning-based abstractions *)
+		(* Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
 			Learning_cartography ((PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
 			,
 			None
 		
-		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step) ->
 			Shuffle_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
 		
-		(** Look for the border using the cartography*)
+		(* Look for the border using the cartography*)
 		| Parsed_Border_cartography (parsed_hyper_rectangle, step) ->
 			Border_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
 		
-		(** Randomly pick up values for a given number of iterations *)
+		(* Randomly pick up values for a given number of iterations *)
 		| Parsed_Random_cartography (parsed_hyper_rectangle, nb, step) ->
 			Random_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , nb , step)
 			,
 			None
 		
-		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, nb, step) ->
 			RandomSeq_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , nb , step)
 			,
@@ -2443,9 +2440,9 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(* Get the synthesis or emptiness type *)
 		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
 		
-		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Convert the projection definition *)
-		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		print_message Verbose_total ("*** Building the projection definition…");
 		let projection = convert_projection_definition index_of_variables parsed_property_option in
 
@@ -2471,7 +2468,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 
 
 (*------------------------------------------------------------*)
-(* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
+(** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
@@ -2481,9 +2478,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     print_message Verbose_high ("\n*** Linking variables finished.");
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug print function for arrays *)
 	let debug_print_array verbose_level =
 		Array.iteri (fun i e ->
@@ -2491,9 +2488,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
 	let
 	possibly_multiply_defined_clock_names,
@@ -2511,9 +2508,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let action_names, removed_action_names = if options#sync_auto_detection then action_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
 		List.partition (synclab_used_everywhere parsed_model.automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_model.automata synclab_name then
@@ -2527,9 +2524,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Create an hash table that will contain previously initialized constants *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create a hash table that will contain previously initialized constants *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     (* It allow to initialize a constant with an other one, previously defined *)
     let initialized_constants = (Hashtbl.create 0) in
     (* Create variable infos template *)
@@ -2542,7 +2539,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         discrete = [];
         variable_refs = Hashtbl.create 0;
         fun_meta = Hashtbl.create 0;
-        type_of_variables = fun i -> DiscreteType.Var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat);
+        type_of_variables = fun _ -> DiscreteType.Var_type_discrete (DiscreteType.Dt_number DiscreteType.Dt_rat);
     }
     in
 
@@ -2588,9 +2585,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* TYPE CHECKING : CONSTANTS IN DECLARATION *)
     let constant_tuples = evaluated_constants in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let (constants : (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t), constants_consistent = make_constants constant_tuples in
 
 
@@ -2605,18 +2602,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the variable_declarations *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all variable names are different (and print warnings for multiply-defined variables if same type) *)
 	let all_variables_different = check_variable_names possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names constants in
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Errors if unassigned constants *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let check_no_unassigned_constants =
 		if unassigned_constants = [] then true
 		else
@@ -2629,9 +2626,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the controllable actions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE (ÉA, 2022/11): will fail if some controllable actions use action names defined but not used in at least one automaton: modify behavior? ***)
 	let check_controllable_actions = check_controllable_actions parsed_model.controllable_actions action_names in
 	if not check_controllable_actions then(
@@ -2639,9 +2636,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	);
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Exit if not well formed *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that at least one automaton is defined *)
 	let at_least_one_automaton =
 		if List.length declared_automata_names = 0 then (
@@ -2654,9 +2651,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
  	
  	
- 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+ 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
 	let observer_automaton, observer_clock_option = match parsed_property_option with
 		| None -> None, None
@@ -2686,9 +2683,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Start building variable lists *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* First remove multiply defined variable names *)
 	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
@@ -2725,7 +2722,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         | Fun_component function_name ->
 (*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
             print_warning ("Function `" ^ function_name ^ "` is declared but never used.")
-        | Variable_component ((variable_name, id) as variable_ref) when VariableInfo.is_local variable_ref ->
+        | Variable_component ((variable_name, _) as variable_ref) when VariableInfo.is_local variable_ref ->
             print_warning ("Local variable `" ^ variable_name ^ "` is declared but never used.")
 (*        | Param_component (param_name, function_name) ->*)
 (*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
@@ -2738,7 +2735,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, discrete_names, parameter_names, discrete_names_by_type, removed_variable_names =
+	let clock_names, _, parameter_names, discrete_names_by_type, removed_variable_names =
 	if options#no_variable_autoremove then(
 		(* Nothing to do *)
 		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, []
@@ -2771,7 +2768,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
 		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
 		(* Remove unused variable names by type in function of single_discrete_names content after auto remove *)
-		let single_discrete_names_by_type = List.filter (fun (var_type, variable_name) -> List.mem variable_name single_discrete_names) single_discrete_names_by_type in
+		let single_discrete_names_by_type = List.filter (fun (_, variable_name) -> List.mem variable_name single_discrete_names) single_discrete_names_by_type in
 		(* Return and append removed variable names *)
 		let removed_variable_names = List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names) in
 		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, removed_variable_names
@@ -2788,7 +2785,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Hack!!! Sort rational at first, for PPL *)
     let discrete_names_by_type, discrete_names =
-        let sorted_discrete_names_by_type = List.stable_sort (fun (var_type_a, variable_name_a) (var_type_b, variable_name_b) ->
+        let sorted_discrete_names_by_type = List.stable_sort (fun (var_type_a, _) (var_type_b, _) ->
             match var_type_a, var_type_b with
             | Var_type_discrete (Dt_number Dt_rat), Var_type_discrete (Dt_number Dt_rat) -> 0
             | Var_type_discrete (Dt_number Dt_rat), _ -> -1
@@ -2800,7 +2797,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     in
 
     (* Group variable names by types *)
-	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, var_name) -> var_type) (fun (var_type, var_name) -> var_name) discrete_names_by_type in
+	let discrete_names_by_type_group = OCamlUtilities.group_by_and_map (fun (var_type, _) -> var_type) (fun (_, var_name) -> var_name) discrete_names_by_type in
 
 	(*------------------------------------------------------------*)
 	(* Special clocks *)
@@ -2852,7 +2849,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions		    = List.length action_names in
 	let nb_clocks		    = List.length clock_names in
 	let nb_discrete		    = List.length discrete_names in
-	let nb_rationals        = discrete_names_by_type |> List.filter (fun (var_type, variable_name) -> match var_type with Var_type_discrete (Dt_number Dt_rat) -> true | _ -> false) |> List.length in
+	let nb_rationals        = discrete_names_by_type |> List.filter (fun (var_type, _) -> match var_type with Var_type_discrete (Dt_number Dt_rat) -> true | _ -> false) |> List.length in
 	let nb_parameters	    = List.length parameter_names in
 	let nb_variables	    = List.length variable_names in
 	let nb_ppl_variables = nb_clocks + nb_parameters + nb_rationals in
@@ -2869,18 +2866,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the LinearConstraint dimensions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Print some information *)
 	print_message Verbose_high ("\nSetting dimensions…");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_rationals;
 	
 	
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the parameter dimensions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(*** NOTE: must be done one and exactly one time ***)
 
@@ -2893,9 +2890,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the arrays of automata, variables and actions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* The list of automata *)
 	let automata = list_of_interval 0 (nb_automata - 1) in
@@ -2976,9 +2973,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Automata *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** Array of automata names:");
@@ -2996,9 +2993,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	);
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all the locations *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all the location names of an automaton are different *)
 	if not (all_locations_different parsed_model.automata) then raise InvalidModel;
 
@@ -3137,9 +3134,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Add new property to details *)
     Logger.add_custom_detail_property "function_metas" json_array_function_metas;
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	let variable_infos = {
         constants					= constants;
@@ -3170,9 +3167,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	}
 	in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the user function definitions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
 
@@ -3190,24 +3187,24 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Convert to table *)
     let functions_table = OCamlUtilities.hashtbl_of_tuples functions_list in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking automata…");
 	let well_formed_automata = check_automata useful_parsing_model_information parsed_model.automata in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: might be a problem in the init checking if the check_automata test fails, hence test first ***)
 	if not (check_no_unassigned_constants && well_formed_automata)
 		then raise InvalidModel;
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
     let init_definition =
@@ -3221,14 +3218,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information init_definition observer_automaton_index_option in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     print_message Verbose_high ("*** Checking constant inits…");
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let well_formed_projection = match parsed_property_option with
 		| None -> true
 		| Some parsed_property -> check_projection_definition variable_infos parsed_property.projection
@@ -3236,9 +3233,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	if not (well_formed_projection && well_formed_init)
 		then raise InvalidModel;
 
@@ -3246,9 +3243,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the property *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	if not (check_property_option useful_parsing_model_information parsed_property_option)
 		then raise InvalidProperty;
@@ -3257,9 +3254,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
 	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
@@ -3270,9 +3267,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("The model contains " ^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ ".");
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the abstract property from the parsed property *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(* We may need to create additional structures for the observer, if any *)
 	
@@ -3293,9 +3290,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the transitions to their final form *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	print_message Verbose_high ("*** Building transitions…");
 	(* Count the number of transitions *)
@@ -3318,9 +3315,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info variable_infos dependency_graph user_function_definitions_table transitions in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add the observer structure to the automata *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	begin
 	match observer_automaton_index_option with
 	| None -> ()
@@ -3398,9 +3395,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*** TODO : perform init for observer (location) ***)
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the controllable actions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
@@ -3413,9 +3410,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert to functional view *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	print_message Verbose_high ("*** Converting to functional view…");
 
@@ -3538,17 +3535,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let min_discrete_index = first_discrete_index in
 	let max_discrete_index = nb_variables - 1 in
 	DiscreteState.initialize nb_automata min_discrete_index max_discrete_index;
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the automata per action *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* List of automata for every action *)
 	print_message Verbose_high ("*** Building automata per action…");
@@ -3563,9 +3560,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let invariants = convert_invariants index_of_variables constants invariants in*)
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handling the special reset clock *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(*** NOTE: if it is defined, then it is the last clock in the list of clocks ***)
 	let special_reset_clock : clock_index option = if with_special_reset_clock then
@@ -3597,9 +3594,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	);
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the strongly deterministic nature of the PTA *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action action, at most one outgoing transition with this action action ***)
 
 	(* Print some information *)
@@ -3645,9 +3642,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	end;
 	
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the presence of silent transitions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Detecting the presence of silent transitions in the model…");
@@ -3658,15 +3655,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) actions in
 	
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(*** NOTE/HACK: duplicate function in StateSpace ***)
 	let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
 		| True_guard -> LinearConstraint.pxd_true_constraint()
 		| False_guard -> LinearConstraint.pxd_false_constraint()
-		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+		| Discrete_guard _ -> LinearConstraint.pxd_true_constraint()
 		| Continuous_guard continuous_guard -> continuous_guard
 		| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 	in
@@ -3722,9 +3719,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check existence of invariants *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let has_invariants = 
 	(* For all PTA *)
 	List.exists (fun automaton_index ->
@@ -3747,9 +3744,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) automata in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check existence of complex updates *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	let transition_contains_complex_update (transition : AbstractModel.transition) : bool =
 		let is_clock_update_complex = function
@@ -3780,9 +3777,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) locations_for_this_automaton
 	) automata in
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Building initial state…");
@@ -3799,7 +3796,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	let (initial_location, initial_constraint) =
-		make_initial_state variable_infos index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition in
+		make_initial_state variable_infos index_of_automata index_of_locations parameters removed_variable_names variable_names init_discrete_pairs init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
@@ -3840,9 +3837,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	);
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect bounded parameters *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create an array parameter_index -> bounds *)
 	let parameter_bounds_array : AbstractModel.bounds array = Array.make nb_parameters {upper = Unbounded; lower = Unbounded} in
 	(* Fill it *)
@@ -3871,9 +3868,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variables *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** All variables:");
@@ -4016,7 +4013,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Debug print: special global clock *)
 	begin
 	match global_time_clock with
-		| Some name -> print_message Verbose_standard ("A global time clock `" ^ Constants.global_time_clock_name ^ "` has been detected.");
+		| Some _ -> print_message Verbose_standard ("A global time clock `" ^ Constants.global_time_clock_name ^ "` has been detected.");
 		| None -> print_message Verbose_medium ("No global time clock `" ^ Constants.global_time_clock_name ^ "` detected.");
 	end;
 
@@ -4038,9 +4035,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Build the final structure *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	{
 	(* Cardinality *)
 	nb_automata    = nb_automata;
