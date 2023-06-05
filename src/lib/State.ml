@@ -38,7 +38,7 @@ type concrete_state = {
 	px_valuation   : (Automaton.variable_index -> NumConst.t);
 }
 
-(** State: location and constraint *)
+(** Symbolic state: location and constraint *)
 type state = {
 	global_location: DiscreteState.global_location;
 	px_constraint  : LinearConstraint.px_linear_constraint;
