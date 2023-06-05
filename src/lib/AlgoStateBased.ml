@@ -101,7 +101,7 @@ let instantiate_costs pi0 =
 
 
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 
 
@@ -385,7 +385,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 
 			(* Case 3a: existential quantification requires to create primed variables *)
 
-			(** TO OPTIMIZE (?): could be performed statically (when converting the model).
+			(*** TO OPTIMIZE (?): could be performed statically (when converting the model).
 				PRO: save time because no need to compute this for each constraint;
 				CON: lose time & memory (but maybe not that much) at some point because operations on constraints will have all dimensions instead of just the updated prime variables
 				TO OPTIMIZE (other option): merge all operations together, so that no need for hashtable
@@ -482,7 +482,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			);
 
 			(* Renames clock X_i' into X_i *)
-			(** TO OPTIMIZE !! *)
+			(*** TO OPTIMIZE !! *)
 			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
@@ -782,10 +782,7 @@ let apply_time_elapsing_to_concrete_valuation (location : DiscreteState.global_l
 (*------------------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
 (*------------------------------------------------------------*)
-let compute_possible_actions source_location =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let compute_possible_actions model (source_location : DiscreteState.global_location) : Automaton.action_index list =
 	(* Create a boolean array for the possible actions *)
 	let possible_actions = Array.make model.nb_actions false in
 	(* Fill it with all the possible actions per location *)
@@ -938,10 +935,7 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 (* guards          : guard constraints per automaton          *)
 (* clock_updates   : updated clock variables                  *)
 (*------------------------------------------------------------*)
-(*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : DiscreteState.global_location) (target_location : DiscreteState.global_location) guards clock_updates =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
+let compute_new_constraint (model : AbstractModel.abstract_model) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : DiscreteState.global_location) (target_location : DiscreteState.global_location) guards clock_updates =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1115,7 +1109,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 (* current_indexes : combination                  *)
 (* max_indexes     : maximum indices              *)
 (*------------------------------------------------------------*)
-(* returns a boolean, indicating that the         *)
+(* returns a Boolean, indicating that the         *)
 (* new combination is valid (false if the old     *)
 (* combination was the last one)                  *)
 (*------------------------------------------------------------*)
@@ -1148,7 +1142,7 @@ let next_combination combination max_indexes =
 (*------------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
 (* involved automata.                                    *)
-(* constr               : current state constraint       *)
+(* pxd_linear_constraint: current state constraint       *)
 (* action index         : index of current action        *)
 (* automata             : involved automata              *)
 (* aut_table            : array of automata              *)
@@ -1158,10 +1152,7 @@ let next_combination combination max_indexes =
 (* returns a bool, indicating iff at least one legal     *)
 (* combination exists.                                   *)
 (*------------------------------------------------------------*)
-let compute_transitions location constr action_index automata involved_automata_indices max_indexes possible_transitions  =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let compute_transitions (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (pxd_linear_constraint : LinearConstraint.pxd_linear_constraint) (action_index : Automaton.action_index) (automata : Automaton.automaton_index list) (involved_automata_indices : Automaton.automaton_index array) (max_indexes : int array) (possible_transitions : AbstractModel.transition_index list array) : bool =
 	let current_index = ref 0 in
 	(* Stop computation as soon as one automaton has no legal transition left. *)
 	try (
@@ -1189,7 +1180,7 @@ let compute_transitions location constr action_index automata involved_automata_
 				)else(
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
 				(*** TODO: check if this test is really worth it ***)
-					let is_possible = State.is_constraint_and_continuous_guard_satisfiable constr guard in
+					let is_possible = State.is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint guard in
 					if not is_possible then (
 						(* Statistics *)
 						counter_nb_early_unsatisfiable#increment;
@@ -1421,7 +1412,7 @@ let post_from_one_state_via_one_transition (source_location : DiscreteState.glob
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+		let new_constraint = compute_new_constraint model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
 
 		(* Check the satisfiability *)
 		match new_constraint with
@@ -2793,19 +2784,19 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** TODO: to get a more abstract method, and update the state space from another function ***)
+	(*** TODO: to get a more abstract method, and update the state space from another function ***)
 	(*** NOTE: made public only for EFoptQueue ***)
-	method post_from_one_state source_state_index =
+	method post_from_one_state (source_state_index : State.state_index ) : state_index list =
 
 		(* Statistics *)
 		counter_post_from_one_state#increment;
 		counter_post_from_one_state#start;
 
 		(* Source location: static *)
-		let source_location = (state_space#get_state source_state_index).global_location in
+		let source_location : DiscreteState.global_location = (state_space#get_state source_state_index).global_location in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
-		let recompute_source_constraint () = (state_space#get_state source_state_index).px_constraint in
+		let recompute_source_constraint () : LinearConstraint.px_linear_constraint = (state_space#get_state source_state_index).px_constraint in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -2823,7 +2814,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(* Statistics *)
 		tcounter_next_transitions#start;
 		(* get possible actions originating from current state *)
-		let list_of_possible_actions = compute_possible_actions source_location in
+		let list_of_possible_actions : Automaton.action_index list = compute_possible_actions model source_location in
 		(* Statistics *)
 		tcounter_next_transitions#stop;
 
@@ -2863,7 +2854,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 			(* Compute conjunction with current constraint *)
 			(*** To optimize: it seems intersection_assign could be used instead ***)
-			let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (recompute_source_constraint ()); discrete_constr] in
+			let orig_plus_discrete : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (recompute_source_constraint ()); discrete_constr] in
 
 			(* In alternative semantics, apply time elapsing NOW, so as to factor this operation once for all *)
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
@@ -2876,15 +2867,15 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			tcounter_next_transitions#start;
 
 			(* Give a new index to those automata *)
-			let involved_automata_indices = Array.make nb_automata_for_this_action 0 in
+			let involved_automata_indices : Automaton.automaton_index array = Array.make nb_automata_for_this_action 0 in
 			(* Keep an array of possible transition indices for each automaton *)
-			let possible_transitions = Array.make nb_automata_for_this_action [] in
+			let possible_transitions : AbstractModel.transition_index list array = Array.make nb_automata_for_this_action [] in
 			(* Use an array of transition indices for the search (start with 0), indicating the current index within the possible transitions for each automaton *)
-			let current_indexes = Array.make nb_automata_for_this_action 0 in
+			let current_indexes : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
 			(* Keep the maximum index of possible transitions for each automaton *)
-			let max_indexes = Array.make nb_automata_for_this_action 0 in
+			let max_indexes : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
 			(* Array for the currently selected transition indices *)
-			let current_transitions = Array.make nb_automata_for_this_action 0 in
+			let current_transitions : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
 
 			(* Statistics *)
 			tcounter_next_transitions#stop;
@@ -2892,15 +2883,15 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			(* Statistics *)
 			tcounter_legal_transitions_exist#start;
 
-			(* compute the possible combinations of transitions *)
-			let legal_transitions_exist = compute_transitions source_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
+			(* compute the possible combinations of transitions (arrays are modified by the function) *)
+			let legal_transitions_exist : bool = compute_transitions model source_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
 
 			(* Statistics *)
 			tcounter_legal_transitions_exist#stop;
 
 			(* Print some information: compute the number of combinations *)
 			if verbose_mode_greater Verbose_medium || options#statistics then(
-				let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in
+				let new_nb_combinations = Array.fold_left (fun the_sum the_max -> the_sum * (the_max + 1)) 1 max_indexes in
 				print_message Verbose_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
 				(* Update for statistics *)
 				counter_nb_combinations#increment_by new_nb_combinations;
@@ -2916,7 +2907,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(* Statistics *)
 				tcounter_next_transitions#start;
 
-				debug_i := !debug_i +1;
+				incr debug_i;
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then (
 					print_message Verbose_high ("------------------------------------------------------------");
@@ -2933,7 +2924,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				);
 
 				(* build the current combination of transitions *)
-				for i=0 to Array.length current_transitions -1 do
+				for i = 0 to Array.length current_transitions - 1 do
 					current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
 				done;
 
@@ -2944,15 +2935,15 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				tcounter_compute_location_guards_discrete#start;
 
 				(* Create the combined transition *)
-				let combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
+				let combined_transition : StateSpace.combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
 					(* Get the current location for this automaton *)
 					let location_index = DiscreteState.get_location source_location real_automaton_index in
-					(* Find the transitions for this automaton *)
-					let transitions = model.transitions real_automaton_index location_index action_index in
+					(* Find the transition indexes for this automaton *)
+					let transitions_indexes : AbstractModel.transition_index list = model.transitions real_automaton_index location_index action_index in
 					(* Get the index of the examined transition for this automaton *)
-					let current_index = current_transitions.(local_automaton_index) in
-					(* Keep the 'current_index'th transition *)
-					let transition_index = List.nth transitions current_index in
+					let current_index : AbstractModel.transition_index = current_transitions.(local_automaton_index) in
+					(* Keep the `current_index`th transition *)
+					let transition_index : AbstractModel.transition_index = List.nth transitions_indexes current_index in
 					(* This is the transition index we are interested in *)
 					transition_index
 				) involved_automata_indices) in
@@ -3036,6 +3027,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(* Return the list of (really) new states *)
 		(*** NOTE: List.rev really useful??!!!! ***)
 		List.rev (new_states_indexes)
+
 
 
 
