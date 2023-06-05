@@ -140,7 +140,7 @@ val create_initial_state : bool -> State.state
 (*------------------------------------------------------------*)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (*------------------------------------------------------------*)
-val concrete_run_of_symbolic_run : StateSpace.stateSpace -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run
+(* val concrete_run_of_symbolic_run : StateSpace.stateSpace -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run *)
 
 (*------------------------------------------------------------*)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)
