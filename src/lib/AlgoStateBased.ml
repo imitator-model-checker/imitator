@@ -1446,6 +1446,29 @@ let post_from_one_state_via_one_transition (source_location : DiscreteState.glob
 
 
 
+(************************************************************)
+(** Apply extrapolation to a state and returns a list of new states *)
+(************************************************************)
+let apply_extrapolation (extrapolation : extrapolation) (state : State.state) : State.state list =
+	(* Get the location and the constraint from the state *)
+	let the_location : DiscreteState.global_location = state.global_location in
+	let the_constraint : LinearConstraint.px_linear_constraint = state.px_constraint in
+
+	(* Call the asked extrapolation of the constraint *)
+	let constraints : LinearConstraint.px_linear_constraint list =
+	match extrapolation with
+	| M					-> Extrapolation.px_m_extrapolation the_constraint
+	| Mglobal			-> Extrapolation.px_mglobal_extrapolation the_constraint
+	| LU				-> Extrapolation.px_lu_extrapolation the_constraint
+	| LUglobal			-> Extrapolation.px_luglobal_extrapolation the_constraint
+	| No_extrapolation	-> raise (InternalError "Extrapolation type `No_extrapolation` impossible at that point")
+	in
+
+	(* Return the pair (location, constraint) for each constraint from the extrapolation *)
+	List.map (fun px_linear_constraint ->
+		(* Create a symbolic state *)
+		{ global_location = the_location ; px_constraint = px_linear_constraint }
+	) constraints
 
 
 (************************************************************)
@@ -2757,28 +2780,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Apply extrapolation to a state *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private apply_extrapolation (extrapolation : extrapolation) (state : State.state) : State.state list =
-		(* Get the location and the constraint from the state *)
-		let the_location = state.global_location in
-		let the_constraint = state.px_constraint in
-
-		(* Call the asked extrapolation of the constraint *)
-		let constraints =
-		match extrapolation with
-		| M					-> Extrapolation.px_m_extrapolation the_constraint
-		| Mglobal			-> Extrapolation.px_mglobal_extrapolation the_constraint
-		| LU				-> Extrapolation.px_lu_extrapolation the_constraint
-		| LUglobal			-> Extrapolation.px_luglobal_extrapolation the_constraint
-		| No_extrapolation	-> raise (InternalError "Extrapolation type `No_extrapolation` impossible at that point")
-		in
-
-		(* Return the pair (location, constraint) for each constraint from the extrapolation *)
-		List.map (fun px_linear_constraint ->
-			{ global_location = the_location ; px_constraint = px_linear_constraint }
-		) constraints
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2982,7 +2983,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 							(* No extrapolation: return a single state *)
 							| No_extrapolation -> [successor]
 							(* Extrapolation: call dedicated function *)
-							| _ -> self#apply_extrapolation options#extrapolation successor
+							| _ -> apply_extrapolation options#extrapolation successor
 
 						in result
 
