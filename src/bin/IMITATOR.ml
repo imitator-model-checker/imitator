@@ -695,7 +695,7 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)
-	(** Synthesis algorithm *)
+	(* Synthesis algorithm *)
 	| Algorithm ->
 	begin
 		(* Retrieve the algorithm *)
@@ -817,7 +817,7 @@ match options#imitator_mode with
 			(* Parametric loop synthesis *)
 			(************************************************************)
 
-			(** Accepting infinite-run (cycle) using an accepting keyword *)
+			(* Accepting infinite-run (cycle) using an accepting keyword *)
 			| Cycle_through state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
@@ -827,7 +827,7 @@ match options#imitator_mode with
 				in myalgo
 
 
-			(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+			(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 			| Cycle_through_generalized state_predicate_list ->
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
@@ -837,7 +837,7 @@ match options#imitator_mode with
 				in myalgo
 
 
-			(** Infinite-run (cycle) with non-Zeno assumption *)
+			(* Infinite-run (cycle) with non-Zeno assumption *)
  			| NZ_Cycle ->
 				(* Important! Set the no-time-elapsing option *)
 				options#set_no_time_elapsing;
@@ -846,7 +846,7 @@ match options#imitator_mode with
 
 				(* Branch depending on the NZ method *)
 				match options#nz_method with
-				(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
+				(* Method by checking whether the PTA is already a CUB-PTA for some valuation *)
 				| NZ_check ->
 					(* Computing a constraint for which the PTA is CUB *)
 					print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
@@ -889,7 +889,7 @@ match options#imitator_mode with
 
 					let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
 
-				(** Method by transforming the PTA into a CUB-PTA *)
+				(* Method by transforming the PTA into a CUB-PTA *)
 				| NZ_transform ->
 					print_message Verbose_standard ("Generating the transformed model…");
 
@@ -944,7 +944,7 @@ match options#imitator_mode with
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB cub_model in myalgo
 
 
-				(** Method assuming the PTA is already a CUB-PTA *)
+				(* Method assuming the PTA is already a CUB-PTA *)
 				| NZ_already ->
 					(* Just call the NZ emptiness check *)
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB model in myalgo
@@ -1002,7 +1002,7 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
-			(** Cover the whole cartography using learning-based abstractions *)
+			(* Cover the whole cartography using learning-based abstractions *)
 			(*** NOTE: this part is kept on purpose despite being odd (actual code followed by a `raise` NotImplemented), so that at least the AlgoBCCoverLearning module is compiled and kept up-to-date with new global code modifications. ***)
 			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
@@ -1012,23 +1012,23 @@ match options#imitator_mode with
 				(*** NOTE: we use #name to avoid a warning (unused variable) ***)
 				raise (NotImplemented("Learning_cartography " ^ myalgo#algorithm_name ^ " is (temporarily?) disabled"))
 
-			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+			(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
 				let bc_algo = new AlgoBCShuffle.algoBCShuffle model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
-			(** Look for the border using the cartography*)
-			| Border_cartography (hyper_rectangle, step) ->
+			(* Look for the border using the cartography*)
+			| Border_cartography (_, _) ->
 				raise (NotImplemented("Border cartography is disabled"))
 
-			(** Randomly pick up values for a given number of iterations *)
+			(* Randomly pick up values for a given number of iterations *)
 			| Random_cartography (hyper_rectangle, max_tries, step) ->
 				let bc_algo = new AlgoBCRandom.algoBCRandom model hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
-			(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+			(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 			| RandomSeq_cartography (hyper_rectangle, max_tries, step) ->
 				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq model hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
@@ -1055,7 +1055,7 @@ match options#imitator_mode with
 			(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 			(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
 
-			(** TODO: add conditions to CUB
+			(*** TODO: add conditions to CUB
 			| Parametric_NZ_CUBtransformDistributed ->
 				print_message Verbose_standard ("Generating the transformed model…");
 
@@ -1107,7 +1107,7 @@ match options#imitator_mode with
 			| Cover_cartography (hyper_rectangle, step) when options#distribution_mode <> Non_distributed ->
 				let algo = match options#distribution_mode with
 
-				(** Distributed mode: Master worker with sequential pi0 *)
+				(* Distributed mode: Master worker with sequential pi0 *)
 				| Distributed_ms_sequential ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
@@ -1118,7 +1118,7 @@ match options#imitator_mode with
 						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker model hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
-				(** Distributed mode: Master worker with sequential pi0 shuffled *)
+				(* Distributed mode: Master worker with sequential pi0 shuffled *)
 				| Distributed_ms_shuffle ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
@@ -1130,7 +1130,7 @@ match options#imitator_mode with
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
-				(** Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
+				(* Distributed mode: Master worker with random pi0 and n retries before switching to sequential mode *)
 				| Distributed_ms_random nb_tries ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
@@ -1142,7 +1142,7 @@ match options#imitator_mode with
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
-				(** Distributed mode: Master worker with subdomain distribution *)
+				(* Distributed mode: Master worker with subdomain distribution *)
 				| Distributed_ms_subpart ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
@@ -1154,7 +1154,7 @@ match options#imitator_mode with
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
-				(** Distributed mode: static distribution mode (each node has its own subdomain with no communication) *)
+				(* Distributed mode: static distribution mode (each node has its own subdomain with no communication) *)
 				| Distributed_static ->
 					(* Branch between collaborator and coordinator *)
 					if DistributedUtilities.is_coordinator() then
