@@ -1471,6 +1471,223 @@ let apply_extrapolation (extrapolation : extrapolation) (state : State.state) : 
 	) constraints
 
 
+
+(************************************************************)
+(** Compute the list of successor states of a given state, and returns the list of new states *)
+(************************************************************)
+(*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
+let post_from_one_state_functional (model : AbstractModel.abstract_model) (source_state : State.state) : State.state list =
+
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Statistics *)
+	(*** TODO ***)
+(* 		counter_post_from_one_state#increment; *)
+(* 		counter_post_from_one_state#start; *)
+
+	(* Shortcut to fields *)
+	let source_location : DiscreteState.global_location = source_state.global_location in
+	let source_constraint : LinearConstraint.px_linear_constraint = source_state.px_constraint in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
+		print_message Verbose_high ("Performing post from "
+			^ (if DiscreteState.is_accepting model.is_accepting source_state.global_location then "accepting " else "")
+			^ "state:");
+		print_message Verbose_high (ModelPrinter.string_of_state model source_state);
+		print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
+		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names source_constraint_projection);
+	);
+
+	(* Statistics *)
+	(*** TODO ***)
+(* 		tcounter_next_transitions#start; *)
+	(* get possible actions originating from current state *)
+	let list_of_possible_actions : Automaton.action_index list = compute_possible_actions model source_location in
+	(* Statistics *)
+	(*** TODO ***)
+(* 		tcounter_next_transitions#stop; *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then (
+		let actions_string : string list = List.map (fun action_index -> model.action_names action_index) list_of_possible_actions in
+		print_message Verbose_high ("Possible synchronized actions are: " ^ (string_of_list_of_string_with_sep ", " actions_string));
+	);
+
+	(* Build the list of new states *)
+	let new_states = ref [] in
+
+	(* Create a constraint D_i = d_i for the discrete variables *)
+	let discrete_constr : LinearConstraint.pxd_linear_constraint = State.discrete_constraint_of_global_location model source_location in
+
+	(*** TODO (ÉA, 2023/06/05): replace the new_states ref with a nice fold_left ***)
+	(* For each action, do: *)
+	List.iter (fun action_index ->
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_next_transitions#start; *)
+
+		(* Print some information *)
+		print_message Verbose_medium ("\nComputing target states for action '" ^ (model.action_names action_index) ^ "'");
+		(* Get the automata declaring the action *)
+		let automata_for_this_action : Automaton.automaton_index list = model.automata_per_action action_index in
+		let nb_automata_for_this_action : int = List.length automata_for_this_action in
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_next_transitions#stop; *)
+
+		(*------------------------------------------------------------*)
+		(* Compute the reachable states for all possible transitions for all the automata belonging to the aforementioned list *)
+		(*------------------------------------------------------------*)
+
+		(* Compute conjunction with current constraint *)
+		(*** TODO ***)
+		(*** To optimize: it seems intersection_assign could be used instead ***)
+		let orig_plus_discrete : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_px_constraint source_constraint); discrete_constr] in
+
+		(* In alternative semantics, apply time elapsing NOW, so as to factor this operation once for all *)
+		(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
+		if options#no_time_elapsing then(
+			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
+			apply_time_elapsing source_location orig_plus_discrete;
+		);
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_next_transitions#start; *)
+
+		(* Give a new index to those automata *)
+		let involved_automata_indices : Automaton.automaton_index array = Array.make nb_automata_for_this_action 0 in
+		(* Keep an array of possible transition indices for each automaton *)
+		let possible_transitions : AbstractModel.transition_index list array = Array.make nb_automata_for_this_action [] in
+		(* Use an array of transition indices for the search (start with 0), indicating the current index within the possible transitions for each automaton *)
+		let current_indexes : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
+		(* Keep the maximum index of possible transitions for each automaton *)
+		let max_indexes : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
+		(* Array for the currently selected transition indices *)
+		let current_transitions : AbstractModel.transition_index array = Array.make nb_automata_for_this_action 0 in
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_next_transitions#stop; *)
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_legal_transitions_exist#start; *)
+
+		(* compute the possible combinations of transitions (arrays are modified by the function) *)
+		let legal_transitions_exist : bool = compute_transitions model source_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
+
+		(* Statistics *)
+		(*** TODO ***)
+(* 			tcounter_legal_transitions_exist#stop; *)
+
+		(* Print some information: compute the number of combinations *)
+		if verbose_mode_greater Verbose_medium || options#statistics then(
+			let new_nb_combinations = Array.fold_left (fun the_sum the_max -> the_sum * (the_max + 1)) 1 max_indexes in
+			print_message Verbose_medium ("" ^ (string_of_int new_nb_combinations) ^ " combination" ^ (s_of_int new_nb_combinations) ^ " will be considered for this state and this action\n");
+			(* Update for statistics *)
+			(*** TODO ***)
+(* 				counter_nb_combinations#increment_by new_nb_combinations; *)
+		);
+
+		(* Loop on all the transition combinations *)
+		let more_combinations = ref legal_transitions_exist in
+		let debug_i = ref 0 in
+
+		(* ------------------------------------------------------------ *)
+		while !more_combinations do
+		(* ------------------------------------------------------------ *)
+			(* Statistics *)
+			(*** TODO ***)
+(* 				tcounter_next_transitions#start; *)
+
+			incr debug_i;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then (
+				print_message Verbose_high ("------------------------------------------------------------");
+				print_message Verbose_high ("Consider the combination #" ^ (string_of_int !debug_i) ^ "");
+				print_message Verbose_high ("------------------------------------------------------------");
+			);
+			if verbose_mode_greater Verbose_total then (
+				let local_indexes = string_of_array_of_string_with_sep "\n\t" (
+				Array.mapi (fun local_index real_index ->
+					(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
+				) involved_automata_indices) in
+				print_message Verbose_high ("\n--- This combination is:\n\t" ^ local_indexes);
+				print_message Verbose_high ("\n------------------------------------------------------------");
+			);
+
+			(* build the current combination of transitions *)
+			for i = 0 to Array.length current_transitions - 1 do
+				current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
+			done;
+
+			(* Statistics *)
+			(*** TODO ***)
+(* 				tcounter_next_transitions#stop; *)
+
+			(* Statistics *)
+			(*** TODO ***)
+(* 				tcounter_compute_location_guards_discrete#start; *)
+
+			(* Create the combined transition *)
+			let combined_transition : StateSpace.combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
+				(* Get the current location for this automaton *)
+				let location_index = DiscreteState.get_location source_location real_automaton_index in
+				(* Find the transition indexes for this automaton *)
+				let transitions_indexes : AbstractModel.transition_index list = model.transitions real_automaton_index location_index action_index in
+				(* Get the index of the examined transition for this automaton *)
+				let current_index : AbstractModel.transition_index = current_transitions.(local_automaton_index) in
+				(* Keep the `current_index`th transition *)
+				let transition_index : AbstractModel.transition_index = List.nth transitions_indexes current_index in
+				(* This is the transition index we are interested in *)
+				transition_index
+			) involved_automata_indices) in
+
+			(* Compute the successor constraint from the current state via this combined_transition *)
+			let successor_option : State.state option = post_from_one_state_via_one_transition source_location source_constraint discrete_constr combined_transition in
+
+			(* Check if new states were indeed computed *)
+			begin
+			match successor_option with
+				| Some successor ->
+					(* First apply extrapolation *)
+					(*** NOTE (ÉA, 2023/06/05): is it the right place for applying extrapolation? ***)
+					let successors_after_extrapolation =
+						(* Check if extrapolation is requested *)
+						match options#extrapolation with
+							(* No extrapolation: return a single state *)
+							| No_extrapolation -> [successor]
+							(* Extrapolation: call dedicated function *)
+							| _ -> apply_extrapolation options#extrapolation successor
+					in
+					(* Add these successors to the list of computed states *)
+					new_states := OCamlUtilities.list_append !new_states successors_after_extrapolation;
+					()
+				(* No new state: do nothing *)
+				| None -> ()
+			end;
+
+			(* Update the next combination *)
+			more_combinations := next_combination current_indexes max_indexes;
+
+		done; (* while more new states *)
+		(* ------------------------------------------------------------ *)
+	) list_of_possible_actions;
+
+	(* Statistics *)
+	(*** TODO ***)
+(* 		counter_post_from_one_state#stop; *)
+
+	(* Return the list of new states *)
+	!new_states
+
+
 (************************************************************)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (************************************************************)

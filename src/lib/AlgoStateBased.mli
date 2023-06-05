@@ -110,6 +110,12 @@ val apply_time_past : DiscreteState.global_location -> LinearConstraint.pxd_line
 val apply_time_elapsing_to_concrete_valuation : DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
 
 
+(*------------------------------------------------------------*)
+(** Compute the list of successor states of a given state, and returns the list of new states *)
+(*------------------------------------------------------------*)
+(*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
+val post_from_one_state_functional : AbstractModel.abstract_model -> State.state -> State.state list
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing; takes a boolean denoting whether we should abort whenever the initial state is unsatisfiable *)
