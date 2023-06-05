@@ -26,13 +26,11 @@ open Statistics
 open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
-open DiscreteExpressions
 open DiscreteExpressionEvaluator
 open AlgoGeneric
 open State
 open Result
 open StateSpace
-open CustomModules
 
 
 (************************************************************)
@@ -874,8 +872,8 @@ let compute_new_location_guards_updates (source_location: DiscreteState.global_l
 	List.iter (fun transition_index ->
 		(* Get the automaton concerned *)
 		(* Access the transition and get the components *)
-		let automaton_index, transition = automaton_and_transition_of_transition_index transition_index in
-		(** Collecting the updates by evaluating the conditions, if there is any *)
+		let _, transition = automaton_and_transition_of_transition_index transition_index in
+		(* Collecting the updates by evaluating the conditions, if there is any *)
         let _ (* no clock update for seq updates *), seq_code_bloc_update = transition.updates in
         eval_seq_code_bloc_with_context (Some model.variable_names) (Some model.functions_table) eval_context seq_code_bloc_update;
 
@@ -1654,7 +1652,7 @@ let compute_admissible_valuations_after_transition
 
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
-let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
+let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predecessors : StateSpace.predecessors_table)*) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -2214,7 +2212,7 @@ let reconstruct_counterexample (state_space : StateSpace.stateSpace) (target_sta
 	);
 
 	(* Exhibit a concrete run from the symbolic run *)
-	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
+	concrete_run_of_symbolic_run state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
 
 
@@ -2340,7 +2338,7 @@ end;;
 (************************************************************)
 
 class virtual algoStateBased (model : AbstractModel.abstract_model) =
-	object (self) inherit algoGeneric model as super
+	object (self) inherit algoGeneric model (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -3184,7 +3182,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create a positive concrete example *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private exhibit_positive_counterexample (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (target_state : State.state) : Result.valuation_and_concrete_run =
+	method private exhibit_positive_counterexample (symbolic_run : StateSpace.symbolic_run) (target_state : State.state) : Result.valuation_and_concrete_run =
 
 		(* Exhibit a concrete clock+parameter valuation in the final state *)
 		let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
@@ -3205,7 +3203,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		);
 
 		(* Exhibit a concrete run from the symbolic run *)
-		let concrete_run = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
+		let concrete_run = concrete_run_of_symbolic_run state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
 
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
@@ -3227,7 +3225,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Try to create two positive concrete counterexamples: one for the same parameter valuation, and one for a different parameter valuation *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private exhibit_negative_counterexamples (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (target_state : State.state) (positive_valuation : PVal.pval) : (Result.valuation_and_concrete_run option * Result.valuation_and_concrete_run option) =
+	method private exhibit_negative_counterexamples (symbolic_run : StateSpace.symbolic_run) (target_state : State.state) (positive_valuation : PVal.pval) : (Result.valuation_and_concrete_run option * Result.valuation_and_concrete_run option) =
 
 		(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 		(* Retrieve global clock index *)
@@ -3352,7 +3350,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				} in
 
 				(* Generate a concrete run for this cut symbolic run *)
-				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
+				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
 
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
@@ -3605,7 +3603,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				} in
 
 				(* Generate a concrete run for this cut symbolic run *)
-				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i_after_time_elapsing in
+				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i_after_time_elapsing in
 
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
@@ -3787,7 +3785,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 		(*------------------------------------------------------------*)
 
 		(* Call dedicated function *)
-		let positive_valuation_and_concrete_run = self#exhibit_positive_counterexample predecessors symbolic_run target_state in
+		let positive_valuation_and_concrete_run = self#exhibit_positive_counterexample symbolic_run target_state in
 
 		(* Print some information *)
 		print_message Verbose_standard "Positive concrete run constructed!";
@@ -3816,7 +3814,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let positive_valuation = positive_valuation_and_concrete_run.valuation in
 
 			(* Reconstruct negative runs *)
-			let negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval = self#exhibit_negative_counterexamples predecessors symbolic_run target_state positive_valuation in
+			let negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval = self#exhibit_negative_counterexamples symbolic_run target_state positive_valuation in
 
 			(* Return all three *)
 			positive_valuation_and_concrete_run, negative_valuation_and_concrete_run_option_otherpval, negative_valuation_and_concrete_run_option_samepval
@@ -4100,7 +4098,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			print_message Verbose_total ("Retrieved state information");
 			(
 				try(
-					Hashtbl.iter (fun state_index2 rank ->
+					Hashtbl.iter (fun state_index2 _ ->
 
 						(* Print some information *)
 						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
@@ -4120,7 +4118,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			let state = state_space#get_state state_index1 in
 			let loc1, constr1 = state.global_location, state.px_constraint in
 
-			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index ->
+			(*** WARNING (ÉA, 2023/06/05): strange to have an unused argument here ***)
+			let smallers = Hashtbl.fold (fun state_index2 _ smaller_state_index ->
 				let state = state_space#get_state state_index2 in
 				let loc2, constr2 = state.global_location, state.px_constraint in
 				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
@@ -4186,7 +4185,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max 1"))
 			in
 
-			let max, max_index =
+			let _, max_index =
 			List.fold_left (fun (current_max, current_max_index) current_index ->
 				(* If we found a new maximum *)
 				match compare_index_with_max current_max current_index with
@@ -4261,7 +4260,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 
 
 
-		let rankingSuccessors successors from_state_index=
+		let rankingSuccessors successors =
 
 			(* The Successors are always ranked before adding into queue and hastbl. Because after that we need exploring the highest rank one *)
 			List.iter (fun state_index ->
@@ -4424,12 +4423,12 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 							let rank = Hashtbl.find rank_hashtable x in
 							match rank with
 							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
-							| Int r ->
+							| Int _ ->
 
 										let state = state_space#get_state state_index in
-										let loc1, constr1 = state.global_location, state.px_constraint in
+										let _, constr1 = state.global_location, state.px_constraint in
 										let state = state_space#get_state x in
-										let loc2, constr2 = state.global_location, state.px_constraint in
+										let _, constr2 = state.global_location, state.px_constraint in
 										(
 										if not (LinearConstraint.px_is_leq constr2 constr1)
 										then
@@ -4602,7 +4601,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				(match options#exploration_order with
 				| Exploration_queue_BFS -> list_append successors !queue
 				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors ;
 												(* list_append successors !queue *)
 				(* Priority system: TODO *)
 				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
