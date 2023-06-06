@@ -64,8 +64,8 @@ val state_included_in : state -> state -> Automaton.clock_index list -> bool
 (* Shortcut, the function is actually called on global locations *)
 (* val match_state_predicate : AbstractProperty.state_predicate -> state -> bool *)
 
-(* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-val match_state_predicate : AbstractModel.abstract_model -> (Automaton.automaton_index -> Automaton.location_index -> bool) -> AbstractProperty.state_predicate -> state -> bool
+(** Tests whether a state matches `state_predicate`; takes the model as argument, notably needed for the function tables and to access the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index`, since both of them can be used in the state_predicate),  *)
+val match_state_predicate : AbstractModel.abstract_model -> AbstractProperty.state_predicate -> state -> bool
 
 
 (************************************************************)

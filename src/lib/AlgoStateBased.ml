@@ -2813,7 +2813,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 				| Win state_predicate
 				->
 					(* Check whether the current state matches the state predicate *)
-					if State.match_state_predicate model model.is_accepting state_predicate state then(
+					if State.match_state_predicate model state_predicate state then(
 						statespace_nature <- StateSpace.Bad;
 					);
 

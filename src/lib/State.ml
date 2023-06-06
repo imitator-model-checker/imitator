@@ -170,11 +170,9 @@ let match_state_predicate state_predicate state =
 	DiscreteState.match_state_predicate state_predicate state.global_location*)
 
 
-(* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
-let match_state_predicate (model : AbstractModel.abstract_model) (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
-    (* let discrete_access = DiscreteState.discrete_access_of_location state.global_location in *)
-    (*** NOTE: removed by ÉA (2023/04/14) ***)
-	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) (* discrete_access *) locations_acceptance_condition state.global_location state_predicate
+(** Tests whether a state matches `state_predicate`; takes the model as argument, notably needed for the function tables and to access the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index`, since both of them can be used in the state_predicate),  *)
+let match_state_predicate (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
+	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) model.is_accepting state.global_location state_predicate
 
 
 
