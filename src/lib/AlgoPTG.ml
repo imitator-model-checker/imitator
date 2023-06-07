@@ -108,7 +108,6 @@ module Depends = DefaultHashtbl (struct
 	let str_of_key = string_of_int
 end)
 
-let complete_synthesis = true 
 
 (************************************************************)
 (************************************************************)
@@ -780,10 +779,15 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria waiting init = 
 		let queue_empty = Queue.is_empty waiting in
-		if complete_synthesis then 
+		let property = Input.get_property() in
+		let complete_synthesis = (property.synthesis_type = Synthesis) in
+		
+		if complete_synthesis then
 			queue_empty
 		else
-			not @@ is_empty(self#initial_constraint () &&& WinningZone.find init) || queue_empty
+			((not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)) || queue_empty)
+
+
 
 	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
 	method private compute_PTG = 
