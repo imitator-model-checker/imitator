@@ -685,18 +685,11 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> model.is_controllable_action e.action)
 	method private get_uncontrollable_edges = self#get_edges >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
 
-	(* TODO: Support multiple automata in PTG? *)
 	(* Whether or not a state is accepting  *)
-	(*** TODO (ÉA, 2023/04/24): use State.match_state_predicate plus an acceptance condition in the property, e.g., Win(state_predicate) ***)
-	method private accepting state_index =
-		let loc = ((state_space#get_state state_index).global_location) in
-		(* All automata should accept or just one is fine? *)
-		let rec is_accepting i =
-			if i = -1 then false else 
-			let loc_id =  DiscreteState.get_location loc i in
-			if model.is_accepting i loc_id then true else is_accepting (i-1) in
+	method private matches_state_predicate state_index =
+		let state = (state_space#get_state state_index) in
+		(State.match_state_predicate model state_predicate state) 
 
-		is_accepting @@ model.nb_automata-1
 
 	(* Losing part of a symbolic state *)
 	method private losing_zone state_index = 
@@ -749,7 +742,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		passed#add state';
 		(Depends.find state') #<- e;
 
-		if self#accepting state' then WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
+		if self#matches_state_predicate state' then WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
 		waiting #<-- (self#get_edge_queue state') ;
 
 		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model); 
@@ -804,7 +797,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		let waiting = self#get_edge_queue init in 
 
 		(* If goal is init then initial winning zone is it's own constraint*)
-		if self#accepting init then
+		if self#matches_state_predicate init then
 			WinningZone.replace init @@ (self#constr_of_state_index >> nn) init;
 
 		(* === ALGORITHM MAIN LOOP === *)
