@@ -27,7 +27,6 @@ open AbstractProperty
 open Result
 open AlgoStateBased
 open State
-open Statistics
 
 (************************************************************)
 (************************************************************)
@@ -36,9 +35,8 @@ open Statistics
 (************************************************************)
 
 (************************************************************)
-(* Exception for NDFS *)
+(** Exception for NDFS *)
 (************************************************************)
-
 exception DFS_Limit_detected of bfs_limit_reached
 
 
@@ -54,7 +52,7 @@ module IntMap = Map.Make(struct type t = int let compare = compare end)
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* add x before the first y in q such that (before x y) holds *)
+(** add x before the first y in q such that (before x y) holds *)
 (*------------------------------------------------------------*)
 let rec add_ordered x q before =
 	match q with
@@ -70,11 +68,11 @@ let rec in_queue astate thequeue =
 
 
 (***********************)
-(* printing the queues *)
+(** printing the queues *)
 (***********************)
 let printtable (colour : string) thetable : unit =
 	if verbose_mode_greater Verbose_medium then(
-			let printrecord state_index u rest =
+			let printrecord state_index _ rest =
 					(string_of_int state_index) ^ " " ^ rest;
 			in print_message Verbose_medium("Table " ^ colour ^ " : [ "
 					^ Hashtbl.fold printrecord thetable "" ^ "]")
@@ -84,7 +82,7 @@ let printtable (colour : string) thetable : unit =
 (***********************)
 (* Edit tables *)
 (***********************)
-(* Table add, test and remove; a state is present as it maps to ():unit *)
+(** Table add, test and remove; a state is present as it maps to ():unit *)
 let table_add (table : (State.state_index, unit) Hashtbl.t) (state_index : State.state_index) : unit =
 		Hashtbl.replace table state_index ()
 
@@ -149,12 +147,12 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	val mutable pzone_nc_table	: (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 100
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "Cycle (NDFS)"
 
 	(************************************)
-	(* Check the states and time limits *)
+	(** Check the states and time limits *)
 	(************************************)
 	method private check_and_update_queue_dfs_limit =
 
@@ -348,7 +346,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method explore_layer_bfs init_state_index =
+	method! explore_layer_bfs init_state_index =
 
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
@@ -521,7 +519,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		(*****************************)
 		(* Function for no lookahead *)
 		(*****************************)
-		let noLookahead astate thesuccessors = init_state_index, false in
+		let noLookahead _ _ = init_state_index, false in
 
 		(*******************************************************)
 		(* Function for generating successors only when needed *)
@@ -770,18 +768,15 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
 					in*)
-					let filterdfs (thestate : State.state_index) (astate : State.state_index)
+					let filterdfs (_ : State.state_index) (astate : State.state_index)
 						(astate_depth : int) : bool =
 						not (table_test blue astate) &&
 						test_reexplore_green astate astate_depth &&
 						not (table_test cyan astate)
 					in
-					let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-						false in
-					let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-						() in
-					let testrecursivedfs (astate : State.state_index) : bool =
-						true in
+					let testaltdfs (_ : State.state_index) (_ : State.state_index) : bool = false in
+					let alternativedfs (_ : State.state_index) (_ : int) : unit = () in
+					let testrecursivedfs (_ : State.state_index) : bool = true in
 					let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
@@ -812,10 +807,10 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in*)
-							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+							let filterdfs (thestate : State.state_index) (astate : State.state_index) (_ : int) : bool =
 								(self#same_parameter_projection thestate astate)
 							in
-							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							let testaltdfs (_ : State.state_index) (astate : State.state_index) : bool =
 								(table_test cyan astate)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
@@ -824,8 +819,8 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (table_test red astate)
 							in
-							let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-								() in
+							(*** WARNING (ÉA, 2023/06/08): this function does nothing?? ***)
+							let postdfs (_ : State.state_index) (_ : int) : unit = () in
 							rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 						);
 						mark_blue_or_green astate astate_depth;
@@ -880,18 +875,15 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
 					in*)
-					let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+					let filterdfs (_ : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 						not (table_test blue astate) &&
 						test_reexplore_green astate astate_depth &&
 						not (table_test cyan astate) &&
 						not (setsubsumes red astate)
 					in
-					let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-						false in
-					let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
-						() in
-					let testrecursivedfs (astate: State.state_index) : bool =
-						true in
+					let testaltdfs (_ : State.state_index) (_ : State.state_index) : bool = false in
+					let alternativedfs (_: State.state_index) (_ : int) : unit = () in
+					let testrecursivedfs (_: State.state_index) : bool = true in
 					let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
@@ -924,10 +916,10 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in*)
-							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+							let filterdfs (thestate : State.state_index) (astate : State.state_index) (_ : int) : bool =
 								(self#same_parameter_projection thestate astate)
 							in
-							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							let testaltdfs (_ : State.state_index) (astate : State.state_index) : bool =
 								(subsumesset astate cyan)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
@@ -936,8 +928,8 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (setsubsumes red astate)
 							in
-							let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-								() in
+							(*** WARNING (ÉA, 2023/06/08): this function does nothing?? ***)
+							let postdfs (_ : State.state_index) (_ : int) : unit = () in
 							rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 						);
 						mark_blue_or_green astate astate_depth;
@@ -1004,7 +996,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
 							in*)
-							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+							let filterdfs (_ : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								not (table_test blue astate) &&
 								test_reexplore_green astate astate_depth &&
 								not (table_test cyan astate)
@@ -1014,8 +1006,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
-							let testrecursivedfs (astate: State.state_index) : bool =
-								true in
+							let testrecursivedfs (_: State.state_index) : bool = true in
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
@@ -1048,10 +1039,10 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in*)
-									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+									let filterdfs (thestate : State.state_index) (astate : State.state_index) (_ : int) : bool =
 										(self#same_parameter_projection thestate astate)
 									in
-									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									let testaltdfs (_ : State.state_index) (astate : State.state_index) : bool =
 										(table_test cyan astate)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
@@ -1060,8 +1051,8 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (table_test red astate)
 									in
-									let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-										() in
+									(*** WARNING (ÉA, 2023/06/08): this function does nothing?? ***)
+									let postdfs (_ : State.state_index) (_ : int) : unit = () in
 									rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 								);
 								mark_blue_or_green astate astate_depth;
@@ -1131,7 +1122,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
 							in*)
-							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+							let filterdfs (_ : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								not (table_test blue astate) &&
 								test_reexplore_green astate astate_depth &&
 								not (table_test cyan astate) &&
@@ -1142,8 +1133,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 							in
 							let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 								add_pending astate (astate_depth + 1) in
-							let testrecursivedfs (astate: State.state_index) : bool =
-								true in
+							let testrecursivedfs (_ : State.state_index) : bool = true in
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red DFS only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
@@ -1176,10 +1166,10 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in*)
-									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
+									let filterdfs (thestate : State.state_index) (astate : State.state_index) (_ : int) : bool =
 										(self#same_parameter_projection thestate astate)
 									in
-									let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									let testaltdfs (_ : State.state_index) (astate : State.state_index) : bool =
 										(subsumesset astate cyan)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
@@ -1188,8 +1178,8 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (layersetsubsumes red astate)
 									in
-									let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-										() in
+									(*** WARNING (ÉA, 2023/06/08): this function does nothing?? ***)
+									let postdfs (_ : State.state_index) (_ : int) : unit = () in
 									rundfs enterdfs predfs noLookahead (self#cyclefound_inner self#set_termination_if_synthesis) filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 								);
 								mark_blue_or_green astate astate_depth;
@@ -1243,9 +1233,9 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 
 		(* Nothing to do *)
@@ -1288,15 +1278,15 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
