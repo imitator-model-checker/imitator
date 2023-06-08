@@ -21,8 +21,6 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
-open AbstractModel
-open Result
 open AlgoCartoGeneric
 
 
@@ -31,9 +29,6 @@ open AlgoCartoGeneric
 (* Internal exceptions *)
 (************************************************************)
 (************************************************************)
-(* To stop a loop when a point is found *)
-exception Found_point of PVal.pval
-
 (* To stop a loop when a point is found or there is no more point *)
 exception Stop_loop of more_points
 
@@ -157,7 +152,7 @@ class algoBCShuffle (model : AbstractModel.abstract_model) (v0 : HyperRectangle.
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
 		(* Initialize the shuffled array *)

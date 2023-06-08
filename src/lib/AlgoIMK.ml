@@ -22,7 +22,6 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
-open AbstractProperty
 open Result
 open AlgoStateBased
 open State
@@ -49,15 +48,15 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "IMK"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
 		nb_random_selections <- 0;
@@ -67,7 +66,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the reference valuation *)
+	(** Get the reference valuation *)
 	(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_reference_pval : PVal.pval =
@@ -102,7 +101,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		);
 		(* Check the pi0-compatibility *)
 		self#print_algo_message_newline Verbose_high ("Checking pi-compatibility:");
-		let compatible, incompatible = LinearConstraint.partition_pi0_compatible reference_pval#get_value p_constraint in
+		let _, incompatible = LinearConstraint.partition_pi0_compatible reference_pval#get_value p_constraint in
 		let is_pi0_incompatible = incompatible <> [] in
 		
 		(* If pi0-incompatible: select an inequality *)
@@ -306,7 +305,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
 	(*** NOTE: this function is redefined here ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method try_termination_at_initial_state : Result.imitator_result option =
+	method! try_termination_at_initial_state : Result.imitator_result option =
 		(* Retrieve the initial state *)
 		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
 
@@ -326,19 +325,19 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
+	(** Actions to perform when meeting a state that is on a loop: nothing to do for this algorithm, but can be defined in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_looping_state state_index = ()
+	method process_looping_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Should we process a pi-incompatible inequality? By default yes *)
+	(** Should we process a pi-incompatible inequality? By default yes *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_pi_incompatible_states () =
 		(* Print some information *)
@@ -347,7 +346,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when a pi-incompatible inequality is found. By default: add its negation to all previous states *)
+	(** Actions to perform when a pi-incompatible inequality is found. By default: add its negation to all previous states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_negated_incompatible_inequality negated_inequality =
 		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
@@ -362,7 +361,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -373,7 +372,7 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 	

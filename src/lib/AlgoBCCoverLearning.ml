@@ -18,7 +18,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
@@ -83,21 +82,12 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicat
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "BC (full coverage with learning-based abstraction)"
+	method! algorithm_name = "BC (full coverage with learning-based abstraction)"
 
-	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Safety redefinition *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** NOTE: safety redefinition: this cartography algorithm should NOT be parameterized by a method, as the method to be called on each point is statically chosen (it will be either EFsynth or PRP, depending on the abstraction) ***)
-	method set_algo_instance_function _ : unit =
-		raise (InternalError "Method 'set_algo_instance_function' should NOT be used in BCCoverlearning")*)
-
-			
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
 		(* The end *)
@@ -107,7 +97,7 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicat
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method call_point pval =
+	method! call_point _ =
 		(* Retrieve the current point *)
 		let current_point = self#get_current_point_option in
 

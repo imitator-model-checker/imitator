@@ -55,15 +55,15 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "PRP"
+	method! algorithm_name = "PRP"
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 
 		bad_state_found <- false;
@@ -159,7 +159,7 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
 	(*** TODO: factorize ***)
-	method add_a_new_state source_state_index combined_transition new_state =
+	method! add_a_new_state source_state_index combined_transition new_state =
 		(* Test pi0-compatibility *)
 		let pi0compatible = self#check_pi0compatibility new_state.px_constraint in
 
@@ -215,7 +215,7 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
 	(*** NOTE: this function is redefined here ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method try_termination_at_initial_state : Result.imitator_result option =
+	method! try_termination_at_initial_state : Result.imitator_result option =
 		(* Retrieve the initial state *)
 		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
 		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
@@ -257,15 +257,15 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method! process_deadlock_state _ = ()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Should we process a pi-incompatible inequality? *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_pi_incompatible_states () =
+	method! process_pi_incompatible_states () =
 		(* Only explore if no bad states found *)
 		let answer = not bad_state_found in
 		(* Print some information *)
@@ -275,9 +275,9 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when a pi-incompatible inequality is found. Add its negation to the accumulated good constraint. *)
+	(** Actions to perform when a pi-incompatible inequality is found. Add its negation to the accumulated good constraint. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_negated_incompatible_inequality negated_inequality =
+	method! process_negated_incompatible_inequality negated_inequality =
 		self#print_algo_message_newline Verbose_medium ("Adding the negation of a pi-incompatible inequality to Kgood.\n");
 
 		let negated_constraint = LinearConstraint.make_p_constraint [negated_inequality] in
@@ -294,13 +294,13 @@ class algoPRP (model : AbstractModel.abstract_model) (pval : PVal.pval) (state_p
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method! process_post_n (_ : State.state_index list) = ()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 
 		let result = if bad_state_found then(
 			(* Return Kbad *)

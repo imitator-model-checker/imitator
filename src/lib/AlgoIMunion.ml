@@ -18,11 +18,8 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open Ppl_ocaml
 open ImitatorUtilities
 open Exceptions
-open AbstractModel
 open Result
 open AlgoIMK
 open State
@@ -53,19 +50,17 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IMunion"
+	method! algorithm_name = "IMunion"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
-(* 		last_states <- []; *)
-
 		result <- LinearConstraint.false_p_nnconvex_constraint ();
 		
 		(* The end *)
@@ -73,9 +68,9 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)
+	(** Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index =
+	method! process_deadlock_state state_index =
 		self#print_algo_message_newline Verbose_low ("found a state with no successor");
 		
 		(* Get the state *)
@@ -90,9 +85,9 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state that is on a loop *)
+	(** Actions to perform when meeting a state that is on a loop *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_looping_state state_index =
+	method! process_looping_state state_index =
 		self#print_algo_message_newline Verbose_low ("found a state in a loop");
 		
 		(* Get the state *)
@@ -106,9 +101,9 @@ class algoIMunion (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 		
 		(* IMunion: return the disjunction of all constraints AND the current constraint, viz., the constraint of the first state (necessary because the states accumulated may have been restricted with some neg J since they were added to "result") *)
 

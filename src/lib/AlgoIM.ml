@@ -18,12 +18,9 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
-open AbstractModel
 open Result
-open AlgoStateBased
 open AlgoIMK
 open State
 
@@ -48,23 +45,23 @@ class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IMconvex"
+	method! algorithm_name = "IMconvex"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		(* The end *)
 		()
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -77,8 +74,7 @@ class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints…");
 		
 		(* Iterate on all states *)
-(* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
-		state_space#iterate_on_states (fun state_index abstract_state ->
+		state_space#iterate_on_states (fun _ abstract_state ->
 			(* Retrieve the px-constraint *)
 			let px_linear_constraint = abstract_state.px_constraint in
 			(* Project onto the parameters *)

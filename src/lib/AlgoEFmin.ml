@@ -18,13 +18,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open ImitatorUtilities
-open Exceptions
-open AbstractModel
-open Result
 open AlgoEFopt
-open Statistics
 
 
 
@@ -34,7 +28,7 @@ open Statistics
 (************************************************************)
 (************************************************************)
 class algoEFmin (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (self) inherit algoEFopt model state_predicate parameter_index as super
+	object (_) inherit algoEFopt model state_predicate parameter_index
 	
 	(************************************************************)
 	(* Class variables *)
@@ -44,13 +38,13 @@ class algoEFmin (model : AbstractModel.abstract_model) (state_predicate : Abstra
 	(*------------------------------------------------------------*)
 	(* Instantiating min/max *)
 	(*------------------------------------------------------------*)
-	(* Function to remove upper bounds (if minimum) or lower bounds (if maximum) *)
+	(** Method to remove upper bounds (if minimum) or lower bounds (if maximum) *)
 	method remove_bounds = LinearConstraint.p_grow_to_infinity_assign
 	
-	(* The closed operator (>= for minimization, and <= for maximization) *)
+	(** The closed operator (>= for minimization, and <= for maximization) *)
 	method closed_op = LinearConstraint.Op_ge
 	
-	(* Function to negate an inequality *)
+	(** Function to negate an inequality *)
 	method negate_inequality = LinearConstraint.negate_single_inequality_p_constraint
 	
 	
@@ -64,7 +58,7 @@ class algoEFmin (model : AbstractModel.abstract_model) (state_predicate : Abstra
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "EFmin"
 	

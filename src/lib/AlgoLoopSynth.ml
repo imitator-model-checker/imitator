@@ -51,7 +51,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
+	(** Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
 		(* Retrieve the model *)
@@ -76,9 +76,9 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		(*** NOTE: duplicate operation ***)
 		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
@@ -199,7 +199,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter synthesized_constraint *)
+	(** When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter synthesized_constraint *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_loop_constraint current_constraint =
 		(* Project onto the parameters *)
@@ -249,9 +249,9 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Detect whether a loop is accepting *)
+	(** Detect whether a loop is accepting *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method is_accepting scc =
+	method is_accepting _ =
 		(* Here, we do not care about 'acceptance' condition: therefore, a loop is always accepting *)
 		true
 
@@ -314,15 +314,15 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -333,7 +333,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Print some information *)
