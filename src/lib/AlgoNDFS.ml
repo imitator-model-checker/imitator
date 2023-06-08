@@ -291,7 +291,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 
 
 	(*** NOTE: this function was used in the inner part of some loops; also, it is identical to "cyclefound", and therefore used there for factoring purpose (ÉA, 2021/08) ***)
-	method private cyclefound_inner (termination_function : unit -> unit) (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
+	method private cyclefound_inner (termination_function : unit -> unit) (_ : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 		(* Get the property to check whether we are in synthesis or witness mode *)
 		let property = Input.get_property() in
 
