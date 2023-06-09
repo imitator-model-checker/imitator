@@ -156,6 +156,36 @@ The full class diagram of all algorithm classes (included distributed algorithms
 \newpage
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Testing}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Non-regression tests can be called using
+
+
+%------------------------------------------------------------
+\begin{terminal}
+python tests/test.py
+\end{terminal}
+%------------------------------------------------------------
+
+It is possible to call only a subset of the tests using the tag system.
+An example of command is:
+
+%------------------------------------------------------------
+\begin{terminal}
+python tests/test.py --filter="tags=mydesiredtag"
+\end{terminal}
+%------------------------------------------------------------
+
+\noindent{}where ``\texttt{mydesiredtag}'' represents the tag the tests should match to be called.
+
+The non-regression tests are defined in the file \texttt{tests/regression\_tests\_data.py}.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Licensing and Credits}
