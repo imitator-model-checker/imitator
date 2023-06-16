@@ -26,7 +26,7 @@ let version_string = "3.4-beta"
 
 let version_name = "Cheese Durian"
 
-(* Path ending with "/" *)
+(** Path ending with "/" *)
 let path_to_program =
 	(* Try to find the last occurrence of '/' in the string *)
 	try(
@@ -56,7 +56,7 @@ let dot_binary_name = "dot"
 (************************************************************)
 (************************************************************)
 
-(* Name for the global time clock in the input model *)
+(** Name for the global time clock in the input model *)
 let global_time_clock_name		= "global_time"
 
 
@@ -111,14 +111,14 @@ let guessed_nb_states_for_hashtable = 100
 (************************************************************)
 (************************************************************)
 
-(* Name of the observer automaton internal action *)
+(** Name of the observer automaton internal action *)
 let observer_nosync_name		= "nosync_obs"
 
 let observer_automaton_name		= "automatically_generated_observer"
 let observer_clock_name			= "automatically_generated_x_obs"
 
 
-(* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
+(** Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
 let special_reset_clock_name	= "special_0_clock"
 
 
@@ -128,7 +128,7 @@ let special_reset_clock_name	= "special_0_clock"
 (************************************************************)
 (************************************************************)
 
-(* Default step for the cartography algorithms *)
+(** Default step for the cartography algorithms *)
 let default_cartography_step	= NumConst.one
 
 (************************************************************)
