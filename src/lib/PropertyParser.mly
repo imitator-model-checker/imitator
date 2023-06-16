@@ -15,19 +15,15 @@
 %{
 open ParsingStructure;;
 open Exceptions;;
-open NumConst;;
-open ImitatorUtilities;;
 
 
-let parse_error s =
+let parse_error _ =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
 
-(* TODO: is it included twice ? *)
-let include_list = ref [];;
 
 (*
 let f (decl_l, aut_l, init_l, prop) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop);;
@@ -64,16 +60,15 @@ let resolve_property l =
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
-	CT_LOC
+	CT_LIST CT_LOC
 	CT_NEXT CT_NOT CT_NZCYCLE
 	CT_ONCE
-	CT_PATTERN CT_PROJECTRESULT CT_PRP CT_PRPC
-	CT_PROPERTY
-	CT_SEQUENCE CT_STEP CT_SYNTH
+	CT_PATTERN CT_PROJECTRESULT CT_PROPERTY CT_PRP CT_PRPC
+	CT_QUEUE
+	CT_SEQUENCE CT_STACK CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_VALID
 	CT_WIN CT_WITHIN
-  CT_LIST CT_STACK CT_QUEUE
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME

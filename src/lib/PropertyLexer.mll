@@ -12,7 +12,6 @@
 
 {
 open PropertyParser
-open Lexing
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
