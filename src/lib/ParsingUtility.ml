@@ -24,11 +24,9 @@ open Gc
 (* Internal modules *)
 (************************************************************)
 open Exceptions
-open AbstractModel
 open AbstractAlgorithm
 open OCamlUtilities
 open ImitatorUtilities
-open Result
 open Statistics
 
 
@@ -218,7 +216,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
 	
-	(** USELESS, even increases memory x-( **)
+	(*** USELESS, even increases memory x-( ***)
 	(* Gc.major (); *)
 
 
