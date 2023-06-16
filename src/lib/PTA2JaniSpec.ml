@@ -23,7 +23,6 @@ open AbstractModel
 open AbstractValue
 open DiscreteType
 open FunctionSig
-open Result
 
 (* TODO benjamin REFACTOR ALL TO USE the new JsonFormatter module *)
 
@@ -38,7 +37,7 @@ let jani_separator = ","
 let jani_version = "1"
 let jani_type = "sha"
 
-(* Jani boolean strings *)
+(** Jani boolean strings *)
 let jani_boolean_strings : customized_boolean_string = {
 	true_string   = "true";
 	false_string  = "false";
@@ -54,7 +53,7 @@ let jani_boolean_strings : customized_boolean_string = {
 	in_operator   = ""; (* useless *)
 }
 
-(* All Jani custom strings *)
+(** All Jani custom strings *)
 let jani_strings = {
     arithmetic_string = Constants.default_arithmetic_string_without_whitespace;
     boolean_string = jani_boolean_strings;
@@ -88,12 +87,12 @@ let json_struct str_properties =
 let json_array str_values =
     "[" ^ OCamlUtilities.string_of_array_of_string_with_sep_without_empty_strings jani_separator str_values ^ "]"
 
-let json_empty_array = "[]"
+(* let json_empty_array = "[]" *)
 
 (* Jani formats *)
 
-let jani_operator_dv =
-    json_property "op" (json_quoted "dv")
+(*let jani_operator_dv =
+    json_property "op" (json_quoted "dv")*)
 
 let jani_operator_av =
     json_property "op" (json_quoted "av")
@@ -106,14 +105,14 @@ let jani_binary_operator str_operator str_left str_right =
         json_property "right" str_right
     |]
 
-(* Format a Jani if-then-else operator *)
+(*(* Format a Jani if-then-else operator *)
 let jani_if_then_else str_condition str_then str_else =
     json_struct [|
         json_property "op" "ite";
         json_property "if" str_condition;
         json_property "then" str_then;
         json_property "else" str_else
-    |]
+    |]*)
 
 (* Format a Jani unary operator *)
 let jani_unary_operator str_operator str_expr =
@@ -128,11 +127,11 @@ let jani_expression str_expression =
         json_property "exp" str_expression
     |]
 
-let jani_named_expression str_name str_expression =
+(*let jani_named_expression str_name str_expression =
     json_struct [|
         json_property "name" str_name;
         json_property "exp" str_expression
-    |]
+    |]*)
 
 (* Format a Jani array value *)
 let jani_array_value str_values =
@@ -229,7 +228,7 @@ let rec string_of_var_type_discrete = function
     | Dt_weak ->
         raise (InternalError "An expression should have a determined type. Maybe something has failed before.")
 
-(* String of length constraint for Jani *)
+(*(* String of length constraint for Jani *)
 let rec string_of_length_constraint = function
     | Length_constraint_expression length_constraint_expr -> string_of_length_constraint_expression length_constraint_expr
     | Length_constraint length -> string_of_int length
@@ -237,7 +236,7 @@ let rec string_of_length_constraint = function
 (* String of length constraint expression for Jani *)
 and string_of_length_constraint_expression = function
     | Length_scalar_constraint constraint_name -> constraint_name
-    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint
+    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint*)
 
 (* String of int type constraint for Jani *)
 let string_of_int_type_constraint = function
@@ -262,9 +261,9 @@ let rec string_of_defined_type_constraint = function
         string_of_type_number_constraint type_number_constraint
     | Bool_constraint ->
         json_quoted "bool"
-    | Binary_constraint length_constraint ->
+    | Binary_constraint _(*length_constraint*) ->
         jani_datatype_ref "binary_word"
-    | Array_constraint (type_constraint, length_constraint) ->
+    | Array_constraint (type_constraint, _(*length_constraint*)) ->
         jani_compound_datatype_ref "array" (string_of_type_constraint type_constraint)
     | List_constraint type_constraint ->
         jani_compound_datatype_ref "list" (string_of_type_constraint type_constraint)
@@ -390,7 +389,7 @@ and string_of_discrete_boolean_expression variable_names = function
         string_of_comparison variable_names l_expr relop r_expr string_of_queue_expression
 
 
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	(*Done for jani, but without test*)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
 		let expr1 = (string_of_arithmetic_expression variable_names discrete_arithmetic_expression1) in
@@ -638,7 +637,7 @@ let strings_of_nonlinear_constraint variable_names (* nonlinear_constraint *) =
 (************************************************************)
 
 (* Add a header to the model *)
-let string_of_header model =
+let string_of_header _ =
     let options = Input.get_options () in
     json_property "jani-version" jani_version ^ jani_separator
     ^ json_property "name" (json_quoted options#model_file_name) ^ jani_separator
@@ -713,7 +712,7 @@ let string_of_custom_user_functions model =
 
         and string_of_instruction = function
 
-            | Local_decl ((variable_name, _), discrete_type, init_expr) ->
+            | Local_decl ((variable_name, _), _(*discrete_type*), _(*init_expr*)) ->
                 print_warning ("Local declaration of `" ^ variable_name ^ "` in function `" ^ fun_def.name ^ "` are not supported by Jani and will not be translated.");
                 ""
 
@@ -722,7 +721,7 @@ let string_of_custom_user_functions model =
                 print_warning ("Assignment found in function `" ^ fun_def.name ^ "`. Assignment are not supported by Jani and will not be translated.");
                 ""
 
-            | Instruction expr ->
+            | Instruction _ ->
                 print_warning ("Instruction found in function `" ^ fun_def.name ^ "`. Instructions are not supported by Jani and will not be translated.");
                 ""
 
@@ -966,12 +965,12 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
     invariant
 
 (* Convert the guard of an edge into a string *)
-let string_of_guard model actions_and_nb_automata model_variable_names transition_guard =
+let string_of_guard model actions_and_nb_automata _(*model_variable_names*) transition_guard =
     let guard = string_of_guard_or_invariant actions_and_nb_automata model.variable_names (transition_guard) in
     (* Guard *)
     guard
 
-let string_of_clock_rate model actions_and_nb_automata automaton_index location_index =
+let string_of_clock_rate model _(*actions_and_nb_automata*) automaton_index location_index =
 	let rec clock_is_1rate clock_index flow_list =
 		match flow_list with
 		| [] -> true

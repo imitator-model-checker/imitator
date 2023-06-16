@@ -38,13 +38,14 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Flag to force under-approximation *)
+
+	(** Flag to force under-approximation *)
 	val mutable force_underapproximation = false
 
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "NZCUB"
 	
@@ -55,9 +56,9 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 
 		(* The end *)
@@ -81,9 +82,9 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when found a loop (after updating the state space) *)
+	(** Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_constraint loop_starting_point_state_index scc loop_px_constraint =
+	method! process_loop_constraint _(*loop_starting_point_state_index*) scc loop_px_constraint =
 (*		(* Compute the SCC (after the transitions were updated, of course) *)
 		self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int loop_starting_point_state_index) ^ "…");
 		let scc = StateSpace.reconstruct_scc state_space loop_starting_point_state_index in*)
@@ -137,7 +138,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 				
 				(* Find the 'b' (which is that of the target) *)
 				(*** NOTE: quite expensive, but much much less than computing resets (or any polyhedra operation) so we don't optimize here ***)
-				let _ , b = List.find (fun (state_index , b) -> state_index  = target_index) states_and_b in
+				let _ , b = List.find (fun (state_index , _) -> state_index  = target_index) states_and_b in
 				
 				(* Combine! *)
 				source_index, combined_transition, b, resets , target_index
@@ -219,7 +220,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."

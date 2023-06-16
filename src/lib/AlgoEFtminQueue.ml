@@ -26,7 +26,6 @@ open AbstractAlgorithm
 open AbstractProperty
 open Result
 open AlgoStateBased
-open Statistics
 open State
 
 
@@ -49,11 +48,11 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Parameter valuations in all |P| dimensions for which the target is reached *)
+	(** Parameter valuations in all |P| dimensions for which the target is reached *)
 	val mutable constraint_valuations : LinearConstraint.p_nnconvex_constraint option = None
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "EF-opttime-PQ"
 
@@ -61,7 +60,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 	(* Variables *)
 	(*------------------------------------------------------------*)
 	
-    (* Epsilon value for "global_time > 0" and to subtract from best-worst-case time, since a small value gets added to floats *)
+    (** Epsilon value for "global_time > 0" and to subtract from best-worst-case time, since a small value gets added to floats *)
     (* NB: For best-worst-case, epsilon gets subtracted twice in the case global_time < 5 *)
     (* NB: Don't make epsilon too small, because that causes weird behavior... *)
 	val epsilon = 0.0001
@@ -95,7 +94,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Returns the variable index for global_time *)
+	(** Returns the variable index for global_time *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private get_global_time =
         let rec find_global_time clocks = match clocks with
@@ -207,7 +206,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
                 parse_time_constraint body;
             )
 
-            | _::body -> (
+            | _::_ -> (
 		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
                 raise (InternalError ("Unable to parse constraint d"));
             );
@@ -293,7 +292,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
                 parse_time_constraint body;
             )
 
-            | _::body -> (
+            | _::_ -> (
 		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
                 raise (InternalError ("Unable to parse constraint d"));
             );
@@ -304,7 +303,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 
 
 
-	(* Obtain the minimum time from a state index *)
+	(** Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
         let source_state = state_space#get_state state_index in
         let source_constraint = source_state.px_constraint in
@@ -313,7 +312,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 		self#time_constr_to_val pxd_constr
 
 		
-	(* Obtain the maximum time from a state index *)
+	(** Obtain the maximum time from a state index *)
 	method private state_index_to_max_time state_index =
         let source_state = state_space#get_state state_index in
         let source_constraint = source_state.px_constraint in
@@ -388,7 +387,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the minimal reachability algorithm [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method explore_layer_bfs init_state_index =
+	method! explore_layer_bfs init_state_index =
 	
 
 		(* Statistics *)
@@ -473,7 +472,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
 
 		let rec pq_list_of_states pq = match pq with
             | [] -> [];
-            | (p,s)::body  -> List.append [s] (pq_list_of_states body);
+            | (_,s)::body  -> List.append [s] (pq_list_of_states body);
         in
 
 
@@ -621,7 +620,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (state_predicate : 
             else (
                 (* Check if this is the target location *)
                 let state = state_space#get_state source_id in
-                let source_location, source_constraint = state.global_location, state.px_constraint in
+                let _(*source_location*), source_constraint = state.global_location, state.px_constraint in
                 if self#is_target_state state then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
@@ -840,7 +839,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
 		(* Nothing to do *)
@@ -885,13 +884,13 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

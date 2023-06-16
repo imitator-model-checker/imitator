@@ -18,12 +18,10 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoStateBased
 open AlgoIMK
 
 
@@ -39,7 +37,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Non-necessarily convex parameter constraint *)
+	(** Non-necessarily convex parameter constraint *)
 	val mutable k_result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint ()
 
 	
@@ -49,15 +47,15 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM"
+	method! algorithm_name = "IM"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		(* The end *)
 		()
@@ -71,7 +69,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(*------------------------------------------------------------*)
 	(* side effect: add the negation of the p_constraint to all computed states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method check_pi0compatibility (constr : LinearConstraint.px_linear_constraint) : bool =
+	method! check_pi0compatibility (constr : LinearConstraint.px_linear_constraint) : bool =
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = self#get_reference_pval in
 		
@@ -141,9 +139,9 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		

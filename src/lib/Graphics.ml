@@ -28,7 +28,6 @@ open AbstractModel
 open AbstractProperty
 open AbstractValue
 open StateSpace
-open Result
 open State
 
 
@@ -54,7 +53,7 @@ let bad_float_of_num_const = NumConst.to_float
 	| Failure msg -> raise (InternalError ("Oops…! Error when converting a NumConst to a float using float_of_string. Error: '" ^ msg ^ "'. NumConst is '" ^ (NumConst.string_of_numconst n) ^ "'"))*)
 
 
-(* Convert a pair of NumConst.t into a pair for plotutils *)
+(** Convert a pair of NumConst.t into a pair for plotutils *)
 let draw_x_y x y =
 	(* Print x *)
 	(string_of_float (bad_float_of_num_const x))
@@ -774,7 +773,7 @@ let get_flow
 
 (* This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
 (*** TODO: draw differently the impossible part of impossible concrete runs ***)
-let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
+let draw_run_generic (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
 	(* Retrieve model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -911,7 +910,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							let flow = get_flow model !previous_location variable_index in
 							
 (*							(*** TODO: urgency / stopwatches! ***)
-							let stopwatches = model.stopwatches (blublu) in 
+							let stopwatches = model.stopwatches (TODO) in
 							
 							let flow =
 								(if *)
@@ -1049,12 +1048,12 @@ let draw_impossible_concrete_run (impossible_concrete_run : StateSpace.impossibl
 		(List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) impossible_concrete_run.steps)
 		(List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step) -> impossible_concrete_step.time , impossible_concrete_step.target) impossible_concrete_run.impossible_steps)
 	in
-	draw_run_generic impossible_concrete_run.p_valuation impossible_concrete_run.initial_state abstract_steps file_prefix
+	draw_run_generic impossible_concrete_run.initial_state abstract_steps file_prefix
 	
 let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
 	(* Transforms steps to abstract pairs *)
 	let abstract_steps = List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) concrete_run.steps in
-	draw_run_generic concrete_run.p_valuation concrete_run.initial_state abstract_steps file_prefix
+	draw_run_generic concrete_run.initial_state abstract_steps file_prefix
 
 (*
 let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
@@ -1608,12 +1607,12 @@ let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : st
 		) "" state_indexes
 		)
 
-		(** HANDLE INITIAL STATE *)
+		(* HANDLE INITIAL STATE *)
 		^ "\n\n/* Initial state */"
 		^ "\n  s_init [shape=none, label=\"init\"];"
 		^ "\n  s_init -> s_" ^ (string_of_int initial_state_index) ^ ";"
 
-		(** NOW HANDLE STATES *)
+		(* NOW HANDLE STATES *)
 		^ "\n\n/* Colors */\n"
 
 		(*** NOTE: here again, we (might) lose a little efficiency to rather order by increasing state id ***)

@@ -17,13 +17,11 @@ open Exceptions
 open Constants
 open OCamlUtilities
 open ImitatorUtilities
-open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
 open DiscreteType
 open AbstractValue
 open FunctionSig
-open Result
 
 
 (************************************************************)
@@ -94,7 +92,7 @@ let string_of_var_type = function
 	| Var_type_discrete var_type_discrete -> string_of_var_type_discrete var_type_discrete
 	| Var_type_parameter -> "parameter"
 
-(* Customized string of length constraint for UPPAAL *)
+(*(* Customized string of length constraint for UPPAAL *)
 let rec string_of_length_constraint = function
     | Length_constraint_expression length_constraint_expr -> string_of_length_constraint_expression length_constraint_expr
     | Length_constraint length -> string_of_int length
@@ -102,7 +100,7 @@ let rec string_of_length_constraint = function
 (* Customized string of length constraint expression for UPPAAL *)
 and string_of_length_constraint_expression = function
     | Length_scalar_constraint constraint_name -> constraint_name
-    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint
+    | Length_plus_constraint (constraint_name, length_constraint) -> constraint_name ^ " + " ^ string_of_length_constraint length_constraint*)
 
 (* Customized string of int type constraint for UPPAAL *)
 let string_of_int_type_constraint = function
@@ -127,9 +125,9 @@ let rec string_of_defined_type_constraint = function
         string_of_type_number_constraint type_number_constraint
     | Bool_constraint ->
         "bool"
-    | Binary_constraint length_constraint ->
+    | Binary_constraint _ ->
         "int"
-    | Array_constraint (type_constraint, length_constraint) ->
+    | Array_constraint (type_constraint, _) ->
         string_of_type_constraint type_constraint ^ "[]"
     | List_constraint type_constraint ->
         string_of_type_constraint type_constraint ^ "[]"
@@ -242,7 +240,7 @@ let string_of_if str_condition_expr str_then_bloc str_else_bloc =
 (************************************************************)
 
 (* Add a header to the model *)
-let string_of_header model =
+let string_of_header _ =
 	"<nta>"
 
 
@@ -449,7 +447,7 @@ let string_of_lognot_function =
     ^ "}\n\n"
 
 (* List of function declarations in Uppaal *)
-let string_of_builtin_functions model =
+let string_of_builtin_functions _ =
     "/* Functions declarations */\n\n"
     ^ string_of_shift_left_function
     ^ string_of_shift_right_function
@@ -589,7 +587,7 @@ let string_of_complex_updates model =
     (* Convert each complex update into UPPAAL function *)
     let str_complex_updates_functions =
 
-        List.map (fun (automaton_index, location_index, action_index, transition) ->
+        List.map (fun (automaton_index, _(*location_index*), action_index, transition) ->
 
             let _, update_seq_code_bloc = transition.updates in
             let is_complex = not (only_assignment_in_update update_seq_code_bloc) in
@@ -676,7 +674,7 @@ let get_uppaal_label_tag_string kind x_coord_str y_coord_str content =
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
 (** Convert a guard or an invariant (according to kind) into a string *)
-let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str = function
+let string_of_guard_or_invariant kind _(*actions_and_nb_automata*) variable_names _(*x_coord_str*) _(*y_coord_str*) = function
 	(* True guard = no guard *)
 	| True_guard -> ""
 
@@ -709,10 +707,6 @@ let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_c
         ) in
         content
 
-(** Convert a guard into a string *)
-let string_of_guard =
-    string_of_guard_or_invariant "guard"
-
 (** Convert an invariant into a string *)
 let string_of_invariant =
     string_of_guard_or_invariant "invariant"
@@ -725,9 +719,9 @@ let uppaal_string_of_guard_or_invariant kind actions_and_nb_automata variable_na
 let uppaal_string_of_guard =
     uppaal_string_of_guard_or_invariant "guard"
 
-(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""invariant\"">content</label> *)
+(*(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""invariant\"">content</label> *)
 let uppaal_string_of_invariant =
-    uppaal_string_of_guard_or_invariant "invariant"
+    uppaal_string_of_guard_or_invariant "invariant"*)
 
 
 
@@ -738,7 +732,7 @@ let uppaal_string_of_invariant =
 
 
 (* Creates a unique id for each location *)
-let id_of_location model automaton_index location_index =
+let id_of_location _ automaton_index location_index =
 	(* Return an id of the form id_pta0_loc0 *)
 	"id_pta" ^ (string_of_int automaton_index) ^ "_loc" ^ (string_of_int location_index ^ "")
 
@@ -1042,7 +1036,7 @@ let string_of_system model =
 (** Model *)
 (************************************************************)
 
-(* Convert the model into a string *)
+(** Convert the model into a string *)
 let string_of_model model =
 	(* Create a list (action_index , nb_automata for this action), needed for strong broadcast encoding *)
 	let actions_and_nb_automata = List.map (fun action_index ->

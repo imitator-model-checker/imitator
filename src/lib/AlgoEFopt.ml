@@ -18,11 +18,9 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
-open AbstractProperty
 open Result
 open AlgoStateBased
 open Statistics
@@ -42,7 +40,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	(************************************************************)
 	
 	(*------------------------------------------------------------*)
-	(* Class "parameters" to be initialized *)
+	(** Class "parameters" to be initialized *)
 	(*------------------------------------------------------------*)
 	val mutable synthesize_valuations : bool option = None
 
@@ -78,7 +76,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	(* Counters *)
 	(*------------------------------------------------------------*)
 	
-	(* State discarded because of a not interesting parameter constraint *)
+	(** State discarded because of a not interesting parameter constraint *)
 	val counter_discarded_state = create_discrete_counter_and_register "EFopt:state discarded" PPL_counter Verbose_low
 
 	
@@ -88,15 +86,15 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	(*------------------------------------------------------------*)
 	(* Instantiating min/max *)
 	(*------------------------------------------------------------*)
-	(* Function to remove upper bounds (if minimum) or lower bounds (if maximum) *)
+	(** Method to remove upper bounds (if minimum) or lower bounds (if maximum) *)
 	method virtual remove_bounds : Automaton.parameter_index list -> Automaton.parameter_index list -> LinearConstraint.p_linear_constraint -> unit
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Function to negate an inequality (to be defined in subclasses) *)
+	(** Method to negate an inequality (to be defined in subclasses) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
 
-	(* The closed operator (>= for minimization, and <= for maximization) *)
+	(** The closed operator (>= for minimization, and <= for maximization) *)
 	method virtual closed_op : LinearConstraint.op
 
 	(* Various strings *)
@@ -104,10 +102,10 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	method virtual str_upper_lower : string
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 
 		(* Timing info *)
@@ -117,7 +115,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the `synthesize_valuations` flag (must be done right after creating the algorithm object!) *)
+	(** Set the `synthesize_valuations` flag (must be done right after creating the algorithm object!) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method set_synthesize_valuations flag =
 		synthesize_valuations <- Some flag
@@ -268,7 +266,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 		);
 
 		(* Retrieve the constraint *)
-		let state_location, px_constraint = state.global_location, state.px_constraint in
+		let _, px_constraint = state.global_location, state.px_constraint in
 		
 		(* Check if an optimum constraint was defined *)
 		match current_optimum with
@@ -501,15 +499,15 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (state_predicate 
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+	(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

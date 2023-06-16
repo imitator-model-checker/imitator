@@ -17,11 +17,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open ImitatorUtilities
-open Exceptions
-open AbstractModel
-open AbstractProperty
 open AlgoLoopSynth
 
 
@@ -31,14 +26,14 @@ open AlgoLoopSynth
 (************************************************************)
 (************************************************************)
 class algoGeneralizedAccLoopSynth (model : AbstractModel.abstract_model) (state_predicate_list : AbstractProperty.state_predicate list) =
-	object (self) inherit algoLoopSynth model as super
+	object (_(*self*)) inherit algoLoopSynth model (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "Cycle"
 	
@@ -48,9 +43,9 @@ class algoGeneralizedAccLoopSynth (model : AbstractModel.abstract_model) (state_
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Detect whether a cycle is accepting *)
+	(** Detect whether a cycle is accepting *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method is_accepting scc =
+	method! is_accepting scc =
 		(* Accepting if each state predicate is matched along the SCC *)
 		List.for_all (fun state_predicate ->
 			(* Accepting if at least one state in the SCC matches the state predicate *)

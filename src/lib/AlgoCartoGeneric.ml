@@ -23,11 +23,9 @@ open ImitatorUtilities
 open Exceptions
 open Statistics
 open AbstractModel
-open AbstractProperty
 open Result
 open AlgoGeneric
 open State
-open StateSpace
 
 
 
@@ -78,10 +76,10 @@ exception Limit_detected of limit_reached
 (* Internal exceptions *)
 (************************************************************)
 (************************************************************)
-(* To stop a loop when a point is found *)
+(** Exception to stop a loop when a point is found *)
 exception Found_point of PVal.pval
 
-(* To stop a loop when a point is found or there is no more point *)
+(** Exception to stop a loop when a point is found or there is no more point *)
 exception Stop_loop of more_points
 
 
@@ -217,7 +215,7 @@ let print_warnings_limit_for = function
 (************************************************************)
 (************************************************************)
 class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoGeneric model as super
+	object (self) inherit algoGeneric model (*as super*)
 	
 	
 	(************************************************************)
@@ -281,7 +279,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : Hype
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Return the current_point; raises InternalError if current_point was not initialized *)
+	(** Return the current_point; raises InternalError if current_point was not initialized *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_current_point_option =
 		match current_point with
@@ -878,7 +876,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : Hype
 		current_algo_instance <- algo_instance_function pval;
 		let imitator_result : imitator_result = current_algo_instance#run() in
 
-		(** Create auxiliary files with the proper file prefix, if requested *)
+		(* Create auxiliary files with the proper file prefix, if requested *)
 		self#create_auxiliary_files imitator_result;
 
 		(* Get the verbose mode back *)

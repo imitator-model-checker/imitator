@@ -18,15 +18,10 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
-open AbstractModel
-open AbstractProperty
 open Result
 open AlgoStateBased
-open Statistics
-open State
 
 
 
@@ -37,7 +32,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoValid (model : AbstractModel.abstract_model) =
-	object (self) inherit algoStateBased model as super
+	object (self) inherit algoStateBased model
 	
 	(************************************************************)
 	(* Class variables *)
@@ -61,14 +56,14 @@ class algoValid (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Simple Boolean denoting whether we should abort if the initial state is unsatisfiable (basically, we should always abort, except for Validity-synthesis) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method abort_if_unsatisfiable_initial_state : bool = false
+	method! abort_if_unsatisfiable_initial_state : bool = false
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
 	(*** NOTE: this function is overridden here ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method try_termination_at_initial_state : Result.imitator_result option =
+	method! try_termination_at_initial_state : Result.imitator_result option =
 
 		(* Terminate in any case *)
 
@@ -101,20 +96,20 @@ class algoValid (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state source_state_index combined_transition new_state =
+	method add_a_new_state _ _ _ =
 		raise (InternalError "Function AlgoValid:add_a_new_state should never be called")
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()
+	method process_deadlock_state _ = ()
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) = ()
+	method process_post_n (_ : State.state_index list) = ()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

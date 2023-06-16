@@ -15,7 +15,6 @@
 
 open OCamlUtilities
 open Exceptions
-open Result
 open DiscreteExpressions
 open AbstractModel
 open AbstractProperty
@@ -132,7 +131,7 @@ let compute_flows_fun (location : DiscreteState.global_location) : (Automaton.cl
 	let flows_hashtable, non_1_flow = compute_flows_gen location in
 
 	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
-	if (not non_1_flow) then (fun clock_id -> NumConst.one) else (
+	if (not non_1_flow) then (fun _ -> NumConst.one) else (
 		(* Return the functional view *)
 		(fun clock_id ->
 			(* Try to get the clock explicit flow *)
@@ -158,11 +157,8 @@ let string_of_accepting	= "accepting"
 (************************************************************)
 (** JSON *)
 (************************************************************)
-let json_NULL	= "null" (*** NOTE: no quotes ***)
 let json_TRUE	= "True"
 let json_FALSE	= "False"
-
-let json_of_string s = "\"" ^ s ^ "\""
 
 let json_escape_ampersand str =
 	(Str.global_replace (Str.regexp "\n") (" ")
@@ -170,9 +166,10 @@ let json_escape_ampersand str =
 	)
 
 (************************************************************)
-(** Parameter valuation (PVal.pval) *)
+(* Parameter valuation (PVal.pval) *)
 (************************************************************)
-(* Convert a parameter valuation (PVal.pval) into a string *)
+
+(** Convert a parameter valuation (PVal.pval) into a string *)
 let string_of_pval model pval =
 	"  " ^ (
 	string_of_list_of_string_with_sep "\n& " (
@@ -184,7 +181,7 @@ let string_of_pval model pval =
 	)
 	)
 
-(* Convert a parameter valuation (PVal.pval) into a JSON-like string *)
+(** Convert a parameter valuation (PVal.pval) into a JSON-like string *)
 let json_of_pval model pval =
 	(* Hack for empty model *)
 	if model.nb_parameters = 0 then
@@ -269,7 +266,7 @@ let footer = "\n"
 (************************************************************)
 
 (* Convert a var_type_discrete into a string *)
-let string_of_var_type_discrete = DiscreteType.string_of_var_type_discrete
+(* let string_of_var_type_discrete = DiscreteType.string_of_var_type_discrete *)
 
 (* Convert a var_type into a string *)
 let string_of_var_type = DiscreteType.string_of_var_type
@@ -341,7 +338,7 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
     and string_of_instruction level instruction =
 
         (* Create tabs according to level *)
-        let tabs, tabs_1  = OCamlUtilities.string_n_times level "  ", OCamlUtilities.string_n_times (level + 1) "  " in
+        let tabs, _  = OCamlUtilities.string_n_times level "  ", OCamlUtilities.string_n_times (level + 1) "  " in
 
         match instruction with
         | Local_decl ((variable_name, _), discrete_type, init_expr) ->
@@ -372,7 +369,7 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
             (* Get string of else bloc if defined *)
             let str_else_bloc =
                 match else_bloc_opt with
-                | Some else_bloc ->
+                | Some _ ->
                     tabs ^ "else\n" ^ string_of_seq_code_bloc (level + 1) then_bloc ^ "\n"
                 | None -> ""
             in
@@ -567,8 +564,8 @@ let json_of_action model (action_index : Automaton.action_index) =
 	| Action_type_nosync -> "(silent)"
 
 
-(** generic template for converting clock updates into string *)
-let string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep =
+(*(** generic template for converting clock updates into string *)
+let string_of_clock_updates_template _(*variable_names*) clock_updates wrap_reset wrap_expr sep =
 	match clock_updates with
 		| No_update -> ""
 		| Resets list_of_clocks ->
@@ -578,16 +575,16 @@ let string_of_clock_updates_template variable_names clock_updates wrap_reset wra
 		| Updates list_of_clocks_lt ->
 			string_of_list_of_string_with_sep sep (List.map (fun (variable_index, linear_term) ->
 				wrap_expr variable_index linear_term
-			) list_of_clocks_lt)
+			) list_of_clocks_lt)*)
 
-(** Convert a clock update into a string *)
+(*(** Convert a clock update into a string *)
 let string_of_clock_updates variable_names clock_updates =
 	let sep = ", " in
 	let wrap_reset variable_index =  (variable_names variable_index) ^ " := 0" in
 	let wrap_expr variable_index linear_term = (variable_names variable_index)
 			^ " := "
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names linear_term) in
-	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep
+	string_of_clock_updates_template variable_names clock_updates wrap_reset wrap_expr sep*)
 
 let customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type =
     DiscreteExpressions.customized_string_of_scalar_or_index_update_type customized_string variable_names scalar_or_index_update_type
@@ -649,9 +646,9 @@ let json_of_seq_code_bloc variable_names seq_code_bloc =
     JsonFormatter.Json_struct (List.map json_of_instruction seq_code_bloc)
 
 
-(** Return if there is no clock updates *)
+(*(** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
-	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
+	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []*)
 
 (* Convert a transition into a string *)
 let string_of_transition model automaton_index (transition : transition) =
@@ -845,67 +842,6 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_old_initial_state model =
-	(* Print some information *)
-(* 	print_message Verbose_total "Entering `ModelPrinter.string_of_initial_state`…"; *)
-
-	(* Header of initial state *)
-	"\n"
-	^ "\n" ^ "(************************************************************)"
-	^ "\n" ^ "(* Initial state *)"
-	^ "\n" ^ "(************************************************************)"
-	^ "\n" ^ ""
-	^ "\n" ^ "init := True"
-
-	(* Initial location *)
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n" ^ "\t(* Initial location *)"
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^
-	(*** WARNING: Do not print the observer ***)
-	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
-	in
-
-	(* Handle all (other) PTA *)
-	let inital_global_location  = model.initial_location in
-	let initial_automata = List.map
-	(fun automaton_index ->
-		(* Finding the initial location for this automaton *)
-		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
-		(* '& loc[pta] = location' *)
-		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
-	) pta_without_obs
-	in string_of_list_of_string initial_automata
-
-	(* Initial discrete assignments *)
-	^ "\n" ^ ""
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n" ^ "\t(* Initial discrete assignments *)"
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^
-	let initial_discrete = List.map
-	(fun discrete_index ->
-		(* Finding the initial value for this discrete *)
-		let initial_value = DiscreteState.get_discrete_value inital_global_location discrete_index in
-		(* '& var = val' *)
-		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (AbstractValue.string_of_value initial_value)
-	) model.discrete
-	in string_of_list_of_string initial_discrete
-
-	(* Initial constraint *)
-	^ "\n" ^ ""
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n" ^ "\t(* Initial constraint *)"
-	^ "\n" ^ "\t(*------------------------------------------------------------*)"
-	^ "\n\t & " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)
-
-	(* Footer of initial state *)
-	^ "\n" ^ ""
-	^ "\n" ^ ";"
-
-(************************************************************)
-(** New initial state since version 3.1 *)
-(************************************************************)
 let string_of_initial_state model =
 	(* Header of initial state *)
 	"\n"
@@ -1080,16 +1016,16 @@ let string_of_abstract_property model property =
 		(* Cycles *)
 		(*------------------------------------------------------------*)
 		
-		(** Accepting infinite-run (cycle) through a state predicate *)
+		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Cycle_through state_predicate ->
 			if state_predicate = (State_predicate_term (State_predicate_factor (Simple_predicate State_predicate_true))) then "Cycle"
 			else "CycleThrough(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
-		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Cycle_through_generalized state_predicate_list ->
 			"CycleThrough(" ^ (string_of_list_of_string_with_sep " , " (List.map (string_of_state_predicate model) state_predicate_list)) ^ ")"
 		
-		(** Infinite-run (cycle) with non-Zeno assumption *)
+		(* Infinite-run (cycle) with non-Zeno assumption *)
 		| NZ_Cycle -> "NZCycle"
 		
 		
@@ -1126,23 +1062,23 @@ let string_of_abstract_property model property =
 		| Cover_cartography (hyper_rectangle, step) ->
 			"BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 
-		(** Cover the whole cartography using learning-based abstractions *)
+		(* Cover the whole cartography using learning-based abstractions *)
 		| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			"BClearn(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
-		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Shuffle_cartography (hyper_rectangle, step) ->
 			"BCshuffle(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
-		(** Look for the border using the cartography*)
+		(* Look for the border using the cartography*)
 		| Border_cartography (hyper_rectangle, step) ->
 			"BCborder(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
-		(** Randomly pick up values for a given number of iterations *)
+		(* Randomly pick up values for a given number of iterations *)
 		| Random_cartography (hyper_rectangle, nb, step) ->
 			"BCrandom(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
-		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 		| RandomSeq_cartography (hyper_rectangle, nb, step) ->
 			"BCrandomseq(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 

@@ -21,7 +21,6 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
-open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
 open Result
@@ -35,14 +34,14 @@ open AlgoEFgen
 (************************************************************)
 (************************************************************)
 class algoEF (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEFgen model state_predicate as super
+	object (self) inherit algoEFgen model state_predicate (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "EF"
 	
@@ -53,7 +52,7 @@ class algoEF (model : AbstractModel.abstract_model) (state_predicate : AbstractP
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Print some information *)
@@ -104,13 +103,6 @@ class algoEF (model : AbstractModel.abstract_model) (state_predicate : AbstractP
 			| Some status -> status
 		in
 
-(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in*)
-		
 		(* Branching between Witness/Synthesis and Exemplification *)
 		if abstract_property.synthesis_type = Exemplification then(
 			(* Return the result *)

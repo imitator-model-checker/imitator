@@ -70,7 +70,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "Parametric deadlock-freeness checking"
+	method! algorithm_name = "Parametric deadlock-freeness checking"
 	
 	
 	
@@ -81,7 +81,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method! initialize_variables =
 		super#initialize_variables;
 		
 		self#print_algo_message Verbose_low "Initializing variables…";
@@ -107,7 +107,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 		
 		(* Get the location and the constraint of s *)
 		let state : state = state_space#get_state state_index in
-		let s_location, s_constraint = state.global_location, state.px_constraint in
+		let _, s_constraint = state.global_location, state.px_constraint in
 		
 		(* For all state s' in the successors of s *)
 		List.iter (fun (combined_transition, state_index') ->
@@ -193,7 +193,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (post_n : State.state_index list) =
+	method! process_post_n (post_n : State.state_index list) =
 		
 		self#print_algo_message Verbose_medium "Entering process_post_n";
 		
@@ -227,7 +227,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method check_termination_at_post_n =
+	method! check_termination_at_post_n =
 		(* Print some information *)
 		self#print_algo_message Verbose_high ("Entering check_termination_at_post_n…");
 
@@ -475,7 +475,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method! compute_result =
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);

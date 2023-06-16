@@ -37,7 +37,7 @@ open Statistics
 let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
 	| True_guard -> LinearConstraint.pxd_true_constraint()
 	| False_guard -> LinearConstraint.pxd_false_constraint()
-	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+	| Discrete_guard _ -> LinearConstraint.pxd_true_constraint()
 	| Continuous_guard continuous_guard -> continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
@@ -89,7 +89,7 @@ let filter_upperbound_by_clock clock_index tuple_inequalities_s0 =
 
 	for i = 0 to length -1
 	do 
-		let (clock_index_2, operator, parametric_linear_term) = (List.nth tuple_inequalities_s0 i) in 
+		let (clock_index_2, operator, _) = (List.nth tuple_inequalities_s0 i) in
 
 		if ( (clock_index = clock_index_2) && ( operator = LinearConstraint.Op_l || operator = LinearConstraint.Op_le || operator = LinearConstraint.Op_eq ) )
 		then 
@@ -278,7 +278,7 @@ let isContraintConflictsParametersConstraints2 con p_cons =
 
 
 
-(*Check cub_contraint all conflict with parameters_constraints - use for p and p*)
+(*(*Check cub_contraint all conflict with parameters_constraints - use for p and p*)
 let isContraintAllConflictsParametersConstraints con p_cons = 
 	let disjunction_cons = disjunction_constraints p_cons in
 	let check = ref true in
@@ -339,7 +339,7 @@ let isContraintAllConflictsParametersConstraints2 con p_cons =
 			);
 	) disjunction_cons;
 	!check
-
+*)
 
 
 
@@ -733,14 +733,14 @@ let tuple2pxd_constraint (clock_index, op, linear_term) =
 
 let create_x_ge_zero clock_index = (clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)
 
-
+(*
 let get_all_clocks_ge_zero_comstraint model = 
 	let ls = ref [] in
 	List.iter (fun clock_index ->
 		ls := !ls@[tuple2pxd_constraint (create_x_ge_zero clock_index)];
 	) model.clocks_without_special_reset_clock;
 	let cons = LinearConstraint.pxd_intersection !ls in
-	cons
+	cons*)
 
 
 let get_all_clocks_ge_zero_comstraint2 clock_index model = 
@@ -797,8 +797,6 @@ let check_cub model =
 								
 	                    		(*print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));	*)	
 
-	                        	(** WORK HERE **)
-
 	                        	let invariant2 = model.invariants automaton_index target_location_index in
 
 	                        	(*
@@ -817,7 +815,7 @@ let check_cub model =
 	                        	let clock_updates = match clock_updates with
 	                        						  No_potential_update -> []
 													| Potential_resets clock_update -> clock_update
-													| Potential_updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
+													| Potential_updates _ -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
 
 	                			let (result, inequalities) = cub_check_2 model (continuous_part_of_guard invariant1) (continuous_part_of_guard guard) (continuous_part_of_guard invariant2) clock_updates in
@@ -908,9 +906,9 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 		let ls_tup_ineq_s0 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s0) in
 		let ls_tup_ineq_t 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_t) in
 		let ls_tup_ineq_s1 	= (filter_upperbound_by_clock_3 clock_index tuple_inequalities_s1) in
-		List.iter (fun (clock_index_s0, op_s0, linear_term_s0) -> 
-			List.iter (fun (clock_index_t, op_t, linear_term_t) -> 
-				List.iter (fun (clock_index_s1, op_s1, linear_term_s1) -> 
+		List.iter (fun (_(*clock_index_s0*), op_s0, linear_term_s0) ->
+			List.iter (fun (_(*clock_index_t*), op_t, linear_term_t) ->
+				List.iter (fun (_(*clock_index_s1*), op_s1, linear_term_s1) ->
 					match (op_s0, linear_term_s0), (op_t, linear_term_t), (op_s1, linear_term_s1) with
 					|(LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _), (LinearConstraint.Op_ge, _)	->	
 						(*Case 1*)
@@ -1230,7 +1228,7 @@ let cub_tran model submodels count_m
 			clocks_constraints parameters_constraints
 			(clock_index_s0 , op_s0, linear_term_s0) (clock_index_t, op_t, linear_term_t) (clock_index_s1, op_s1, linear_term_s1) 
 			(*for printing - not important*)
-			submodel = 
+			_(*submodel*) =
 
 	print_message Verbose_total ("Entering cub_tran; converting constraints…" ); 
 	
@@ -1868,7 +1866,7 @@ let cub_tran model submodels count_m
 	()
 
 
-(* [CUB-PTA Tranformation] This use for filtering infinities in constraint *)
+(** [CUB-PTA Tranformation] This use for filtering infinities in constraint *)
 let filter_inf model cons = 
 	let inequalities = LinearConstraint.pxd_get_inequalities cons in
 	let tuple_inequalities 	= (convert_inequality_list_2_tuple_list model inequalities) in
@@ -1944,7 +1942,7 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 	let con = ref (LinearConstraint.pxd_true_constraint ()) in
 	for i = 1 to (DynArray.length clocks_constraints - 1) do
 		let (loc_index1, cons1) = DynArray.get clocks_constraints (i-1) in
-		let (loc_index2, cons2) = DynArray.get clocks_constraints (i) in
+		let (_, cons2) = DynArray.get clocks_constraints (i) in
 		if loc_index1 = loc_index1 
 		then
 		 	(
@@ -1993,12 +1991,12 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 (************************************************************)
 (************************************************************)
 
-(* String result - Some additional information in result: name of sub-model and number of CUB-PTAs in Disjunctive CUB-PTA *)
+(** String result - Some additional information in result: name of sub-model and number of CUB-PTAs in Disjunctive CUB-PTA *)
 let additional_info = ref " "
 
 
 
-(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
+(** We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 let local_silent_action_index_of_automaton_index model automaton_index =
 	model.nb_actions + automaton_index
 
@@ -2149,8 +2147,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 						let transition = model.transitions_description transition_index in
 						let guard, updates, target_location_index = transition.guard, transition.updates, transition.target in
 
-						(** WORK HERE **)
-						
 						(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
 (* 						let invariant2 = model.invariants automaton_index target_location_index in *)
 
@@ -2168,7 +2164,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 						let clock_updates = match clock_updates with
 											No_potential_update -> []
 											| Potential_resets clock_update -> clock_update
-											| Potential_updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! "));
+											| Potential_updates _ -> raise (InternalError(" Clock_update are not supported currently! "));
 						in
 
 						(*add transitions*)
@@ -2236,7 +2232,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let count_t = ref 1 in
 			DynArray.iter ( fun transition -> 
 				print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
-				let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = transition in
+				let (location_index, target_location_index, guard, clock_updates, _(*action_index*), _(*update_seq_code_bloc*)) = transition in
 				(*work here*)
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
@@ -2306,7 +2302,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		let count_t = ref 1 in
 		DynArray.iter ( fun transition -> 
 			print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
-			let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = transition in
+			let (location_index, target_location_index, guard, clock_updates, _(*action_index*), _(*update_seq_code_bloc*)) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
 			let continuous_part_invariant_s0 = continuous_part_of_guard invariant_s0 in
 			print_message Verbose_low ("   continuous part of invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names continuous_part_invariant_s0 ) ) ;
@@ -2412,7 +2408,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(* Delete true constraints and clone location *)
 	let loc_clocks_constraints = DynArray.make 0 in
-	DynArray.iter (fun (locations, transitions, c_constraints, parameters_constraints) ->
+	DynArray.iter (fun (_(*locations*), _(*transitions*), c_constraints, _(*parameters_constraints*)) ->
 	for i = 0 to (DynArray.length c_constraints - 1) do
 		let (loc_index1, cons1) = DynArray.get c_constraints (i) in
 		if (LinearConstraint.pxd_is_true cons1) = false
@@ -2565,7 +2561,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 	(* [CUB-PTA TRANSFORMATION] STAGE 3 - ADDING TRANSITIONS *)
-	DynArray.iter (fun (_, transitions, _, _, index, init_locs) ->
+	DynArray.iter (fun (_, transitions, _, _, index, _(*init_locs*)) ->
 
 		DynArray.iter ( fun (source_location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) ->
 			let listCubLoc1 = Hashtbl.find_all index source_location_index in
@@ -2626,9 +2622,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] STAGE 4 - REMOVING PROBLEMATIC TRANSITIONS *)
 	print_message Verbose_low ("\nSTAGE 4 - REMOVE PROBLEMATIC TRANSITIONS ");
 	let new_transitions = DynArray.make 0 in
-	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+	DynArray.iter (fun (locations, transitions, _(*c_constraints*), p_constraints, _(*index*), _(*init_locs*)) ->
 		for i = 1 to (DynArray.length transitions) do
-			let (location_index, target_location_index, guard, clock_updates, action_index, update_seq_code_bloc) = DynArray.get transitions (i-1) in
+			let (location_index, target_location_index, guard, clock_updates, _(*action_index*), _(*update_seq_code_bloc*)) = DynArray.get transitions (i-1) in
 			let s0_cons = Hashtbl.find locations location_index in
 			let s1_cons = Hashtbl.find locations target_location_index in
 
@@ -2754,7 +2750,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
 	let newtransitions = DynArray.make 0 in
 
-	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+	DynArray.iter (fun (locations, transitions, _, p_constraints, _, init_locs) ->
 
 		let new_sub_initial_location_name  = ("cub_pta_init_" ^ string_of_int (!submodel_index )) in
 		Hashtbl.add loc_naming_tbl new_sub_initial_location_name (Hashtbl.length loc_naming_tbl);
@@ -2907,7 +2903,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let distributedModels = ref [] in
 
 
-	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+	DynArray.iter (fun (locations, transitions, _, p_constraints, _, init_locs) ->
 
 		(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
 		let new_invariants_per_location_hashtbl_2 =  Hashtbl.create 0 in
@@ -3499,7 +3495,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		Array.iteri(fun automaton_index array_of_names ->
 			print_message Verbose_low ("Automaton #" ^ (string_of_int automaton_index ) ^ ":");
 			(* Iterate on locations for this automaton *)
-			Array.iteri(fun location_index location_name ->
+			Array.iteri(fun location_index _ ->
 				print_message Verbose_low ("  Location l_" ^ (string_of_int location_index ) ^ " -> " ^ "");
 				let actions_for_this_location = new_actions_per_location_function automaton_index location_index in
 				print_message Verbose_low (string_of_list_of_string_with_sep " - " (List.map new_action_names actions_for_this_location) );
@@ -3520,7 +3516,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 		(* Dummy pretty-printing of clock updates *)
 				(*** TODO ***)
-		let string_of_clock_updates clock_updates = 
+		let string_of_clock_updates _ =
 			"TODO"
 		in
 	
@@ -3529,7 +3525,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			(* Get the actual transition *)
 			let transition = new_transitions_description transition_index in
 			let clock_updates, update_seq_code_bloc = transition.updates in
-			let guard , clock_updates , update_seq_code_bloc, target_location_index = transition.guard, clock_updates, update_seq_code_bloc, transition.target in
+			let guard , clock_updates , _, target_location_index = transition.guard, clock_updates, update_seq_code_bloc, transition.target in
 			"["
 				^ "g=" ^ (ModelPrinter.string_of_guard model.variable_names guard)
 				^
@@ -3567,11 +3563,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 		
 	(************************************************************)
-	(** Build the abstract model *)
+	(* Build the abstract model *)
 	(************************************************************)
 	let transformed_abstract_model =
 	{
-		(** General information **)
+		(*** General information ***)
 		(* Cardinality *)
 		nb_automata = model.nb_automata;
 		nb_actions = new_nb_actions;
@@ -3606,7 +3602,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		parameters_bounds = model.parameters_bounds;
 
 		
-		(** Content of the PTA **)
+		(*** Content of the PTA ***)
 		(* The observer *)
 	
 		(*** TODO ***)
