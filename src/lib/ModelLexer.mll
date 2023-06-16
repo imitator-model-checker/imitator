@@ -38,7 +38,7 @@ rule token = parse
 			let c = try(
 				open_in absolute_filename
 			)with
-				| Sys_error e ->
+				| Sys_error _ ->
 					(* Abort properly *)
 (* 					print_error(e); *)
 					raise (IncludeFileNotFound file_name);
@@ -75,7 +75,7 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "continuous"     { CT_CONTINUOUS }
 	| "controllable"   { CT_CONTROLLABLE }
-	| "discrete"       { CT_DISCRETE }
+	| "discrete"       { CT_RATIONAL }
 	| "do"             { CT_DO }
 	| "done"           { CT_DONE }
 	| "downto"         { CT_DOWNTO }
@@ -101,8 +101,8 @@ rule token = parse
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
 	| "queue"          { CT_QUEUE }
-  	| "rat"            { CT_DISCRETE }
-	| "rational"       { CT_DISCRETE }
+  	| "rat"            { CT_RATIONAL }
+	| "rational"       { CT_RATIONAL }
 	| "return"         { CT_RETURN }
 	| "stack"          { CT_STACK }
 	| "stop"           { CT_STOP }

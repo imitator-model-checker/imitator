@@ -17,12 +17,11 @@
 %{
 open ParsingStructure;;
 open Exceptions;;
-open NumConst;;
 open ImitatorUtilities;;
 open DiscreteType;;
 
 
-let parse_error s =
+let parse_error _ =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
 	raise (ParsingError (symbol_start, symbol_end))
@@ -70,30 +69,28 @@ let unzip l = List.fold_left
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTIONS CT_AND CT_AUTOMATON
+	CT_ACCEPTING CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
+	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
-	CT_VOID CT_DISCRETE CT_INT CT_BOOL CT_BINARY_WORD CT_ARRAY
-	CT_INSIDE
-	CT_DO
-	CT_IN
+	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
-	CT_FALSE CT_FLOW
+	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_INIT CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INIT CT_INSIDE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_OR
 	CT_PARAMETER
+	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
-	CT_THEN CT_TRUE
+	CT_THEN CT_TO CT_TRUE
 	CT_URGENT
-	CT_VAR
+	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
     CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
-    CT_FUN CT_RETURN CT_BEGIN CT_FOR CT_FROM CT_TO CT_DOWNTO CT_DONE
 
 
 %token EOF
@@ -240,7 +237,7 @@ var_type_discrete_queue:
 ;
 
 var_type_discrete_number:
-    | CT_DISCRETE { Dt_rat }
+    | CT_RATIONAL { Dt_rat }
     | CT_INT { Dt_int }
 ;
 
@@ -633,7 +630,7 @@ init_discrete_continuous_definition:
 ;
 
 init_discrete_definition:
-    | CT_DISCRETE OP_EQ init_discrete_expression SEMICOLON { $3 }
+    | CT_RATIONAL OP_EQ init_discrete_expression SEMICOLON { $3 }
 ;
 
 init_continuous_definition:
