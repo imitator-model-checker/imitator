@@ -379,7 +379,7 @@ val px_exhibit_point : px_linear_constraint -> px_valuation
 val pxd_exhibit_point : pxd_linear_constraint -> pxd_valuation
 
 (** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
-val px_zone_predecessor : px_linear_constraint -> px_linear_constraint -> px_linear_constraint -> (variable list) -> (variable list) -> (variable list) -> px_linear_constraint
+(* val px_zone_predecessor : px_linear_constraint -> px_linear_constraint -> (variable list) -> (variable list) -> (variable list) -> px_linear_constraint *)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -822,7 +822,7 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 (************************************************************)
 (** {2 Tests} *)
 (************************************************************)
-val test_PDBMs : unit -> unit
+(* val test_PDBMs : unit -> unit *)
 
 
 

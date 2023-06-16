@@ -42,22 +42,25 @@ open Constants
 
 (* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
 
-(* We found multiple clocks, e.g., x > y *)
+(** We found multiple clocks, e.g., x > y *)
 exception Not_a_clock_guard_multiple_clocks_found
-(* We found a discrete, e.g., x + d > 0 *)
+
+(** We found a discrete, e.g., x + d > 0 *)
 exception Not_a_clock_guard_discrete_found
-(* We found no clock, e.g., p + d > 0 *)
+
+(** We found no clock, e.g., p + d > 0 *)
 exception Not_a_clock_guard_no_clock_found
-(* Temporary exception (TODO) for other cases *)
+
+(** Temporary exception (TODO) for other cases *)
 exception Not_a_clock_guard_non_1_coefficient
 
-(* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
+(** Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
 exception Not_an_inequality
 
-(* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
+(** Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
 
-(* Raised when trying to get a point in an empty (false) constraint *)
+(** Raised when trying to get a point in an empty (false) constraint *)
 exception EmptyConstraint
 
 
@@ -332,7 +335,7 @@ type time_direction = Time_forward | Time_backward
 
 
 (************************************************************)
-(** {2 Valuations} *)
+(* {2 Valuations} *)
 (************************************************************)
 
 type p_valuation = (variable -> coef)
@@ -672,12 +675,12 @@ let nncc_assert_dimensions nb_dimensions nncc =
 
 (************************************************************)
 (************************************************************)
-(** {2 Linear terms} *)
+(* {2 Linear terms} *)
 (************************************************************)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear term from its list of members and its constant coefficient *)
@@ -698,7 +701,7 @@ let make_pxd_linear_term = make_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Modification functions} *)
+(* {3 Modification functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Add two linear terms *)
@@ -714,12 +717,12 @@ let sub_linear_terms lt1 lt2 =
 
 
 let sub_p_linear_terms = sub_linear_terms
-let sub_px_linear_terms = sub_linear_terms
+(* let sub_px_linear_terms = sub_linear_terms *)
 let sub_pxd_linear_terms = sub_linear_terms
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access functions} *)
+(* {3 Access functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*------------------------------------------------------------*)
@@ -801,7 +804,7 @@ exception Found_coef of coef
 
 (* First a recursive function *)
 let rec get_coefficient_in_linear_term_rec minus_flag = function
-	| Variable variable -> ()
+	| Variable _ -> ()
 	| Coefficient c ->
 		let numconst_coef = NumConst.numconst_of_mpz c in
 		raise (Found_coef (if minus_flag then NumConst.neg numconst_coef else numconst_coef))
@@ -816,7 +819,7 @@ let rec get_coefficient_in_linear_term_rec minus_flag = function
 	| Times (coeff, rterm) ->
 		if Gmp.Z.equal coeff (Gmp.Z.zero) then ()
 		else (match rterm with
-			| Variable variable -> ()
+			| Variable _ -> ()
 			| _ -> raise (InternalError ("In function `get_coefficient_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
@@ -830,7 +833,7 @@ let get_coefficient_in_linear_term (linear_term : ppl_linear_term) =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Renaming linear terms} *)
+(* {3 Renaming linear terms} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* `rename_linear_term variable_pairs linear_term` renames variables within linear_term as follows: v is replaced with v' for any pair `(v,v')` in variable_pairs *)
@@ -862,7 +865,7 @@ let rename_pxd_linear_term = rename_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Evaluation functions} *)
+(* {3 Evaluation functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*------------------------------------------------------------*)
@@ -941,11 +944,11 @@ let rec evaluate_linear_term_ppl valuation_function linear_term =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to string} *)
+(* {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 let string_of_coef = NumConst.string_of_numconst
-let string_of_constant = NumConst.string_of_numconst
+(* let string_of_constant = NumConst.string_of_numconst *)
 
 let jani_string_of_coef = NumConst.jani_string_of_numconst
 
@@ -1061,21 +1064,21 @@ let rec jani_string_of_ppl_linear_term (names : (variable -> string)) (linear_te
 
 let pxd_linear_term_is_unary (linear_term : internal_linear_term) =
 	match linear_term with
-		| IR_Coef z -> true
-		| IR_Var v -> true
-		| IR_Plus (t,u) -> false
-		| IR_Minus (t,u) -> false
-		| IR_Times (t,u) -> false
+		| IR_Coef _ -> true
+		| IR_Var _ -> true
+		| IR_Plus _ -> false
+		| IR_Minus _ -> false
+		| IR_Times _ -> false
 
 let op_term_of_pxd_linear_term (linear_term : internal_linear_term) =
 	match linear_term with
-		| IR_Coef z -> ""
-		| IR_Var v ->  ""
-		| IR_Plus (t,u) -> "+"
-		| IR_Minus (t,u) -> "-"
-		| IR_Times (t,u) -> "*"
+		| IR_Coef _ -> ""
+		| IR_Var _ ->  ""
+		| IR_Plus _ -> "+"
+		| IR_Minus _ -> "-"
+		| IR_Times _ -> "*"
 
-let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
+let left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
 	match linear_term with
 	(*  * linear_term to hack return type *)
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
@@ -1095,13 +1098,13 @@ let rec left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
 			  left_term_of_pxd_linear_term names lterm*)
 
-		| IR_Plus (lterm, rterm) -> "Duary", "", lterm
+		| IR_Plus (lterm, _) -> "Duary", "", lterm
 				
-		| IR_Minus (lterm, rterm) -> "Duary", "", lterm
+		| IR_Minus (lterm, _) -> "Duary", "", lterm
 				
-		| IR_Times (z, rterm) -> "Unary", (jani_string_of_coef z), linear_term
+		| IR_Times (z, _) -> "Unary", (jani_string_of_coef z), linear_term
 
-let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
+let right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
 	match linear_term with
 	(*  * linear_term to hack return type *)
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
@@ -1122,11 +1125,11 @@ let rec right_term_of_pxd_linear_term (names : (variable -> string)) (linear_ter
 			when Gmp.Z.equal z (Gmp.Z.zero) ->
 			  right_term_of_pxd_linear_term names lterm*)
 
-		| IR_Plus (lterm, rterm) -> "Duary", "", rterm
+		| IR_Plus (_, rterm) -> "Duary", "", rterm
 				
-		| IR_Minus (lterm, rterm) -> "Duary", "", rterm
+		| IR_Minus (_, rterm) -> "Duary", "", rterm
 				
-		| IR_Times (z, rterm) -> "Duary", "", rterm
+		| IR_Times (_, rterm) -> "Duary", "", rterm
 
 (* Negate a linear term *)
 let rec negate_linear_term = function
@@ -1159,7 +1162,7 @@ let rec string_of_linear_term_for_jani variable_names linear_term =
 let string_of_pxd_linear_term_for_jani = string_of_linear_term_for_jani
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to PPL} *)
+(* {3 Conversion to PPL} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* In order to convert a linear_term (with rational coefficients) *)
@@ -1220,21 +1223,13 @@ let normalize_linear_term (lt : internal_linear_term) : (Ppl.linear_expression *
 	
 	(* Return result *)
 	result
-	
 
-(** Convert our ad-hoc linear_term into a Ppl.linear_expression *)
-let ppl_linear_expression_of_linear_term linear_term : Ppl.linear_expression =
-	let ppl_term, r = normalize_linear_term linear_term in
-	let p = NumConst.get_num r in
-	(* Simplifies a bit *)
-	if Gmp.Z.equal p Gmp.Z.one then ppl_term
-	else Times (p, ppl_term)
 
 
 
 (************************************************************)
 (************************************************************)
-(** {2 Linear inequalities} *)
+(* {2 Linear inequalities} *)
 (************************************************************)
 (************************************************************)
 
@@ -1245,8 +1240,17 @@ let ppl_linear_expression_of_linear_term linear_term : Ppl.linear_expression =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(*(** Convert our ad-hoc linear_term into a Ppl.linear_expression *)
+let ppl_linear_expression_of_linear_term linear_term : Ppl.linear_expression =
+	let ppl_term, r = normalize_linear_term linear_term in
+	let p = NumConst.get_num r in
+	(* Simplifies a bit *)
+	if Gmp.Z.equal p Gmp.Z.one then ppl_term
+	else Times (p, ppl_term)*)
 
 let ppl_linear_expression_of_linear_term (linear_term : internal_linear_term) : Ppl.linear_expression =
 	let ppl_term, r = normalize_linear_term linear_term in
@@ -1289,7 +1293,7 @@ let px_make_linear_inequalities_eq_0 = make_linear_inequalities_eq_0
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** split a linear_inequality into its two terms and the operator *)
@@ -1323,7 +1327,7 @@ let op_of_pxd_linear_inequality = op_of_linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(* {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -1397,12 +1401,12 @@ let negate_inequality = function
 	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
 	| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
 	| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
-	| Equal (lterm, rterm) -> raise Not_an_inequality
+	| Equal _ -> raise Not_an_inequality
 
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Normalization (for pretty-printing)} *)
+(* {3 Normalization (for pretty-printing)} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** build a linear inequality from two terms and an operator *)
@@ -1469,8 +1473,8 @@ let rec sign_split_expression = function
 
 
 
-(** normalize an inequality for pretty printing; *)
-(** the expressions are rearranged such that only positive coefficients occur *)
+(** Normalize an inequality for pretty printing;
+  * the expressions are rearranged such that only positive coefficients occur *)
 let normalize_inequality (ineq : linear_inequality) = 
 	let lterm, rterm, op = split_linear_inequality ineq in
 	let lpos, lneg = sign_split_expression lterm in
@@ -1482,7 +1486,7 @@ let normalize_inequality (ineq : linear_inequality) =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
 
 
@@ -1598,7 +1602,7 @@ let clock_guard_of_linear_inequality linear_inequality =
 		(* Variable not found *)
 		| None -> ()
 		(* Variable found *)
-		| Some coeff -> raise Not_a_clock_guard_discrete_found;
+		| Some _ -> raise Not_a_clock_guard_discrete_found;
 	done;
 	
 
@@ -1692,7 +1696,7 @@ let substitute_variables sub linear_inequality =
 
 (************************************************************)
 (************************************************************)
-(** {2 Linear Constraints} *)
+(* {2 Linear Constraints} *)
 (************************************************************)
 (************************************************************)
 
@@ -1701,7 +1705,7 @@ let substitute_variables sub linear_inequality =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Initialization} *)
+(* {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
@@ -1725,7 +1729,7 @@ let set_dimensions nb_p nb_c nb_d =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
@@ -1872,7 +1876,7 @@ let pxd_copy = ippl_copy_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion between types of constraints } *)
+(* {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -1914,7 +1918,7 @@ let pxd_of_x_constraint = pxd_of_px_constraint
 let px_of_x_constraint = identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Tests} *)
+(* {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
@@ -1938,20 +1942,17 @@ let pxd_is_satisfiable = is_satisfiable
 
 
 (** Check if 2 constraints are equal *)
-let is_equal = ippl_is_equal
 let p_is_equal = ippl_is_equal
 let px_is_equal = ippl_is_equal
 let pxd_is_equal = ippl_is_equal
 
 
 (** Check if a constraint is included in another one *)
-let is_leq = ippl_is_leq
 let p_is_leq = ippl_is_leq
 let px_is_leq = ippl_is_leq
 let pxd_is_leq = ippl_is_leq
 
 (** Check if a constraint is strictly included in another one *)
-let is_le = ippl_is_le
 let p_is_le = ippl_is_le
 let x_is_le = ippl_is_le
 (*let px_is_le = ippl_is_le
@@ -1959,12 +1960,11 @@ let pxd_is_le = ippl_is_le*)
 
 
 (** Check if a constraint contains an integer point *)
-let contains_integer_point = ippl_contains_integer_point
 let px_contains_integer_point = ippl_contains_integer_point
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* Get the list of dimensions of a constraint *)
@@ -2182,7 +2182,7 @@ let clock_upper_bound_in clock_index px_linear_constraint =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -2228,7 +2228,7 @@ let customized_string_of_pxd_linear_constraint = string_of_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(* {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -2352,7 +2352,7 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 
 (** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is `p >= 0`, for a given `p`. Raises Not_an_inequality if more than two inequalities, or if an equality is found. *)
 (*** HACK: a very ad-hoc function, needed for EFmax ***)
-(** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
+(*** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
 let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
 	(* Retrieve the inequalities *)
 	let inequalities = p_get_inequalities p_linear_constraint in
@@ -2696,7 +2696,7 @@ let time_past_assign nb_dimensions variables_elapse variables_constant linear_co
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let px_time_past_assign c = time_past_assign !px_dim c
-let pxd_time_past_assign c = time_past_assign !pxd_dim c
+(* let pxd_time_past_assign c = time_past_assign !pxd_dim c *)
 
 
 (*------------------------------------------------------------*)
@@ -2721,7 +2721,7 @@ let px_grow_to_infinity_assign variables_elapse variables_constant linear_constr
 
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
-(** WARNING: this function is certainly not optimized at all! *)
+(*** WARNING: this function is certainly not optimized at all! ***)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 let grow_to_zero_assign_gen nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
@@ -2749,7 +2749,7 @@ let render_non_strict_p_linear_constraint k =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Operations without modification} *)
+(* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -2950,11 +2950,11 @@ let pxd_exhibit_point l = exhibit_point !pxd_dim l
 (*------------------------------------------------------------*)
 (* Backward valuations computation *)
 (*------------------------------------------------------------*)
-
+(*
 (** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
 (*** NOTE: no check is made that z2 is a successor of z1, nor that z is a subset of z2 ***)
 (*** NOTE: only works for constant resets of the form clock := constant ***)
-let zone_predecessor nb_dimensions z1 z2 z variables_elapse variables_constant variable_reset =
+let zone_predecessor nb_dimensions z1 z variables_elapse variables_constant variable_reset =
 	(* Copy z, to avoid side-effects *)
 	let linear_constraint = copy z in
 	
@@ -2982,12 +2982,12 @@ let zone_predecessor nb_dimensions z1 z2 z variables_elapse variables_constant v
 
 
 (* Instance for px-constraints *)
-let px_zone_predecessor z1 z2 z variables_elapse variables_constant variable_reset = zone_predecessor !px_dim z1 z2 z variables_elapse variables_constant variable_reset
+let px_zone_predecessor z1 z variables_elapse variables_constant variable_reset = zone_predecessor !px_dim z1 z variables_elapse variables_constant variable_reset*)
 
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 More testing functions} *)
+(* {3 More testing functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*** NOTE: function after the modification functions, because makes use of `px_intersection_assign` ***)
@@ -3044,7 +3044,7 @@ let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Pi0-compatibility} *)
+(* {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
@@ -3084,7 +3084,7 @@ let partition_pi0_compatible pi0 linear_constraint =
 
 (*
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to GrML} *)
+(* {3 Conversion to GrML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear term (PPL) into a string *)								
@@ -3301,15 +3301,15 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Brute-force casts (argh) } *)
+(* {3 Brute-force casts (argh) } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_term p check = p (*** WARNING! should be copied here! ***)
+let cast_p_of_pxd_linear_term p _ = p (*** WARNING! should be copied here! ***)
 
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_constraint pxd_linear_constraint check =
+let cast_p_of_pxd_linear_constraint pxd_linear_constraint _ =
 	(* First copy *)
 	let p_constraint = copy pxd_linear_constraint in
 	(* Decrease number of dimensions *)
@@ -3319,7 +3319,7 @@ let cast_p_of_pxd_linear_constraint pxd_linear_constraint check =
 
 
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_d_of_pxd_linear_constraint check pxd_linear_constraint =
+let cast_d_of_pxd_linear_constraint _ pxd_linear_constraint =
 	(* Just copy *)
 	let d_constraint = copy pxd_linear_constraint in
 	(* Return *)
@@ -3327,7 +3327,7 @@ let cast_d_of_pxd_linear_constraint check pxd_linear_constraint =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Plot interactions} *)
+(* {3 Plot interactions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -3377,15 +3377,15 @@ let make_straight_line_ray r p =
 (* create a straight line from two points having the same abscissa or ordinate *)
 let make_straight_line_points p1 p2 = 
 	match (p1,p2) with
-		|(Dot (a,b),Dot (c,d)) when a=c -> (1.,0.,0.-.a)
-		|(Dot (a,b),Dot (c,d)) when b=d -> (0.,0.-.1.,b)
+		|(Dot (a,_),Dot (c,_)) when a=c -> (1.,0.,0.-.a)
+		|(Dot (_,b),Dot (_,d)) when b=d -> (0.,0.-.1.,b)
 		|_ -> (0.,0.,0.)
 
 (* find the intersection between two straight line *)
 let intersection_straight_line d1 d2 =
 	match (d1,d2) with
-		|((0.,0.,0.),(d,e,f)) -> Dot ((0.),(0.))
-		|((a,b,c),(0.,0.,0.)) -> Dot ((0.),(0.))
+		|((0.,0.,0.),_) -> Dot ((0.),(0.))
+		|((_,_,_),(0.,0.,0.)) -> Dot ((0.),(0.))
 		|((a,b,c),(d,e,f)) -> (if b <> 0. then Dot ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((c/.b)+.(((a*.b*.f)-.(a*.e*.c))/.((b*.a*.e)-.(b*.b*.d)))))
 						else if e<>0. then Dot ((((b*.f)-.(e*.c))/.((a*.e)-.(b*.d))),0.-.((f/.e)+.(((d*.b*.f)-.(d*.e*.c))/.((e*.a*.e)-.(e*.b*.d)))))
 						else Dot (0.,0.))
@@ -3525,10 +3525,10 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 	) in
 	(* if points are present, sort them counter-clockwise *)
 	match (point_list, List.length ray) with
-		| ((p :: ps), 0) -> 
+		| ((p :: _), 0) ->
 			let compare = compare_points p in
 			(false,List.sort compare point_list)
-		| ((p :: ps), _) -> 
+		| ((p :: _), _) ->
 			let compare = compare_points p in
 			(true,List.sort compare point_list)
 		| (_, 0) -> (false,point_list;)
@@ -3550,10 +3550,10 @@ let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 	((fst shape), str)
 
 
-
+(*
 (************************************************************)
 (************************************************************)
-(** {2 PDBMs} *)
+(* {2 PDBMs} *)
 (************************************************************)
 (************************************************************)
 
@@ -3597,7 +3597,7 @@ let make_zero_cpdbm (nb_clocks : int) =
 		,
 		PDBM_leq
 	in
-	(** TODO: canonicalize ?!!! *)
+	(*** TODO: canonicalize ?!!! ***)
 	p_true_constraint ()
 	,
 	Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element())
@@ -3627,7 +3627,7 @@ let make_true_cpdbm (nb_clocks : int) =
 	(* Return PDBM *)
 	p_true_constraint()
 	,
-	(** TODO: canonicalize ?!!! *)
+	(*** TODO: canonicalize ?!!! ***)
 	matrix
 
 
@@ -3703,9 +3703,9 @@ let pdbm_time_elapsing pdbm =
 	done
 
 
-let cpdbm_time_elapsing cpdbm =
+(*let cpdbm_time_elapsing cpdbm =
 	let lt, pdbm = cpdbm in
-	lt, (pdbm_time_elapsing pdbm)
+	lt, (pdbm_time_elapsing pdbm)*)
 
 
 
@@ -3767,7 +3767,7 @@ let px_linear_constraint_of_pdbm clock_offset pdbm =
 			let inequality : px_linear_inequality = make_px_linear_inequality linear_term (op_of_pdbm_rel op) in
 			
 			(* Intersect with the current constraint *)
-			(** WARNING / BADPROG: very unefficient ! *)
+			(*** WARNING / BADPROG: very unefficient ! ***)
 			px_intersection_assign linear_constraint [make_px_constraint [inequality]];
 			);
 			end
@@ -3794,7 +3794,7 @@ let px_linear_constraint_of_pdbm clock_offset pdbm =
 		let inequality : px_linear_inequality = make_px_linear_inequality linear_term (op_of_pdbm_rel op) in
 		
 		(* Intersect with the current constraint *)
-		(** WARNING / BADPROG: very unefficient ! *)
+		(*** WARNING / BADPROG: very unefficient ! ***)
 		px_intersection_assign linear_constraint [make_px_constraint [inequality]];*)
 	
 	(* Return the constraint *)
@@ -3956,16 +3956,16 @@ let test_PDBMs () =
 	print_cpdbm cpdbm2;
 	
 	print_string "\n*%*%*%*%*%*% ENDING PDBMs TESTS *%*%*%*%*%*%";
-	()
+	()*)
 
 
 
 (************************************************************)
-(** {2 Non-necessarily convex linear Constraints} *)
+(* {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Type} *)
+(* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
@@ -3977,7 +3977,7 @@ type px_nnconvex_constraint = nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false non-necessarily convex constraint *)
@@ -4012,7 +4012,7 @@ let px_nnconvex_copy = nnconvex_copy
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
@@ -4056,7 +4056,7 @@ let get_disjuncts p_nnconvex_constraint =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Tests} *)
+(* {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a nnconvex_constraint is false *)
@@ -4093,7 +4093,7 @@ let px_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Simplification} *)
+(* {3 Simplification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let p_nn_simplify p_nnconvex_constraint =
 	ippl_nncc_pairwise_reduce p_nnconvex_constraint;
@@ -4102,7 +4102,7 @@ let p_nn_simplify p_nnconvex_constraint =
 	
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to string} *)
+(* {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
@@ -4131,7 +4131,7 @@ let string_of_x_nnconvex_constraint = string_of_p_nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Modifications} *)
+(* {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
@@ -4371,7 +4371,7 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Operations without modification} *)
+(* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -4518,7 +4518,7 @@ let x_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to a list of p_linear_constraint} *)
+(* {3 Conversion to a list of p_linear_constraint} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
 let p_linear_constraint_list_of_p_nnconvex_constraint =
@@ -4535,7 +4535,7 @@ let px_linear_constraint_list_of_px_nnconvex_constraint =
 
 (************************************************************)
 (************************************************************)
-(** {2 Convex or non-necessarily convex linear Constraints} *)
+(* {2 Convex or non-necessarily convex linear Constraints} *)
 (************************************************************)
 (************************************************************)
 type p_convex_or_nonconvex_constraint =
@@ -4553,7 +4553,7 @@ let string_of_p_convex_or_nonconvex_constraint names = function
 
 (************************************************************)
 (************************************************************)
-(** {2 Serialization for PaTATOR} *)
+(* {2 Serialization for PaTATOR} *)
 (************************************************************)
 (************************************************************)
 
@@ -4583,7 +4583,7 @@ let serialize_SEP_OR = "o"
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Variables} *)
+(* {3 Variables} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 let serialize_variable = string_of_int
@@ -4598,7 +4598,7 @@ let unserialize_variable variable_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Coefficients} *)
+(* {3 Coefficients} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_coef = Gmp.Z.string_from
 
@@ -4606,7 +4606,7 @@ let unserialize_coef = (*NumConst.numconst_of_string*)Gmp.Z.from_string
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Operators} *)
+(* {3 Operators} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_ALL_OPS = "<l=g>"
 
@@ -4627,7 +4627,7 @@ let unserialize_op s = match s with
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Coefficients} *)
+(* {3 Coefficients} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Unserialize a pair (coef, variable) or a coef *)
 let unserialize_coef_var coef_var_pair_string =
@@ -4643,7 +4643,7 @@ let unserialize_coef_var coef_var_pair_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear term} *)
+(* {3 Linear term} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear term (PPL) into a string *)
@@ -4652,13 +4652,13 @@ let rec serialize_linear_term linear_term =
 	(*** WARNING: slightly problematic translation, as we do not check that a variable is never without a coefficient (in which case it will be interpreted as a coefficient instead of a variable) ***)
 		| Coefficient z -> serialize_coef z
 		| Variable v -> serialize_variable v
-		| Unary_Plus t -> (*serialize_linear_term t*)raise (InternalError("Match Unary_Plus not taken into account in serialization"))
-		| Unary_Minus t -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
+		| Unary_Plus _ -> (*serialize_linear_term t*)raise (InternalError("Match Unary_Plus not taken into account in serialization"))
+		| Unary_Minus _ -> raise (InternalError("Match Unary_Minus not taken into account in serialization"))
 		| Plus (lterm, rterm) -> (
 			  let lstr = serialize_linear_term lterm in
 				let rstr = serialize_linear_term rterm in
 				lstr ^ serialize_SEP_LT ^ rstr )
-		| Minus (lterm, rterm) -> raise (InternalError("Match Minus not taken into account in serialization"))
+		| Minus _ -> raise (InternalError("Match Minus not taken into account in serialization"))
 		| Times (z, rterm) -> (
 				let fstr = serialize_coef z in
 				let tstr = serialize_linear_term rterm in
@@ -4688,7 +4688,7 @@ let unserialize_linear_term linear_term_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear inequalities} *)
+(* {3 Linear inequalities} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Serialize a linear inequality *)
@@ -4728,8 +4728,9 @@ let unserialize_linear_inequality linear_inequality_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Linear constraints} *)
+(* {3 Linear constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 (** Serialize a linear constraint *)
 let serialize_p_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
@@ -4753,7 +4754,7 @@ let unserialize_p_linear_constraint linear_constraint_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Parametric non-necessarily convex constraints} *)
+(* {3 Parametric non-necessarily convex constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_p_nnconvex_constraint p_nnconvex_constraint =
 	(* Get a list of linear constraints and serialize *)
@@ -4776,7 +4777,7 @@ let unserialize_p_nnconvex_constraint p_nnconvex_constraint_string =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Non-necessarily convex linear Constraints} *)
+(* {3 Non-necessarily convex linear Constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_p_convex_or_nonconvex_constraint = function
 	| Convex_p_constraint p_linear_constraint -> serialize_p_linear_constraint p_linear_constraint
@@ -4841,8 +4842,8 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								let b = ref false in
 								begin
 								match linear_term with
-								| IR_Coef c -> ()
-								| IR_Var v -> ()
+								| IR_Coef _ -> ()
+								| IR_Var _ -> ()
 								| IR_Plus (lterm, rterm) -> 	(
 													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
 			  											(* isMinus lterm;
@@ -4850,11 +4851,11 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 														b := (isMinus lterm || isMinus rterm);
 														()
 														)
-								| IR_Minus (lterm, rterm) -> 	(
+								| IR_Minus _ -> 	(
 														b := true; 
 														() 
 														)
-								| IR_Times (c1, rterm) -> ()
+								| IR_Times _ -> ()
 								(*| _ -> raise (InternalError("Detection error `get_coef` function"))*)
 								end;
 								!b
@@ -4885,7 +4886,7 @@ let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 
 										!coefs_vars
 
-(* TODO to check *)
+(*(* TODO to check *)
 let rec length_of_linear_term = function
     | IR_Coef _
     | IR_Var _ -> 1
@@ -4893,7 +4894,7 @@ let rec length_of_linear_term = function
     | IR_Minus (l_term, r_term) ->
         length_of_linear_term l_term + length_of_linear_term r_term
     | IR_Times (_, r_term) ->
-        length_of_linear_term r_term
+        length_of_linear_term r_term*)
 
 
 let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
@@ -4940,8 +4941,8 @@ let isSmaller term1 term2 	=
 								let checkMinus2 = isMinus term2 in		
 
 								(*check whether the both linear terms contain negative coef*)
-								let (vars1, coefs1) = List.split coefs_vars1 in
-								let (vars2, coefs2) = List.split coefs_vars2 in
+								let (vars1, _) = List.split coefs_vars1 in
+								let (vars2, _) = List.split coefs_vars2 in
 								
 								(*
 								let less_than_zero1 = is_mem_in_coef_list_less_than_zero coefs1 in
