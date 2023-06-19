@@ -13,7 +13,6 @@
 
 open ParsingStructure
 open DiscreteType
-open CustomModules
 
 (**)
 type variable_callback = (variable_name -> unit) option
@@ -28,14 +27,14 @@ type parsing_structure_leaf =
 type parsed_seq_code_bloc_leaf =
     | Leaf_update_variable of variable_ref * parsed_boolean_expression * update_mode
 
-(* Leaf of linear expression *)
+(** Leaf of linear expression *)
 type linear_expression_leaf =
     | Leaf_true_linear_constraint
     | Leaf_false_linear_constraint
     | Leaf_linear_constant of NumConst.t
     | Leaf_linear_variable of NumConst.t * variable_name
 
-(* Leaf of init state predicate *)
+(** Leaf of init state predicate *)
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
@@ -47,11 +46,13 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-(* Type of callback function called when reach a leaf of a discrete expression *)
+(** Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = parsing_structure_leaf -> 'a
-(* Type of callback function called when reach a leaf of a sequential code bloc *)
+
+(** Type of callback function called when reach a leaf of a sequential code bloc *)
 type 'a seq_code_bloc_leaf_callback = parsed_seq_code_bloc_leaf -> 'a
-(* Type of callback function called when reach a leaf of a linear expression *)
+
+(** Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
@@ -71,16 +72,22 @@ val for_all_in_parsed_discrete_factor : bool parsing_structure_leaf_callback -> 
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
 val for_all_in_parsed_linear_expression : bool linear_expression_leaf_callback -> linear_expression -> bool
+
 (** Check if all leaf of a linear term satisfy the predicate **)
 val for_all_in_parsed_linear_term : bool linear_expression_leaf_callback -> linear_term -> bool
+
 (** Check if all leaf of a linear constraint satisfy the predicate **)
 val for_all_in_parsed_linear_constraint : bool linear_expression_leaf_callback -> linear_constraint -> bool
+
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 val for_all_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
+
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
 val for_all_in_parsed_normal_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
+
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 val for_all_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
+
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
 val for_all_in_parsed_fun_def : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
@@ -100,21 +107,26 @@ val exists_in_parsed_discrete_factor : bool parsing_structure_leaf_callback -> p
 
 (** Check if any leaf of a linear expression the predicate **)
 val exists_in_parsed_linear_expression : bool linear_expression_leaf_callback -> linear_expression -> bool
+
 (** Check if any leaf of a linear term the predicate **)
 val exists_in_parsed_linear_term : bool linear_expression_leaf_callback -> linear_term -> bool
+
 (** Check if any leaf of a linear constraint satisfy the predicate **)
 val exists_in_parsed_linear_constraint : bool linear_expression_leaf_callback -> linear_constraint -> bool
+
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 val exists_in_parsed_nonlinear_constraint : bool parsing_structure_leaf_callback -> nonlinear_constraint -> bool
 
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 val exists_in_parsed_normal_update : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> normal_update -> bool
+
 (** Check if any leaf of a parsed state predicate satisfy the predicate **)
 val exists_in_parsed_state_predicate : (state_predicate_leaf -> bool) -> bool parsing_structure_leaf_callback -> parsed_state_predicate -> bool
 
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
 val exists_in_parsed_seq_code_bloc : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_seq_code_bloc -> bool
+
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
 val exists_in_parsed_function_definition : ?decl_callback:bool variable_declaration_callback -> bool seq_code_bloc_leaf_callback -> bool parsing_structure_leaf_callback -> parsed_fun_definition -> bool
 
@@ -135,17 +147,22 @@ val iterate_in_parsed_state_predicate : (state_predicate_leaf -> unit) -> unit p
 
 (** Iterate over a linear expression applying a unit function **)
 val iterate_parsed_linear_expression : unit linear_expression_leaf_callback -> linear_expression -> unit
+
 (** Iterate over a linear term applying a unit function **)
 val iterate_parsed_linear_term : unit linear_expression_leaf_callback -> linear_term -> unit
+
 (** Iterate over a linear constraint applying a unit function **)
 val iterate_parsed_linear_constraint : unit linear_expression_leaf_callback -> linear_constraint -> unit
+
 (** Iterate over a non-linear constraint applying a unit function **)
 val iterate_parsed_nonlinear_constraint : unit parsing_structure_leaf_callback -> nonlinear_constraint -> unit
+
 (** Iterate over a non-linear convex predicate **)
 val iterate_parsed_nonlinear_convex_predicate : unit parsing_structure_leaf_callback -> convex_predicate -> unit
 
 (** Iterate over a parsed sequential code bloc definition **)
 val iterate_in_parsed_seq_code_bloc : ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_seq_code_bloc -> unit
+
 (** Iterate over a parsed function definition **)
 val iterate_in_parsed_function_definition :  ?decl_callback:unit variable_declaration_callback -> unit seq_code_bloc_leaf_callback -> unit parsing_structure_leaf_callback -> parsed_fun_definition -> unit
 
@@ -171,7 +188,7 @@ val string_of_parsed_scalar_or_index_update_type : variable_infos -> parsed_scal
 (* Parsed linear constraint to string *)
 val string_of_parsed_linear_constraint : variable_infos -> linear_constraint -> string
 val string_of_linear_expression : variable_infos -> linear_expression -> string
-val string_of_linear_term : variable_infos -> linear_term -> string
+(* val string_of_linear_term : linear_term -> string *)
 val string_of_parsed_init_state_predicate : variable_infos -> parsed_init_state_predicate -> string
 
 val string_of_parsed_nonlinear_constraint : variable_infos -> nonlinear_constraint -> string

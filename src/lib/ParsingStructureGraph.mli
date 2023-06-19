@@ -12,8 +12,6 @@
  ************************************************************)
 
 open ParsingStructure
-open ParsingStructureUtilities
-open ParsingStructureMeta
 open CustomModules
 
 type automaton_name = string
@@ -27,12 +25,13 @@ type component =
     | Variable_component of variable_ref
     | Fun_component of fun_name
 
-(* A components set *)
+(** A components set *)
 module ComponentSet : Set.S with type elt = component
 
-(* Relation between two components a -> b mean a use b *)
+(** Relation between two components a -> b mean a use b *)
 type relation = component * component
-(* Dependency graph as a list of relations between the components *)
+
+(** Dependency graph as a list of relations between the components *)
 type dependency_graph = component list (* declared components *) * relation list
 
 
@@ -40,10 +39,10 @@ type dependency_graph = component list (* declared components *) * relation list
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 val dependency_graph : ?no_var_autoremove:bool -> declarations_info -> parsed_model -> parsed_property option -> dependency_graph
 
-(* Get dependency graph as string (dot graphviz format) *)
+(** Get dependency graph as string (dot graphviz format) *)
 val string_of_dependency_graph : dependency_graph -> string
 
-(* Get all declared components of model *)
+(** Get all declared components of model *)
 val components_of_model : dependency_graph -> ComponentSet.t
 
 (* Get all components that are effectively used by automatons of the model *)

@@ -13,12 +13,7 @@
  *
  ************************************************************)
 
-open Constants
-open Exceptions
 open ParsingStructure
-open AbstractModel
 open AbstractProperty
-open DiscreteExpressions
-open DiscreteType
 
 val convert_state_predicate : useful_parsing_model_information -> parsed_state_predicate -> state_predicate

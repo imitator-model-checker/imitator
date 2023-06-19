@@ -18,31 +18,31 @@ open DiscreteType
 open OCamlUtilities
 open CustomModules
 
-(**)
+(* *)
 type variable_callback = (variable_name -> unit) option
 
-(* Leaves of parsing structure *)
+(** Leaves of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_ref
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
-(* Leaves of parsed bloc *)
+(** Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
     | Leaf_update_variable of variable_ref * parsed_boolean_expression * update_mode
 
-(* Leaf of linear expression *)
+(** Leaf of linear expression *)
 type linear_expression_leaf =
     | Leaf_true_linear_constraint
     | Leaf_false_linear_constraint
     | Leaf_linear_constant of NumConst.t
     | Leaf_linear_variable of NumConst.t * variable_name
 
-(* Leaf of init state predicate *)
+(** Leaf of init state predicate *)
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
-(* Leaf of state predicate *)
+(** Leaf of state predicate *)
 type state_predicate_leaf =
     | Leaf_predicate_true
     | Leaf_predicate_false
@@ -637,20 +637,20 @@ let rec string_of_parsed_linear_constraint variable_infos = function
             (string_of_linear_expression variable_infos r_expr)
 
 and string_of_linear_expression variable_infos = function
-	| Linear_term term -> string_of_linear_term variable_infos term
+	| Linear_term term -> string_of_linear_term term
 	| Linear_plus_expression (expr, term) ->
 	    string_of_linear_expression variable_infos expr
 	    ^ " + "
-	    ^ string_of_linear_term variable_infos term
+	    ^ string_of_linear_term term
 	| Linear_minus_expression (expr, term) ->
 	    string_of_linear_expression variable_infos expr
 	    ^ " - "
-	    ^ string_of_linear_term variable_infos term
+	    ^ string_of_linear_term term
 
-and string_of_linear_term variable_infos = function
+and string_of_linear_term = function
 	| Constant c -> NumConst.string_of_numconst c
 	| Variable (coef, variable_name) when NumConst.equal NumConst.one coef -> variable_name
-	| Variable (coef, variable_name) -> (NumConst.string_of_numconst coef)
+	| Variable (coef, _) -> (NumConst.string_of_numconst coef)
 
 let string_of_parsed_init_state_predicate variable_infos = function
 	| Parsed_loc_assignment (automaton_name, location_name) -> "loc[" ^ automaton_name ^ "] = " ^ location_name
@@ -797,7 +797,7 @@ let link_variables_in_parsed_model parsed_model =
                 let variable_opt = Hashtbl.find_opt local_variables variable_name in
                 match variable_opt with
                 (* If found in local variables get id *)
-                | Some (discrete_type, id) -> id
+                | Some (_, id) -> id
                 | None -> 0 (* global variable id *)
             in
             (* Print linking info *)
@@ -841,7 +841,7 @@ let link_variables_in_parsed_model parsed_model =
                 let variable_opt = Hashtbl.find_opt local_variables variable_name in
                 match variable_opt with
                 (* If found in local variables get id *)
-                | Some (discrete_type, id) -> id
+                | Some (_, id) -> id
                 | None -> 0 (* global variable id *)
             in
             (* Print linking info *)

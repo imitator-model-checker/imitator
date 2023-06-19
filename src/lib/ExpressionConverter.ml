@@ -19,7 +19,6 @@ open ImitatorUtilities
 open OCamlUtilities
 open Exceptions
 open CustomModules
-open Constants
 
 (* Parsing structure modules *)
 open ParsingStructure
@@ -634,7 +633,7 @@ let rec type_check_parsed_scalar_or_index_update_type variable_infos = function
         in
         Typed_indexed_update (typed_scalar_or_index_update_type, typed_index_expr_type, discrete_type), discrete_type
 
-let rec type_check_seq_code_bloc variable_infos infer_type_opt (* parsed_seq_code_bloc *) =
+let type_check_seq_code_bloc variable_infos _(*infer_type_opt*) (* parsed_seq_code_bloc *) =
 
     let rec type_check_seq_code_bloc_rec parsed_seq_code_bloc =
         List.map type_check_parsed_instruction parsed_seq_code_bloc
@@ -874,7 +873,7 @@ let type_check_parsed_fun_definition variable_infos (fun_def : ParsingStructure.
     typed_fun_def, return_type
 
 
-let type_check_parsed_loc_predicate variable_infos infer_type_opt = function
+let type_check_parsed_loc_predicate = function
 	| Parsed_loc_predicate_EQ (automaton_name, loc_name) -> Typed_loc_predicate_EQ (automaton_name, loc_name), Dt_bool
 	| Parsed_loc_predicate_NEQ (automaton_name, loc_name) -> Typed_loc_predicate_NEQ (automaton_name, loc_name), Dt_bool
 
@@ -895,7 +894,7 @@ let rec type_check_parsed_simple_predicate variable_infos infer_type_opt = funct
 	        Typed_discrete_boolean_expression (typed_expr, discrete_type), discrete_type
 
 	| Parsed_loc_predicate predicate ->
-	    let typed_predicate, discrete_type = type_check_parsed_loc_predicate variable_infos infer_type_opt predicate in
+	    let typed_predicate, discrete_type = type_check_parsed_loc_predicate predicate in
 	    Typed_loc_predicate typed_predicate, discrete_type
 
 	| Parsed_state_predicate_true -> Typed_state_predicate_true, Dt_bool
@@ -1161,10 +1160,9 @@ end = struct
 
 open AbstractModel
 open DiscreteExpressions
-open TypeChecker
 
 
-type discrete_index = int
+(* type discrete_index = int *)
 
 
 
@@ -1270,7 +1268,7 @@ and discrete_arithmetic_expression_of_typed_boolean_expression variable_infos di
 	| _ -> raise (InternalError "Trying to convert Boolean expression to arithmetic one. Maybe something failed in type checking or conversion.")
 
 and discrete_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos discrete_number_type = function
-	| Typed_arithmetic_expr (expr, discrete_type) ->
+	| Typed_arithmetic_expr (expr, _) ->
 	    (match discrete_number_type with
 	    | Dt_weak_number
 	    | Dt_rat ->
@@ -1544,7 +1542,7 @@ and rational_expression_of_typed_function_call variable_infos argument_expressio
 
 (* Int expression conversion *)
 and int_arithmetic_expression_of_typed_discrete_boolean_expression variable_infos = function
-    | Typed_arithmetic_expr (expr, discrete_type) ->
+    | Typed_arithmetic_expr (expr, _) ->
         int_arithmetic_expression_of_typed_arithmetic_expression variable_infos expr
     | _ as expr ->
         raise_conversion_error "int" (string_of_typed_discrete_boolean_expression variable_infos expr)
@@ -1820,7 +1818,7 @@ and stack_expression_of_typed_boolean_expression variable_infos expr =
             | Global ->
                 let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
-                | Constant_kind value -> Literal_stack
+                | Constant_kind _ -> Literal_stack
                 | Variable_kind ->
                     let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
                     Stack_variable discrete_index
@@ -1873,7 +1871,7 @@ and queue_expression_of_typed_boolean_expression variable_infos expr =
             | Global ->
                 let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
                 (match variable_kind with
-                | Constant_kind value -> Literal_queue
+                | Constant_kind _ -> Literal_queue
                 | Variable_kind ->
                     let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
                     Queue_variable discrete_index
@@ -1974,7 +1972,7 @@ let rec scalar_or_index_update_type_of_typed_scalar_or_index_update_type variabl
         let variable_kind = VariableInfo.variable_kind_of_variable_name variable_infos variable_ref in
 
         (match variable_kind with
-        | Constant_kind value -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
+        | Constant_kind _ -> raise (InternalError "Unable to set a constant expression. This should be checked before.")
         | Variable_kind ->
             let discrete_index = VariableInfo.index_of_variable_name variable_infos variable_name in
             Scalar_update (Global_update discrete_index)
@@ -2179,10 +2177,10 @@ let linear_term_of_linear_expression variable_infos linear_expression =
     let array_of_coef, constant = array_of_coef_of_linear_expression variable_infos linear_expression in
     linear_term_of_array array_of_coef constant
 
-
+(*
 type linear_term_element =
     | Lt_var of NumConst.t * variable_ref
-    | Lt_cons of NumConst.t
+    | Lt_cons of NumConst.t*)
 
 (* Convert typed arithmetic expression to a linear term, if possible, and reduce it *)
 (*
@@ -2420,7 +2418,7 @@ let clock_update_of_typed_seq_code_bloc variable_infos is_only_resets seq_code_b
     )
 
 (* Convert typed sequential code bloc to sequential code bloc for abstract model *)
-let rec seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc =
+let seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc =
 
     let rec seq_code_bloc_of_typed_seq_code_bloc_rec typed_seq_code_bloc =
         List.map instruction_of_typed_instruction typed_seq_code_bloc

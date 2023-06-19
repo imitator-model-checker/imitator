@@ -19,7 +19,7 @@ open DiscreteType
 
 
 
-(** Utils **)
+(* Utils **)
 
 val variable_name_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_name
 val variable_ref_of_parsed_scalar_or_index_update_type : parsed_scalar_or_index_update_type -> variable_ref
@@ -32,18 +32,22 @@ val discrete_boolean_expression_constant_value_opt : parsed_discrete_boolean_exp
 val is_parsed_boolean_expression_constant : variable_infos -> parsed_boolean_expression -> bool
 val is_parsed_arithmetic_expression_constant : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
-(* Check if a parsed boolean expression has side effects *)
+(** Check if a parsed boolean expression has side effects *)
 val has_side_effect_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
-(* Check if a parsed discrete boolean expression has side effects *)
+
+(** Check if a parsed discrete boolean expression has side effects *)
 val has_side_effect_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
-(* Check if a parsed discrete arithmetic expression has side effects *)
+
+(** Check if a parsed discrete arithmetic expression has side effects *)
 val has_side_effect_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
-(* Check if a parsed state predicate has side effects *)
+
+(** Check if a parsed state predicate has side effects *)
 val has_side_effect_parsed_state_predicate : variable_infos -> parsed_state_predicate -> bool
 
-(* Check if a parsed boolean expression contains function call(s) *)
+(** Check if a parsed boolean expression contains function call(s) *)
 val has_fun_call_parsed_boolean_expression : parsed_boolean_expression -> bool
-(* Check if a parsed discrete arithmetic expression contains function call(s) *)
+
+(** Check if a parsed discrete arithmetic expression contains function call(s) *)
 val has_fun_call_parsed_discrete_arithmetic_expression : parsed_discrete_arithmetic_expression -> bool
 
 val is_linear_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
@@ -54,7 +58,6 @@ val is_linear_parsed_term : variable_infos -> parsed_discrete_term -> bool
 val is_linear_parsed_factor : variable_infos -> parsed_discrete_factor -> bool
 *)
 
-val all_variables_defined_in_parsed_boolean_expression : variable_infos -> variable_callback -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression_without_callback : variable_infos -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_boolean_expression : variable_infos -> variable_callback -> parsed_boolean_expression -> bool
 val all_variables_defined_in_parsed_discrete_boolean_expression : variable_infos -> variable_callback -> parsed_discrete_boolean_expression -> bool
@@ -71,16 +74,19 @@ val all_variables_defined_in_nonlinear_convex_predicate : variable_infos -> vari
 
 val all_variables_defined_in_parsed_state_predicate : useful_parsing_model_information -> variable_infos -> variable_callback -> (automaton_name -> unit) option -> (automaton_name -> location_name -> unit) option -> parsed_state_predicate -> bool
 
-(* Check that there is only discrete variables in a parsed boolean expression *)
+(** Check that there is only discrete variables in a parsed boolean expression *)
 val only_discrete_in_parsed_boolean_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_boolean_expression -> bool
-(* Check that there is only discrete variables in a parsed arithmetic expression *)
+
+(** Check that there is only discrete variables in a parsed arithmetic expression *)
 val only_discrete_in_parsed_discrete_arithmetic_expression : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_discrete_arithmetic_expression -> bool
-(* Check that there is only discrete variables in a parsed discrete boolean expression *)
+
+(** Check that there is only discrete variables in a parsed discrete boolean expression *)
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 
-(* Check whether there is clock or param factors in arithmetic expression found in boolean expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
+(** Check whether there is clock or param factors in arithmetic expression found in boolean expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
 val nonlinear_operation_on_continuous_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
-(* Check whether there is clock or param factors in arithmetic expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
+
+(** Check whether there is clock or param factors in arithmetic expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
 val nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> bool
 
 val no_variables_in_linear_expression : variable_infos -> linear_expression -> bool
@@ -89,7 +95,6 @@ val is_parsed_linear_expression_constant : variable_infos -> linear_expression -
 
 
 
-val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_boolean_expression_with_accumulator : StringSet.t ref -> parsed_boolean_expression -> unit
 val get_variables_in_parsed_discrete_boolean_expression_with_accumulator : StringSet.t ref -> parsed_discrete_boolean_expression -> unit
 val get_variables_in_parsed_normal_update_with_accumulator : StringSet.t ref -> normal_update -> unit
@@ -120,16 +125,20 @@ val get_functions_in_nonlinear_convex_predicate : nonlinear_constraint list -> S
 val get_variables_in_parsed_simple_predicate : parsed_simple_predicate -> StringSet.t
 val get_variables_in_parsed_state_predicate : parsed_state_predicate -> StringSet.t
 
-(* Update info tuple *)
+(** Update info tuple *)
 type update_info = variable_ref (* assigned variable *) * variable_ref list (* assignee *) * parsed_boolean_expression (* update expression *) * update_mode (* mode: indexed or scalar *)
 
-(* Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
+(** Get pairs of left and right members of assignments (ex: i := j + 1 + k return the triple (i, [j;k], j + 1 + k) *)
 val left_right_member_of_assignments_in_parsed_seq_code_bloc : parsed_seq_code_bloc -> update_info list
-(* Check whether clock updates found in parsed sequential code bloc are only resets *)
+
+(** Check whether clock updates found in parsed sequential code bloc are only resets *)
 val is_only_resets_in_parsed_seq_code_bloc : variable_infos -> parsed_seq_code_bloc -> bool
-(* Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)
+
+(** Check whether clock updates found in parsed sequential code bloc (and all called functions in bloc) are only resets *)
 val is_only_resets_in_parsed_seq_code_bloc_deep : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc -> bool
-(* Get local variables of a parsed function definition *)
+
+(** Get local variables of a parsed function definition *)
 val local_variables_of_parsed_fun_def : parsed_fun_definition -> (variable_name * var_type_discrete * int) list
-(* Check if function has side effect recursively (through other function calls found in function body) *)
+
+(** Check if function has side effect recursively (through other function calls found in function body) *)
 val is_function_has_side_effects : functions_meta_table -> parsed_functions_table -> parsed_fun_definition -> bool

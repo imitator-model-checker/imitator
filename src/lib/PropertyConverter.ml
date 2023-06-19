@@ -13,13 +13,8 @@
  *
  ************************************************************)
 
-open Constants
-open Exceptions
 open ParsingStructure
-open AbstractModel
 open AbstractProperty
-open DiscreteExpressions
-open DiscreteType
 open TypedStructure
 
 (* Convert parsed_loc_predicate *)

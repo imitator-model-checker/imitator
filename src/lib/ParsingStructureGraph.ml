@@ -31,9 +31,10 @@ type component =
     | Variable_component of variable_ref
     | Fun_component of fun_name
 
-(* Relation between two components a -> b mean a use b *)
+(** Relation between two components a -> b mean a use b *)
 type relation = component * component
-(* Dependency graph as a list of relations between the components *)
+
+(** Dependency graph as a list of relations between the components *)
 type dependency_graph = component list (* declared components *) * relation list
 
 (* A relations set *)
@@ -115,7 +116,7 @@ let is_clock_reset declarations_info variable_ref expr =
     is_clock declarations_info variable_ref && is_reset expr && variable_name <> Constants.global_time_clock_name
 
 (* All relations found in a sequential code bloc *)
-let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_component (* parsed_seq_code_bloc *) =
+let relations_in_parsed_seq_code_bloc declarations_info _(*code_bloc_name*) bloc_component (* parsed_seq_code_bloc *) =
 
     let rec relations_in_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
         let relations_nested = List.map relations_in_parsed_instruction parsed_seq_code_bloc in
@@ -140,7 +141,7 @@ let rec relations_in_parsed_seq_code_bloc declarations_info code_bloc_name bloc_
 
         | Parsed_assignment (parsed_scalar_or_index_update_type, expr) ->
 
-            let rec contains_function_call =
+            let contains_function_call =
                 let has_fun_call = ParsingStructureMeta.has_fun_call_parsed_boolean_expression expr in
                 let rec has_indexes_fun_call = function
                     | Parsed_scalar_update _ -> false
@@ -286,7 +287,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 	(*** NOTE: we pass this set by reference ***)
 
 	(* Gather in each automaton *)
-	List.iter (fun (automaton_name, sync_name_list, locations) ->
+	List.iter (fun (automaton_name, _, locations) ->
 		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
         let automaton_component = Automaton_component automaton_name in
         all_relations := RelationSet.add (System_component, automaton_component) !all_relations;
@@ -426,16 +427,16 @@ let all_components_used_in_property_option parsed_property_option =
 		(* Cycles *)
 		(*------------------------------------------------------------*)
 
-		(** Accepting infinite-run (cycle) through a state predicate *)
+		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
         | Parsed_Win parsed_state_predicate
 			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
-		(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
 			-> List.iter (ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref) parsed_state_predicate_list
 
-		(** Infinite-run (cycle) with non-Zeno assumption *)
+		(* Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> ()
 
 
@@ -475,19 +476,19 @@ let all_components_used_in_property_option parsed_property_option =
 
 		(* Cartography *)
 		| Parsed_Cover_cartography (parsed_hyper_rectangle, _)
-		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, _)
-		(** Look for the border using the cartography*)
+		(* Look for the border using the cartography*)
 		| Parsed_Border_cartography (parsed_hyper_rectangle, _)
-		(** Randomly pick up values for a given number of iterations *)
+		(* Randomly pick up values for a given number of iterations *)
 		| Parsed_Random_cartography (parsed_hyper_rectangle, _, _)
-		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, _)
 			->
 			variables_used_ref := StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle);
 
 
-		(** Cover the whole cartography using learning-based abstractions *)
+		(* Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, _)
 		(* Parametric reachability preservation *)
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
@@ -693,7 +694,7 @@ let used_components_of_model_list (_, component_relations) =
         if RelationSet.mem relation already_processed then [] else (
             already_processed_component := RelationSet.add relation already_processed;
             (* Get destination refs as new source starting from the current ref *)
-            let source_refs = List.filter (fun (a, b) -> a = used_variable_component) component_relations in
+            let source_refs = List.filter (fun (a, _) -> a = used_variable_component) component_relations in
             (* Compute destination refs *)
             let dest_refs = List.fold_left (fun acc s -> all_reachable_component s @ acc) [] source_refs in
             (* Add current ref with computed destination refs *)
@@ -702,7 +703,7 @@ let used_components_of_model_list (_, component_relations) =
     in
 
     (* Get system refs *)
-    let system_refs = List.filter (fun (s, d) -> match s with System_component -> true | _ -> false) component_relations in
+    let system_refs = List.filter (fun (s, _) -> match s with System_component -> true | _ -> false) component_relations in
     (* Find all reachable refs (variables / functions) from system refs... *)
     List.fold_left (fun acc system_ptr -> all_reachable_component system_ptr @ acc) [] system_refs
 
@@ -766,7 +767,7 @@ let unused_functions_of_model dependency_graph =
 
 
 (* Remove all unused clock assignments in sequential code bloc *)
-let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph (* parsed_seq_code_bloc *) =
+let remove_unused_assignments_in_parsed_seq_code_bloc _(*declarations_info*) dependency_graph (* parsed_seq_code_bloc *) =
 
     (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
@@ -776,8 +777,8 @@ let remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependen
         List.filter_map remove_unused_assignment_instruction parsed_seq_code_bloc
 
     and remove_unused_assignment_instruction = function
-        | Parsed_assignment (parsed_scalar_or_index_update_type, expr) as instruction ->
-            let variable_name, id as variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
+        | Parsed_assignment (parsed_scalar_or_index_update_type, _) as instruction ->
+            let variable_name, _ as variable_ref = variable_ref_of_parsed_scalar_or_index_update_type parsed_scalar_or_index_update_type in
 
             let is_not_used = not (List.mem variable_name used_global_variables_list) && VariableInfo.is_global variable_ref in
 
@@ -842,7 +843,7 @@ let is_init_state_predicate_used used_global_variables (* init_state_predicate *
     in
     (* Check whether init state predicate is used *)
     let is_init_state_predicate_used = function
-        | Parsed_discrete_predicate (variable_name, expr) ->
+        | Parsed_discrete_predicate (variable_name, _) ->
             StringSet.mem variable_name used_global_variables
         | Parsed_linear_predicate linear_constraint ->
             is_linear_constraint_used linear_constraint

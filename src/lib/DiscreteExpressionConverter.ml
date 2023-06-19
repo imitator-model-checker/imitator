@@ -14,27 +14,22 @@
  ************************************************************)
 
 (* Utils modules *)
-open Constants
 open Exceptions
 open CustomModules
-open OCamlUtilities
 open ImitatorUtilities
 
 (* Parsing structure modules *)
 open ParsingStructure
-open ParsingStructureMeta
-open ParsingStructureGraph
 open DiscreteType
 
 (* Abstract model modules *)
 open AbstractModel
-open DiscreteExpressions
 open ExpressionConverter.Convert
 
 (* --- Structure checking --- *)
 
 (* Check that some expression in sequential code bloc contains only discrete *)
-let check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name (* seq_code_bloc *) =
+let check_inner_expression_of_seq_code_bloc variable_infos _(*code_bloc_name*) (* seq_code_bloc *) =
 
     (* Message when clock or parameter found *)
     let clock_or_param_found_callback_opt str_expr =
@@ -401,7 +396,7 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         (* Group parameters by their names *)
         let parameters_by_names = OCamlUtilities.group_by (fun ((variable_name, _), _) -> variable_name) fun_def.parameters in
         (* If for one parameter name, their is more than one parameter, there is duplicates *)
-        let duplicate_parameters = List.filter (fun (parameter_name, group) -> List.length group > 1) parameters_by_names in
+        let duplicate_parameters = List.filter (fun (_, group) -> List.length group > 1) parameters_by_names in
 
         (* For each parameter get if duplicate definitions are consistent or not *)
         (* Ex: for fn f (a : int, a : rat), duplicate definition of `a` isn't consistent *)
@@ -573,7 +568,7 @@ and try_convert_linear_term_of_parsed_discrete_factor = function
             )
 
         (* Nested expression used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
-        | Parsed_nested_expr expr ->
+        | Parsed_nested_expr _ ->
             raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
 
         | _ as factor ->
@@ -588,10 +583,10 @@ let try_convert_linear_expression_of_parsed_discrete_boolean_expression = functi
             relop,
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
         )
-    | Parsed_comparison (l_expr, relop, r_expr) ->
+    | Parsed_comparison _ ->
         raise (InvalidExpression "Use of non arithmetic comparison is forbidden in an expression that involve clock(s) / parameter(s)")
     (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
-    | Parsed_comparison_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+    | Parsed_comparison_in _ -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
     | Parsed_nested_bool_expr _ -> raise (InvalidExpression "A non-convex predicate involve clock(s) / parameter(s)")
     | Parsed_not _ -> raise (InvalidExpression "A not expression involve clock(s) / parameter(s)")
 
@@ -628,7 +623,7 @@ let convert_constant_init initialized_constants (name, expr, var_type) =
     (* Convert *)
     ExpressionConverter.Convert.global_expression_of_typed_boolean_expression dummy_variable_infos typed_expr
 
-(* Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
+(** Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
 let convert_guard variable_infos guard_convex_predicate =
 
     (* Function that split a convex_predicate into two lists *)

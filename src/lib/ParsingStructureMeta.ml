@@ -13,8 +13,6 @@
 
 open ParsingStructure
 open ParsingStructureUtilities
-open OCamlUtilities
-open ImitatorUtilities
 open CustomModules
 open DiscreteType
 open VariableInfo
@@ -44,7 +42,7 @@ let discrete_boolean_expression_constant_value_opt = function
 
 (* Tree leaf functions *)
 
-(* Check if leaf is a constant *)
+(** Check if leaf is a constant *)
 let is_constant variable_infos = function
     | Leaf_variable (variable_name, _) -> is_constant_is_defined variable_infos variable_name
     | Leaf_constant _ -> true
@@ -53,13 +51,13 @@ let is_constant variable_infos = function
     (* In the same manner as side_effects. We answer "false" by sake of simplicity here *)
     | Leaf_fun _ -> false
 
-(* Check if leaf is a function call *)
+(** Check if leaf is a function call *)
 let has_fun_call = function
     | Leaf_fun _ -> true
     | Leaf_variable _
     | Leaf_constant _ -> false
 
-(* Check if leaf has side effects *)
+(** Check if leaf has side effects *)
 let has_side_effects variable_infos = function
     | Leaf_fun function_name ->
         let function_metadata = VariableInfo.function_metadata_by_name variable_infos function_name in
@@ -67,7 +65,7 @@ let has_side_effects variable_infos = function
     | Leaf_variable _
     | Leaf_constant _ -> false
 
-(* Check if linear leaf is a constant *)
+(** Check if linear leaf is a constant *)
 let is_linear_constant variable_infos = function
     | Leaf_linear_variable (_, variable_name) -> is_constant_is_defined variable_infos variable_name
     | Leaf_linear_constant _
@@ -182,7 +180,7 @@ let is_only_discrete variable_infos clock_or_param_found_callback_opt = function
     (* As long as function can only return discrete and can't manipulate clocks and parameters *)
     | Leaf_fun _ -> true
 
-(* Check if leaf is a clock *)
+(*(* Check if leaf is a clock *)
 let is_clock variable_infos = function
     | Leaf_variable variable_ref -> VariableInfo.is_clock variable_infos variable_ref
     | Leaf_constant _ -> false
@@ -192,7 +190,7 @@ let is_clock variable_infos = function
 let is_param variable_infos = function
     | Leaf_variable variable_ref -> VariableInfo.is_param variable_infos variable_ref
     | Leaf_constant _ -> false
-    | Leaf_fun _ -> false
+    | Leaf_fun _ -> false*)
 
 (* Check if leaf is a clock or parameter *)
 let is_clock_or_param variable_infos = function
@@ -408,33 +406,33 @@ let only_discrete_in_parsed_discrete_arithmetic_expression variable_infos clock_
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
 
-(* Check if a parsed arithmetic expression contains clocks *)
+(*(* Check if a parsed arithmetic expression contains clocks *)
 let has_clock_parsed_arithmetic_expression variable_infos =
-    exists_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)
+    exists_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)*)
 
-(* Check if a parsed term contains clocks *)
+(*(* Check if a parsed term contains clocks *)
 let has_clock_parsed_discrete_term variable_infos =
-    exists_in_parsed_discrete_term (is_clock variable_infos)
+    exists_in_parsed_discrete_term (is_clock variable_infos)*)
 
-(* Check if a parsed factor contains clocks *)
+(*(* Check if a parsed factor contains clocks *)
 let has_clock_parsed_discrete_factor variable_infos =
-    exists_in_parsed_discrete_factor (is_clock variable_infos)
+    exists_in_parsed_discrete_factor (is_clock variable_infos)*)
 
-(* Check if a parsed arithmetic expression contains parameters *)
+(*(* Check if a parsed arithmetic expression contains parameters *)
 let has_param_parsed_arithmetic_expression variable_infos =
-    exists_in_parsed_discrete_arithmetic_expression (is_param variable_infos)
+    exists_in_parsed_discrete_arithmetic_expression (is_param variable_infos)*)
 
-(* Check if a parsed term contains parameters *)
+(*(* Check if a parsed term contains parameters *)
 let has_param_parsed_discrete_term variable_infos =
-    exists_in_parsed_discrete_term (is_param variable_infos)
+    exists_in_parsed_discrete_term (is_param variable_infos)*)
 
-(* Check if a parsed factor contains parameters *)
+(*(* Check if a parsed factor contains parameters *)
 let has_param_parsed_discrete_factor variable_infos =
-    exists_in_parsed_discrete_factor (is_param variable_infos)
+    exists_in_parsed_discrete_factor (is_param variable_infos)*)
 
-(* Check if a parsed arithmetic expression contains clocks or parameters *)
+(*(* Check if a parsed arithmetic expression contains clocks or parameters *)
 let has_clock_or_param_parsed_arithmetic_expression variable_infos =
-    exists_in_parsed_discrete_arithmetic_expression (is_clock_or_param variable_infos)
+    exists_in_parsed_discrete_arithmetic_expression (is_clock_or_param variable_infos)*)
 
 (* Check if a parsed term contains clocks or parameters *)
 let has_clock_or_param_parsed_discrete_term variable_infos =
@@ -544,9 +542,9 @@ let get_variable_refs_in_parsed_discrete_arithmetic_expression_with_accumulator 
 let get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator functions_used_ref =
     iterate_parsed_discrete_arithmetic_expression (add_function_of_discrete_boolean_expression functions_used_ref)
 
-(* Gather all function names used in a parsed sequential code bloc in a given accumulator *)
+(*(* Gather all function names used in a parsed sequential code bloc in a given accumulator *)
 let get_functions_in_parsed_seq_code_bloc_with_accumulator variables_used_ref =
-    iterate_in_parsed_seq_code_bloc (fun _ -> ()) (add_function_of_discrete_boolean_expression variables_used_ref)
+    iterate_in_parsed_seq_code_bloc (fun _ -> ()) (add_function_of_discrete_boolean_expression variables_used_ref)*)
 
 (* Gather all variable names used in a linear expression in a given accumulator *)
 let get_variables_in_linear_expression_with_accumulator variables_used_ref =
@@ -632,9 +630,9 @@ let get_variable_refs_in_parsed_discrete_arithmetic_expression =
 let get_functions_in_parsed_discrete_arithmetic_expression =
     wrap_accumulator get_functions_in_parsed_discrete_arithmetic_expression_with_accumulator
 
-(* Gather all function names used in a parsed sequential code bloc *)
+(*(* Gather all function names used in a parsed sequential code bloc *)
 let get_functions_in_parsed_seq_code_bloc variables_used_ref =
-    wrap_accumulator get_functions_in_parsed_seq_code_bloc_with_accumulator
+    wrap_accumulator get_functions_in_parsed_seq_code_bloc_with_accumulator*)
 
 (* Gather all variable names used in a parsed normal update expression *)
 let get_variables_in_parsed_normal_update =
@@ -706,7 +704,7 @@ let is_only_resets_in_parsed_seq_code_bloc variable_infos (* seq_code_bloc *) =
     ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
         (function
             (* If found clock update and assigned value is not zero so there is not only resets *)
-            | Leaf_update_variable ((variable_name, _) as variable_ref, update_expr, _) ->
+            | Leaf_update_variable ((_, _) as variable_ref, update_expr, _) ->
 
                 let is_clock = VariableInfo.is_clock variable_infos variable_ref in
                 let is_reset_value =
@@ -813,7 +811,7 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_boolean_expression vari
 	    nonlinear_operation_on_continuous_in_parsed_boolean_expression variable_infos expr
 
 and nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos = function
-    | Parsed_sum_diff (expr, term, parsed_sum_diff) ->
+    | Parsed_sum_diff (expr, term, _) ->
         nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos expr ||
         nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
@@ -821,7 +819,7 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression v
 	    nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos term
 
 and nonlinear_operation_on_continuous_in_parsed_discrete_term variable_infos = function
-	| Parsed_product_quotient (term, factor, parsed_product_quotient) ->
+	| Parsed_product_quotient (term, factor, _) ->
 	    let has_clock_or_param_left = has_clock_or_param_parsed_discrete_term variable_infos term in
 	    let has_clock_or_param_right = has_clock_or_param_parsed_discrete_factor variable_infos factor in
 	    (* If we reach left and right expressions that contains at least one clock or parameter, there is a continuous factor ! *)

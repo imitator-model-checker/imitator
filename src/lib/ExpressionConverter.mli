@@ -17,7 +17,6 @@
 module rec TypeChecker : sig
 
 open ParsingStructure
-open DiscreteType
 open TypedStructure
 
 (* Check that a discrete init is well typed *)
