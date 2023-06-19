@@ -162,7 +162,7 @@ type scc = state_index list
 val get_action_from_combined_transition : AbstractModel.abstract_model -> combined_transition -> action_index
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
-val get_resets : AbstractModel.abstract_model -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
+val get_resets : AbstractModel.abstract_model -> combined_transition -> Automaton.clock_index list
 
 
 (************************************************************)

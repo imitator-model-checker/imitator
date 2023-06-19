@@ -31,7 +31,7 @@ open AbstractAlgorithm
 
 (************************************************************)
 (************************************************************)
-(** Types *)
+(* Types *)
 (************************************************************)
 (************************************************************)
 
@@ -58,7 +58,7 @@ type addition_result =
 
 
 (************************************************************)
-(** Transitions *)
+(* Transitions *)
 (************************************************************)
 
 (** A combined transition is a list of transitions (one for each automaton involved) *)
@@ -98,10 +98,10 @@ type concrete_run = {
 
 
 (************************************************************)
-(** Impossible concrete run *)
+(* Impossible concrete run *)
 (************************************************************)
 
-(* An impossible concrete run is a run that starts with a concrete run prefix, and then follows by taking transitions NOT admissible in the state space. Transitions may be imaginary, but locations remain existing locations. *)
+(** An impossible concrete run is a run that starts with a concrete run prefix, and then follows by taking transitions NOT admissible in the state space. Transitions may be imaginary, but locations remain existing locations. *)
 
 type impossible_concrete_step = {
 	(* First let time elapse *)
@@ -127,7 +127,7 @@ type impossible_concrete_run = {
 
 
 (************************************************************)
-(** Symbolic run in a state space *)
+(* Symbolic run in a state space *)
 (************************************************************)
 
 (*** WARNING: the structure is here (state, transition) followed by final state, but in concrete_run, it is initial state followed by (transition, state) list :( ***)
@@ -144,7 +144,7 @@ type symbolic_run = {
 
 
 (************************************************************)
-(** Set of state index *)
+(* Set of state index *)
 (************************************************************)
 
 (* state struct for constructing set type *)
@@ -160,7 +160,7 @@ module StateIndexSet = Set.Make(StateStruct)
 
 
 (************************************************************)
-(** State space structure *)
+(* State space structure *)
 (************************************************************)
 (* Ugly Fix*)
 module LocationHash = Hashtbl.Make (
@@ -172,31 +172,31 @@ module LocationHash = Hashtbl.Make (
 )
 
 type state_space = {
-	(** The number of generated states (even not added to the state space) *)
+	(* The number of generated states (even not added to the state space) *)
 	nb_generated_states : int ref;
 
-	(** An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
+	(* An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
 	mutable all_states : (State.state_index, abstract_state) Hashtbl.t;
 
-	(** The id of the initial state *)
+	(* The id of the initial state *)
 	(*** NOTE: mutable due to the fact that the initial state can be merged with another state *)
 	mutable initial : State.state_index option;
 
-	(** A hashtable location -> location_index *)
+	(* A hashtable location -> location_index *)
 	index_of_locations : (location_index) LocationHash.t;
 
-	(** A DynArray location_index -> location *)
+	(* A DynArray location_index -> location *)
 	locations : DiscreteState.global_location DynArray.t;
 
-	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
+	(* A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
         (* modified by Jaco van de Pol: use global_location_index as key, rather than hash code of global_location *)
 	mutable states_for_comparison : (location_index, State.state_index) Hashtbl.t;
 	(*2.12 diff here*)
 
-	(** A HashTable state_index -> list of (combined_transition * 'target_state_index') *)
+	(* A HashTable state_index -> list of (combined_transition * 'target_state_index') *)
 	mutable transitions_table : (State.state_index , (combined_transition * State.state_index) list) Hashtbl.t;
 
-	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
+	(* An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : State.state_index ref;
 }
 
@@ -204,7 +204,7 @@ type state_space = {
 
 
 (************************************************************)
-(** SCC detection *)
+(* SCC detection *)
 (************************************************************)
 
 (** An SCC is just a list of states *)
@@ -215,7 +215,7 @@ type scc = State.state_index list
 	- the other SCCs are discarded
 ***)
 
-(* Data structure: node with index / lowlink / onStack *)
+(** Data structure: node with index / lowlink / onStack *)
 type tarjan_node = {
 	(* Additional field used to record the real state_index in the state space *)
 	state_index     : State.state_index;
@@ -228,7 +228,7 @@ type tarjan_node = {
 
 (************************************************************)
 (************************************************************)
-(** Local exceptions *)
+(* Local exceptions *)
 (************************************************************)
 (************************************************************)
 exception Found_cycle
@@ -237,19 +237,19 @@ exception Found_cycle
 (* local exception *)
 exception Found_transition of combined_transition
 
-(* Exception raised when the SCC is found *)
+(** Exception raised when the SCC is found *)
 exception Found_scc of scc
 
-(* Old state found *)
+(** Old state found *)
 exception Found_old of State.state_index
-(* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
+(** State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
 exception Found_new of State.state_index
 
 
 
 (************************************************************)
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 (************************************************************)
 
@@ -284,7 +284,7 @@ let counter_nb_states = create_hybrid_counter_and_register "StateSpace.nb_states
 let counter_nb_transitions = create_hybrid_counter_and_register "StateSpace.nb_transitions" States_counter Verbose_experiments
 let counter_empty_states_for_comparison = create_hybrid_counter_and_register "StateSpace.empty_states_for_comparison" States_counter Verbose_experiments
 
-let data_recorder_merging = create_data_recorder_and_register "StateSpace.merging_sequences" Algorithm_counter Verbose_experiments
+(* let data_recorder_merging = create_data_recorder_and_register "StateSpace.merging_sequences" Algorithm_counter Verbose_experiments *)
 
 (* Counters for experiments of merging-in-pta *)
 let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip tests" Algorithm_counter Verbose_experiments
@@ -293,7 +293,7 @@ let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip t
 
 (************************************************************)
 (************************************************************)
-(** Class-independent functions *)
+(* Class-independent functions *)
 (************************************************************)
 (************************************************************)
 
@@ -305,7 +305,7 @@ let string_of_state_index (state_index : State.state_index) = "s_" ^ (string_of_
 
 
 (************************************************************)
-(** Class-independent function: state space nature *)
+(* Class-independent function: state space nature *)
 (************************************************************)
 
 (** Convert a statespace_nature into a string *)
@@ -337,12 +337,12 @@ let get_action_from_combined_transition (model : AbstractModel.abstract_model) (
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 (*** TODO: allow for all resets ***)
-let get_resets (model : AbstractModel.abstract_model) (state_index : State.state_index) combined_transition (state_index' : State.state_index) =
+let get_resets (model : AbstractModel.abstract_model) (combined_transition : combined_transition) =
 	(* For all transitions involved in the combined transition *)
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
 		let transition = model.transitions_description transition_index in
-		(* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
+		(*** TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? ***)
         let potential_clock_updates, _ = transition.updates in
 		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
 		match potential_clock_updates with
@@ -363,9 +363,9 @@ let get_resets (model : AbstractModel.abstract_model) (state_index : State.state
 (* Class-independent function on DiscreteState hash code *)
 (**************************************************************)
 
-(** compute a hash code for a state, depending only on the location *)
+(*(** compute a hash code for a state, depending only on the location *)
 let location_hash_code (state : state) =
-	DiscreteState.hash_code state.global_location
+	DiscreteState.hash_code state.global_location*)
 
 
 (**************************************************************)
@@ -900,7 +900,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(*------------------------------------------------------------*)
-	(** SCC detection *)
+	(* SCC detection *)
 	(*------------------------------------------------------------*)
 
 	(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): `reconstruct_scc state_space source_state_index` reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
@@ -1141,7 +1141,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(************************************************************)
-	(** Backward run-computation *)
+	(* Backward run-computation *)
 	(************************************************************)
 
 
@@ -1159,7 +1159,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(*------------------------------------------------------------*)
-		(** Table to color/mark states *)
+		(* Table to color/mark states *)
 		(*------------------------------------------------------------*)
 		let colortable_create init_nb : ('a, bool) Hashtbl.t = Hashtbl.create init_nb in
 
@@ -1286,7 +1286,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(************************************************************)
-	(** Statistics *)
+	(* Statistics *)
 	(************************************************************)
 
 	(** Get statistics on the structure of the states: number of different locations, number of different constraints *)
@@ -1331,7 +1331,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		) in
 
 		(* Add number of constraints per location *)
-		Hashtbl.iter (fun location nb_constraints ->
+		Hashtbl.iter (fun _ nb_constraints ->
 			result_string := !result_string ^ " - " ^ (string_of_int nb_constraints);
 		) nb_constraints_per_location_id;
 		(* Add average *)
@@ -1352,9 +1352,10 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(************************************************************)
 	(************************************************************)
-	(** Methods modifying the state space *)
+	(* Methods modifying the state space *)
 	(************************************************************)
 	(************************************************************)
+
 	(** Increment the number of generated states (even though not member of the state space) *)
 	method increment_nb_gen_states =
 		state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
@@ -1612,7 +1613,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		if List.mem (combined_transition , target_state_index) transitions_and_states then(
 			print_message Verbose_total ("Transition belong to the list already");
 		)else(
-			(** Add to the data structure *)
+			(* Add to the data structure *)
 			Hashtbl.replace state_space.transitions_table source_state_index
 				(List.rev ((combined_transition , target_state_index) :: transitions_and_states))
 		);
@@ -1630,7 +1631,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		(*** TODO: it seems that getting the list is done twice here; optimization? ***)
 		if not (List.mem combined_transition transitions) then(
-			(** Add to the data structure *)
+			(* Add to the data structure *)
 			Hashtbl.replace state_space.transitions_table source_state_index
 				(List.rev ((combined_transition , target_state_index) :: (get_successors_with_combined_transitions state_space source_state_index)))
 		)else(
@@ -1671,12 +1672,12 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(************************************************************)
 	(************************************************************)
-	(** Methods modifying the state space: merging *)
+	(* Methods modifying the state space: merging *)
 	(************************************************************)
 	(************************************************************)
 
 	(************************************************************)
-	(** THE FOLLOWING WAS ADDED FROM V2.12 *)
+	(* THE FOLLOWING WAS ADDED FROM V2.12 *)
 	(************************************************************)
 
 	(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
@@ -1785,7 +1786,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		let merge_state si =
 			print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 			let state = self#get_state si in
-			let l, c = state.global_location, state.px_constraint in
+			let c = state.px_constraint in
 			(* get merge candidates as pairs (index, state) *)
 			let candidates = self#get_siblings_212 si in
 			(* try to merge with siblings, restart if merge found, return eaten states *)
@@ -1903,7 +1904,7 @@ class stateSpace (guessed_nb_transitions : int) =
 					(*Remove state from all_states and states_for_comparison*)
 					Hashtbl.remove state_space.all_states merged_index;
 					Hashtbl.filter_map_inplace (
-							fun location_index state_index -> if state_index = merged_index then None else Some state_index
+							fun _ state_index -> if state_index = merged_index then None else Some state_index
 							(*filter_map_inplace discard binding associated to None, update if Some*)
 						) state_space.states_for_comparison;
 
@@ -1912,7 +1913,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
-		(** Merge refactor copy_and_reduce **)
+		(* Merge refactor copy_and_reduce **)
 		let copy_and_reduce merger_state eaten =
 			(* make a copy of the reachable part of the state space with the eaten states replaced by the merger_state *)
 			let new_states = Hashtbl.create 1024 in
@@ -2085,7 +2086,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			in
 
 			main_merging si look_in_queue;
-			while options#merge_restart && !did_something do (** Restart only if option restart is set **)
+			while options#merge_restart && !did_something do (* Restart only if option restart is set *)
 				print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
 				main_merging si look_in_queue
 			done;

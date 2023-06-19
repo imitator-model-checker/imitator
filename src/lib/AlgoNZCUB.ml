@@ -134,7 +134,7 @@ class algoNZCUB (model : AbstractModel.abstract_model) =
 			let transitions_with_resets_and_b = List.map (fun (source_index, combined_transition, target_index ) -> 
 				(* Compute resets *)
 				(*** WARNING: StateSpace.get_resets only works for selected (normal) resets ***)
-				let resets = StateSpace.get_resets model source_index combined_transition target_index in
+				let resets = StateSpace.get_resets model combined_transition in
 				
 				(* Find the 'b' (which is that of the target) *)
 				(*** NOTE: quite expensive, but much much less than computing resets (or any polyhedra operation) so we don't optimize here ***)
