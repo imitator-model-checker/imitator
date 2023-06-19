@@ -24,7 +24,7 @@ open AbstractProperty
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Inclusion *)
+(** Inclusion *)
 (*------------------------------------------------------------*)
 
 let default_state_comparison property : AbstractAlgorithm.state_comparison_operator =
@@ -66,13 +66,13 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
 		-> Equality_check
@@ -118,20 +118,20 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	| Cover_cartography _
 		-> Equality_check
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography _
 		-> Inclusion_check
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography _
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography _
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography _
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography _
 		-> Equality_check
 
@@ -189,11 +189,11 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
@@ -241,21 +241,21 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(* Cartography *)
 	| Cover_cartography _
 
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography _
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography _
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography _
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography _
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography _
 		(* All comparison operators preserve correctness *)
 		(*** WARNING: not sure…? ***)
@@ -278,7 +278,7 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 
 
 (*------------------------------------------------------------*)
-(* Merge *)
+(** Merge *)
 (*------------------------------------------------------------*)
 
 let merge_needed property =
@@ -321,13 +321,13 @@ let merge_needed property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
 		-> false
@@ -373,20 +373,20 @@ let merge_needed property =
 	| Cover_cartography _
 		-> false
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography _
 		-> true
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography _
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography _
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography _
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography _
 		-> false
 
@@ -439,16 +439,16 @@ let merge_needed property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	(* Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZCycle_check
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+
+	(* Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
 	| NZCycle_transform
 	
-	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+	(* Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
 	| NZCycle_CUB
 	
 		-> Exploration_layer_BFS
@@ -488,19 +488,19 @@ let merge_needed property =
 	(* Cartography *)
 	| Cover_cartography _
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography _
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography _
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography _
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography _
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography _
 
 	(* Parametric reachability preservation *)
@@ -515,7 +515,7 @@ let merge_needed property =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Does the property support the #witness mode? *)
+(** Does the property support the #witness mode? *)
 (*------------------------------------------------------------*)
 
 let supports_witness property =
@@ -558,13 +558,13 @@ let supports_witness property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
 		-> true
@@ -607,19 +607,19 @@ let supports_witness property =
 	(* Cartography *)
 	| Cover_cartography _
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography _
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography _
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography _
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography _
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography _
 
 	(* Parametric reachability preservation *)
@@ -635,7 +635,7 @@ let supports_witness property =
 
 
 (*------------------------------------------------------------*)
-(* Does the property support the #exemplification mode? *)
+(** Does the property support the #exemplification mode? *)
 (*------------------------------------------------------------*)
 
 let supports_exemplification property =
@@ -659,10 +659,10 @@ let supports_exemplification property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _
 
 		-> true
@@ -693,7 +693,7 @@ let is_cartography property =
 (* Textual description of properties *)
 (************************************************************)
 
-(* Gives a textual description of a property *)
+(** Gives a textual description of a property *)
 let text_of_property property =
 	let synthesis_or_witness = match property.synthesis_type with
 		| Exemplification	-> "exemplification"
@@ -736,13 +736,13 @@ let text_of_property property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
 
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized _ -> "infinite generalized accepting run " ^ synthesis_or_witness
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ ""
 	
 
@@ -781,19 +781,19 @@ let text_of_property property =
 	(* Cartography *)
 	| Cover_cartography (_, step) -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step)
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography (_, _, step) -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step) ^ " and using learning-based abstractions"
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography (_, step) -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst step)
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography (_, step) -> "behavioral cartography algorithm with border detection and step " ^ (NumConst.string_of_numconst step)
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography (_, nb, step) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst step)
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography (_, nb, step) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst step)
 
 	(* Parametric reachability preservation *)
