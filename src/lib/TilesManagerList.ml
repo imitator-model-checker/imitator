@@ -18,8 +18,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open Exceptions
 open ImitatorUtilities
 open Result
 open TilesManager
@@ -33,14 +31,14 @@ open TilesManager
 (************************************************************)
 (************************************************************)
 class tilesManagerList =
-	object (self) inherit tilesManager as super
+	object (_(*self*)) inherit tilesManager (*as super*)
 	
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
-	(* List of results stored as a list *)
+	(** List of results stored as a list *)
 	val mutable abstract_point_based_results : Result.abstract_point_based_result list = []
 
 	
@@ -49,21 +47,21 @@ class tilesManagerList =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Initialize the manager *)
+	(** Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize =
 		abstract_point_based_results <- []
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the number of results processed and stored *)
+	(** Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_nb_results =
 		List.length abstract_point_based_results
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check if a parameter valuation belongs to the tiles *)
+	(** Check if a parameter valuation belongs to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method pval_in_tiles pval =
 		(*** NOTE: obliged to define a non-anonymous function; otherwise OCaml makes a wrong type inference... ***)
@@ -73,7 +71,7 @@ class tilesManagerList =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Process a new tile, i.e., add it to the tiles *)
+	(** Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_tile tile =
 		abstract_point_based_results <- tile :: abstract_point_based_results

@@ -18,8 +18,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open ImitatorUtilities
 open Exceptions
 open Result
 
@@ -147,13 +145,13 @@ let pval_in_good_or_bad_constraint pval (good_or_bad_constraint : good_or_bad_co
 (************************************************************)
 (************************************************************)
 class virtual tilesManager =
-	object (self)
+	object (_(*self*))
 	
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Flag to remember whether a valuation was skipped *)
+	(** Flag to remember whether a valuation was skipped *)
 	val mutable point_skipped = false
 	
 	
@@ -161,29 +159,29 @@ class virtual tilesManager =
 	(* Class methods *)
 	(************************************************************)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Initialize the manager *)
+	(** Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual initialize : unit
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the number of results processed and stored *)
+	(** Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual get_nb_results : int
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check if a parameter valuation belongs to the tiles *)
+	(** Check if a parameter valuation belongs to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual pval_in_tiles : PVal.pval -> bool
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Remembers the fact that at least one point was skipped, i.e., the resulting constraint is not valid *)
+	(** Remember the fact that at least one point was skipped, i.e., the resulting constraint is not valid *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method set_point_skipped : unit =
 		point_skipped <- true
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Process a new tile, i.e., add it to the tiles *)
+	(** Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual process_tile : Result.abstract_point_based_result -> unit
 

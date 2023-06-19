@@ -18,8 +18,6 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
-open Exceptions
 open ImitatorUtilities
 open Result
 open TilesManager
@@ -32,7 +30,7 @@ open TilesManager
 (************************************************************)
 (************************************************************)
 class tilesManagerConstraint =
-	object (self) inherit tilesManager as super
+	object (_(*self*)) inherit tilesManager (*as super*)
 	
 	
 	(************************************************************)
@@ -47,7 +45,7 @@ class tilesManagerConstraint =
 			bad		= LinearConstraint.false_p_nnconvex_constraint (), Constraint_exact;
 		}
 	
-	(* Keep track of the number of results processed and added *)
+	(** Keep track of the number of results processed and added *)
 	val mutable nb_results_added = 0
 
 	
@@ -56,7 +54,7 @@ class tilesManagerConstraint =
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Initialize the manager *)
+	(** Initialize the manager *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize =
 	(*** BADPROG: in fact, this initialization is already done when the object is created (but safer to reinitialize just in case) ***)
@@ -72,21 +70,21 @@ class tilesManagerConstraint =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the number of results processed and stored *)
+	(** Get the number of results processed and stored *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_nb_results =
 		nb_results_added
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check if a parameter valuation belongs to the tiles *)
+	(** Check if a parameter valuation belongs to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method pval_in_tiles pval =
 		pval_in_good_or_bad_constraint pval result
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Process a new tile, i.e., add it to the tiles *)
+	(** Process a new tile, i.e., add it to the tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_tile abstract_point_based_result =
 		(*** NOTE: for now, we do not keep the tiles in memory ***)
@@ -99,8 +97,10 @@ class tilesManagerConstraint =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Process the result of the cartography *)
-	(* If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected (*** NOTE: used in Random to force the coverage to Unknown ***) *)
+	(** Process the result of the cartography
+	 * If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected
+	 (*** NOTE: used in Random to force the coverage to Unknown ***)
+	 *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_result start_time v0 nb_points_in_v0 nb_unsuccessful_points termination_status (forced_coverage_option : Result.bc_coverage option) =
 
