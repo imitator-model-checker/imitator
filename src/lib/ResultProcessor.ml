@@ -18,12 +18,8 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-
-open JsonFormatter
-
 open Statistics
 open AbstractModel
 open Result
@@ -38,7 +34,7 @@ let counter = Statistics.create_time_counter_and_register "file generation" Grap
 
 
 (************************************************************)
-(* Conversion of a good_bad_constraint into a list of (1 or 2) zones *)
+(** Conversion of a good_bad_constraint into a list of (1 or 2) zones *)
 (************************************************************)
 let zones_of_good_bad_constraint = function
 	(* Only good valuations: convert to GOOD convex polyhedron *)
@@ -131,7 +127,8 @@ let verbose_string_of_soundness_suffix = function
 (* 	| Constraint_under_over -> "This constraint is both a possibly under-approximation and a possibly over-approximation (or the actual result itself)" *)
 	(* Impossible to compare the constraint with the original result *)
 	| Constraint_maybe_invalid -> "validity cannot be assessed"
-let verbose_string_of_soundness s = "This constraint " ^ (verbose_string_of_soundness_suffix s)
+
+(* let verbose_string_of_soundness s = "This constraint " ^ (verbose_string_of_soundness_suffix s) *)
 
 
 let string_of_coverage = function
@@ -266,7 +263,7 @@ let add_custom_details _ =
 (************************************************************)
 (* I/O functions *)
 (************************************************************)
-(* Header for result files *)
+(** Header for result files *)
 let file_header () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -981,7 +978,7 @@ let print_single_synthesis_or_point_based_result result computation_time constra
 
 
 
-let process_single_synthesis_or_point_based_result file_prefix algorithm_name result state_space computation_time termination =
+let process_single_synthesis_or_point_based_result file_prefix algorithm_name result state_space computation_time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1118,7 +1115,7 @@ let process_result result algorithm_name prefix_option =
 		);
 		
 		(* Generic handling for drawing etc. *)
-		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time result.termination
+		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time
 		
 
 	| Point_based_result result ->
@@ -1134,7 +1131,7 @@ let process_result result algorithm_name prefix_option =
 		);
 		
 		(* Generic handling for drawing etc. *)
-		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time result.termination
+		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time
 
 
 	| Cartography_result cartography_result ->

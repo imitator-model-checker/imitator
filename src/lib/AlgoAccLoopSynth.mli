@@ -17,7 +17,6 @@
 (* Modules *)
 (************************************************************)
 open AlgoLoopSynth
-open State
 
 
 (************************************************************)
@@ -25,6 +24,7 @@ open State
 (************************************************************)
 class algoAccLoopSynth : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
 	object inherit algoLoopSynth
+
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -33,7 +33,7 @@ class algoAccLoopSynth : AbstractModel.abstract_model -> AbstractProperty.state_
 		
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Detect whether a cycle is accepting *)
+		(** Detect whether a cycle is accepting *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method is_accepting : StateSpace.scc ->  bool
 

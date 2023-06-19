@@ -21,10 +21,10 @@ open Exceptions
 (****************************************************************)
 (* Handling the global number of dimensions *)
 (****************************************************************)
-(* Number of dimensions (singleton pattern) *)
+(** Number of dimensions (singleton pattern) *)
 let nb_dim = ref None
 
-(* All dimensions, i.e., [0, …, nb_dim] (singleton pattern) *)
+(** All dimensions, i.e., [0, …, nb_dim] (singleton pattern) *)
 let all_dimensions = ref None
 
 

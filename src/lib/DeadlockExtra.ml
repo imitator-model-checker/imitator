@@ -12,10 +12,9 @@
 
  (* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
 
-type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) list
+(* type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) list *)
 
 open LinearConstraint
-open StateSpace
 open DiscreteExpressionEvaluator
 open State
 
@@ -23,14 +22,14 @@ let dl_instantiate_discrete_gen discrete constr =
     pxd_intersection_assign discrete [constr];
     pxd_hide_discrete_and_collapse discrete
 
-(* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
+(** go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
 let dl_instantiate_discrete (state_space : StateSpace.stateSpace) state_index constr =
     let model = Input.get_model() in
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     let discrete = State.discrete_constraint_of_global_location model glob_location in
     dl_instantiate_discrete_gen discrete constr
 
-(* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
+(*(** go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
 let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) state_index constr transition =
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
 
@@ -57,7 +56,7 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 
     let discrete = State.discrete_constraint_of_global_location model location in
 
-    dl_instantiate_discrete_gen discrete constr
+    dl_instantiate_discrete_gen discrete constr*)
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
 let dl_discrete_constraint_of_global_location (state_space : StateSpace.stateSpace) state_index transition =
@@ -91,7 +90,7 @@ let dl_discrete_constraint_of_global_location (state_space : StateSpace.stateSpa
     State.discrete_constraint_of_global_location model location,
     DiscreteExpressionEvaluator.effective_clock_updates eval_context model.variable_names
 
-(* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
+(*(* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *) 
 let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z updates transition =
     let model = Input.get_model () in
@@ -103,7 +102,7 @@ let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z update
 
 
 
-    constr_px
+    constr_px*)
 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *)
@@ -119,7 +118,7 @@ let dl_inverse_update_ben_fix (state_space : StateSpace.stateSpace) state_index 
 
 
 
-(* Apply past time operator *)
+(** Apply past time operator *)
 let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     AlgoStateBased.apply_time_past glob_location z

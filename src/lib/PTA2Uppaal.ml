@@ -58,10 +58,10 @@ let uppaal_update_separator = ", "
 
 
 
-(* Positioning *)
+(** Positioning *)
 let scaling_factor = 200
 
-(* Customized string of discrete number type for UPPAAL *)
+(** Customized string of discrete number type for UPPAAL *)
 let string_of_var_type_discrete_number = function
     | Dt_weak_number
     | Dt_rat -> "int"

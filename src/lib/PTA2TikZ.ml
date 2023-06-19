@@ -15,7 +15,6 @@
 open OCamlUtilities
 open Exceptions
 open AbstractModel
-open AbstractProperty
 open DiscreteExpressions
 open Constants
 
@@ -26,7 +25,7 @@ open Constants
 (** Constants *)
 (************************************************************)
 
-let tikz_boolean_string = { default_string with
+(*let tikz_boolean_string = { default_string with
     and_operator = " \\land ";
     or_operator = " \\lor ";
     not_operator = "\\neg";
@@ -34,9 +33,9 @@ let tikz_boolean_string = { default_string with
 	le_operator   = "\\leq";
 	neq_operator  = "\\neq";
 	ge_operator   = "\\geq";
-}
+}*)
 
-let tikz_string = { global_default_string with boolean_string = tikz_boolean_string }
+(* let tikz_string = { global_default_string with boolean_string = tikz_boolean_string } *)
 
 (************************************************************
  Functions
@@ -82,8 +81,8 @@ let tikz_string_of_guard =
 
 
 
-(* Add a header to the model *)
-let string_of_header model =
+(** Add a header to the model *)
+let string_of_header _ =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	          "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
@@ -135,7 +134,7 @@ let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
         | Instruction expr ->
             escape_latex (DiscreteExpressions.string_of_global_expression variable_names_with_style expr)
 
-        | For_loop ((variable_name, _ (* id *)), from_expr, to_expr, loop_dir, inner_bloc) ->
+        | For_loop ((variable_name, _ (* id *)), from_expr, to_expr, _, inner_bloc) ->
             "for " ^ escape_latex variable_name ^ " from "
             ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression variable_names_with_style from_expr)
             ^ " to "

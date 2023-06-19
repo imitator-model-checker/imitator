@@ -38,11 +38,11 @@ type error_type =
 
 
 (************************************************************)
-(** Termination of the algorithm *)
+(* Termination of the algorithm *)
 (************************************************************)
 type nb_unexplored_successors = int
 
-(* Termination for state-space based algorithms *)
+(** Termination for state-space based algorithms *)
 type state_based_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| Regular_termination
@@ -62,7 +62,7 @@ type state_based_algorithm_termination =
 	| Target_found
 
 
-(* Termination for cartography algorithms *)
+(** Termination for cartography algorithms *)
 type bc_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| BC_Regular_termination
@@ -144,7 +144,7 @@ type bc_coverage =
 
 
 (************************************************************)
-(** General result for the IMITATOR algorithms *)
+(* General result for the IMITATOR algorithms *)
 (************************************************************)
 
 (*------------------------------------------------------------*)

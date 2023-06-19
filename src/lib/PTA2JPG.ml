@@ -15,9 +15,7 @@
 
 
 open OCamlUtilities
-open Exceptions
 open AbstractModel
-open Result
 open ImitatorUtilities
 
 
@@ -25,10 +23,10 @@ open ImitatorUtilities
  Functions
 ************************************************************)
 
-(* Create the array of dot colors *)
+(** Create the array of dot colors *)
 let dot_colors = Array.of_list Graphics.dot_colors
 
-(* Coloring function for each thing *)
+(** Coloring function for each thing *)
 let color = fun index ->
 	(* If more colors than our array: white *)
 	try dot_colors.(index) with Invalid_argument _ -> "white"
@@ -42,8 +40,8 @@ let string_of_list_of_variables variable_names variables =
 	string_of_list_of_string_with_sep "," variables
 
 
-(* Add a header to the model *)
-let string_of_header model =
+(** Add a header to the model *)
+let string_of_header () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	          "/************************************************************"
@@ -54,7 +52,7 @@ let string_of_header model =
 	^ "\n" ^" ************************************************************/"
 
 
-(* Convert a sync into a string *)
+(** Convert a sync into a string *)
 let string_of_sync model action_index =
 	match model.action_types action_index with
 	| Action_type_sync -> (model.action_names action_index) ^ "\\n"
@@ -321,6 +319,6 @@ Generation time: " ^ (now()) ^ "\"];"
 
 (* Convert an automaton into a string *)
 let string_of_model model =
-	string_of_header model
+	string_of_header ()
 (* 	^  "\n" ^ string_of_declarations model *)
 	^  "\n" ^ string_of_automata model
