@@ -176,7 +176,7 @@ let is_linear_guard = function
 	| Discrete_continuous_guard guard -> DiscreteExpressions.is_linear_nonlinear_constraint guard.discrete_guard
 
 (* Convert the invariant of a location into a string *)
-let string_of_invariant model automaton_index location_index stopwatches _ =
+let string_of_invariant model automaton_index location_index stopwatches =
 
     let invariant = model.invariants automaton_index location_index in
     let str_invariant = ModelPrinter.string_of_guard model.variable_names invariant in
@@ -300,7 +300,7 @@ let string_of_transitions model automaton_index location_index =
 
 
 (* Convert a location of an automaton into a string *)
-let string_of_location model automaton_index location_index stopwatches clocks =
+let string_of_location model automaton_index location_index stopwatches =
 	"\n"
 	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
 	^ (model.location_names automaton_index location_index)
@@ -309,19 +309,19 @@ let string_of_location model automaton_index location_index stopwatches clocks =
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
 	)
 	^ ": "
-	^ (string_of_invariant model automaton_index location_index stopwatches clocks)
+	^ (string_of_invariant model automaton_index location_index stopwatches)
 	^ (string_of_transitions model automaton_index location_index)
 
 
 (* Convert the locations of an automaton into a string *)
-let string_of_locations model automaton_index stopwatches clocks =
+let string_of_locations model automaton_index stopwatches =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		string_of_location model automaton_index location_index stopwatches clocks
+		string_of_location model automaton_index location_index stopwatches
 	) (model.locations_per_automaton automaton_index))
 
 
 (* Convert an automaton into a string *)
-let string_of_automaton model automaton_index stopwatches clocks =
+let string_of_automaton model automaton_index stopwatches =
 	(* Print some information *)
 	print_message Verbose_low ("Translating automaton '" ^ (model.automata_names automaton_index) ^ "'...");
 
@@ -330,19 +330,19 @@ let string_of_automaton model automaton_index stopwatches clocks =
 	^ "\n--************************************************************"
 	^ "\n " ^ (string_of_synclabs model automaton_index)
 	^ "\n " ^ (string_of_initially model automaton_index)
-	^ "\n " ^ (string_of_locations model automaton_index stopwatches clocks)
+	^ "\n " ^ (string_of_locations model automaton_index stopwatches)
 	^ "\n end -- " ^ (model.automata_names automaton_index) ^ ""
 	^ "\n--************************************************************"
 
 
 (* Convert the automata into a string *)
-let string_of_automata model stopwatches clocks =
+let string_of_automata model stopwatches =
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
 	(* Print all (other) PTA *)
 	string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton model automaton_index stopwatches clocks
+		List.map (fun automaton_index -> string_of_automaton model automaton_index stopwatches
 	) pta_without_obs)
 
 
@@ -564,7 +564,7 @@ let string_of_model model =
 	(* The function declarations *)
 	^  "\n" ^ string_of_fun_definitions model
 	(* All automata *)
-	^  "\n" ^ string_of_automata model stopwatches clocks
+	^  "\n" ^ string_of_automata model stopwatches
 
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
