@@ -80,12 +80,12 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicat
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "BC (full coverage with learning-based abstraction)"
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
+	(** Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! initialize_variables =
 		super#initialize_variables;
@@ -95,7 +95,7 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (state_predicat
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
+	(** Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! call_point _ =
 		(* Retrieve the current point *)
