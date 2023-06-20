@@ -1,6 +1,9 @@
 (* Mikael, Aarhus, March 21, 2023 
 	Two automata PTG
-    Expected constraint: False
+    Expected constraint: 
+     1 >= p
+    & p >= 0
+    & q = 2
 *)
 
 controllable actions: c_1, c_2;
