@@ -760,7 +760,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		if complete_synthesis then
 			init_exact
 		else
-			LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (WinningZone.find init)
+			not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)
 
 
 
@@ -852,14 +852,14 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		in
 
 		(* Get the termination status *)
-		 let termination_status = match termination_status with
-			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
-			| Some status -> status
-		in
+		let termination_status = match termination_status with
+		| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
+		| Some status -> status
+	in
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness = if termination_status = Regular_termination && (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
 		Single_synthesis_result
