@@ -177,7 +177,6 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING (2022/11, ÉA): copied from AlgoEF ***)
 	method private process_state (state : State.state) : bool =
 	
 		(* Statistics *)
@@ -189,97 +188,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_constraint = state.px_constraint in
-		
-		let to_be_added =
-			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate model state_predicate state then(
-			
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium "Projecting onto the parameters (using the cache)…";
-				);
-
-				(* Project onto the parameters *)
-				(*** NOTE: here, we use the mini-cache system ***)
-				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
-
-				(* Projecting onto SOME parameters if required *)
-				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-				if Input.has_property() then(
-					let abstract_property = Input.get_property() in
-					match abstract_property.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						(* Print some information *)
-						if verbose_mode_greater Verbose_high then
-							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
-
-						(*** TODO! do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-				); (* end if projection *)
-
-				(* Statistics *)
-				counter_found_target#increment;
-				
-				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
-				(*** NOTE: advantage of doing it twice: print less information :-) ***)
-				
-				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
-
-				(*** NOTE (ÉA, 2022/11): this is the "cumulative pruning" *)
-
-				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
-					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
-				)else(
-					(* The constraint is new! *)
-					
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a new target state.";
-						
-					(* Update the bad constraint using the current constraint *)
-					(*** NOTE: perhaps try first whether p_constraint <= synthesized_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
-					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the synthesized constraint:";
-						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						
-						self#print_algo_message Verbose_low "The synthesized constraint is now:";
-						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
-					);
-				); (* end if new bad constraint *)
-				
-				(* Do NOT compute its successors; cut the branch *)
-				false
-				
-			) (* end if match state predicate *)
-			else(
-				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-				
-				(* Keep the state as it is not a bad state *)
-				true
-			) (* end if not match state predicate *)
-		
-		in
-		
-		(* Statistics *)
-		counter_process_state#stop;
-
-		(* Return result *)
-		to_be_added
-	(*** END WARNING (2022/11, ÉA): copied from AlgoEF ***)
+		true
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
