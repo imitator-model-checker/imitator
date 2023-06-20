@@ -4085,6 +4085,8 @@ let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 	(*** NOTE: PPL works in the reverse order: the 2nd covers the 1st one ***)
 	ippl_nncc_geometrically_covers p_nnconvex_constraint' p_nnconvex_constraint
 
+let px_nnconvex_constraint_is_leq = p_nnconvex_constraint_is_leq
+
 (** Check if a nnconvex_constraint is equal to another one *)
 let p_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 

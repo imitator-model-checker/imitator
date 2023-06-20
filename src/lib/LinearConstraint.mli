@@ -722,6 +722,7 @@ val p_nnconvex_constraint_is_pi0_compatible : p_valuation -> p_nnconvex_constrai
 
 (** Check if a nnconvex_constraint is included in another one *)
 val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
+val px_nnconvex_constraint_is_leq : px_nnconvex_constraint -> px_nnconvex_constraint -> bool
 
 (** Check if a nnconvex_constraint is equal to another one *)
 val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
