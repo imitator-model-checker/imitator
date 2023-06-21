@@ -291,7 +291,7 @@ let reverse_op = function
 	| Op_l		-> Op_g
 
 
-(* Convert an internal_op to string *)
+(** Convert an internal_op to string *)
 let string_of_op = function
 	| Op_g  -> ">"
 	| Op_ge -> ">="
@@ -300,10 +300,10 @@ let string_of_op = function
 	| Op_l  -> "<"
 
 
-(* The predefined operators in PPL (Less_Than_RS, Less_Or_Equal_RS, Equal_RS, Greater_Or_Equal_RS, Greater_Than_RS *)
+(** The predefined operators in PPL (Less_Than_RS, Less_Or_Equal_RS, Equal_RS, Greater_Or_Equal_RS, Greater_Than_RS *)
 type ppl_op = Ppl.relation_symbol
 
-(* The predefined linear term in PPL *)
+(** The predefined linear term in PPL *)
 type ppl_linear_term = Ppl.linear_expression
 
 
@@ -345,9 +345,9 @@ type pxd_valuation = (variable -> coef)
 type d_valuation = (variable -> coef)
 
 	
-(***********************************************coef*************)
 (************************************************************)
-(** Global variables *)
+(************************************************************)
+(* Global variables *)
 (************************************************************)
 (************************************************************)
 

@@ -13,9 +13,6 @@
  ************************************************************)
 
 
-open LinearConstraint
-open Automaton
-
 type ('a, 'b) t
 
 (** construct a cache given a hash function and the maximum size *)

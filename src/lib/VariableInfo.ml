@@ -16,7 +16,6 @@
 open Exceptions
 open ParsingStructure
 open DiscreteType
-open OCamlUtilities
 
 type variable_scope = Global | Local
 
@@ -38,16 +37,16 @@ let [@inline] is_local variable_ref = not (is_global variable_ref)
 
 let variable_scope_of variable_ref = if is_global variable_ref then Global else Local
 
-(* Get variable name given a variable index  *)
+(** Get variable name given a variable index  *)
 let [@inline] variable_name_of_index variable_infos = List.nth variable_infos.variable_names
 
-(* Get variable index given a variable name *)
+(** Get variable index given a variable name *)
 let [@inline] index_of_variable_name variable_infos = Hashtbl.find variable_infos.index_of_variables
 
-(* Get constant value given a constant name *)
+(** Get constant value given a constant name *)
 let [@inline] value_of_constant_name variable_infos = Hashtbl.find variable_infos.constants
 
-(* Check if variable is defined => declared and not removed  *)
+(** Check if variable is defined => declared and not removed  *)
 let [@inline] is_variable_is_defined variable_infos = Hashtbl.mem variable_infos.variable_refs
 
 (* Check if global variable is defined => declared and not removed  *)

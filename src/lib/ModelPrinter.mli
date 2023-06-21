@@ -24,21 +24,19 @@ open DiscreteExpressions
 val string_of_var_type : DiscreteType.var_type -> string
 
 (************************************************************)
-(** Arithmetic expression *)
+(* Arithmetic expressions *)
 (************************************************************)
 (** Convert a AbstractModel.global_expression into a string *)
 val string_of_global_expression : (Automaton.variable_index -> Automaton.variable_name) -> DiscreteExpressions.global_expression -> string
 
-(************************************************************)
-(** Arithmetic expression *)
-(************************************************************)
 (** Convert a AbstractModel.discrete_arithmetic_expression into a string *)
 val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.variable_name) -> DiscreteExpressions.discrete_arithmetic_expression -> string
 
 
 (************************************************************)
-(** State *)
+(* State *)
 (************************************************************)
+
 (*** TODO/BADPROG : Move elsewhere? ***)
 (** Convert a symbolic state into a string *)
 val string_of_state : AbstractModel.abstract_model -> State.state -> string
@@ -47,7 +45,7 @@ val string_of_state : AbstractModel.abstract_model -> State.state -> string
 val string_of_concrete_state : AbstractModel.abstract_model -> State.concrete_state -> string
 
 (************************************************************)
-(** Guard *)
+(* Guard *)
 (************************************************************)
 (** Convert a guard into a string *)
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
@@ -55,7 +53,7 @@ val customized_string_of_guard : Constants.customized_string -> (Automaton.varia
 
 
 (************************************************************)
-(** Debug-print for symbolic run *)
+(* Debug-print for symbolic run *)
 (************************************************************)
 
 val debug_string_of_symbolic_run            : AbstractModel.abstract_model -> StateSpace.stateSpace -> StateSpace.symbolic_run -> string
@@ -66,10 +64,10 @@ val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> St
 
 
 (************************************************************)
-(** Updates *)
+(* Updates *)
 (************************************************************)
 
-(* Convert the function definitions into a string *)
+(** Convert the function definitions into a string *)
 val string_of_fun_definitions : AbstractModel.abstract_model -> string
 
 (*(** Template to convert a boolean expresion into a string *)
@@ -84,27 +82,27 @@ val string_of_scalar_or_index_update_type : DiscreteExpressions.variable_name_ta
 val string_of_seq_code_bloc : abstract_model -> int -> ?sep:string -> seq_code_bloc -> string
 
 (************************************************************)
-(** Points and hyperrectangles *)
+(* Points and hyperrectangles *)
 (************************************************************)
 
-(* Convert a parameter valuation (PVal.pval) into a string *)
+(** Convert a parameter valuation (PVal.pval) into a string *)
 val string_of_pval : AbstractModel.abstract_model -> PVal.pval -> string
 
-(* Convert a px-valuation into a string *)
+(** Convert a px-valuation into a string *)
 val string_of_px_valuation : AbstractModel.abstract_model -> LinearConstraint.px_valuation -> string
 
-(* Convert a x-valuation into a string *)
+(** Convert a x-valuation into a string *)
 val string_of_x_valuation : AbstractModel.abstract_model -> LinearConstraint.x_valuation -> string
 
-(* Convert a v0 into a string *)
+(** Convert a v0 into a string *)
 val string_of_v0 : AbstractModel.abstract_model -> v0 -> string
 
 
 (************************************************************)
-(** Model and property *)
+(* Model and property *)
 (************************************************************)
 
-(* Convert a model into a string *)
+(** Convert a model into a string *)
 val string_of_model : AbstractModel.abstract_model -> string
 
 (** Convert an string_of_abstract_property to a string, using the naming functions of an AbstractModel.abstract_model *)
@@ -112,7 +110,7 @@ val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProper
 
 
 (************************************************************)
-(** Getting the flows of a location *)
+(* Getting the flows of a location *)
 (************************************************************)
 
 (*** BADPROG: very, very bad programming: this function should be in AlgoStateBased BUT ModelPrinter doesn't have access to AlgoStateBased (but the other way is possible); and it is called from both modules, so defined here (ÉA, 2021/11/02) ***)

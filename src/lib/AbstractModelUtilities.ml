@@ -12,7 +12,6 @@
  ************************************************************)
 
 open AbstractModel
-open DiscreteState
 open Exceptions
 
 

@@ -13,11 +13,8 @@
  *
  ************************************************************)
 
-open Exceptions
 open ParsingStructure
 open DiscreteType
-open ParsedValue
-open OCamlUtilities
 
 type variable_scope = Global | Local
 
@@ -34,9 +31,10 @@ val variable_name_of_index : variable_infos -> variable_index -> variable_name
 val index_of_variable_name : variable_infos -> variable_name -> variable_index
 val value_of_constant_name : variable_infos -> variable_name -> AbstractValue.abstract_value
 
-(* Check if variable is defined => declared and not removed  *)
+(** Check if variable is defined => declared and not removed  *)
 val is_variable_is_defined : variable_infos -> variable_ref -> bool
-(* Check if global variable is defined => declared and not removed  *)
+
+(** Check if global variable is defined => declared and not removed  *)
 val is_global_variable_is_defined : variable_infos -> variable_name -> bool
 
 val is_variable_removed : variable_infos -> variable_ref -> bool

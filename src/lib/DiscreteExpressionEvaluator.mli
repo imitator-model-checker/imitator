@@ -14,7 +14,6 @@
  ************************************************************)
 
 (* Utils modules *)
-open CustomModules
 
 (* Abstract model modules *)
 open DiscreteExpressions

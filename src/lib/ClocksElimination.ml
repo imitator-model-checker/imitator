@@ -57,7 +57,7 @@ let is_constrained_in_guard clock_index : guard -> bool = function
   | Continuous_guard continuous_guard -> LinearConstraint.pxd_is_constrained continuous_guard clock_index
   | Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_is_constrained discrete_continuous_guard.continuous_guard clock_index
 
-(* TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? *)
+(*** TODO benjamin IMPORTANT get potential clock update here, do we want potential or effective ? ***)
 let potential_clocks_in_update update =
     let clock_updates, _ = update in
     match clock_updates with
@@ -70,7 +70,7 @@ let potential_clocks_in_update update =
       let result, _ = List.split clock_update_list in result
 
 (*------------------------------------------------------------*)
-(* Find the local clocks per automaton *)
+(** Find the local clocks per automaton *)
 (*------------------------------------------------------------*)
 (*** WARNING: the use of clock_offset is not beautiful (and error prone) here ***)
 let find_local_clocks () =
@@ -158,9 +158,9 @@ let find_local_clocks () =
 
 
 (*------------------------------------------------------------*)
-(* Find the useless clocks in automata locations *)
+(** Find the useless clocks in automata locations *)
 (*------------------------------------------------------------*)
-(** NOTE: this function is not related to model conversion, and could (should?) be defined elsewhere *)
+(*** NOTE: this function is not related to model conversion, and could (should?) be defined elsewhere ***)
 let find_useless_clocks_in_automata local_clocks_per_automaton =
 
   (* Retrieve the model *)
@@ -196,7 +196,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
             let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 
             (* For each transition starting from this location *)
-            (** TODO: What happens here with the clock updates ?? *)
+            (*** TODO: What happens here with the clock updates ?? ***)
             List.iter (fun transition ->
 
                 (* Get the clocks updated or reset *)
@@ -341,9 +341,9 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 
 
 (*------------------------------------------------------------*)
-(* Function for preparing data structures for dynamic clock elimination *)
+(** Function for preparing data structures for dynamic clock elimination *)
 (*------------------------------------------------------------*)
-(* NOTE: This function is only called if the dynamic clock elimination option is activated *)
+(*** NOTE: This function is only called if the dynamic clock elimination option is activated ***)
 let prepare_clocks_elimination () =
   (* Create counters *)
   let counter_preparation_ref = create_time_counter_and_register "dynamic clock elimination (preparation)" Algorithm_counter Verbose_standard in
@@ -386,7 +386,7 @@ let prepare_clocks_elimination () =
 
 
 (*------------------------------------------------------------*)
-(* Eliminating useless clocks in a linear constraint *)
+(*** Eliminating useless clocks in a linear constraint ***)
 (*------------------------------------------------------------*)
 let dynamic_clock_elimination target_location current_constraint =
   (* Get counter *)

@@ -233,7 +233,7 @@ type state_comparison_operator =
 (* Predicates on mode *)
 (************************************************************)
 
-(* Does the algorithm require a second (property) file in addition to the model? *)
+(** Does the algorithm require a second (property) file in addition to the model? *)
 type second_file_need =
 	| Second_file_required
 	| Second_file_optional

@@ -23,26 +23,29 @@
 
 (* Raised when a linear_inequality is not a clock guard, i.e., of the form `x ~ plterm` *)
 
-(* We found multiple clocks, e.g., x > y *)
+(** We found multiple clocks, e.g., x > y *)
 exception Not_a_clock_guard_multiple_clocks_found
-(* We found a discrete, e.g., x + d > 0 *)
+
+(** We found a discrete, e.g., x + d > 0 *)
 exception Not_a_clock_guard_discrete_found
-(* We found no clock, e.g., p + d > 0 *)
+
+(** We found no clock, e.g., p + d > 0 *)
 exception Not_a_clock_guard_no_clock_found
-(* Temporary exception (TODO) for other cases *)
+
+(** Temporary exception (TODO) for other cases *)
 exception Not_a_clock_guard_non_1_coefficient
 
-(* Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
+(** Raised when a linear_inequality is an equality, i.e., `pxd_linear_term = pxd_linear_term` *)
 exception Not_an_inequality
 
-(* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
+(** Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
 
-(* Raised when trying to get a point in an empty (false) constraint *)
+(** Raised when trying to get a point in an empty (false) constraint *)
 exception EmptyConstraint
 
 (************************************************************)
-(** {2 Variables and coefficients} *)
+(* {2 Variables and coefficients} *)
 (************************************************************)
 
 type variable = int
@@ -57,7 +60,7 @@ type internal_linear_term =
 	| IR_Times of coef * internal_linear_term
 
 (************************************************************)
-(** {2 Valuations} *)
+(* {2 Valuations} *)
 (************************************************************)
 
 type p_valuation = (variable -> coef)
@@ -68,11 +71,11 @@ type d_valuation = (variable -> coef)
 
 
 (************************************************************)
-(** {2 Linear terms} *)
+(* {2 Linear terms} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Type} *)
+(* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* type linear_term *)
@@ -82,7 +85,7 @@ type pxd_linear_term = internal_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* val normalize_linear_term : linear_term -> Ppl_ocaml.linear_expression * NumConst.t *)
@@ -95,22 +98,22 @@ val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access functions} *)
+(* {3 Access functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (*------------------------------------------------------------*)
-(* Get the constant coefficient of a p_linear_term *)
+(** Get the constant coefficient of a p_linear_term *)
 (*------------------------------------------------------------*)
 val p_get_coefficient_in_linear_term : p_linear_term -> coef
 
 (*------------------------------------------------------------*)
-(* Get the coefficient of one particular variable in a p_linear_term *)
+(** Get the coefficient of one particular variable in a p_linear_term *)
 (*------------------------------------------------------------*)
 val p_get_variable_coefficient_in_internal_linear_term : variable -> p_linear_term -> coef
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(* {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Add two linear terms *)
@@ -134,7 +137,7 @@ val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
 val negate_linear_term : pxd_linear_term -> pxd_linear_term
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear term into a string *)
@@ -153,11 +156,11 @@ val string_of_pxd_linear_term_for_jani : (variable -> string) -> pxd_linear_term
 (*val string_of_linear_constraint_for_jani : (variable -> string) -> linear_term -> string*)
 
 (************************************************************)
-(** {2 Linear inequalities} *)
+(* {2 Linear inequalities} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Type} *)
+(* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 type op =
 	| Op_g
@@ -179,7 +182,7 @@ type pxd_linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using linear term and an operator *)
@@ -194,7 +197,7 @@ val px_make_linear_inequalities_eq_0  : variable list -> px_linear_inequality  l
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Get the op of a linear_inequality *)
 val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
@@ -202,7 +205,7 @@ val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(* {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert to a nonstrict inequality *)
@@ -220,7 +223,7 @@ val negate_wrt_pi0 : p_valuation -> p_linear_inequality -> p_linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
@@ -245,11 +248,11 @@ val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality 
 
 
 (************************************************************)
-(** {2 Linear Constraints} *)
+(* {2 Linear Constraints} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Type} *)
+(* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convex constraint (polyhedron) on the parameters *)
@@ -271,7 +274,7 @@ type pxd_linear_constraint
 type time_direction = Time_forward | Time_backward
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Initialization} *)
+(* {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
@@ -280,7 +283,7 @@ val set_dimensions : int -> int -> int -> unit
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear constraint from a list of linear inequalities *)
@@ -336,7 +339,7 @@ val pxd_make_time_polyhedron_from_flows_and_constants : time_direction -> (varia
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* Get the list of dimensions of a constraint *)
@@ -365,7 +368,7 @@ val pxd_find_variables : variable list -> pxd_linear_constraint -> variable list
 val partition_lu : variable list -> pxd_linear_constraint list -> (variable list * variable list)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Operations without modification} *)
+(* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Given a linear constraint and a variable (dimension), return the pair of bounds, i.e., the infimum and supremum. If the dimension is not bounded, return None. Otherwise return a pair Some (NumConst.t, minimum) (resp. maximum), which is true if the bound is closed (i.e., a minimum (resp. maximum), as opposed to an infimum (resp. supremum)). *)
@@ -383,7 +386,7 @@ val pxd_exhibit_point : pxd_linear_constraint -> pxd_valuation
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Tests} *)
+(* {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
@@ -454,7 +457,7 @@ val parameter_constraint_of_p_linear_constraint : Automaton.parameter_index -> p
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Functions} *)
+(* {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** makes a copy of a constraint *)
@@ -566,7 +569,7 @@ val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_const
 val px_grow_to_infinity_assign : variable list -> variable list -> px_linear_constraint -> unit
 
 (** Remove all lower bounds on the first variable list; the second list will remain constant *)
-(** WARNING: this function is certainly not optimized at all! *)
+(*** WARNING: this function is certainly not optimized at all! ***)
 (*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
 val px_grow_to_zero_assign : variable list -> variable list -> px_linear_constraint -> unit
@@ -578,7 +581,7 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Pi0-compatibility} *)
+(* {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
@@ -593,7 +596,7 @@ val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_i
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion between types of constraints } *)
+(* {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
@@ -605,7 +608,7 @@ val px_of_x_constraint : x_linear_constraint -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Brute-force casts (argh) } *)
+(* {3 Brute-force casts (argh) } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
@@ -618,7 +621,7 @@ val cast_d_of_pxd_linear_constraint : bool -> pxd_linear_constraint -> d_linear_
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to string} *)
+(* {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a linear constraint into a string using default values *)
@@ -645,7 +648,7 @@ val string_of_and : string
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to plot} *)
+(* {3 Conversion to plot} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** converts a linear_constraint to a set of 2d points wrt. the variables x,y *)
@@ -660,11 +663,11 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 
 
 (************************************************************)
-(** {2 Non-necessarily convex linear Constraints} *)
+(* {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Type} *)
+(* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
@@ -674,11 +677,12 @@ type px_nnconvex_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* JvdP: export the list of clocks *)
 val clocks : unit -> (Automaton.clock_index list)
+
 (* JvdP: export the list of clocks *)
 val parameters : unit -> (Automaton.parameter_index list)
 
@@ -692,13 +696,16 @@ val true_px_nnconvex_constraint  : unit -> px_nnconvex_constraint
 
 (** Copy a p_nnconvex_constraint *)
 val p_nnconvex_copy : p_nnconvex_constraint -> p_nnconvex_constraint
+
 (** Copy a px_nnconvex_constraint *)
 val px_nnconvex_copy : px_nnconvex_constraint -> px_nnconvex_constraint
 
 
 (** Create a new nnconvex_constraint from a linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraint : p_linear_constraint -> p_nnconvex_constraint
+
 val x_nnconvex_constraint_of_x_linear_constraint : x_linear_constraint -> x_nnconvex_constraint
+
 val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint
 
 (** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
@@ -706,7 +713,7 @@ val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> 
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Tests} *)
+(* {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a nnconvex_constraint is false *)
@@ -730,7 +737,7 @@ val px_nnconvex_constraint_is_equal : px_nnconvex_constraint -> px_nnconvex_cons
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Operations without modification} *)
+(* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
@@ -742,7 +749,7 @@ val px_nnconvex_exhibit_point : px_nnconvex_constraint -> px_valuation
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Modifications} *)
+(* {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
@@ -765,6 +772,7 @@ val px_nnconvex_union_assign : px_nnconvex_constraint -> px_nnconvex_constraint 
 val p_nnconvex_difference_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 val x_nnconvex_difference_assign : x_nnconvex_constraint -> x_nnconvex_constraint -> unit
 val px_nnconvex_difference_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
+
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
 val p_nnconvex_difference : p_nnconvex_constraint -> p_nnconvex_constraint -> p_nnconvex_constraint
 
@@ -777,14 +785,14 @@ val px_nnconvex_hide_nonparameters_and_collapse : px_nnconvex_constraint -> p_nn
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to a list of p_linear_constraint} *)
+(* {3 Conversion to a list of p_linear_constraint} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
 val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint -> p_linear_constraint list
 val px_linear_constraint_list_of_px_nnconvex_constraint : px_nnconvex_constraint -> px_linear_constraint list
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion to string} *)
+(* {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
@@ -795,7 +803,7 @@ val string_of_px_nnconvex_constraint : (variable -> string) -> px_nnconvex_const
 
 
 (************************************************************)
-(** {2 Non-necessarily convex linear Constraints} *)
+(* {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 type p_convex_or_nonconvex_constraint =
 	| Convex_p_constraint of p_linear_constraint
@@ -808,7 +816,7 @@ val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_conve
 
 
 (************************************************************)
-(** {2 Serialization} *)
+(* {2 Serialization} *)
 (************************************************************)
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
@@ -821,7 +829,7 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 
 
 (************************************************************)
-(** {2 Tests} *)
+(* {2 Tests} *)
 (************************************************************)
 (* val test_PDBMs : unit -> unit *)
 

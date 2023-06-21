@@ -361,16 +361,16 @@ let find_multiple_gen tcdiv_q base_number step number =
 		)
 		base_number
 
-(** WARNING: not really tested !!! *)
-(** Find the closest multiple of step from base_number below (or equal to) number *)
-(* That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
+(*** WARNING: not really tested !!! ***)
+(** Find the closest multiple of step from base_number below (or equal to) number
+  * That is: find the largest n s.t. n = k * step + base_number, with k integer, and n <= number *)
 let find_multiple_below =
 	find_multiple_gen Gmp.Z.tdiv_q
 
 
-(** WARNING: not really tested !!! *)
-(** Find the closest multiple of step from base_number above (or equal to) number *)
-(* That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
+(*** WARNING: not really tested !!! ***)
+(** Find the closest multiple of step from base_number above (or equal to) number
+  * That is: find the smallest n s.t. n = k * step + base_number, with k integer, and n >= number *)
 let find_multiple_above =
 	find_multiple_gen Gmp.Z.cdiv_q
 
@@ -448,7 +448,9 @@ let random_integer min max =
 
 	(* Compute random *)
 	let random_number = Gmp.Z.urandomm (random_generator()) nb in
-(* 	let plouf = Gmp.Q.mpz_urandomm in *)
+
+	(* 	let plouf = Gmp.Q.mpz_urandomm in *)
+
 	(* Convert back to Gmp.Q *)
 	let random_number = Gmp.Q.from_z random_number in
 

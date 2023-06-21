@@ -20,12 +20,11 @@
 (************************************************************)
 open OCamlUtilities
 open Automaton
-open AbstractProperty
 
 
 
 (************************************************************)
-(** {2 Types} *)
+(* {2 Types} *)
 (************************************************************)
 
 (** Unique identifier for each different global location *)
@@ -83,11 +82,11 @@ type rational_display =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Automata} *)
+(* {3 Automata} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 type automaton_index = int
-type automaton_name = string
+(* type automaton_name = string *)
 
 
 
@@ -136,11 +135,11 @@ let string_of_discrete names index =
 
 
 (************************************************************)
-(** {2 Locations} *)
+(* {2 Locations} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Initialization} *)
+(* {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** 'initialize nb_automata min_discrete_index max_discrete_index' initializes the min and max discrete indexes and the number of automata. *)
@@ -151,7 +150,7 @@ let initialize nb_auto min_discrete max_discrete =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
 let make_location locations_per_automaton discrete_values : global_location =
@@ -202,7 +201,7 @@ let update_location_with locations_per_automaton (locations, _) =
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
@@ -258,7 +257,7 @@ let is_accepting (locations_acceptance_condition : automaton_index -> location_i
 	get_locations global_location |> Array.mapi locations_acceptance_condition |> Array.exists identity
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)

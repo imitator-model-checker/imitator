@@ -11,12 +11,13 @@
  *
  ************************************************************)
 
+(************************************************************)
+(************************************************************)
+(* Modules *)
+(************************************************************)
+(************************************************************)
 open ParsingStructure
-open ParsingStructureUtilities
-open ImitatorUtilities
-open OCamlUtilities
 open DiscreteType
-open CustomModules
 
 type inner_type = var_type_discrete
 
@@ -129,8 +130,8 @@ type typed_fun_definition = {
 let string_format_typed_node str_node discrete_type =
     "{" ^ str_node ^ ":" ^ string_of_var_type_discrete discrete_type ^ "}"
 
-let string_format_number_typed_node str_node discrete_number_type =
-    "{" ^ str_node ^ ":" ^ string_of_var_type_discrete_number discrete_number_type ^ "}"
+(*let string_format_number_typed_node str_node discrete_number_type =
+    "{" ^ str_node ^ ":" ^ string_of_var_type_discrete_number discrete_number_type ^ "}"*)
 
 let string_of_typed_sum_diff = function
     | Typed_plus -> Constants.default_arithmetic_string.plus_string
@@ -255,11 +256,11 @@ and string_of_typed_discrete_factor variable_infos discrete_type = function
 
 let rec string_of_typed_scalar_or_index_update_type variable_infos = function
     | Typed_scalar_update (variable_name, _ (* id *)) -> variable_name
-    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, discrete_type) ->
+    | Typed_indexed_update (typed_scalar_or_index_update_type, index_expr, _) ->
         string_of_typed_scalar_or_index_update_type variable_infos typed_scalar_or_index_update_type
         ^ "[" ^ string_of_typed_discrete_arithmetic_expression variable_infos (Dt_number Dt_int) index_expr ^ "]"
 
-let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) =
+let string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) =
 
     let rec string_of_typed_seq_code_bloc_rec parsed_seq_code_bloc =
         let str_instructions = List.map string_of_typed_instruction parsed_seq_code_bloc in
@@ -315,7 +316,7 @@ let rec string_of_typed_seq_code_bloc variable_infos (* parsed_seq_code_bloc *) 
     in
     string_of_typed_seq_code_bloc_rec (* parsed_seq_code_bloc *)
 
-let string_of_typed_loc_predicate variable_infos = function
+let string_of_typed_loc_predicate _ = function
 	| Typed_loc_predicate_EQ (automaton_name, location_name) ->
 	    automaton_name ^ " = " ^ location_name
 	| Typed_loc_predicate_NEQ (automaton_name, location_name) ->

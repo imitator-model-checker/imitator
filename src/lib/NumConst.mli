@@ -25,7 +25,7 @@ type t
 (**************************************************)
 
 (**************************************************)
-(** {2 Constants} *)
+(* {2 Constants} *)
 (**************************************************)
 
 val zero : t
@@ -34,7 +34,7 @@ val minus_one : t
 
 
 (**************************************************)
-(** {2 User Conversions} *)
+(* {2 User Conversions} *)
 (**************************************************)
 
 val numconst_of_string : string -> t
@@ -55,7 +55,7 @@ val get_num : t -> Gmp.Z.t
 val get_den : t -> Gmp.Z.t
 
 (**************************************************)
-(** {2 Arithmetic Functions} *)
+(* {2 Arithmetic Functions} *)
 (**************************************************)
 
 val add : t -> t -> t
@@ -71,6 +71,7 @@ val max : t -> t -> t
 
 (** Find the closest multiple of step from base_number below (or equal to) number *)
 val find_multiple_below : t -> t -> t -> t
+
 (** Find the closest multiple of step from base_number above (or equal to) number *)
 val find_multiple_above : t -> t -> t -> t
 
@@ -79,7 +80,7 @@ val random_integer : t -> t -> t
 
 
 (**************************************************)
-(** {2 Comparison Functions} *)
+(* {2 Comparison Functions} *)
 (**************************************************)
 val equal : t -> t -> bool
 val neq : t -> t -> bool
@@ -89,20 +90,22 @@ val ge : t -> t -> bool
 val g : t -> t -> bool
 
 (**************************************************)
-(** {2 Test Functions} *)
+(* {2 Test Functions} *)
 (**************************************************)
-(* Check if a NumConst is an integer *)
+(** Check if a NumConst is an integer *)
 val is_integer : t -> bool
 
-(* Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
+(** Check if a number is of type 'int', i.e., if it is an integer, and small enough to be represented as an int *)
 val is_int : t -> bool
 
 
 (**************************************************)
-(** {2 Conversion Functions} *)
+(* {2 Conversion Functions} *)
 (**************************************************)
-(* Converts to int; raise Failure in case of impossible cast *)
+
+(** Converts to int; raise Failure in case of impossible cast *)
 val to_int : t -> int
+
 val to_bounded_int : t -> int
 
 (** Convert a NumConst to a float thanks to the GMP.Q conversion *)

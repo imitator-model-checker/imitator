@@ -14,7 +14,6 @@
  ************************************************************)
 
 (* Utils modules *)
-open CustomModules
 open OCamlUtilities
 open Exceptions
 
@@ -336,7 +335,7 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
     (* Call top-level *)
     eval_int_expression_with_context_rec
 
-(* Evaluate a boolean expression *)
+(** Evaluate a boolean expression *)
 and eval_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | True_bool -> true
     | False_bool -> false
@@ -352,7 +351,7 @@ and eval_boolean_expression_with_context variable_names functions_table_opt eval
 
     | Discrete_boolean_expression dbe -> eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt dbe
 
-(* Evaluate a discrete boolean expression *)
+(** Evaluate a discrete boolean expression *)
 and eval_discrete_boolean_expression_with_context variable_names functions_table_opt eval_context_opt = function
     | Bool_variable variable_index ->
         bool_value (try_eval_variable variable_index eval_context_opt)
@@ -362,7 +361,8 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
                 (* Variable should exist as it was checked before *)
         let discrete_value = try_eval_local_variable variable_ref eval_context_opt in
         bool_value discrete_value
-    (** Discrete arithmetic expression of the form Expr ~ Expr *)
+
+    (* Discrete arithmetic expression of the form Expr ~ Expr *)
     (* We just have to create a Rational_comparison and a Int_comparison to solve this *)
     | Arithmetic_comparison (l_expr, relop, r_expr) ->
         (operator_of_relop relop)
@@ -393,7 +393,7 @@ and eval_discrete_boolean_expression_with_context variable_names functions_table
             (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt l_expr)
             (eval_queue_expression_with_context variable_names functions_table_opt eval_context_opt r_expr)
 
-    (** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+    (* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
     | Expression_in (discrete_arithmetic_expression_1, discrete_arithmetic_expression_2, discrete_arithmetic_expression_3) ->
         (* Compute the first one to avoid redundancy *)
         let expr1_evaluated = eval_discrete_arithmetic_expression_with_context variable_names functions_table_opt eval_context_opt  discrete_arithmetic_expression_1 in
@@ -578,7 +578,7 @@ and rewrite_clock_update variable_names eval_context functions_table_opt (* expr
                 | Plus -> IR_Coef (NumConst.add c1 c2)
                 | Minus -> IR_Coef (NumConst.sub c1 c2)
                 )
-            | l_expr, r_expr ->
+            | _, _ ->
                 let sum_diff_f =
                     match sum_diff with
                     | Plus ->
@@ -612,7 +612,7 @@ and rewrite_clock_update variable_names eval_context functions_table_opt (* expr
                     IR_Coef (NumConst.div c1 c2)
                 )
             (* k / var or k / c*var *)
-            | IR_Coef c, linear_term when product_quotient = Div ->
+            | IR_Coef _, _ when product_quotient = Div ->
                 raise (InternalError (Lazy.force nonlinear_operation_message))
             | IR_Coef c, linear_term
             | linear_term, IR_Coef c ->
@@ -907,7 +907,7 @@ and pack_value variable_names functions_table_opt eval_context_opt old_value new
             unpacked_old_array, old_array, Some index
     in
 
-    let unpacked_old_array, old_array, some_index = pack_value_scalar_or_index_update_type scalar_or_index_update_type in
+    let _, old_array, some_index = pack_value_scalar_or_index_update_type scalar_or_index_update_type in
     match some_index with
     | Some index ->
         old_array.(index) <- new_value;
@@ -922,25 +922,30 @@ let check_nonlinear_constraint_with_context variable_names functions_table_opt e
 
 (* Evaluate an expression *)
 let eval_global_expression variable_names functions_table_opt discrete_access_opt = eval_global_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+
 (* Evaluate a boolean expression *)
 let eval_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
+
 (* Evaluate a discrete boolean expression *)
 let eval_discrete_boolean_expression variable_names functions_table_opt discrete_access_opt = eval_discrete_boolean_expression_with_context variable_names functions_table_opt (create_eval_context_opt discrete_access_opt)
 
-(* Check if a nonlinear constraint is satisfied *)
+(** Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint variable_names functions_table_opt discrete_access =
   List.for_all (eval_discrete_boolean_expression variable_names functions_table_opt (Some discrete_access))
 
-(* Try to evaluate a constant expression, if expression isn't constant, it raise an error *)
+(** Try to evaluate a constant expression, if expression isn't constant, it raise an error *)
 let try_eval_constant_global_expression functions_table_opt = eval_global_expression_with_context None functions_table_opt None
-(* Try to evaluate a constant non linear constraint, if expression isn't constant, it raise an error *)
+
+(** Try to evaluate a constant non linear constraint, if expression isn't constant, it raise an error *)
 let try_eval_nonlinear_constraint functions_table_opt = check_nonlinear_constraint_with_context None functions_table_opt None
-(* Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
+
+(** Try to evaluate a constant rational term, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_term functions_table_opt = eval_rational_term_with_context None functions_table_opt None
-(* Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
+
+(** Try to evaluate a constant rational factor, if expression isn't constant, it raise an error *)
 let try_eval_constant_rational_factor functions_table_opt = eval_rational_factor_with_context None functions_table_opt None
 
-let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access)
+(* let direct_update variable_names functions_table_opt discrete_access = direct_update_with_context variable_names functions_table_opt (create_eval_context discrete_access) *)
 let eval_seq_code_bloc variable_names functions_table_opt discrete_access = eval_seq_code_bloc_with_context variable_names functions_table_opt (create_eval_context discrete_access)
 
 (* Try to evaluate a constant expression, if expression isn't constant, it return None *)

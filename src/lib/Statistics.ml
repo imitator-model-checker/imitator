@@ -32,26 +32,26 @@ open ImitatorUtilities
 (************************************************************)
 
 type counterCategory =
-	(** Algorithm functions *)
+	(* Algorithm functions *)
 	| Algorithm_counter
 	
-	(** Cache counters *)
+	(* Cache counters *)
 	| Cache_counter
 	
-	(** The global counter *)
+	(* The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
 	| Global_counter
 	
-	(** Everything related to graphics generation *)
+	(* Everything related to graphics generation *)
 	| Graphics_counter
 	
-	(** Lexing and parsing *)
+	(* Lexing and parsing *)
 	| Parsing_counter
 
-	(** All calls to PPL *)
+	(* All calls to PPL *)
 	| PPL_counter
 	
-	(** States computations *)
+	(* States computations *)
 	| States_counter
 	
 
@@ -69,7 +69,7 @@ let all_counters_enabled = ref false
 (************************************************************)
 (************************************************************)
 class virtual counter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self)
+	object(_)
 
 	(************************************************************)
 	(* Class variables *)
@@ -120,17 +120,19 @@ end;;
 (************************************************************)
 (************************************************************)
 class timeCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self) inherit counter name counter_category level as super
+	object(self) inherit counter name counter_category level (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Current value *)
+	(** Current value *)
 	val mutable value = 0.0
-	(* Latest start time *)
+
+	(** Latest start time *)
 	val mutable start_time = 0.0
-	(* Running or not? *)
+
+	(** Running or not? *)
 	val mutable running = false
 	
 	
@@ -198,7 +200,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class discreteCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self) inherit counter name counter_category level as super
+	object(_) inherit counter name counter_category level (*as super*)
 		
 	(************************************************************)
 	(* Class variables *)
@@ -250,7 +252,7 @@ end
 (************************************************************)
 (*** TODO: rather use multiple inheritance from discreteCounter? ***)
 class hybridCounter (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self) inherit timeCounter name counter_category level as super
+	object(_) inherit timeCounter name counter_category level (*as super*)
 		
 	(************************************************************)
 	(* Class variables *)
@@ -276,7 +278,7 @@ class hybridCounter (name : string) (counter_category : counterCategory) (level 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method string_of_value =
+	method! string_of_value =
 		(* Continuous value *)
 		(string_of_seconds value)
 		(* Discrete value *)
@@ -307,7 +309,7 @@ end
 (************************************************************)
 (************************************************************)
 class data_recorder (name : string) (counter_category : counterCategory) (level : ImitatorUtilities.verbose_mode) =
-	object(self) inherit counter name counter_category level as super
+	object(_) inherit counter name counter_category level (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -361,26 +363,26 @@ let all_counters : counter list ref= ref []
 (************************************************************)
 
 let string_of_category = function
-	(** Algorithm functions *)
+	(* Algorithm functions *)
 	| Algorithm_counter -> "Algorithm counters"
 	
-	(** Cache counters *)
+	(* Cache counters *)
 	| Cache_counter -> "Cache counters"
 	
-	(** The global counter *)
+	(* The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
 	| Global_counter -> "Global counter"
 	
-	(** Everything related to graphics generation *)
+	(* Everything related to graphics generation *)
 	| Graphics_counter -> "Graphics-related counters"
 	
-	(** Lexing and parsing *)
+	(* Lexing and parsing *)
 	| Parsing_counter -> "Parsing counters"
 
-	(** All calls to PPL *)
+	(* All calls to PPL *)
 	| PPL_counter -> "PPL counters"
 
-	(** States computations *)
+	(* States computations *)
 	| States_counter -> "State computation counters"
 	
 

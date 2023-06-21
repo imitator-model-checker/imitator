@@ -100,13 +100,13 @@ type property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through of state_predicate
 
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Cycle_through_generalized of state_predicate list
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(* Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
 	
 
@@ -147,19 +147,19 @@ type property =
 	(* Cartography *)
 	| Cover_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography of state_predicate * HyperRectangle.hyper_rectangle * NumConst.t
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Border_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Random_cartography of HyperRectangle.hyper_rectangle * int * NumConst.t
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography of HyperRectangle.hyper_rectangle * int * NumConst.t
 
 	(* Parametric reachability preservation *)

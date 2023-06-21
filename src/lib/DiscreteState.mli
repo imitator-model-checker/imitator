@@ -71,8 +71,9 @@ val initialize : int -> int -> int -> unit
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
 val make_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location
 
+(*
 (** 'update_location locations discrete_values location' creates a new location from the original location, and update the given automata and discrete variables. *)
-(*val update_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> global_location*)
+val update_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location -> global_location*)
 
 (* Side-effect function for updating a discrete variable given a value at given location *)
 (*val update_discrete_with : discrete_index * AbstractValue.abstract_value -> global_location -> unit*)
@@ -90,7 +91,7 @@ val make_global_location_and_local_variables : global_location -> local_variable
 (* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(* Get the global_location component of a global_location_and_local_variables *)
+(** Get the global_location component of a global_location_and_local_variables *)
 val get_global_location : global_location_and_local_variables -> global_location
 
 (** Get array of locations *)

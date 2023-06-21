@@ -22,26 +22,26 @@
 (************************************************************)
 
 type counterCategory =
-	(** Algorithm functions *)
+	(* Algorithm functions *)
 	| Algorithm_counter
 	
-	(** Cache counters *)
+	(* Cache counters *)
 	| Cache_counter
 	
-	(** The global counter *)
+	(* The global counter *)
 	(*** TODO: prevent more than one such counter to be created ***)
 	| Global_counter
 	
-	(** Everything related to graphics generation *)
+	(* Everything related to graphics generation *)
 	| Graphics_counter
 	
-	(** Lexing and parsing *)
+	(* Lexing and parsing *)
 	| Parsing_counter
 
-	(** All calls to PPL *)
+	(* All calls to PPL *)
 	| PPL_counter
 
-	(** States computations *)
+	(* States computations *)
 	| States_counter
 	
 
