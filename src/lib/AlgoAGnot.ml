@@ -34,14 +34,14 @@ open AlgoEFgen
 (************************************************************)
 (************************************************************)
 class algoAGnot (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEFgen model state_predicate as super
+	object (self) inherit algoEFgen model state_predicate (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
+	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "AG"
 	
@@ -52,7 +52,7 @@ class algoAGnot (model : AbstractModel.abstract_model) (state_predicate : Abstra
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method packaging the result output by the algorithm *)
+	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
 		(* Print some information *)

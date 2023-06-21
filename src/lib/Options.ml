@@ -36,20 +36,20 @@ open AbstractProperty
 (* Class-independent functions *)
 (************************************************************)
 
-(* Returns a `type` from a `type option`. Raises Exception InternalError if it is equal to None ***)
+(** Returns a `type` from a `type option`. Raises Exception InternalError if it is equal to None ***)
 let value_of_option option_name (a : 'a option) : 'a = match a with
 	| Some value -> value
 	| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
 
 
-(* Warn if an option is already set; this helps to detect cases when both `-merge` and `-no-merge` are called, for example *)
+(** Warn if an option is already set; this helps to detect cases when both `-merge` and `-no-merge` are called, for example *)
 let warn_if_set option_value option_name =
 	if option_value <> None then(
 		print_warning ("Option `" ^ option_name ^ "` may be set to two different values. Behavior is unspecified.");
 	)
 
 
-(* Remove the path in a file name, to only keep the actual file name *)
+(** Remove the path in a file name, to only keep the actual file name *)
 let remove_path_in_file_name model_file_name =
 	(* Split the string according to "/" *)
 	let split_file_prefix = Str.split (Str.regexp "/") model_file_name in
@@ -738,7 +738,7 @@ class imitator_options =
 				print_message Verbose_standard "Romeo might soon output a result… (but might also not)";
 				(*Unix.sleep 8;
 				print_message Verbose_standard "Wait a little longer please…";*)
-				for i = 1 to 8 do
+				for _ = 1 to 8 do
 					let messages = [
 						"Did you know? The first computation of Romeo started in 2004. We are still awaiting its result.";
 						"Did you know? A recent study showed that the Juliet model checker is by far more efficient in verifying concurrent systems.";

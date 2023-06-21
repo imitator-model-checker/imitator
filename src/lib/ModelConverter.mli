@@ -15,23 +15,23 @@
 
 
 (****************************************************************)
-(** Modules *)
+(* Modules *)
 (****************************************************************)
 
 
 (****************************************************************)
-(** Exceptions *)
+(* Exceptions *)
 (****************************************************************)
 
 exception InvalidProperty
 
 (****************************************************************)
-(** Types *)
+(* Types *)
 (****************************************************************)
 
 
 (****************************************************************)
-(** Conversion functions *)
+(* Conversion functions *)
 (****************************************************************)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 val abstract_structures_of_parsing_structures : Options.imitator_options -> ParsingStructure.parsed_model -> (ParsingStructure.parsed_property option) -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)
