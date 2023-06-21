@@ -44,6 +44,8 @@ let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
 let print_PTG = print_message Verbose_medium
 
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
+
+type edge_status = BackpropLosing | BackpropWinning | Unexplored
 module type Default = sig  
 	type elem
 	type key
@@ -95,6 +97,17 @@ module WinningZone = DefaultHashtbl (struct
 	let str_of_key = string_of_int >> (^) ("s")
 end)  
 
+module LosingZone = DefaultHashtbl (struct 
+	let model = ref None
+	type elem = LinearConstraint.px_nnconvex_constraint
+	type key = state_index
+	let tbl = Hashtbl.create 100
+	let default = fun _ -> LinearConstraint.false_px_nnconvex_constraint()
+	let str_of_elem zone = match !model with 
+		| Some model -> LinearConstraint.string_of_px_nnconvex_constraint model.variable_names zone
+		| None -> "No model provided"
+	let str_of_key = string_of_int >> (^) ("s")
+end)  
 
 module Depends = DefaultHashtbl (struct 
 	let model = ref None
@@ -164,7 +177,6 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING (2022/11, ÉA): copied from AlgoEF ***)
 	method private process_state (state : State.state) : bool =
 	
 		(* Statistics *)
@@ -176,97 +188,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_constraint = state.px_constraint in
-		
-		let to_be_added =
-			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate model state_predicate state then(
-			
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium "Projecting onto the parameters (using the cache)…";
-				);
-
-				(* Project onto the parameters *)
-				(*** NOTE: here, we use the mini-cache system ***)
-				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
-
-				(* Projecting onto SOME parameters if required *)
-				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-				if Input.has_property() then(
-					let abstract_property = Input.get_property() in
-					match abstract_property.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						(* Print some information *)
-						if verbose_mode_greater Verbose_high then
-							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
-
-						(*** TODO! do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-				); (* end if projection *)
-
-				(* Statistics *)
-				counter_found_target#increment;
-				
-				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
-				(*** NOTE: advantage of doing it twice: print less information :-) ***)
-				
-				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
-
-				(*** NOTE (ÉA, 2022/11): this is the "cumulative pruning" *)
-
-				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
-					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
-				)else(
-					(* The constraint is new! *)
-					
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a new target state.";
-						
-					(* Update the bad constraint using the current constraint *)
-					(*** NOTE: perhaps try first whether p_constraint <= synthesized_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
-					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the synthesized constraint:";
-						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						
-						self#print_algo_message Verbose_low "The synthesized constraint is now:";
-						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
-					);
-				); (* end if new bad constraint *)
-				
-				(* Do NOT compute its successors; cut the branch *)
-				false
-				
-			) (* end if match state predicate *)
-			else(
-				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-				
-				(* Keep the state as it is not a bad state *)
-				true
-			) (* end if not match state predicate *)
-		
-		in
-		
-		(* Statistics *)
-		counter_process_state#stop;
-
-		(* Return result *)
-		to_be_added
-	(*** END WARNING (2022/11, ÉA): copied from AlgoEF ***)
+		true
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -635,11 +557,14 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	
 	(* === BEGIN API FOR REFACTORING === *)
 	
+	(* AlgoStateBased. *)
 	method private compute_symbolic_successors state = state_space#get_successors_with_combined_transitions state
 	
 
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
+
+	(* AlgoStateBased.create_initial_state *)
 	method private get_initial_state_index = state_space#get_initial_state_index
 
 	(* Computes the predecessor zone of current_zone using edge *)
@@ -658,10 +583,13 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 
 
 	(* === END API FOR REFACTORING === *)
+
+	val init_losing_zone_changed = ref false 
 	
 	(* Initialize the Winning and Depend tables with our model - only affects printing information in terminal *)
 	method private initialize_tables () = 
 		WinningZone.model := Some model;
+		LosingZone.model := Some model;
 		Depends.model := Some model
 
 	(* Edges from a symbolic state *)
@@ -669,7 +597,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		let successors = self#compute_symbolic_successors state in
 		let action_state_list = List.map (fun (transition, state') ->
 			let action = StateSpace.get_action_from_combined_transition model transition in
-			{state; action; transition; state'}
+			{state; action; transition; state'}, Unexplored
 			) successors in
 		action_state_list
 
@@ -681,25 +609,26 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		queue	
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
-	method private get_controllable_edges = self#get_edges >> List.filter (fun e -> model.is_controllable_action e.action)
-	method private get_uncontrollable_edges = self#get_edges >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
+	method private get_controllable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> model.is_controllable_action e.action)
+	method private get_uncontrollable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
 
 	(* Whether or not a state is accepting  *)
 	method private matches_state_predicate state_index =
 		let state = (state_space#get_state state_index) in
 		(State.match_state_predicate model state_predicate state) 
 
+	(* Decides if a symbolic state is a deadlock state (no outgoing controllable actions). Used for Losing Zones *)
+	method private is_dead_lock state = 
+		self#get_controllable_edges state = [] && not @@ self#matches_state_predicate state
 
-	(* Losing part of a symbolic state *)
-	method private losing_zone state_index = 
-			let zone = (self#constr_of_state_index >> nn) state_index in 
-			LinearConstraint.px_nnconvex_difference_assign zone (WinningZone.find state_index);
-			zone
+	(* Negate a zone within a state (corresponds to taking the complement) *)
+	method private negate_zone zone state_index = 
+			let complete_zone = (self#constr_of_state_index >> nn) state_index in 
+			LinearConstraint.px_nnconvex_difference_assign complete_zone zone;
+			complete_zone
 		
 	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
 	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
-
-
 		
 	(* Computes the safe timed predecessors of (nn_convex) zone g avoiding (nn_convex) zone b coming from a state *)
 	method private safe_timed_pred (g : LinearConstraint.px_nnconvex_constraint) (b:  LinearConstraint.px_nnconvex_constraint) (state : state_index)  = 
@@ -742,50 +671,96 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		(Depends.find state') #<- e;
 
 		if self#matches_state_predicate state' then WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
+		if self#is_dead_lock state' then LosingZone.replace state' @@ (self#constr_of_state_index >> nn) state'; 
 		waiting #<-- (self#get_edge_queue state') ;
 
-		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model); 
-		if not @@ is_empty (WinningZone.find state') then waiting #<- e;
+		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model); 
+		
+		if not @@ is_empty (WinningZone.find state') then waiting #<- (e, BackpropWinning);
+		if not @@ is_empty (LosingZone.find state') then (waiting #<- (e, BackpropLosing); init_losing_zone_changed := true)
+
+	(* Append a status to queue of edges (linear time in size of queue) *)
+	method private append_edge_status edge_queue status = 
+		Queue.of_seq @@ Seq.map (fun e -> (e, status)) @@ Queue.to_seq @@ edge_queue
+
+	(* General method for backpropagation of winning/losing zones *)
+	method private backtrack_gen e find replace to_str good_edge bad_edge precedence callback = 
+		let {state; state';_}= e in 
+		let get_pred_from_edges default edges zone = 
+			List.fold_left (|||) default @@
+				List.map (fun edge -> 
+					self#predecessor_nnconvex edge (zone edge.state')
+				)
+			edges
+		in
+		let g_init = LinearConstraint.px_nnconvex_copy @@ WinningZone.find state in 
+		let g = get_pred_from_edges g_init (good_edge state) find in
+		let b = get_pred_from_edges (bot ()) (bad_edge state) (fun x -> self#negate_zone (find x) x) in 
+		
+		if precedence then LinearConstraint.px_nnconvex_difference_assign b g;
+		let new_zone = self#safe_timed_pred g b state in 
+		print_PTG (Printf.sprintf "\tPred_t(G, B) = %s" @@ LinearConstraint.string_of_px_nnconvex_constraint model.variable_names new_zone);
+		if (find state) #!= new_zone then
+			begin
+				replace state new_zone;
+				print_PTG "Updating zones to:";
+				print_PTG (to_str ());
+				callback state
+			end;
+		(Depends.find state') #<- e
+
+
+	(* Backtracks in order to update losing zones in the simulation graph *)	
+	method private backtrack_losing e waiting = 
+		print_PTG "\tLOSING ZONE PROPAGATION:";
+		let callback  state = 
+			waiting #<-- (self#append_edge_status (Depends.find state) BackpropLosing);
+			if state = self#get_initial_state_index then init_losing_zone_changed := true 
+		in 
+		self#backtrack_gen e LosingZone.find LosingZone.replace LosingZone.to_str 
+											 self#get_uncontrollable_edges self#get_controllable_edges true
+											 callback
+
+
 
 	(* Backtracks in order to update winning zones in the simulation graph *)	
-	method private backtrack e waiting = 
-		let {state; state';_}= e in 
-		begin
-			print_PTG ("\tI've seen state " ^ (string_of_int state') ^ " before. Reevaluating winning zone.");
-			let get_pred_from_edges default edges zone = 
-				List.fold_left (|||) default @@
-					List.map (fun edge -> 
-						self#predecessor_nnconvex edge (zone edge.state')
-					)
-				edges
-			in
+	method private backtrack_winning e waiting =
+		print_PTG "\tWINNING ZONE PROPAGATION:"; 
+		let callback  state = 
+			waiting #<-- (self#append_edge_status (Depends.find state) BackpropWinning);
+		in 
+		self#backtrack_gen e WinningZone.find WinningZone.replace WinningZone.to_str 
+											 self#get_controllable_edges self#get_uncontrollable_edges false
+											 callback
 
-			let g_init = LinearConstraint.px_nnconvex_copy @@ WinningZone.find state in 
-			let g = get_pred_from_edges g_init (self#get_controllable_edges state) (WinningZone.find) in
-			let b = get_pred_from_edges (bot ()) (self#get_uncontrollable_edges state) (self#losing_zone) in 
+	(* Initial state is lost if initial constraint is included in losing zone *)
+	method private init_is_lost init =
+		LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (LosingZone.find init)
 
-			let win = self#safe_timed_pred g b state in	
-			print_PTG (Printf.sprintf "\tPred_t(G, B) = %s" @@ LinearConstraint.string_of_px_nnconvex_constraint model.variable_names win);
-			if (WinningZone.find state) #!= win then
-				begin
-					waiting #<-- (Depends.find state);
-					WinningZone.replace state win;
-					print_PTG "Updating winning zones to:";
-					print_PTG (WinningZone.to_str ())
-				end;
-			(Depends.find state') #<- e
-		end
-
+	(* Initial state is exact if winning and losing zone covers initial zone  *)
+	method private init_is_exact init = 
+		let init_zone_nn = nn @@ self#constr_of_state_index init in 
+		let winning_and_losing_zone = LinearConstraint.px_nnconvex_copy @@ WinningZone.find init ||| LosingZone.find init in
+		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_and_losing_zone
+	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria waiting init = 
 		let queue_empty = Queue.is_empty waiting in
 		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 		
+		let init_lost, init_exact = 
+			match !init_losing_zone_changed, complete_synthesis with
+			| true, true -> init_losing_zone_changed := false; self#init_is_lost init, self#init_is_exact init
+			| true, false -> init_losing_zone_changed := false; self#init_is_lost init, false
+			| false, _ -> false, false
+		in
+
+		init_lost || queue_empty ||
 		if complete_synthesis then
-			queue_empty
+			init_exact
 		else
-			((not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)) || queue_empty)
+			not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)
 
 
 
@@ -806,16 +781,26 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
-			print_PTG ("\nEntering main loop with waiting list: " ^ edge_seq_to_str (Queue.to_seq waiting) model);
-			let e = Queue.pop waiting in 			
+			print_PTG ("\nEntering main loop with waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model);
+			let e, edge_status = Queue.pop waiting in 			
 			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str e model));
 			if not @@ passed#mem e.state' then  
 				self#forward_exploration e waiting passed
 			else
-				self#backtrack e waiting
+				match edge_status with
+					| Unexplored -> 
+						self#backtrack_winning e waiting;
+						self#backtrack_losing e waiting
+					| BackpropWinning -> 
+						self#backtrack_winning e waiting
+					| BackpropLosing -> 
+						self#backtrack_losing e waiting
 		done;
-		print_PTG "After running AlgoPTG I found winning these zones:";
+		print_PTG "After running AlgoPTG I found these winning zones:";
 		print_PTG (WinningZone.to_str ());
+
+		print_PTG "And these losing zones: ";
+		print_PTG (LosingZone.to_str());
 
 		let winning_parameters = project_params (self#initial_constraint () &&& WinningZone.find init) in
 		synthesized_constraint <- winning_parameters
@@ -867,14 +852,14 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		in
 
 		(* Get the termination status *)
-		 let termination_status = match termination_status with
-			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
-			| Some status -> status
-		in
+		let termination_status = match termination_status with
+		| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
+		| Some status -> status
+	in
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness = if termination_status = Regular_termination && (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
 		Single_synthesis_result
