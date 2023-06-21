@@ -20,7 +20,6 @@ open Exceptions
 open OCamlUtilities
 open Constants
 open ImitatorUtilities
-open Automaton
 open ParsingStructure
 open AbstractModel
 open DiscreteExpressions
@@ -38,7 +37,7 @@ let location_name location_index =
 (************************************************************)
 (** Shortcuts *)
 (************************************************************)
-let truec = LinearConstraint.pxd_true_constraint
+(* let truec = LinearConstraint.pxd_true_constraint *)
 
 
 (************************************************************)
@@ -59,9 +58,9 @@ let ct_x_leq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
 
 
-(* Constraint x >= d, with `d` a LinearConstraint.p_linear_term : x - d >= 0 *)
+(*(* Constraint x >= d, with `d` a LinearConstraint.p_linear_term : x - d >= 0 *)
 let ct_x_geq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false*)
 
 
 (* Constraint x > d, with `d` LinearConstraint.p_linear_term : d - x = 0 *)

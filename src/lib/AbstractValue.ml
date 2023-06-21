@@ -15,7 +15,7 @@
 open Exceptions
 open Constants
 
- (* Parsing structure modules *)
+(* Parsing structure modules *)
 open ParsedValue
 open DiscreteType
 
@@ -46,7 +46,7 @@ and abstract_container_value =
 (* --- Strings --- *)
 
 (* Convert number value to string *)
-let customized_string_of_number_value customized_string = function
+let customized_string_of_number_value _ = function
     | Abstract_rat_value v -> NumConst.to_string v
     | Abstract_int_value v -> Int32.to_string v
 
@@ -86,7 +86,7 @@ and string_of_container_value customized_string = function
         let l_delimiter, r_delimiter = customized_string.array_string.array_literal_delimiter in
         if str_values = "" then "queue()" else "queue(" ^ l_delimiter ^ str_values ^ r_delimiter ^ ")"
 
-(* Convert value to string *)
+(** Convert value to string *)
 let string_of_value = customized_string_of_value global_default_string
 
 (* --- Values --- *)
@@ -232,9 +232,9 @@ let rec default_value_of_discrete_type = function
     | Dt_bool -> Abstract_scalar_value (Abstract_bool_value false)
     | Dt_bin l -> Abstract_scalar_value (Abstract_bin_value (BinaryWord.zero l))
     | Dt_array (inner_type, length) -> Abstract_container_value (Abstract_array_value (Array.make length (default_value_of_discrete_type inner_type)))
-    | Dt_list inner_type -> Abstract_container_value (Abstract_list_value [])
-    | Dt_stack inner_type -> Abstract_container_value (Abstract_stack_value (Stack.create ()))
-    | Dt_queue inner_type -> Abstract_container_value (Abstract_queue_value (Queue.create ()))
+    | Dt_list _ -> Abstract_container_value (Abstract_list_value [])
+    | Dt_stack _ -> Abstract_container_value (Abstract_stack_value (Stack.create ()))
+    | Dt_queue _ -> Abstract_container_value (Abstract_queue_value (Queue.create ()))
     | Dt_weak -> raise (InternalError "Unable to have default value of a weak typed variable.")
 
 (* Get default abstract value of the given var type *)
@@ -321,7 +321,7 @@ let to_rat_value = function
 
 (* Convert parsed value to an abstract one *)
 let rec of_parsed_value = function
-    | Weak_number_value v -> raise (InternalError "Unable to convert number value to abstract value")
+    | Weak_number_value _ -> raise (InternalError "Unable to convert number value to abstract value")
     | Rat_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_rat_value v))
     | Int_value v -> Abstract_scalar_value (Abstract_number_value (Abstract_int_value v))
     | Bool_value v -> Abstract_scalar_value (Abstract_bool_value v)

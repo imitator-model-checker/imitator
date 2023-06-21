@@ -11,7 +11,7 @@
  *
  ************************************************************)
 
- (* Parsing structure module *)
+(* Parsing structure module *)
 open ParsedValue
 open DiscreteType
 
@@ -41,7 +41,7 @@ and abstract_container_value =
 
 (* --- Strings --- *)
 
-(* Convert value to string *)
+(** Convert value to string *)
 val string_of_value : abstract_value -> string
 
 (* -- Values --- *)
@@ -63,10 +63,10 @@ val stack_value : abstract_value -> abstract_value Stack.t
 (* Get queue value of abstract value, raise an error if abstract value doesn't hold the asked type *)
 val queue_value : abstract_value -> abstract_value Queue.t
 
-(* Get hash of an abstract value *)
+(** Get hash of an abstract value *)
 val hash : abstract_value -> int
 
-(* Get abstract value of a zero rational *)
+(** Get abstract value of a zero rational *)
 val rational_zero : abstract_value
 
 (* Convert an abstract value to float, if possible, else raise an error *)

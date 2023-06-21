@@ -20,10 +20,10 @@
 open DiscreteType
 open ParsedValue
 
-(* Name of constraint *)
+(** Name of constraint *)
 type constraint_name = string
 
-(* Length constraint, like array length, binary word length *)
+(** Length constraint, like array length, binary word length *)
 type length_constraint =
     | Length_constraint of int
     | Length_constraint_expression of length_constraint_expression

@@ -11,11 +11,8 @@
  *
  ************************************************************)
 
-open DiscreteExpressions
 open ParsingStructure
-open ParsingStructureUtilities
 open ParsedValue
-open Exceptions
 
 (* Only reduce rational expression *)
 module RationalReducer = struct
@@ -26,7 +23,7 @@ module RationalReducer = struct
 (* 3. Convert back to parsed arithmetic expression: 6 + 3x *)
 (* 4. Eventually simplify expression (if there is multiplication by one, or addition of 0, ...) *)
 
-    (* Term element *)
+    (** Term element *)
     type term_element =
         (* Constant term (e.g: 1) *)
         | Cons_term of NumConst.t
@@ -35,7 +32,7 @@ module RationalReducer = struct
         (* Term term is non reducible term weighted by a coef (e.g: f(0) * 2) *)
         | Term_term of NumConst.t * parsed_discrete_term
 
-    (* Combine left and right terms when multiplying a list of terms by another *)
+    (** Combine left and right terms when multiplying a list of terms by another *)
     (* e.g: (1 + 2 - 3) * (4 + 5) = 1*4 + 1*5 + 2*4 + 2*5 + -3*4 + -3*5 = 0 *)
     let combine_mul l_terms r_terms =
 

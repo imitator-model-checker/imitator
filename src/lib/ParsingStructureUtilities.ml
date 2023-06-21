@@ -11,12 +11,10 @@
  *
  ************************************************************)
 
-open Exceptions
 open ParsingStructure
 open VariableInfo
 open DiscreteType
 open OCamlUtilities
-open CustomModules
 
 (* *)
 type variable_callback = (variable_name -> unit) option
@@ -50,11 +48,13 @@ type state_predicate_leaf =
     | Leaf_predicate_EQ of string (* automaton name *) * string (* location name *)
     | Leaf_predicate_NEQ of string (* automaton name *) * string (* location name *)
 
-(* Type of callback function called when reach a leaf of a discrete expression *)
+(** Type of callback function called when reach a leaf of a discrete expression *)
 type 'a parsing_structure_leaf_callback = parsing_structure_leaf -> 'a
-(* Type of callback function called when reach a leaf of a sequential code bloc *)
+
+(** Type of callback function called when reach a leaf of a sequential code bloc *)
 type 'a seq_code_bloc_leaf_callback = parsed_seq_code_bloc_leaf -> 'a
-(* Type of callback function called when reach a leaf of a linear expression *)
+
+(** Type of callback function called when reach a leaf of a linear expression *)
 type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
@@ -214,7 +214,7 @@ and fold_parsed_linear_expression operator leaf_fun = function
             (fold_parsed_linear_term operator leaf_fun term)
 
 (** Fold a parsed linear term using operator applying custom function on leafs **)
-and fold_parsed_linear_term operator leaf_fun = function
+and fold_parsed_linear_term _ leaf_fun = function
     | Constant value -> leaf_fun (Leaf_linear_constant value)
     | Variable (value, variable_name) -> leaf_fun (Leaf_linear_variable (value, variable_name))
 
@@ -222,12 +222,12 @@ and fold_parsed_linear_term operator leaf_fun = function
 let fold_parsed_nonlinear_constraint = fold_parsed_discrete_boolean_expression
 
 
-let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun leaf_fun = function
+(*let fold_init_state_predicate operator base loc_assignment_leaf_fun linear_expression_leaf_fun leaf_fun = function
 	| Parsed_loc_assignment (automaton_name, loc_name) -> loc_assignment_leaf_fun (automaton_name, loc_name)
 	| Parsed_linear_predicate linear_constraint -> fold_parsed_linear_constraint operator linear_expression_leaf_fun linear_constraint
-	| Parsed_discrete_predicate (_, expr) -> fold_parsed_boolean_expression operator base leaf_fun expr
+	| Parsed_discrete_predicate (_, expr) -> fold_parsed_boolean_expression operator base leaf_fun expr*)
 
-let fold_parsed_loc_predicate operator base predicate_leaf_fun leaf_fun = function
+let fold_parsed_loc_predicate _ _ predicate_leaf_fun _ = function
     | Parsed_loc_predicate_EQ (automaton_name, loc_name) ->
         predicate_leaf_fun (Leaf_predicate_EQ (automaton_name, loc_name))
     | Parsed_loc_predicate_NEQ (automaton_name, loc_name) ->
@@ -287,7 +287,7 @@ let fold_parsed_fun_def operator base ?(decl_callback=None) seq_code_bloc_leaf_f
 
     parsed_seq_code_bloc_result |> operator return_expr_result |> operator decl_callback_result
 
-let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) []
+(* let flat_map_parsed_boolean_expression = fold_parsed_boolean_expression (@) [] *)
 (** Check if all leaf of a parsing structure satisfy the predicate **)
 
 (* Apply to a fold function the standard parameters for evaluate AND *)
@@ -302,14 +302,16 @@ let for_all_in_parsed_discrete_factor = apply_evaluate_and_with_base fold_parsed
 
 (** Check if all leaf of a linear expression satisfy the predicate **)
 let for_all_in_parsed_linear_expression = apply_evaluate_and fold_parsed_linear_expression
+
 (** Check if all leaf of a linear term satisfy the predicate **)
 let for_all_in_parsed_linear_term = apply_evaluate_and fold_parsed_linear_term
+
 (** Check if all leaf of a linear constraint satisfy the predicate **)
 let for_all_in_parsed_linear_constraint = apply_evaluate_and fold_parsed_linear_constraint
+
 (** Check if all leaf of a non-linear constraint satisfy the predicate **)
 let for_all_in_parsed_nonlinear_constraint = apply_evaluate_and_with_base fold_parsed_nonlinear_constraint
-(** Check if all leaf of a parsed update satisfy the predicate **)
-let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
+
 (** Check if all leaf of a parsed normal update satisfy the predicate **)
 let for_all_in_parsed_normal_update = apply_evaluate_and_with_base fold_parsed_normal_update
 
@@ -321,6 +323,7 @@ let for_all_in_parsed_state_predicate = apply_evaluate_and_with_base fold_parsed
 
 (** Check if all leaf of a parsed sequential code bloc satisfy the predicate **)
 let for_all_in_parsed_seq_code_bloc = apply_evaluate_and_with_base fold_parsed_seq_code_bloc
+
 (** Check if all leaf of a parsed function definition satisfy the predicate **)
 let for_all_in_parsed_fun_def = apply_evaluate_and_with_base fold_parsed_fun_def
 
@@ -338,23 +341,28 @@ let exists_in_parsed_discrete_factor = apply_evaluate_or_with_base fold_parsed_d
 
 (** Check if any leaf of a linear expression satisfy the predicate **)
 let exists_in_parsed_linear_expression = apply_evaluate_or fold_parsed_linear_expression
+
 (** Check if any leaf of a linear term satisfy the predicate **)
 let exists_in_parsed_linear_term = apply_evaluate_or fold_parsed_linear_term
+
 (** Check if any leaf of a linear constraint satisfy the predicate **)
 let exists_in_parsed_linear_constraint = apply_evaluate_or fold_parsed_linear_constraint
+
 (** Check if any leaf of a non-linear constraint satisfy the predicate **)
 let exists_in_parsed_nonlinear_constraint = apply_evaluate_or_with_base fold_parsed_nonlinear_constraint
+
 (** Check if any leaf of a parsed normal update satisfy the predicate **)
 let exists_in_parsed_normal_update = apply_evaluate_or_with_base fold_parsed_normal_update
 
-let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate
-let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate
-let exists_in_parsed_state_predicate_factor = apply_evaluate_or_with_base fold_parsed_state_predicate_factor
-let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_parsed_state_predicate_term
+(* let exists_in_parsed_loc_predicate = apply_evaluate_or_with_base fold_parsed_loc_predicate *)
+(* let exists_in_parsed_simple_predicate = apply_evaluate_or_with_base fold_parsed_simple_predicate *)
+(* let exists_in_parsed_state_predicate_factor = apply_evaluate_or_with_base fold_parsed_state_predicate_factor *)
+(* let exists_in_parsed_state_predicate_term = apply_evaluate_or_with_base fold_parsed_state_predicate_term *)
 let exists_in_parsed_state_predicate = apply_evaluate_or_with_base fold_parsed_state_predicate
 
 (** Check if any leaf of a parsed sequential code bloc satisfy the predicate **)
 let exists_in_parsed_seq_code_bloc = apply_evaluate_or_with_base fold_parsed_seq_code_bloc
+
 (** Check if any leaf of a parsed function definition satisfy the predicate **)
 let exists_in_parsed_function_definition = apply_evaluate_or_with_base fold_parsed_fun_def
 
@@ -373,12 +381,16 @@ let iterate_parsed_discrete_factor = apply_evaluate_unit_with_base fold_parsed_d
 
 (** Iterate over a linear expression **)
 let iterate_parsed_linear_expression = apply_evaluate_unit fold_parsed_linear_expression
+
 (** Iterate over a linear term **)
 let iterate_parsed_linear_term = apply_evaluate_unit fold_parsed_linear_term
+
 (** Iterate over a linear constraint **)
 let iterate_parsed_linear_constraint = apply_evaluate_unit fold_parsed_linear_constraint
+
 (** Iterate over a non-linear constraint **)
 let iterate_parsed_nonlinear_constraint = apply_evaluate_unit_with_base fold_parsed_nonlinear_constraint
+
 (** Iterate over a non-linear convex predicate **)
 let iterate_parsed_nonlinear_convex_predicate leaf_fun convex_predicate =
     List.iter (iterate_parsed_nonlinear_constraint leaf_fun) convex_predicate
@@ -392,6 +404,7 @@ let iterate_in_parsed_state_predicate = apply_evaluate_unit_with_base fold_parse
 
 (** Iterate over a parsed sequential code bloc definition **)
 let iterate_in_parsed_seq_code_bloc = apply_evaluate_unit_with_base fold_parsed_seq_code_bloc
+
 (** Iterate over a parsed function definition **)
 let iterate_in_parsed_function_definition = apply_evaluate_unit_with_base fold_parsed_fun_def
 

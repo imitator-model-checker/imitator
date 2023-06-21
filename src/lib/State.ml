@@ -22,13 +22,12 @@
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
-open Automaton
 open AbstractModel
 open Statistics
 
 
 (************************************************************)
-(** Reachable states *)
+(* Reachable states *)
 (************************************************************)
 type state_index = int
 
@@ -52,7 +51,7 @@ type abstract_state = {
 
 
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
 
@@ -93,7 +92,7 @@ let upd_cache = Cache.make upd_hash 100*)
 
 
 (************************************************************)
-(** State comparison functions *)
+(* State comparison functions *)
 (************************************************************)
 
 (** Compare two states (generic version).
@@ -145,7 +144,7 @@ let state_included_in = states_compare LinearConstraint.px_is_leq   "inclusion"
 
 
 (************************************************************)
-(** Matching state predicates with a global location *)
+(* Matching state predicates with a global location *)
 (************************************************************)
 
 (*let is_one_location_accepting (state : state) =
@@ -177,7 +176,7 @@ let match_state_predicate (model : AbstractModel.abstract_model) (state_predicat
 
 
 (************************************************************)
-(** Constraints satisfaction *)
+(* Constraints satisfaction *)
 (*************************************************************)
 
 (** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
@@ -234,7 +233,7 @@ let is_constraint_and_continuous_guard_satisfiable (pxd_linear_constraint : Line
 
 
 (************************************************************)
-(** Computation of invariants *)
+(* Computation of invariants *)
 (*************************************************************)
 
 (*------------------------------------------------------------*)
@@ -307,12 +306,12 @@ let compute_valuated_invariant (model : AbstractModel.abstract_model) (location 
 
 (************************************************************)
 (************************************************************)
-(** Operations on states: computation of successors and predecessors *)
+(* Operations on states: computation of successors and predecessors *)
 (************************************************************)
 (************************************************************)
 
 (************************************************************)
-(** Time-elapsing and time-past *)
+(* Time-elapsing and time-past *)
 (************************************************************)
 
 (*------------------------------------------------------------*)
@@ -449,7 +448,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 
 			(* Case 3a: existential quantification requires to create primed variables *)
 
-			(** TO OPTIMIZE (?): could be performed statically (when converting the model).
+			(*** TO OPTIMIZE (?): could be performed statically (when converting the model).
 				PRO: save time because no need to compute this for each constraint;
 				CON: lose time & memory (but maybe not that much) at some point because operations on constraints will have all dimensions instead of just the updated prime variables
 				TO OPTIMIZE (other option): merge all operations together, so that no need for hashtable
@@ -546,7 +545,7 @@ let apply_updates_assign_gen (time_direction: LinearConstraint.time_direction) (
 			);
 
 			(* Renames clock X_i' into X_i *)
-			(** TO OPTIMIZE !! *)
+			(*** TO OPTIMIZE !! *)
 			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
@@ -628,7 +627,7 @@ let apply_updates_assign_backward = apply_updates_assign_gen LinearConstraint.Ti
 
 (************************************************************)
 (************************************************************)
-(** Structure to define sets of state_index *)
+(* Structure to define sets of state_index *)
 (************************************************************)
 (************************************************************)
 
@@ -654,7 +653,7 @@ class stateIndexSet =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Initially, the set is empty *)
+	(** Initially, the set is empty *)
 	val mutable the_set = StateIndexSet.empty
 	
 
@@ -663,28 +662,28 @@ class stateIndexSet =
 	(* Access methods *)
 	(************************************************************)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Is the set empty? *)
+	(** Is the set empty? *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method is_empty =
 		StateIndexSet.is_empty the_set
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Does the set contain a given element? *)
+	(** Does the set contain a given element? *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method mem element =
 		StateIndexSet.mem element the_set
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Retrieve the number of elements *)
+	(** Retrieve the number of elements *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method cardinal =
 		StateIndexSet.cardinal the_set
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Retrieve all elements in the form of a list *)
+	(** Retrieve all elements in the form of a list *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method all_elements =
 		StateIndexSet.elements the_set
@@ -696,7 +695,7 @@ class stateIndexSet =
 	(************************************************************)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Empty the set *)
+	(** Empty the set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method empty =
 		(* Directly replace the set with a new empty set *)
@@ -704,14 +703,14 @@ class stateIndexSet =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add an element to the set *)
+	(** Add an element to the set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add element =
 		the_set <- StateIndexSet.add element the_set
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Remove an element; raises Not_found if the element was not in the set *)
+	(** Remove an element; raises Not_found if the element was not in the set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method remove element =
 		(* First check *)
@@ -721,7 +720,7 @@ class stateIndexSet =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Remove an element or do nothing if the element was not in the set *)
+	(** Remove an element or do nothing if the element was not in the set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method remove_or_do_nothing element =
 		the_set <- StateIndexSet.remove element the_set

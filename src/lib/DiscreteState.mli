@@ -23,7 +23,7 @@ open Automaton
 
 
 (************************************************************)
-(** {2 Types} *)
+(* {2 Types} *)
 (************************************************************)
 
 (** Unique identifier for each different global location *)
@@ -53,11 +53,11 @@ type rational_display =
 type local_variables_table = (variable_ref, AbstractValue.abstract_value) Hashtbl.t
 
 (************************************************************)
-(** {2 Locations} *)
+(* {2 Locations} *)
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Initialization} *)
+(* {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** 'initialize nb_automata min_discrete_index max_discrete_index' initializes the min and max discrete indexes and the number of automata. *)
@@ -65,8 +65,9 @@ val initialize : int -> int -> int -> unit
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Creation} *)
+(* {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
 val make_location : (automaton_index * location_index) list -> (discrete_index * AbstractValue.abstract_value) list -> global_location
 
@@ -86,7 +87,7 @@ val make_global_location_and_local_variables : global_location -> local_variable
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Access} *)
+(* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (* Get the global_location component of a global_location_and_local_variables *)
@@ -100,10 +101,13 @@ val get_location : global_location -> automaton_index -> location_index
 
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value
+
 (** Get the NumConst value associated to some discrete variable *)
 val get_discrete_rational_value : global_location -> discrete_index -> NumConst.t
+
 (** Set the value associated to some discrete variable *)
 val set_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value -> unit
+
 (** Get a tuple of functions for reading / writing a global variable at a given location *)
 (* A discrete access enable to read or write a value of a variable at a given discrete index *)
 val discrete_access_of_location_and_local_variables : global_location_and_local_variables -> discrete_access
@@ -120,7 +124,7 @@ val location_equal: global_location -> global_location -> bool
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
-(** {3 Conversion} *)
+(* {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
 (** 'string_of_location automata_names location_names discrete_names rational_display location' converts a location to a string. *)

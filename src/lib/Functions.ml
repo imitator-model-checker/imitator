@@ -15,15 +15,10 @@
  ************************************************************)
 
 (* Utils modules *)
-open Exceptions
 open OCamlUtilities
-open CustomModules
 
 (* Parsing structure modules *)
-open DiscreteType
-open ParsedValue
 open ParsingStructure
-open ParsingStructureUtilities
 
 (* Abstract model modules *)
 open DiscreteExpressions
@@ -32,8 +27,8 @@ open FunctionSig
 
 
 (* Shortcuts to hash table types *)
-type functions_meta_table = (string, function_metadata) Hashtbl.t
-type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
+(* type functions_meta_table = (string, function_metadata) Hashtbl.t *)
+(* type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t *)
 
 
 (* binary(l) -> l -> binary(l) *)

@@ -231,7 +231,7 @@ type tarjan_node = {
 (* Local exceptions *)
 (************************************************************)
 (************************************************************)
-exception Found_cycle
+(* exception Found_cycle *)
 
 (** Get the combined_transition between a state_index and its successor. Raise Not_found if no such transition exists. If several combined transitions exist, only the first one is retrieved. *)
 (* local exception *)
@@ -242,6 +242,7 @@ exception Found_scc of scc
 
 (** Old state found *)
 exception Found_old of State.state_index
+
 (** State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
 exception Found_new of State.state_index
 
@@ -255,14 +256,16 @@ exception Found_new of State.state_index
 
 let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
 
-(* Numbers of new states that were in fact included into an old state *)
+(** Numbers of new states that were in fact included into an old state *)
 let statespace_dcounter_nb_states_included = create_discrete_counter_and_register "number of new states <= old" States_counter Verbose_standard
-(* Numbers of new states that were in fact larger than an old state *)
+
+(** Numbers of new states that were in fact larger than an old state *)
 let statespace_dcounter_nb_states_including = create_discrete_counter_and_register "number of new states >= old" States_counter Verbose_standard
 
-(* Numbers of merging attempts (for states that have the same discrete location) *)
+(** Numbers of merging attempts (for states that have the same discrete location) *)
 let nb_merging_attempts = create_discrete_counter_and_register "StateSpace.merging attempts" States_counter Verbose_standard
-(* Numbers of actual merges *)
+
+(** Numbers of actual merges *)
 let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_counter Verbose_standard
 
 (* Complete time for merging *)
@@ -287,7 +290,7 @@ let counter_empty_states_for_comparison = create_hybrid_counter_and_register "St
 (* let data_recorder_merging = create_data_recorder_and_register "StateSpace.merging_sequences" Algorithm_counter Verbose_experiments *)
 
 (* Counters for experiments of merging-in-pta *)
-let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip tests" Algorithm_counter Verbose_experiments
+(* let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip tests" Algorithm_counter Verbose_experiments *)
 
 
 
@@ -872,7 +875,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				| True_guard -> current_list_of_guards
 				(*** NOTE: we could optimize the case of False (because no need to go further); BUT the number of transitions is usually small and, most importantly, it is unlikely a guard is false in the model ***)
 				| False_guard -> (LinearConstraint.pxd_false_constraint()) :: current_list_of_guards
-				| Discrete_guard discrete_guard -> current_list_of_guards
+				| Discrete_guard _ -> current_list_of_guards
 				| Continuous_guard continuous_guard -> continuous_guard :: current_list_of_guards
 				| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard :: current_list_of_guards
 
@@ -1399,7 +1402,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Compute the new state index *)
 		let new_state_index = !(state_space.next_state_index) in
 		(* Retrieve the location and the constraint *)
-		let location, linear_constraint = new_state.global_location, new_state.px_constraint in
+		let linear_constraint = new_state.px_constraint in
 	(*	print_warning "warning: consistency check";
 		(* Consistency check: the state should NOT be present (otherwise this is a duplicate) *)
 		Hashtbl.iter (fun state_index _ ->
@@ -1880,11 +1883,11 @@ class stateSpace (guessed_nb_transitions : int) =
 							else (combined_transition, target_index) :: (update_target src tail merger_index merged_index)
 					in
 
-					(** Transitions with merged as target **)
+					(* Transitions with merged as target **)
 					Hashtbl.iter (fun src successors -> (Hashtbl.replace state_space.transitions_table src (update_target src successors merger_index merged_index))) state_space.transitions_table;
 
 					let transitions_merged = self#get_successors_with_combined_transitions merged_index in
-					(** Transitions with merged as source **)
+					(* Transitions with merged as source **)
 					Hashtbl.remove state_space.transitions_table merged_index;
 					List.iter (
 						fun (combined_transition , target_state_index) ->
@@ -2080,7 +2083,7 @@ class stateSpace (guessed_nb_transitions : int) =
 					(*| Merge_update_level -> ();*)
 					end;
 				end;
-				(**)
+				(* *)
 				in
 				merging [] candidates;
 			in

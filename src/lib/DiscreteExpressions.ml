@@ -17,14 +17,14 @@ type variable_name = string
 type variable_name_table = Automaton.variable_index -> variable_name
 
 (****************************************************************)
-(** Operators *)
+(* Operators *)
 (****************************************************************)
 
 (** Boolean operators *)
 type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 (****************************************************************)
-(** Valuation *)
+(* Valuation *)
 (****************************************************************)
 
 (* Conjonction / Disjonction operators *)
@@ -53,7 +53,7 @@ type update_scope =
     | Local_update of Automaton.variable_ref
 
 (****************************************************************)
-(** Global expression *)
+(* Global expression *)
 (****************************************************************)
 type global_expression =
     (* A typed expression *)
@@ -72,7 +72,7 @@ and discrete_arithmetic_expression =
     | Int_arithmetic_expression of int_arithmetic_expression
 
 (****************************************************************)
-(** Rational arithmetic expressions for discrete variables *)
+(* Rational arithmetic expressions for discrete variables *)
 (****************************************************************)
 and rational_arithmetic_expression =
     | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
@@ -92,7 +92,7 @@ and rational_factor =
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(** Int arithmetic expressions for discrete variables *)
+(* Int arithmetic expressions for discrete variables *)
 (************************************************************)
 (************************************************************)
 and int_arithmetic_expression =
@@ -114,7 +114,7 @@ and int_factor =
 
 
 (****************************************************************)
-(** Boolean expressions for discrete variables *)
+(* Boolean expressions for discrete variables *)
 (****************************************************************)
 
 (** Boolean expression *)
@@ -125,7 +125,7 @@ and boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Arithmetic_comparison of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
 	| Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
 	| Binary_comparison of binary_word_expression * relop * binary_word_expression
@@ -133,23 +133,23 @@ and discrete_boolean_expression =
 	| List_comparison of list_expression * relop * list_expression
     | Stack_comparison of stack_expression * relop * stack_expression
     | Queue_comparison of queue_expression * relop * queue_expression
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
-	(** Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	(* Boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
-	(** Boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
+	(* Boolean expression of the form not(Expr ~ Expr), with ~ = { &, | }*)
 	| Not_bool of boolean_expression (** Negation *)
-	(** Discrete boolean variable *)
+	(* Discrete boolean variable *)
 	| Bool_variable of Automaton.variable_index
     | Bool_local_variable of Automaton.variable_ref
-	(** Discrete boolean constant *)
+	(* Discrete boolean constant *)
 	| Bool_constant of bool
     | Bool_indexed_expr of access_type * int_arithmetic_expression
     | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 
 (************************************************************)
-(** Binary word expressions for discrete variables *)
+(* Binary word expressions for discrete variables *)
 (************************************************************)
 
 (** Binary word expression *)
@@ -161,7 +161,7 @@ and binary_word_expression =
     | Binary_word_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(** Array expressions for discrete variables *)
+(* Array expressions for discrete variables *)
 (************************************************************)
 
 (** Array expression *)
@@ -267,7 +267,7 @@ and is_variable_rational_factor = function
     | Rational_nested_expression expr -> is_variable_rational_arithmetic_expression expr
     | _ -> false
 
-(* Check whether an expression is linear *)
+(*(* Check whether an expression is linear *)
 let rec is_linear_global_expression = function
     | Arithmetic_expression expr -> is_linear_arithmetic_expression expr
     | Bool_expression expr -> is_linear_boolean_expression expr
@@ -280,10 +280,10 @@ and is_linear_boolean_expression = function
 	| Conj_dis (_, _, And) -> true
 	| Conj_dis (_, _, Or) -> false
 	| Discrete_boolean_expression expr ->
-		is_linear_discrete_boolean_expression expr
+		is_linear_discrete_boolean_expression expr*)
 
 (* Check whether a discrete boolean expression is linear *)
-and is_linear_discrete_boolean_expression = function
+let rec is_linear_discrete_boolean_expression = function
 	| Arithmetic_comparison (l_expr, _, r_expr) ->
 	    is_linear_arithmetic_expression l_expr &&
 	    is_linear_arithmetic_expression r_expr
@@ -298,7 +298,7 @@ and is_linear_discrete_boolean_expression = function
 (* Check whether a arithmetic expression is linear *)
 and is_linear_arithmetic_expression = function
     | Rational_arithmetic_expression expr -> is_linear_rational_arithmetic_expression expr
-    | Int_arithmetic_expression expr -> false
+    | Int_arithmetic_expression _ -> false
 
 (* Check whether a rational expression is linear *)
 and is_linear_rational_arithmetic_expression = function
@@ -360,10 +360,10 @@ let is_left_expr_has_parenthesis = function
 (* or x / (y * z) *)
 let is_right_expr_has_parenthesis = function
     (* check x / (y * z) *)
-    | Rational_product_quotient (discrete_term, discrete_factor, Div) when is_discrete_factor_is_mul discrete_factor -> true
+    | Rational_product_quotient (_, discrete_factor, Div) when is_discrete_factor_is_mul discrete_factor -> true
     (* check x / (y + z) or x / (y - z) *)
     (* check x * (y + z) or x * (y - z) *)
-    | Rational_product_quotient (discrete_term, discrete_factor, _) -> is_discrete_factor_has_parenthesis discrete_factor
+    | Rational_product_quotient (_, discrete_factor, _) -> is_discrete_factor_has_parenthesis discrete_factor
     | _ -> false
 
 let add_left_parenthesis expr str =
@@ -404,10 +404,10 @@ let is_left_int_expr_has_parenthesis = function
 (* or x / (y * z) *)
 let is_right_int_expr_has_parenthesis = function
     (* check x / (y * z) *)
-    | Int_product_quotient (term, factor, Div) when is_int_factor_is_mul factor -> true
+    | Int_product_quotient (_, factor, Div) when is_int_factor_is_mul factor -> true
     (* check x / (y + z) or x / (y - z) *)
     (* check x * (y + z) or x * (y - z) *)
-    | Int_product_quotient (term, factor, _) -> is_int_factor_has_parenthesis factor
+    | Int_product_quotient (_, factor, _) -> is_int_factor_has_parenthesis factor
     | _ -> false
 
 let add_left_parenthesis_int expr str =
@@ -513,7 +513,7 @@ let print_binary_word_overflow_warning_if_needed expr length = function
 (* --- Expressions strings --- *)
 
 (* Convert function call to string *)
-let print_function function_name str_arguments = function_name ^ "(" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments ^ ")"
+(* let print_function function_name str_arguments = function_name ^ "(" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_arguments ^ ")" *)
 
 (* Convert sum / diff operator to string *)
 let string_of_sum_diff = function

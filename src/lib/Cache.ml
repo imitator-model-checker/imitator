@@ -22,7 +22,7 @@ open Statistics
 
 
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 let counter_hits = create_discrete_counter_and_register "cache hits" Cache_counter Verbose_low
 let counter_misses = create_discrete_counter_and_register "cache misses" Cache_counter Verbose_low
@@ -31,8 +31,8 @@ let counter_collisions = create_discrete_counter_and_register "cache collisions"
 
 type ('a, 'b) t = {
 	mutable size  : int;
-	mutable table : (int, 'a * 'b) Hashtbl.t;
-	mutable hash  : 'a -> int;
+	(*mutable*) table : (int, 'a * 'b) Hashtbl.t;
+	(*mutable*) hash  : 'a -> int;
 	
 	(* statistics *)
 (*	mutable hits : int;
