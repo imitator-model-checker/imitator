@@ -23477,6 +23477,84 @@ Constraint nature                       : good
 	##------------------------------------------------------------]
 
 	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (simple, witness)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_witness_simple.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'losing_state_prop_witness_simple.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+	
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (complex, witness)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_witness_complex.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'losing_state_prop_witness_complex.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (simple, synthesis)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_synth.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'losing_state_prop_synth.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
     
 	##------------------------------------------------------------
 	#{

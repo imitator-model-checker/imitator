@@ -1,0 +1,44 @@
+(* Mikael, Aarhus, June 16, 2023 
+	PTG where propagating losing state should be more efficient (even for finding witness)
+    Expected constraint: False
+*)
+
+controllable actions: c_1;
+
+var
+ 	x : clock;
+
+automaton ptg
+
+actions: c_1, u_1;
+
+loc l1: invariant True
+    when True sync u_1 goto trap;
+    when True sync c_1 goto l2;
+
+loc l2: invariant True
+    when True sync c_1 goto l3;
+
+loc l3: invariant True
+    when True sync c_1 goto Goal;
+
+accepting loc Goal: invariant True
+
+loc trap: invariant True
+    when True sync u_1 goto trap2;
+    when True sync u_1 goto trap3;
+
+loc trap2: invariant True
+
+loc trap3: invariant True
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+	& p >= 0
+;
+
+end

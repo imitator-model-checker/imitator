@@ -585,6 +585,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* === END API FOR REFACTORING === *)
 
 	val init_losing_zone_changed = ref false 
+	val init_winning_zone_changed = ref false
 	
 	(* Initialize the Winning and Depend tables with our model - only affects printing information in terminal *)
 	method private initialize_tables () = 
@@ -677,7 +678,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model); 
 		
 		if not @@ is_empty (WinningZone.find state') then waiting #<- (e, BackpropWinning);
-		if not @@ is_empty (LosingZone.find state') then (waiting #<- (e, BackpropLosing); init_losing_zone_changed := true)
+		if not @@ is_empty (LosingZone.find state') then waiting #<- (e, BackpropLosing)
 
 	(* Append a status to queue of edges (linear time in size of queue) *)
 	method private append_edge_status edge_queue status = 
@@ -693,12 +694,12 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 				)
 			edges
 		in
-		let g_init = LinearConstraint.px_nnconvex_copy @@ WinningZone.find state in 
+		let g_init = LinearConstraint.px_nnconvex_copy @@ find state in 
 		let g = get_pred_from_edges g_init (good_edge state) find in
 		let b = get_pred_from_edges (bot ()) (bad_edge state) (fun x -> self#negate_zone (find x) x) in 
 		
 		if precedence then LinearConstraint.px_nnconvex_difference_assign b g;
-		let new_zone = self#safe_timed_pred g b state in 
+		let new_zone = self#safe_timed_pred g b state in
 		print_PTG (Printf.sprintf "\tPred_t(G, B) = %s" @@ LinearConstraint.string_of_px_nnconvex_constraint model.variable_names new_zone);
 		if (find state) #!= new_zone then
 			begin
@@ -713,7 +714,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* Backtracks in order to update losing zones in the simulation graph *)	
 	method private backtrack_losing e waiting = 
 		print_PTG "\tLOSING ZONE PROPAGATION:";
-		let callback  state = 
+		let callback state = 
 			waiting #<-- (self#append_edge_status (Depends.find state) BackpropLosing);
 			if state = self#get_initial_state_index then init_losing_zone_changed := true 
 		in 
@@ -726,19 +727,22 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* Backtracks in order to update winning zones in the simulation graph *)	
 	method private backtrack_winning e waiting =
 		print_PTG "\tWINNING ZONE PROPAGATION:"; 
-		let callback  state = 
+		let callback state = 
 			waiting #<-- (self#append_edge_status (Depends.find state) BackpropWinning);
-		in 
+			if state = self#get_initial_state_index then init_winning_zone_changed := true 		in 
 		self#backtrack_gen e WinningZone.find WinningZone.replace WinningZone.to_str 
 											 self#get_controllable_edges self#get_uncontrollable_edges false
 											 callback
 
 	(* Initial state is lost if initial constraint is included in losing zone *)
 	method private init_is_lost init =
+		init_losing_zone_changed := false;
 		LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (LosingZone.find init)
 
 	(* Initial state is exact if winning and losing zone covers initial zone  *)
 	method private init_is_exact init = 
+		init_losing_zone_changed := false;
+		init_winning_zone_changed := false;
 		let init_zone_nn = nn @@ self#constr_of_state_index init in 
 		let winning_and_losing_zone = LinearConstraint.px_nnconvex_copy @@ WinningZone.find init ||| LosingZone.find init in
 		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_and_losing_zone
@@ -748,15 +752,14 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		let queue_empty = Queue.is_empty waiting in
 		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
-		
-		let init_lost, init_exact = 
-			match !init_losing_zone_changed, complete_synthesis with
-			| true, true -> init_losing_zone_changed := false; self#init_is_lost init, self#init_is_exact init
-			| true, false -> init_losing_zone_changed := false; self#init_is_lost init, false
-			| false, _ -> false, false
-		in
 
-		init_lost || queue_empty ||
+		let recompute_init_lost = !init_losing_zone_changed in 
+		let recompute_init_exact = complete_synthesis && (!init_losing_zone_changed || !init_winning_zone_changed) in
+
+		let init_lost = if recompute_init_lost then self#init_is_lost init else false in
+		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
+
+		queue_empty || init_lost ||
 		if complete_synthesis then
 			init_exact
 		else
@@ -778,6 +781,10 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		(* If goal is init then initial winning zone is it's own constraint*)
 		if self#matches_state_predicate init then
 			WinningZone.replace init @@ (self#constr_of_state_index >> nn) init;
+
+		(* If init is deadlock then initial losing zone is it's own constraint*)
+		if self#matches_state_predicate init then
+			(LosingZone.replace init @@ (self#constr_of_state_index >> nn) init; init_losing_zone_changed := true);
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
