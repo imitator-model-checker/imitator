@@ -108,8 +108,8 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
 			let to_be_added =
-			(*** NOTE: don't perform the following test if the associated option is enabled ***)
-			if options#no_leq_test_in_ef then true else(
+				(*** NOTE: do NOT perform this test depending on the option ***)
+			if not options#cumulative_pruning then true else(
 				(* Check whether new_state.px_constraint <= synthesized_constraint *)
 				if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 					(* Print some information *)

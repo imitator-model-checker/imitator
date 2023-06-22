@@ -166,6 +166,10 @@ class imitator_options =
 		(* Comparison operator between states when adding a new state to the state space *)
 		val mutable comparison_operator : AbstractAlgorithm.state_comparison_operator option = None
 
+		(* Cumulative pruning: when a new state is computed, check whether it is included into the previously computed constraints *)
+		(*** NOTE: might be expensive in the case of thousands of disjuncts in the computed constraints, cf. [AHW18], therefore this option can be set to false when needed ***)
+		val mutable cumulative_pruning				= true
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		val mutable cycle_algorithm : AbstractAlgorithm.cycle_algorithm option = None
 
@@ -213,9 +217,6 @@ class imitator_options =
 
 		(* do not use green color in NDFS *)
 		val mutable no_green						= false
-
-		(* No leq test of the new states wrt the computed constraint in EFsynth *)
-		val mutable no_leq_test_in_ef				= false
 
 		(* do not use lookahead in NDFS *)
 		val mutable no_lookahead					= false
@@ -275,6 +276,8 @@ class imitator_options =
 		method is_set_comparison_operator			= comparison_operator <> None
 		method set_comparison_operator b			= comparison_operator <- Some b
 
+		method cumulative_pruning					= cumulative_pruning
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
 		method is_set_cycle_algorithm : bool		= cycle_algorithm <> None
@@ -329,7 +332,6 @@ class imitator_options =
 		method nb_args								= nb_args
 		method no_acceptfirst						= no_acceptfirst
 		method no_green								= no_green
-		method no_leq_test_in_ef					= no_leq_test_in_ef
 		method no_lookahead							= no_lookahead
 		method no_time_elapsing						= no_time_elapsing
 		method no_random							= no_random
@@ -947,7 +949,7 @@ class imitator_options =
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
 
-				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test and pruning).
+				("-no-cumulative-pruning", Unit (fun () -> cumulative_pruning <- false), " In reachability/safety/loop synthesis: does not perform inclusion test of the new states parameter constraints in the already computed constraints (also known as cumulative pruning). Default: enabled (i.e., inclusion test and pruning).
 				");
 
 				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green color in NDFS. Default: enabled (i.e., green).
@@ -1264,9 +1266,9 @@ class imitator_options =
 
 
 			(*------------------------------------------------------------*)
-			(* No no_leq_test_in_ef if not EF/PRP/cycles… *)
+			(* No -no-cumulative-pruning if not EF/PRP/cycles… *)
 			(*------------------------------------------------------------*)
-			if no_leq_test_in_ef then(
+			if not cumulative_pruning then(
 				if imitator_mode <> Algorithm then(
 					print_warning ("The option `-no-cumulative-pruning` is reserved for selected synthesis algorithms. It will thus be ignored.");
 				)else(

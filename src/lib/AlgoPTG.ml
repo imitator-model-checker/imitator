@@ -218,8 +218,8 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
 			
-				(*** NOTE: don't perform this test if the associated option is enabled ***)
-				if not options#no_leq_test_in_ef then(
+				(*** NOTE: do NOT perform this test depending on the option ***)
+				if options#cumulative_pruning then(
 					(* Check whether new_state.px_constraint <= synthesized_constraint *)
 					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 						(* Print some information *)

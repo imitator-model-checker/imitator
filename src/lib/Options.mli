@@ -39,6 +39,10 @@ class imitator_options :
 		method is_set_comparison_operator	: bool
 		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
 
+		(* Cumulative pruning: when a new state is computed, check whether it is included into the previously computed constraints *)
+		(*** NOTE: might be expensive in the case of thousands of disjuncts in the computed constraints, cf. [AHW18], therefore this option can be set to false when needed ***)
+		method cumulative_pruning			: bool
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm				: AbstractAlgorithm.cycle_algorithm
 		method is_set_cycle_algorithm		: bool
@@ -92,7 +96,6 @@ class imitator_options :
 		method no_acceptfirst				: bool
 		method nb_args						: int
 		method no_green						: bool
-		method no_leq_test_in_ef			: bool
 		method no_lookahead					: bool
 		method no_random					: bool
 		method no_time_elapsing				: bool

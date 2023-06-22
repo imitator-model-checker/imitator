@@ -133,9 +133,9 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
 				(*** NOTE: advantage of doing it twice: print less information :-) ***)
 				
-				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
+				(*** NOTE: do NOT do it if NOT cumulative_pruning ***)
 				
-				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
+				if (options#cumulative_pruning) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
 					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
 				)else(
 					(* The constraint is new! *)
@@ -247,8 +247,8 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (state_predicate 
 			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
 			
-				(*** NOTE: don't perform this test if the associated option is enabled ***)
-				if not options#no_leq_test_in_ef then(
+				(*** NOTE: do NOT perform this test depending on the option ***)
+				if options#cumulative_pruning then(
 					(* Check whether new_state.px_constraint <= synthesized_constraint *)
 					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 						(* Print some information *)
