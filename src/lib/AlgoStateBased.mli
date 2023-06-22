@@ -28,7 +28,7 @@ open State
 (************************************************************)
 (************************************************************)
 
-(* Type to define the state_index that have unexplored successors in case of premature termination *)
+(** Type to define the state_index that have unexplored successors in case of premature termination *)
 type unexplored_successors =
 	(* Not defined (i.e., not yet defined, or no premature termination) *)
 	| UnexSucc_undef
@@ -55,7 +55,7 @@ type bfs_limit_reached =
 
 
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 
 (*** NOTE: made public only because used in AlgoEFOptQueue ***)
@@ -196,7 +196,7 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.stateSpace
 
-		(* Nature of the state space according to a property *)
+		(** Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature
 
 		(* Function to be called from the distributed IMITATOR *)
@@ -204,32 +204,32 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		val mutable patator_termination_function : (unit -> unit) option
 
 
-		(* Status of the analysis *)
+		(** Status of the analysis *)
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable termination_status : Result.state_based_algorithm_termination option
 
-		(* List of state_index that have unexplored successors in case of premature termination *)
+		(** List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
 
-		(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+		(** Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
 		val mutable algorithm_keep_going : bool
 
-		(* The current new state indexes *)
+		(** The current new state indexes *)
 		val mutable new_states_indexes : state_index list
 
-		(* Variable to remain of the termination *)
+		(** Variable to remain of the termination *)
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : bfs_limit_reached
 
-		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+		(** Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
 
 		(*** NOTE: only used for exemplification purpose ***)
-		(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+		(** Positive examples spotted (positive examples: concrete runs to the target state) *)
 		val mutable positive_examples : Result.valuation_and_concrete_run list
 
 		(*** NOTE: only used for exemplification purpose ***)
-		(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+		(** Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 		val mutable negative_examples : Result.valuation_and_concrete_run list
 
 		(*** NOTE: only used for exemplification purpose ***)
@@ -241,17 +241,17 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		(************************************************************)
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Write a message preceeded by "[algorithm_name]" *)
+		(** Write a message preceeded by "[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message : verbose_mode -> string -> unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Write a message preceeded by "\n[algorithm_name]" *)
+		(** Write a message preceeded by "\n[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message_newline : verbose_mode -> string -> unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Variable initialization (to be defined in subclasses) *)
+		(** Variable initialization (to be defined in subclasses) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method initialize_variables : unit
 
@@ -263,7 +263,7 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		method get_initial_p_nnconvex_constraint_or_die : LinearConstraint.p_nnconvex_constraint
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Set the PaTATOR termination function *)
+		(** Set the PaTATOR termination function *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_patator_termination_function : (unit -> unit) -> unit
 
@@ -284,18 +284,18 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Update the nature of the trace set *)
+		(** Update the nature of the trace set *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Simple Boolean denoting whether we should abort if the initial state is unsatisfiable (basically, we should always abort, except for Validity-synthesis) *)
+		(** Simple Boolean denoting whether we should abort if the initial state is unsatisfiable (basically, we should always abort, except for Validity-synthesis) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method abort_if_unsatisfiable_initial_state : bool
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
+		(** Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_initial_state_or_abort : State.state
 
@@ -312,13 +312,13 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
+		(** Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*** NOTE: made public only for EFoptQueue ***)
 		method post_from_one_state : state_index -> state_index list
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Add a transition to the state space *)
+		(** Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method add_transition_to_state_space : (state_index * StateSpace.combined_transition * state_index) -> StateSpace.addition_result -> unit
 
@@ -328,26 +328,26 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method try_termination_at_initial_state : Result.imitator_result option
 
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method virtual process_initial_state : State.state -> bool *)
+ 		method virtual process_initial_state : State.state -> bool *)
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Generate counter-example(s) if required by the algorithm *)
+		(** Generate counter-example(s) if required by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method construct_counterexamples : state_index -> unit
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Create 1 positive and (up to) 2 negative examples (of type `option` in case could not be exhibited) *)
+		(** Create 1 positive and (up to) 2 negative examples (of type `option` in case could not be exhibited) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method exhibit_3_counterexamples : State.state_index-> (Result.valuation_and_concrete_run * Result.valuation_and_concrete_run option * Result.valuation_and_concrete_run option)
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
+		(** Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_deadlock_state : state_index -> unit
 
@@ -372,12 +372,12 @@ class virtual algoStateBased : AbstractModel.abstract_model ->
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Main method to run the algorithm *)
+		(** Main method to run the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : unit -> Result.imitator_result
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+		(** Packaging the result at the end of the exploration (to be defined in subclasses) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual compute_result : Result.imitator_result
 
