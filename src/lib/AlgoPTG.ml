@@ -127,25 +127,17 @@ end)
 (************************************************************)
 (************************************************************)
 class algoPTG (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased model as super
+	object (self) inherit algoStateBased model (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Depth in the explored state space *)
-	(*** NOTE: private ***)
-	val mutable bfs_current_depth = 0
-
 	(*------------------------------------------------------------*)
 	(* Counters *)
 	(*------------------------------------------------------------*)
 
-	(* The target state has been found *)
-	val counter_found_target = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
-
 	(* Methods counters *)
-	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
 
@@ -158,8 +150,6 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! initialize_variables =
-		super#initialize_variables;
-		
 		(*** NOTE: duplicate operation ***)
 		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
@@ -176,39 +166,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state (_ : State.state) : bool =
-	
-		(* Statistics *)
-		counter_process_state#increment;
-		counter_process_state#start;
-	
-		(* Print some information *)
-		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium "Entering process_state…";
-		);
-
-		true
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform with the initial state; returns None unless the initial state cannot be kept, in which case the algorithm returns an imitator_result *)
-	(*** NOTE: this function is redefined here ***)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! try_termination_at_initial_state : Result.imitator_result option =
-		(* Retrieve the initial state *)
-		let initial_px_constraint : LinearConstraint.px_linear_constraint = self#get_initial_px_constraint_or_die in
-		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
-
-
-		if self#process_state initial_state then None
-		else(
-			(* Set termination status *)
-			termination_status <- Some (Result.Regular_termination);
-
-			(* Terminate *)
-			Some (self#compute_result)
-		)
-
+	method private process_state (_ : State.state) : bool = true
 
 
 	
@@ -311,7 +269,7 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 		(* The state is kept in any case *)
 		true
 (*** WARNING/BADPROG: what precedes is partially copy/paste to AlgoPRP.ml ***)
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
@@ -330,228 +288,6 @@ class algoPTG (model : AbstractModel.abstract_model) (state_predicate : Abstract
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: could be stopped when the bad constraints are equal to the initial p-constraint ***)
 	method check_termination_at_post_n = false
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method to run the BFS algorithm  *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING (2022/11, ÉA): copied from AlgoStateBased ***)
-	method! explore_layer_bfs init_state_index =
-
-		(* Statistics *)
-(*		counter_explore_using_strategy#increment;
-		counter_explore_using_strategy#start;*)
-
-		(* Set the depth to 1 *)
-		bfs_current_depth <- 1;
-
-		(* To check whether the time limit / state limit is reached *)
-		limit_reached <- Keep_going;
-
-		(* Flag modified by the algorithm to perhaps terminate earlier *)
-		algorithm_keep_going <- true;
-
-
-		(*------------------------------------------------------------*)
-		(* Perform the post^* *)
-		(*------------------------------------------------------------*)
-		(* Set of states computed at the previous depth *)
-		let post_n = ref [init_state_index] in
-
-		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
-		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
-			(* Print some information *)
-			if verbose_mode_greater Verbose_standard then (
-				print_message Verbose_low ("\n");
-				print_message Verbose_standard ("Computing post^" ^ (string_of_int bfs_current_depth) ^ " from "  ^ (string_of_int (List.length !post_n)) ^ " state" ^ (s_of_int (List.length !post_n)) ^ ".");
-			);
-
-			(* Count the states for verbose purpose: *)
-			let num_state = ref 0 in
-
-			(* Statistics *)
-(*			counter_nplus1#increment;
-			counter_nplus1#start;*)
-
-			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
-			let post_n_plus_1 =
-			try(
-			(* For each newly found state: *)
-			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				(* Count the states for verbose purpose: *)
-				num_state := !num_state + 1;
-
-				(* Perform the post *)
-				let new_states = self#post_from_one_state source_state_index in
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then (
-					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
-					print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int (List.length !post_n)) ^ " in post^" ^ (string_of_int bfs_current_depth) ^ ".\n");
-				);
-
-				(* Return the concatenation of the new states *)
-				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
-				List.rev_append current_post_n_plus_1 new_states
-			) [] !post_n
-			)
-			with TerminateAnalysis ->(
-				(* Set the flag *)
-				algorithm_keep_going <- false;
-				(* If analysis terminated: successors are just the empty list *)
-				(*** TODO: it should be possible to change the flag algorithm_keep_going from inside the function instead of deleting this list ***)
-				[]
-			)
-
-			in
-
-			(* Statistics *)
-(* 			counter_nplus1#stop; *)
-
-			(* Statistics *)
-(*			counter_process_post_n#increment;
-			counter_process_post_n#start;*)
-
-			self#process_post_n !post_n;
-
-			(* Statistics *)
-(* 			counter_process_post_n#stop; *)
-
-			(*------------------------------------------------------------*)
-			(* Begin merging *)
-			(*------------------------------------------------------------*)
-			(* Merge states! *)
-			let new_states_after_merging = ref post_n_plus_1 in
-			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
-
-            (*** BEGIN CALL OF MERGING ***)
-			begin
-            match options#merge_algorithm with
-            | Merge_reconstruct
-            | Merge_onthefly    ->
-                new_states_after_merging := state_space#merge !new_states_after_merging;
-            | Merge_212 ->
-                let eaten_states = state_space#merge212 !new_states_after_merging in
-                new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-            | Merge_none ->
-                ()
-            end;
-			(*** END CALL OF MERGING ***)
-
-			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
-			post_n := !new_states_after_merging;
-			(*------------------------------------------------------------*)
-			(* End merging *)
-			(*------------------------------------------------------------*)
-
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then (
-				let beginning_message = if !post_n = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !post_n)) ^ " new state" ^ (s_of_int (List.length !post_n)) ^ "") in
-				print_message Verbose_medium (beginning_message ^ " for post^" ^ (string_of_int bfs_current_depth) ^ ".\n");
-			);
-
-			(* If acyclic option: empty the list of already reached states for comparison with former states *)
-			if options#acyclic then(
-				print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
-				state_space#empty_states_for_comparison;
-			);
-
-			(* Print some memory information *)
-			if options#statistics then(
-				(*** TODO ***)
-			);
-
-			(* Statistics *)
-(*			counter_gcmajor#increment;
-			counter_gcmajor#start;
-
-			(* Statistics *)
-			counter_gcmajor#stop;*)
-
-
-			(* Go one step deeper *)
-			bfs_current_depth <- bfs_current_depth + 1;
-
-			(* Check if the limit has been reached *)
-			(*** NOTE (ÉA, 2022/11): disabled so far (would check the time limit, states limit, depth limit…) ***)
-(* 			self#check_and_update_layer_bfs_limit; *)
-
-			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
-			if limit_reached = Keep_going then(
-				(* Print some information *)
-				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
-				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ " with a queue of " ^ (string_of_int (List.length !post_n)) ^ " unexplored state" ^ (s_of_int (List.length !post_n)) ^ "…");
-
-				if self#check_termination_at_post_n then(
-					algorithm_keep_going <- false;
-				);
-			);
-
-		done; (* END WHILE *)
-
-		(* Were they any more states to explore? *)
-		let nb_unexplored_successors = List.length !post_n in
-
-		(* Set the list of states with unexplored successors, if any *)
-		if nb_unexplored_successors > 0 then(
-			(*** NOTE: if an exception TerminateAnalysis was raised, this list is empty :( ***)
-			unexplored_successors <- UnexSucc_some !post_n;
-		);
-
-		(* Update termination condition *)
-		begin
-		match limit_reached with
-			(* No limit: regular termination *)
-			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
-			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
-			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
-			| Keep_going (*when termination_status <> None*) -> ()
-
-			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
-
-			(* Termination due to state space depth limit reached *)
-			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit nb_unexplored_successors)
-
-			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
-
-			(* Termination because a witness has been found *)
-			(*** NOTE/TODO: add a new result termination type? ***)
-			| Witness_found -> termination_status <- Some (Result.Regular_termination)
-		end
-		;
-
-		(* Print some information *)
-		(*** NOTE: must be done after setting the limit (above) ***)
-		(*** NOTE (ÉA, 2022/11): disabled so far (would check the time limit, states limit, depth limit…) ***)
-(* 		self#bfs_print_warnings_limit (); *)
-
-		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
-			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
-		);
-
-
-		print_message Verbose_standard (
-			let nb_states = state_space#nb_states in
-			let nb_transitions = state_space#nb_transitions in
-			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
-			"\n" ^ fixpoint_str ^ " at a depth of "
-			^ (string_of_int bfs_current_depth) ^ ""
-			^ ": "
-			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
-			^ " with "
-			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space."
-		);
-		(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
-
-		(* Statistics *)
-		counter_explore_using_strategy#stop;
-
-		(* The end *)
-		()
-	(*** END WARNING (2022/11, ÉA): copied from AlgoStateBased ***)
-
 
 	
 	(* === BEGIN API FOR REFACTORING === *)
