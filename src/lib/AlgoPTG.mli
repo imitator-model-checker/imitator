@@ -30,7 +30,7 @@ class algoPTG : AbstractModel.abstract_model -> AbstractProperty.state_predicate
 		(************************************************************)
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Name of the algorithm *)
+		(** Name of the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method algorithm_name : string
 
@@ -57,9 +57,8 @@ class algoPTG : AbstractModel.abstract_model -> AbstractProperty.state_predicate
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method try_termination_at_initial_state : Result.imitator_result option
 
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+		(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_deadlock_state : state_index -> unit
 		
@@ -76,7 +75,7 @@ class algoPTG : AbstractModel.abstract_model -> AbstractProperty.state_predicate
 		method check_termination_at_post_n : bool
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Method packaging the result output by the algorithm *)
+		(** Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_result : Result.imitator_result
 
