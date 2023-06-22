@@ -242,6 +242,12 @@ class imitator_options =
 		(* Name for the file containing the property *)
 		val mutable property_file_name				= None
 
+		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
+		val mutable ptg_onthefly					= false
+
+		(* In game algorithms: propagate losing states *)
+		val mutable ptg_propagate_losing_states		= false
+
 		(* process again green states *)
 		val mutable recompute_green					= false
 
@@ -358,6 +364,10 @@ class imitator_options =
 		method pi_compatible						= pi_compatible
 		method precomputepi0						= precomputepi0
 		method property_file_name					= property_file_name
+
+		method ptg_onthefly							= ptg_onthefly
+		method ptg_propagate_losing_states			= ptg_propagate_losing_states
+
 		method states_limit							= states_limit
 		method statistics							= statistics
 
@@ -990,6 +1000,12 @@ class imitator_options =
 				");
 
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
+				");
+
+				("-PTG-onthefly", Unit (fun () -> ptg_onthefly <- true), " In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize. Default: false, i.e., does not compute on-the-fly.
+				");
+
+				("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
 				");
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]

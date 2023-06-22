@@ -119,6 +119,13 @@ class imitator_options :
 		method set_output_result			: bool -> unit
 
 		method output_tiles_files			: bool
+
+		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
+		method ptg_onthefly					: bool
+
+		(* In game algorithms: propagate losing states *)
+		method ptg_propagate_losing_states	: bool
+
 		method pi_compatible				: bool
 		method precomputepi0				: bool
 		method property_file_name			: string option
