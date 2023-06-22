@@ -44,7 +44,7 @@ val dot_binary_name : string
 (************************************************************)
 (************************************************************)
 
-(* Name for the global time clock in the input model *)
+(** Name for the global time clock in the input model *)
 val global_time_clock_name : string
 
 
@@ -170,22 +170,26 @@ type customized_string = {
     binary_word_representation : customized_binary_word_representation;
 }
 
-val global_default_string : customized_string
 (** Default string values of bool symbols *)
 val default_string : customized_boolean_string
+
 (** Default string values of bool symbols without white spaces around operators *)
 val default_string_without_whitespace : customized_boolean_string
+
 (** Default string values of arithmetic symbols *)
 val default_arithmetic_string : customized_arithmetic_string
+
 (** Default string values of arithmetic symbols without white spaces around operators *)
 val default_arithmetic_string_without_whitespace : customized_arithmetic_string
+
 (** Default string values of array delimiters symbols without whitespaces around operators *)
 val default_array_string : customized_array_string
+
 (** Default string values of parenthesis delimiters symbols without whitespaces *)
 val default_paren_delimiter : string * string
 
 (** Default string of symbols *)
-val global_default_string : customized_string
+ val global_default_string : customized_string
 
 val array_string : string
 val list_string : string

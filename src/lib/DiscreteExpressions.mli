@@ -13,9 +13,10 @@
 
 type variable_name = string
 type variable_name_table = Automaton.variable_index -> variable_name
+
 (************************************************************)
 (************************************************************)
-(** Operators *)
+(* Operators *)
 (************************************************************)
 (************************************************************)
 
@@ -26,11 +27,11 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 (************************************************************)
 (************************************************************)
-(** Valuation *)
+(* Valuation *)
 (************************************************************)
 (************************************************************)
 
-(* Conjonction / Disjonction operators *)
+(** Conjunction / Disjunction operators *)
 type conj_dis =
     | And
     | Or
@@ -54,6 +55,7 @@ type loop_dir =
 type update_scope =
     | Global_update of Automaton.discrete_index
     | Local_update of Automaton.variable_ref
+
 
 (****************************************************************)
 (** Global expression *)
@@ -115,7 +117,7 @@ and int_factor =
     | Int_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(** Boolean expressions for discrete variables *)
+(* Boolean expressions for discrete variables *)
 (************************************************************)
 
 (** Boolean expression *)
@@ -126,7 +128,7 @@ and boolean_expression =
 	| Discrete_boolean_expression of discrete_boolean_expression
 
 and discrete_boolean_expression =
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	(* TODO create another type regrouping all comparisons ? *)
 	| Arithmetic_comparison of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
     | Boolean_comparison of discrete_boolean_expression * relop * discrete_boolean_expression
@@ -135,23 +137,28 @@ and discrete_boolean_expression =
     | List_comparison of list_expression * relop * list_expression
     | Stack_comparison of stack_expression * relop * stack_expression
     | Queue_comparison of queue_expression * relop * queue_expression
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+
+	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
-	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+
+	(* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Boolean_expression of boolean_expression
-	(** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
+
+	(* Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Not_bool of boolean_expression (** Negation *)
-	(** discrete variable in boolean expression *)
+
+	(* Discrete variable in boolean expression *)
 	| Bool_variable of Automaton.variable_index
 	| Bool_local_variable of Automaton.variable_ref
-	(** discrete constant in boolean expression *)
+
+	(* Discrete constant in boolean expression *)
 	| Bool_constant of bool
     | Bool_indexed_expr of access_type * int_arithmetic_expression
 
     | Bool_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(** Binary word expressions for discrete variables *)
+(* Binary word expressions for discrete variables *)
 (************************************************************)
 
 (** Binary word expression *)

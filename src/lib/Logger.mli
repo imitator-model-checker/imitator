@@ -12,17 +12,18 @@
  ************************************************************)
 
 (* Utils modules *)
-open Exceptions
 open JsonFormatter
 
 val custom_details : (string, json_element) Hashtbl.t
-(* Add a property to custom details json struct *)
+
+(** Add a property to custom details json struct *)
 val add_custom_detail_property : string -> json_element -> unit
 
-(* Add a property to custom details json struct *)
+(** Add a property to custom details json struct *)
 val add_custom_detail_array : string -> json_element -> unit
 
-(* Get json structure of all custom details *)
+(** Get json structure of all custom details *)
 val json_struct_of_details : unit -> json_element
-(* Get json string of all custom details *)
+
+(** Get json string of all custom details *)
 val json_string_of_details : unit -> string

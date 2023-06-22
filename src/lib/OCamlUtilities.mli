@@ -14,7 +14,7 @@
 
  
 (************************************************************)
-(** Useful functions on integers *)
+(* Useful functions on integers *)
 (************************************************************)
 (** Check if an integer is a power of two, i.e., n = 2^m, with m >= 1 *)
 val is_a_power_of_2 : int -> bool
@@ -22,7 +22,7 @@ val is_a_power_of_2 : int -> bool
 
 
 (************************************************************)
-(** Useful functions on float *)
+(* Useful functions on float *)
 (************************************************************)
 (** Round a float with 1 digit after comma, and convert to string *)
 val round1_float : float -> string
@@ -32,39 +32,44 @@ val round3_float : float -> string
 
 
 (************************************************************)
-(** Useful functions on options *)
+(* Useful functions on options *)
 (************************************************************)
 (** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
 val a_of_a_option : 'a option -> 'a
 
 (************************************************************)
-(** Useful lambda functions *)
+(* Useful lambda functions *)
 (************************************************************)
 val identity : 'a -> 'a
 
 (************************************************************)
-(** Useful functions on tuples *)
+(* Useful functions on tuples *)
 (************************************************************)
 
-(* Get first element of tuple *)
+(** Get first element of tuple *)
 val first_of_tuple : 'a * 'b -> 'a
-(* Get second element of tuple *)
+
+(** Get second element of tuple *)
 val second_of_tuple : 'a * 'b -> 'b
-(* Apply a tuple as argument to a function *)
+
+(** Apply a tuple as argument to a function *)
 val apply_tuple : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
-(* Map first element of tuple *)
+
+(** Map first element of tuple *)
 val map_first_of_tuple : ('a -> 'c) -> 'a * 'b -> 'c * 'b
 
-(* Get first element of triplet *)
+(** Get first element of triplet *)
 val first_of_triplet : 'a * 'b * 'c -> 'a
-(* Get second element of triplet *)
+
+(** Get second element of triplet *)
 val second_of_triplet : 'a * 'b * 'c -> 'b
-(* Get third element of triplet *)
+
+(** Get third element of triplet *)
 val third_of_triplet : 'a * 'b * 'c -> 'c
 
 
 (************************************************************)
-(** Useful functions on lists *)
+(* Useful functions on lists *)
 (************************************************************)
 (** Check if a list is empty *)
 val list_empty : 'a list -> bool
@@ -147,7 +152,7 @@ val hashtbl_group_by : ('a -> 'b) -> 'a list -> ('b, 'a list) Hashtbl.t
 val hashtbl_of_tuples : ('a * 'b) list -> ('a, 'b) Hashtbl.t
 
 (************************************************************)
-(** Useful functions on arrays *)
+(* Useful functions on arrays *)
 (************************************************************)
 
 (* Check if an element belongs to an array *)
@@ -171,8 +176,9 @@ val array_shuffle : 'a array -> unit
 (** Perform the substraction of 2 NumConst array of same size **)
 val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 
+
 (************************************************************)
-(** Useful functions on dynamic arrays *)
+(* Useful functions on dynamic arrays *)
 (************************************************************)
 
 (* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
@@ -180,7 +186,7 @@ val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 
 
 (************************************************************)
-(** Useful functions on hash tables *)
+(* Useful functions on hash tables *)
 (************************************************************)
 (** Get all bound keys in an hash table; multiple bindings yield multiple (identical) keys *)
 (*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
@@ -193,7 +199,7 @@ val hashtbl_get_or_default : ('a , 'b) Hashtbl.t -> 'a -> 'b -> 'b
 val hashtbl_filter : ('a -> bool) -> ('a,'b) Hashtbl.t -> unit 
 
 (************************************************************)
-(** Useful functions on string *)
+(* Useful functions on string *)
 (************************************************************)
 (** Returns a fresh string made of 'n' times 's' *)
 val string_n_times : int -> string -> string
@@ -222,7 +228,7 @@ val indent_paragraph : int -> string -> string
 (** Convert a list of int into a string with , separator *)
 val string_of_list_of_int : int list -> string
 
-(* Returns a list of substrings splitted using sep *)
+(* Returns a list of substrings split using sep *)
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 val split : string -> string -> string list
 
@@ -236,7 +242,7 @@ val waswere_of_int  : int -> string
 val escape_string_for_dot : string -> string
 
 (************************************************************)
-(** Useful functions on booleans *)
+(* Useful functions on Booleans *)
 (************************************************************)
 (* Evaluate both part of an 'and' comparison and return the conjunction *)
 val evaluate_and : bool -> bool -> bool
@@ -252,7 +258,7 @@ val xnor : bool -> bool -> bool
 
 
 (************************************************************)
-(** Date functions *)
+(* Date functions *)
 (************************************************************)
 
 (** Print the current date and time under the form of a string *)
@@ -261,7 +267,7 @@ val now : unit -> string
 
 
 (**************************************************)
-(** System functions *)
+(* System functions *)
 (**************************************************)
 
 (** Read the first line of a file and convert to string *)

@@ -23,11 +23,13 @@ class hyper_rectangle :
 		
 		(** Get the minimum value for a dimension *)
 		method get_min : int -> NumConst.t
+
 		(** Get the maximum value for a dimension *)
 		method get_max : int -> NumConst.t
 
 		(** Set the minimum value for a dimension *)
 		method set_min : int -> NumConst.t -> unit
+
 		(** Set the maximum value for a dimension *)
 		method set_max : int -> NumConst.t -> unit
 

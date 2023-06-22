@@ -12,7 +12,7 @@
  ****************************************************************)
 
 (****************************************************************)
-(** Names *)
+(* Names *)
 (****************************************************************)
 
 type variable_index = int
@@ -25,7 +25,7 @@ type variable_id = int
 type variable_ref = variable_name * variable_id
 
 (****************************************************************)
-(** Operators *)
+(* Operators *)
 (****************************************************************)
 
 (** Boolean operators *)
@@ -34,17 +34,17 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 
 (****************************************************************)
-(** Declarations *)
+(* Declarations *)
 (****************************************************************)
 
-(* Type of the sequence *)
+(** Type of the sequence *)
 type parsed_sequence_type =
     | Parsed_array
     | Parsed_list
     | Parsed_stack
     | Parsed_queue
 
-(* Type of boolean operator *)
+(** Type of boolean operator *)
 type parsed_conj_dis =
     | Parsed_and
     | Parsed_or
@@ -58,13 +58,13 @@ type parsed_boolean_expression =
 
 and parsed_discrete_boolean_expression =
     | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_comparison_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-	(** Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
+	(* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) *)
 	| Parsed_nested_bool_expr of parsed_boolean_expression
-    (** Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
+    (* Parsed boolean expression of the form not(Expr ~ Expr), with ~ = { &, | } *)
 	| Parsed_not of parsed_boolean_expression (** Negation *)
 
 (****************************************************************)
@@ -102,7 +102,7 @@ type variable_declaration = DiscreteType.var_type * (variable_name * parsed_bool
 type variable_declarations = variable_declaration list
 
 (****************************************************************)
-(** Convex predicates, linear and non-linear expressions *)
+(* Convex predicates, linear and non-linear expressions *)
 (****************************************************************)
 
 (** Linear expressions *)
@@ -129,14 +129,14 @@ type nonlinear_constraint = parsed_discrete_boolean_expression
 type convex_predicate = nonlinear_constraint list
 
 (****************************************************************)
-(** Automata *)
+(* Automata *)
 (****************************************************************)
-(* Type of locations: urgent or not *)
+(** Type of locations: urgent or not *)
 type parsed_urgency =
 	| Parsed_location_urgent
 	| Parsed_location_nonurgent
 
-(* Type of locations: accepting or not *)
+(** Type of locations: accepting or not *)
 type parsed_acceptance =
 	| Parsed_location_accepting
 	| Parsed_location_nonaccepting
@@ -163,7 +163,7 @@ type parsed_loop_dir =
     | Parsed_for_loop_down
 
 (****************************************************************)
-(** Bloc of sequential code *)
+(* Bloc of sequential code *)
 (****************************************************************)
 type parsed_instruction =
     | Parsed_local_decl of variable_ref * DiscreteType.var_type_discrete * parsed_boolean_expression (* init expr *)
@@ -176,7 +176,7 @@ type parsed_instruction =
 and parsed_seq_code_bloc = parsed_instruction list
 
 (****************************************************************)
-(** User functions *)
+(* User functions *)
 (****************************************************************)
 
 (* Metadata of a function *)
@@ -235,7 +235,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 
 
 (****************************************************************)
-(** Init definition *)
+(* Init definition *)
 (****************************************************************)
 
 (** State predicates *)
@@ -248,14 +248,14 @@ type parsed_init_state_predicate =
 type init_definition = parsed_init_state_predicate list
 
 (****************************************************************)
-(** Definition of the property *)
+(* Definition of the property *)
 (****************************************************************)
 
 type parsed_duration = linear_expression
 
 
 (****************************************************************)
-(** Projection definition *)
+(* Projection definition *)
 (****************************************************************)
 
 type parsed_projection = (variable_name list) option
@@ -276,7 +276,7 @@ type parsed_model = {
 
 
 (****************************************************************)
-(** Parsed valuation and valuation domains *)
+(* Parsed valuation and valuation domains *)
 (****************************************************************)
 
 type parsed_pval = (string *  NumConst.t) list
@@ -285,7 +285,7 @@ type parsed_pdomain = (string * NumConst.t * NumConst.t) list
 
 
 (****************************************************************)
-(** Predicates for properties *)
+(* Predicates for properties *)
 (****************************************************************)
 
 type parsed_loc_predicate =
@@ -315,7 +315,7 @@ and parsed_state_predicate =
 
 	
 (****************************************************************)
-(** Parsed property *)
+(* Parsed property *)
 (****************************************************************)
 
 type parsed_synthesis_type =
@@ -324,7 +324,7 @@ type parsed_synthesis_type =
 	| Parsed_exemplify
 
 
-(* Observer patterns [Andre13] *)
+(** Observer patterns [Andre13] *)
 type parsed_pattern =
 	(* if a2 then a1 has happened before *)
 	| Parsed_action_precedence_acyclic of sync_name * sync_name
@@ -404,13 +404,13 @@ type parsed_property_type =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Accepting infinite-run (cycle) through a state predicate *)
+	(* Accepting infinite-run (cycle) through a state predicate *)
 	| Parsed_Cycle_Through of parsed_state_predicate
 
-	(** Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
+	(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 	| Parsed_Cycle_Through_generalized of parsed_state_predicate list
 
-	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	(* Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| Parsed_NZ_Cycle
 	
 
@@ -448,19 +448,19 @@ type parsed_property_type =
 	(* Cartography *)
 	| Parsed_Cover_cartography of parsed_pdomain * NumConst.t
 
-	(** Cover the whole cartography using learning-based abstractions *)
+	(* Cover the whole cartography using learning-based abstractions *)
 	| Parsed_Learning_cartography of parsed_state_predicate * parsed_pdomain * NumConst.t
 	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Parsed_Shuffle_cartography of parsed_pdomain * NumConst.t
 	
-	(** Look for the border using the cartography*)
+	(* Look for the border using the cartography*)
 	| Parsed_Border_cartography of parsed_pdomain * NumConst.t
 	
-	(** Randomly pick up values for a given number of iterations *)
+	(* Randomly pick up values for a given number of iterations *)
 	| Parsed_Random_cartography of parsed_pdomain * int * NumConst.t
 	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| Parsed_RandomSeq_cartography of parsed_pdomain * int * NumConst.t
 
 	(* Parametric reachability preservation *)
@@ -500,9 +500,10 @@ type declarations_info = {
 
 (************************************************************)
 (************************************************************)
-(** Useful data structure to avoid multiple parameters in functions *)
+(* Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
+
 type constants_table = (Automaton.variable_name , AbstractValue.abstract_value) Hashtbl.t
 
 type variable_infos = {

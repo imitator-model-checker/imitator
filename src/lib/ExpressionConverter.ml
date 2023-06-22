@@ -544,7 +544,7 @@ and type_check_parsed_discrete_factor variable_infos infer_type_opt = function
         in
 
         (* Resolve constraint according to arguments types *)
-        let resolved_constraints, malformed_constraints = TypeConstraintResolver.resolve_constraints variable_infos function_parameter_signature_constraint call_signature in
+        let resolved_constraints, malformed_constraints = TypeConstraintResolver.resolve_constraints function_parameter_signature_constraint call_signature in
 
         let resolved_constraints = resolved_constraints @ dependent_type_constraints in
 

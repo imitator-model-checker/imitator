@@ -15,7 +15,6 @@
 open Exceptions
 
 (* Parsing structure modules *)
-open ParsingStructureUtilities
 open DiscreteType
 
 (**)
@@ -67,7 +66,7 @@ and resolve_type_constraint discrete_type = function
 and resolve_defined_type_number_constraint = function
     | Rat_constraint
     | Int_constraint Int_type_constraint -> []
-    | Int_constraint (Int_name_constraint constraint_name) -> []
+    | Int_constraint (Int_name_constraint _) -> []
 
 and resolve_type_number_constraint type_number = function
     | Number_type_name_constraint constraint_name -> [constraint_name, Resolved_type_constraint (Dt_number type_number)]
@@ -80,7 +79,7 @@ and resolve_length_constraint length = function
 and resolve_length_constraint_expression length = function
     | Length_scalar_constraint constraint_name -> [constraint_name, Resolved_length_constraint length]
     (* Difficult to resolve constraint here ! *)
-    | Length_plus_constraint (constraint_name, length_constraint) -> []
+    | Length_plus_constraint _ -> []
 
 (* Check whether two constraint resolutions are compatible *)
 let is_resolved_constraints_compatibles constraint_a constraint_b =
@@ -92,7 +91,7 @@ let is_resolved_constraints_compatibles constraint_a constraint_b =
     | _ -> false
 
 (* Resolve signature constraints from passed argument discrete type *)
-let resolve_constraints variable_infos signature discrete_types =
+let resolve_constraints signature discrete_types =
 
     (* Function that choose the best constraint resolution *)
     (* between many compatibles and well-formed resolutions *)
@@ -129,7 +128,7 @@ let resolve_constraints variable_infos signature discrete_types =
     let resolved_constraint_group_by_constraint_name = OCamlUtilities.group_by_and_map (fun (constraint_name, _) -> constraint_name) (fun (_, resolved_constraint) -> resolved_constraint) resolved_constraints in
 
     (* Now we have to partition list between well-formed constraints and mal-formed constraints *)
-    let well_formed_constraint_resolutions, malformed_constraint_resolutions = List.partition (fun (constraint_name, resolutions) ->
+    let well_formed_constraint_resolutions, malformed_constraint_resolutions = List.partition (fun (_, resolutions) ->
         (* For a particular constraint name (for example 'a), check that resolutions are compatible *)
         (* If different resolutions for the same constraint are not compatible, then constraint is malformed *)
         OCamlUtilities.for_all_in_arrangement is_resolved_constraints_compatibles resolutions
@@ -208,9 +207,9 @@ and discrete_type_of_type_constraint_name resolved_constraints_table = function
 and discrete_type_of_type_number_constraint resolved_constraints_table = function
     | Number_type_name_constraint constraint_name ->
         get_discrete_type_resolved_constraint resolved_constraints_table constraint_name
-    | Defined_type_number_constraint number_type -> Dt_number (discrete_type_of_defined_type_number_constraint resolved_constraints_table number_type)
+    | Defined_type_number_constraint number_type -> Dt_number (discrete_type_of_defined_type_number_constraint number_type)
 
-and discrete_type_of_defined_type_number_constraint resolved_constraints_table = function
+and discrete_type_of_defined_type_number_constraint = function
     | Rat_constraint -> Dt_rat
     | Int_constraint _ -> Dt_int
 
