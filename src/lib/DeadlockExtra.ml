@@ -86,19 +86,6 @@ let dl_discrete_constraint_of_global_location (model : AbstractModel.abstract_mo
     State.discrete_constraint_of_global_location model location,
     DiscreteExpressionEvaluator.effective_clock_updates eval_context model.variable_names
 
-(*(* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
-(* This is probably incomplete, if there was also a discrete update *) 
-let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z updates transition =
-    let model = Input.get_model () in
-    let constr = px_copy z in
-    let constr_pxd = pxd_of_px_constraint constr in
-    (State.apply_updates_assign_backward model constr_pxd updates);
-
-    let constr_px = dl_instantiate_discrete_after_seq state_space state_index constr_pxd transition in
-
-
-
-    constr_px*)
 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *)
@@ -126,29 +113,9 @@ let dl_predecessor (model : AbstractModel.abstract_model) state_space state_inde
     let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
     
-    constr_pxd
     (* result *)
+    constr_pxd
 
-(* this extends get_resets: we return (x,0) for resets and (x,lt) for updates *)
-(* TODO CLEAN, unused now we are using effective clock updates to know which clocks are updated EFFECTIVELY *)
-(*
-let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transition =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
-	(* For all transitions involved in the combined transition *)
-	let updates = List.fold_left (fun current_updates transition_index ->
-		(* Get the actual transition *)
-		let transition = model.transitions_description transition_index in
-		let clock_updates, _ = transition.updates in
-        clock_updates :: current_updates
-	) [] combined_transition
-	in
-
-	(* Keep each update once *)
-    (* TODO: check for inconsistent updates? see with new sequential updates and rewritten clocks ! *)
-	OCamlUtilities.list_only_once updates
-*)
 
 let dl_weakest_precondition (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) s1_index transition s2_index =
     let z1 = (state_space#get_state s1_index).px_constraint in
