@@ -115,11 +115,11 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
-			let precondition = DeadlockExtra.dl_weakest_precondition state_space state_index combined_transition state_index' in
+			let precondition = DeadlockExtra.dl_weakest_precondition model state_space state_index combined_transition state_index' in
 			self#print_algo_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
-			DeadlockExtra.dl_inverse_time state_space state_index precondition;
+			DeadlockExtra.dl_inverse_time model state_space state_index precondition;
 			self#print_algo_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
-			let precondition_px = DeadlockExtra.dl_instantiate_discrete state_space state_index precondition in
+			let precondition_px = DeadlockExtra.dl_instantiate_discrete model state_space state_index precondition in
 			self#print_algo_message Verbose_medium ("Hidden Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names precondition_px));
 
 			(* Update the local constraint by adding the new constraint as a union *)

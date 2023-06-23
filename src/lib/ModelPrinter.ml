@@ -97,9 +97,6 @@ let compute_flows_list (model : AbstractModel.abstract_model) (location : Discre
 	(* Call generic function *)
 	let flows_hashtable, non_1_flow = compute_flows_gen model location in
 
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
 	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
 	if (not non_1_flow) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
 		(* Computing the list of clocks with their flow *)

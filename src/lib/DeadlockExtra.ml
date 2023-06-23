@@ -12,8 +12,6 @@
 
  (* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
 
-(* type clock_updates = (Automaton.clock_index * LinearConstraint.pxd_linear_term) list *)
-
 open LinearConstraint
 open DiscreteExpressionEvaluator
 open State
@@ -23,8 +21,7 @@ let dl_instantiate_discrete_gen discrete constr =
     pxd_hide_discrete_and_collapse discrete
 
 (** go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
-let dl_instantiate_discrete (state_space : StateSpace.stateSpace) state_index constr =
-    let model = Input.get_model() in
+let dl_instantiate_discrete (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) state_index constr =
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     let discrete = State.discrete_constraint_of_global_location model glob_location in
     dl_instantiate_discrete_gen discrete constr
@@ -59,12 +56,11 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
     dl_instantiate_discrete_gen discrete constr*)
 
 (* go from pxd-constraint to px-constraint by substituting concrete values for discrete variables *)
-let dl_discrete_constraint_of_global_location (state_space : StateSpace.stateSpace) state_index transition =
+let dl_discrete_constraint_of_global_location (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) state_index transition =
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
 
     (* Copy location where we perform the destructive sequential updates*)
     let location = DiscreteState.copy_location glob_location in
-    let model = Input.get_model() in
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
@@ -106,12 +102,11 @@ let dl_inverse_update (state_space : StateSpace.stateSpace) state_index z update
 
 (* "undo" the effect of updates on zone z (by computing the weakest precondition) *)
 (* This is probably incomplete, if there was also a discrete update *)
-let dl_inverse_update_ben_fix (state_space : StateSpace.stateSpace) state_index z transition =
-    let model = Input.get_model () in
+let dl_inverse_update_ben_fix (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) state_index z transition =
     let constr = px_copy z in
     let constr_pxd = pxd_of_px_constraint constr in
 
-    let discrete_constr, effective_clock_updates = dl_discrete_constraint_of_global_location  state_space state_index transition in
+    let discrete_constr, effective_clock_updates = dl_discrete_constraint_of_global_location model state_space state_index transition in
     State.apply_updates_assign_backward model constr_pxd [effective_clock_updates];
     dl_instantiate_discrete_gen discrete_constr constr_pxd
 
@@ -119,16 +114,14 @@ let dl_inverse_update_ben_fix (state_space : StateSpace.stateSpace) state_index 
 
 
 (** Apply past time operator *)
-let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
-    let model = Input.get_model() in
+let dl_inverse_time (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) state_index z =
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
     AlgoStateBased.apply_time_past model glob_location z
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)
-let dl_predecessor state_space state_index z1 guard z2 transition =
-(*     let model = Input.get_model () in (* only for printing *) *)
-    let constr = dl_inverse_update_ben_fix state_space state_index z2 transition in
+let dl_predecessor (model : AbstractModel.abstract_model) state_space state_index z1 guard z2 transition =
+    let constr = dl_inverse_update_ben_fix model state_space state_index z2 transition in
     px_intersection_assign constr [z1];
     let constr_pxd = pxd_of_px_constraint constr in
     pxd_intersection_assign constr_pxd [guard];
@@ -157,13 +150,10 @@ let dl_get_clock_updates (state_space : StateSpace.stateSpace) combined_transiti
 	OCamlUtilities.list_only_once updates
 *)
 
-let dl_weakest_precondition (state_space : StateSpace.stateSpace) s1_index transition s2_index =
+let dl_weakest_precondition (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) s1_index transition s2_index =
     let z1 = (state_space#get_state s1_index).px_constraint in
     let z2 = (state_space#get_state s2_index).px_constraint in
   
-  (* Retrieve the model *)
-	let model = Input.get_model () in
-
     let guard = state_space#get_guard model s1_index transition in
  
-    dl_predecessor state_space s1_index z1 guard z2 transition
+    dl_predecessor model state_space s1_index z1 guard z2 transition

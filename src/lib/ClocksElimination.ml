@@ -390,9 +390,6 @@ let dynamic_clock_elimination (model : AbstractModel.abstract_model) target_loca
   (* Increment counter *)
   counter_elimination#increment;
 
-  (* Retrieve the model *)
-  let model = Input.get_model() in
-
   (* First check that initialization was performed *)
   let compute_clocks_to_eliminate =
     match !useless_clocks with

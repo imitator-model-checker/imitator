@@ -309,7 +309,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let pred_zone = self#constr_of_state_index state in 
 		let constraints = List.map (fun z -> 
 			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor state_space state pred_zone guard z transition in 	
+			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state pred_zone guard z transition in
 			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
 			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
 			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 

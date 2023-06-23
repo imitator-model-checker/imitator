@@ -642,9 +642,7 @@ class stateSpace (guessed_nb_transitions : int) =
 (*	(*------------------------------------------------------------*)
 	(** Pretty-printing method for debug *)
 	(*------------------------------------------------------------*)
-	method private debug_string : string =
-		(* Retrieve model *)
-		let model = Input.get_model() in
+	method private debug_string (model : AbstractModel.abstract_model) : string =
 		"BEGIN state space: "
 
 		^ "\n\n  States:"
