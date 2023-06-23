@@ -23,9 +23,9 @@ let options_ref = ref None
 
 
 (************************************************************)
-(** Set / get functions *)
+(* Set / get functions *)
 (************************************************************)
-(* Local set function *)
+(** Local set function *)
 let set_model model =
 	model_ref := Some model
 
