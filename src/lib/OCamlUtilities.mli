@@ -155,13 +155,13 @@ val hashtbl_of_tuples : ('a * 'b) list -> ('a, 'b) Hashtbl.t
 (* Useful functions on arrays *)
 (************************************************************)
 
-(* Check if an element belongs to an array *)
+(** Check if an element belongs to an array *)
 val in_array : 'a -> 'a array -> bool
 
-(* Returns the (first) index of an element in an array, or raise Not_found if not found *)
+(** Returns the (first) index of an element in an array, or raise Not_found if not found *)
 val index_of : 'a -> 'a array -> int
 
-(* Return the list of the indexes whose value is true *)
+(** Return the list of the indexes whose value is true *)
 val true_indexes : bool array -> int list
 
 (* Shuffle an array *)
@@ -181,7 +181,7 @@ val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 (* Useful functions on dynamic arrays *)
 (************************************************************)
 
-(* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
+(** exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 
 
@@ -204,16 +204,16 @@ val hashtbl_filter : ('a -> bool) -> ('a,'b) Hashtbl.t -> unit
 (** Returns a fresh string made of 'n' times 's' *)
 val string_n_times : int -> string -> string
 
-(* Convert an array of string into a string *)
+(** Convert an array of string into a string *)
 val string_of_array_of_string : string array -> string
 
-(* Convert a list of string into a string *)
+(** Convert a list of string into a string *)
 val string_of_list_of_string : string list -> string
 
-(* Convert an array of string into a string with separators *)
+(** Convert an array of string into a string with separators *)
 val string_of_array_of_string_with_sep : string -> string array -> string
 
-(* Convert an array of string into a string with separators removing empty strings *)
+(** Convert an array of string into a string with separators removing empty strings *)
 val string_of_array_of_string_with_sep_without_empty_strings : string -> string array -> string
 
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
@@ -222,13 +222,13 @@ val string_of_list_of_string_with_sep : string -> string list -> string
 (** Convert a list of string into a string with separators removing empty strings *)
 val string_of_list_of_string_with_sep_without_empty_strings : string -> string list -> string
 
-(* Add \t identation of string according to the given level *)
+(** Add \t identation of string according to the given level *)
 val indent_paragraph : int -> string -> string
 
 (** Convert a list of int into a string with , separator *)
 val string_of_list_of_int : int list -> string
 
-(* Returns a list of substrings split using sep *)
+(** Returns a list of substrings split using sep *)
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
 val split : string -> string -> string list
 
@@ -244,16 +244,16 @@ val escape_string_for_dot : string -> string
 (************************************************************)
 (* Useful functions on Booleans *)
 (************************************************************)
-(* Evaluate both part of an 'and' comparison and return the conjunction *)
+(** Evaluate both part of an 'and' comparison and return the conjunction *)
 val evaluate_and : bool -> bool -> bool
 
-(* Evaluate both part of an 'or' comparison and return the disjunction *)
+(** Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
 
-(* XOR: returns true if both are different *)
+(** XOR: returns true if both are different *)
 val xor : bool -> bool -> bool
 
-(* XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
+(** XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
 val xnor : bool -> bool -> bool
 
 
@@ -279,28 +279,29 @@ val read_from_file : string -> string
 (** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 val write_to_file : string -> string -> unit
 
-(* pow of x by e *)
+(** pow of x by e *)
 val pow : Int32.t -> Int32.t -> Int32.t
 
-(* pow of int of x by e *)
+(** pow of int of x by e *)
 val pow_int : int -> int -> int
 
 val modulo : Int32.t -> Int32.t -> Int32.t
 
-(* Render a beautiful and cute json from an ugly horrible json *)
+(** Render a beautiful and cute json from an ugly horrible json *)
 val prettify_json : string -> string
 
-(* equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
+(** equivalent to List.filter_map of OCaml 4.08, but reverse the list *)
 val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
 
 val list_to_string_set : string list -> CustomModules.StringSet.t
 val string_set_to_list : CustomModules.StringSet.t -> string list
 val var_set_to_list : CustomModules.VarSet.t -> (string * int) list
 
-(* Convert list to array *)
+(** Convert list to array *)
 val array_of_list : 'a list -> 'a array
-(* Convert array to list *)
+
+(** Convert array to list *)
 val list_of_array : 'a array -> 'a list
 
-(* Unit as binary operator *)
+(** Unit as binary operator *)
 val bin_unit : unit -> unit -> unit

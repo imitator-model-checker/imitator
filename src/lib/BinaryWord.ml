@@ -11,16 +11,15 @@
  *
  ************************************************************)
 
-(* Binary word type *)
+(** Binary word type *)
 type t = int * bool array
 
-(* Get a zero binary word of length l *)
+(** Get a zero binary word of length l *)
 let zero l =
-    l, Array.init l (fun i -> false)
+    l, Array.init l (fun _ -> false)
 
 (* Get the length of the binary word *)
-let length (l, b) =
-    l
+let length (l, _) = l
 
 (* --- Strings --- *)
 
@@ -56,8 +55,8 @@ let fill_right (l, b) i =
 
 let log_not (l, b) = l, Array.map not b
 
-let bitwise op (l1, b1) (l2, b2) =
-    l1, Array.mapi (fun i a -> op (Array.get b1 i) (Array.get b2 i)) b1
+let bitwise op (l1, b1) (_, b2) =
+    l1, Array.mapi (fun i _ -> op (Array.get b1 i) (Array.get b2 i)) b1
 
 let log_and = bitwise (&&)
 let log_or = bitwise (||)

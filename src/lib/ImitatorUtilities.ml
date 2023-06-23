@@ -23,7 +23,6 @@ open Gc
 (************************************************************)
 (** Internal modules *)
 (************************************************************)
-open Exceptions
 open OCamlUtilities
 
 
@@ -148,7 +147,7 @@ let level_of_verbose = function
 
 (* The global verbose mode *)
 type global_verbose_mode_type =
-	| Verbose_mode_not_set
+(* 	| Verbose_mode_not_set *)
 	| Verbose_mode_set of verbose_mode
 
 (* set to standard by default *)
@@ -160,7 +159,7 @@ let timed_mode = ref false
 (* Get the verbose mode *)
 let get_verbose_mode () =
 	match !global_verbose_mode with
-	| Verbose_mode_not_set -> raise (Exceptions.InternalError ("The verbose mode has not yet been set."))
+(* 	| Verbose_mode_not_set -> raise (Exceptions.InternalError ("The verbose mode has not yet been set.")) *)
 	| Verbose_mode_set verbose_mode -> verbose_mode
 
 
@@ -343,8 +342,8 @@ let log_detail_in_array_lazy verbose_mode key lazy_json_element =
 (** Information printing *)
 (************************************************************)
  
-let print_version_string () = 
-	print_string (Constants.program_name ^ " " ^ Constants.version_string ^ "\n")
+(*let print_version_string () =
+	print_string (Constants.program_name ^ " " ^ Constants.version_string ^ "\n")*)
 
 
 let print_header_string () =

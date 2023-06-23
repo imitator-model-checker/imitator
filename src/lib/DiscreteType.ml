@@ -14,16 +14,16 @@
  ************************************************************)
 
 (************************************************************)
-(** Types  *)
+(* Types  *)
 (************************************************************)
 
-(* Specific type of number *)
+(** Specific type of number *)
 type var_type_discrete_number =
     | Dt_rat
     | Dt_int
     | Dt_weak_number
 
-(* Specific type of discrete variables *)
+(** Specific type of discrete variables *)
 type var_type_discrete =
     | Dt_weak
     | Dt_void
@@ -43,18 +43,18 @@ type var_type =
 
 
 (************************************************************)
-(** Type functions  *)
+(* Type functions  *)
 (************************************************************)
 
-(** String of types  **)
+(* String of types  **)
 
-(* String of number var type *)
+(** String of number var type *)
 let string_of_var_type_discrete_number = function
     | Dt_rat -> "rational"
     | Dt_int -> "int"
     | Dt_weak_number -> "number"
 
-(* String of discrete var type *)
+(** String of discrete var type *)
 let rec string_of_var_type_discrete = function
     | Dt_weak -> "weak"
     | Dt_void -> "void"
@@ -77,9 +77,9 @@ let string_of_var_type_constructor = function
     | Var_type_parameter as var_type -> string_of_var_type var_type
     | Var_type_discrete _ -> "variable"
 
-(** Check types **)
+(* Check types **)
 
-(* Check if a Var_type is a Var_type_discrete of anything *)
+(** Check if a Var_type is a Var_type_discrete of anything *)
 let is_discrete_type = function
     | Var_type_discrete _ -> true
     | _ -> false
@@ -133,7 +133,7 @@ let rec is_discrete_type_holding_void_type = function
     | Dt_queue inner_type -> is_discrete_type_holding_void_type inner_type
     | _ -> false
 
-let rec is_var_type_holding_void_type = function
+let is_var_type_holding_void_type = function
 	| Var_type_discrete discrete_type -> is_discrete_type_holding_void_type discrete_type
     | _ -> false
 
@@ -144,7 +144,7 @@ let rec extract_inner_type = function
     | Dt_queue inner_type -> extract_inner_type inner_type
     | _ as discrete_type -> discrete_type
 
-(* Get default discrete type of any type that is, or holding a inner type that is unknown number type *)
+(*(* Get default discrete type of any type that is, or holding a inner type that is unknown number type *)
 (* For example : 1 is unknown number, it will be a rational, [1,2] is an array of unknown number, it will be *)
 (* an array of rational *)
 let rec default_type_of_type_holding_unknown_number_type = function
@@ -153,7 +153,7 @@ let rec default_type_of_type_holding_unknown_number_type = function
     | Dt_list inner_type -> Dt_list (default_type_of_type_holding_unknown_number_type inner_type)
     | Dt_stack inner_type -> Dt_stack (default_type_of_type_holding_unknown_number_type inner_type)
     | Dt_queue inner_type -> Dt_queue (default_type_of_type_holding_unknown_number_type inner_type)
-    | _ as discrete_type -> discrete_type
+    | _ as discrete_type -> discrete_type*)
 
 (* Check if discrete type is a rational *)
 let is_discrete_type_rational_type = function

@@ -102,26 +102,32 @@ let string_of_value = customized_string_of_value global_default_string
 (** Default values  **)
 
 (* Default discrete rational value *)
-let default_rational = Rat_value NumConst.zero
+(* let default_rational = Rat_value NumConst.zero *)
+
 (* Default discrete int value *)
-let default_int = Int_value Int32.zero
+(* let default_int = Int_value Int32.zero *)
+
 (* Default discrete bool value *)
-let default_bool = Bool_value false
+(* let default_bool = Bool_value false *)
+
 (* Default discrete binary word value *)
-let default_binary_word_value l = Bin_value (BinaryWord.zero l)
+(* let default_binary_word_value l = Bin_value (BinaryWord.zero l) *)
+
 (* Default discrete list value *)
-let default_list_value = List_value []
+(* let default_list_value = List_value [] *)
+
 (* Default discrete stack value *)
-let default_stack_value = Stack_value (Stack.create ())
+(* let default_stack_value = Stack_value (Stack.create ()) *)
+
 (* Default discrete stack value *)
-let default_queue_value = Queue_value (Queue.create ())
+(* let default_queue_value = Queue_value (Queue.create ()) *)
 
 
 let is_zero = function
     | Weak_number_value value
     | Rat_value value -> value = NumConst.zero
     | Int_value value -> value = Int32.zero
-    | value -> false
+    | _ -> false
 
 
 (** Convert values  **)

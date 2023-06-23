@@ -21,10 +21,9 @@ open Exceptions
 
 (* Parsing structure modules *)
 open DiscreteType
-open ParsedValue
 
 (* Abstract modules *)
-open DiscreteExpressions
+(* open DiscreteExpressions *)
 
 (* Name of constraint *)
 type constraint_name = string
@@ -76,15 +75,15 @@ type signature_constraint = type_constraint list
 type signature = var_type_discrete list
 
 (** -------------------- **)
-(** Utils **)
+(* Utils **)
 (** -------------------- **)
 
-(* Split signature into signature of parameters and signature of return type *)
+(** Split signature into signature of parameters and signature of return type *)
 let split_signature =
     OCamlUtilities.list_split_last
 
 (** -------------------- **)
-(** Strings **)
+(* Strings **)
 (** -------------------- **)
 
 let rec string_of_length_constraint = function
@@ -144,10 +143,10 @@ let string_of_signature signature =
     l_par_del ^ OCamlUtilities.string_of_list_of_string_with_sep ", " str_param_types ^ r_par_del ^ " : " ^ str_return_type
 
 (** -------------------- **)
-(** Compatibility **)
+(* Compatibility **)
 (** -------------------- **)
 
-let rec is_discrete_type_compatible_with_length_constraint length = function
+let is_discrete_type_compatible_with_length_constraint length = function
     | Length_constraint length_value -> length = length_value
     (* In theory a length constraint expression can be incompatible with some length *)
     (* but may be compatible too, eg : 1 + 1 with 2, so we consider as compatible anyway *)
@@ -187,13 +186,13 @@ and is_discrete_type_compatible_with_defined_type_constraint discrete_type defin
         is_discrete_type_compatible_with_type_constraint inner_type type_constraint
     | _ -> false
 
-(* Check whether a signature is compatible with a signature constraint (for type checking) *)
+(** Check whether a signature is compatible with a signature constraint (for type checking) *)
 let is_signature_compatible_with_signature_constraint signature signature_constraint =
     let signature_with_signature_constraint = List.combine signature signature_constraint in
     List.for_all (fun (s_type, sc_type) -> is_discrete_type_compatible_with_type_constraint s_type sc_type) signature_with_signature_constraint
 
 (** -------------------- **)
-(** Conversion **)
+(* Conversion **)
 (** -------------------- **)
 
 let type_number_constraint_of_discrete_number_type = function
@@ -227,6 +226,6 @@ let type_constraint_of_discrete_type discrete_type =
     in
     Defined_type_constraint (type_constraint_of_discrete_type_rec discrete_type)
 
-(* Get signature constraint of signature *)
+(** Get signature constraint of signature *)
 let signature_constraint_of_signature = List.map type_constraint_of_discrete_type
 

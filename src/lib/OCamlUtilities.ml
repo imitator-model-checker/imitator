@@ -15,13 +15,13 @@
  
 
 (************************************************************)
-(** Modules *)
+(* Modules *)
 (************************************************************)
 open Unix
 
 
 (************************************************************)
-(** Useful functions on integers *)
+(* Useful functions on integers *)
 (************************************************************)
 let rec is_a_power_of_2_rec n =
 	if n mod 2 <> 0 then false
@@ -43,25 +43,26 @@ exit(1)*)
 
 
 (************************************************************)
-(** Useful functions on options *)
+(* Useful functions on options *)
 (************************************************************)
+
 (** Get the value of an 'a option that is assumed to be different from None, or raise NoneException otherwise *)
 let a_of_a_option = function
 	| Some thing -> thing
 	| None -> raise Exceptions.NoneException
 
-(* Apply function to an element if Some, else return None *)
+(*(** Apply function to an element if Some, else return None *)
 let apply_or_none f = function
     | Some x -> Some (f x)
-    | None -> None
+    | None -> None*)
 
 (************************************************************)
-(** Useful lambda functions *)
+(* Useful lambda functions *)
 (************************************************************)
 let identity x = x
 
 (************************************************************)
-(** Useful functions on tuples *)
+(* Useful functions on tuples *)
 (************************************************************)
 
 (* Get first element of tuple *)
@@ -83,11 +84,11 @@ let third_of_triplet (_, _, x) = x
 (** Useful functions on lists *)
 (************************************************************)
 
-(* Check if a list is empty *)
+(** Check if a list is empty *)
 let list_empty l =
 	l = []
 
-(* Return a random element in a list *)
+(** Return a random element in a list *)
 let random_element l =
 	Random.self_init();
 	let nth = Random.int (List.length l) in
@@ -229,7 +230,7 @@ let list_delete_at i al =
 	if i >= List.length al  then raise (Failure "list_delete_at");
 	let rec del i = function
 		| [] -> []
-		| h::t when i = 0 -> t
+		| _::t when i = 0 -> t
 		| h::t -> h :: del (i - 1) t
 	in
 	del i al
@@ -241,7 +242,7 @@ let list_set_nth i elem l =
 	if i >= List.length l  then raise (Failure "list_set_nth");
 	let rec set i elem = function
 		| [] -> []
-		| h::t when i = 0 -> elem::t
+		| _::t when i = 0 -> elem::t
 		| h::t -> h :: set (i - 1) elem t
 	in
 	set i elem l
@@ -375,9 +376,9 @@ let array_exists p a =
 	) with Exceptions.Found -> true
 
 
-(** Shuffles the values of an array *)
 (*** NOTE: important, otherwise always the same "random" ! ***)
 ;;Random.self_init();;
+(** Shuffles the values of an array *)
 (*** NOTE: Found online at http://www.codecodex.com/wiki/index.php?title=Shuffle_an_array ***)
 (*** WARNING: not a real shuffle! the first element is always at the end... ***)
 let array_shuffle a = Array.sort (fun _ _ -> (Random.int 3) - 1) a
@@ -396,10 +397,10 @@ let sub_array array1 array2 =
 
 
 (************************************************************)
-(** Useful functions on dynamic arrays *)
+(* Useful functions on dynamic arrays *)
 (************************************************************)
 
-(* exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
+(** exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 let dynArray_exists p a =
 	try(
 		DynArray.iter (fun 
@@ -412,7 +413,7 @@ let dynArray_exists p a =
 	
 
 (************************************************************)
-(** Useful functions on hash tables *)
+(* Useful functions on hash tables *)
 (************************************************************)
 (** Get all bound keys in an hash table; multiple bindings yield multiple (identical) keys *)
 (*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
@@ -439,21 +440,21 @@ let hashtbl_of_tuples tuples =
     table
 
 (************************************************************)
-(** Useful functions on string *)
+(* Useful functions on string *)
 (************************************************************)
-(* Convert an array of string into a string *)
+(** Convert an array of string into a string *)
 let string_of_array_of_string =
 	Array.fold_left (fun the_string s -> the_string ^ s) ""
 
-(* Returns a fresh string made of 'n' times 's' *)
+(** Returns a fresh string made of 'n' times 's' *)
 let string_n_times n s =
 	string_of_array_of_string (Array.make n s)
 
-(* Convert a list of string into a string *)
+(** Convert a list of string into a string *)
 let string_of_list_of_string =
 	List.fold_left (fun the_string s -> the_string ^ s) ""
 
-(* Convert an array of string into a string with separators *)
+(** Convert an array of string into a string with separators *)
 let string_of_array_of_string_with_sep sep a =
 	let length = Array.length a in
 	if length = 0 then "" else(
@@ -513,7 +514,7 @@ let waswere_of_int  i =
 
 (** Escape \n & > & < for use in dot *)
 let escape_string_for_dot str =
-	(** BUG: cannot work with global replace *)
+	(*** BUG: cannot work with global replace ***)
 (*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
 			str*)
 (* 		Str.global_replace (Str.regexp "\\(>\\|&\\)") ("\\" ^ "\\(\\1\\)") *)
@@ -529,25 +530,26 @@ let escape_string_for_dot str =
 
 
 (************************************************************)
-(** Useful functions on booleans *)
+(* Useful functions on booleans *)
 (************************************************************)
-(* Evaluate both part of an 'and' comparison and return the conjunction *)
+
+(** Evaluate both parts of an 'and' comparison and return the conjunction *)
 let evaluate_and a b =
 (*	let computed_a = a in
 	let computed_b = b in
 	computed_a && computed_b*)
 	a && b
 
-(* Evaluate both part of an 'or' comparison and return the disjunction *)
+(** Evaluate both part of an 'or' comparison and return the disjunction *)
 let evaluate_or a b =
 	a || b
 
 
-(* XOR: returns true if both are different *)
+(** XOR: returns true if both are different *)
 let xor (a : bool) (b : bool) : bool =
 	a <> b
 
-(* XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
+(** XNOR: returns true if both are true or both are false, i.e., when both are equal to each other *)
 let xnor (a : bool) (b : bool) : bool =
 	a = b
 
@@ -565,13 +567,13 @@ let round_n n f =
 
 
 (************************************************************)
-(** Printing time functions *)
+(* Printing time functions *)
 (************************************************************)
 let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
 let months = [| "Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
 				"Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec" |]
 
-(* 'add_digits n i' adds (m-n) '0' in front of 'i', if 'i' is an integer with only 'm' digits; result is always a string *)
+(** 'add_digits n i' adds (m-n) '0' in front of 'i', if 'i' is an integer with only 'm' digits; result is always a string *)
 let add_digits n i =
 	(* Convert to string *)
 	let str_i = string_of_int i in
@@ -586,7 +588,7 @@ let add_digits n i =
 	) ^ str_i
 
 
-(* Adds a zero if a number has only 1 digit *)
+(** Adds a zero if a number has only 1 digit *)
 let two_digits = add_digits 2
 (*	(* Add a 0 if needed *)
 	(if i <= 9 then "0" else "")
@@ -642,7 +644,7 @@ let round3_float d =
 
 
 (**************************************************)
-(** System functions *)
+(* System functions *)
 (**************************************************)
 
 (** Read the first line of a file and convert to string *)
@@ -743,10 +745,11 @@ let list_to_string_set x = x |> List.to_seq |> CustomModules.StringSet.of_seq
 let string_set_to_list x = x |> CustomModules.StringSet.to_seq |> List.of_seq
 let var_set_to_list x = x |> CustomModules.VarSet.to_seq |> List.of_seq
 
-(* Convert list to array *)
+(** Convert list to array *)
 let array_of_list x = x |> List.to_seq |> Array.of_seq
-(* Convert array to list *)
+
+(** Convert array to list *)
 let list_of_array x = x |> Array.to_seq |> List.of_seq
 
-(* Unit as binary operator *)
+(** Unit as binary operator *)
 let bin_unit (a : unit) (b : unit) = a; b; ()
