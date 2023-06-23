@@ -40,7 +40,7 @@ class algoPostStar : AbstractModel.abstract_model -> Options.imitator_options ->
 		
 		
 		(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
+		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
@@ -49,7 +49,7 @@ class algoPostStar : AbstractModel.abstract_model -> Options.imitator_options ->
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
+		(** Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_deadlock_state : state_index -> unit
 		

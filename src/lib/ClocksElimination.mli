@@ -24,4 +24,4 @@ val prepare_clocks_elimination : AbstractModel.abstract_model -> unit
 (*------------------------------------------------------------*)
 (** Eliminating useless clocks in a linear constraint *)
 (*------------------------------------------------------------*)
-val dynamic_clock_elimination : DiscreteState.global_location -> LinearConstraint.px_linear_constraint -> unit
+val dynamic_clock_elimination : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.px_linear_constraint -> unit

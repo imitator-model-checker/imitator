@@ -158,11 +158,7 @@ let find_local_clocks (model : AbstractModel.abstract_model) =
 (** Find the useless clocks in automata locations *)
 (*------------------------------------------------------------*)
 (*** NOTE: this function is not related to model conversion, and could (should?) be defined elsewhere ***)
-let find_useless_clocks_in_automata local_clocks_per_automaton =
-
-  (* Retrieve the model *)
-  let model = Input.get_model() in
-
+let find_useless_clocks_in_automata (model : AbstractModel.abstract_model) local_clocks_per_automaton =
   (* Create the data structure *)
   let useless_clocks_per_location = Array.make model.nb_automata (Array.make 0 []) in
 
@@ -370,7 +366,7 @@ let prepare_clocks_elimination (model : AbstractModel.abstract_model) =
 
   (* Compute and update useless clocks *)
   print_message Verbose_low ("*** Building useless clocks per location per automaton…");
-  useless_clocks := Some (find_useless_clocks_in_automata local_clocks_per_automaton);
+  useless_clocks := Some (find_useless_clocks_in_automata model local_clocks_per_automaton);
 
   (* Stop counter *)
   counter_preparation_ref#stop;
@@ -380,9 +376,9 @@ let prepare_clocks_elimination (model : AbstractModel.abstract_model) =
 
 
 (*------------------------------------------------------------*)
-(*** Eliminating useless clocks in a linear constraint ***)
+(** Eliminating useless clocks in a linear constraint *)
 (*------------------------------------------------------------*)
-let dynamic_clock_elimination target_location current_constraint =
+let dynamic_clock_elimination (model : AbstractModel.abstract_model) target_location current_constraint =
   (* Get counter *)
   let counter_elimination = match !counter_elimination with
     | Some counter_elimination -> counter_elimination

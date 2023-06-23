@@ -220,7 +220,7 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (options : Option
 		self#reset_minicache;
 		
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in

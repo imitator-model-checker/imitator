@@ -20,7 +20,7 @@ open Exceptions
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Check whether at least one local location is urgent *)
+(** Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
 
 let is_global_location_urgent (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) : bool =
@@ -34,8 +34,7 @@ let is_global_location_urgent (model : AbstractModel.abstract_model) (location :
 	List.exists is_local_location_urgent model.automata
 
 (*------------------------------------------------------------*)
-(* Get all invariants of model's automatas *)
-(* Note : use of Input.get_model *)
+(** Get all invariants of model's automatas *)
 (*------------------------------------------------------------*)
 let get_model_invariants (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) : AbstractModel.invariant list =
 	List.map (fun automaton_index ->
@@ -46,7 +45,9 @@ let get_model_invariants (model : AbstractModel.abstract_model) (location : Disc
 	) model.automata
 
 
+(*------------------------------------------------------------*)
 (** Split guards into two list, one of discrete guards and other of continuous guards *)
+(*------------------------------------------------------------*)
 let split_guards_into_discrete_and_continuous =
     List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
 		match guard with

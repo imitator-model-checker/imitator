@@ -1248,7 +1248,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (options : Options.imitato
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 
 		begin
 		match addition_result with

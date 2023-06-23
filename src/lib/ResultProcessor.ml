@@ -278,12 +278,8 @@ let file_header () =
 	^ "\n * Command  : " ^ (string_of_array_of_string_with_sep " " Sys.argv)
 	^ "\n ************************************************************)\n\n"
 
-(* Return a string made of some information concerning the input model *)
-let model_statistics () =
-	
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+(** Return a string made of some information concerning the input model *)
+let model_statistics (model : AbstractModel.abstract_model) =
 	(* Create the statistics *)
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
@@ -438,13 +434,10 @@ let export_to_file_unsatisfiableinitialstate file_name =
 
 
 (* Write a `no_result` result to the result file *)
-let export_to_file_noresult file_name =
+let export_to_file_noresult (model : AbstractModel.abstract_model) file_name =
 	(* Start counter *)
 	counter#start;
 	
-	(* Retrieve the model *)
-(* 	let model = Input.get_model() in *)
-
 	(* Prepare the string to write *)
 	let file_content =
 
@@ -453,7 +446,7 @@ let export_to_file_noresult file_name =
 
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) General statistics *)
@@ -478,14 +471,9 @@ let export_to_file_noresult file_name =
 
 
 (* Write a single_synthesis_result to the result file *)
-let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
+let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model) file_name (single_synthesis_result : Result.single_synthesis_result) =
 	(* Start counter *)
 	counter#start;
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
 
 	(* Convert the resulting constraint to a string *)
 	let result_str : string = string_of_good_or_bad_constraint model.variable_names single_synthesis_result.result in
@@ -503,7 +491,7 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 		
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result with delimiters *)
@@ -535,12 +523,9 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 
 
 (* Write a multiple_synthesis_result to the result file *)
-let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
+let export_to_file_multiple_synthesis_result (model : AbstractModel.abstract_model) file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
 	(* Start counter *)
 	counter#start;
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
 
 	(* Convert the resulting constraint to a string *)
 	let result_str : string = string_of_good_or_bad_constraint model.variable_names multiple_synthesis_result.result in
@@ -558,7 +543,7 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 		
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result with delimiters *)
@@ -586,14 +571,9 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 
 
 (* Write an ef_synth result to the result file *)
-let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
+let export_to_file_point_based_result (model : AbstractModel.abstract_model) file_name (point_based_result : Result.point_based_result) =
 	(* Start counter *)
 	counter#start;
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
 
 	(* Convert the constraint to a string *)
 	let result_str = string_of_good_or_bad_constraint model.variable_names point_based_result.result in
@@ -613,7 +593,7 @@ let export_to_file_point_based_result file_name (point_based_result : Result.poi
 
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) Recall pi0 *)
@@ -688,14 +668,9 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 
 		
 (* Write result of BC to file *)
-let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
+let export_to_file_cartography_result (model : AbstractModel.abstract_model) file_name (cartography_result : Result.cartography_result) =
 	(* Start counter *)
 	counter#start;
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
 
 	(* Convert the abstract_point_based_result's to string *)
 	let abstract_point_based_results_str = string_of_list_of_string_with_sep "\n" (
@@ -744,7 +719,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 		
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) Recall v0 *)
@@ -781,15 +756,10 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 	()
 
 
-(* Export result of type 'Runs_exhibition_result' *)
-let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
+(** Export result of type 'Runs_exhibition_result' *)
+let export_to_file_runs_exhibition_result (model : AbstractModel.abstract_model) file_name (result : Result.runs_exhibition_result) =
 	(* Start counter *)
 	counter#start;
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
 
 	(* Convert the valuation_and_concrete_run's to string *)
 	let runs_str = string_of_list_of_string_with_sep "\n" (
@@ -831,7 +801,7 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 		
 		(* 2) Statistics about model *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (model_statistics ())
+		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result with delimiters *)
@@ -929,11 +899,9 @@ let print_memory_statistics () =
 (************************************************************)
 (* Print single_synthesis_result (or in fact point_based_result too) on screen *)
 (************************************************************)
-let print_single_synthesis_or_point_based_result result computation_time constraint_str =
+let print_single_synthesis_or_point_based_result (model : AbstractModel.abstract_model) result computation_time constraint_str =
 	(* Print the result *)
 	if verbose_mode_greater Verbose_standard then(
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -1069,10 +1037,13 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 
 
 	| Syntax_check_result | Translation_result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_noresult file_name;
+			export_to_file_noresult model file_name;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1090,10 +1061,13 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 			^ (string_of_seconds state_space_computation.computation_time) ^ "."
 		);
 
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_noresult file_name;
+			export_to_file_noresult model file_name;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1113,37 +1087,39 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 
 
 	| Single_synthesis_result result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time result.constraint_description;
+		print_single_synthesis_or_point_based_result model result.result result.computation_time result.constraint_description;
 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_single_synthesis_result file_name result;
+			export_to_file_single_synthesis_result model file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
 		
-		(* The model must be defined at this point *)
-		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
 		(* Generic handling for drawing etc. *)
 		process_single_synthesis_or_point_based_result model file_prefix algorithm_name result.result result.state_space result.computation_time
 		
 
 	| Point_based_result result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
+		print_single_synthesis_or_point_based_result model result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_point_based_result file_name result;
+			export_to_file_point_based_result model file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
 		
-		(* The model must be defined at this point *)
-		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
 		(* Generic handling for drawing etc. *)
 		process_single_synthesis_or_point_based_result model file_prefix algorithm_name result.result result.state_space result.computation_time
 
@@ -1159,6 +1135,9 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 			print_highlighted_message Shell_soundness Verbose_standard ("\n" ^ (verbose_string_of_coverage cartography_result.coverage));
 		);
 		
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* Print memory information *)
 		if options#statistics || verbose_mode_greater Verbose_experiments then(
 			print_newline();
@@ -1168,7 +1147,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 		(* Write to file if requested for BC *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_cartography_result file_name cartography_result;
+			export_to_file_cartography_result model file_name cartography_result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1190,8 +1169,6 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 			) [] valid_tiles
 			in
 			
-			(* The model must be defined at this point *)
-			let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
 			Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			(* Print some information *)
@@ -1204,13 +1181,16 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 	
 	(* Multiple synthesis (e.g., PRPC) *)
 	| Multiple_synthesis_result result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
+		print_single_synthesis_or_point_based_result model result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_multiple_synthesis_result file_name result;
+			export_to_file_multiple_synthesis_result model file_name result;
 			()
 		)else(
 			print_message Verbose_high "No result export to file requested.";
@@ -1221,9 +1201,6 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 
 		(* Render zones in a graphical form *)
 		if options#output_bc_cart then (
-			(* The model must be defined at this point *)
-			let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
-
 			let zones = zones_of_good_bad_constraint result.result in
 
 			Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
@@ -1247,7 +1224,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 
 		(* Write to file *)
 		let file_name = file_prefix ^ Constants.result_file_extension in
-		export_to_file_runs_exhibition_result file_name result;
+		export_to_file_runs_exhibition_result model file_name result;
 		
 		(* Print statistics *)
 		print_memory_statistics ();

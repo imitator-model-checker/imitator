@@ -46,9 +46,7 @@ let escape_latex str =
 	Str.global_replace (Str.regexp "_") ("\\_") str
 
 
-let variable_names_with_style variable_index =
-	(* Get the model *)
-	let model = Input.get_model() in
+let variable_names_with_style (model : AbstractModel.abstract_model) variable_index =
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
 	| DiscreteType.Var_type_clock -> "\\styleclock{" ^ name ^ "}"
@@ -57,8 +55,8 @@ let variable_names_with_style variable_index =
 
 
 (** Proper form for constraints *)
-let tikz_string_of_lc_gen lc_fun lc =
-	let lc_string = lc_fun variable_names_with_style lc in
+let tikz_string_of_lc_gen lc_fun (model : AbstractModel.abstract_model) lc =
+	let lc_string = lc_fun (variable_names_with_style model) lc in
 	(* Do some replacements *)
 	"& $" ^ Str.global_replace (Str.regexp ">=") ("\\geq")
 		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\\land$ & $")
@@ -96,12 +94,12 @@ let string_of_header _ =
 
 
 (** Convert a sync into a string *)
-let string_of_sync model action_index =
+let string_of_sync (model : AbstractModel.abstract_model) action_index =
 	match model.action_types action_index with
 	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
-let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
+let string_of_seq_code_bloc (model : AbstractModel.abstract_model) (* seq_code_bloc *) =
 
     let begin_line = "\n\t\t & $" in
     let end_line = "$\\\\% \\n" in
@@ -117,28 +115,28 @@ let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
             ^ ":"
             ^ DiscreteType.string_of_var_type_discrete discrete_type
             ^ "="
-            ^ escape_latex (DiscreteExpressions.string_of_global_expression variable_names_with_style expr)
+            ^ escape_latex (DiscreteExpressions.string_of_global_expression (variable_names_with_style model) expr)
 
         | Assignment (scalar_or_index_update_type, expr) ->
-			ModelPrinter.string_of_scalar_or_index_update_type variable_names_with_style scalar_or_index_update_type
+			ModelPrinter.string_of_scalar_or_index_update_type (variable_names_with_style model) scalar_or_index_update_type
 			^ ":="
 			(* Convert the arithmetic_expression *)
-			^ escape_latex (ModelPrinter.string_of_global_expression variable_names_with_style expr)
+			^ escape_latex (ModelPrinter.string_of_global_expression (variable_names_with_style model) expr)
 
         | Clock_assignment (clock_index, expr) ->
-			variable_names clock_index
+			model.variable_names clock_index
 			^ ":="
 			(* Convert the arithmetic_expression *)
-			^ escape_latex (DiscreteExpressions.string_of_rational_arithmetic_expression variable_names_with_style expr)
+			^ escape_latex (DiscreteExpressions.string_of_rational_arithmetic_expression (variable_names_with_style model) expr)
 
         | Instruction expr ->
-            escape_latex (DiscreteExpressions.string_of_global_expression variable_names_with_style expr)
+            escape_latex (DiscreteExpressions.string_of_global_expression (variable_names_with_style model) expr)
 
         | For_loop ((variable_name, _ (* id *)), from_expr, to_expr, _, inner_bloc) ->
             "for " ^ escape_latex variable_name ^ " from "
-            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression variable_names_with_style from_expr)
+            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression (variable_names_with_style model) from_expr)
             ^ " to "
-            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression variable_names_with_style to_expr)
+            ^ escape_latex (DiscreteExpressions.string_of_int_arithmetic_expression (variable_names_with_style model) to_expr)
             ^ " do"
             ^ end_line
             ^ string_of_seq_code_bloc inner_bloc
@@ -147,7 +145,7 @@ let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 
         | While_loop (condition_expr, inner_bloc) ->
             "while "
-            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression variable_names_with_style condition_expr)
+            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression (variable_names_with_style model) condition_expr)
             ^ " do"
             ^ end_line
             ^ string_of_seq_code_bloc inner_bloc
@@ -165,7 +163,7 @@ let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
                 | None -> ""
             in
             "if "
-            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression variable_names_with_style condition_expr)
+            ^ escape_latex (DiscreteExpressions.string_of_boolean_expression (variable_names_with_style model) condition_expr)
             ^ " then"
             ^ end_line
             ^ string_of_seq_code_bloc then_bloc
@@ -179,7 +177,7 @@ let string_of_seq_code_bloc variable_names (* seq_code_bloc *) =
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index source_location transition =
+let string_of_transition (model : AbstractModel.abstract_model) automaton_index source_location transition =
 	let _, update_seq_code_bloc = transition.updates in
 
 	let source_location_name = model.location_names automaton_index source_location in
@@ -194,7 +192,7 @@ let string_of_transition model automaton_index source_location transition =
 
 	(* GUARD *)
 	^ (if transition.guard <> AbstractModel.True_guard then (
-		"\n\t\t" ^ (tikz_string_of_guard transition.guard) ^ "\\\\"
+		"\n\t\t" ^ (tikz_string_of_guard model transition.guard) ^ "\\\\"
 	) else "" )
 
 	(* ACTION *)
@@ -202,14 +200,14 @@ let string_of_transition model automaton_index source_location transition =
 
 	(* UPDATES *)
 	(* Updates *)
-	^ string_of_seq_code_bloc model.variable_names update_seq_code_bloc
+	^ string_of_seq_code_bloc model update_seq_code_bloc
 
 	(* The end *)
 	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"
 
 
 (* Convert the transitions of a location into a string *)
-let string_of_transitions_per_location model automaton_index location_index =
+let string_of_transitions_per_location (model : AbstractModel.abstract_model) automaton_index location_index =
 	string_of_list_of_string (
 	(* For each action *)
 	List.map (fun action_index ->
@@ -225,14 +223,14 @@ let string_of_transitions_per_location model automaton_index location_index =
 
 
 (* Convert the transitions of an automaton into a string *)
-let string_of_transitions model automaton_index =
+let string_of_transitions (model : AbstractModel.abstract_model) automaton_index =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
 		string_of_transitions_per_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 
 
 (* Convert a location of an automaton into a string *)
-let string_of_location model automaton_index location_index =
+let string_of_location (model : AbstractModel.abstract_model) automaton_index location_index =
 	(* LOCATION *)
 (* 	\node[location, fill=cpale2] (Q0) {\coulloc{l0}}; *)
 
@@ -300,19 +298,19 @@ let string_of_location model automaton_index location_index =
 		(* Begin *)
 		^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }"
 		(* Invariant *)
-		^ (if has_invariant then (tikz_string_of_linear_constraint invariant) ^ "\\\\" else "")
+		^ (if has_invariant then (tikz_string_of_linear_constraint model invariant) ^ "\\\\" else "")
 		(* Stopwatches and flows *)
 		^ (if has_non_1rate_clocks then (
 			(* Stopwatches *)
 			let stopwatches = model.stopwatches automaton_index location_index in
 			(if stopwatches <> [] then
-				(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")\\\\")
+				(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map (variable_names_with_style model) stopwatches)) ^ ")\\\\")
 			else "")
 			^
 			(* Flows *)
 			let flows = model.flow automaton_index location_index in
 			(if flows <> [] then
-				(" & " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "\\\\")
+				(" & " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style model clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "\\\\")
 			else "")
 			) else "")
 		(* The end *)
@@ -321,14 +319,14 @@ let string_of_location model automaton_index location_index =
 
 
 (* Convert the locations of an automaton into a string *)
-let string_of_locations model automaton_index =
+let string_of_locations (model : AbstractModel.abstract_model) automaton_index =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
 		string_of_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 
 
 (* Convert an automaton into a string *)
-let string_of_automaton model automaton_index =
+let string_of_automaton (model : AbstractModel.abstract_model) automaton_index =
 
 	let automaton_name = escape_latex (model.automata_names automaton_index) in
 
@@ -352,7 +350,7 @@ let string_of_automaton model automaton_index =
 
 
 (* Convert the automata into a string *)
-let string_of_automata model =
+let string_of_automata (model : AbstractModel.abstract_model) =
 	(* Retrieve the input options *)
 (*	let options = Input.get_options () in
 
@@ -391,7 +389,7 @@ let string_of_automata model =
 
 
 (* Convert the model into a string *)
-let tikz_string_of_model model =
+let tikz_string_of_model (model : AbstractModel.abstract_model) =
 	let tikz_model =
 	(* The small personnalized header *)
 	string_of_header model

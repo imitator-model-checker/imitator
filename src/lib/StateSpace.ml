@@ -639,7 +639,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	(************************************************************)
 
-	(*------------------------------------------------------------*)
+(*	(*------------------------------------------------------------*)
 	(** Pretty-printing method for debug *)
 	(*------------------------------------------------------------*)
 	method private debug_string : string =
@@ -671,7 +671,7 @@ class stateSpace (guessed_nb_transitions : int) =
 (*	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	let transitions_table = Hashtbl.create guessed_nb_transitions in *)
 
-		^ "\n\nEND STATE SPACE"
+		^ "\n\nEND STATE SPACE"*)
 
 	(*------------------------------------------------------------*)
 	(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
@@ -1443,9 +1443,9 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 
-	(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+	(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
-	method add_state state_comparison (new_state : state) : addition_result =
+	method add_state state_comparison (global_time_clock_option : Automaton.clock_index option) (new_state : state) : addition_result =
 		(* Statistics *)
 		counter_add_state#increment;
 		counter_add_state#start;
@@ -1485,9 +1485,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				(* Retrieve the input options *)
 				let options = Input.get_options () in
 				let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
-					(* Retrieve the model *)
-					let model = Input.get_model() in
-					match model.global_time_clock with
+					match global_time_clock_option with
 					(* Nothing to do *)
 					| None -> []
 					(* Nothing to do *)

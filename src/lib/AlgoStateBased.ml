@@ -1086,7 +1086,7 @@ let compute_new_constraint (model : AbstractModel.abstract_model) (source_constr
 		(* Remove useless clocks (if option activated) *)
 		(*** WARNING: code duplication!!! ***)
 		if options#dynamic_clock_elimination then(
-			ClocksElimination.dynamic_clock_elimination target_location current_constraint;
+			ClocksElimination.dynamic_clock_elimination model target_location current_constraint;
 		);
 
 
@@ -1338,7 +1338,7 @@ let create_initial_state (model : AbstractModel.abstract_model) (abort_if_unsati
 
 		(* Remove useless clocks (if option activated) *)
 		if options#dynamic_clock_elimination then(
-			ClocksElimination.dynamic_clock_elimination initial_location current_constraint;
+			ClocksElimination.dynamic_clock_elimination model initial_location current_constraint;
 		);
 
 
@@ -2943,7 +2943,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4916,7 +4916,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method to run the BFS algorithm  *)
+	(** Main method to run the BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* 09-10-2017: Changed to public for distributed version - Files related: AlgoNZCUBdist *)
 	(* method private explore_layer_bfs init_state_index = *)
@@ -5139,7 +5139,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method to run the algorithm *)
+	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
 		(* Get some variables *)
@@ -5201,7 +5201,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		| None ->
 
 			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check init_state with
+			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
 				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

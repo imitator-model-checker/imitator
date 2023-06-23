@@ -152,7 +152,7 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -177,7 +177,7 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 		if pi0compatible then (
 
 			(* Try to add the new state to the state space *)
-			let addition_result = state_space#add_state options#comparison_operator new_state in
+			let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 
 			begin
 			match addition_result with

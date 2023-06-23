@@ -232,12 +232,12 @@ class stateSpace : int ->
 		method get_initial_state_index : state_index
 
 		(*------------------------------------------------------------*)
-		(** Compte and return the list of index successors of a state *)
+		(** Compute and return the list of index successors of a state *)
 		(*------------------------------------------------------------*)
 		method get_successors : state_index -> state_index list
 
 		(*------------------------------------------------------------*)
-		(** Compte and return the list of pairs (index successor of a state, corresponding combined_transition) *)
+		(** Compute and return the list of pairs (index successor of a state, corresponding combined_transition) *)
 		(*------------------------------------------------------------*)
 		method get_successors_with_combined_transitions : state_index -> (combined_transition * state_index) list
 
@@ -315,9 +315,9 @@ class stateSpace : int ->
 		(** Increment the number of generated states (even though not member of the state space) *)
 		method increment_nb_gen_states : unit
 
-		(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+		(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 		(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
-		method add_state : AbstractAlgorithm.state_comparison_operator -> state -> addition_result
+		method add_state : AbstractAlgorithm.state_comparison_operator -> Automaton.clock_index option -> state -> addition_result
 
 		(** Add a transition to the state space *)
 		method add_transition : (state_index * combined_transition * state_index) -> unit

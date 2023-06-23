@@ -58,7 +58,7 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -66,7 +66,7 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 		
 		(* Print some information *)
 		print_message Verbose_total ("New state addition attempt successfully performed.");
