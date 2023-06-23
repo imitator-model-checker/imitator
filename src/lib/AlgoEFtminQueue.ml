@@ -394,8 +394,6 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (options : Options.
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
 
-		let options = Input.get_options() in
-		
 		(* (temporarily?) Removed best-worst case algorithm *)
 		(*
 		if options#best_worst_case then print_message Verbose_standard("NOTE: some models with nonstandard target locations (e.g. a combination of multiple targets) may have to be updated for correctness sake.");
