@@ -147,28 +147,6 @@ let state_included_in = states_compare LinearConstraint.px_is_leq   "inclusion"
 (* Matching state predicates with a global location *)
 (************************************************************)
 
-(*let is_one_location_accepting (state : state) =
-	
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	(* Retrieve the locations *)
-	let locations = DiscreteState.get_locations state.global_location in
-	let result = ref false in
-	(* Check whether a local location is accepting *)
-	
-	(*** TODO: rewrite using Array.exists! ***)
-	
-	Array.iteri (fun automaton_index location_index ->
-		result := !result || model.is_accepting automaton_index location_index) locations;
-	
-	(* Return result *)
-	!result
-	
-let match_state_predicate state_predicate state =
-	(* Call dedicated function *)
-	DiscreteState.match_state_predicate state_predicate state.global_location*)
-
-
 (** Tests whether a state matches `state_predicate`; takes the model as argument, notably needed for the function tables and to access the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index`, since both of them can be used in the state_predicate),  *)
 let match_state_predicate (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
 	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) model.is_accepting state.global_location state_predicate
