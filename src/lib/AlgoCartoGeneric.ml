@@ -190,7 +190,7 @@ let abstract_point_based_result_of_point_based_result (point_based_result : poin
 
 
 (*------------------------------------------------------------*)
-(* Print warning(s) depending on a Result.bc_algorithm_termination *)
+(** Print warning(s) depending on a Result.bc_algorithm_termination *)
 (*------------------------------------------------------------*)
 let print_warnings_limit_for = function
 	| BC_Regular_termination -> ()
@@ -214,8 +214,8 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoGeneric model (*as super*)
+class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoGeneric model options (*as super*)
 	
 	
 	(************************************************************)
@@ -249,7 +249,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : Hype
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) (Input.get_model()) dummy_pval in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) model options dummy_pval in myalgo
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
@@ -485,8 +485,6 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (v0 : Hype
 	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_initial_state_or_abort : state =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 
 		(* Print the initial state *)
 		if verbose_mode_greater Verbose_medium then

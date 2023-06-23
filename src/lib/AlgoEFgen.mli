@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFgen : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
+class virtual algoEFgen : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)

@@ -44,8 +44,8 @@ type has_loop =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoLoopSynth (model : AbstractModel.abstract_model) =
-	object (self) inherit algoStateBased model as super
+class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
+	object (self) inherit algoStateBased model options as super
 	
 	(************************************************************)
 	(* Class variables *)

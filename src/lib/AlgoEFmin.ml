@@ -27,8 +27,8 @@ open AlgoEFopt
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFmin (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (_) inherit algoEFopt model state_predicate parameter_index
+class algoEFmin (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+	object (_) inherit algoEFopt model options state_predicate parameter_index
 	
 	(************************************************************)
 	(* Class variables *)

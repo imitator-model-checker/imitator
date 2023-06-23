@@ -22,7 +22,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoNDFS : AbstractModel.abstract_model -> AbstractProperty.state_predicate ->
+class algoNDFS : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 
 		(************************************************************)

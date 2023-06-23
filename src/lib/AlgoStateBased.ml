@@ -2568,8 +2568,8 @@ end;;
 (************************************************************)
 (************************************************************)
 
-class virtual algoStateBased (model : AbstractModel.abstract_model) =
-	object (self) inherit algoGeneric model (*as super*)
+class virtual algoStateBased (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
+	object (self) inherit algoGeneric model options (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -2859,10 +2859,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) =
 	(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialConditions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_initial_state_or_abort : state =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-
-
 		(* Print the initial state *)
 		if verbose_mode_greater Verbose_medium then
 			print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model {global_location = model.initial_location; px_constraint = model.initial_constraint}) ^ "\n");

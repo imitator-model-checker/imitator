@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoValid : AbstractModel.abstract_model ->
+class algoValid : AbstractModel.abstract_model -> Options.imitator_options ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)

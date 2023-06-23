@@ -21,7 +21,7 @@ open ImitatorUtilities
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
-class virtual algoGeneric (_ : AbstractModel.abstract_model) =
+class virtual algoGeneric (_ : AbstractModel.abstract_model) (_ : Options.imitator_options) =
 	object (self)
 
 	(************************************************************)
@@ -30,14 +30,6 @@ class virtual algoGeneric (_ : AbstractModel.abstract_model) =
 	(** Start time for the algorithm *)
 	val mutable start_time = 0.
 
-	(*------------------------------------------------------------*)
-	(* Shortcuts *)
-	(*------------------------------------------------------------*)
-	
-	(** Retrieve the input options *)
-	val options = Input.get_options ()
-	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Virtual method: the algorithm name is to be defined in concrete classes *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

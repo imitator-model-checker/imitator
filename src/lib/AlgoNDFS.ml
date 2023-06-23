@@ -112,8 +112,8 @@ let printpendingqueue (colour : string) (thequeue : (State.state_index * int) li
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased model as super
+class algoNDFS (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoStateBased model options as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -352,7 +352,6 @@ class algoNDFS (model : AbstractModel.abstract_model) (state_predicate : Abstrac
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
 
-		let options = Input.get_options() in
 		limit_reached <- Keep_going;
 		
 		(************************************)

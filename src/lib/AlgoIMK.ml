@@ -33,8 +33,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
-	object (self) inherit algoStateBased model as super
+class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
+	object (self) inherit algoStateBased model options as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -82,8 +82,6 @@ class algoIMK (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(* side effect: add the negation of the p_constraint to all computed states *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method check_pi0compatibility (constr : LinearConstraint.px_linear_constraint) : bool =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 		(* Retrieve the pi0 (dynamic!) *)
 		let reference_pval = self#get_reference_pval in
 		

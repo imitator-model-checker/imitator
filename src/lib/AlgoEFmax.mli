@@ -22,7 +22,7 @@ open AlgoEFopt
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFmax : AbstractModel.abstract_model -> AbstractProperty.state_predicate -> Automaton.parameter_index ->
+class algoEFmax : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate -> Automaton.parameter_index ->
 	object inherit algoEFopt
 		(************************************************************)
 		(* Class variables *)

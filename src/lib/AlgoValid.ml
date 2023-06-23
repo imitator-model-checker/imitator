@@ -31,8 +31,8 @@ open AlgoStateBased
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoValid (model : AbstractModel.abstract_model) =
-	object (self) inherit algoStateBased model
+class algoValid (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
+	object (self) inherit algoStateBased model options
 	
 	(************************************************************)
 	(* Class variables *)

@@ -21,7 +21,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoPostStar : AbstractModel.abstract_model ->
+class algoPostStar : AbstractModel.abstract_model -> Options.imitator_options ->
 	object inherit algoStateBased
 	
 		(************************************************************)

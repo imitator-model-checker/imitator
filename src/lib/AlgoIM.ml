@@ -31,8 +31,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
-	object (self) inherit algoIMK model pval as super
+class algoIM (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
+	object (self) inherit algoIMK model options pval as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -62,9 +62,6 @@ class algoIM (model : AbstractModel.abstract_model) (pval : PVal.pval) =
 	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! compute_result =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(*** NOTE: Method used here: intersection of all p-constraints ***)
 		(* Alternative methods would have been: 1) on-the-fly intersection (everytime a state is met) or 2) intersection of all final states, i.e., member of a loop, or deadlock states *)
 
