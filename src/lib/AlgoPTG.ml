@@ -474,6 +474,11 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		init_losing_zone_changed := false;
 		LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (LosingZone.find init)
 
+	(* Initial state is won if parameter valuations in its winning zone is non-empty *)
+	method private init_has_winning_witness init =
+		init_winning_zone_changed := false;
+		not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)
+
 	(* Initial state is exact if winning and losing zone covers initial zone  *)
 	method private init_is_exact init = 
 		init_losing_zone_changed := false;
@@ -488,17 +493,19 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 
-		let recompute_init_lost = !init_losing_zone_changed in 
+		let recompute_init_lost = !init_losing_zone_changed in
+		let recompute_init_has_winning_witness = not complete_synthesis && !init_winning_zone_changed in  
 		let recompute_init_exact = complete_synthesis && (!init_losing_zone_changed || !init_winning_zone_changed) in
 
 		let init_lost = if recompute_init_lost then self#init_is_lost init else false in
+		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness init else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
 		queue_empty || init_lost ||
 		if complete_synthesis then
 			init_exact
 		else
-			not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)
+			init_has_winning_witness
 
 
 
