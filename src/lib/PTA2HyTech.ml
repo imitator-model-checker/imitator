@@ -59,10 +59,7 @@ let footer = "\n"
 
 (* Collect all clocks that may be stopped in some location *)
 (*** NOTE: this could be done once for all and stored in the model ***)
-let find_stopwatches () =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
+let find_stopwatches (model : AbstractModel.abstract_model) =
 	(* Print some information *)
 	print_message Verbose_low "Computing the set of stopwatches.";
 
@@ -350,10 +347,7 @@ let string_of_automata model stopwatches =
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_initial_state () =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
+let string_of_initial_state (model : AbstractModel.abstract_model) =
 	(* Print some information *)
 	print_message Verbose_low "Translating the initial state…";
 
@@ -550,9 +544,9 @@ let string_of_optimization model =
 (************************************************************)
 
 (** Convert the model into a string *)
-let string_of_model model =
+let string_of_model (model : AbstractModel.abstract_model) =
 	(* Compute stopwatches *)
-	let stopwatches = find_stopwatches() in
+	let stopwatches = find_stopwatches model in
 
 	(* Partition between real clocks and stopwatches *)
 	let stopwatches, clocks = List.partition (fun variable_index -> List.mem variable_index stopwatches) model.clocks_without_special_reset_clock in
@@ -567,7 +561,7 @@ let string_of_model model =
 	^  "\n" ^ string_of_automata model stopwatches
 
 	(* The initial state *)
-	^ "\n" ^ string_of_initial_state ()
+	^ "\n" ^ string_of_initial_state model
 
 (*	
 	(*** TODO !!! ***)

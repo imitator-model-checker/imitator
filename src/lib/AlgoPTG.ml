@@ -376,7 +376,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		let backward (x : LinearConstraint.px_linear_constraint) =
 			let constr_d = LinearConstraint.pxd_of_px_constraint x in 
-			apply_time_past global_location constr_d;  
+			apply_time_past model global_location constr_d;
 			LinearConstraint.pxd_hide_discrete_and_collapse constr_d
 		in
 

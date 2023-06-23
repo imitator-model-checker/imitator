@@ -20,6 +20,7 @@
 (************************************************************)
 open OCamlUtilities
 open ImitatorUtilities
+open Exceptions
 open Statistics
 open AbstractModel
 open Result
@@ -978,7 +979,7 @@ let print_single_synthesis_or_point_based_result result computation_time constra
 
 
 
-let process_single_synthesis_or_point_based_result file_prefix algorithm_name result state_space computation_time =
+let process_single_synthesis_or_point_based_result (model : AbstractModel.abstract_model) file_prefix algorithm_name result state_space computation_time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -989,12 +990,12 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	print_message Verbose_high "Drawing state space…";
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
-	Graphics.draw_statespace_if_requested state_space algorithm_name radical;
+	Graphics.draw_statespace_if_requested model state_space algorithm_name radical;
 	
 	(* Render zones in a graphical form *)
 	if options#draw_cart then (
 		let zones = zones_of_good_bad_constraint result in
-		Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
+		Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 	);
@@ -1008,10 +1009,16 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 (************************************************************)
 
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
-let process_result result algorithm_name prefix_option =
+let process_result_generic (model_option : AbstractModel.abstract_model option) result algorithm_name prefix_option =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	
+
+	(* Useful to get the model ONLY in cases when it is defined *)
+	let get_model_from_model_option = function
+		| Some model -> model
+		| None -> raise (InternalError "The model should have been defined in process_result_generic")
+	in
+
 	(* Define the file prefix for all outputs *)
 	let file_prefix = match prefix_option with
 		(* Use the user-defined prefix *)
@@ -1020,11 +1027,11 @@ let process_result result algorithm_name prefix_option =
 		| None -> options#files_prefix
 	in
 	
-	let draw_statespace_if_requested state_space =
+	let draw_statespace_if_requested (model : AbstractModel.abstract_model) state_space =
 		print_message Verbose_high "Drawing state space…";
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace_if_requested state_space algorithm_name radical
+		Graphics.draw_statespace_if_requested model state_space algorithm_name radical
 	in
 		
 	
@@ -1095,8 +1102,11 @@ let process_result result algorithm_name prefix_option =
 		print_state_space_statistics state_space_computation.computation_time state_space_computation.state_space;
 		print_memory_statistics ();
 		
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* Draw state space *)
-		draw_statespace_if_requested state_space_computation.state_space;
+		draw_statespace_if_requested model state_space_computation.state_space;
 		
 		(* The end *)
 		()
@@ -1114,8 +1124,10 @@ let process_result result algorithm_name prefix_option =
 			print_message Verbose_high "No result export to file requested.";
 		);
 		
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
 		(* Generic handling for drawing etc. *)
-		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time
+		process_single_synthesis_or_point_based_result model file_prefix algorithm_name result.result result.state_space result.computation_time
 		
 
 	| Point_based_result result ->
@@ -1130,8 +1142,10 @@ let process_result result algorithm_name prefix_option =
 			print_message Verbose_high "No result export to file requested.";
 		);
 		
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
 		(* Generic handling for drawing etc. *)
-		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time
+		process_single_synthesis_or_point_based_result model file_prefix algorithm_name result.result result.state_space result.computation_time
 
 
 	| Cartography_result cartography_result ->
@@ -1176,7 +1190,9 @@ let process_result result algorithm_name prefix_option =
 			) [] valid_tiles
 			in
 			
-			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
+			(* The model must be defined at this point *)
+			let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+			Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			(* Print some information *)
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
@@ -1205,8 +1221,12 @@ let process_result result algorithm_name prefix_option =
 
 		(* Render zones in a graphical form *)
 		if options#output_bc_cart then (
+			(* The model must be defined at this point *)
+			let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 			let zones = zones_of_good_bad_constraint result.result in
-			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
+
+			Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -1222,6 +1242,9 @@ let process_result result algorithm_name prefix_option =
 		
 	(* Result for runs exhibition *)
 	| Runs_exhibition_result result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+
 		(* Write to file *)
 		let file_name = file_prefix ^ Constants.result_file_extension in
 		export_to_file_runs_exhibition_result file_name result;
@@ -1230,7 +1253,7 @@ let process_result result algorithm_name prefix_option =
 		print_memory_statistics ();
 
 		(* Draw state space *)
-		draw_statespace_if_requested result.state_space;
+		draw_statespace_if_requested model result.state_space;
 		
 		(* Render signals and sets of parameters in a graphical form *)
 		List.iteri (fun index valuation_and_concrete_run ->
@@ -1243,8 +1266,8 @@ let process_result result algorithm_name prefix_option =
 			(* Print signal *)
 			begin
 			match valuation_and_concrete_run.concrete_run with
-				| Concrete_run concrete_run -> Graphics.draw_concrete_run concrete_run prefix
-				| Impossible_concrete_run impossible_concrete_run -> Graphics.draw_impossible_concrete_run impossible_concrete_run prefix
+				| Concrete_run concrete_run -> Graphics.draw_concrete_run model concrete_run prefix
+				| Impossible_concrete_run impossible_concrete_run -> Graphics.draw_impossible_concrete_run model impossible_concrete_run prefix
 			end;
 
 			(* Print parameter zone *)
@@ -1252,7 +1275,8 @@ let process_result result algorithm_name prefix_option =
 				print_message Verbose_low "Plotting cartography of the runs' constraints…";
 				(* Generate the graphics: parameters *)
 				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in
-				Graphics.draw_cartography zones prefix;
+
+				Graphics.draw_cartography model zones prefix;
 			) else (
 				print_message Verbose_high "Graphical cartography not asked: not drawn.";
 			);
@@ -1263,6 +1287,10 @@ let process_result result algorithm_name prefix_option =
 		()
 
 
+(** Process_result can only be called with an actual defined model *)
+let process_result (model : AbstractModel.abstract_model) =
+	process_result_generic (Some model)
+
 
 
 (* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)
@@ -1272,9 +1300,9 @@ let process_result result algorithm_name prefix_option =
 (************************************************************)
 
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate with success *)
-let process_result_and_terminate (result : Result.imitator_result) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
+let process_result_and_terminate (model : AbstractModel.abstract_model) (result : Result.imitator_result) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
 	(* Process the result and create output file *)
-	process_result result algorithm_name prefix_option;
+	process_result_generic (Some model) result algorithm_name prefix_option;
 
 	(* Stop counter *)
 	global_counter#stop;
@@ -1290,7 +1318,7 @@ let process_result_and_terminate (result : Result.imitator_result) (algorithm_na
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate with failure *)
 let process_result_and_abort (error_type : Result.error_type) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
 	(* Process the result and create output file *)
-	process_result (Error_result error_type) algorithm_name prefix_option;
+	process_result_generic None (Error_result error_type) algorithm_name prefix_option;
 
 	(* Stop counter *)
 	global_counter#stop;

@@ -13,31 +13,31 @@
  
  
 (*------------------------------------------------------------*)
-(* Function for preparing data structures for extrapolation *)
+(** Function for preparing data structures for extrapolation *)
 (*------------------------------------------------------------*)
-val prepare_extrapolation : unit -> unit
+val prepare_extrapolation : AbstractModel.abstract_model -> unit
 
 
 (*------------------------------------------------------------*)
-(* Apply M extrapolation *)
+(** Apply M extrapolation *)
 (*------------------------------------------------------------*)
 val px_m_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 
 
 (*------------------------------------------------------------*)
-(* Apply Mglobal extrapolation *)
+(** Apply Mglobal extrapolation *)
 (*------------------------------------------------------------*)
 val px_mglobal_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 
 
 (*------------------------------------------------------------*)
-(* Apply LU extrapolation *)
+(** Apply LU extrapolation *)
 (*------------------------------------------------------------*)
 val px_lu_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 
 
 (*------------------------------------------------------------*)
-(* Apply LU extrapolation *)
+(** Apply LU-global extrapolation *)
 (*------------------------------------------------------------*)
 val px_luglobal_extrapolation : LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint list
 

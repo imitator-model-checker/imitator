@@ -546,10 +546,7 @@ let set_maximums l u nb_clocks : unit =
 (************************************************************)
 
 (* Update all global variables to prepare the extrapolation *)
-let prepare_extrapolation () : unit =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let prepare_extrapolation (model : AbstractModel.abstract_model) : unit =
 	let p_bounds = Array.make model.nb_parameters (Minus_infinity, Infinity) in
 	
 	(* Retrieve guards (actually invariants too) *)
@@ -604,10 +601,6 @@ let prepare_extrapolation () : unit =
 (************************************************************)
 
 let m_extrapolation_of_x (big_m : numconst_or_infinity) (x : variable) (px_linear_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint list =
-
-	(* Retrieve the model *)
-(* 	let model = Input.get_model() in *)
-
 	(* Case m is Finite *)
 	let finite (m : NumConst.t) =
 	

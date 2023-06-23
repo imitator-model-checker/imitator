@@ -73,10 +73,7 @@ let potential_clocks_in_update update =
 (** Find the local clocks per automaton *)
 (*------------------------------------------------------------*)
 (*** WARNING: the use of clock_offset is not beautiful (and error prone) here ***)
-let find_local_clocks () =
-  (* Retrieve the model *)
-  let model = Input.get_model() in
-
+let find_local_clocks (model : AbstractModel.abstract_model) =
   (*** HACK: yes, clock_offset is the number of parameters, but quite hard coded ***)
   let clock_offset = model.nb_parameters in
 
@@ -344,7 +341,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 (** Function for preparing data structures for dynamic clock elimination *)
 (*------------------------------------------------------------*)
 (*** NOTE: This function is only called if the dynamic clock elimination option is activated ***)
-let prepare_clocks_elimination () =
+let prepare_clocks_elimination (model : AbstractModel.abstract_model) =
   (* Create counters *)
   let counter_preparation_ref = create_time_counter_and_register "dynamic clock elimination (preparation)" Algorithm_counter Verbose_standard in
   counter_preparation := Some counter_preparation_ref;
@@ -353,12 +350,9 @@ let prepare_clocks_elimination () =
   (* Start counter *)
   counter_preparation_ref#start;
 
-  (* Retrieve the model *)
-  let model = Input.get_model() in
-
   (* Compute the local clocks per automaton *)
   print_message Verbose_low ("*** Building local clocks per automaton…");
-  let local_clocks_per_automaton = find_local_clocks () in
+  let local_clocks_per_automaton = find_local_clocks model in
 
   (* Debug print: local clocks per automaton *)
   if verbose_mode_greater Verbose_total then(

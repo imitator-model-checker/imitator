@@ -54,8 +54,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Op
 	(** Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 
 

@@ -501,7 +501,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 		(* Get the initial state after time elapsing *)
 		(*** NOTE: here is the call to AlgoStateBased *)
 		(*** NOTE: Boolean true denoting abortion whenever unsatisfiable initial state *)
-		let init_state_after_time_elapsing : state = AlgoStateBased.create_initial_state (true) in
+		let init_state_after_time_elapsing : state = AlgoStateBased.create_initial_state model true in
 		let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 
@@ -739,7 +739,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method create_auxiliary_files imitator_result =
 		let file_prefix = options#files_prefix ^ "-" ^ (string_of_int current_iteration) in
-		ResultProcessor.process_result imitator_result current_algo_instance#algorithm_name (Some file_prefix);
+		ResultProcessor.process_result model imitator_result current_algo_instance#algorithm_name (Some file_prefix);
 		
 		(* The end *)
 		()

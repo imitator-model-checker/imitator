@@ -34,10 +34,7 @@ open StateSpace
 (* Also returns a Boolean being true iff there is any non-1 flow *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_gen (location : DiscreteState.global_location) : (((Automaton.clock_index, NumConst.t) Hashtbl.t) * bool) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let compute_flows_gen (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) : (((Automaton.clock_index, NumConst.t) Hashtbl.t) * bool) =
 	(* Hashtbl clock_id --> flow *)
 	let flows_hashtable = Hashtbl.create (List.length model.clocks) in
 	
@@ -96,9 +93,9 @@ let compute_flows_gen (location : DiscreteState.global_location) : (((Automaton.
 (* Returns a list of pairs (clock_index, flow)                *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_list (location : DiscreteState.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+let compute_flows_list (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) : ((Automaton.clock_index * NumConst.t) list) =
 	(* Call generic function *)
-	let flows_hashtable, non_1_flow = compute_flows_gen location in
+	let flows_hashtable, non_1_flow = compute_flows_gen model location in
 
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -126,9 +123,9 @@ let compute_flows_list (location : DiscreteState.global_location) : ((Automaton.
 (* Returns a function clock_index -> flow                     *)
 (* Raises a warning whenever a clock is assigned to TWO different flows *)
 (*------------------------------------------------------------*)
-let compute_flows_fun (location : DiscreteState.global_location) : (Automaton.clock_index -> NumConst.t) =
+let compute_flows_fun (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) : (Automaton.clock_index -> NumConst.t) =
 	(* Call generic function *)
-	let flows_hashtable, non_1_flow = compute_flows_gen location in
+	let flows_hashtable, non_1_flow = compute_flows_gen model location in
 
 	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
 	if (not non_1_flow) then (fun _ -> NumConst.one) else (
@@ -1194,7 +1191,7 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	^ " flows["
 	^ (
 		let global_location : DiscreteState.global_location = state.global_location in
-		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list global_location in
+		let flows : (Automaton.clock_index * NumConst.t) list = compute_flows_list model global_location in
 		(* Iterate *)
 		string_of_list_of_string_with_sep ", " (
 			List.map (fun (variable_index, flow) -> (model.variable_names variable_index ) ^ "' = "  ^ (NumConst.string_of_numconst flow) ) flows
@@ -1237,7 +1234,7 @@ let json_of_discrete_values model (global_location : DiscreteState.global_locati
 (* Convert a concrete state into JSON-style string (locations, discrete variables valuations, continuous variables valuations, current flows for continuous variables) *)
 let json_of_concrete_state model (state : State.concrete_state) =
     let global_location = state.global_location in
-    let flows = compute_flows_list global_location in
+    let flows = compute_flows_list model global_location in
     "state", JsonFormatter.Json_struct [
         "location", json_of_global_location model state.global_location;
         "discrete_variables", json_of_discrete_values model state.global_location;

@@ -120,8 +120,9 @@ let dl_inverse_update_ben_fix (state_space : StateSpace.stateSpace) state_index 
 
 (** Apply past time operator *)
 let dl_inverse_time (state_space : StateSpace.stateSpace) state_index z =
+    let model = Input.get_model() in
 	let glob_location = state_space#get_location (state_space#get_global_location_index state_index) in
-    AlgoStateBased.apply_time_past glob_location z
+    AlgoStateBased.apply_time_past model glob_location z
 
 
 (* compute direct predecessor of z2 in z1, linked by (guard,updates) *)

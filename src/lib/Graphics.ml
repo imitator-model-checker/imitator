@@ -32,7 +32,7 @@ open State
 
 
 (************************************************************)
-(** Statistics *)
+(* Statistics *)
 (************************************************************)
 let counter_graphics_statespace = create_time_counter_and_register "state space drawing" Graphics_counter Verbose_standard
 
@@ -63,7 +63,7 @@ let draw_x_y x y =
 	^ (string_of_float (bad_float_of_num_const y))
 	
 
-(* Prepare the comments at the end of a graph file *)
+(** Prepare the comments at the end of a graph file *)
 let draw_comments command =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -96,23 +96,19 @@ let run_graph command =
 	execution
 
 
-(* Create a file name for a given signal (i.e. the evolution of a variable over time) in a valuations drawing *)
+(** Create a file name for a given signal (i.e. the evolution of a variable over time) in a valuations drawing *)
 let make_concreterun_variable_file_name file_prefix file_index =
 	file_prefix ^ "_signal_" ^ (string_of_int file_index) ^ ".graph"
 
-(* Create a file name with radical cartography_file_prefix and number file_index for a given tile of the cartography *)
+(** Create a file name with radical cartography_file_prefix and number file_index for a given tile of the cartography *)
 let make_cartography_tile_file_name cartography_file_prefix file_index =
 	cartography_file_prefix ^ "_points_" ^ (string_of_int file_index) ^ ".txt"
 
 
 (*------------------------------------------------------------*)
-(* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
+(** Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
 let graph_color_of_int tile_index statespace_nature dotted =
-	(* Retrieve model *)
-(*	let model = Input.get_model() in
-	let property = Input.get_property() in*)
-	
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
@@ -136,13 +132,13 @@ let graph_color_of_int tile_index statespace_nature dotted =
 
 
 (*------------------------------------------------------------*)
-(** Draw (using the plotutils graph utility) the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
+(* Draw (using the plotutils graph utility) the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
 exception CartographyError
 
 
 
-(* Get the reference hyper rectangle for properties that have one, or return None otherwise *)
+(** Get the reference hyper rectangle for properties that have one, or return None otherwise *)
 let get_v0_option () =
 	(* First check whether there is a property *)
 	if Input.has_property() then(
@@ -182,7 +178,7 @@ let get_v0_option () =
 	) else None
 
 
-let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
+let draw_cartography (model : AbstractModel.abstract_model) (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
 	(* Create counter *)
 	let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard in
 
@@ -190,8 +186,6 @@ let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_n
 	counter_graphics_cartography#start;
 	
 try(
-	(* Retrieve the model *)
-	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -719,12 +713,12 @@ try(
 
 
 (*------------------------------------------------------------*)
-(** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
+(* Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
 exception Found_flow of NumConst.t
 
-(* Side function to get the flow of a variable in a given global_location *)
+(** Side function to get the flow of a variable in a given global_location *)
 (*** NOTE: if incompatible flows are defined (i.e., a different flow in 2 different automata), the result is undefined (actually the first non-1 flow is returned) ***)
 (*** NOTE: this function could be defined elsewhere… ***)
 let get_flow
@@ -771,11 +765,9 @@ let get_flow
 	) with Found_flow flow -> flow
 
 
-(* This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
+(** This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
 (*** TODO: draw differently the impossible part of impossible concrete runs ***)
-let draw_run_generic (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
-	(* Retrieve model *)
-	let model = Input.get_model() in
+let draw_run_generic (model : AbstractModel.abstract_model) (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1042,18 +1034,18 @@ let draw_run_generic (initial_state : State.concrete_state) (abstract_steps : (N
 
 
 
-let draw_impossible_concrete_run (impossible_concrete_run : StateSpace.impossible_concrete_run) (file_prefix : string) : unit =
+let draw_impossible_concrete_run (model : AbstractModel.abstract_model) (impossible_concrete_run : StateSpace.impossible_concrete_run) (file_prefix : string) : unit =
 	(* Transforms steps to abstract pairs *)
 	let abstract_steps = list_append
 		(List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) impossible_concrete_run.steps)
 		(List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step) -> impossible_concrete_step.time , impossible_concrete_step.target) impossible_concrete_run.impossible_steps)
 	in
-	draw_run_generic impossible_concrete_run.initial_state abstract_steps file_prefix
+	draw_run_generic model impossible_concrete_run.initial_state abstract_steps file_prefix
 	
-let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
+let draw_concrete_run (model : AbstractModel.abstract_model) (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
 	(* Transforms steps to abstract pairs *)
 	let abstract_steps = List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) concrete_run.steps in
-	draw_run_generic concrete_run.initial_state abstract_steps file_prefix
+	draw_run_generic model concrete_run.initial_state abstract_steps file_prefix
 
 (*
 let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
@@ -1323,10 +1315,8 @@ let dot_colors = [
 "indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
 ]
 
-(* Convert a graph to a dot file *)
-let dot_of_statespace (state_space : StateSpace.stateSpace) (algorithm_name : string) (*~fancy*) =
-	(* Retrieve the model *)
-	let model : AbstractModel.abstract_model = Input.get_model () in
+(** Convert a graph to a dot file *)
+let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (algorithm_name : string) (*~fancy*) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1736,8 +1726,6 @@ Generation time: " ^ (now()) ^ "\"];"
 
 (** Execute the `dot` utility with as argument the image format, the radical, and the source file. Returns `Some file_name` if successful, or None otherwise *)
 let dot dot_image_extension radical dot_source_file : (string option) =
-	(* Retrieve the model *)
-(* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1808,7 +1796,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	
 
 (** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
-let draw_statespace_if_requested (state_space : StateSpace.stateSpace) algorithm_name radical : unit =
+let draw_statespace_if_requested (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) algorithm_name radical : unit =
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -1822,7 +1810,7 @@ let draw_statespace_if_requested (state_space : StateSpace.stateSpace) algorithm
 			print_warning "State space is empty: not drawing";
 		)else(
 
-			let dot_model, states = dot_of_statespace state_space algorithm_name in
+			let dot_model, states = dot_of_statespace model state_space algorithm_name in
 
 			(* Write states file if needed *)
 			if options#states_description then (

@@ -631,7 +631,7 @@ let pxd_compute_time_polyhedron (direction : LinearConstraint.time_direction) (m
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 
-	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list location in
+	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list model location in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
@@ -655,7 +655,7 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 	(* Print some information *)
 	print_message Verbose_high ("Computing list of explicit flows…");
 
-	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list location in
+	let flows : (Automaton.clock_index * NumConst.t) list = ModelPrinter.compute_flows_list model location in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
@@ -677,10 +677,7 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 
 
 
-let apply_time_shift (direction : LinearConstraint.time_direction) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
-	(* Get the model *)
-	let model = Input.get_model() in
-
+let apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 	(* If urgent: no time elapsing *)
 	if AbstractModelUtilities.is_global_location_urgent model location then (
 		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
@@ -743,10 +740,7 @@ let apply_time_past = apply_time_shift LinearConstraint.Time_backward
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing_to_concrete_valuation (location : DiscreteState.global_location) (time_elapsing : NumConst.t) (px_valuation : LinearConstraint.px_valuation) =
-	(* Get the model *)
-	let model = Input.get_model() in
-
+let apply_time_elapsing_to_concrete_valuation (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (time_elapsing : NumConst.t) (px_valuation : LinearConstraint.px_valuation) =
 	(* If urgent location: nothing to change, i.e., copy *)
 	if AbstractModelUtilities.is_global_location_urgent model location then(
 		print_message Verbose_medium ("Urgent location: do not apply time elapsing");
@@ -763,7 +757,7 @@ let apply_time_elapsing_to_concrete_valuation (location : DiscreteState.global_l
 		done;
 
 		(* Get the flows *)
-		let flows : (Automaton.clock_index -> NumConst.t) = ModelPrinter.compute_flows_fun location in
+		let flows : (Automaton.clock_index -> NumConst.t) = ModelPrinter.compute_flows_fun model location in
 
 		(* Iterate on clocks *)
 		for variable_index = model.nb_parameters to model.nb_parameters + model.nb_clocks - 1 do
@@ -841,10 +835,7 @@ let compute_possible_actions model (source_location : DiscreteState.global_locat
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates (source_location: DiscreteState.global_location) (combined_transition : StateSpace.combined_transition) : (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (source_location: DiscreteState.global_location) (combined_transition : StateSpace.combined_transition) : (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
     let automaton_and_transition_of_transition_index transition_index =
         model.automaton_of_transition transition_index,
         model.transitions_description transition_index
@@ -965,7 +956,7 @@ let compute_new_constraint (model : AbstractModel.abstract_model) (source_constr
 			end;
 
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-			apply_time_elapsing orig_location source_constraint_with_maybe_time_elapsing;
+			apply_time_elapsing model orig_location source_constraint_with_maybe_time_elapsing;
 
 			(* Compute the invariant in the source location I_l(X) *)
 			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
@@ -1048,7 +1039,7 @@ let compute_new_constraint (model : AbstractModel.abstract_model) (source_constr
 		(* Normal IMITATOR semantics for time-elapsing: apply time-elapsing now *)
 		if not options#no_time_elapsing then(
 			print_message Verbose_high ("Applying time elapsing to [C(X) and g(X)]rho and I_l'(X) ]");
-			apply_time_elapsing target_location current_constraint;
+			apply_time_elapsing model target_location current_constraint;
 		);
 
 
@@ -1221,9 +1212,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.state =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
+let create_initial_state (model : AbstractModel.abstract_model) (abort_if_unsatisfiable_initial_state : bool) : State.state =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1306,7 +1295,7 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 		if not options#no_time_elapsing then(
 			(* Perform time elapsing *)
 			print_message Verbose_high ("Applying time elapsing to [ C0(X) and I_l0(X) and D_i = d_i ]");
-			apply_time_elapsing initial_location current_constraint;
+			apply_time_elapsing model initial_location current_constraint;
 
 	(*		(* Compute the list of stopwatches *)
 			let stopped_clocks, elapsing_clocks = compute_stopwatches initial_location in
@@ -1369,13 +1358,9 @@ let create_initial_state (abort_if_unsatisfiable_initial_state : bool) : State.s
 (* returns Some state, or None if the constraint is unsatisfiable    *)
 (*------------------------------------------------------------*)
 
-let post_from_one_state_via_one_transition (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
-
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let post_from_one_state_via_one_transition (model : AbstractModel.abstract_model) (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 	(* Compute the new location for the current combination of transitions *)
-	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates model source_location combined_transition in
 
 	(* Statistics *)
 	tcounter_compute_location_guards_discrete#stop;
@@ -1553,7 +1538,7 @@ let post_from_one_state_functional (model : AbstractModel.abstract_model) (sourc
 		(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
 		if options#no_time_elapsing then(
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-			apply_time_elapsing source_location orig_plus_discrete;
+			apply_time_elapsing model source_location orig_plus_discrete;
 		);
 
 		(* Statistics *)
@@ -1650,7 +1635,7 @@ let post_from_one_state_functional (model : AbstractModel.abstract_model) (sourc
 			) involved_automata_indices) in
 
 			(* Compute the successor constraint from the current state via this combined_transition *)
-			let successor_option : State.state option = post_from_one_state_via_one_transition source_location source_constraint discrete_constr combined_transition in
+			let successor_option : State.state option = post_from_one_state_via_one_transition model source_location source_constraint discrete_constr combined_transition in
 
 			(* Check if new states were indeed computed *)
 			begin
@@ -1719,17 +1704,15 @@ let nth_transition_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n :
 (** Compute the predecessors of a zone *)
 (*------------------------------------------------------------*)
 
-(* `continuous_predecessor location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
+(* `continuous_predecessors model location_n initial_z_n z_n z_n_post` (where `z_n_post` is a set of "final" valuations of location n, `z_n` is the symbolic zone of location n, and `initial_z_n` is the set of admissible initial valuations for location n) computes the set of valuations at location n that are initial admissible valuations *and* that are predecessor (via time past) of valuations of `z_n_post`. If `z_n_post` is a single point, note that the result is a single point (or possibly a set of points) corresponding to valuations right when entering location n. *)
 let continuous_predecessors
+	(model				: AbstractModel.abstract_model)
 	(location_n			: DiscreteState.global_location)
 	(initial_z_n		: LinearConstraint.px_linear_constraint)
 	(z_n				: LinearConstraint.px_linear_constraint)
 	(z_n_post			: LinearConstraint.px_linear_constraint)
 		: LinearConstraint.px_linear_constraint
 		=
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
 	(* Copy (for safety concerns) *)
 	let current_pxd_constraint = LinearConstraint.px_copy z_n_post in
 
@@ -1764,23 +1747,21 @@ let continuous_predecessors
 	current_pxd_constraint
 
 
-(* `discrete_predecessors state_n_minus_1 transition_n_minus_1_n initial_z_n` (where `initial_z_n` is a set of "initial" valuations of location n, `transition_n_minus_1_n` is the transition from n-1 to n, and `state_n_minus_1` is the symbolic state n-1) computes the set of valuations at location n-1 that are "final" admissible valuations *and* that are predecessor (via discrete successor) of valuations of `initial_z_n`. That is, the result is the set of points corresponding to valuations right before taking the transition from n-1 to n, and leading to `initial_z_n`. *)
+(* `discrete_predecessors model state_n_minus_1 transition_n_minus_1_n initial_z_n` (where `initial_z_n` is a set of "initial" valuations of location n, `transition_n_minus_1_n` is the transition from n-1 to n, and `state_n_minus_1` is the symbolic state n-1) computes the set of valuations at location n-1 that are "final" admissible valuations *and* that are predecessor (via discrete successor) of valuations of `initial_z_n`. That is, the result is the set of points corresponding to valuations right before taking the transition from n-1 to n, and leading to `initial_z_n`. *)
 
 let discrete_predecessors
+	(model					: AbstractModel.abstract_model)
 	(state_n_minus_1		: State.state)
 	(transition_n_minus_1_n	: StateSpace.combined_transition)
 	(initial_z_n			: LinearConstraint.px_linear_constraint)
 		: LinearConstraint.px_linear_constraint
 		=
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
 	(* Get location and constraint*)
 	let location_n_minus_1 : DiscreteState.global_location					= state_n_minus_1.global_location in
 	let z_n_minus_1			: LinearConstraint.px_linear_constraint		= state_n_minus_1.px_constraint in
 
 	(*** BADPROG: multiple computations! ***)
-	let _, _, (guards_n_minus_1_n : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1_n : AbstractModel.clock_updates list) = compute_new_location_guards_updates location_n_minus_1 transition_n_minus_1_n in
+	let _, _, (guards_n_minus_1_n : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1_n : AbstractModel.clock_updates list) = compute_new_location_guards_updates model location_n_minus_1 transition_n_minus_1_n in
 
 	(* Copy the constraint and convert to PXD *)
 	let current_pxd_constraint = LinearConstraint.pxd_of_px_constraint initial_z_n in
@@ -1838,7 +1819,7 @@ let discrete_predecessors
 
 
 
-(* Rebuild the "initial admissible valuations" after taking a transition from state n-1 to n, i.e., apply guard and updates to z_n-1, and intersect with z_n *)
+(** Rebuild the "initial admissible valuations" after taking a transition from state n-1 to n, i.e., apply guard and updates to z_n-1, and intersect with z_n *)
 let compute_admissible_valuations_after_transition
 		(model					: AbstractModel.abstract_model)
 		(state_n_minus_1		: State.state)
@@ -1854,7 +1835,7 @@ let compute_admissible_valuations_after_transition
 
 	(* Reconstruct guards and updates *)
 	(*** BADPROG: multiple computations! ***)
-	let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1 : AbstractModel.clock_updates list) = compute_new_location_guards_updates location_n_minus_1 transition_n_minus_1_n in
+	let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), (updates_n_minus_1 : AbstractModel.clock_updates list) = compute_new_location_guards_updates model location_n_minus_1 transition_n_minus_1_n in
 
 	(* Our goal: intersect the previous state (z_n_minus_1) with the guard, and then apply updates *)
 
@@ -1883,10 +1864,7 @@ let compute_admissible_valuations_after_transition
 
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
-let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predecessors : StateSpace.predecessors_table)*) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let concrete_run_of_symbolic_run (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
 	(*** BEGIN CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 	(*
 	(* 1. we backup the model *)
@@ -2101,7 +2079,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predec
 
 	(* Step 2: cancelling time elapsing, i.e., compute continuous predecessors *)
 
-	let valuations_n_plus_1_before_time_elapsing : LinearConstraint.px_linear_constraint = continuous_predecessors location_n_plus_1 admissible_initial_valuations z_n_plus_1 z_n_plus_1_final in
+	let valuations_n_plus_1_before_time_elapsing : LinearConstraint.px_linear_constraint = continuous_predecessors model location_n_plus_1 admissible_initial_valuations z_n_plus_1 z_n_plus_1_final in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -2213,7 +2191,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predec
 
 
 		(* Step 1: apply discrete predecessor from n+1 to n, i.e., compute the valuations just before the discrete step *)
-		let valuations_n_after_time_elapsing : LinearConstraint.px_linear_constraint = discrete_predecessors state_n symbolic_step_n.transition z_n_plus_1 in
+		let valuations_n_after_time_elapsing : LinearConstraint.px_linear_constraint = discrete_predecessors model state_n symbolic_step_n.transition z_n_plus_1 in
 
 
 		(* Step 2: compute the initial admissible valuations *)
@@ -2250,7 +2228,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predec
 
 		(* Step 3: apply continuous predecessor at state n *)
 
-		let valuations_n_before_time_elapsing = continuous_predecessors location_n admissible_initial_valuations_at_n z_n valuations_n_after_time_elapsing in
+		let valuations_n_before_time_elapsing = continuous_predecessors model location_n admissible_initial_valuations_at_n z_n valuations_n_after_time_elapsing in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -2390,10 +2368,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.stateSpace) (*(predec
 (************************************************************)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a concrete run *)
 (************************************************************)
-let reconstruct_counterexample (state_space : StateSpace.stateSpace) (target_state_index : State.state_index) : StateSpace.concrete_run =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-
+let reconstruct_counterexample (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (target_state_index : State.state_index) : StateSpace.concrete_run =
 	(* Print some information *)
 	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
 
@@ -2443,7 +2418,7 @@ let reconstruct_counterexample (state_space : StateSpace.stateSpace) (target_sta
 	);
 
 	(* Exhibit a concrete run from the symbolic run *)
-	concrete_run_of_symbolic_run state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
+	concrete_run_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
 
 
@@ -2453,29 +2428,12 @@ let reconstruct_counterexample (state_space : StateSpace.stateSpace) (target_sta
 (************************************************************)
 (************************************************************)
 
-(* Type to define the state_index that have unexplored successors in case of premature termination *)
+(** Type to define the state_index that have unexplored successors in case of premature termination *)
 type unexplored_successors =
 	(* Not defined (i.e., not yet defined, or no premature termination) *)
 	| UnexSucc_undef
 	(* A list of states with unexplored successors *)
 	| UnexSucc_some of state_index list
-
-
-
-(************************************************************)
-(************************************************************)
-(* Types and exceptions for queue-based BFS *)
-(************************************************************)
-(************************************************************)
-(*(* state struct for constructing set type *)
-module State = struct
-	type t = state_index
-	let compare = compare
-end
-
-(* set of states for efficient lookup *)
-module StateindexQueue = Queue.Make(State)*)
-
 
 
 
@@ -2578,45 +2536,45 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
-	(* Nature of the state space according to a property *)
+	(** Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
 
 
 (*	(* Clock that may be reset at each transition *)
 	val mutable reset_clock : Automaton.clock_index option = None*)
 
-	(* Function to be called from the distributed IMITATOR *)
+	(** Function to be called from the distributed IMITATOR *)
 	(*** NOTE: public ***)
 	val mutable patator_termination_function : (unit -> unit) option = None
 
-	(* Status of the analysis *)
+	(** Status of the analysis *)
 	(*** NOTE: public ***)
 	val mutable termination_status : Result.state_based_algorithm_termination option = None
 
-	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
+	(** Constraint of the initial state (used by some algorithms to initialize their variables) *)
 	(*** NOTE: public ***)
 	val mutable initial_px_constraint_option : LinearConstraint.px_linear_constraint option = None
 	val mutable initial_p_constraint_option : LinearConstraint.p_linear_constraint option = None
 	val mutable initial_p_nnconvex_constraint_option : LinearConstraint.p_nnconvex_constraint option = None
 
-	(* List of state_index that have unexplored successors in case of premature termination *)
+	(** List of state_index that have unexplored successors in case of premature termination *)
 	(*** NOTE: public ***)
 	val mutable unexplored_successors : unexplored_successors = UnexSucc_undef
 
 
-	(* Depth in the explored state space *)
+	(** Depth in the explored state space *)
 	(*** NOTE: private ***)
 	val mutable bfs_current_depth = 0
 
-	(* The current new state indexes *)
+	(** The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
-	(* Variable to remind of the termination *)
+	(** Variable to remind of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
 
-	(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+	(** Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
 	val mutable algorithm_keep_going = true
 
 
@@ -2878,7 +2836,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 
 			(* Get the initial state after time elapsing *)
-			let init_state_after_time_elapsing : state = create_initial_state (self#abort_if_unsatisfiable_initial_state) in
+			let init_state_after_time_elapsing : state = create_initial_state model (self#abort_if_unsatisfiable_initial_state) in
 			let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 			(* Check the satisfiability *)
@@ -3074,7 +3032,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
 			if options#no_time_elapsing then(
 				print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-				apply_time_elapsing source_location orig_plus_discrete;
+				apply_time_elapsing model source_location orig_plus_discrete;
 			);
 
 			(* Statistics *)
@@ -3186,7 +3144,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				end;*)
 
 				(* Compute the successor constraint from the current state via this combined_transition *)
-				let successor_option : State.state option = post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition in
+				let successor_option : State.state option = post_from_one_state_via_one_transition model source_location (recompute_source_constraint ()) discrete_constr combined_transition in
 
 				let successors = match successor_option with
 					| Some successor ->
@@ -3301,7 +3259,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 		(*** NOTE: we still care about urgency and stopwatches though ***)
-		let initial_valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation start_global_location chosen_time_elapsing start_valuation in
+		let initial_valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation model start_global_location chosen_time_elapsing start_valuation in
 
 			(* Starting point: the last known existing valuation *)
 		let current_valuation = ref initial_valuation_after_elapsing in
@@ -3358,7 +3316,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 			(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 			(*** NOTE: we still care about urgency and stopwatches though ***)
-			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation next_location chosen_time_elapsing !current_valuation in
+			let valuation_after_elapsing : LinearConstraint.px_valuation = apply_time_elapsing_to_concrete_valuation model next_location chosen_time_elapsing !current_valuation in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
@@ -3409,7 +3367,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		);
 
 		(* Exhibit a concrete run from the symbolic run *)
-		let concrete_run = concrete_run_of_symbolic_run state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
+		let concrete_run = concrete_run_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
 
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
@@ -3556,7 +3514,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				} in
 
 				(* Generate a concrete run for this cut symbolic run *)
-				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
+				let concrete_run_prefix = concrete_run_of_symbolic_run model state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
 
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(
@@ -3697,7 +3655,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 			(* Rebuild the guard along the combined transition from i to i+1 *)
 			(*** BADPROG: multiple computations! ***)
-			let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), _ = compute_new_location_guards_updates global_location_i combined_transition_i in
+			let _, _, (continuous_guards : LinearConstraint.pxd_linear_constraint list), _ = compute_new_location_guards_updates model global_location_i combined_transition_i in
 
 			(* Create a constraint D_i = d_i for the discrete variables *)
 			let pxd_discrete_constraint : LinearConstraint.pxd_linear_constraint = State.discrete_constraint_of_global_location model global_location_i in
@@ -3715,7 +3673,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			);
 
 			(* Apply time past on the guard, depending on the flows *)
-			apply_time_past global_location_i pxd_guard_i;
+			apply_time_past model global_location_i pxd_guard_i;
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
@@ -3809,7 +3767,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				} in
 
 				(* Generate a concrete run for this cut symbolic run *)
-				let concrete_run_prefix = concrete_run_of_symbolic_run state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i_after_time_elapsing in
+				let concrete_run_prefix = concrete_run_of_symbolic_run model state_space (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i_after_time_elapsing in
 
 				(* Print it *)
 				if verbose_mode_greater Verbose_medium then(

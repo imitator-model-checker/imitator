@@ -90,7 +90,7 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-val compute_new_location_guards_updates : DiscreteState.global_location -> StateSpace.combined_transition -> (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+(* val compute_new_location_guards_updates : AbstractModel.abstract_model -> DiscreteState.global_location -> StateSpace.combined_transition -> (DiscreteState.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) *)
 
 
 (*------------------------------------------------------------*)
@@ -101,13 +101,13 @@ val compute_new_location_guards_updates : DiscreteState.global_location -> State
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-val apply_time_past : DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit
+val apply_time_past : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-val apply_time_elapsing_to_concrete_valuation : DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
+val apply_time_elapsing_to_concrete_valuation : AbstractModel.abstract_model -> DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
 
 
 (*------------------------------------------------------------*)
@@ -121,7 +121,7 @@ val post_from_one_state_functional : AbstractModel.abstract_model -> State.state
 (** Compute the initial state with the initial invariants and time elapsing; takes a boolean denoting whether we should abort whenever the initial state is unsatisfiable *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (*** NOTE: only needed as an interface for AlgoCartoGeneric, which does NOT inherit AlgoStateBased ***)
-val create_initial_state : bool -> State.state
+val create_initial_state : AbstractModel.abstract_model -> bool -> State.state
 
 (*------------------------------------------------------------*)
 (** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values (that we do not need to know as we know the zone), given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `nnconvex_constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
@@ -146,12 +146,12 @@ val create_initial_state : bool -> State.state
 (*------------------------------------------------------------*)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (*------------------------------------------------------------*)
-(* val concrete_run_of_symbolic_run : StateSpace.stateSpace -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run *)
+(* val concrete_run_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.stateSpace -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run *)
 
 (*------------------------------------------------------------*)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)
 (*------------------------------------------------------------*)
-val reconstruct_counterexample : StateSpace.stateSpace -> state_index -> StateSpace.concrete_run
+val reconstruct_counterexample : AbstractModel.abstract_model -> StateSpace.stateSpace -> state_index -> StateSpace.concrete_run
 
 (*
 (************************************************************)

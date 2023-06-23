@@ -16,12 +16,12 @@
 
  
 (*------------------------------------------------------------*)
-(* Function for preparing data structures for dynamic clock elimination *)
+(** Function for preparing data structures for dynamic clock elimination *)
 (*------------------------------------------------------------*)
-val prepare_clocks_elimination : unit -> unit
+val prepare_clocks_elimination : AbstractModel.abstract_model -> unit
 
 
 (*------------------------------------------------------------*)
-(* Eliminating useless clocks in a linear constraint *)
+(** Eliminating useless clocks in a linear constraint *)
 (*------------------------------------------------------------*)
 val dynamic_clock_elimination : DiscreteState.global_location -> LinearConstraint.px_linear_constraint -> unit

@@ -59,8 +59,6 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 	(*** NOTE/TODO: technically, clocks should be non-negative, but parameters should just be conform to the initial p_constraint ***)
 	
 	val all_clocks_and_parameters_nonnegative : LinearConstraint.px_linear_constraint =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
 		(* Find clocks and parameters *)
 		let clocks_and_parameters = list_union model.clocks model.parameters in
 		(* Constrain non-negative *)

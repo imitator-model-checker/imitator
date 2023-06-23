@@ -93,7 +93,7 @@ print_header_string();
 (* let options_parsing_counter = create_time_counter_and_register "options parsing" Parsing_counter Verbose_low in
 options_parsing_counter#start;*)
 
-(* object with command line options *)
+(* Object with command line options *)
 let options = new imitator_options in
 
 options#parse;
@@ -565,7 +565,7 @@ counter_main_algorithm#start;
 (* Need to be called before initial state is created! *)
 if options#dynamic_clock_elimination then (
 	print_message Verbose_low "Initializing clock elimination…";
-	ClocksElimination.prepare_clocks_elimination ()
+	ClocksElimination.prepare_clocks_elimination model
 );
 
 (************************************************************)
@@ -574,7 +574,7 @@ if options#dynamic_clock_elimination then (
 if options#extrapolation <> No_extrapolation then (
 	print_message Verbose_low "Preparing clock extrapolation…";
 	try(
-		Extrapolation.prepare_extrapolation ();
+		Extrapolation.prepare_extrapolation model;
 	) with
 	| Model_not_compatible_for_extrapolation ->
 		print_error ("The input model is too expressive for applying extrapolation.");
@@ -599,7 +599,7 @@ match options#imitator_mode with
 	print_message Verbose_standard "Syntax is correct. Have fun!";
 
 	(* Generate directly the "empty" result for syntax check *)
-	ResultProcessor.process_result_and_terminate Syntax_check_result "syntax check" None global_counter
+	ResultProcessor.process_result_and_terminate model Syntax_check_result "syntax check" None global_counter
 
 
 	(************************************************************)
@@ -641,7 +641,7 @@ match options#imitator_mode with
 		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
 
 		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
+		ResultProcessor.process_result model Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
 			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 			)) ) None;
 
@@ -669,7 +669,7 @@ match options#imitator_mode with
 		end;
 
 		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result_and_terminate Translation_result "translation to graphics" None global_counter
+		ResultProcessor.process_result_and_terminate model Translation_result "translation to graphics" None global_counter
 
 
 	(************************************************************)
@@ -689,7 +689,7 @@ match options#imitator_mode with
 		counter_main_algorithm#stop;
 
 		(* Process and terminate *)
-		ResultProcessor.process_result_and_terminate result concrete_algorithm#algorithm_name None global_counter
+		ResultProcessor.process_result_and_terminate model result concrete_algorithm#algorithm_name None global_counter
 
 
 	(************************************************************)
@@ -1198,7 +1198,7 @@ match options#imitator_mode with
 		counter_main_algorithm#stop;
 
 		(* Process *)
-		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
+		ResultProcessor.process_result model result concrete_algorithm#algorithm_name None;
 
 	end; (* match type of abstract algorithm *)
 

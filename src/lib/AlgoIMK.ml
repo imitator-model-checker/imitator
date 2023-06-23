@@ -205,9 +205,6 @@ class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: return the list of actually added states ***)
 	method add_a_new_state source_state_index combined_transition new_state =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 		(* Is the new state valid? *)
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
