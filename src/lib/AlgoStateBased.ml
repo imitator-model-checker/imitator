@@ -1461,7 +1461,7 @@ let apply_extrapolation (extrapolation : extrapolation) (state : State.state) : 
 (** Compute the list of successor states of a given state, and returns the list of new states *)
 (************************************************************)
 (*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
-let post_from_one_state_functional (model : AbstractModel.abstract_model) (source_state : State.state) : State.state list =
+let combined_transitions_and_states_from_one_state_functional (model : AbstractModel.abstract_model) (source_state : State.state) : (combined_transition * State.state) list =
 
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -1652,7 +1652,8 @@ let post_from_one_state_functional (model : AbstractModel.abstract_model) (sourc
 							| _ -> apply_extrapolation options#extrapolation successor
 					in
 					(* Add these successors to the list of computed states *)
-					new_states := OCamlUtilities.list_append !new_states successors_after_extrapolation;
+					let transition_successor_pairs = List.map (fun s -> combined_transition, s) successors_after_extrapolation in
+					new_states := OCamlUtilities.list_append !new_states transition_successor_pairs;
 					()
 				(* No new state: do nothing *)
 				| None -> ()

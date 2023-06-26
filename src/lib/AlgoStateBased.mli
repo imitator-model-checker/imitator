@@ -114,7 +114,7 @@ val apply_time_elapsing_to_concrete_valuation : AbstractModel.abstract_model -> 
 (** Compute the list of successor states of a given state, and returns the list of new states *)
 (*------------------------------------------------------------*)
 (*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
-val post_from_one_state_functional : AbstractModel.abstract_model -> State.state -> State.state list
+val combined_transitions_and_states_from_one_state_functional : AbstractModel.abstract_model -> State.state -> (StateSpace.combined_transition * State.state) list
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

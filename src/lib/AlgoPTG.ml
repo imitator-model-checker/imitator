@@ -41,7 +41,7 @@ let bot = LinearConstraint.false_px_nnconvex_constraint
 
 let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
 let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
-let print_PTG = print_message Verbose_medium
+let print_PTG = print_message Verbose_low
 
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
 
@@ -290,26 +290,28 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	method check_termination_at_post_n = false
 
 	
+	val mutable otf_state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
+
 	(* === BEGIN API FOR REFACTORING === *)
 	
 	(* AlgoStateBased. *)
-	method private compute_symbolic_successors state = state_space#get_successors_with_combined_transitions state
+	method private compute_symbolic_successors1 state = state_space#get_successors_with_combined_transitions state
 	
 
-	method private constr_of_state_index state = (state_space#get_state state).px_constraint
-	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
+	method private constr_of_state_index state = (otf_state_space#get_state state).px_constraint
+	method private get_global_location state = otf_state_space#get_location (otf_state_space#get_global_location_index state)
 
 	(* AlgoStateBased.create_initial_state *)
-	method private get_initial_state_index = state_space#get_initial_state_index
+	method private get_initial_state_index = otf_state_space#get_initial_state_index
 
 	(* Computes the predecessor zone of current_zone using edge *)
 	method private predecessor_nnconvex edge current_zone = 
 		let {state; transition; _} = edge in 
-		let guard = state_space#get_guard model state transition in
+		let guard = otf_state_space#get_guard model state transition in
 		let pred_zone = self#constr_of_state_index state in 
 		let constraints = List.map (fun z -> 
 			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state pred_zone guard z transition in
+			let pxd_pred = DeadlockExtra.dl_predecessor model otf_state_space state pred_zone guard z transition in 	
 			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
 			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
 			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
@@ -318,6 +320,33 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 
 	(* === END API FOR REFACTORING === *)
+
+	val mutable passed_states : State.stateIndexSet = new State.stateIndexSet
+
+	method private initialize_state_space () = 
+		let state = AlgoStateBased.create_initial_state model false in
+		let _ = otf_state_space#add_state AbstractAlgorithm.No_check None state in ()
+		
+
+	method private compute_symbolic_successors source_state_index = 
+		if passed_states#mem source_state_index then 
+			otf_state_space#get_successors_with_combined_transitions source_state_index
+		else 
+		begin
+			passed_states#add source_state_index;
+			let state = otf_state_space#get_state source_state_index in 
+			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional model state in 
+			List.map (fun (transition, s) -> 
+				let addition_result =  otf_state_space#add_state options#comparison_operator None s in 
+				(* TODO: Replacing and Already Present could mean we should check some things for the algorithm? Not sure about this*)
+				match addition_result with 
+				| New_state new_state_index
+				| State_replacing new_state_index
+				| State_already_present new_state_index -> 
+					otf_state_space#add_transition (source_state_index, transition, new_state_index);
+					transition, new_state_index
+			) successors
+		end
 
 	val init_losing_zone_changed = ref false 
 	val init_winning_zone_changed = ref false
@@ -350,7 +379,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	(* Whether or not a state is accepting  *)
 	method private matches_state_predicate state_index =
-		let state = (state_space#get_state state_index) in
+		let state = (otf_state_space#get_state state_index) in
 		(State.match_state_predicate model state_predicate state) 
 
 	(* Decides if a symbolic state is a deadlock state (no outgoing controllable actions). Used for Losing Zones *)
@@ -422,16 +451,24 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack_gen e find replace to_str good_edge bad_edge precedence callback = 
 		let {state; state';_}= e in 
+
+ 
+		let str = LinearConstraint.string_of_px_nnconvex_constraint model.variable_names in 
+
 		let get_pred_from_edges default edges zone = 
 			List.fold_left (|||) default @@
 				List.map (fun edge -> 
-					self#predecessor_nnconvex edge (zone edge.state')
+					let y = (zone edge.state') in 
+					let x = self#predecessor_nnconvex edge y in 
+					print_PTG (Printf.sprintf "pred_nnconvx (%s, %s) = %s" (edge_to_str edge model) (str y) (str x));
+					x
 				)
 			edges
 		in
 		let g_init = LinearConstraint.px_nnconvex_copy @@ find state in 
 		let g = get_pred_from_edges g_init (good_edge state) find in
-		let b = get_pred_from_edges (bot ()) (bad_edge state) (fun x -> self#negate_zone (find x) x) in 
+		let b = get_pred_from_edges (bot ()) (bad_edge state) (fun x -> self#negate_zone (find x) x) in
+		print_PTG (Printf.sprintf "g = %s\nb = %s" (str g) (str b));
 		
 		if precedence then LinearConstraint.px_nnconvex_difference_assign b g;
 		let new_zone = self#safe_timed_pred g b state in
@@ -512,6 +549,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
 	method private compute_PTG = 
 		self#initialize_tables();
+		self#initialize_state_space();
 
 		(* === ALGORITHM INITIALIZATION === *)
 		let init = self#get_initial_state_index in 
@@ -620,7 +658,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			constraint_description = "constraint guaranteeing the existence of a winning strategy";
 
 			(* Explored state space *)
-			state_space			= state_space;
+			state_space			= otf_state_space;
 
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
