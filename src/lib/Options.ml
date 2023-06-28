@@ -243,7 +243,7 @@ class imitator_options =
 		val mutable property_file_name				= None
 
 		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		val mutable ptg_onthefly					= false
+		val mutable ptg_notonthefly					= false
 
 		(* In game algorithms: propagate losing states *)
 		val mutable ptg_propagate_losing_states		= false
@@ -365,7 +365,7 @@ class imitator_options =
 		method precomputepi0						= precomputepi0
 		method property_file_name					= property_file_name
 
-		method ptg_onthefly							= ptg_onthefly
+		method ptg_notonthefly						= ptg_notonthefly
 		method ptg_propagate_losing_states			= ptg_propagate_losing_states
 
 		method states_limit							= states_limit
@@ -1002,7 +1002,7 @@ class imitator_options =
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
 				");
 
-				("-PTG-onthefly", Unit (fun () -> ptg_onthefly <- true), " In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize. Default: false, i.e., does not compute on-the-fly.
+				("-PTG-no-onthefly", Unit (fun _ -> ptg_notonthefly <- true), " In game algorithms: do not perform the algorithm on-the-fly, but rather first build the state space, and then synthesize. Default: false, i.e., algorithm computes on-the-fly.
 				");
 
 				("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.

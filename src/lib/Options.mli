@@ -121,7 +121,7 @@ class imitator_options :
 		method output_tiles_files			: bool
 
 		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		method ptg_onthefly					: bool
+		method ptg_notonthefly				: bool
 
 		(* In game algorithms: propagate losing states *)
 		method ptg_propagate_losing_states	: bool

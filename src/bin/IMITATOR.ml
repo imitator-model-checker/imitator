@@ -1045,7 +1045,12 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model options state_predicate in myalgo
+				let state_space_ptg = match options#ptg_notonthefly with 
+					| true -> new AlgoPTG.stateSpacePTG_full model options
+					| false -> new AlgoPTG.stateSpacePTG_OTF model options
+				in 
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model options state_predicate state_space_ptg in myalgo
+
 
 
 			(************************************************************)

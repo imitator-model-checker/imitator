@@ -19,10 +19,29 @@ open AlgoStateBased
 open State
 
 
+class virtual stateSpacePTG : object
+	val mutable state_space : StateSpace.stateSpace
+	method state_space : StateSpace.stateSpace
+	method virtual initialize_state_space : unit -> unit
+	method virtual compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+end
+
+class stateSpacePTG_OTF : AbstractModel.abstract_model -> Options.imitator_options ->  object 
+	inherit stateSpacePTG
+	method initialize_state_space : unit ->unit
+	method compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+end
+
+class stateSpacePTG_full : AbstractModel.abstract_model -> Options.imitator_options -> object 
+	inherit stateSpacePTG
+	method initialize_state_space : unit ->unit
+	method compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+end
+
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoPTG : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class algoPTG : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate -> stateSpacePTG ->
 	object inherit algoStateBased
 
 		(************************************************************)
