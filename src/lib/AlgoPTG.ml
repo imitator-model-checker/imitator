@@ -479,14 +479,20 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		passed#add state';
 		(Depends.find state') #<- e;
 
-		if self#matches_state_predicate state' then WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
-		if self#is_dead_lock state' then LosingZone.replace state' @@ (self#constr_of_state_index >> nn) state'; 
 		waiting #<-- (self#get_edge_queue state') ;
-
 		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model); 
-		
-		if not @@ is_empty (WinningZone.find state') then waiting #<- (e, BackpropWinning);
-		if not @@ is_empty (LosingZone.find state') then waiting #<- (e, BackpropLosing)
+
+		if self#matches_state_predicate state' then 
+			begin 
+				WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
+				waiting #<- (e, BackpropWinning)
+			end;
+
+		if options#ptg_propagate_losing_states && self#is_dead_lock state' then 
+			begin
+				LosingZone.replace state' @@ (self#constr_of_state_index >> nn) state'; 
+				waiting #<- (e, BackpropLosing)
+			end;
 
 	(* Append a status to queue of edges (linear time in size of queue) *)
 	method private append_edge_status edge_queue status = 
@@ -565,8 +571,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let queue_empty = Queue.is_empty waiting in
 		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
+		let propagate_losing_states = options#ptg_propagate_losing_states in 
 
-		let recompute_init_lost = !init_losing_zone_changed in
+		let recompute_init_lost = propagate_losing_states && !init_losing_zone_changed in
 		let recompute_init_has_winning_witness = not complete_synthesis && !init_winning_zone_changed in  
 		let recompute_init_exact = complete_synthesis && (!init_losing_zone_changed || !init_winning_zone_changed) in
 
@@ -574,16 +581,13 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness init else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
-		queue_empty || init_lost ||
-		if complete_synthesis then
-			init_exact
-		else
-			init_has_winning_witness
+		queue_empty || init_lost ||	init_exact || init_has_winning_witness
 
 
 
 	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
 	method private compute_PTG = 
+		let propagate_losing_states = options#ptg_propagate_losing_states in 
 		self#initialize_tables();
 
 		(* === ALGORITHM INITIALIZATION === *)
@@ -598,7 +602,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			WinningZone.replace init @@ (self#constr_of_state_index >> nn) init;
 
 		(* If init is deadlock then initial losing zone is it's own constraint*)
-		if self#matches_state_predicate init then
+		if self#matches_state_predicate init && propagate_losing_states then
 			(LosingZone.replace init @@ (self#constr_of_state_index >> nn) init; init_losing_zone_changed := true);
 
 		(* === ALGORITHM MAIN LOOP === *)
@@ -612,7 +616,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 				match edge_status with
 					| Unexplored -> 
 						self#backtrack_winning e waiting;
-						self#backtrack_losing e waiting
+						if propagate_losing_states then self#backtrack_losing e waiting
 					| BackpropWinning -> 
 						self#backtrack_winning e waiting
 					| BackpropLosing -> 
@@ -621,8 +625,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		print_PTG "After running AlgoPTG I found these winning zones:";
 		print_PTG (WinningZone.to_str ());
 
-		print_PTG "And these losing zones: ";
-		print_PTG (LosingZone.to_str());
+		if propagate_losing_states then
+			print_PTG (Printf.sprintf "And these losing zones: %s" (LosingZone.to_str()));
 
 		let winning_parameters = project_params (self#initial_constraint () &&& WinningZone.find init) in
 		synthesized_constraint <- winning_parameters
