@@ -108,14 +108,24 @@ module LosingZone = DefaultHashtbl (struct
 	let str_of_key = string_of_int >> (^) ("s")
 end)  
 
+module EdgeSet = Set.Make(struct type t = edge let compare = Stdlib.compare end)
+
+class edgeSet = object 
+	val mutable internal_set = EdgeSet.empty
+	method add e = internal_set <- EdgeSet.add e internal_set
+	method mem e = EdgeSet.mem e internal_set 
+	method to_list = EdgeSet.elements internal_set
+	method to_seq = EdgeSet.to_seq internal_set
+end
+
 module Depends = DefaultHashtbl (struct 
 	let model = ref None
-	type elem = edge Queue.t 
+	type elem = edgeSet
 	type key = state_index
 	let tbl = Hashtbl.create 100
-	let default = fun idx -> let q = Queue.create () in Hashtbl.add tbl idx q; q
-	let str_of_elem queue = match !model with 
-		| Some model -> edge_seq_to_str (Queue.to_seq queue) model
+	let default = fun idx -> let s = new edgeSet in Hashtbl.add tbl idx s; s
+	let str_of_elem set = match !model with 
+		| Some model -> "TODO"
 		| None -> "No model provided"
 	let str_of_key = string_of_int
 end)
@@ -477,7 +487,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let {state';_} = e in 
 		print_PTG ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
 		passed#add state';
-		(Depends.find state') #<- e;
+		(Depends.find state')#add e;
 
 		waiting #<-- (self#get_edge_queue state') ;
 		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model); 
@@ -494,9 +504,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 				waiting #<- (e, BackpropLosing)
 			end;
 
-	(* Append a status to queue of edges (linear time in size of queue) *)
-	method private append_edge_status edge_queue status = 
-		Queue.of_seq @@ Seq.map (fun e -> (e, status)) @@ Queue.to_seq @@ edge_queue
+	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
+	method private edge_set_to_queue_with_status edge_set status = 
+		Queue.of_seq @@ Seq.map (fun e -> (e, status)) (edge_set#to_seq)
 
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack_gen e find replace to_str good_edge bad_edge precedence callback = 
@@ -522,14 +532,14 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 				print_PTG (to_str ());
 				callback state
 			end;
-		(Depends.find state') #<- e
+		(Depends.find state')#add e
 
 
 	(* Backtracks in order to update losing zones in the simulation graph *)	
 	method private backtrack_losing e waiting = 
 		print_PTG "\tLOSING ZONE PROPAGATION:";
 		let callback state = 
-			waiting #<-- (self#append_edge_status (Depends.find state) BackpropLosing);
+			waiting #<-- (self#edge_set_to_queue_with_status (Depends.find state) BackpropLosing);
 			if state = state_space'#get_initial_state_index then init_losing_zone_changed := true 
 		in 
 		self#backtrack_gen e LosingZone.find LosingZone.replace LosingZone.to_str 
@@ -542,7 +552,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	method private backtrack_winning e waiting =
 		print_PTG "\tWINNING ZONE PROPAGATION:"; 
 		let callback state = 
-			waiting #<-- (self#append_edge_status (Depends.find state) BackpropWinning);
+			waiting #<-- (self#edge_set_to_queue_with_status (Depends.find state) BackpropWinning);
 			if state = state_space'#get_initial_state_index then init_winning_zone_changed := true 		in 
 		self#backtrack_gen e WinningZone.find WinningZone.replace WinningZone.to_str 
 											 self#get_controllable_edges self#get_uncontrollable_edges false
