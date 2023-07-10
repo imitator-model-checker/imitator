@@ -19,12 +19,12 @@
 (************************************************************)
 open OCamlUtilities
 open ImitatorUtilities
-open Exceptions
+(* open Exceptions *)
 open AbstractModel
 open AbstractProperty
 open Result
-open AlgoStateBased
-open Statistics
+open AlgoGeneric
+(* open Statistics *)
 open State
 
 (* Notation and shorthands *)
@@ -124,8 +124,8 @@ module Depends = DefaultHashtbl (struct
 	type key = state_index
 	let tbl = Hashtbl.create 100
 	let default = fun idx -> let s = new edgeSet in Hashtbl.add tbl idx s; s
-	let str_of_elem set = match !model with 
-		| Some model -> "TODO"
+	let str_of_elem _ = match !model with
+		| Some _ -> "TODO"
 		| None -> "No model provided"
 	let str_of_key = string_of_int
 end)
@@ -217,19 +217,20 @@ end
 (************************************************************)
 (************************************************************)
 class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
-	object (self) inherit algoStateBased model options (*as super*)
+	object (self) inherit algoGeneric model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
+
+	val mutable state_space' : StateSpace.stateSpace = state_space_ptg#state_space
+
+	(** Non-necessarily convex constraint storing the parameter synthesis result *)
+	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+
 	(*------------------------------------------------------------*)
 	(* Counters *)
 	(*------------------------------------------------------------*)
-
-	(* Methods counters *)
-	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
-
 
 	
 	(************************************************************)
@@ -237,150 +238,21 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "PTG"
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
+	method initialize_variables =
 		(*** NOTE: duplicate operation ***)
 		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
 		(* The end *)
 		()
 
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Name of the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "PTG"
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state (_ : State.state) : bool = true
-
-
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state space (if indeed needed) *)
-	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
-	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: return the list of actually added states ***)
-	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state source_state_index combined_transition new_state =
-		(* Statistics *)
-		counter_add_a_new_state#increment;
-		counter_add_a_new_state#start;
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium "Entering `add_a_new_state` (and reset cache)…";
-		);
-		
-		(* Reset the mini-cache (for the p-constraint) *)
-		self#reset_minicache;
-		
-		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
-		
-		(* Boolean to check whether the state is a target state *)
-		let is_target = ref false in
-		
-		begin
-		match addition_result with
-		(* If the state was present: do nothing *)
-		| StateSpace.State_already_present _ -> ()
-
-		(* If this is really a new state, or a state larger than a former state *)
-		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
-
-			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			self#update_statespace_nature new_state;
-			
-			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			(*** NOTE: if the answer is false, then the new state is a target state ***)
-			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
-			let to_be_added = ref (self#process_state new_state) in
-			
-			(* Update the target flag *)
-			is_target := not !to_be_added;
-			
-			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
-			if !to_be_added then(
-			
-				(*** NOTE: do NOT perform this test depending on the option ***)
-				if options#cumulative_pruning then(
-					(* Check whether new_state.px_constraint <= synthesized_constraint *)
-					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
-						(* Print some information *)
-						self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
-
-						(* Do NOT compute its successors; cut the branch *)
-						to_be_added := false;
-					);
-				);
-			);
-
-			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			if !to_be_added then
-				new_states_indexes <- new_state_index :: new_states_indexes;
-			
-		end (* end if new state *)
-		;
-		
-		(*** TODO: move the two following statements to a higher level function? (post_from_one_state?) ***)
-		
-		(* Retrieve the new state index *)
-		(*** HACK ***)
-		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
-		
-		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
-
-		
-		
-		(* Case accepting state *)
-		if !is_target then(
-			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-			let property = Input.get_property() in
-			if property.synthesis_type = Exemplification then(
-				self#construct_counterexamples new_state_index;
-			);
-			
-			(* 2. If #witness mode, then we will throw an exception *)
-			self#terminate_if_witness;
-		); (* end if target *)
-
-
-		
-		(* Statistics *)
-		counter_add_a_new_state#stop;
-
-		(* The state is kept in any case *)
-		true
-(*** WARNING/BADPROG: what precedes is partially copy/paste to AlgoPRP.ml ***)
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state _ = ()
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_post_n (_ : State.state_index list) = ()
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: could be stopped when the bad constraints are equal to the initial p-constraint ***)
-	method check_termination_at_post_n = false
-
-	
-	val mutable state_space' : StateSpace.stateSpace = state_space_ptg#state_space
 
 	method private constr_of_state_index state = (state_space'#get_state state).px_constraint
 	method private get_global_location state = state_space'#get_location (state_space'#get_global_location_index state)
@@ -459,7 +331,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		let backward (x : LinearConstraint.px_linear_constraint) =
 			let constr_d = LinearConstraint.pxd_of_px_constraint x in 
-			apply_time_past model global_location constr_d;
+			AlgoStateBased.apply_time_past model global_location constr_d;
 			LinearConstraint.pxd_hide_discrete_and_collapse constr_d
 		in
 
@@ -641,10 +513,25 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let winning_parameters = project_params (self#initial_constraint () &&& WinningZone.find init) in
 		synthesized_constraint <- winning_parameters
 
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Main method to run the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method run () =
+		(*** NOTE: actually not even useful… ***)
+(* 		self#initialize_variables; *)
+
+		(* Compute the parametric timed game *)
+		self#compute_PTG;
+
+		(* Return the result *)
+		self#compute_result;
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method compute_result =
+	method private compute_result =
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
@@ -687,15 +574,15 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 					projected_synthesized_constraint
 		in
 
-		(* Get the termination status *)
+(*		(* Get the termination status *)
 		let termination_status = match termination_status with
 		| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
 		| Some status -> status
-	in
+		in*)
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination && (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under in
+		let soundness = (*if termination_status = Regular_termination && (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under*)Constraint_exact in
 
 		(* Return the result *)
 		Single_synthesis_result
@@ -713,7 +600,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			computation_time	= time_from start_time;
 
 			(* Termination *)
-			termination			= termination_status;
+			termination			= (*termination_status*)Regular_termination;
 		}
 
 
