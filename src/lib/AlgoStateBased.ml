@@ -2579,20 +2579,20 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	val mutable algorithm_keep_going = true
 
 
-	(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+	(** Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithms) *)
 	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 
-	(* Mini cache system: keep in memory the current p-constraint to save computation time (for selected algorithms such as EFsynth) *)
+	(** Mini cache system: keep in memory the current p-constraint to save computation time (for selected algorithms such as EFsynth) *)
 	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
 	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
 
 
 	(*** NOTE: only used for exemplification purpose ***)
-	(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+	(** Positive examples spotted (positive examples: concrete runs to the target state) *)
 	val mutable positive_examples : Result.valuation_and_concrete_run list = []
 
 	(*** NOTE: only used for exemplification purpose ***)
-	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+	(** Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 	val mutable negative_examples : Result.valuation_and_concrete_run list = []
 
 	(*** NOTE: only used for exemplification purpose ***)
