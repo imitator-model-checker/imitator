@@ -47,7 +47,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster : AbstractModel.abstract_
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Run the master algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method run : unit -> Result.imitator_result
+		method run : Result.imitator_result
 
 
 end

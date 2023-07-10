@@ -174,7 +174,7 @@ class virtual algoCartoGeneric : AbstractModel.abstract_model -> Options.imitato
 
 		
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
-		method run : unit -> Result.imitator_result
+		method run : Result.imitator_result
 		
 
 

@@ -517,7 +517,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(*** NOTE: actually not even useful… ***)
 (* 		self#initialize_variables; *)
 
@@ -525,7 +525,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		self#compute_PTG;
 
 		(* Return the result *)
-		self#compute_result;
+		self#compute_result
+
+		(* The end *)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

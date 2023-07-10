@@ -63,8 +63,6 @@ class virtual algoEFopt : AbstractModel.abstract_model -> Options.imitator_optio
 		(*------------------------------------------------------------*)
 		(* Algorithmic methods *)
 		(*------------------------------------------------------------*)
-		method run : unit -> Result.imitator_result
-		
 
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)

@@ -34,8 +34,6 @@ class algoIMcomplete : AbstractModel.abstract_model -> Options.imitator_options 
 		(************************************************************)
 		method algorithm_name : string
 		
-		method run : unit -> Result.imitator_result
-		
 		method initialize_variables : unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

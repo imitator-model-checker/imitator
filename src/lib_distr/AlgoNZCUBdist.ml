@@ -610,7 +610,7 @@ class algoNZCUBdist (model : AbstractModel.abstract_model) =
 
 					let algo = new AlgoNZCUB.algoNZCUB in
 					
-					let result = algo#run () in 
+					let result = algo#run in
 
 
 					let good_or_bad_constraint = match result with 
@@ -667,7 +667,7 @@ class algoNZCUBdist (model : AbstractModel.abstract_model) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* print_message Verbose_standard ("This is the main run method for switching between Master and Worker!…\n"); *)
 
 		(* Get some variables *)

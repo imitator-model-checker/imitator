@@ -34,8 +34,6 @@ class algoIM : AbstractModel.abstract_model -> Options.imitator_options -> PVal.
 		(************************************************************)
 		method algorithm_name : string
 		
-		method run : unit -> Result.imitator_result
-		
 		method initialize_variables : unit
 		
 		method compute_result : Result.imitator_result

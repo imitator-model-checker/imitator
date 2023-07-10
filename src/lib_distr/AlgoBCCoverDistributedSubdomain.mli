@@ -60,7 +60,7 @@ class virtual algoBCCoverDistributedSubdomain : AbstractModel.abstract_model -> 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generic algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual run : unit -> Result.imitator_result
+		method virtual run : Result.imitator_result
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

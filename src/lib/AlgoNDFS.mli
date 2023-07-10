@@ -34,9 +34,6 @@ class algoNDFS : AbstractModel.abstract_model -> Options.imitator_options -> Abs
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		method run : unit -> Result.imitator_result
-		
-
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)

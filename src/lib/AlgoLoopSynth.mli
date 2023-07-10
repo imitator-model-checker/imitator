@@ -36,8 +36,6 @@ class virtual algoLoopSynth : AbstractModel.abstract_model -> Options.imitator_o
 		(* Class methods *)
 		(************************************************************)
 		
-		method run : unit -> Result.imitator_result
-		
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)

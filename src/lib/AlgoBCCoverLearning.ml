@@ -262,7 +262,7 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Opti
 		current_algo_instance <- algo_instance;
 		
 		(* Run! *)
-		let imitator_result : imitator_result = current_algo_instance#run() in
+		let imitator_result : imitator_result = current_algo_instance#run in
 		
 		(* Create auxiliary files with the proper file prefix, if requested *)
 		self#create_auxiliary_files imitator_result;

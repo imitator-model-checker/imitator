@@ -33,9 +33,6 @@ class algoPostStar : AbstractModel.abstract_model -> Options.imitator_options ->
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		method run : unit -> Result.imitator_result
-		
-
 		method initialize_variables : unit
 		
 		

@@ -261,7 +261,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster (model : AbstractModel.ab
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Algorithm for the master *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* Create an object responsible to handle everything linked to the cartography *)
 		let bc = self#bc_instance in
 

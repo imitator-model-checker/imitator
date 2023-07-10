@@ -300,7 +300,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator (model : AbstractModel.a
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* Initialize counters *)
 		tcounter_split_subdomains#reset;
 		tcounter_process_result#reset;

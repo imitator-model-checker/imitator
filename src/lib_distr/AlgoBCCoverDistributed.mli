@@ -49,7 +49,7 @@ class virtual algoBCCoverDistributed : AbstractModel.abstract_model -> HyperRect
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Processing the result of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual run : unit -> Result.imitator_result
+		method virtual run : Result.imitator_result
 
 
 end

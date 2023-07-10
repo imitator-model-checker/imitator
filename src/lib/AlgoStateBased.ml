@@ -5142,7 +5142,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
 		let nb_ppl_variables = model.nb_ppl_variables in

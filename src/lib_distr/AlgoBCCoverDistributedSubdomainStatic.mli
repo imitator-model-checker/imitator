@@ -46,7 +46,7 @@ class virtual algoBCCoverDistributedSubdomainStatic : AbstractModel.abstract_mod
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generic algorithm for all collaborators (including the coordinator) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method run : unit -> Result.imitator_result
+		method run : Result.imitator_result
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

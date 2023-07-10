@@ -382,7 +382,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (model : AbstractModel.
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 

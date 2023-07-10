@@ -74,7 +74,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker (model : AbstractModel.ab
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 
 		(* Counters *)
 		(*** TODO: set as class variables? ***)

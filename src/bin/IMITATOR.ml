@@ -682,7 +682,7 @@ match options#imitator_mode with
 
 		(*** NOTE: duplicate code with what follows ***)
 
-		let result = concrete_algorithm#run() in
+		let result = concrete_algorithm#run in
 
 		(* Stop the main algorithm counters *)
 		counter_algorithm_and_parsing#stop;
@@ -1196,7 +1196,7 @@ match options#imitator_mode with
 
 
 		(* Run! *)
-		let result = concrete_algorithm#run() in
+		let result = concrete_algorithm#run in
 
 		(* Stop the main algorithm counters *)
 		counter_algorithm_and_parsing#stop;

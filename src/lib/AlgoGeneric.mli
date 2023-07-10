@@ -57,7 +57,7 @@ class virtual algoGeneric : AbstractModel.abstract_model -> Options.imitator_opt
 		method virtual initialize_variables : unit
 		
 		(** Main method to run the algorithm: virtual method to be defined in subclasses *)
-		method virtual run : unit -> Result.imitator_result
+		method virtual run : Result.imitator_result
 		
 (************************************************************)
 (************************************************************)

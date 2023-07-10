@@ -872,7 +872,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 		(* Call the algorithm to be iterated on (typically IM or PRP) *)
 		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
 		current_algo_instance <- algo_instance_function pval;
-		let imitator_result : imitator_result = current_algo_instance#run() in
+		let imitator_result : imitator_result = current_algo_instance#run in
 
 		(* Create auxiliary files with the proper file prefix, if requested *)
 		self#create_auxiliary_files imitator_result;
@@ -916,7 +916,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method running the algorithm: implements here a generic cartography, and calls other functions that may be modified in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 		(* Factoring initialization *)
 		self#initialize_cartography;
 		

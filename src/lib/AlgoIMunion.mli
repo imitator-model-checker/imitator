@@ -37,8 +37,6 @@ class algoIMunion : AbstractModel.abstract_model -> Options.imitator_options -> 
 		(************************************************************)
 		method algorithm_name : string
 		
-		method run : unit -> Result.imitator_result
-		
 		method initialize_variables : unit
 		
 		(* Actions to perform when meeting a state with no successors: add the state to the list of "last" states *)

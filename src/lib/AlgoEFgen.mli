@@ -35,8 +35,6 @@ class virtual algoEFgen : AbstractModel.abstract_model -> Options.imitator_optio
 		(* Class methods *)
 		(************************************************************)
 		
-		method run : unit -> Result.imitator_result
-		
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)

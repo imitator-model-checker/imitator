@@ -111,7 +111,7 @@ class virtual algoBCCoverDistributedSubdomainStatic (model : AbstractModel.abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generic algorithm for all collaborators (including the coordinator) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
+	method run =
 (*		(* Initialize: will do nothing for regular collaborators, and a few things (including a check that the number of nodes is a power of 2) for the coordinator) *)
 		self#initialize;*)
 		
@@ -134,7 +134,7 @@ class virtual algoBCCoverDistributedSubdomainStatic (model : AbstractModel.abstr
 		self#print_algo_message Verbose_standard ("Running cartography on own static subdomain…");
 		
 		(* Launch the cartography *)
-		let imitator_result = bc_instance#run () in
+		let imitator_result = bc_instance#run in
 
 		(* Retrieve the result *)
 		let cartography_result =

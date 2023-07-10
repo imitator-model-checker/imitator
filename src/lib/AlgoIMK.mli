@@ -40,7 +40,7 @@ class algoIMK : AbstractModel.abstract_model -> Options.imitator_options -> PVal
 		method initialize_variables : unit
 		
 		
-		method run : unit -> Result.imitator_result
+		method run : Result.imitator_result
 		
 		
 		
