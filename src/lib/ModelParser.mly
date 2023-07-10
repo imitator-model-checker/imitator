@@ -32,10 +32,36 @@ let parse_error _ =
 let include_list = ref [];;
 
 let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
+	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.controllable_actions, parsed_model_list.controllable_actions with
+			| No_controllable_actions, No_controllable_actions
+				-> No_controllable_actions
+
+			| No_controllable_actions, Controllable_actions action_names
+			| Controllable_actions action_names, No_controllable_actions
+				-> Controllable_actions action_names
+
+			| Controllable_actions action_names_1, Controllable_actions action_names_2
+				-> Controllable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
+
+			| Uncontrollable_actions action_names_1, Uncontrollable_actions action_names_2
+				-> Uncontrollable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
+
+			| No_controllable_actions, Uncontrollable_actions action_names
+			| Uncontrollable_actions action_names, No_controllable_actions
+				-> Uncontrollable_actions action_names
+
+			| Uncontrollable_actions u_action_names, Controllable_actions c_action_names
+			| Controllable_actions c_action_names, Uncontrollable_actions u_action_names
+				->
+				(*** WARNING (2023/07/10): should be an error ***)
+				print_warning ("The submodels define contradictory controllable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " c_action_names) ^ ") AND uncontrollable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " u_action_names) ^ "); the behavior becomes unspecified!");
+				Controllable_actions c_action_names
+		in
+
 	{
-		controllable_actions	= List.append parsed_model.controllable_actions parsed_model_list.controllable_actions;
+		controllable_actions	= merged_controllable_actions;
 		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
-    fun_definitions = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
+		fun_definitions = 		List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
 		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
@@ -44,7 +70,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-		controllable_actions	= [];
+		controllable_actions	= No_controllable_actions;
 		variable_declarations	= [];
     fun_definitions = [];
 		automata				= [];
@@ -84,7 +110,7 @@ let unzip l = List.fold_left
 	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TO CT_TRUE
-	CT_URGENT
+	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
 	/*** NOTE: just to forbid their use in the input model and property ***/
@@ -151,8 +177,9 @@ end_opt:
   CONTROLLABLE ACTIONS
 ************************************************************/
 controllable_actions_option:
-	| CT_CONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { $4 }
-	| { [] }
+	| CT_CONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Controllable_actions $4 }
+	| CT_UNCONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Uncontrollable_actions $4 }
+	| { No_controllable_actions }
 ;
 
 

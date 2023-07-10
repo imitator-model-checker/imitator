@@ -111,6 +111,7 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }
 	| "True"           { CT_TRUE }
+	| "uncontrollable" { CT_UNCONTROLLABLE }
  	| "urgent"         { CT_URGENT }
 	| "var"            { CT_VAR }
   	| "void"           { CT_VOID }

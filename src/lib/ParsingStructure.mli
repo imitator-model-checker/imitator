@@ -34,6 +34,14 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 
 (****************************************************************)
+(** Controllable actions *)
+(****************************************************************)
+type parsed_controllable_actions =
+	| Controllable_actions of sync_name list
+	| Uncontrollable_actions of sync_name list
+	| No_controllable_actions
+
+(****************************************************************)
 (* Declarations *)
 (****************************************************************)
 
@@ -266,7 +274,7 @@ type parsed_projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_model = {
-	controllable_actions	: sync_name list;
+	controllable_actions	: parsed_controllable_actions;
 	variable_declarations	: variable_declarations;
 	fun_definitions         : parsed_fun_definition_list;
 	automata				: parsed_automaton list;

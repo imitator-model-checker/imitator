@@ -2630,8 +2630,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the controllable actions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE (ÉA, 2022/11): will fail if some controllable actions use action names defined but not used in at least one automaton: modify behavior? ***)
-	let check_controllable_actions = check_controllable_actions parsed_model.controllable_actions action_names in
-	if not check_controllable_actions then(
+	let controllable_actions_checked : bool = match parsed_model.controllable_actions with
+	| Controllable_actions controllable_action_names
+	| Uncontrollable_actions controllable_action_names
+		-> check_controllable_actions controllable_action_names action_names
+	| No_controllable_actions -> true
+	in
+
+	if not controllable_actions_checked then(
 		print_error("There were errors in the definition of controllable actions.");
 	);
 
@@ -2646,7 +2652,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) else true in
 
 	(* Stop here if model not well formed *)
- 	if not (constants_consistent && all_variables_different && all_automata_different && check_controllable_actions && at_least_one_automaton) then raise InvalidModel;
+ 	if not (constants_consistent && all_variables_different && all_automata_different && controllable_actions_checked && at_least_one_automaton) then raise InvalidModel;
  	
  	
  	
@@ -3401,7 +3407,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
-	let controllable_actions_indices = make_controllable_actions parsed_model.controllable_actions index_of_actions in
+	let controllable_actions_indices : action_index list = match parsed_model.controllable_actions with
+		| Controllable_actions controllable_action_names
+			-> make_controllable_actions controllable_action_names index_of_actions
+		| Uncontrollable_actions controllable_action_names
+			-> raise (NotImplemented "Uncontrollable_actions")
+		| No_controllable_actions -> []
+	 in
 
 	(* Is an action controllable? *)
 	let is_controllable_action action_index = List.mem action_index controllable_actions_indices in
