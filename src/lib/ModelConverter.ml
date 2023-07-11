@@ -2631,10 +2631,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE (ÉA, 2022/11): will fail if some controllable actions use action names defined but not used in at least one automaton: modify behavior? ***)
 	let controllable_actions_checked : bool = match parsed_model.controllable_actions with
-	| Controllable_actions controllable_action_names
-	| Uncontrollable_actions controllable_action_names
+	| Parsed_controllable_actions controllable_action_names
+	| Parsed_uncontrollable_actions controllable_action_names
 		-> check_controllable_actions controllable_action_names action_names
-	| No_controllable_actions -> true
+	| Parsed_no_controllable_actions -> true
 	in
 
 	if not controllable_actions_checked then(
@@ -3408,11 +3408,21 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
 	let controllable_actions_indices : action_index list = match parsed_model.controllable_actions with
-		| Controllable_actions controllable_action_names
-			-> make_controllable_actions controllable_action_names index_of_actions
-		| Uncontrollable_actions controllable_action_names
-			-> raise (NotImplemented "Uncontrollable_actions")
-		| No_controllable_actions -> []
+		| Parsed_controllable_actions controllable_action_names ->
+			print_message Verbose_high ("      Controllable actions detected");
+			(* Convert to a list of controllable actions *)
+			make_controllable_actions controllable_action_names index_of_actions
+
+		| Parsed_uncontrollable_actions controllable_action_names ->
+			print_message Verbose_high ("      Uncontrollable actions detected");
+			(* Convert to a list of UNcontrollable actions *)
+			let uncontrollable_actions_indices = make_controllable_actions controllable_action_names index_of_actions in
+			(* Take complement *)
+			list_diff actions uncontrollable_actions_indices
+
+		| Parsed_no_controllable_actions ->
+			print_message Verbose_high ("      No controllable actions detected");
+			[]
 	 in
 
 	(* Is an action controllable? *)

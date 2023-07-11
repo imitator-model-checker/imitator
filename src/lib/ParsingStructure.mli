@@ -37,9 +37,9 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Controllable actions *)
 (****************************************************************)
 type parsed_controllable_actions =
-	| Controllable_actions of sync_name list
-	| Uncontrollable_actions of sync_name list
-	| No_controllable_actions
+	| Parsed_controllable_actions of sync_name list
+	| Parsed_uncontrollable_actions of sync_name list
+	| Parsed_no_controllable_actions
 
 (****************************************************************)
 (* Declarations *)
