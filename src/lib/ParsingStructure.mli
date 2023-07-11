@@ -18,7 +18,7 @@
 type variable_index = int
 type automaton_name	= string
 type location_name	= string
-type sync_name		= string
+type action_name	= string
 
 type variable_name = string
 type variable_id = int
@@ -37,8 +37,8 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Controllable actions *)
 (****************************************************************)
 type parsed_controllable_actions =
-	| Parsed_controllable_actions of sync_name list
-	| Parsed_uncontrollable_actions of sync_name list
+	| Parsed_controllable_actions of action_name list
+	| Parsed_uncontrollable_actions of action_name list
 	| Parsed_no_controllable_actions
 
 (****************************************************************)
@@ -150,7 +150,7 @@ type parsed_acceptance =
 	| Parsed_location_nonaccepting
 
 type sync =
-	| Sync of sync_name
+	| Sync of action_name
 	| NoSync
 
 type guard = convex_predicate
@@ -187,7 +187,7 @@ and parsed_seq_code_bloc = parsed_instruction list
 (* User functions *)
 (****************************************************************)
 
-(* Metadata of a function *)
+(** Metadata of a function *)
 type function_metadata = {
     name : variable_name;
     parameter_refs : variable_ref list;
@@ -195,7 +195,7 @@ type function_metadata = {
     side_effect : bool;
 }
 
-(* Parsed function definition *)
+(** Parsed function definition *)
 type parsed_fun_definition = {
     name : variable_name; (* function name *)
     parameters : (variable_ref * DiscreteType.var_type_discrete) list; (* parameter names, ids and types *)
@@ -203,20 +203,20 @@ type parsed_fun_definition = {
     body : parsed_seq_code_bloc * parsed_boolean_expression option; (* body *)
 }
 
-(* Parsed function definition list *)
+(** Parsed function definition list *)
 type parsed_fun_definition_list = parsed_fun_definition list
 
 (* Shortcuts to hash table types *)
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-(* A list of pairs (clock, rational) *)
+(** A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
 
-(* Transition = Guard * update list * sync label * destination location *)
+(** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
 
-(* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
+(** Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
 	(* Name *)
 	name        : location_name;
@@ -237,7 +237,7 @@ type parsed_location = {
 }
 
 
-type parsed_automaton = automaton_name * sync_name list * parsed_location list
+type parsed_automaton = automaton_name * action_name list * parsed_location list
 
 
 
@@ -263,7 +263,7 @@ type parsed_duration = linear_expression
 
 
 (****************************************************************)
-(* Projection definition *)
+(** Projection definition *)
 (****************************************************************)
 
 type parsed_projection = (variable_name list) option
@@ -335,33 +335,33 @@ type parsed_synthesis_type =
 (** Observer patterns [Andre13] *)
 type parsed_pattern =
 	(* if a2 then a1 has happened before *)
-	| Parsed_action_precedence_acyclic of sync_name * sync_name
+	| Parsed_action_precedence_acyclic of action_name * action_name
 	(* everytime a2 then a1 has happened before *)
-	| Parsed_action_precedence_cyclic of sync_name * sync_name
+	| Parsed_action_precedence_cyclic of action_name * action_name
 	(* everytime a2 then a1 has happened once before *)
-	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
+	| Parsed_action_precedence_cyclicstrict of action_name * action_name
 
 	(* a within d *)
-	| Parsed_action_deadline of sync_name * parsed_duration
+	| Parsed_action_deadline of action_name * parsed_duration
 	
 	(* if a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
+	| Parsed_TB_Action_precedence_acyclic of action_name * action_name * parsed_duration
 	(* everytime a2 then a1 happened within d before *)
-	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
+	| Parsed_TB_Action_precedence_cyclic of action_name * action_name * parsed_duration
 	(* everytime a2 then a1 happened once within d before *)
-	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
+	| Parsed_TB_Action_precedence_cyclicstrict of action_name * action_name * parsed_duration
 
 	(* if a1 then eventually a2 within d *)
-	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
+	| Parsed_TB_response_acyclic of action_name * action_name * parsed_duration
 	(* everytime a1 then eventually a2 within d *)
-	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
+	| Parsed_TB_response_cyclic of action_name * action_name * parsed_duration
 	(* everytime a1 then eventually a2 within d once before next *)
-	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
+	| Parsed_TB_response_cyclicstrict of action_name * action_name * parsed_duration
 
 	(* sequence a1, …, an *)
-	| Parsed_Sequence_acyclic of sync_name list
+	| Parsed_Sequence_acyclic of action_name list
 	(* always sequence a1, …, an *)
-	| Parsed_Sequence_cyclic of sync_name list
+	| Parsed_Sequence_cyclic of action_name list
 
 
 
@@ -541,4 +541,3 @@ type useful_parsing_model_information = {
 	removed_action_names				: Automaton.action_name list;
 	variable_infos                      : variable_infos;
 }
-
