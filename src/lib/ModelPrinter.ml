@@ -246,13 +246,23 @@ let property_header() =
 (** Footer *)
 (************************************************************)
 
-(* End of the file *)
+(** End of the file *)
 let footer = "\n"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ "(* The end *)"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ "end"
 	^ "\n" ^ ""
+
+(************************************************************)
+(** Controllable actions *)
+(************************************************************)
+
+(* Controllable actions *)
+let string_of_controllable_actions (model : AbstractModel.abstract_model) : string =
+	if model.controllable_actions = [] then "" else(
+		"\ncontrollable actions: " ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names model.controllable_actions)) ^ ";\n"
+	)
 
 
 (************************************************************)
@@ -1114,6 +1124,8 @@ let string_of_model model =
 	
 	(* The header *)
 	model_header ()
+	(* Controllable actions *)
+	^  "\n" ^ string_of_controllable_actions model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
 	(* The function definitions *)
