@@ -45,6 +45,7 @@ let latex_header = "
 \\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]
 \\tikzstyle{urgent}=[dotted, draw=red, very thick]
 \\tikzstyle{accepting}=[double]
+\\tikzstyle{uncontrollable}=[dashed]
 
 
 \\definecolor{coloract}{rgb}{0.50, 0.70, 0.30}

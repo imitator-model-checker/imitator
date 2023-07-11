@@ -183,12 +183,18 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	let source_location_name = model.location_names automaton_index source_location in
 	let destination_location_name = model.location_names automaton_index transition.target in
 
+	let uncontrollable_description =
+		(* A transition is labeled uncontrollable if it is not controllable AND there are some controllable actions *)
+		if model.controllable_actions <> [] && not (model.is_controllable_action transition.action) then "uncontrollable"
+		else ""
+	in
+
 	(*	\path (Q0) edge node{\begin{tabular}{c}
 			\coulact{press?} \\
 			$\coulclock{x} := 0$ \\
 			$\coulclock{y} := 0$ \\
 			\\end{tabular}} (Q1);*)
-	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge node{\\begin{tabular}{@{} c @{\\ } c@{} }"
+	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge[" ^ uncontrollable_description ^ "] node{\\begin{tabular}{@{} c @{\\ } c@{} }"
 
 	(* GUARD *)
 	^ (if transition.guard <> AbstractModel.True_guard then (
@@ -395,7 +401,6 @@ let tikz_string_of_model (model : AbstractModel.abstract_model) =
 	string_of_header model
 	(* The big LaTeX header *)
 	^ LatexHeader.latex_header
-(* 	^  "\n" ^ string_of_declarations model *)
 	^  "\n" ^ string_of_automata model
 	(* Footer *)
 	^ "
