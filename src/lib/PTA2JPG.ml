@@ -52,14 +52,14 @@ let string_of_header () =
 	^ "\n" ^" ************************************************************/"
 
 
-(** Convert a sync into a string *)
-let string_of_sync model action_index =
+(** Convert an action into a string *)
+let string_of_action_index (model : AbstractModel.abstract_model) action_index =
 	match model.action_types action_index with
 	| Action_type_sync -> (model.action_names action_index) ^ "\\n"
 	| Action_type_nosync -> ""
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index source_location transition =
+let string_of_transition (model : AbstractModel.abstract_model) automaton_index source_location transition =
     (* s_12 -> s_5 [label="bUp"]; *)
 	let _, update_seq_code_bloc = transition.updates in
 	"\n\t"
@@ -70,16 +70,22 @@ let string_of_transition model automaton_index source_location transition =
 	^ (id_of_location automaton_index transition.target)
 
 	^ " ["
-	(* Color and style for sync label *)
+	(* Color and style for action label *)
 	(* Check if the label is shared *)
 	^ (if List.length (model.automata_per_action transition.action) > 1 then
-		let color = color transition.action in
-		"style=bold, color=" ^ color ^ ", "
+			let color = color transition.action in
+			"penwidth=3, color=" ^ color ^ ", "
 		(* Check if this is a Action_type_nosync action: in which case dotted *)
-		else match model.action_types transition.action with
+		else
+			match model.action_types transition.action with
+			(* "Synchronized" action but with only 1 PTA involved: rather a non-synchronized named action *)
 			| Action_type_sync -> ""
-			| Action_type_nosync -> "style=dashed, "
+			(* Real silent action (no name, no synchronization) *)
+			| Action_type_nosync -> "style=dotted, color=darkgray, "
 		)
+	(* Add dashed style if the transition is uncontrollable: a transition is considered uncontrollable if it is not controllable AND there are some controllable actions *)
+	^ (if model.controllable_actions <> [] && not (model.is_controllable_action transition.action) then "style=dashed, "
+		else "")
 
 	(* LABEL *)
 	^ "label=\""
@@ -93,7 +99,7 @@ let string_of_transition model automaton_index source_location transition =
 		else ""
 		)
 	(* Sync *)
-	^ (string_of_sync model transition.action)
+	^ (string_of_action_index model transition.action)
 	(* Updates *)
 	^ ModelPrinter.string_of_seq_code_bloc model 1 update_seq_code_bloc
 	^ "\"];"

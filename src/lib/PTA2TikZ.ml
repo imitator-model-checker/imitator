@@ -184,7 +184,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	let destination_location_name = model.location_names automaton_index transition.target in
 
 	let uncontrollable_description =
-		(* A transition is labeled uncontrollable if it is not controllable AND there are some controllable actions *)
+		(* A transition is considered uncontrollable if it is not controllable AND there are some controllable actions *)
 		if model.controllable_actions <> [] && not (model.is_controllable_action transition.action) then "uncontrollable"
 		else ""
 	in
