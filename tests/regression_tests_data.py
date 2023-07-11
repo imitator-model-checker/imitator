@@ -36,6 +36,7 @@ tests = [
 		## Last modified            : 2023/03/33
 		## Test for IMITATOR version: 3.4
 		#'purpose'    : 'Test something',
+		#'tags'       : 'syntax,semantic,translation',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax',
 		#'expectations' : [
@@ -899,9 +900,163 @@ Error                                   : division by 0
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword',
+		'tags'       : 'syntax,controllable,ptg',
+		'input_files': ['parametric_timed_games/controllable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'controllable_actions-regenerated.imi' , 'content' : """
+controllable actions: b;
+
+
+var
+
+ 	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test uncontrollable keyword',
+		'tags'       : 'syntax,controllable,ptg',
+		'input_files': ['parametric_timed_games/uncontrollable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'uncontrollable_actions-regenerated.imi' , 'content' : """
+controllable actions: a, c;
+
+
+var
+
+ 	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword + include',
+		'tags'       : 'syntax,controllable,ptg,include',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'include_controllable_actions-regenerated.imi' , 'content' : """
+controllable actions: a, b;
+
+var
+	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword + include with inconsistent inclusion (WARNING, this test should perhaps rather fail?)',
+		'tags'       : 'syntax,controllable,ptg,include',
+		'input_files': ['parametric_timed_games/include_controllable_actions_inconsistent.imi'],
+		'options'    : '-imi2IMI',
+		# WARNING: this test so far only triggers a warning, but the model could be rejected
+		'expectations' : [
+			{'file': 'include_controllable_actions_inconsistent-regenerated.imi' , 'content' : """
+controllable actions: b;
+
+var
+	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [1]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-1a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -920,7 +1075,7 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  x = 1 do {x := 0;}  sync a goto l1;
@@ -931,7 +1086,7 @@ loc l1: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  x = 1 do {x := 0;}  sync a goto l1;
@@ -983,6 +1138,7 @@ end
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [2]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-2a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -1002,7 +1158,7 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  p + 1 = x do {x := 0;}  sync a goto l1;
@@ -1012,7 +1168,7 @@ loc l1: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  y = 1 do {y := p;}  sync a goto l1;
@@ -1067,6 +1223,7 @@ end
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [3]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-3a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -1084,7 +1241,7 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  p + 1 = x do {x := 0;}  sync a goto l1;
@@ -1095,7 +1252,7 @@ loc l1: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
 	when  y = 1 do {y := p;}  sync a goto l1;
@@ -1153,6 +1310,7 @@ end
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-1.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1174,6 +1332,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing included file with funny characters',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-2.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1195,6 +1354,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: parsing error in included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-3a.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1217,6 +1377,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing file in included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-4a.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1239,7 +1400,7 @@ Error                                   : model parsing error
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test include: functions',
 		'author': 'lbinria',
-		'tags':'include, function',
+		'tags':'syntax,include, function',
 		'input_files': ['tests_include_model/example-include-functions-1a.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -1257,7 +1418,7 @@ end
 (************************************************************)
  automaton P1
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc s0: invariant True
 	when True do {}  (* sync nosync_1*)  goto lend;
@@ -1270,7 +1431,7 @@ accepting loc lend: invariant True
 (************************************************************)
  automaton P2
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc s0: invariant True
 	when f() + j = 4 do {res := f();}  (* sync nosync_2*)  goto lend;
@@ -20521,7 +20682,7 @@ var
 (************************************************************)
  automaton Task_t1
 (************************************************************)
- synclabs: t1_arr_event, t1_arr, t1_dis, t1_miss, t1_end;
+ actions: t1_arr_event, t1_arr, t1_dis, t1_miss, t1_end;
 
 
 loc t1_loc_idle: invariant True
@@ -20548,7 +20709,7 @@ loc t1_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t1_arr
 (************************************************************)
- synclabs: t1_arr_event;
+ actions: t1_arr_event;
 
 
 loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
@@ -20560,7 +20721,7 @@ loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
 (************************************************************)
  automaton Task_t2
 (************************************************************)
- synclabs: t2_arr_event, t2_arr, t2_dis, t2_miss, t2_pre, t2_end;
+ actions: t2_arr_event, t2_arr, t2_dis, t2_miss, t2_pre, t2_end;
 
 
 loc t2_loc_idle: invariant True
@@ -20588,7 +20749,7 @@ loc t2_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t2_arr
 (************************************************************)
- synclabs: t2_arr_event;
+ actions: t2_arr_event;
 
 
 loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
@@ -20600,7 +20761,7 @@ loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
 (************************************************************)
  automaton Task_t3
 (************************************************************)
- synclabs: t3_arr_event, t3_arr, t3_dis, t3_miss, t3_pre, t3_end;
+ actions: t3_arr_event, t3_arr, t3_dis, t3_miss, t3_pre, t3_end;
 
 
 loc t3_loc_idle: invariant True
@@ -20628,7 +20789,7 @@ loc t3_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t3_arr
 (************************************************************)
- synclabs: t3_arr_event;
+ actions: t3_arr_event;
 
 
 loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
@@ -20640,7 +20801,7 @@ loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
 (************************************************************)
  automaton Task_t4
 (************************************************************)
- synclabs: t4_arr_event, t4_arr, t4_dis, t4_miss, t4_pre, t4_end;
+ actions: t4_arr_event, t4_arr, t4_dis, t4_miss, t4_pre, t4_end;
 
 
 loc t4_loc_idle: invariant True
@@ -20668,7 +20829,7 @@ loc t4_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t4_arr
 (************************************************************)
- synclabs: t4_arr_event;
+ actions: t4_arr_event;
 
 
 loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
@@ -20680,7 +20841,7 @@ loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
 (************************************************************)
  automaton Task_t5
 (************************************************************)
- synclabs: t5_arr_event, t5_arr, t5_dis, t5_miss, t5_pre, t5_end;
+ actions: t5_arr_event, t5_arr, t5_dis, t5_miss, t5_pre, t5_end;
 
 
 loc t5_loc_idle: invariant True
@@ -20708,7 +20869,7 @@ loc t5_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t5_arr
 (************************************************************)
- synclabs: t5_arr_event;
+ actions: t5_arr_event;
 
 
 loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
@@ -20720,7 +20881,7 @@ loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
 (************************************************************)
  automaton sched_CPU1
 (************************************************************)
- synclabs: t1_arr, t2_arr, t3_arr, t4_arr, t5_arr, t1_dis, t2_dis, t3_dis, t4_dis, t5_dis, t5_end, t5_pre, t4_end, t4_pre, t3_end, t3_pre, t2_end, t2_pre, t1_end;
+ actions: t1_arr, t2_arr, t3_arr, t4_arr, t5_arr, t1_dis, t2_dis, t3_dis, t4_dis, t5_dis, t5_end, t5_pre, t4_end, t4_pre, t3_end, t3_pre, t2_end, t2_pre, t1_end;
 
 
 loc CPU1_loc_: invariant True
@@ -21170,7 +21331,7 @@ loc CPU1_loc_stop: invariant True
 (************************************************************)
  automaton OBS_dline
 (************************************************************)
- synclabs: t1_miss, t2_miss, t3_miss, t4_miss, t5_miss;
+ actions: t1_miss, t2_miss, t3_miss, t4_miss, t5_miss;
 
 
 loc dline_loc_nomiss: invariant True
@@ -21283,7 +21444,7 @@ end
 # (************************************************************)
 #  automaton pta
 # (************************************************************)
-#  synclabs: ;
+#  actions: ;
 #
 # loc l1: invariant True
 # 	when  i = 0
@@ -21297,7 +21458,7 @@ end
 # (************************************************************)
 #  automaton pta2
 # (************************************************************)
-#  synclabs: ;
+#  actions: ;
 #
 # loc l2: invariant True
 # 	when  i = 0
@@ -21375,7 +21536,7 @@ var
 (************************************************************)
  automaton pta
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc l1: invariant True
 	when b
@@ -21392,7 +21553,7 @@ accepting loc lend: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc l2: invariant True
 	when b
