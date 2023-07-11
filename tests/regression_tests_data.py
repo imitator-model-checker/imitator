@@ -22285,6 +22285,46 @@ var
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
+		'tags'       : 'syntax,translation,controllable',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2TikZ',
+		'expectations' : [
+			# WARNING: one has to manually replace \ with \\
+			{'file': 'include_controllable_actions.tex' , 'content' : """
+		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{a}$\\\\
+		 & $x:=1/2 * \\styleparam{p}$\\\\%
+		\\end{tabular}} (l1);
+
+		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{b}$\\\\
+		 & $x:=1$\\\\%
+		\\end{tabular}} (l1);
+
+		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{c}$\\\\
+		 & $x:=2$\\\\%
+		\\end{tabular}} (l1);
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/07/09
 		# Last modified            : 2021/07/09
 		# Test for IMITATOR version: 3.1
