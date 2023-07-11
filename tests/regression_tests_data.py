@@ -21809,9 +21809,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0 [color=blue, style=filled];
-  s_1 [color=yellow, style=filled];
+  s_1 [color=cyan, style=filled];
   s_2 [color=blue, style=filled];
-  s_3 [color=yellow, style=filled];
+  s_3 [color=cyan, style=filled];
 		"""
 			} # end result file
 			,
@@ -21838,9 +21838,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
+  s_1[fillcolor=cyan, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
   s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
+  s_3[fillcolor=cyan, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
 		"""
 			} # end result file
 			,
@@ -21867,9 +21867,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_1[fillcolor=cyan, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
   s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
+  s_3[fillcolor=cyan, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2018/06/05): I had to manually replace '\n' with '\\n' to make this test pass
