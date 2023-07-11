@@ -22345,6 +22345,51 @@ var
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test export to dot with controllable actions',
+		'tags'       : 'syntax,translation',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2PDF -graphics-source',
+		'expectations' : [
+			{'file': 'include_controllable_actions-pta.dot' , 'content' : """
+/**************************************************/
+/* automaton pta1 */
+/**************************************************/
+ init0[shape=none, label="pta1"];
+ init0 -> s_0_0;
+
+s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
+	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x := 2;"];
+/**************************************************/
+
+
+/**************************************************/
+/* automaton pta2 */
+/**************************************************/
+ init1[shape=none, label="pta2"];
+ init1 -> s_1_0;
+
+s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
+	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x := 0;"];
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/07/09
 		# Last modified            : 2021/07/09
 		# Test for IMITATOR version: 3.1
