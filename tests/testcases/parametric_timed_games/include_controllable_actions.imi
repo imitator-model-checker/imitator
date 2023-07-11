@@ -1,0 +1,92 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test the controllable keyword with include keyword
+ * Description      : Test the controllable keyword with include keyword
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/07/11
+ * Last modified    : 2023/07/11
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+
+controllable actions: a;
+
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta1
+(************************************************************)
+actions: a, b, c;
+
+loc l1: invariant True
+	when x = 1 sync a do {x := p/2} goto l1;
+	when x = 1 sync b do {x := 1} goto l1;
+	when x = 1 sync c do {x := 2} goto l1;
+
+end (* pta *)
+
+#include "./include_controllable_actions_submodel.imi";
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta1] := l1,
+		loc[pta2] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

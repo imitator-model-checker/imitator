@@ -1,0 +1,13 @@
+
+controllable actions: b;
+
+(************************************************************)
+  automaton pta2
+(************************************************************)
+actions: a, b;
+
+loc l1: invariant True
+	when x = 1 sync a do {x := p/2} goto l1;
+	when x = 1 sync b do {x := 1} goto l1;
+
+end (* pta *)
