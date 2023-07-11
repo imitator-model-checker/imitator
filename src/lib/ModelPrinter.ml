@@ -509,7 +509,7 @@ let string_of_actions_declaration model automaton_index =
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_actions_declaration(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
-	"synclabs: "
+	"actions: "
 	^ (let synclabs, _ = (List.fold_left (fun (synclabs, first) action_index ->
 		match model.action_types action_index with
 		(* Case sync: declare *)
