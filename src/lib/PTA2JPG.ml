@@ -149,11 +149,11 @@ let string_of_location model automaton_index location_index =
 	let location_color =
 		match is_accepting, is_urgent with
 		(* Accepting AND urgent: orange *)
-		| true, true -> "\"fdcdac\""
+		| true, true -> "\"#fdcdac\""
 		(* Accepting: red/pink *)
-		| true, false -> "\"f4cae4\""
+		| true, false -> "\"#f4cae4\""
 		(* Urgent: yellow *)
-		| false, true -> "\"fff2ae\""
+		| false, true -> "\"#fff2ae\""
 		(* Normal: standard *)
 		| false, false -> "\"#b3e2cd\""
 	in
