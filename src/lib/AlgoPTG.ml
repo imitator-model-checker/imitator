@@ -35,8 +35,6 @@ let nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint
 let project_params = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse 
 let is_empty =  LinearConstraint.px_nnconvex_constraint_is_false 
 let (#!=) = LinearConstraint.px_nnconvex_constraint_is_equal >>> not
-let (#<-) queue elem = Queue.add elem queue   
-let (#<--) queue1 queue2 = Queue.transfer queue2 queue1
 let bot = LinearConstraint.false_px_nnconvex_constraint
 
 let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
@@ -72,13 +70,17 @@ module DefaultHashtbl (D : Default) = struct
 end
 
 
+let status_to_string = function 
+	| Unexplored -> "EXPLORE"
+	| BackpropLosing -> "BACKPROP(LOSING)"
+	| BackpropWinning -> "BACKPROP(WINNING)"
 
-let edge_to_str = fun ({state; action; state';_} : edge) model -> 	
+let edge_to_str = fun ({state; action; state';_}, status : edge * edge_status) model -> 	
 	let action_str = model.action_names action in 
-	Printf.sprintf "%d --%s-> %d" state action_str state'
+	Printf.sprintf "%d --%s-> %d (%s)" state action_str state' (status_to_string status)
 
-let edge_seq_to_str seq model = "[" ^ 
-	Seq.fold_left 
+let edge_list_to_str seq model = "[" ^ 
+	List.fold_left 
 		(fun acc edge -> Printf.sprintf "%s, %s" acc (edge_to_str edge model))
 		("") (
 		seq) 
@@ -211,6 +213,60 @@ class stateSpacePTG_full model options = object
 		state_space#get_successors_with_combined_transitions source_state_index
 end
 
+
+let compare_edge e1 e2 = match e1, e2 with
+	| (_, Unexplored), (_, Unexplored) -> PriorityQueue.Equal
+	| _, (_, Unexplored) -> PriorityQueue.LessThan
+	| (_, Unexplored), _ -> PriorityQueue.GreaterThan
+	| _ -> PriorityQueue.Equal
+
+
+
+class virtual ['a] waitingList list = object(self)
+	method virtual queue : 'a
+	method virtual add : edge * edge_status -> unit
+	method virtual extract : edge * edge_status
+	method virtual is_empty : bool
+	method virtual to_list : (edge * edge_status) list
+	method virtual length : int
+	method virtual add_all : 'a waitingList -> unit
+	method virtual of_list : (edge * edge_status) list -> unit
+	initializer 
+		self#of_list list
+end
+
+
+module EdgePriorityQueue = PriorityQueue.Make(struct type t = (edge * edge_status) let compare = compare_edge end)
+
+class prioQueue list = object 
+	inherit ([EdgePriorityQueue.queue] waitingList list)
+	val mutable queue = EdgePriorityQueue.empty 
+	method queue = queue
+	method add e = queue <- EdgePriorityQueue.insert queue e
+	method extract = let (elt, queue') = EdgePriorityQueue.extract queue in queue <- queue'; elt
+	method is_empty = EdgePriorityQueue.is_empty queue
+	method to_list = EdgePriorityQueue.to_list queue
+	method length = EdgePriorityQueue.length queue
+	method add_all waitingList = queue <- EdgePriorityQueue.merge queue waitingList#queue
+	method of_list list = queue <- EdgePriorityQueue.of_list list	
+end
+
+class normalQueue list = object
+	inherit ([(edge * edge_status) Queue.t] waitingList list)
+	val queue = Queue.create () 
+	method queue = queue
+	method add e = Queue.add e queue
+	method extract = Queue.pop queue
+	method is_empty = Queue.is_empty queue
+	method to_list = List.of_seq (Queue.to_seq queue)
+	method length = Queue.length queue
+	method add_all waitingList = Queue.transfer waitingList#queue queue 
+	method of_list list = List.iter (fun e -> Queue.add e queue) list
+end
+
+let (#<-) (queue : 'a waitingList) elem = queue#add elem   
+let (#<--) (queue1 : 'a waitingList) (queue2 : 'a waitingList) = queue1#add_all queue2
+
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -276,6 +332,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	val init_losing_zone_changed = ref false 
 	val init_winning_zone_changed = ref false
+	val init_winning_zone = fun _ -> WinningZone.find state_space_ptg#state_space#get_initial_state_index
 	
 	(* Initialize the Winning and Depend tables with our model - only affects printing information in terminal *)
 	method private initialize_tables () = 
@@ -294,10 +351,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	(* Edges from a symbolic state as a queue *)
 	method private get_edge_queue state_index =
-		let queue = Queue.create () in 
-		let add elem = Queue.add elem queue in 
-		List.iter add @@ self#get_edges state_index;
-		queue	
+		new prioQueue @@ self#get_edges state_index;
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
 	method private get_controllable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> model.is_controllable_action e.action)
@@ -354,6 +408,14 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			) @@
 			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g)
 
+	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
+	method private global_constraint_pruning state_index = 
+		let constr = self#constr_of_state_index state_index in 
+		let constr_params = LinearConstraint.px_hide_nonparameters_and_collapse constr in 
+		let winning_params = project_params @@ init_winning_zone () in 
+		let constr_params_nnconvex = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint constr_params in 
+		LinearConstraint.p_nnconvex_constraint_is_leq constr_params_nnconvex winning_params
+
 	(* Explores forward in order to discover winning states *)
 	method private forward_exploration e waiting passed= 
 		let {state';_} = e in 
@@ -361,8 +423,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		passed#add state';
 		(Depends.find state')#add e;
 
-		waiting #<-- (self#get_edge_queue state') ;
-		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model); 
+		if (not @@ false) then 
+			waiting #<-- (self#get_edge_queue state');
+		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model); 
 
 		if self#matches_state_predicate state' then 
 			begin 
@@ -378,7 +441,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
 	method private edge_set_to_queue_with_status edge_set status = 
-		Queue.of_seq @@ Seq.map (fun e -> (e, status)) (edge_set#to_seq)
+		new prioQueue @@ List.map (fun e -> (e, status)) (edge_set#to_list)
 
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack_gen e find replace to_str good_edge bad_edge precedence callback = 
@@ -450,7 +513,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria waiting init = 
-		let queue_empty = Queue.is_empty waiting in
+		let queue_empty = waiting#is_empty in
 		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 		let propagate_losing_states = options#ptg_propagate_losing_states in 
@@ -489,9 +552,10 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
-			print_PTG ("\nEntering main loop with waiting list: " ^ edge_seq_to_str (Seq.map fst @@ Queue.to_seq waiting) model);
-			let e, edge_status = Queue.pop waiting in 			
-			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str e model));
+			print_message Verbose_standard (Printf.sprintf "PTG waiting list size: %d" @@ waiting#length);
+			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model);
+			let e, edge_status = waiting#extract in 			
+			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model));
 			if not @@ passed#mem e.state' then  
 				self#forward_exploration e waiting passed
 			else
