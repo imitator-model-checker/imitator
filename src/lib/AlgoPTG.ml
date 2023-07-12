@@ -279,7 +279,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(* Class variables *)
 	(************************************************************)
 
-	val mutable state_space' : StateSpace.stateSpace = state_space_ptg#state_space
+	val mutable state_space : StateSpace.stateSpace = state_space_ptg#state_space
 
 	(** Non-necessarily convex constraint storing the parameter synthesis result *)
 	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
@@ -310,17 +310,17 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	
 
-	method private constr_of_state_index state = (state_space'#get_state state).px_constraint
-	method private get_global_location state = state_space'#get_location (state_space'#get_global_location_index state)
+	method private constr_of_state_index state = (state_space#get_state state).px_constraint
+	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
 
 	(* Computes the predecessor zone of current_zone using edge *)
 	method private predecessor_nnconvex edge current_zone = 
 		let {state; transition; _} = edge in 
-		let guard = state_space'#get_guard model state transition in
+		let guard = state_space#get_guard model state transition in
 		let pred_zone = self#constr_of_state_index state in 
 		let constraints = List.map (fun z -> 
 			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor model state_space' state pred_zone guard z transition in 	
+			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state pred_zone guard z transition in 	
 			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
 			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
 			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
@@ -359,7 +359,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	(* Whether or not a state is accepting  *)
 	method private matches_state_predicate state_index =
-		let state = (state_space'#get_state state_index) in
+		let state = (state_space#get_state state_index) in
 		(State.match_state_predicate model state_predicate state) 
 
 	(* Decides if a symbolic state is a deadlock state (no outgoing controllable actions). Used for Losing Zones *)
@@ -475,7 +475,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		print_PTG "\tLOSING ZONE PROPAGATION:";
 		let callback state = 
 			waiting #<-- (self#edge_set_to_queue_with_status (Depends.find state) BackpropLosing);
-			if state = state_space'#get_initial_state_index then init_losing_zone_changed := true 
+			if state = state_space#get_initial_state_index then init_losing_zone_changed := true 
 		in 
 		self#backtrack_gen e LosingZone.find LosingZone.replace LosingZone.to_str 
 											 self#get_uncontrollable_edges self#get_controllable_edges true
@@ -488,7 +488,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		print_PTG "\tWINNING ZONE PROPAGATION:"; 
 		let callback state = 
 			waiting #<-- (self#edge_set_to_queue_with_status (Depends.find state) BackpropWinning);
-			if state = state_space'#get_initial_state_index then init_winning_zone_changed := true 		in 
+			if state = state_space#get_initial_state_index then init_winning_zone_changed := true 		in 
 		self#backtrack_gen e WinningZone.find WinningZone.replace WinningZone.to_str 
 											 self#get_controllable_edges self#get_uncontrollable_edges false
 											 callback
@@ -526,6 +526,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness init else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
+		print_PTG (Printf.sprintf "DEBUG: call to init_has_winning_witness returns %b. recompute_init_has_winning_witness is %b. init_has_winning_witness variable is %b" 
+		(self#init_has_winning_witness init) (recompute_init_has_winning_witness) (init_has_winning_witness));
+
 		queue_empty || init_lost ||	init_exact || init_has_winning_witness
 
 
@@ -536,7 +539,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		self#initialize_tables();
 
 		(* === ALGORITHM INITIALIZATION === *)
-		let init = state_space'#get_initial_state_index in 
+		let init = state_space#get_initial_state_index in 
 		
 		let passed = new State.stateIndexSet in 
 		passed#add init;
@@ -602,7 +605,6 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
-		self#compute_PTG; 
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
@@ -648,7 +650,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = (*if termination_status = Regular_termination && (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under*)Constraint_exact in
+		let soundness = if (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
 		Single_synthesis_result
@@ -660,7 +662,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			constraint_description = "constraint guaranteeing the existence of a winning strategy";
 
 			(* Explored state space *)
-			state_space			= state_space';
+			state_space			= state_space;
 
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
