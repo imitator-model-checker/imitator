@@ -6,7 +6,7 @@
  * 
  * Module description: Parametric timed game with reachability condition
  * 
- * File contributors : Étienne André
+ * File contributors : Mikael Bisgaard Dahlsen-Jensen, Étienne André
  * Created           : 2022/11/29
  *
  ************************************************************)
@@ -33,7 +33,7 @@ let (>>>) f g x y = g(f x y)
 
 let nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint
 let project_params = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse 
-let is_empty =  LinearConstraint.px_nnconvex_constraint_is_false 
+let is_empty =  LinearConstraint.p_nnconvex_constraint_is_false 
 let (#!=) = LinearConstraint.px_nnconvex_constraint_is_equal >>> not
 let bot = LinearConstraint.false_px_nnconvex_constraint
 
@@ -326,10 +326,6 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
 		List.fold_left (|||) (bot ()) constraints
 
-
-
-	(* === END API FOR REFACTORING === *)
-
 	val init_losing_zone_changed = ref false 
 	val init_winning_zone_changed = ref false
 	val init_winning_zone = fun _ -> WinningZone.find state_space_ptg#state_space#get_initial_state_index
@@ -410,11 +406,14 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 
-		let constr = self#constr_of_state_index state_index in 
-		let constr_params = LinearConstraint.px_hide_nonparameters_and_collapse constr in 
-		let winning_params = project_params @@ init_winning_zone () in 
-		let constr_params_nnconvex = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint constr_params in 
-		LinearConstraint.p_nnconvex_constraint_is_leq constr_params_nnconvex winning_params
+		if options#cumulative_pruning then 
+			let constr = self#constr_of_state_index state_index in 
+			let constr_params = LinearConstraint.px_hide_nonparameters_and_collapse constr in 
+			let winning_params = project_params @@ init_winning_zone () in 
+			let constr_params_nnconvex = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint constr_params in 
+			LinearConstraint.p_nnconvex_constraint_is_leq constr_params_nnconvex winning_params
+		else
+			false
 
 	(* Explores forward in order to discover winning states *)
 	method private forward_exploration e waiting passed= 
@@ -423,9 +422,13 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		passed#add state';
 		(Depends.find state')#add e;
 
-		if (not @@ false) then 
-			waiting #<-- (self#get_edge_queue state');
-		print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model); 
+		if self#global_constraint_pruning state' then 
+			print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
+		else
+			begin
+				waiting #<-- (self#get_edge_queue state');
+				print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model)
+			end;
 
 		if self#matches_state_predicate state' then 
 			begin 
@@ -499,9 +502,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (LosingZone.find init)
 
 	(* Initial state is won if parameter valuations in its winning zone is non-empty *)
-	method private init_has_winning_witness init =
+	method private init_has_winning_witness =
 		init_winning_zone_changed := false;
-		not @@ is_empty (self#initial_constraint () &&& WinningZone.find init)
+		not @@ is_empty synthesized_constraint
 
 	(* Initial state is exact if winning and losing zone covers initial zone  *)
 	method private init_is_exact init = 
@@ -518,16 +521,16 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 		let propagate_losing_states = options#ptg_propagate_losing_states in 
 
+		if !init_winning_zone_changed then 
+			synthesized_constraint <- project_params (self#initial_constraint () &&& WinningZone.find init);
+
 		let recompute_init_lost = propagate_losing_states && !init_losing_zone_changed in
 		let recompute_init_has_winning_witness = not complete_synthesis && !init_winning_zone_changed in  
 		let recompute_init_exact = complete_synthesis && (!init_losing_zone_changed || !init_winning_zone_changed) in
 
 		let init_lost = if recompute_init_lost then self#init_is_lost init else false in
-		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness init else false in 
+		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
-
-		print_PTG (Printf.sprintf "DEBUG: call to init_has_winning_witness returns %b. recompute_init_has_winning_witness is %b. init_has_winning_witness variable is %b" 
-		(self#init_has_winning_witness init) (recompute_init_has_winning_witness) (init_has_winning_witness));
 
 		queue_empty || init_lost ||	init_exact || init_has_winning_witness
 
