@@ -409,9 +409,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		if options#cumulative_pruning then 
 			let constr = self#constr_of_state_index state_index in 
 			let constr_params = LinearConstraint.px_hide_nonparameters_and_collapse constr in 
-			let winning_params = project_params @@ init_winning_zone () in 
 			let constr_params_nnconvex = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint constr_params in 
-			LinearConstraint.p_nnconvex_constraint_is_leq constr_params_nnconvex winning_params
+			LinearConstraint.p_nnconvex_constraint_is_leq constr_params_nnconvex synthesized_constraint
 		else
 			false
 

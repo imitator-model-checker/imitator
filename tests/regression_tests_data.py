@@ -23801,6 +23801,32 @@ Constraint nature                       : good
 	##------------------------------------------------------------]
 
 	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Cumulative Pruning',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/cumulative_pruning.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'cumulative_pruning.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
     
 	##------------------------------------------------------------
 	#{
