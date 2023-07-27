@@ -20,8 +20,6 @@ jobs:
       - name: Run build
         run: .github/scripts/build.sh
         shell: bash
-        env:
-          DOCKER_RUNNING: true
 
       # build documentation
       - name: Documentation
