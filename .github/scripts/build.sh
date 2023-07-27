@@ -48,8 +48,7 @@ fi
 [ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/bin/python"
 
 # install opam and ocaml libraries
-docker_container=$(echo $([ ! -f /.dockerenv ]) $?)
-[[ "${docker_container}" = '0' ]] && opam init -a || opam init -a --disable-sandboxing
+[[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing || opam init -a
 
 opam install -y extlib fileutils oasis alcotest
 eval $(opam env)

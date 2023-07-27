@@ -2,6 +2,8 @@
 FROM ubuntu:20.04
 LABEL maintainer="Jaime Arias <arias@lipn.univ-paris13.fr>"
 
+ENV DOCKER_RUNNING=true
+
 # Copying files for build imitator
 COPY . /imitator/
 
