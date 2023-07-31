@@ -4909,9 +4909,102 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 
+	# END : Type checking on guards tests
 	,
 
-	# END : Type checking on guards tests
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether undeclared var is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-undeclared-var.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether a clock (so far forbidden there) is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-clock.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused clock is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-clock.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused discrete is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-discrete.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#------------------------------------------------------------
 	{

@@ -1,0 +1,1 @@
+property := #synth AGnot((not loc[pta] = l1) & unused > 0)
