@@ -4963,6 +4963,30 @@ Error                                   : invalid model
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2023/08/02
+		# Last modified            : 2023/08/02
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether a parameter (so far forbidden there) is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-parameter.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
 		# Test since               : 2023/07/31
 		# Last modified            : 2023/07/31
 		# Test for IMITATOR version: 3.4
@@ -4986,8 +5010,31 @@ Error                                   : invalid model
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2023/08/02
+		# Last modified            : 2023/08/02
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused parameter is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-parameter.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 2
+		# Test author              : Étienne André
 		# Test since               : 2023/07/31
-		# Last modified            : 2023/07/31
+		# Last modified            : 2023/08/02
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test whether an unused discrete is found in property',
 		'tags'       : 'property',
@@ -4995,7 +5042,9 @@ Error                                   : invalid model
 		'options'    : '-depth-limit 2',
 		'expectations' : [
 			{'file': 'dummy.res' , 'content' : """
-Error                                   : invalid model
+BEGIN CONSTRAINT
+ p >= 0
+END CONSTRAINT
 		"""
 			} # end result file
 			,

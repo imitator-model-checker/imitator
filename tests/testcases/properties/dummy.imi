@@ -15,8 +15,8 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2023/07/31
- * Last modified    : 2023/07/31
- * Model version    : 0.1
+ * Last modified    : 2023/08/02
+ * Model version    : 0.2
  *
  * IMITATOR version : 3.4-beta
  ************************************************************)
@@ -24,7 +24,7 @@
 var
 
 (* Clocks *)
- 	x, y, (* y is unused *)
+ 	x, unused_clock, (* unused_clock is unused *)
 		: clock;
 
 (* Discrete *)
@@ -34,7 +34,7 @@ var
 		: rational;
 
 (* Parameters *)
-	p,
+	p, unused_parameter,
 		: parameter;
 
 
