@@ -23969,6 +23969,58 @@ Constraint nature                       : good
 	##------------------------------------------------------------]
 
 	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Coverage Pruning (Lose)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/coverage_pruning_lose.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'coverage_pruning_lose.res' , 'content' : """
+BEGIN CONSTRAINT
+	5 >= p & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Coverage Pruning (Win)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/coverage_pruning_win.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'coverage_pruning_win.res' , 'content' : """
+BEGIN CONSTRAINT
+	1 > p & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
     
 	##------------------------------------------------------------
 	#{

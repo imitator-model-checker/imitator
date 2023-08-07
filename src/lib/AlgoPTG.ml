@@ -419,27 +419,32 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let {state';_} = e in 
 		print_PTG ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
 		passed#add state';
-		(Depends.find state')#add e;
 
-		if self#global_constraint_pruning state' then 
-			print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
-		else
-			begin
-				waiting #<-- (self#get_edge_queue state');
-				print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model)
-			end;
-
+		let coverage_pruning = ref false in 
 		if self#matches_state_predicate state' then 
 			begin 
 				WinningZone.replace state' @@ (self#constr_of_state_index >> nn) state';
-				waiting #<- (e, BackpropWinning)
+				waiting #<- (e, BackpropWinning);
+				coverage_pruning := true
 			end;
 
-		if options#ptg_propagate_losing_states && self#is_dead_lock state' then 
+		if self#is_dead_lock state' then 
 			begin
-				LosingZone.replace state' @@ (self#constr_of_state_index >> nn) state'; 
-				waiting #<- (e, BackpropLosing)
+				if options#ptg_propagate_losing_states then 
+					(LosingZone.replace state' @@ (self#constr_of_state_index >> nn) state'; 
+					waiting #<- (e, BackpropLosing));
+				coverage_pruning := true
 			end;
+
+		begin 
+			match self#global_constraint_pruning state', !coverage_pruning with 
+				|	true, _ -> print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
+				| _, true -> print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
+				| _ ->
+					(Depends.find state')#add e;
+					waiting #<-- (self#get_edge_queue state');
+					print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model)
+		end;
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
 	method private edge_set_to_queue_with_status edge_set status = 
@@ -557,7 +562,6 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
-			print_message Verbose_standard (Printf.sprintf "PTG waiting list size: %d" @@ waiting#length);
 			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model);
 			let e, edge_status = waiting#extract in 			
 			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model));

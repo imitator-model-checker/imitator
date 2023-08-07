@@ -1,0 +1,53 @@
+(* Mikael, Aarhus, Aug 08, 2023 
+	Test for coverage pruning
+    Expected constraint 5 >= p & p >= 0
+	Should not explore trap1, trap2, trap3 and trap4 because of coverage pruning.
+	trap1 and trap2 will still be included in state_space because they are generated in the deadlock check of trap.
+*)
+
+controllable actions: c_1;
+
+var
+ 	x : clock;
+	p : parameter;
+
+automaton ptg
+
+actions: c_1, u_1;
+
+loc l1: invariant True
+	when p > 5 sync u_1 goto trap;
+    when True sync c_1 goto l2;
+
+
+loc trap : invariant True
+	when True sync u_1 goto trap1;
+	when True sync u_1 goto trap2;
+
+loc trap1 : invariant True
+	when True sync u_1 goto trap3;
+
+loc trap2 : invariant True
+	when True sync u_1 goto trap4;
+
+loc trap3 : invariant True 
+
+loc trap4 : invariant True
+
+loc l2 : invariant True 
+	when True sync c_1 goto l3;
+
+loc l3 : invariant True 
+	when True sync c_1 goto Goal;	
+
+accepting loc Goal: invariant True
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+	& p >= 0
+;
+
+end
