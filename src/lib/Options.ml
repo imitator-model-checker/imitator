@@ -166,6 +166,9 @@ class imitator_options =
 		(* Comparison operator between states when adding a new state to the state space *)
 		val mutable comparison_operator : AbstractAlgorithm.state_comparison_operator option = None
 
+		(* In PTG: Check if state is completely winning or losing, if so: stop exploration from this state. This is an option for benchmarking purposes. *)
+		val mutable coverage_pruning				= true
+
 		(* Cumulative pruning: when a new state is computed, check whether it is included into the previously computed constraints *)
 		(*** NOTE: might be expensive in the case of thousands of disjuncts in the computed constraints, cf. [AHW18], therefore this option can be set to false when needed ***)
 		val mutable cumulative_pruning				= true
@@ -283,6 +286,7 @@ class imitator_options =
 		method set_comparison_operator b			= comparison_operator <- Some b
 
 		method cumulative_pruning					= cumulative_pruning
+		method coverage_pruning = coverage_pruning
 
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
@@ -957,6 +961,9 @@ class imitator_options =
         ");
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
+				");
+
+				("-no-coverage-pruning", Unit (fun () -> coverage_pruning <- false), " In PTG: does not prune exploration of states that are fully covered (winning or losing). Default: enabled (i.e., tests coverage and prunes).
 				");
 
 				("-no-cumulative-pruning", Unit (fun () -> cumulative_pruning <- false), " In reachability/safety/loop synthesis: does not perform inclusion test of the new states parameter constraints in the already computed constraints (also known as cumulative pruning). Default: enabled (i.e., inclusion test and pruning).

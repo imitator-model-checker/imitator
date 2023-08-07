@@ -436,6 +436,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 				coverage_pruning := true
 			end;
 
+		coverage_pruning := !coverage_pruning && options#coverage_pruning;
+
 		begin 
 			match self#global_constraint_pruning state', !coverage_pruning with 
 				|	true, _ -> print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
