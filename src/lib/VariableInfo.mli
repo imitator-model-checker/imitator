@@ -38,6 +38,10 @@ val is_variable_is_defined : variable_infos -> variable_ref -> bool
 val is_global_variable_is_defined : variable_infos -> variable_name -> bool
 
 val is_variable_removed : variable_infos -> variable_ref -> bool
+val is_variable_declared : variable_infos -> variable_ref -> bool
+(* Check if a global variable was declared, even if removed *)
+val is_global_variable_declared : variable_infos -> variable_name -> bool
+
 val is_global_variable_removed : variable_infos -> variable_name -> bool
 val is_constant_is_defined : variable_infos -> variable_name -> bool
 val is_variable_or_constant_defined : variable_infos -> variable_ref -> bool

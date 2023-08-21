@@ -66,6 +66,10 @@ let [@inline] is_variable_declared variable_infos variable_ref =
     is_variable_is_defined variable_infos variable_ref
     || is_variable_removed variable_infos variable_ref
 
+(* Check if a global variable was declared, even if removed *)
+let [@inline] is_global_variable_declared variable_infos variable_name =
+    is_variable_declared variable_infos (variable_name, 0)
+
 (* Check if constant is defined => declared and removed or not *)
 let [@inline] is_constant_is_defined variable_infos = Hashtbl.mem variable_infos.constants
 

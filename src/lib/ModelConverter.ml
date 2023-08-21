@@ -606,10 +606,17 @@ let check_init_definition parsed_model =
 
     and check_init_constraint = function
         (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint when VariableInfo.is_global_variable_removed variable_infos variable_name ->
-            print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
+        | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) as linear_constraint  ->
+
+            if (VariableInfo.is_global_variable_removed variable_infos variable_name) then
+                print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
+
+            if not (VariableInfo.is_global_variable_declared variable_infos variable_name) then (
+                print_error ("Variable `" ^ variable_name ^ "` in continuous init is not declared");
+                false
+            )
             (* Still check the second term *)
-            if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
+            else if not (ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message linear_expression) then (
                 print_error ("Linear constraint \"" ^ ParsingStructureUtilities.string_of_parsed_linear_constraint variable_infos linear_constraint ^ "\" uses undeclared variable(s).");
                 false
             )
@@ -733,7 +740,7 @@ let check_discrete_inits functions_table variable_infos init_values_for_discrete
 (*------------------------------------------------------------*)
 (** Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-let check_init functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option =
+let check_init dependency_graph functions_table (useful_parsing_model_information : useful_parsing_model_information) init_definition observer_automaton_index_option variable_remove =
 
     let partition_and_map_loc_init_and_variable_inits = function
         (* Make pairs (automaton_name, location_name) *)
@@ -754,7 +761,19 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
     (* Check that discrete variables used in discrete init exist *)
     let definitions_well_formed = List.for_all (check_init_definition useful_parsing_model_information) init_definition in
 
+    (* Here if not well formed we can raise an error *)
+    if not definitions_well_formed then
+        raise InvalidModel;
 
+	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
+    let init_definition =
+        (* If no auto remove, keep all inits *)
+        if variable_remove then
+            init_definition
+        (* If auto remove, remove all unused variable inits *)
+        else
+            ParsingStructureGraph.remove_unused_inits dependency_graph init_definition
+    in
 
     (* Check there is only one initial location per automaton *)
     let one_loc_per_automaton = has_one_loc_per_automaton initial_locations useful_parsing_model_information observer_automaton_index_option in
@@ -765,10 +784,10 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
 	(* Partition and map the init inequalities between the discrete init assignments, and other inequalities *)
     let discrete_inits, other_inequalities = OCamlUtilities.partition_map (discrete_init_of_discrete_linear_predicate variable_infos) filtered_init_inequalities in
 
-    let well_formed = definitions_well_formed && one_loc_per_automaton in
+(*    let well_formed = definitions_well_formed && one_loc_per_automaton in*)
 
     (* Here if not well formed we can raise an error *)
-    if not well_formed then
+    if not one_loc_per_automaton then
         raise InvalidModel;
 
     (* Check init discrete section : discrete *)
@@ -836,7 +855,7 @@ let check_init functions_table (useful_parsing_model_information : useful_parsin
         raise (InvalidExpression ("There are errors in the continuous init section"));
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_pairs, discrete_initialization_well_formed
+	init_definition, discrete_values_pairs, discrete_initialization_well_formed
 
 (* Check if a constant or a variable is typed as a void, print error when one found *)
 let has_void_constant_or_variable str_var_kind name var_type =
@@ -3212,17 +3231,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the init_definition *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking init definition…");
-	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
-    let init_definition =
-        (* If no auto remove, keep all inits *)
-        if options#no_variable_autoremove then
-            parsed_model.init_definition
-        (* If auto remove, remove all unused variable inits *)
-        else
-            ParsingStructureGraph.remove_unused_inits dependency_graph parsed_model.init_definition
-    in
 
-	let init_discrete_pairs, well_formed_init = check_init functions_table useful_parsing_model_information init_definition observer_automaton_index_option in
+	let init_definition, init_discrete_pairs, well_formed_init = check_init dependency_graph functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option options#no_variable_autoremove in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
