@@ -120,6 +120,7 @@ val memory_used : unit -> string
 
 type shell_highlighting_type =
 	| Shell_bold
+	| Shell_bright_green
 	| Shell_error
 	| Shell_normal
 	| Shell_result

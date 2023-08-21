@@ -235,6 +235,7 @@ let set_timed_mode () =
 
 type shell_highlighting_type =
 	| Shell_bold
+	| Shell_bright_green
 	| Shell_error
 	| Shell_normal
 	| Shell_result
@@ -242,12 +243,13 @@ type shell_highlighting_type =
 	| Shell_warning
 
 let shell_code_of_shell_highlighting_type = function
-	| Shell_bold -> "\027[1m"
-	| Shell_error -> "\027[1;37;41m"
-	| Shell_normal -> "\027[0m"
-	| Shell_result -> "\027[92;40m"
-	| Shell_soundness -> "\027[94m"
-	| Shell_warning -> "\027[93;40m"
+	| Shell_bold			-> "\027[1m"
+	| Shell_bright_green	-> "\027[1;32;40m"
+	| Shell_error			-> "\027[1;37;41m"
+	| Shell_normal			-> "\027[0m"
+	| Shell_result			-> "\027[92;40m"
+	| Shell_soundness		-> "\027[94m"
+	| Shell_warning			-> "\027[93;40m"
 
 (*    HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -474,11 +476,15 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Verbose_standard ((shell_code_of_shell_highlighting_type Shell_bold) ^ Constants.program_name ^ " successfully terminated" ^ (shell_code_of_shell_highlighting_type Shell_normal) ^ " (" ^ (after_seconds ()) ^ ")");
+
+	(* Use some nice font to highlight termination *)
+	print_highlighted_message Shell_bright_green Verbose_standard ((shell_code_of_shell_highlighting_type Shell_bold) ^ Constants.program_name ^ " successfully terminated" ^ (shell_code_of_shell_highlighting_type Shell_normal) ^ " (" ^ (after_seconds ()) ^ ")");
+
 	(* Print memory info *)
 	if verbose_mode_greater Verbose_experiments then(
 		print_message Verbose_experiments ("Estimated memory used: " ^ (memory_used ()));
 	);
+
 	(* The end *)
 	print_newline();
 	flush stderr;
