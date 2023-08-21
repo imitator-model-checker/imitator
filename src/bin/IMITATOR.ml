@@ -783,9 +783,7 @@ match options#imitator_mode with
 			(* Reachability with minimization of a parameter valuation *)
 			(************************************************************)
 			| EFpmin (state_predicate , parameter_index) ->
-				let efopt_algo = new AlgoEFmin.algoEFmin model options state_predicate parameter_index in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
+				let efopt_algo = new AlgoEFmin.algoEFmin model options (not emptiness_only) state_predicate parameter_index in
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 
@@ -794,9 +792,7 @@ match options#imitator_mode with
 			(* Reachability with maximization of a parameter valuation *)
 			(************************************************************)
 			| EFpmax (state_predicate , parameter_index) ->
-				let efopt_algo = new AlgoEFmax.algoEFmax model options state_predicate parameter_index  in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
+				let efopt_algo = new AlgoEFmax.algoEFmax model options (not emptiness_only) state_predicate parameter_index  in
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 

@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFopt : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate -> Automaton.parameter_index ->
+class virtual algoEFopt : AbstractModel.abstract_model -> Options.imitator_options -> bool -> AbstractProperty.state_predicate -> Automaton.parameter_index ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
@@ -35,12 +35,6 @@ class virtual algoEFopt : AbstractModel.abstract_model -> Options.imitator_optio
 		
 		method initialize_variables : unit
 
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Set the 'synthesize_valuations' flag (must be done right after creating the algorithm object!) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method set_synthesize_valuations : bool -> unit
-		
-		
 		(*------------------------------------------------------------*)
 		(* Instantiating min/max *)
 		(*------------------------------------------------------------*)

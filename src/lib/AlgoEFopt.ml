@@ -32,18 +32,13 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
 	object (self) inherit algoStateBased model options as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
-	(*------------------------------------------------------------*)
-	(** Class "parameters" to be initialized *)
-	(*------------------------------------------------------------*)
-	val mutable synthesize_valuations : bool option = None
-
 	(*------------------------------------------------------------*)
 	(* Variables *)
 	(*------------------------------------------------------------*)
@@ -115,20 +110,8 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Set the `synthesize_valuations` flag (must be done right after creating the algorithm object!) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method set_synthesize_valuations flag =
-		synthesize_valuations <- Some flag
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Shortcuts methods *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private get_synthesize_valuations =
-		match synthesize_valuations with
-		| Some flag -> flag
-		| None -> raise (InternalError "Variable `synthesize_valuations` not initialized in AlgoEFopt although it should have been at this point")
-		
 	method private get_current_optimum =
 		match current_optimum with
 		| Some optimum -> optimum
@@ -287,7 +270,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 				self#update_optimum projected_constraint;
 				
 				(* Case synthesis *)
-				if self#get_synthesize_valuations then(
+				if full_synthesis then(
 					self#replace_optimum_valuations px_constraint;
 				);
 				
@@ -331,7 +314,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 				let discard = ref true in
 				
 				(* Case synthesis AND goal location *)
-				if self#get_synthesize_valuations then(
+				if full_synthesis then(
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
 						self#print_algo_message Verbose_high "…but since we want synthesis, still checks whether the optimum is *equal*";
@@ -407,7 +390,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 					self#update_optimum projected_constraint;
 
 					(* Case synthesis *)
-					if self#get_synthesize_valuations then(
+					if full_synthesis then(
 						self#replace_optimum_valuations px_constraint;
 					);
 					
@@ -420,7 +403,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 
 					(* Keep the state, but add the negation of the optimum to squeeze the state space! (no need to explore the part with parameters smaller/larger than the optimum) *)
 					(*** NOTE: not in synthesis mode ***)
-					if not self#get_synthesize_valuations then(
+					if not full_synthesis then(
 						let negated_optimum = match negated_optimum with
 							| Some negated_optimum -> negated_optimum
 							| None -> raise (InternalError("A negated optimum should be defined at that point"))
@@ -532,7 +515,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 		
 		let result =
 		(* Case synthesis: get the synthesized multidimensional constraint *)
-		if self#get_synthesize_valuations then (
+		if full_synthesis then (
 			
 			(* Get the constraint *)
 			match current_optimum_valuations with
