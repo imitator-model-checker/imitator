@@ -731,6 +731,29 @@ Error                                   : invalid model
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that variables names are checked in function calls',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/undeclared-var-in-function-call.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'undeclared-var-in-function-call.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 #*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON UNSATISFIABLE INITIAL STATE
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
