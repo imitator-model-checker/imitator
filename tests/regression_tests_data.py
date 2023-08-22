@@ -4392,6 +4392,401 @@ Error                                   : invalid model
 	,
 
 	#------------------------------------------------------------
+	# BEGIN : Test new init state section
+	#------------------------------------------------------------
+
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/10
+# 		## Last modified            : 2021/03/10
+# 		## Test disabled            : 2021/06/01
+# 		## Test for IMITATOR version: > 3.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test init state printing - old state zone (printing)',
+# 		'tags' : 'semantic, printing, init',
+# 		'input_files': ['init_state/old-init-state-printing.imi'],
+# 		'options'    : '-imi2IMI',
+# 		'expectations' : [
+# 			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
+# var
+# 	i, j
+# 		: discrete;
+#
+#
+# (************************************************************)
+#  automaton pta
+# (************************************************************)
+#  actions: ;
+#
+# loc l1: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_1*)  goto lend;
+#
+# accepting loc lend: invariant True
+#  end (* pta *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+#  automaton pta2
+# (************************************************************)
+#  actions: ;
+#
+# loc l2: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_2*)  goto lend2;
+#
+# accepting loc lend2: invariant True
+#  end (* pta2 *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+# (* Initial state *)
+# (************************************************************)
+#
+# init := True
+# 	(*------------------------------------------------------------*)
+# 	(* Initial location *)
+# 	(*------------------------------------------------------------*)
+# 	& loc[pta] = l1
+# 	& loc[pta2] = l2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial discrete assignments *)
+# 	(*------------------------------------------------------------*)
+# 	& i = 1
+# 	& j = 2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial constraint *)
+# 	(*------------------------------------------------------------*)
+# 	 & True
+#
+# ;
+#
+#
+# (************************************************************)
+# (* The end *)
+# (************************************************************)
+# end
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/06/01
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test imi2IMI for initial state v3.1',
+		'tags' : 'semantic, printing, init',
+		'input_files': ['init_state/new-init-state-printing.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
+var
+	i, j
+		: rational;
+
+	b
+		: bool;
+
+	k, l
+		: int;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ actions: ;
+
+loc l1: invariant True
+	when b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {} (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ actions: ;
+
+loc l2: invariant True
+	when b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {} (* sync nosync_2*)  goto lend2;
+
+accepting loc lend2: invariant True
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+		loc[pta2] := l2,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 1,
+		j := 2,
+		b := False,
+		k := 0,
+		l := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/09
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-variable-at-discrete-and-continuous.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/04
+# 		## Last modified            : 2021/05/31
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'purpose'    : 'Test that init of an undeclared variable is forbidden - new init state (behavior)',
+# 		'tags' : 'semantic, behavior, init',
+# 		'input_files': ['init_state/init-discrete-section-not-declared-error.imi'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-discrete-section-not-declared-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/04
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-constant.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
+  STATE 1:
+  pta: lend, b = True ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-variable.imi'],
+		'options'    : '-no-var-autoremove -mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
+		'tags'       : 'syntax,init',
+		'input_files': ['init_state/constants-in-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'constants-in-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test new init state section
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
 	{
 		## Test version             : 1
 		## Test since               : 2021/05/28
@@ -21559,400 +21954,6 @@ end
 	#------------------------------------------------------------
 	,
 
-	#------------------------------------------------------------
-	# BEGIN : Test new init state section
-	#------------------------------------------------------------
-
-# 	#------------------------------------------------------------
-# 	{
-# 		## Test version             : 1
-# 		## Test since               : 2021/03/10
-# 		## Last modified            : 2021/03/10
-# 		## Test disabled            : 2021/06/01
-# 		## Test for IMITATOR version: > 3.0
-# 		## Author 					: lbinria
-# 		'author': 'lbinria',
-# 		'purpose'    : 'Test init state printing - old state zone (printing)',
-# 		'tags' : 'semantic, printing, init',
-# 		'input_files': ['init_state/old-init-state-printing.imi'],
-# 		'options'    : '-imi2IMI',
-# 		'expectations' : [
-# 			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
-# var
-# 	i, j
-# 		: discrete;
-#
-#
-# (************************************************************)
-#  automaton pta
-# (************************************************************)
-#  actions: ;
-#
-# loc l1: invariant True
-# 	when  i = 0
-# & j = 0 do {}  (* sync nosync_1*)  goto lend;
-#
-# accepting loc lend: invariant True
-#  end (* pta *)
-# (************************************************************)
-#
-#
-# (************************************************************)
-#  automaton pta2
-# (************************************************************)
-#  actions: ;
-#
-# loc l2: invariant True
-# 	when  i = 0
-# & j = 0 do {}  (* sync nosync_2*)  goto lend2;
-#
-# accepting loc lend2: invariant True
-#  end (* pta2 *)
-# (************************************************************)
-#
-#
-# (************************************************************)
-# (* Initial state *)
-# (************************************************************)
-#
-# init := True
-# 	(*------------------------------------------------------------*)
-# 	(* Initial location *)
-# 	(*------------------------------------------------------------*)
-# 	& loc[pta] = l1
-# 	& loc[pta2] = l2
-#
-# 	(*------------------------------------------------------------*)
-# 	(* Initial discrete assignments *)
-# 	(*------------------------------------------------------------*)
-# 	& i = 1
-# 	& j = 2
-#
-# 	(*------------------------------------------------------------*)
-# 	(* Initial constraint *)
-# 	(*------------------------------------------------------------*)
-# 	 & True
-#
-# ;
-#
-#
-# (************************************************************)
-# (* The end *)
-# (************************************************************)
-# end
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/10
-		## Last modified            : 2021/06/01
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test imi2IMI for initial state v3.1',
-		'tags' : 'semantic, printing, init',
-		'input_files': ['init_state/new-init-state-printing.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
-var 
-	i, j
-		: rational;
-
-	b
-		: bool;
-
-	k, l
-		: int;
-
-
-
-(************************************************************)
- automaton pta
-(************************************************************)
- actions: ;
-
-loc l1: invariant True
-	when b
-& i = 0
-& j = 0
-& k = 0
-& l = 0 do {} (* sync nosync_1*)  goto lend;
-
-accepting loc lend: invariant True
- end (* pta *)
-(************************************************************)
-
-
-(************************************************************)
- automaton pta2
-(************************************************************)
- actions: ;
-
-loc l2: invariant True
-	when b
-& i = 0
-& j = 0
-& k = 0
-& l = 0 do {} (* sync nosync_2*)  goto lend2;
-
-accepting loc lend2: invariant True
- end (* pta2 *)
-(************************************************************)
-
-
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-
-init := {
-
-	discrete =
-		(*------------------------------------------------------------*)
-		(* Initial location *)
-		(*------------------------------------------------------------*)
-		loc[pta] := l1,
-		loc[pta2] := l2,
-		(*------------------------------------------------------------*)
-		(* Initial discrete variables assignments *)
-		(*------------------------------------------------------------*)
-		i := 1,
-		j := 2,
-		b := False,
-		k := 0,
-		l := 0
-	;
-
-	(*------------------------------------------------------------*)
-	(* Initial continuous constraint *)
-	(*------------------------------------------------------------*)
-	continuous = 
-		& True
-	;
-
-}
-
-
-(************************************************************)
-(* The end *)
-(************************************************************)
-end
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/16
-		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: 3.0.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/16
-		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/09
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-variable-at-discrete-and-continuous.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-# 	#------------------------------------------------------------
-# 	{
-# 		## Test version             : 1
-# 		## Test since               : 2021/03/04
-# 		## Last modified            : 2021/05/31
-# 		## Test for IMITATOR version: 3.1.0
-# 		## Author 					: lbinria
-# 		'purpose'    : 'Test that init of an undeclared variable is forbidden - new init state (behavior)',
-# 		'tags' : 'semantic, behavior, init',
-# 		'input_files': ['init_state/init-discrete-section-not-declared-error.imi'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'init-discrete-section-not-declared-error.res' , 'content' : """
-# Error                                   : invalid model
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
-
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/04
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-with-constant.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
-  STATE 1:
-  pta: lend, b = True ==> 
-&True
-
-  Projection onto the parameters:
-  True
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/05/27
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-with-variable.imi'],
-		'options'    : '-no-var-autoremove -mode statespace -states-description',
-		'expectations' : [
-			{'file': 'init-variable-with-variable.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2023/08/22
-		# Last modified            : 2023/08/22
-		# Test for IMITATOR version: 3.4-beta
-		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
-		'tags'       : 'syntax,init',
-		'input_files': ['init_state/constants-in-init.imi'],
-		'options'    : '-mode checksyntax',
-		'expectations' : [
-			{'file': 'constants-in-init.res' , 'content' : """
-Number of IPTAs                         : 1
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/21
-		## Last modified            : 2021/06/21
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	# END : Test new init state section
-	#------------------------------------------------------------
 
 
 	#------------------------------------------------------------
