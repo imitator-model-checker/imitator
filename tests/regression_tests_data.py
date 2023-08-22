@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/04/05
+# Last modified     : 2023/08/22
 #************************************************************
 
 
@@ -21896,6 +21896,29 @@ Error                                   : invalid model
 Error                                   : invalid model
 		"""
 			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
+		'tags'       : 'syntax,init',
+		'input_files': ['init_state/constants-in-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'constants-in-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
 			,
 		] # end expectations
 	} # end test case
