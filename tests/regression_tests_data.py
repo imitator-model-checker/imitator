@@ -708,6 +708,29 @@ Number of IPTAs                         : 1
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions syntax is still checked',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-invalid-syntax.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'unused-function-invalid-syntax.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 #*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON UNSATISFIABLE INITIAL STATE
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-

@@ -1,0 +1,94 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that function syntax is checked
+ * Description      : Test that function syntax is checked
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/08/22
+ * Last modified    : 2023/08/22
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+(************************************************************)
+(* Functions *)
+(************************************************************)
+function this_function_does_nothing () : bool
+begin
+	return this_does_not_exist(some_unknown_variable) + toto * (hello (hello))
+end
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when x = 1 sync a do {x := p/2} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+
+
+
