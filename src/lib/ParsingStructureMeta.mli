@@ -83,6 +83,9 @@ val only_discrete_in_parsed_discrete_arithmetic_expression : variable_infos -> (
 (** Check that there is only discrete variables in a parsed discrete boolean expression *)
 val only_discrete_in_nonlinear_expression : variable_infos -> parsed_discrete_boolean_expression -> bool
 
+(* Check that there is only discrete variables in a parsed state predicate *)
+val only_discrete_in_parsed_state_predicate : variable_infos -> (var_type -> variable_name -> unit) option -> parsed_state_predicate -> bool
+
 (** Check whether there is clock or param factors in arithmetic expression found in boolean expression (e.g: x*x or 2*x*(1+(2*y)) ) *)
 val nonlinear_operation_on_continuous_in_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> bool
 

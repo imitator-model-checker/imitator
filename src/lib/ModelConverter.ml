@@ -1707,6 +1707,8 @@ let check_parsed_state_predicate parsing_infos expr =
         (* Undefined location name callback, triggered if an undefined location is found *)
         (Some (fun automaton_name loc_name -> print_error ("Unknown location name `" ^ loc_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.")))
         expr
+    &&
+    ParsingStructureMeta.only_discrete_in_parsed_state_predicate variable_infos (Some (fun var_type variable_name -> print_error ("Variable `" ^ variable_name ^ "` is a " ^ DiscreteType.string_of_var_type var_type ^ ". Only discrete can be used in property."))) expr
 
 (*------------------------------------------------------------*)
 (** Generic function checking whether a name is a valid parameter name *)
@@ -2151,6 +2153,9 @@ type converted_observer_structure = {
 	
 	initial_observer_constraint_option	: LinearConstraint.px_linear_constraint option;
 }
+
+
+
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)

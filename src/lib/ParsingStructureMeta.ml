@@ -406,6 +406,10 @@ let only_discrete_in_parsed_discrete_arithmetic_expression variable_infos clock_
 let only_discrete_in_nonlinear_expression variable_infos expr =
     for_all_in_parsed_discrete_boolean_expression (is_only_discrete variable_infos None) expr
 
+(* Check that there is only discrete variables in a parsed state predicate *)
+let only_discrete_in_parsed_state_predicate variable_infos clock_or_param_found_callback_opt expr =
+    for_all_in_parsed_state_predicate (fun _ -> true) (is_only_discrete variable_infos clock_or_param_found_callback_opt) expr
+
 (*(* Check if a parsed arithmetic expression contains clocks *)
 let has_clock_parsed_arithmetic_expression variable_infos =
     exists_in_parsed_discrete_arithmetic_expression (is_clock variable_infos)*)
