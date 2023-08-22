@@ -91,32 +91,35 @@ val is_global_expression_constant : functions_table option -> global_expression 
 
 (* --- Builtin-function evaluations --- *)
 
-val eval_pow : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_mod : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_int_div : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_rational_of_int : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_shift_left : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_shift_right : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_fill_left : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_fill_right : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_log_and : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_log_or : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_log_xor : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_log_not : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_array_append : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_array_mem : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_array_length : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_is_empty : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_cons : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_hd : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_tl : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_rev : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_mem : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_list_length : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_push : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_pop : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_top : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_clear : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_is_empty : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-val eval_stack_length : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_pow                : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_mod                : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_int_div            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_rational_of_int    : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_shift_left         : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_shift_right        : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_fill_left          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_fill_right         : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_log_and            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_log_or             : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_log_xor            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_log_not            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_array_copy         : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_array_append       : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_array_mem          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_array_length       : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_is_empty      : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+(* val eval_list_copy          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value *)
+val eval_list_cons          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_hd            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_tl            : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_rev           : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_mem           : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_list_length        : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_copy         : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_push         : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_pop          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_top          : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_clear        : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_is_empty     : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
+val eval_stack_length       : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 

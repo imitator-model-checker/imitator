@@ -9,16 +9,16 @@
  * Categories       : TBD
  * Source           : Own work
  * bibkey           :
- * Author           : B.L
+ * Author           : B.L + Étienne André
  * Modeling         : B.L
  * Input by         : B.L
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2022/06/29
- * Last modified    : 2022/10/27
- * Model version    : 1.1
+ * Last modified    : 2023/08/22
+ * Model version    : 1.2
  *
- * IMITATOR version : 3.3
+ * IMITATOR version : 3.4
  ************************************************************)
 
 var
@@ -28,6 +28,7 @@ var
   b, bsl, bsr, bla, blo, blxo, bln : binary(4);
   bfl, bfr : binary(6);
   aa : int array(4);
+  array_b : int array(4);
   array_mem : bool;
   a_length : int;
 
@@ -44,11 +45,13 @@ var
   stack_pop, stack_top : int;
   stack_is_empty : bool;
   stack_length : int;
+  s_copy : int stack;
 
   q : int queue;
   queue_pop, queue_top : int;
   queue_is_empty : bool;
   queue_length : int;
+  q_copy : int queue;
 
 automaton P
 
@@ -84,6 +87,8 @@ automaton P
     array_mem := array_mem(1, aa); (* array_mem = True *)
     a_length := array_length(aa); (* array_length = 4 *)
 
+    array_b := array_copy(aa);
+
     (* lists *)
 
     list_is_empty := list_is_empty(l); (* list_is_empty = False *)
@@ -104,8 +109,12 @@ automaton P
     stack_top := stack_top(s); (* stack_top = 10 *)
     stack_push(1, s); (* s = [10,1]*)
     stack_length := stack_length(s); (* stack_length = 2 *)
+
+    s_copy := stack_copy(s);
+
     stack_clear(s); (* s = [] *)
     stack_is_empty := stack_is_empty(s); (* stack_is_empty = True *)
+
 
     (* queues *)
 
@@ -114,6 +123,7 @@ automaton P
     queue_pop := queue_pop(q); (* q = [11], queue_pop = 10 *)
     queue_top := queue_top(q); (* queue_top = 11 *)
     queue_push(1, q); (* q = [11,1] *)
+    q_copy := queue_copy(q);
     queue_length := queue_length(q); (* queue_length = 2 *)
     queue_clear(q); (* q = [] *)
     queue_is_empty := queue_is_empty(q); (* queue_is_empty = True *)
@@ -131,7 +141,10 @@ init := {
     loc[P]:=s0,
     r := 3,
     b := 0b1011,
-    l := list([1,2,3,4,5])
+    l := list([1,2,3,4,5]),
+    array_b := [1,1,1,1],
+    s_copy := stack(),
+    q_copy := queue(),
   ;
 
 }

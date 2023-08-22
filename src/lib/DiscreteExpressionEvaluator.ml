@@ -1107,6 +1107,11 @@ let eval_log_not str_expr = function
         Abstract_scalar_value (Abstract_bin_value (BinaryWord.log_not binary_word))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
+let eval_array_copy str_expr = function
+    | Abstract_container_value (Abstract_array_value a) :: _ ->
+        Abstract_container_value (Abstract_array_value (Array.copy a))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
 let eval_array_append str_expr = function
     | Abstract_container_value (Abstract_array_value l_array) :: Abstract_container_value (Abstract_array_value r_array) :: _ ->
         Abstract_container_value (Abstract_array_value (Array.append l_array r_array))
@@ -1126,6 +1131,11 @@ let eval_list_is_empty str_expr = function
     | Abstract_container_value (Abstract_list_value l) :: _ ->
         Abstract_scalar_value (Abstract_bool_value (List.length l = 0))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+(*let eval_list_copy str_expr = function
+    | Abstract_container_value (Abstract_list_value l) :: _ ->
+        Abstract_container_value (Abstract_list_value (List.copy l))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))*)
 
 let eval_list_cons str_expr = function
     | e :: Abstract_container_value (Abstract_list_value l) :: _ ->
@@ -1157,6 +1167,13 @@ let eval_list_mem str_expr = function
 let eval_list_length str_expr = function
     | Abstract_container_value (Abstract_list_value l) :: _ ->
         Abstract_scalar_value (Abstract_number_value (Abstract_int_value (Int32.of_int (List.length l))))
+    | _ -> raise (InternalError (bad_arguments_message str_expr))
+
+let eval_stack_copy str_expr = function
+    | Abstract_container_value (Abstract_stack_value s) :: _ ->
+        Abstract_container_value (Abstract_stack_value (Stack.copy s))
+    | Abstract_container_value (Abstract_queue_value q) :: _ ->
+       Abstract_container_value (Abstract_queue_value (Queue.copy q))
     | _ -> raise (InternalError (bad_arguments_message str_expr))
 
 let eval_stack_push str_expr = function

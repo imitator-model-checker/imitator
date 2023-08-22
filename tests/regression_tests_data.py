@@ -5606,19 +5606,19 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		## Test version             : 1
+		## Test version             : 1.1
 		## Test since               : 2022/07/19
-		## Last modified            : 2022/10/27
+		## Last modified            : 2023/08/22
 		'author': 'lbinria',
 		'purpose'    : 'Test all builtin functions',
 		'input_files': ['functions/builtin-functions.imi'],
 		'tags': 'semantic, behavior, function',
-		'imitator-version': '3.3',
+		'imitator-version': '3.4-beta',
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'builtin-functions-statespace.states' , 'content' : """
   STATE 1:
-  P: lend, r = 5, r_pow = 25, queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1 ==>
+  P: lend, r = 5, r_pow = 25, q_copy = queue([11, 1]), queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), s_copy = stack([1, 10]), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, array_b = [1, 2, 3, 4], aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1 ==>
 &True
 		"""
 			 } # end result file

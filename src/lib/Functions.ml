@@ -178,6 +178,16 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             side_effect = false
         };
         {
+            name = "array_copy";
+            parameter_refs = variable_refs_of_names ["a"];
+            signature_constraint = [
+                Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
+                Defined_type_constraint (Array_constraint (Type_name_constraint "a", Length_constraint_expression (Length_scalar_constraint "l")));
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_array_copy;
+            side_effect = false
+        };
+        {
             name = "array_append";
             parameter_refs = variable_refs_of_names ["a1"; "a2"];
             signature_constraint = [
@@ -282,6 +292,16 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             side_effect = false
         };
         {
+            name = "stack_copy";
+            parameter_refs = variable_refs_of_names ["s"];
+            signature_constraint = [
+                Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+                Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_copy;
+            side_effect = true
+        };
+        {
             name = "stack_push";
             parameter_refs = variable_refs_of_names ["s"; "e"];
             signature_constraint = [
@@ -341,6 +361,16 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_length;
             side_effect = false
+        };
+        {
+            name = "queue_copy";
+            parameter_refs = variable_refs_of_names ["s"];
+            signature_constraint = [
+                Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+                Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
+            ];
+            body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_copy;
+            side_effect = true
         };
         {
             name = "queue_push";

@@ -991,6 +991,8 @@ However, an array can be indirectly modified through one of its elements, using 
 \begin{itemize}
 	\item \styleIMI{a[i:int]:'a} -- Returns the element of array \styleIMI{a} at index \styleIMI{i}
 
+	\item \label{item:lbl-array_copy} \styleIMI{array\_copy(a:'a array(l)):'a array(l)} -- Copies an array of length \styleIMI{l}, resulting in an identical array of length \styleIMI{l}
+
 	\item \label{item:lbl-array_append} \styleIMI{array\_append(a1:'a array(l1), a2:'a array(l2)):'a array(l1+l2)} -- Concatenates an array of length \styleIMI{l1} with an array of length \styleIMI{l2}, resulting in an array of length \styleIMI{l1 + l2}
 
 	\item \label{item:lbl-array_length} \styleIMI{array\_length(a1:'a array(l1)):int=l1} -- Returns the length of array~\styleIMI{a1}
@@ -1132,6 +1134,8 @@ Some stack functions are subject to side effects, \ie{} they modify the stack.
 \begin{itemize}
 	\item \styleIMI{stack():'a stack} -- Returns an empty stack
 
+	\item \label{item:lbl-stack_copy} \styleIMI{stack\_copy(s:'a stack) :'a stack} -- Copies a stack \styleIMI{s} into an identical fresh stack
+
 	\item \label{item:lbl-stack_push} \styleIMI{stack\_push(e:'a, s:'a stack)} -- Adds an element \styleIMI{e} at the top of the stack \styleIMI{s}---the stack is modified, this function is subject to side-effects
 
 	\item \label{item:lbl-stack_pop} \styleIMI{stack\_pop(s:'a stack):'a} -- Removes the element at the top of the stack \styleIMI{s} and returns it---the stack is modified, this function is subject to side-effects
@@ -1213,6 +1217,8 @@ Examples of queue definitions are given below:
 
 \begin{itemize}
 	\item \styleIMI{queue():'a queue} -- Returns an empty queue
+
+	\item \label{item:lbl-queue_copy} \styleIMI{queue\_copy(q:'a queue) :'a queue} -- Copies a queue \styleIMI{q} into an identical queue
 
 	\item \label{item:lbl-queue_push} \styleIMI{queue\_push(e:'a, q:'a queue)} -- Adds an element \styleIMI{e} at the end of the queue \styleIMI{q}---the queue is modified, this function is subject to side-effects
 
@@ -1315,6 +1321,8 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions ov
 			\hline
 			\multicolumn{3}{|c|}{\textbf{Arrays}} \\
 			\hline
+			\hyperref[item:lbl-array_copy]{\styleIMI{array\_copy}} & Copies an array & \cellNo{}\\
+			\hline
 			\hyperref[item:lbl-array_append]{\styleIMI{array\_append}} & Concatenates two arrays & \cellNo{}\\
 			\hline
 			\hyperref[item:lbl-array_length]{\styleIMI{array\_length}} & Returns the length of an array & \cellNo{}\\
@@ -1339,6 +1347,8 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions ov
 			\hline
 			\multicolumn{3}{|c|}{\textbf{Stack}} \\
 			\hline
+			\hyperref[item:lbl-stack_copy]{\styleIMI{stack\_copy}} & Copies a stack & \cellNo{}\\
+			\hline
 			\hyperref[item:lbl-stack_push]{\styleIMI{stack\_push}} & Pushes an element on the top of a stack & \cellYes{}\\
 			\hline
 			\hyperref[item:lbl-stack_pop]{\styleIMI{stack\_pop}} & Removes and returns the element on the top of a stack & \cellYes{}\\
@@ -1352,6 +1362,8 @@ We summarize in \cref{table:summary:builtin-functions} the built-in functions ov
 			\hyperref[item:lbl-stack_length]{\styleIMI{stack\_length}} & Returns the number of elements in a stack & \cellNo{}\\
 			\hline
 			\multicolumn{3}{|c|}{\textbf{Queues}} \\
+			\hline
+			\hyperref[item:lbl-queue_copy]{\styleIMI{queue\_copy}} & Copies a queue & \cellNo{}\\
 			\hline
 			\hyperref[item:lbl-queue_push]{\styleIMI{queue\_push}} & Adds an element at the end of a queue & \cellYes{}\\
 			\hline
@@ -4883,6 +4895,7 @@ We define each of those two components below.
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
 	\ & \styleIMI{(} \nt{array\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{array\_copy (} \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_append (} \nt{array\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_length (} \nt{array\_expression} \styleIMI{)} \\
 	$|$ & \styleIMI{array\_mem (} \nt{global\_expression} \styleIMI{, } \nt{array\_expression} \styleIMI{)} \\
@@ -5931,6 +5944,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{pow} \\
 	\styleIMI{projectresult} \\
 	\styleIMI{property} \\
+	% TODO (2023/08/22): these are probably NOT reserved words!!
 	\styleIMI{queue\_clear} \\
 	\styleIMI{queue\_is\_empty} \\
 	\styleIMI{queue\_length} \\
