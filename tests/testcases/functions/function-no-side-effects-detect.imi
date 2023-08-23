@@ -1,0 +1,127 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Checking that modifications of local variables are not labeled as side-effect functions
+ * Description      : Checking that modifications of local variables are not labeled as side-effect functions
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/08/23
+ * Last modified    : 2023/08/23
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: int;
+	r,
+		: rational;
+	q,
+		: int queue;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+(************************************************************)
+(* Functions *)
+(************************************************************)
+(* Function returning true with some computations on a local int variable BUT no side-effect *)
+function return_true() : bool
+begin
+	var i2 : int = i;
+	i2 := i + 1;
+	return True
+end
+
+(* Function returning true with some computations on a local queue variable BUT no side-effect *)
+function return_true_queue() : bool
+begin
+	var q2 : int queue = queue_copy(q);
+	queue_clear(q2);
+	return True
+end
+
+function highest_element_in_queue(q : int queue) : int
+begin
+	var q_copy : int queue = queue_copy(q);
+	var highest : int = 0;
+	(* Iterate on the copied queue *)
+	while not (queue_is_empty(q_copy)) do
+		var e : int = queue_pop(q_copy);
+		if e > highest then highest := e end
+	done
+	return highest
+end
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant return_true()
+	when x = 1 & highest_element_in_queue(q) >= 0 sync a do {x := p/2; i := i+1; r := r*r; queue_push(4, q); queue_push(2, q); queue_push(99, q); queue_push(1, q); i := highest_element_in_queue(q)} goto l2;
+
+loc l2: invariant return_true_queue()
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		r := 1/2,
+		i := 0,
+		q := queue(),
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

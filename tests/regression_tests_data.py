@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/08/22
+# Last modified     : 2023/08/23
 #************************************************************
 
 
@@ -5697,7 +5697,7 @@ Error                                   : invalid model
       ## Test since               : 2022/06/23
       ## Last modified            : 2022/06/23
       'author': 'lbinria',
-      'purpose'    : 'Test side effects detection on user defined functions',
+      'purpose'    : 'Test side-effects detection in user-defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
       'tags': 'function, inference',
       'imitator-version': '3.4',
@@ -5735,6 +5735,30 @@ Error                                   : invalid model
 
     ,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/23
+		# Last modified            : 2023/08/23
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test absence of false positive in side-effects detection in user-defined functions',
+		'tags'       : 'syntax,semantic,translation',
+		'input_files': ['functions/function-no-side-effects-detect.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'function-no-side-effects-detect-statespace.states' , 'content' : """
+STATE 1:
+  pta: l2, q = queue([4, 2, 99, 1]), i = 99
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
     #------------------------------------------------------------
     {
       ## Test version             : 1
