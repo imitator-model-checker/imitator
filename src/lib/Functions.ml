@@ -299,7 +299,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Stack_constraint (Type_name_constraint "a"));
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_copy;
-            side_effect = true
+            side_effect = false
         };
         {
             name = "stack_push";
@@ -370,7 +370,7 @@ let builtin_function_bodies : AbstractModel.fun_definition list =
                 Defined_type_constraint (Queue_constraint (Type_name_constraint "a"));
             ];
             body = Fun_builtin DiscreteExpressionEvaluator.eval_stack_copy;
-            side_effect = true
+            side_effect = false
         };
         {
             name = "queue_push";
