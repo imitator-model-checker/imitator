@@ -538,7 +538,12 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
-		queue_empty || init_lost ||	init_exact || init_has_winning_witness
+		let time_out = match options#time_limit with 
+			Some time_limit -> ImitatorUtilities.time_from start_time > float_of_int time_limit
+			| None -> false
+		in
+
+		queue_empty || init_lost ||	init_exact || init_has_winning_witness || time_out
 
 
 
@@ -595,6 +600,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	method run =
 		(*** NOTE: actually not even useful… ***)
 (* 		self#initialize_variables; *)
+
+		start_time <- Unix.gettimeofday();
 
 		(* Compute the parametric timed game *)
 		self#compute_PTG;
