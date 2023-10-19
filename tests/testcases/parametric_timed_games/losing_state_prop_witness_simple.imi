@@ -38,7 +38,6 @@ end (* ptg *)
 init :=
 	& loc[ptg] = l1
 	& x = 0
-	& p >= 0
 ;
 
 end
