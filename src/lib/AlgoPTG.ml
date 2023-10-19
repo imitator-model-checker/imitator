@@ -40,6 +40,7 @@ let bot = LinearConstraint.false_px_nnconvex_constraint
 let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
 let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
 let print_PTG = print_message Verbose_low
+let print_exp = print_message Verbose_experiments
 
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
 
@@ -178,7 +179,7 @@ class stateSpacePTG_full model options = object
 	inherit stateSpacePTG
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
-		print_PTG ("PTG: Generating full statespace (not on the fly)");
+		print_exp ("PTG: Generating full statespace (not on the fly)");
 		let state = AlgoStateBased.create_initial_state model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
 		let process_successors_from_state_index source_state_index = 
@@ -200,7 +201,7 @@ class stateSpacePTG_full model options = object
 		in
 
 		let rec bfs unexplored_state_indices = 
-			print_PTG (Printf.sprintf "Expanding frontier of %d states " (List.length unexplored_state_indices));
+			print_exp (Printf.sprintf "Expanding frontier of %d states " (List.length unexplored_state_indices));
 			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
 				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
 			if unexplored_state_indices' = [] then () else bfs unexplored_state_indices' 
@@ -208,6 +209,7 @@ class stateSpacePTG_full model options = object
 		let initial_state_index = state_space#get_initial_state_index in 
 		passed_states#add initial_state_index;
 		bfs [initial_state_index];
+		print_exp (Printf.sprintf "PTG: Finished generating full statespace. Total states: %d" state_space#nb_states)
 
 	method compute_symbolic_successors source_state_index = 
 		state_space#get_successors_with_combined_transitions source_state_index
@@ -307,6 +309,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* The end *)
 		()
+	
+	val mutable termination_status = Regular_termination
 
 	
 
@@ -543,6 +547,8 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			| None -> false
 		in
 
+		if time_out then termination_status <- Time_limit state_space#nb_states;
+
 		queue_empty || init_lost ||	init_exact || init_has_winning_witness || time_out
 
 
@@ -569,6 +575,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
+			print_exp (Printf.sprintf "Waiting list size: %d, state space size: %d" waiting#length state_space#nb_states);
 			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model);
 			let e, edge_status = waiting#extract in 			
 			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model));
@@ -620,6 +627,9 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
+		self#print_algo_message_newline Verbose_standard (
+			Printf.sprintf "Size of explored state space: %d" (state_space#nb_states);
+		);
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
@@ -665,7 +675,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if (Input.get_property()).synthesis_type = Synthesis then Constraint_exact else Constraint_maybe_under in
+		let soundness = if (Input.get_property()).synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
 		Single_synthesis_result
@@ -683,7 +693,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 			computation_time	= time_from start_time;
 
 			(* Termination *)
-			termination			= (*termination_status*)Regular_termination;
+			termination			= termination_status;
 		}
 
 
