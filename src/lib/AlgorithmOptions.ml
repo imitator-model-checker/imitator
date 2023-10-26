@@ -631,7 +631,7 @@ let supports_witness property =
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> false
+	| Win _ -> true
 
 
 (*------------------------------------------------------------*)
