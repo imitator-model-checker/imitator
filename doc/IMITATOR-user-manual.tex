@@ -2667,6 +2667,17 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 	The \emph{accepting} cycles are not (yet?)\ supported for non-Zeno synthesis.
 \end{remark}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parametric Timed Game parameter synthesis}\label{section:algorithm:ptg}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Given a Parametric Timed Game (PTA enriched with controllable/uncontrollable actions) synthesizes a parameter constraint such that, for any parameter valuation in that constraint, a winning strategy exists for the controllable player. Based on the algorithm on Timed Games described in~\cite{DBLP:conf/concur/CassezDFLL05} and further extended for Parametric Timed Games in \cite{DBLP:conf/wodes/JovanovicFLR12}.
+
+The property syntax is of the following form:
+
+\begin{IMITATORproperty}
+property := #synth Win(state_predicate);
+\end{IMITATORproperty}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2895,6 +2906,10 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellNo{} & \cellNo{} \\
 
+			% PTG
+			\hline
+			PTG                   & \styleIMI{Win(state\_pred)}        & \cellYes{} & \cellYes{} & \cellNo{} \\
+
 			% Observer patterns
 
 			\hline
@@ -2989,6 +3004,11 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \styleOption{inclusion}  \\
 			\hline
 			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \styleOption{inclusion}  \\
+
+			% PTG
+
+			\hline
+			PTG                   & \styleIMI{Win(state\_pred)}        & \cellNo{} & \styleOption{inclusion}  \\
 
 			% Observer patterns = reachability
 
@@ -4444,8 +4464,8 @@ We define each of those two components below.
 \regleGrammaire{controllable\_actions}
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
-
 	$|$ & \styleIMI{controllable actions:} \nt{name\_list} \styleIMI{;} \\
+	$|$ & \styleIMI{uncontrollable actions:} \nt{name\_list} \styleIMI{;} \\
 	$|$ & \emptystring
 \end{longtable}
 
@@ -5489,8 +5509,11 @@ We define each of those two components below.
 	$|$ & \styleIMI{BCrandomseq} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
 	$|$ & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}    \\
 
+	% PTG
+	$|$ & \styleIMI{Win(} \nt{state\_predicate} \styleIMI{)}    																\\ 
+
 	% Observer pattern
-	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                       \\
+	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                 \\
 \end{longtable}
 
 
