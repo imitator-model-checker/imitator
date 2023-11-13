@@ -72,7 +72,7 @@ FME = ||| i:{0..N-1}@proc(i); // forget about this composition*)
 (************************************************************)
 automaton procGEN
 (************************************************************)
-synclabs: access_GEN, enter_GEN, exit_GEN, no_access_GEN, try_GEN, update_GEN;
+actions: access_GEN, enter_GEN, exit_GEN, no_access_GEN, try_GEN, update_GEN;
 
 loc idleGEN: invariant True
 	when turn = IDLE sync try_GEN do {xGEN := 0} goto activeGEN;
@@ -97,7 +97,7 @@ end -- procGEN*)
 (************************************************************)
 automaton proc1
 (************************************************************)
-synclabs: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
+actions: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
 
 loc idle1: invariant True
 	when turn = IDLE sync try_1 do {x1 := 0} goto active1;
@@ -122,7 +122,7 @@ end (*proc1*)
 (************************************************************)
 automaton proc2
 (************************************************************)
-synclabs: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
+actions: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
 
 loc idle2: invariant True
 	when turn = IDLE sync try_2 do {x2 := 0} goto active2;
@@ -147,7 +147,7 @@ end (*proc2*)
 (************************************************************)
 automaton proc3
 (************************************************************)
-synclabs: access_3, enter_3, exit_3, no_access_3, try_3, update_3;
+actions: access_3, enter_3, exit_3, no_access_3, try_3, update_3;
 
 loc idle3: invariant True
 	when turn = IDLE sync try_3 do {x3 := 0} goto active3;

@@ -1,0 +1,1 @@
+property := #synth AGnot ( loc[PetFeederShield_PetFeederShield_1_blocked_action] = good );

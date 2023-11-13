@@ -62,7 +62,7 @@ var
 (************************************************************)
 automaton sender
 (************************************************************)
-synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
+actions: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
 
 
 loc idleS: invariant x>=0
@@ -107,7 +107,7 @@ end (*sender*)
 (************************************************************)
 automaton receiver
 (************************************************************)
-synclabs: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
+actions: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
 
 
 loc new_file: invariant z>=0
@@ -170,7 +170,7 @@ end (*receiver*)
 (************************************************************)
 automaton channelK
 (************************************************************)
-synclabs: F,G;
+actions: F,G;
 
 loc startK: invariant u>=0
 
@@ -217,7 +217,7 @@ end (*channelK*)
 (************************************************************)
 automaton channelL
 (************************************************************)
-synclabs: A,B;
+actions: A,B;
 
 loc startL: invariant v>=0
 
@@ -240,7 +240,7 @@ end (*channelL*)
 (************************************************************)
 automaton Sclient
 (************************************************************)
-synclabs: Sin, Sout_OK, Sout_DK, Sout_NOK;
+actions: Sin, Sout_OK, Sout_DK, Sout_NOK;
 
 loc startSC: invariant ys<=SYNC 	(*invariant ys>=0*)
 
@@ -259,7 +259,7 @@ end (*Sclient*)
 (************************************************************)
 automaton Rclient
 (************************************************************)
-synclabs: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
+actions: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
 
 loc startRC: invariant yr>=0
 

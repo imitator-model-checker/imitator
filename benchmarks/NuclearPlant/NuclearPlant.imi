@@ -40,7 +40,7 @@ var 	x1, x2
 (************************************************************)
   automaton plant
 (************************************************************)
-synclabs: startHeating, tooHot, triggerAlarm, startWatering, endWatering, restart;
+actions: startHeating, tooHot, triggerAlarm, startWatering, endWatering, restart;
 initially normal;
 
 loc normal: invariant True

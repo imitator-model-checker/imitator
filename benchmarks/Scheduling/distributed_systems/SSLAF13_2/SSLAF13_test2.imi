@@ -66,7 +66,7 @@ var
 		: parameter;
 
 automaton pipeline_1
-	synclabs:pipeline_restart_1,task_11_act,task_11_done,task_12_act,task_12_done,task_13_act,task_13_done,task_14_act,task_14_done,task_15_act,task_15_done;
+	actions:pipeline_restart_1,task_11_act,task_11_done,task_12_act,task_12_done,task_13_act,task_13_done,task_14_act,task_14_done,task_15_act,task_15_done;
 
 	loc P1_1: invariant t_asap_1 <= 0
 		 when t_asap_1=0 sync task_11_act goto P1_2;
@@ -93,7 +93,7 @@ automaton pipeline_1
 end
 
 automaton pipeline_2
-	synclabs:pipeline_restart_2,task_21_act,task_21_done,task_22_act,task_22_done,task_23_act,task_23_done,task_24_act,task_24_done,task_25_act,task_25_done;
+	actions:pipeline_restart_2,task_21_act,task_21_done,task_22_act,task_22_done,task_23_act,task_23_done,task_24_act,task_24_done,task_25_act,task_25_done;
 
 	loc P2_1: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_21_act goto P2_2;
@@ -120,7 +120,7 @@ automaton pipeline_2
 end
 
 automaton proc_1
-	 synclabs: DEADLINE_MISSED_1, task_11_act,task_11_done,task_15_act,task_15_done,task_25_act,task_25_done;
+	 actions: DEADLINE_MISSED_1, task_11_act,task_11_done,task_15_act,task_15_done,task_25_act,task_25_done;
 
 	loc DEADLINE_MISS: invariant True
 	loc proc_1_000: invariant True stop {t_task_11,t_task_15,t_task_25}
@@ -172,7 +172,7 @@ automaton proc_1
 end
 
 automaton proc_2
-	 synclabs: DEADLINE_MISSED_2,task_12_act,task_12_done,task_14_act,task_14_done,task_22_act,task_22_done,task_24_act,task_24_done;
+	 actions: DEADLINE_MISSED_2,task_12_act,task_12_done,task_14_act,task_14_done,task_22_act,task_22_done,task_24_act,task_24_done;
 
 	 loc idle: invariant True stop{t_task_12,t_task_14,t_task_22,t_task_24}
 		when True sync task_12_act do{Token_12 := True}goto t_12_running;
@@ -260,7 +260,7 @@ automaton proc_2
 end
 
 automaton proc_3
-	 synclabs: DEADLINE_MISSED_3, task_23_act,task_23_done;
+	 actions: DEADLINE_MISSED_3, task_23_act,task_23_done;
 
 	loc DEADLINE_MISS: invariant True
 	loc proc_3_0: invariant True stop {t_task_23}
@@ -272,7 +272,7 @@ automaton proc_3
 end
 
 automaton proc_4
-	 synclabs: DEADLINE_MISSED_4, task_13_act,task_13_done,task_21_act,task_21_done;
+	 actions: DEADLINE_MISSED_4, task_13_act,task_13_done,task_21_act,task_21_done;
 
 	loc DEADLINE_MISS: invariant True
 	loc proc_4_00: invariant True stop {t_task_13,t_task_21}

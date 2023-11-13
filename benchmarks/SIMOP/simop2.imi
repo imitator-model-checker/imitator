@@ -49,7 +49,7 @@ var
 (************************************************************)
   automaton PLC
 (************************************************************)
-synclabs: PLCbeg,COMin0, COMin1, PLCout0, PLCout1;
+actions: PLCbeg,COMin0, COMin1, PLCout0, PLCout1;
 
 loc PLCinit: invariant True
 	when True  sync PLCbeg do {PLCclk := 0} goto PLC1;
@@ -94,7 +94,7 @@ end (*PLC*)
 (************************************************************)
 automaton COM
 (************************************************************)
-synclabs : PLCbeg, PLCout0, PLCout1, CNreq0, CNreq1, NCrep0, NCrep1, COMin1, COMin0;
+actions : PLCbeg, PLCout0, PLCout1, CNreq0, CNreq1, NCrep0, NCrep1, COMin1, COMin0;
 
 loc COMinit: invariant True
 	when True  sync PLCbeg goto COM1;
@@ -168,7 +168,7 @@ end (*COM*)
 (************************************************************)
 automaton NET
 (************************************************************)
-synclabs : CNreq0, CNreq1, NCrep0, NCrep1, NRreq0, NRreq1, RNrep0, RNrep1;
+actions : CNreq0, CNreq1, NCrep0, NCrep1, NRreq0, NRreq1, RNrep0, RNrep1;
 
 loc NET1: invariant True
 	when True  sync CNreq0 do {NETclk := 0} goto NET2;
@@ -199,7 +199,7 @@ end (*NET*)
 (************************************************************)
 automaton RIO
 (************************************************************)
-synclabs : NRreq0, RNrep0, SIGout0, NRreq1, RNrep1, SIGin1, SIGout1;
+actions : NRreq0, RNrep0, SIGout0, NRreq1, RNrep1, SIGin1, SIGout1;
 
 loc RIO1: invariant True
 	when True  sync NRreq0 do {RIOclk := 0} goto RIO2;
@@ -242,7 +242,7 @@ end (*RIO*)
 (************************************************************)
 automaton ENV
 (************************************************************)
-synclabs : SIGout0, SIGout1, SIGin1;
+actions : SIGout0, SIGout1, SIGin1;
 
 loc ENVinit: invariant True
 	when True sync SIGout0 goto ENV1;

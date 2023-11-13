@@ -40,7 +40,7 @@ var
 (************************************************************)
   automaton Producer
 (************************************************************)
-synclabs: ProdReset, Feed2;
+actions: ProdReset, Feed2;
 
 loc prodReady: invariant xprod <= d
 	when xprod >= c sync Feed2 do {xprod := 0} goto prodWaiting;
@@ -55,7 +55,7 @@ end (* Producer *)
 (************************************************************)
   automaton Consumer
 (************************************************************)
-synclabs: ConsReset, Feed4;
+actions: ConsReset, Feed4;
 
 loc consReady: invariant xcons <= d
 	when xcons >= c sync Feed4 do {xcons := 0} goto consWaiting;
@@ -70,7 +70,7 @@ end (* Consumer *)
 (************************************************************)
   automaton Node1
 (************************************************************)
-synclabs: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
+actions: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
 
 loc node1Ready: invariant xnode1 <= d
 	when xnode1 >= c sync Feed2 do {xnode1 := 0} goto intermediate1;
@@ -93,7 +93,7 @@ end (* Node1 *)
 (************************************************************)
   automaton Node2
 (************************************************************)
-synclabs: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
+actions: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
 
 loc node2Ready: invariant xnode2 <= d
 	when xnode2 >= c sync Feed3 do {xnode2 := 0} goto intermediate1;

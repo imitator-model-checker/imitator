@@ -45,7 +45,7 @@ var
 (************************************************************)
 automaton proc1
 (************************************************************)
-synclabs : tau,start1,set1,enter1,abort1,release1;
+actions : tau,start1,set1,enter1,abort1,release1;
 
 
 loc idle: invariant True
@@ -69,7 +69,7 @@ end
 (************************************************************)
 automaton proc2
 (************************************************************)
-synclabs : tau,start2,set2,enter2,abort2,release2;
+actions : tau,start2,set2,enter2,abort2,release2;
 
 
 loc idle: invariant True
@@ -93,7 +93,7 @@ end
 (************************************************************)
 automaton arbitrer
 (************************************************************)
-synclabs : set1,release1,
+actions : set1,release1,
            set2,release2,
 	   tau;
 	   

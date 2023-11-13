@@ -48,7 +48,7 @@ var
 (************************************************************)
 automaton periodic_event_T2_1
 (************************************************************)
-synclabs: recommence_T2_1;
+actions: recommence_T2_1;
 
 loc p20: invariant x2p <= offset
 	when x2p >= offset do {x2p := 0} goto p2;
@@ -62,7 +62,7 @@ end (* periodic_event_T2_1 *)
 (************************************************************)
 automaton memoire_lancement_T2_1
 (************************************************************)
-synclabs: recommence_T2_1, lance_T2_1, fin_T2_1;
+actions: recommence_T2_1, lance_T2_1, fin_T2_1;
 
 loc m20: invariant True
 	when True sync recommence_T2_1 do {c2 := c2 + 1} goto m21;
@@ -78,7 +78,7 @@ end (* memoire_lancement_T2_1 *)
 (************************************************************)
 automaton periodic_event_T6_1
 (************************************************************)
-synclabs: recommence_T6_1;
+actions: recommence_T6_1;
 
 loc p60: invariant x6p <= 100
 	when x6p = 100 do {x6p := 0} goto p61;
@@ -92,7 +92,7 @@ end (* periodic_event_T6_1 *)
 (************************************************************)
 automaton memoire_lancement_T6_1
 (************************************************************)
-synclabs: recommence_T6_1, lance_T6_1, fin_T6_1;
+actions: recommence_T6_1, lance_T6_1, fin_T6_1;
 
 loc m610: invariant True
 	when True sync recommence_T6_1 do {c61 := c61 + 1} goto m611;
@@ -112,7 +112,7 @@ end (* memoire_lancement_T6_1 *)
 (************************************************************)
 automaton memoire_lancement_T5_1
 (************************************************************)
-synclabs: fin_T6_1, lance_T5_1, fin_T5_1;
+actions: fin_T6_1, lance_T5_1, fin_T5_1;
 
 loc m510: invariant True
 	when True sync fin_T6_1 do {c5 := c5 + 1} goto m511;
@@ -128,7 +128,7 @@ end (* memoire_lancement_T5_1 *)
 (************************************************************)
 automaton memoire_lancement_T6_2
 (************************************************************)
-synclabs: fin_T6_2, lance_T6_2, fin_T5_1;
+actions: fin_T6_2, lance_T6_2, fin_T5_1;
 
 loc m620: invariant True
 	when True sync fin_T5_1 do {c62 := c62 + 1} goto m621;
@@ -144,7 +144,7 @@ end (* memoire_lancement_T6_2 *)
 (************************************************************)
 automaton memoire_lancement_T6_3
 (************************************************************)
-synclabs: fin_T6_3, lance_T6_3, fin_T6_2;
+actions: fin_T6_3, lance_T6_3, fin_T6_2;
 
 loc m630: invariant True
 	when True sync fin_T6_2 do {c63 := c63 + 1} goto m631;
@@ -160,7 +160,7 @@ end (* memoire_lancement_T6_3 *)
 (************************************************************)
 automaton memoire_lancement_T7_1
 (************************************************************)
-synclabs: fin_T6_2, lance_T7_1, fin_T7_1;
+actions: fin_T6_2, lance_T7_1, fin_T7_1;
 
 loc m70: invariant True
 	when True sync fin_T6_2 do {c7 := c7 + 1} goto m71;
@@ -182,7 +182,7 @@ end (* memoire_lancement_T7_1 *)
 (************************************************************)
 automaton tasks
 (************************************************************)
-synclabs : lance_T2_1, lance_T6_1, lance_T5_1, lance_T6_2, lance_T6_3, lance_T7_1,
+actions : lance_T2_1, lance_T6_1, lance_T5_1, lance_T6_2, lance_T6_3, lance_T7_1,
 	fin_T2_1, fin_T6_1, fin_T5_1, fin_T6_2, fin_T6_3, fin_T7_1;
 
 loc l0: invariant True
@@ -303,7 +303,7 @@ end (* tasks *)
 
 automaton Observateur1
 
-synclabs: lance_T6_1, fin_T7_1, obs1_bloc;
+actions: lance_T6_1, fin_T7_1, obs1_bloc;
 
 loc obs10: invariant True stop {t1}
 	when chemin_T6_1 = 1 sync lance_T6_1 do {t1 := 0} goto obs11;
@@ -326,7 +326,7 @@ end (* Observateur1 *)
 
 automaton Observateur2
 
-synclabs: lance_T6_1, fin_T7_1, obs2_bloc;
+actions: lance_T6_1, fin_T7_1, obs2_bloc;
 
 loc obs20: invariant True stop {t2}
 	when chemin_T6_1 = 2 sync lance_T6_1 do {t2 := 0} goto obs21;
@@ -349,7 +349,7 @@ end (* Observateur2 *)
 
 automaton Observateur
 
-synclabs: obs1_bloc, obs2_bloc;
+actions: obs1_bloc, obs2_bloc;
 
 loc obsI: invariant True
 	when True sync obs1_bloc goto obsF;

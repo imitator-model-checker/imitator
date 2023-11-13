@@ -54,7 +54,7 @@ var
 (************************************************************)
   automaton train
 (************************************************************)
-synclabs: sensor_far, pass;
+actions: sensor_far, pass;
 
 loc far: invariant x_train <= p_far
 	(* Normal mode: sensors are on *)
@@ -81,7 +81,7 @@ end (* train *)
 (************************************************************)
   automaton gate
 (************************************************************)
-synclabs: pass, power_cut, sensor_far, start_lowering, end_lowering;
+actions: pass, power_cut, sensor_far, start_lowering, end_lowering;
 
 loc up: invariant True
 	when True sync sensor_far do {x_gate := 0} goto waiting;
@@ -130,7 +130,7 @@ end (* gate *)
 (************************************************************)
   automaton intruder
 (************************************************************)
-synclabs: break_sensor, choose_house, choose_sensor, power_cut;
+actions: break_sensor, choose_house, choose_sensor, power_cut;
 
 urgent loc choosing: invariant True
 	when True sync choose_sensor goto walking_sensor;

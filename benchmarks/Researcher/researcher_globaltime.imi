@@ -43,7 +43,7 @@ var
 (************************************************************)
   automaton researcher
 (************************************************************)
-synclabs: done, drink, drunk, restart;
+actions: done, drink, drunk, restart;
 
 loc working: invariant x <= pTotal
 	when x >= 0.8 pTotal goto workingFast;

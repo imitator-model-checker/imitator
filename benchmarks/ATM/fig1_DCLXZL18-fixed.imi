@@ -38,7 +38,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
+actions: ;
 
 loc Idle: invariant True
 	when True do {x := 0 , y := 0 , z := 0} goto Start;

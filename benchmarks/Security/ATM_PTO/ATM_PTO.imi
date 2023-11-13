@@ -1,6 +1,6 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : ATM_PTO
  * Description      : Toy example of an ATM to evaluate parametric timed opacity; the model works by the self-composition of two copies of the PTA, with a Boolean "cash_spotted" encoding the secret action (getting cash), following the method in [ALMS22]
  * Correctness      : Timed opacity, i.e., valuation of the (unique) timing parameter `p_total` for which the system is timed-opaque  for the execution time also denoted by `p_total`
@@ -13,11 +13,11 @@
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2022/07/15
  * Last modified    : 2022/07/18
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.3
  ******************************************************************************)
 
@@ -57,7 +57,7 @@ var
 (************************************************************)
   automaton ATM_1
 (************************************************************)
-synclabs:
+actions:
 	(* Controllable: system *)
 	askPassword_1, finish, start_1,
 	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)
@@ -147,7 +147,7 @@ end (* ATM *)
 (************************************************************)
   automaton ATM_2
 (************************************************************)
-synclabs:
+actions:
 	(* Controllable: system *)
 	askPassword_2, finish, start_2,
 	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)

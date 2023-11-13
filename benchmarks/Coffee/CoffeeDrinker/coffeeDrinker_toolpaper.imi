@@ -84,7 +84,7 @@ var
 (************************************************************)
   automaton machine
 (************************************************************)
-synclabs: press, cup, coffee, sleep;
+actions: press, cup, coffee, sleep;
 
 loc idle: invariant True
 	when True sync press do {x := 0} goto add_sugar;
@@ -109,7 +109,7 @@ end (* machine *)
 (************************************************************)
   automaton researcher
 (************************************************************)
-synclabs: press, coffee;
+actions: press, coffee;
 
 loc researching: invariant y1 <= p_work_max
 	when y1 >= p_work_min sync press do {y1 := 0, y2 := 0, nb_sugar := 0} goto add_sugar;

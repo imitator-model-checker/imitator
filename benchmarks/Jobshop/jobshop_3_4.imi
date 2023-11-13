@@ -62,7 +62,7 @@ var 	x1, x2, x3(*, s*)
 (************************************************************)
   automaton job1
 (************************************************************)
-synclabs: b1;
+actions: b1;
 
 loc I1: invariant True
 	when  not(m3)  sync b1 do {x1 := 0, m3 := True} goto J1;
@@ -95,7 +95,7 @@ end (*job1*)
 (************************************************************)
   automaton job2
 (************************************************************)
-synclabs: b2;
+actions: b2;
 
 loc I2: invariant True
 	when  not(m2) sync b2 do {x2 := 0,m2 := True} goto J2;
@@ -128,7 +128,7 @@ end (*job2*)
 (************************************************************)
   automaton job3
 (************************************************************)
-synclabs: b3;
+actions: b3;
 
 loc I3: invariant True
 	when  not(m3) sync b3 do {x3 := 0,m3 := True} goto J3;
