@@ -3,7 +3,7 @@
  *
  *                       IMITATOR
  *
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: main virtual class to explore the state space: only
@@ -2776,6 +2776,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 						statespace_nature <- StateSpace.Bad;
 					);
 
+
+				| EU _
 
 				| Cycle_through_generalized _
 

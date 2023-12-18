@@ -734,7 +734,10 @@ let text_of_property property =
 	(* Safety *)
 	| AGnot _ -> "safety " ^ synthesis_or_witness
 	
-	
+	(* Until *)
+	| EU _ -> "until " ^ synthesis_or_witness
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
