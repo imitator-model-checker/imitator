@@ -1,0 +1,1 @@
+property := #synth E (True) U (i = 0 & j = 2);

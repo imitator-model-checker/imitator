@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/08/23
+# Last modified     : 2023/12/18
 #************************************************************
 
 
@@ -7756,6 +7756,314 @@ Constraint soundness                    : possible under-approximation
 Termination                             : terminated after reaching a target state (some states may have been unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat on the initial state)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat due to unreachability)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (True due to initial state matched)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-3.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching location)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-5.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-7.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-9.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (corner-point case))',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (false))',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-11.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
 """
 			} #end result file
 		] # end expectations
