@@ -775,6 +775,12 @@ match options#imitator_mode with
 
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot model options state_predicate in myalgo
 
+			(************************************************************)
+			(* Until *)
+			(************************************************************)
+			| EU (state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model options state_predicate_phi state_predicate_psi in myalgo
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
