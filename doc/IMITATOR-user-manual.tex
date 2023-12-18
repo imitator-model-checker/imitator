@@ -2068,7 +2068,7 @@ While all properties implement synthesis, not all of them implement emptiness; a
 In the following, we now describe the algorithms implemented in \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Reachability}\label{section:algorithm:EFsynth}
+\section{Reachability (EF)}\label{section:algorithm:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
@@ -2150,7 +2150,7 @@ property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Safety}\label{section:algorithm:EF}
+\section{Safety (AGnot)}\label{section:algorithm:EF}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
@@ -2219,6 +2219,22 @@ This algorithm requires a clock named \styleIMI{global\_time} to be defined in t
 \end{becareful}
 
 \emph{The maximum time reachability is currently not implemented.}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exists-until-synthesis}\label{section:algorithm:EU}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Exists-until (``EU'' in CTL) denotes that a property holds \emph{until} another property holds.
+The second property must eventually hold, and might even hold from the first state, in which case the first property does not need to hold.
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth E (state_predicate) U (state_predicate);
+\end{IMITATORproperty}
+
+Most remarks for EF (see \cref{section:algorithm:EFsynth}) also hold for EU.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2851,6 +2867,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{}  & \cellYes{} \\
 			\hline
 			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
+			\hline
+			Until                 & \styleIMI{E(sp\_1)U(sp\_2)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 
 			% Optimized reachability
 
@@ -2950,6 +2968,8 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \styleOption{inclusion} \\
 			\hline
 			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \styleOption{inclusion} \\
+			\hline
+			Until           & \styleIMI{E(sp\_1)U(sp\_2)}                  & \cellYes{} & \styleOption{inclusion} \\
 
 			% Optimized reachability
 
@@ -3769,7 +3789,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:EF,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:EF,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 

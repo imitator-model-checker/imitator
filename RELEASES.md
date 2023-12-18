@@ -6,6 +6,7 @@
 ### Major features
 * Updates are now fully sequential in the model, including clock updates; WARNING: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
+* New EU ("Exists … until") algorithm
 
 ### Syntax changes in the model
 * Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
