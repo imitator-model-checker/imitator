@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Parser for the input model
  *
@@ -60,6 +61,7 @@ rule token = parse
 	| "Cycle"          { CT_INFCYCLE }
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
 	| "EF"             { CT_EF }
+	| "E"              { CT_E }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
@@ -74,6 +76,7 @@ rule token = parse
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
  	| "TracePreservation" { CT_TRACEPRESERVATION }
+	| "U"              { CT_U }
  	| "Valid"          { CT_VALID }
 
 	| "accepting"      { CT_ACCEPTING }
@@ -102,9 +105,9 @@ rule token = parse
 	| "True"           { CT_TRUE }
 	| "Win"            { CT_WIN }
 	| "within"         { CT_WITHIN }
-  | "list"           { CT_LIST }
-  | "stack"          { CT_STACK }
-  | "queue"          { CT_QUEUE }
+	| "list"           { CT_LIST }
+	| "stack"          { CT_STACK }
+	| "queue"          { CT_QUEUE }
 
 
 

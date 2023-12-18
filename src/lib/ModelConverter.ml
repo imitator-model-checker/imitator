@@ -3,8 +3,8 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Convert a parsing structure into an abstract model
  *
@@ -1883,7 +1883,14 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
-		
+		(* Until *)
+		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_phi)
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+
+
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
@@ -2201,7 +2208,17 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 		
-		
+		(* Until *)
+		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			(* Return a property and no observer *)
+			EU
+				(PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)

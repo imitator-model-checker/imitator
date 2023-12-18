@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Property description
  *
@@ -76,7 +77,10 @@ type property =
 	(* Safety *)
 	| AGnot of state_predicate
 	
-	
+	(* Until *)
+	| EU of state_predicate * state_predicate
+
+
 (*	
 	(* Unavoidability *)
 	| AF of state_predicate

@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: generic EFsynth algorithm [JLR15]
@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFgen : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class virtual algoEUgen : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)

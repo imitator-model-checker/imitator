@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
@@ -24,7 +24,7 @@ open Exceptions
 open AbstractModel
 open AbstractProperty
 open Result
-open AlgoEFgen
+open AlgoEUgen
 
 
 
@@ -34,7 +34,7 @@ open AlgoEFgen
 (************************************************************)
 (************************************************************)
 class algoEF (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEFgen model options state_predicate (*as super*)
+	object (self) inherit algoEUgen model options None state_predicate (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

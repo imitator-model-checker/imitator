@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Describes some of the options associated with algorithms
  *
@@ -45,7 +46,10 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(* Safety *)
 	| AGnot _
 	
-	
+	(* Reachability *)
+	| EU _
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
@@ -167,7 +171,10 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(* Safety *)
 	| AGnot _
 	
-	
+	(* Until *)
+	| EU _
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
@@ -300,7 +307,10 @@ let merge_needed property =
 	(* Safety *)
 	| AGnot _
 	
-	
+	(* Until *)
+	| EU _
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
@@ -535,6 +545,10 @@ let supports_witness property =
 	
 	(* Safety *)
 	| AGnot _
+
+	(* Until *)
+	| EU _
+
 		-> true
 	
 	
@@ -654,6 +668,9 @@ let supports_exemplification property =
 	
 (*	(* Safety *)
 	| AGnot _*)
+
+(*	(* Until *)
+	| EU _*)
 		-> true
 	(*------------------------------------------------------------*)
 	(* Cycles *)

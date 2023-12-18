@@ -998,7 +998,9 @@ let string_of_abstract_property model property =
 
 			"AGnot(" ^ state_predicate_str ^ ")"
 
-		
+		(* Until *)
+		| EU (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)

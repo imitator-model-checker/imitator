@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: generic EFsynth algorithm [JLR15]
@@ -34,7 +34,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFgen (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class virtual algoEUgen (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options as super
 	
 	(************************************************************)
@@ -90,8 +90,8 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (options : Option
 		let state_constraint = state.px_constraint in
 		
 		let to_be_added =
-			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate model state_predicate state then(
+			(* Check whether the current location matches one of the target (final) locations *)
+			if State.match_state_predicate model state_predicate_psi state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
@@ -162,10 +162,23 @@ class virtual algoEFgen (model : AbstractModel.abstract_model) (options : Option
 				
 			) (* end if match state predicate *)
 			else(
-				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				self#print_algo_message Verbose_medium "State not matching a final location.";
 				
-				(* Keep the state as it is not a bad state *)
-				true
+				(* In case algorithm EU: check whether the first predicate (temporary, "phi") is matched *)
+				match state_predicate_phi_option with
+				| Some state_predicate_phi ->
+					(* Check whether the current location matches one of the target phi predicates *)
+					if State.match_state_predicate model state_predicate_phi state then(
+						self#print_algo_message Verbose_medium "State matching a phi predicate: keep";
+						true
+					)else(
+						self#print_algo_message Verbose_medium "State NOT matching a phi predicate: discard";
+						false
+					)
+
+				| None ->
+					(* No phi predicate (a.k.a. True) -> Keep the state *)
+					true
 			) (* end if not match state predicate *)
 		
 		in

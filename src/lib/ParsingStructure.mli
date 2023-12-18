@@ -3,8 +3,8 @@
  *                       IMITATOR
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
@@ -385,7 +385,10 @@ type parsed_property_type =
 	(* Safety *)
 	| Parsed_AGnot of parsed_state_predicate
 	
-	
+	(* Until *)
+	| Parsed_EU of parsed_state_predicate * parsed_state_predicate
+
+
 (*	
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate

@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Parser for the input model
  *
@@ -56,7 +57,7 @@ let resolve_property l =
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
-	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
+	CT_E CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
@@ -67,6 +68,7 @@ let resolve_property l =
 	CT_QUEUE
 	CT_SEQUENCE CT_STACK CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
+	CT_U
 	CT_VALID
 	CT_WIN CT_WITHIN
 
@@ -139,6 +141,9 @@ property:
 
 	/* Safety */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
+
+	/* Until */
+	| CT_E state_predicate CT_U state_predicate { Parsed_EU ($2, $4) }
 
 
 	/*------------------------------------------------------------*/
