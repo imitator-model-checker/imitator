@@ -207,15 +207,20 @@ class stateSpacePTG_full model options = object
 			)
 		in
 
-		let rec bfs unexplored_state_indices = 
+		let depth_limit = match options#depth_limit with
+			| Some d -> d
+			| None -> -1
+		in 
+
+		let rec bfs unexplored_state_indices depth = 
 			print_exp (Printf.sprintf "Expanding frontier of %d states " (List.length unexplored_state_indices));
 			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
 				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
-			if unexplored_state_indices' = [] then () else bfs unexplored_state_indices' 
+			if unexplored_state_indices' = [] || depth = depth_limit then () else bfs unexplored_state_indices' (depth+1)
 		in
 		let initial_state_index = state_space#get_initial_state_index in 
 		passed_states#add initial_state_index;
-		bfs [initial_state_index];
+		bfs [initial_state_index] 1;
 		print_exp (Printf.sprintf "PTG: Finished generating full statespace. Total states: %d" state_space#nb_states)
 
 	method compute_symbolic_successors source_state_index = 
