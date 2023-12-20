@@ -2,7 +2,6 @@ open AbstractModel
 open Automaton
 open State
 open StateSpace
-open AlgoPTG
 
 
 class winningMovesPerAction : object 
