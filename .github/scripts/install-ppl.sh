@@ -13,10 +13,11 @@ cd ppl-${PPL_VERSION}
 if [[ "$RUNNER_OS" = "macOS" ]]; then
     # patch clang
     patch -p0 <"${PATCH_FOLDER}/clang5.patch"
+    EXTRA_ARGS="--with-gmp=$(brew --prefix)"
 fi
 
 # compile ppl
-./configure --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp --disable-documentation --enable-interfaces=ocaml
+./configure --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp ${EXTRA_ARGS} --disable-documentation --enable-interfaces=ocaml
 
 # compile Ocaml interface
 cd interfaces/OCaml && make -j 4 && make install && cd ../../..
