@@ -1,7 +1,7 @@
 imitator
 ========
 
-![Travis (.org) branch](https://img.shields.io/travis/imitator-model-checker/imitator/master.svg)
+[![CI](https://github.com/imitator-model-checker/imitator/actions/workflows/workflow.yml/badge.svg?branch=master)](https://github.com/imitator-model-checker/imitator/actions/workflows/workflow.yml)
 ![GitHub](https://img.shields.io/github/license/imitator-model-checker/imitator.svg)
 
 [IMITATOR](https://www.imitator.fr) [[Andre21]](https://www.doi.org/10.1007/978-3-030-81685-8_26) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
