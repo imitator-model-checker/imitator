@@ -6,6 +6,7 @@
 ### Major features
 * Updates are now fully sequential in the model, including clock updates; WARNING: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
+* New AG ("global invariant") algorithm
 * New EU ("Exists … until") algorithm
 
 ### Syntax changes in the model

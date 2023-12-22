@@ -2150,7 +2150,7 @@ property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Safety (AGnot)}\label{section:algorithm:EF}
+\section{Safety (AGnot)}\label{section:algorithm:AGnot}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
@@ -2162,6 +2162,23 @@ property := #synth AGnot(state_predicate);
 \end{IMITATORproperty}
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Global invariant (AG)}\label{section:algorithm:AG}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Global invariant synthesis aims at synthesizing valuations for which the state predicate is true in any reachable state of the system.
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth AG(state_predicate);
+\end{IMITATORproperty}
+
+Internally, this algorithm is implemented exactly as the safety-synthesis, where the state predicate is first negated.
+% The global invariant synthesis is defined (and implemented) as the AGnot with the negation of the state predicate.
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2867,6 +2884,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{}  & \cellYes{} \\
 			\hline
 			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
+			\hline
+			Global invariant                 & \styleIMI{AG(state\_predicate)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 			\hline
 			Until                 & \styleIMI{E(sp\_1)U(sp\_2)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 
@@ -3789,7 +3808,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:EF,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
@@ -5473,6 +5492,7 @@ We define each of those two components below.
 	% 	Non-nested CTL
 	$|$ & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
+	$|$ & \styleIMI{AG} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{E} \nt{state\_predicate} \styleIMI{U} \nt{state\_predicate} \\
 
 	% Optimized reachability
