@@ -252,7 +252,7 @@ end
 
 module EdgePriorityQueue = PriorityQueue.Make(struct type t = (edge * edge_status) let compare = compare_edge end)
 
-class prioQueue list = object 
+(*class prioQueue list = object
 	inherit ([EdgePriorityQueue.queue] waitingList list)
 	val mutable queue = EdgePriorityQueue.empty 
 	method queue = queue
@@ -263,7 +263,7 @@ class prioQueue list = object
 	method length = EdgePriorityQueue.length queue
 	method add_all waitingList = queue <- EdgePriorityQueue.merge queue waitingList#queue
 	method of_list list = queue <- EdgePriorityQueue.of_list list	
-end
+end*)
 
 class normalQueue list = object
 	inherit ([(edge * edge_status) Queue.t] waitingList list)
