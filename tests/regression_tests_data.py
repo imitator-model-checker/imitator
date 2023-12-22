@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/12/18
+# Last modified     : 2023/12/22
 #************************************************************
 
 
@@ -7182,6 +7182,30 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/22
+		# Last modified            : 2023/12/22
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AG on a very simple example',
+		'tags'       : 'algorithm',
+		'input_files': ['safety/safety-initial-state2.imi', 'safety/safety-initial-state2-AG1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
