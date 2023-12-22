@@ -77,6 +77,9 @@ type property =
 	(* Safety *)
 	| AGnot of state_predicate
 	
+	(* Global invariant *)
+	| AG of state_predicate
+
 	(* Until *)
 	| EU of state_predicate * state_predicate
 

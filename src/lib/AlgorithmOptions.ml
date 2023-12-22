@@ -46,6 +46,9 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(* Safety *)
 	| AGnot _
 	
+	(* Global invariant *)
+	| AG _
+
 	(* Reachability *)
 	| EU _
 
@@ -177,7 +180,10 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	
 	(* Safety *)
 	| AGnot _
-	
+
+	(* Global invariant *)
+	| AG _
+
 	(* Until *)
 	| EU _
 		(* All comparison operators preserve correctness *)
@@ -321,6 +327,9 @@ let merge_needed property =
 	(* Safety *)
 	| AGnot _
 	
+	(* Global invariant *)
+	| AG _
+
 	(* Until *)
 	| EU _
 		-> true
@@ -565,6 +574,9 @@ let supports_witness property =
 	(* Safety *)
 	| AGnot _
 
+	(* Global invariant *)
+	| AG _
+
 	(* Until *)
 	| EU _
 
@@ -691,6 +703,9 @@ let supports_exemplification property =
 (*	(* Safety *)
 	| AGnot _*)
 
+(*	(* Global invariant *)
+	| AG _*)
+
 (*	(* Until *)
 	| EU _*)
 		-> true
@@ -756,6 +771,9 @@ let text_of_property property =
 	(* Safety *)
 	| AGnot _ -> "safety " ^ synthesis_or_witness
 	
+	(* Global invariant *)
+	| AG _ -> "global invariant " ^ synthesis_or_witness
+
 	(* Until *)
 	| EU _ -> "until " ^ synthesis_or_witness
 

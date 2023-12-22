@@ -49,8 +49,8 @@ rule token = parse
 	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
 	| "AccLoop"        { CT_ACCEPTINGCYCLE }
 	| "AcceptingLoop"  { CT_ACCEPTINGCYCLE }
-	(* | "AG"             { CT_AG } *)
 	| "AF"             { CT_AF }
+	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "DeadlockFree"   { CT_DEADLOCKFREE }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }

@@ -1881,6 +1881,9 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
 
+		(* Global invariant *)
+		| Parsed_AG parsed_state_predicate
+
 		(* Unavoidability *)
 		| Parsed_AF parsed_state_predicate
 
@@ -2212,6 +2215,13 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 		
+		(* Global invariant *)
+		| Parsed_AG parsed_state_predicate ->
+			(* Return a property and no observer *)
+			AG (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
 		(* Until *)
 		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
 			->

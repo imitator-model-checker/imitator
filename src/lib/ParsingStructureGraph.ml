@@ -404,6 +404,8 @@ let all_components_used_in_property_option parsed_property_option =
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
+		(* Global invariant *)
+		| Parsed_AG parsed_state_predicate
 		(* Unavoidability *)
 		| Parsed_AF parsed_state_predicate
             -> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate

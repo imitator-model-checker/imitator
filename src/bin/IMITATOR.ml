@@ -776,6 +776,13 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGnot.algoAGnot model options state_predicate in myalgo
 
 			(************************************************************)
+			(* Global invariant *)
+			(************************************************************)
+			| AG state_predicate_ ->
+				raise (NotImplemented "Algorithm AG is not implemented for now")
+
+
+			(************************************************************)
 			(* Until *)
 			(************************************************************)
 			| EU (state_predicate_phi, state_predicate_psi) ->

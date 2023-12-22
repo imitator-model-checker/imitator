@@ -385,15 +385,14 @@ type parsed_property_type =
 	(* Safety *)
 	| Parsed_AGnot of parsed_state_predicate
 	
+	(* Global invariant *)
+	| Parsed_AG of parsed_state_predicate
+
 	(* Until *)
 	| Parsed_EU of parsed_state_predicate * parsed_state_predicate
 
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
-	
-(*
-	(* Liveness *)
-	| Parsed_AG of parsed_state_predicate*)
 	
 	
 	(*------------------------------------------------------------*)
