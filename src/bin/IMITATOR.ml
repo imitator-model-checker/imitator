@@ -778,8 +778,13 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Global invariant *)
 			(************************************************************)
-			| AG state_predicate_ ->
-				raise (NotImplemented "Algorithm AG is not implemented for now")
+			| AG state_predicate ->
+				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
+				if abstract_property.synthesis_type = Witness then(
+					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
+				);
+
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAG.algoAG model options state_predicate in myalgo
 
 
 			(************************************************************)
@@ -787,6 +792,7 @@ match options#imitator_mode with
 			(************************************************************)
 			| EU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model options state_predicate_phi state_predicate_psi in myalgo
+
 
 			(************************************************************)
 			(* Unavoidability *)

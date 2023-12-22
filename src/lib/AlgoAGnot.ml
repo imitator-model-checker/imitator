@@ -33,6 +33,7 @@ open AlgoEUgen
 (* Class definition *)
 (************************************************************)
 (************************************************************)
+(*** NOTE: AG is implemented as the negation of EF ***)
 class algoAGnot (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoEUgen model options None state_predicate (*as super*)
 	
@@ -43,7 +44,7 @@ class algoAGnot (model : AbstractModel.abstract_model) (options : Options.imitat
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AG"
+	method algorithm_name = "AGnot"
 	
 	
 	
@@ -125,7 +126,7 @@ class algoAGnot (model : AbstractModel.abstract_model) (options : Options.imitat
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in AGsafe.compute_result")
+			| None -> raise (InternalError ("Termination status not set in " ^ self#algorithm_name ^ ".compute_result"))
 			| Some status -> status
 		in
 
@@ -147,7 +148,7 @@ class algoAGnot (model : AbstractModel.abstract_model) (options : Options.imitat
 			result				= Good_constraint (result, soundness);
 			
 			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing safety";
+			constraint_description = "constraint guaranteeing global safety";
 	
 			(* Explored state space *)
 			state_space			= state_space;
