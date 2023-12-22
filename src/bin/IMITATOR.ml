@@ -781,6 +781,12 @@ match options#imitator_mode with
 			| EU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model options state_predicate_phi state_predicate_psi in myalgo
 
+			(************************************************************)
+			(* Unavoidability *)
+			(************************************************************)
+			| AF (*state_predicate*)_ ->
+				raise (NotImplemented "Algorithm AF is not implemented for now")
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

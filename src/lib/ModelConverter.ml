@@ -1880,6 +1880,10 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
+
+		(* Unavoidability *)
+		| Parsed_AF parsed_state_predicate
+
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
@@ -2218,6 +2222,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
 			,
 			None
+
+		(* Unavoidability *)
+		| Parsed_AF parsed_state_predicate ->
+			(* Return a property and no observer *)
+			AF (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

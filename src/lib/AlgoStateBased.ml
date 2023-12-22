@@ -2763,6 +2763,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				(* Reachability *)
 				| EF state_predicate
 				| AGnot state_predicate
+				| AF state_predicate
 				| EFpmin (state_predicate, _)
 				| EFpmax (state_predicate, _)
 				| EFtmin state_predicate

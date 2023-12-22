@@ -388,11 +388,10 @@ type parsed_property_type =
 	(* Until *)
 	| Parsed_EU of parsed_state_predicate * parsed_state_predicate
 
-
-(*	
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
 	
+(*
 	(* Liveness *)
 	| Parsed_AG of parsed_state_predicate*)
 	

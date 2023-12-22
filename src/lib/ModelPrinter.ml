@@ -1001,6 +1001,9 @@ let string_of_abstract_property model property =
 		(* Until *)
 		| EU (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
+		(* Unavoidability *)
+		| AF state_predicate -> "AF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)

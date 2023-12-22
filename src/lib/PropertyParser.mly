@@ -53,7 +53,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AG CT_AGnot CT_ALWAYS
+	CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF /* CT_AG */ CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -144,6 +144,9 @@ property:
 
 	/* Until */
 	| CT_E state_predicate CT_U state_predicate { Parsed_EU ($2, $4) }
+
+	/* Unavoidability */
+	| CT_AF state_predicate { Parsed_AF $2 }
 
 
 	/*------------------------------------------------------------*/

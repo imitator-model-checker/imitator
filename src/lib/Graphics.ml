@@ -148,6 +148,8 @@ let get_v0_option () =
 
 			| EF _
 			| AGnot _
+			| EU _
+			| AF _
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
@@ -1087,6 +1089,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 			match (Input.get_property()).property with
 				| EF state_predicate
 				| AGnot state_predicate
+				| AF state_predicate
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate
@@ -1094,7 +1097,9 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 				| PRP (state_predicate, _)
 				| Win (state_predicate)
 					-> [state_predicate]
-					
+
+				| EU (state_predicate_1, state_predicate_2) -> [state_predicate_1; state_predicate_2]
+
 				| Cycle_through_generalized state_predicate_list
 					-> state_predicate_list
 
