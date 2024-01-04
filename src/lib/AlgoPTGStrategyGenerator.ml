@@ -208,14 +208,60 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
 
 
 let generate_controller (system_model : AbstractModel.abstract_model) (get_winning_moves : state_index -> winningMovesPerState) (state_space : stateSpace) = 
-  let initial_state = (state_space#get_state (state_space#get_initial_state_index)).global_location in
   let transition_descriptions = Hashtbl.create 100 in
   let transitions = Hashtbl.create 100 in 
   let transition_counter = ref 0 in 
-  let found_transitions = [] in 
-  let rec explore winning_moves = 
+  let location_counter = ref 0 in 
+  let explored = new stateIndexSet in 
+  let locations = ref [] in 
+
+  let fresh_location () = 
+      let loc = !location_counter in 
+      locations := loc :: !locations;
+      location_counter := !location_counter + 1;
+      loc 
+  in 
+
+  let add_transition src (transition : transition) = 
+    Hashtbl.add transition_descriptions !transition_counter transition;
+    let transitions_per_action = match Hashtbl.find_opt transitions src with 
+      | Some x -> x
+      | None -> let x = Hashtbl.create 100 in Hashtbl.add transitions src x; x in
+    let transition_list = match Hashtbl.find_opt transitions_per_action transition.action with 
+      | Some l -> l
+      | None -> [] in
+    let transition_list' = !transition_counter::transition_list in 
+    Hashtbl.add transitions_per_action transition.action transition_list';
+    transition_counter := !transition_counter + 1;
+  in 
+
+  (* Name: Winning-move-guided exploration *)
+  let rec explore state_index location_index = 
+    let continue_exploring state_index location_index = 
+      if not @@ explored#mem state_index then
+        begin
+          explored#add state_index;
+          explore state_index location_index;
+        end
+    in
+    let successors_with_combined_transitions = state_space#get_successors_with_combined_transitions state_index in 
+    let uncontrollable_successors = List.filter (
+      fun (t,_) -> 
+        let action = StateSpace.get_action_from_combined_transition system_model t in
+        not @@ system_model.is_controllable_action action 
+      ) successors_with_combined_transitions in
+    List.iter (
+      fun (t,state_index') ->
+        let location_index' = fresh_location () in              (* TODO: Generalize to multiple automata *)
+        let old_transition = system_model.transitions_description (List.hd t) in
+        let new_transition = {old_transition with target = location_index'} in 
+        add_transition state_index new_transition;
+        continue_exploring state_index' location_index'
+    ) uncontrollable_successors;
+    let winning_moves = get_winning_moves state_index in
     winning_moves#iter (
-      fun state_index winning_moves_per_action -> 
+      fun state_index' winning_moves_per_action ->
+        let location_index' = fresh_location () in   
         winning_moves_per_action#iter (
         fun action_index nnconv_constr -> 
         if not @@ LinearConstraint.px_nnconvex_constraint_is_false nnconv_constr then
@@ -224,15 +270,19 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
             List.iter (
             fun px_linear_constr ->
               let pxd_linear_constr = LinearConstraint.pxd_of_px_constraint px_linear_constr in
-              Hashtbl.add transition_descriptions !transition_counter 
-              {action = action_index; guard = Continuous_guard pxd_linear_constr; updates = (No_potential_update, []); target = state_index};
-              transition_counter := !transition_counter + 1
-            ) constituent_constrs
+              let transition = {
+                action = action_index; 
+                guard = Continuous_guard pxd_linear_constr; 
+                updates = (No_potential_update, []); (* TODO *)
+                target = location_index'}
+                ; in
+              add_transition location_index transition
+              ) constituent_constrs
           end);
-        explore (get_winning_moves state_index)
-      )
+        continue_exploring state_index' location_index'
+    )
   in
-  explore (get_winning_moves state_space#get_initial_state_index);
+  explore state_space#get_initial_state_index (fresh_location ());
 
   (* DEBUG *)
   Hashtbl.iter 
@@ -244,6 +294,16 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     | _ -> ()
   )
   transition_descriptions;
+  Hashtbl.iter 
+  (fun state_index transitions_per_action -> 
+    Hashtbl.iter 
+    (fun action_index transition_index_list -> 
+      print_message Verbose_standard 
+      (Printf.sprintf "transitions for location %d, action %d: %s" state_index action_index 
+      (String.concat ";" (List.map (fun n -> string_of_int n) transition_index_list)))
+    ) transitions_per_action
+  )
+  transitions;
 
 
   let controller : simple_abstract_model = {
@@ -255,8 +315,8 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     nb_parameters = system_model.nb_parameters;
     nb_variables  = system_model.nb_variables;
     nb_ppl_variables = system_model.nb_ppl_variables;
-    nb_locations  = system_model.nb_transitions;
-    nb_transitions = system_model.nb_transitions;
+    nb_locations  = !location_counter;
+    nb_transitions = !transition_counter;
     has_invariants = system_model.has_invariants;
     has_complex_updates = system_model.has_complex_updates;
     bounded_parameters = system_model.bounded_parameters;
@@ -273,7 +333,7 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     variable_names = (fun var_id -> "name");
     discrete_names_by_type_group = [];
     type_of_variables = (fun var_id -> Var_type_clock);
-    automata = [];
+    automata = [0];
     automata_names = (fun automata_id -> "name");
     locations_per_automaton = (fun automata_id -> []);
     location_names = (fun automata_id -> fun location_id -> "name");
