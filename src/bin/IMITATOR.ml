@@ -797,8 +797,8 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Unavoidability *)
 			(************************************************************)
-			| AF (*state_predicate*)_ ->
-				raise (NotImplemented "Algorithm AF is not implemented for now")
+			| AF state_predicate ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAF model options state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
