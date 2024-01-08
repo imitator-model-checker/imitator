@@ -100,7 +100,6 @@ type constraint_soundness =
 (* 	| Constraint_under_over *)
 	
 	(* Impossible to compare the constraint with the original result *)
-	(*** NOTE: technically it used by variants of IM where the intersection with the real result is not null ***)
 	| Constraint_maybe_invalid
 
 
