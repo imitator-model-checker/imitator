@@ -3,8 +3,8 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
- * 
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
  * Module description: unbounded exact rational computation using GMP
  * 
  * File contributors : Étienne André, Dylan Marinho

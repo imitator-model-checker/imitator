@@ -2,8 +2,6 @@
  *
  *                       IMITATOR
  *
- * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Contain all types and functions for operations onto parsed discrete value

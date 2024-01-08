@@ -1,12 +1,13 @@
 (*****************************************************************
  *
  *                       IMITATOR
- * 
- * Université Paris 13, LIPN, CNRS, France
- * 
- * Author:        Etienne Andre
- * 
- * Created:       2015/03/24
+ *
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
+ * Author:        Étienne André
+ *
+ * File contributors : Étienne André
+ * Created           : 2015/03/24
  *
  ****************************************************************)
 

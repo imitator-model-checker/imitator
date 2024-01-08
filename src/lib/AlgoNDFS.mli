@@ -2,8 +2,8 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 & CNRS (France)
- * 
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
  * Module description: NDFS algorithms
  * 
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André

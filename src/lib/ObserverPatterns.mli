@@ -3,14 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: operations linked to the observer patterns
  *
  * File contributors : Étienne André
  * Created:       2013/02/04
- * Last modified: 2020/08/21
  *
  ************************************************************)
 

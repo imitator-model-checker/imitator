@@ -2,9 +2,9 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
- * 
  * Module description: Parametric deadlock-freeness
+ *
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * File contributors : Étienne André

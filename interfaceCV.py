@@ -4,7 +4,7 @@
 #
 #                       IMITATOR
 # 
-# LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+# Université Sorbonne Paris Nord, LIPN, CNRS, France
 # 
 # Script description: interface between IMITATOR and Lin Shang-Wei's learning-based tool (CV, for compositional verifier)
 # 

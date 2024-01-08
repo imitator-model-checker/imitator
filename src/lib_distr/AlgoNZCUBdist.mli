@@ -2,8 +2,8 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 & CNRS (France)
- * 
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
  * Module description: Non-zenoness emptiness check using CUB transformation (synthesizes valuations for which there exists a non-zeno loop in the PTA). Distributed version.
  * 
  * File contributors : Étienne André

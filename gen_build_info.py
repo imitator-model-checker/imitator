@@ -9,8 +9,7 @@
 #
 # Étienne André
 #
-# Laboratoire d'Informatique de Paris Nord
-# Université Paris 13, France
+# Université Sorbonne Paris Nord, LIPN, CNRS, France
 # Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
 # Created      : 2013/09/26

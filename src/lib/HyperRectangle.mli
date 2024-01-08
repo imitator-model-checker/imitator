@@ -2,12 +2,11 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
- * 
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
  * Author:        Etienne Andre
  * 
  * Created:       2014/09/24
- * Last modified: 2016/03/18
  *
  ****************************************************************)
 

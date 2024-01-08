@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  *
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Class for parameter valuation
  *

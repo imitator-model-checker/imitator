@@ -3,7 +3,7 @@
  *                       IMITATOR
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, LORIA, CNRS, France
  *
  * Author:        Étienne André

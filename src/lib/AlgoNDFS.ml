@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  *
- * LIPN, Université Paris 13 & CNRS (France)
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: NDFS algorithms

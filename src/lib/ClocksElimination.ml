@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  *
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
  * Module description: Dynamic elimination of clocks not used in the future [Andre13, FSFMA]
  *
