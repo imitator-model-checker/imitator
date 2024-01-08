@@ -44,7 +44,7 @@ type has_loop =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) =
+class virtual algoLoopSynth (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
@@ -195,9 +195,8 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 		
 		(* Projecting onto SOME parameters if required *)
 		(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
-		if Input.has_property() then(
-			let abstract_property = Input.get_property() in
-			match abstract_property.projection with
+		begin
+			match property.projection with
 			(* Unchanged *)
 			| None -> ()
 			(* Project *)
@@ -216,7 +215,8 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 				);
-		); (* end if projection *)
+		end;
+		(* end if projection *)
 
 		(* Update the loop constraint using the current constraint *)
 		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
@@ -262,7 +262,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 			self#update_loop_constraint loop_px_constraint;
 			
 			(* Construct counterexample if requested by the algorithm *)
-			let property = Input.get_property() in
 			if property.synthesis_type = Exemplification then(
 				(*** temporary HACK: start from the last state of the SCC ***)
 				let last_state : state_index = OCamlUtilities.list_last scc in
@@ -277,7 +276,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 			);
 
 			(* If witness: raise TerminateAnalysis! *)
-			self#terminate_if_witness (Input.get_property());
+			self#terminate_if_witness property;
 		);
 		
 		(* The end *)
@@ -329,9 +328,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
-		(* Retrieve the property *)
-		let abstract_property = Input.get_property() in
-
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in LoopSynth.compute_result")
@@ -339,7 +335,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_p
 		in
 
 		(* Branching between Witness/Synthesis and Exemplification *)
-		if abstract_property.synthesis_type = Exemplification then(
+		if property.synthesis_type = Exemplification then(
 			(* Return the result *)
 			Runs_exhibition_result
 			{

@@ -31,7 +31,7 @@ open Result
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAF (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property)  (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoGeneric model options (*as super*)
 
 	
@@ -91,13 +91,10 @@ class algoAF (model : AbstractModel.abstract_model) ((*abstract_property*)_ : Ab
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 
-		(* Retrieve the property *)
-		let abstract_property = Input.get_property() in
-
 		(* Projecting onto SOME parameters if required *)
 		(*** NOTE: Useless test as we are in AF, so there is a property ***)
 		let result =
-			match abstract_property.projection with
+			match property.projection with
 				(* No projection: copy the initial p constraint *)
 				| None -> synthesized_constraint
 				(* Project *)
@@ -127,7 +124,7 @@ class algoAF (model : AbstractModel.abstract_model) ((*abstract_property*)_ : Ab
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** TODO: double check ***)
-		let soundness = if (Input.get_property()).synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
 
 		(* Return the result *)
 		Single_synthesis_result

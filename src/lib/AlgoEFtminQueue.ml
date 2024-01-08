@@ -42,7 +42,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFtminQueue (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class algoEFtminQueue (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
@@ -589,9 +589,6 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (abstract_property 
 		let can_merge = ref false in
 		let pq_add = ref 1 in
 		
-		(* Get property to check whether the mode is witness or synthesis *)
-		let property = Input.get_property() in
-
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
 		while limit_reached == Keep_going && not (pq_is_empty !pq) && !algorithm_keep_going do

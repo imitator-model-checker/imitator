@@ -34,8 +34,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPRP (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoIMK model abstract_property options pval (*as super*)
+class algoPRP (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoIMK model property options pval (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -75,9 +75,8 @@ class algoPRP (model : AbstractModel.abstract_model) (abstract_property : Abstra
 
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
-				if Input.has_property() then(
-					let abstract_property = Input.get_property() in
-					match abstract_property.projection with
+				begin
+					match property.projection with
 					(* Unchanged *)
 					| None -> ()
 					(* Project *)
@@ -96,7 +95,8 @@ class algoPRP (model : AbstractModel.abstract_model) (abstract_property : Abstra
 						if verbose_mode_greater Verbose_medium then(
 							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						);
-				); (* end if projection *)
+				end;
+				(* end if projection *)
 
 				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a state violating the property.";

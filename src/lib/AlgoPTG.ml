@@ -286,7 +286,7 @@ let (#<--) (queue1 : 'a waitingList) (queue2 : 'a waitingList) = queue1#add_all 
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	(************************************************************)
@@ -538,7 +538,6 @@ class algoPTG (model : AbstractModel.abstract_model) (abstract_property : Abstra
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria waiting init = 
 		let queue_empty = waiting#is_empty in
-		let property = Input.get_property() in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 		let propagate_losing_states = options#ptg_propagate_losing_states in 
 
@@ -671,13 +670,10 @@ class algoPTG (model : AbstractModel.abstract_model) (abstract_property : Abstra
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
-		(* Retrieve the property *)
-		let abstract_property = Input.get_property() in
-
 		(* Projecting onto SOME parameters if required *)
 		(*** NOTE: Useless test as we are in EF, so there is a property ***)
 		let result =
-			match abstract_property.projection with
+			match property.projection with
 				(* No projection: copy the initial p constraint *)
 				| None -> synthesized_constraint
 				(* Project *)
@@ -713,7 +709,7 @@ class algoPTG (model : AbstractModel.abstract_model) (abstract_property : Abstra
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if (Input.get_property()).synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
 		Single_synthesis_result

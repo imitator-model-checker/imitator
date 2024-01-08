@@ -33,7 +33,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMK (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) =
+class algoIMK (model : AbstractModel.abstract_model) ((*property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)

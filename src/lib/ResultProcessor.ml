@@ -1168,7 +1168,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 				list_append computed_zones zones_for_this_result
 			) [] valid_tiles
 			in
-			
+
 			Graphics.draw_cartography model zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			(* Print some information *)

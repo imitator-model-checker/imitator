@@ -31,8 +31,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMunion (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoIMK model abstract_property options pval (*as super*)
+class algoIMunion (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) =
+	object (self) inherit algoIMK model property options pval (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

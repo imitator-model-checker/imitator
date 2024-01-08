@@ -34,7 +34,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEUgen (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
+class virtual algoEUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
@@ -92,9 +92,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) ((*abstract_prope
 
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-				if Input.has_property() then(
-					let abstract_property = Input.get_property() in
-					match abstract_property.projection with
+				begin
+					match property.projection with
 					(* Unchanged *)
 					| None -> ()
 					(* Project *)
@@ -113,7 +112,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) ((*abstract_prope
 						if verbose_mode_greater Verbose_medium then(
 							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						);
-				); (* end if projection *)
+				end;
+				(* end if projection *)
 
 				(* Statistics *)
 				counter_found_target#increment;
@@ -279,13 +279,12 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) ((*abstract_prope
 		(* Case accepting state *)
 		if !is_target then(
 			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-			let property = Input.get_property() in
 			if property.synthesis_type = Exemplification then(
 				self#construct_counterexamples new_state_index;
 			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
-			self#terminate_if_witness (Input.get_property());
+			self#terminate_if_witness property;
 		); (* end if target *)
 
 

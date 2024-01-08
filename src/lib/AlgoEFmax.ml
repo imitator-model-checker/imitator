@@ -29,8 +29,8 @@ open LinearConstraint
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFmax (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (self) inherit algoEFopt model abstract_property options full_synthesis state_predicate parameter_index
+class algoEFmax (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+	object (self) inherit algoEFopt model property options full_synthesis state_predicate parameter_index
 	
 	(************************************************************)
 	(* Class variables *)

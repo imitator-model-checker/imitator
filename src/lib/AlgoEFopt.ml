@@ -32,7 +32,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFopt (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+class virtual algoEFopt (model : AbstractModel.abstract_model) ((*property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)

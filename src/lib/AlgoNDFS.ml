@@ -112,7 +112,7 @@ let printpendingqueue (colour : string) (thequeue : (State.state_index * int) li
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNDFS (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options (*as super*)
 
 	(************************************************************)
@@ -281,8 +281,6 @@ class algoNDFS (model : AbstractModel.abstract_model) (abstract_property : Abstr
 		()
 	
 	method private set_termination_if_synthesis () : unit =
-		(* Get the property to check whether we are in synthesis or witness mode *)
-		let property = Input.get_property() in
 	(* For synthesis: we do not stop immediately *)
 		if (property.synthesis_type = Synthesis) then
 			termination_status <- Some Regular_termination
@@ -292,9 +290,6 @@ class algoNDFS (model : AbstractModel.abstract_model) (abstract_property : Abstr
 
 	(*** NOTE: this function was used in the inner part of some loops; also, it is identical to "cyclefound", and therefore used there for factoring purpose (ÉA, 2021/08) ***)
 	method private cyclefound_inner (termination_function : unit -> unit) (_ : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
-		(* Get the property to check whether we are in synthesis or witness mode *)
-		let property = Input.get_property() in
-
 		cyclecount <- cyclecount + 1;
 		total_cyclecount <- total_cyclecount + 1;
 		if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
@@ -674,9 +669,6 @@ class algoNDFS (model : AbstractModel.abstract_model) (abstract_property : Abstr
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*                     State Space Exploration                       *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-		(* Get the property to check whether we are in synthesis or witness mode *)
-		let property = Input.get_property() in
 
 		(* loop for iterative deepening, otherwise used only once *)
 

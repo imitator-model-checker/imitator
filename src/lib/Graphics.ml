@@ -148,7 +148,7 @@ exception CartographyError
 let get_v0_option () =
 	(* First check whether there is a property *)
 	if Input.has_property() then(
-		
+
 		match (Input.get_property()).property with
 			| Valid
 
@@ -163,9 +163,9 @@ let get_v0_option () =
 			| Cycle_through _
 			| Cycle_through_generalized _
 			| PRP _
-				
+
 			| NZ_Cycle
-			
+
 			| Deadlock_Freeness
 			| IM _
 			| ConvexIM _
@@ -174,7 +174,7 @@ let get_v0_option () =
 
 			| Win _
 				-> None
-			
+
 			| Cover_cartography (v0, _)
 			| Learning_cartography (_ , v0, _)
 			| Shuffle_cartography (v0, _)
@@ -182,7 +182,7 @@ let get_v0_option () =
 			| Random_cartography (v0, _, _)
 			| RandomSeq_cartography (v0, _, _)
 			| PRPC (_, v0, _)
-			
+
 				-> Some v0
 	) else None
 

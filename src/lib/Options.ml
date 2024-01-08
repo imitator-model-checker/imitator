@@ -1148,9 +1148,9 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method recall_and_warn (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) : unit =
 			(* Function to access the property if the mode is Algorithm *)
-			let get_property () = match property_option with
+			let get_option_property () = match property_option with
 			| Some property -> property
-			| None -> raise (InternalError "A property should have be defined in `recall_and_warn.get_property`")
+			| None -> raise (InternalError "A property should have be defined in `recall_and_warn.get_option_property`")
 			in
 
 			(* File *)
@@ -1169,7 +1169,7 @@ class imitator_options =
 			begin
 			match imitator_mode with
 			| Algorithm ->
-				print_message Verbose_standard ("Algorithm: " ^ (AlgorithmOptions.text_of_property (get_property () )));
+				print_message Verbose_standard ("Algorithm: " ^ (AlgorithmOptions.text_of_property (get_option_property () )));
 
 			| _ ->
 				let mode_string = string_of_mode imitator_mode in
@@ -1295,7 +1295,7 @@ class imitator_options =
 				if imitator_mode <> Algorithm then(
 					print_warning ("The option `-no-cumulative-pruning` is reserved for selected synthesis algorithms. It will thus be ignored.");
 				)else(
-					let property = get_property() in
+					let property = get_option_property() in
 
 					(*** HACK: hard-coded => to externalize somewhere? ***)
 					match property.property with
@@ -1346,7 +1346,7 @@ class imitator_options =
 			(*------------------------------------------------------------*)
 			(*------------------------------------------------------------*)
 			if imitator_mode = Algorithm then(
-				let property = get_property() in
+				let property = get_option_property() in
 
 				if property.property <> NZ_Cycle && self#is_set_nz_method then(
 					print_warning ("The `-nz-method` option is reserved for non-Zeno cycle synthesis algorithms. Ignored.");
@@ -1362,7 +1362,7 @@ class imitator_options =
 			(* Only BFS (no NDFS) for generalized acceptance conditions, so far *)
 			(*------------------------------------------------------------*)
 			if imitator_mode = Algorithm then(
-				match (get_property()).property with
+				match (get_option_property()).property with
 					(* Accepting infinite-run (cycle) through a state predicate *)
 					| Cycle_through_generalized _ ->
 						begin

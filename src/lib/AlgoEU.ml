@@ -33,8 +33,8 @@ open AlgoEUgen
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEU (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model abstract_property options (Some state_predicate_phi) state_predicate_psi (*as super*)
+class algoEU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (self) inherit algoEUgen model property options (Some state_predicate_phi) state_predicate_psi (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -63,13 +63,10 @@ class algoEU (model : AbstractModel.abstract_model) (abstract_property : Abstrac
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
-		(* Retrieve the property *)
-		let abstract_property = Input.get_property() in
-		
 		(* Projecting onto SOME parameters if required *)
 		(*** NOTE: Useless test as we are in EF, so there is a property ***)
 		let result =
-			match abstract_property.projection with
+			match property.projection with
 				(* No projection: copy the initial p constraint *)
 				| None -> synthesized_constraint
 				(* Project *)
@@ -104,7 +101,7 @@ class algoEU (model : AbstractModel.abstract_model) (abstract_property : Abstrac
 		in
 
 		(* Branching between Witness/Synthesis and Exemplification *)
-		if abstract_property.synthesis_type = Exemplification then(
+		if property.synthesis_type = Exemplification then(
 			(* Return the result *)
 			Runs_exhibition_result
 			{

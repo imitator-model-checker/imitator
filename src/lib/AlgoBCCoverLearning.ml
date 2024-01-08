@@ -63,8 +63,8 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Opti
 	(** Backup the original model (for final postprocessing) *)
 	val original_model : AbstractModel.abstract_model = model
 
-	(** Backup the original property (for final postprocessing) *)
-	val original_property = Input.get_property ()
+(*	(** Backup the original property (for final postprocessing) *)
+	val original_property = Input.get_property ()*)
 
 	(** Backup the original model file names *)
 	val original_file = (Input.get_options ())#model_file_name
@@ -274,7 +274,7 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Opti
 		
 		(* Set model and property back to their original value *)
 		Input.set_model original_model;
-		Input.set_property original_property;
+(* 		Input.set_property original_property; *)
 		(* Set model name and model prefix name back to their original value *)
 		options#set_file original_file;
 		options#set_files_prefix original_files_prefix;

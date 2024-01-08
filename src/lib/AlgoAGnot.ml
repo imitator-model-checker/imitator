@@ -34,8 +34,8 @@ open AlgoEUgen
 (************************************************************)
 (************************************************************)
 (*** NOTE: AG is implemented as the negation of EF ***)
-class algoAGnot (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model abstract_property options None state_predicate (*as super*)
+class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEUgen model property options None state_predicate (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -84,7 +84,7 @@ class algoAGnot (model : AbstractModel.abstract_model) (abstract_property : Abst
 
 		(* Projecting onto SOME parameters if required *)
 		let result =
-		match (Input.get_property()).projection with
+		match property.projection with
 		(* No projection: copy the initial p constraint *)
 		| None -> LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint
 		(* Project *)
