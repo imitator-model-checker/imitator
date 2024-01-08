@@ -54,15 +54,10 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 	(* Non-necessarily convex parameter constraint for which deadlocks may arise *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 
-	(* Convex parameter constraint ensuring all clocks and parameters are non-negative (constant object used as a shortcut, as it is often used in the algorithm) *)
-	
-	(*** NOTE/TODO: technically, clocks should be non-negative, but parameters should just be conform to the initial p_constraint ***)
-	
-	val all_clocks_and_parameters_nonnegative : LinearConstraint.px_linear_constraint =
-		(* Find clocks and parameters *)
-		let clocks_and_parameters = list_union model.clocks model.parameters in
-		(* Constrain non-negative *)
-		LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters
+	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
+	val parameters_consistent_with_init : LinearConstraint.px_linear_constraint =
+(* 		model.px_clocks_non_negative_and_initial_p_constraint *)
+		LinearConstraint.px_of_p_constraint model.initial_p_constraint
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -167,8 +162,8 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 			self#print_algo_message Verbose_high ("nnconvex_s (s \ good, not allowing exit) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
 		);
 		
-		(* Ensure clocks and parameters are not negative *)
-		LinearConstraint.px_nnconvex_px_intersection_assign nnconvex_s all_clocks_and_parameters_nonnegative;
+		(* Ensure that parameters are consistent with initial parameter constraint *)
+		LinearConstraint.px_nnconvex_px_intersection_assign nnconvex_s parameters_consistent_with_init;
 		
 		
 		(* Print some information *)
