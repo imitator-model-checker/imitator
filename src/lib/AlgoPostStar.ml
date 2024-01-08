@@ -69,10 +69,6 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 		(* If this is really a new state, or a state larger than a former state *)
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
-			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			(*** NOTE: in fact not necessary for this algorithm ***)
-			self#update_statespace_nature new_state;
-			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			new_states_indexes <- new_state_index :: new_states_indexes;
 			
@@ -126,21 +122,11 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in
-
 		(* Return result *)
 		State_space_computation_result
 		{
 			(* Explored state space *)
 			state_space			= state_space;
-			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

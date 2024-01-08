@@ -35,15 +35,6 @@ open AbstractAlgorithm
 (************************************************************)
 (************************************************************)
 
-(************************************************************)
-(** Nature of a state space according to some property *)
-(************************************************************)
-type statespace_nature =
-	| Good
-	| Bad
-	| Unknown
-
-
 
 (************************************************************)
 (** Result of the function adding a new state *)
@@ -305,17 +296,6 @@ let counter_empty_states_for_comparison = create_hybrid_counter_and_register "St
 (** Debug string function *)
 (************************************************************)
 let string_of_state_index (state_index : State.state_index) = "s_" ^ (string_of_int state_index)
-
-
-(************************************************************)
-(* Class-independent function: state space nature *)
-(************************************************************)
-
-(** Convert a statespace_nature into a string *)
-let string_of_statespace_nature = function
-	| Good -> "good"
-	| Bad -> "bad"
-	| Unknown -> "unknown"
 
 
 (**************************************************************)

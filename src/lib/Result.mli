@@ -154,9 +154,6 @@ type state_space_computation_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.stateSpace;
 	
-	(* Nature of the state space *)
-	statespace_nature	: StateSpace.statespace_nature;
-
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	

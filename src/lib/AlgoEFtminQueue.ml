@@ -851,10 +851,6 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 		(* If this is really a new state, or a state larger than a former state *)
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
-			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			(*** NOTE: in fact not necessary for this algorithm ***)
-			self#update_statespace_nature new_state;
-			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			new_states_indexes <- new_state_index :: new_states_indexes;
 			

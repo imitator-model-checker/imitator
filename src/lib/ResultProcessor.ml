@@ -40,19 +40,19 @@ let counter = Statistics.create_time_counter_and_register "file generation" Grap
 let zones_of_good_bad_constraint = function
 	(* Only good valuations: convert to GOOD convex polyhedron *)
 	| Good_constraint (p_nnconvex_constraint, _) ->
-		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, StateSpace.Good]
+		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, Graphics.Good]
 		
 	(* Only bad valuations: convert to BAD convex polyhedron *)
 	| Bad_constraint (p_nnconvex_constraint, _) ->
-		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, StateSpace.Bad]
+		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, Graphics.Bad]
 
 	(* Both good and bad valuations *)
 	| Good_bad_constraint good_and_bad_constraint ->
 		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
 		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
 		[
-			LinearConstraint.Nonconvex_p_constraint good_p_nnconvex_constraint, StateSpace.Good;
-			LinearConstraint.Nonconvex_p_constraint bad_p_nnconvex_constraint, StateSpace.Bad;
+			LinearConstraint.Nonconvex_p_constraint good_p_nnconvex_constraint, Graphics.Good;
+			LinearConstraint.Nonconvex_p_constraint bad_p_nnconvex_constraint, Graphics.Bad;
 		]
 
 
@@ -200,14 +200,14 @@ let string_soundness_of_good_or_bad_constraint = function
 		(string_of_soundness bad_soundness)
 
 
-(** Convert a Result.good_or_bad_constraint into a string for the sole statespace nature *)
-let string_statespace_nature_of_good_or_bad_constraint = function
+(** Convert a Result.good_or_bad_constraint into a string for printing the constraint nature *)
+let string_constraint_nature_of_good_or_bad_constraint = function
 	(* Only good valuations *)
-	| Good_constraint _ -> StateSpace.string_of_statespace_nature StateSpace.Good
+	| Good_constraint _ -> "good"
 	(* Only bad valuations *)
-	| Bad_constraint _ -> StateSpace.string_of_statespace_nature StateSpace.Bad
+	| Bad_constraint _ -> "bad"
 	(* Both good and bad valuations *)
-	| Good_bad_constraint _ -> (StateSpace.string_of_statespace_nature StateSpace.Good) ^ "/" ^ (StateSpace.string_of_statespace_nature StateSpace.Bad)
+	| Good_bad_constraint _ -> "good" ^ "/" ^ "bad"
 
 
 (** Convert a Result.good_or_bad_constraint into a verbose string for the sole soundness *)
@@ -332,16 +332,16 @@ let abstract_statespace_statistics abstract_state_space total_time =
 
 	
 (* Return a string made of some information concerning the result *)
-let result_nature_statistics (soundness_str : string) termination (statespace_nature_str : string) =
+let result_nature_statistics (soundness_str : string) termination (constraint_nature_str : string) =
 	    "Constraint soundness                    : " ^ soundness_str
 	^ "\nTermination                             : " ^ (string_of_bfs_algorithm_termination termination)
-	^ "\nConstraint nature                       : " ^ statespace_nature_str
+	^ "\nConstraint nature                       : " ^ constraint_nature_str
 
 (* Return a string made of some information concerning the result (for multiple_synthesis_result) *)
-let result_nature_statistics_bc (soundness_str : string) termination (statespace_nature_str : string) =
+let result_nature_statistics_bc (soundness_str : string) termination (constraint_nature_str : string) =
 	    "Constraint soundness                    : " ^ soundness_str
 	^ "\nTermination                             : " ^ (string_of_bc_algorithm_termination termination)
-	^ "\nConstraint nature                       : " ^ statespace_nature_str
+	^ "\nConstraint nature                       : " ^ constraint_nature_str
 
 
 (*** TODO: would be smarter to have a generic function export_to_file_result : imitator_result -> unit () ***)
@@ -481,8 +481,8 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 	(* Handle the soundness separately *)
 	let soundness_str : string = string_soundness_of_good_or_bad_constraint single_synthesis_result.result in 
 
-	(* Handle the statespace nature separately *)
-	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint single_synthesis_result.result in
+	(* Handle the constraint nature separately *)
+	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint single_synthesis_result.result in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -499,7 +499,7 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 		
 		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics soundness_str single_synthesis_result.termination statespace_nature_str)
+		^ "\n" ^ (result_nature_statistics soundness_str single_synthesis_result.termination constraint_nature_str)
 		
 		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
@@ -533,8 +533,8 @@ let export_to_file_multiple_synthesis_result (model : AbstractModel.abstract_mod
 	(* Handle the soundness separately *)
 	let soundness_str : string = string_soundness_of_good_or_bad_constraint multiple_synthesis_result.result in 
 
-	(* Handle the statespace nature separately *)
-	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint multiple_synthesis_result.result in
+	(* Handle the constraint nature separately *)
+	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint multiple_synthesis_result.result in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -551,7 +551,7 @@ let export_to_file_multiple_synthesis_result (model : AbstractModel.abstract_mod
 		
 		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics_bc soundness_str multiple_synthesis_result.termination statespace_nature_str)
+		^ "\n" ^ (result_nature_statistics_bc soundness_str multiple_synthesis_result.termination constraint_nature_str)
 		
 		(* 5) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
@@ -581,8 +581,8 @@ let export_to_file_point_based_result (model : AbstractModel.abstract_model) fil
 	(* Handle the soundness separately *)
 	let soundness_str = string_soundness_of_good_or_bad_constraint point_based_result.result in 
 	
-	(* Handle the statespace nature separately *)
-	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint point_based_result.result in
+	(* Handle the constraint nature separately *)
+	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint point_based_result.result in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -607,7 +607,7 @@ let export_to_file_point_based_result (model : AbstractModel.abstract_model) fil
 		
 		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics soundness_str point_based_result.termination statespace_nature_str)
+		^ "\n" ^ (result_nature_statistics soundness_str point_based_result.termination constraint_nature_str)
 (* 		^ "\nNumber of random selections             : " ^ (string_of_int point_based_result.nb_random_selections) *)
 		
 		(* 6) Statistics about state space *)
@@ -679,8 +679,8 @@ let export_to_file_cartography_result (model : AbstractModel.abstract_model) fil
 			(* Handle the soundness separately *)
 			let soundness_str : string = string_soundness_of_good_or_bad_constraint abstract_point_based_result.result in 
 			
-			(* Handle the statespace nature separately *)
-			let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint abstract_point_based_result.result in
+			(* Handle the constraint nature separately *)
+			let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint abstract_point_based_result.result in
 
 
 			(* mapi starts counting from 0, but we like starting counting from 1 *)
@@ -697,7 +697,7 @@ let export_to_file_cartography_result (model : AbstractModel.abstract_model) fil
 			
 			(* 3) Statistics about result *)
 			^ "\n\n------------------------------------------------------------"
-			^ "\n" ^ (result_nature_statistics soundness_str abstract_point_based_result.termination statespace_nature_str)
+			^ "\n" ^ (result_nature_statistics soundness_str abstract_point_based_result.termination constraint_nature_str)
 (*			^ "\nNumber of random selections             : " ^ (string_of_int abstract_point_based_result.nb_random_selections)*)
 			
 			(* 4) Statistics about state space *)
@@ -1251,7 +1251,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 			if options#draw_cart then (
 				print_message Verbose_low "Plotting cartography of the runs' constraints…";
 				(* Generate the graphics: parameters *)
-				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in
+				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> Graphics.Good | Impossible_concrete_run _ -> Graphics.Bad] in
 
 				Graphics.draw_cartography model zones prefix;
 			) else (

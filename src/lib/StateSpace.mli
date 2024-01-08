@@ -37,16 +37,6 @@ type combined_transition = AbstractModel.transition_index list
 
 
 (************************************************************)
-(** Nature of a state space (according to some property) *)
-(************************************************************)
-type statespace_nature =
-	| Good
-	| Bad
-	| Unknown
-
-
-
-(************************************************************)
 (** Result of the function adding a new state *)
 (************************************************************)
 type addition_result =
@@ -168,8 +158,6 @@ val get_resets : AbstractModel.abstract_model -> combined_transition -> Automato
 (** Misc: conversion to string *)
 (************************************************************)
 val string_of_state_index : state_index -> string
-
-val string_of_statespace_nature : statespace_nature -> string
 
 
 

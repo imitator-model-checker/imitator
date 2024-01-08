@@ -444,9 +444,6 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 			(* If this is really a new state, or a state larger than a former state *)
 			| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
-				(* First check whether this is a bad tile according to the property and the nature of the state *)
-				self#update_statespace_nature new_state;
-				
 				(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)

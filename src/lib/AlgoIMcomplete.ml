@@ -143,13 +143,6 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.i
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in
-		
 		(* Constraint is… *)
 		let soundness =
 			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
@@ -162,12 +155,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.i
 			else Constraint_maybe_invalid
 		in
 		
-		let result = match statespace_nature with
-			(*** NOTE: if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
-	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good. ***)
-			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(k_result, soundness)
-			| StateSpace.Bad -> Bad_constraint(k_result, soundness)
-		in
+		let result =  Good_constraint(k_result, soundness) in
 
 		(* Return result *)
 		Point_based_result
@@ -180,9 +168,6 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.i
 			
 			(* Explored state space *)
 			state_space			= state_space;
-			
-			(* Nature of the state space *)
-(* 			statespace_nature	= statespace_nature; *)
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;

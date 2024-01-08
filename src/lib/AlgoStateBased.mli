@@ -196,9 +196,6 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable state_space : StateSpace.stateSpace
 
-		(** Nature of the state space according to a property *)
-		val mutable statespace_nature : StateSpace.statespace_nature
-
 		(* Function to be called from the distributed IMITATOR *)
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable patator_termination_function : (unit -> unit) option
@@ -276,12 +273,6 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(** Check whether the projection of a PX-constraint is included into the `synthesized_constraint` *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method check_whether_px_included_into_synthesized_constraint : LinearConstraint.px_linear_constraint -> bool
-
-
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Update the nature of the trace set *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method update_statespace_nature : State.state -> unit
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -129,13 +129,6 @@ class algoAGnot (model : AbstractModel.abstract_model) (options : Options.imitat
 			| None -> raise (InternalError ("Termination status not set in " ^ self#algorithm_name ^ ".compute_result"))
 			| Some status -> status
 		in
-
-(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in*)
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)

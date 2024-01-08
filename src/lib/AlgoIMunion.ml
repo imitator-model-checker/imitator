@@ -107,21 +107,10 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		(*** NOTE: unsure of this computation (if it has any meaning for this algorithm anyway) ***)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in
-
 		(* Constraint is exact if termination is normal, unknown otherwise (on the one hand, pi-incompatible inequalities (that would restrain the constraint) may be missing, and on the other hand union of good states (that would enlarge the constraint) may be missing too) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
 
-		let synthesized_constraint = match statespace_nature with
-			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(synthesized_constraint, soundness)
-			| StateSpace.Bad -> Bad_constraint(synthesized_constraint, soundness)
-		in
+		let synthesized_constraint = Good_constraint(synthesized_constraint, soundness) in
 
 		(* Return result *)
 		Point_based_result

@@ -30,8 +30,14 @@ val dot_colors : string list
 (* Functions *)
 (************************************************************)
 
+(*** HACK: pass directly whether zones are good or bad ***)
+type polyhedron_nature =
+	| Good
+	| Bad
+	| Unknown
+
 (** Draw (using the plotutils graph utility) the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
-val draw_cartography : AbstractModel.abstract_model -> (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list ->  string -> unit
+val draw_cartography : AbstractModel.abstract_model -> (LinearConstraint.p_convex_or_nonconvex_constraint * polyhedron_nature) list ->  string -> unit
 
 
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)

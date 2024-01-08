@@ -2537,10 +2537,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
-	(** Nature of the state space according to a property *)
-	val mutable statespace_nature = StateSpace.Unknown
-
-
 (*	(* Clock that may be reset at each transition *)
 	val mutable reset_clock : Automaton.clock_index option = None*)
 
@@ -2736,7 +2732,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			false
 		)
 
-
+(*
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2791,7 +2787,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 					(* Cannot conclude anything from a single state yet *)
 					()
 
-		)
+		)*)
 
 
 

@@ -260,9 +260,6 @@ class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator
 				);*)
 	
 				
-				(* First check whether this is a bad tile according to the property and the nature of the state *)
-				self#update_statespace_nature new_state;
-				
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				new_states_indexes <- new_state_index :: new_states_indexes;
 				
@@ -381,21 +378,10 @@ class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		(*** NOTE: unsure of this computation (if it has any meaning for this algorithm anyway) ***)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in
-
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as there may be pi-incompatible inequalities missing) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
-		let result = match statespace_nature with
-			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
-			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
-		in
+		let result = Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness) in
 
 		(* Return result *)
 		Point_based_result

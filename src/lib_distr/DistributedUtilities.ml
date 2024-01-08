@@ -248,18 +248,6 @@ let unserialize_hyper_rectangle (hyper_rectangle_string : string) =
 (* BFS result *)
 (*------------------------------------------------------------*)
 
-let serialize_statespace_nature = function
-	| StateSpace.Good -> "G"
-	| StateSpace.Bad -> "B"
-	| StateSpace.Unknown -> "U"
-
-
-let unserialize_statespace_nature = function
-	| "G" -> StateSpace.Good
-	| "B" -> StateSpace.Bad
-	| "U" -> StateSpace.Unknown
-	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_statespace_nature."))
-
 let serialize_bfs_algorithm_termination = function
 	(* Fixpoint-like termination *)
 	| Result.Regular_termination -> "R"
@@ -463,26 +451,12 @@ let serialize_abstract_point_based_result abstract_point_based_result =
 	^
 	serialize_SEP_STRUCT
 	^
-(*	(* Nature of the state space *)
-	(serialize_statespace_nature abstract_point_based_result.statespace_nature)
-	^
-	serialize_SEP_STRUCT
-	^
-	(* Number of random selections of pi-incompatible inequalities performed *)
-	(string_of_int abstract_point_based_result.nb_random_selections)
-	^
-	serialize_SEP_STRUCT
-	^*)
+
 	(* Total computation time of the algorithm *)
 	(string_of_float abstract_point_based_result.computation_time)
 	^
 	serialize_SEP_STRUCT
 	^
-(*	(* Soundness of the result *)
-	(serialize_constraint_soundness abstract_point_based_result.soundness)
-	^
-	serialize_SEP_STRUCT
-	^*)
 	(* Termination *)
 	(serialize_bfs_algorithm_termination abstract_point_based_result.termination)
 
@@ -492,17 +466,16 @@ let serialize_abstract_point_based_result abstract_point_based_result =
 let unserialize_abstract_point_based_result (abstract_point_based_result_string : string) =
 
 	print_message Verbose_high ( "[Master] About to unserialize '" ^ abstract_point_based_result_string ^ "'");
-	let reference_val_str, result_str, abstract_state_space_str, (*statespace_nature_str, nb_random_selections_str , *)computation_time_str, (*soundness_str, *)termination_str =
+	let reference_val_str, result_str, abstract_state_space_str, computation_time_str, (*soundness_str, *)termination_str =
 	match split serialize_SEP_STRUCT abstract_point_based_result_string with
-		| [reference_val_str; result_str; abstract_state_space_str; (*statespace_nature_str; nb_random_selections_str ; *)computation_time_str; (*soundness_str; *)termination_str ]
-			-> reference_val_str, result_str, abstract_state_space_str, (*statespace_nature_str, nb_random_selections_str , *)computation_time_str, (*soundness_str, *)termination_str
+		| [reference_val_str; result_str; abstract_state_space_str; computation_time_str; (*soundness_str; *)termination_str ]
+			-> reference_val_str, result_str, abstract_state_space_str, computation_time_str, (*soundness_str, *)termination_str
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ abstract_point_based_result_string ^ "'."))
 	in
 	{
 		reference_val 			= unserialize_pi0 reference_val_str;
 		result 					= unserialize_good_or_bad_constraint result_str;
 		abstract_state_space 	= unserialize_abstract_state_space abstract_state_space_str;
-(* 		statespace_nature		= unserialize_statespace_nature statespace_nature_str; *)
 (* 		nb_random_selections	= int_of_string nb_random_selections_str; *)
 		computation_time		= float_of_string computation_time_str;
 (* 		soundness				= unserialize_constraint_soundness soundness_str; *)

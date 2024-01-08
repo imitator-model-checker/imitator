@@ -41,6 +41,12 @@ let counter_graphics_statespace = create_time_counter_and_register "state space 
 (* Plot (graph) Functions *)
 (************************************************************)
 
+(*** HACK: pass directly whether zones are good or bad ***)
+type polyhedron_nature =
+	| Good
+	| Bad
+	| Unknown
+
 (*------------------------------------------------------------*)
 (* General functions *)
 (*------------------------------------------------------------*)
@@ -108,16 +114,16 @@ let make_cartography_tile_file_name cartography_file_prefix file_index =
 (*------------------------------------------------------------*)
 (** Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
-let graph_color_of_int tile_index statespace_nature dotted =
+let graph_color_of_int tile_index polyhedron_nature dotted =
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
 	if Input.has_property() then(
 		(* Go for a good / bad coloring *)
-		match statespace_nature with
-		| StateSpace.Good -> 2 (* green *)
-		| StateSpace.Bad -> 1 (* red *)
-		| StateSpace.Unknown -> 5 (* cyan *)
+		match polyhedron_nature with
+		| Good -> 2 (* green *)
+		| Bad -> 1 (* red *)
+		| Unknown -> 5 (* cyan *)
 	(* Else random coloring *)
 	)else(
 		(* Only 5 colors from 1 to 5 *)
@@ -181,7 +187,7 @@ let get_v0_option () =
 	) else None
 
 
-let draw_cartography (model : AbstractModel.abstract_model) (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
+let draw_cartography (model : AbstractModel.abstract_model) (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * polyhedron_nature) list) cartography_file_prefix =
 	(* Create counter *)
 	let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard in
 
@@ -214,12 +220,12 @@ try(
 	(* Converting to convex constraints *)
 	(*** BADPROG: creating a list of singletons and lists, and then flatten ***)
 	let returned_constraint_list = List.flatten (List.map (function
-		| LinearConstraint.Convex_p_constraint p_linear_constraint, statespace_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , statespace_nature]
-		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, statespace_nature ->
+		| LinearConstraint.Convex_p_constraint p_linear_constraint, polyhedron_nature -> [LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint , polyhedron_nature]
+		| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, polyhedron_nature ->
 			(* Get the convex constraints *)
 			let p_linear_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
 			(* Render non-strict *)
-			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, statespace_nature) p_linear_constraints
+			List.map (fun p_linear_constraint -> LinearConstraint.render_non_strict_p_linear_constraint p_linear_constraint, polyhedron_nature) p_linear_constraints
 		) returned_constraint_list
 	)  in
 	
@@ -587,7 +593,7 @@ try(
 	let file_index = ref 0 in
 	let tile_index = ref 0 in
 	(* Creation of files (Daphne wrote this?) *)
-	let create_file_for_constraint k statespace_nature =
+	let create_file_for_constraint k polyhedron_nature =
 	
 		(* Increment the file index *)
 		file_index := !file_index + 1;
@@ -612,9 +618,10 @@ try(
 		(* Comments at the end of the graph file *)
 		let comments = (draw_comments (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv))
 		(*** WARNING: This line is used by Giuseppe Lipari: do not change without prior agreement ***)
-		^ (if Input.has_property() then(
+		(*** OOPS: changed by ÉA without prior agreement (2024/01/08) ***)
+		(*^ (if Input.has_property() then(
 			"\n# Tile nature: " ^ (StateSpace.string_of_statespace_nature statespace_nature) ^ ""
-		) else "")
+		) else "")*)
 		in
 		
 		(* Print some information *)
@@ -637,19 +644,19 @@ try(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " --fill-fraction 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " --fill-fraction 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index polyhedron_nature true) ^ " --fill-fraction 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index polyhedron_nature false) ^ " --fill-fraction 0.7 " ^ file_name ^ " "
 		;
 	in
 	
 	(* For all returned_constraint *)
-	List.iter (fun (p_linear_constraint, statespace_nature) ->
+	List.iter (fun (p_linear_constraint, polyhedron_nature) ->
 		(* Test just in case! (otherwise an exception arises *)
 		if LinearConstraint.p_is_false p_linear_constraint then(
 			print_warning " Found a false constraint when computing the cartography. Ignored."
 		)else(
 			tile_index := !tile_index + 1;
-			create_file_for_constraint p_linear_constraint statespace_nature
+			create_file_for_constraint p_linear_constraint polyhedron_nature
 		)
 	) returned_constraint_list;
 	

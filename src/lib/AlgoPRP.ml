@@ -171,9 +171,6 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 			(* If this is really a new state, or a state larger than a former state *)
 			| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
-				(* First check whether this is a bad tile according to the property and the nature of the state *)
-				self#update_statespace_nature new_state;
-
 				(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 				let to_be_added = self#process_pi0_compatible_state new_state in
 
@@ -306,27 +303,21 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally;
-			It is bad if any bad state was met. *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in
-
-		(* Constraint is... *)
+		(* Constraint is… *)
 		let soundness =
 			(* EXACT if termination is normal, whatever the state space nature is *)
 			if termination_status = Regular_termination then Constraint_exact
 			(* POSSIBLY UNDERAPPROXIMATED if state space nature is bad and termination is not normal *)
-			else if statespace_nature = StateSpace.Bad then Constraint_maybe_under
+			else if bad_state_found then Constraint_maybe_under
 			(* INVALID if state space nature is good and termination is not normal *)
 			else Constraint_maybe_invalid
 		in
 
-		let result = match statespace_nature with
-			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(result, soundness)
-			| StateSpace.Bad -> Bad_constraint(result, soundness)
+		let result = if bad_state_found
+			then
+				Bad_constraint(result, soundness)
+			else
+				Good_constraint(result, soundness)
 		in
 
 		(* Return result *)
