@@ -2,9 +2,9 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
- * 
+ *
  * Module description: IMKunion algorithm [AS11]
  * 
  * File contributors : Étienne André
@@ -37,12 +37,6 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* List of last states *)
-(* 	val mutable last_states : StateSpace.state_index list = [] *)
-
-	(* Non-necessarily convex parameter constraint *)
-	val mutable result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-	
 	
 	
 	(************************************************************)
@@ -61,7 +55,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 	method! initialize_variables =
 		super#initialize_variables;
 		
-		result <- LinearConstraint.false_p_nnconvex_constraint ();
+		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 		
 		(* The end *)
 		()
@@ -78,7 +72,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_p_union_assign result p_constraint
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint
 		
 (*		(* Add to the list of last states *)
 		last_states <- state_index :: last_states*)
@@ -95,7 +89,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_p_union_assign result p_constraint
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint
 		(* Add to the list of last states *)
 (* 		last_states <- state_index :: last_states *)
 
@@ -118,7 +112,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 
 		self#print_algo_message_newline Verbose_total ("adding the initial constraint to the result");
-		LinearConstraint.p_nnconvex_p_intersection_assign result p_constraint;
+		LinearConstraint.p_nnconvex_p_intersection_assign synthesized_constraint p_constraint;
 		
 		
 		self#print_algo_message_newline Verbose_standard (
@@ -142,9 +136,9 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		(* Constraint is exact if termination is normal, unknown otherwise (on the one hand, pi-incompatible inequalities (that would restrain the constraint) may be missing, and on the other hand union of good states (that would enlarge the constraint) may be missing too) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
 
-		let result = match statespace_nature with
-			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(result, soundness)
-			| StateSpace.Bad -> Bad_constraint(result, soundness)
+		let synthesized_constraint = match statespace_nature with
+			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(synthesized_constraint, soundness)
+			| StateSpace.Bad -> Bad_constraint(synthesized_constraint, soundness)
 		in
 
 		(* Return result *)
@@ -154,7 +148,7 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
-			result				= result;
+			result				= synthesized_constraint;
 			
 			(* Explored state space *)
 			state_space			= state_space;

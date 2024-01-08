@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IMKunion algorithm [AS11]
@@ -27,10 +27,6 @@ class algoIMunion : AbstractModel.abstract_model -> Options.imitator_options -> 
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-
-		(* Non-necessarily convex parameter constraint *)
-		val mutable result: LinearConstraint.p_nnconvex_constraint 
-
 
 		(************************************************************)
 		(* Class methods *)
