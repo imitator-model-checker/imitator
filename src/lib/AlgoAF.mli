@@ -37,9 +37,6 @@ class algoAF : AbstractModel.abstract_model -> Options.imitator_options -> Abstr
 		(* Class methods *)
 		(************************************************************)
 
-		(** Variable initialization *)
-		method initialize_variables : unit
-
 		(** Main method to run the algorithm *)
 		method run : Result.imitator_result
 end

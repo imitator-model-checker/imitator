@@ -79,21 +79,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (model : AbstractModel.
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-(* 		super#initialize_variables; *)
-
-		(* Rest instances *)
-		current_point <- AlgoCartoGeneric.No_more;
-		bc_option <- None;
-		first_point <- true;
-
-		(* The end *)
-		()
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create an instance of the sequential cartography *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: in dynamic distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)

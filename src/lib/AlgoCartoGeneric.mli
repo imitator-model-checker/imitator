@@ -149,9 +149,6 @@ class virtual algoCartoGeneric : AbstractModel.abstract_model -> Options.imitato
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-(* 		method virtual algorithm_instance : AlgoIMK.algoIMK *)
-
 		
 		(* Create the initial point for the analysis *)
 		method virtual get_initial_point : more_points
@@ -164,7 +161,7 @@ class virtual algoCartoGeneric : AbstractModel.abstract_model -> Options.imitato
 
 		
 		(* Variable initialization (to be improved in subclasses) *)
-		method initialize_variables : unit
+		method initialize_carto_variables : unit
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

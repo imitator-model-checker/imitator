@@ -33,8 +33,6 @@ class virtual algoEFopt : AbstractModel.abstract_model -> Options.imitator_optio
 		(* Class methods *)
 		(************************************************************)
 		
-		method initialize_variables : unit
-
 		(*------------------------------------------------------------*)
 		(* Instantiating min/max *)
 		(*------------------------------------------------------------*)

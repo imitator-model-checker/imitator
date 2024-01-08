@@ -35,11 +35,6 @@ class algoBCCover : AbstractModel.abstract_model -> Options.imitator_options -> 
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
-		
-		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-(* 		method algorithm_instance : AlgoIMK.algoIMK *)
-
 		(* Create the initial point for the analysis *)
 		method get_initial_point : more_points
 

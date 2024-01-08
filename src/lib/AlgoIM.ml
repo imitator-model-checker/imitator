@@ -32,7 +32,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoIM (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoIMK model options pval as super
+	object (self) inherit algoIMK model options pval (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -49,14 +49,6 @@ class algoIM (model : AbstractModel.abstract_model) (options : Options.imitator_
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "IMconvex"
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		(* The end *)
-		()
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Method packaging the result output by the algorithm *)

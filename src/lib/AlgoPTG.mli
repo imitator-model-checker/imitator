@@ -60,6 +60,4 @@ class algoPTG : AbstractModel.abstract_model -> Options.imitator_options -> Abst
 		
 		method run : Result.imitator_result
 
-		method initialize_variables : unit
-		
 end

@@ -525,12 +525,10 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
+	method initialize_carto_variables =
 		(* Time counter for the algorithm *)
 		start_time <- Unix.gettimeofday();
 		
-		(* super#initialize_variables; *)
-
 		(* Set the number of dimensions in the system *)
 		nb_dimensions <- model.nb_parameters;
 		
@@ -686,7 +684,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 		(* Variable initialization *)
 		(*** NOTE: done before printing, since the number of points is needed just below ***)
 		self#print_algo_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
+		self#initialize_carto_variables;
 
 		(* Print some information *)
 		print_message Verbose_standard ("\n**************************************************");

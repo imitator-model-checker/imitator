@@ -36,9 +36,6 @@ class virtual algoBCCoverDistributedMSPointBasedWorker : AbstractModel.abstract_
 		(************************************************************)
 		method virtual algorithm_name : string
 		
-		method initialize_variables : unit
-		
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Run the worker algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

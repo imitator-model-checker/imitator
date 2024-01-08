@@ -38,7 +38,7 @@ class virtual algoBCCoverDistributed : AbstractModel.abstract_model -> HyperRect
 		(************************************************************)
 		method virtual algorithm_name : string
 		
-		method virtual initialize_variables : unit
+		method initialize_carto_variables : unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Run IM and return an abstract_point_based_result. Parameters are the reference valuation and the termination function to be set in IM (for PaTATOR). *)

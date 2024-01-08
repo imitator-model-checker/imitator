@@ -33,18 +33,11 @@ class virtual algoBCCoverDistributedSubdomain : AbstractModel.abstract_model -> 
 		(* Number of collaborators (including the coordinator) *)
 		val nb_collaborators : int
 	
-		(* The current algorithm instance *)
-(* 		val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover *)
-
-		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
 		method virtual algorithm_name : string
 		
-		method initialize_variables : unit
-		
-			
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Compute the initial subdomains (with the v0 and the number of collaborators as arguments) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

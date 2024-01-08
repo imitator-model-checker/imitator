@@ -201,16 +201,6 @@ class virtual algoBCCoverDistributedSubdomain (model : AbstractModel.abstract_mo
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual algorithm_name : string
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-(* 		super#initialize_variables; *)
-		
-		(* The end *)
-		()
-
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Compute the initial subdomains (with the v0 and the number of collaborators as arguments) *)

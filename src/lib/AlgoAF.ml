@@ -65,21 +65,10 @@ class algoAF (model : AbstractModel.abstract_model) (options : Options.imitator_
 	(* Class methods *)
 	(************************************************************)
 
-	(** Variable initialization *)
-	method initialize_variables =
-(*		(*** NOTE: duplicate operation ***)
-		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();*)
-
-		(* The end *)
-		()
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run : Result.imitator_result =
-		(*** NOTE: actually not even useful… ***)
-(* 		self#initialize_variables; *)
 
 		start_time <- Unix.gettimeofday();
 

@@ -60,7 +60,9 @@ class virtual algoBCCoverDistributed (model : AbstractModel.abstract_model) (v0 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual initialize_variables : unit
+	method initialize_carto_variables : unit =
+		(* Default behavior: nothing *)
+		()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

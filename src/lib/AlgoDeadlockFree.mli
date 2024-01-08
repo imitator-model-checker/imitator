@@ -33,9 +33,6 @@ class algoDeadlockFree : AbstractModel.abstract_model -> Options.imitator_option
 		(* Class methods *)
 		(************************************************************)
 		
-		method initialize_variables : unit
-		
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

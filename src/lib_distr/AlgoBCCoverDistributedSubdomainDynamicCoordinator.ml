@@ -262,9 +262,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator (model : AbstractModel.a
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-(* 		super#initialize_variables; *)
-
+	method! initialize_carto_variables =
 		(* First create the tiles manager *)
 		(*** NOTE: the get function takes care of the Some/None cases (and may raise an exception if not properly initialized) ***)
 		begin

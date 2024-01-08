@@ -34,8 +34,6 @@ class algoIMcomplete : AbstractModel.abstract_model -> Options.imitator_options 
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Checks a new state for pi0-compatibility .*)
 		(* constr            : new state constraint            *)

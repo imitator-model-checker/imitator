@@ -36,17 +36,11 @@ class algoBCRandomSeq : AbstractModel.abstract_model -> Options.imitator_options
 		(************************************************************)
 		method algorithm_name : string
 		
-		
-		method initialize_variables : unit
-		
 		(* Create the initial point for the analysis *)
 		method get_initial_point : more_points
 
 		(* Find the next point *)
 		method find_next_point : more_points
-
-		(* Processing the result of IM *)
-(* 		method process_result : Result.im_result -> PVal.pval -> unit *)
 
 		method compute_bc_result : Result.imitator_result
 end

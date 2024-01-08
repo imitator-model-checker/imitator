@@ -34,7 +34,6 @@ class algoNDFS : AbstractModel.abstract_model -> Options.imitator_options -> Abs
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)

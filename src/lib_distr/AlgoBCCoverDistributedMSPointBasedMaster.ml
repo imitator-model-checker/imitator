@@ -67,16 +67,6 @@ class virtual algoBCCoverDistributedMSPointBasedMaster (model : AbstractModel.ab
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-(* 		super#initialize_variables; *)
-
-		(* The end *)
-		()
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual bc_instance : AlgoCartoGeneric.algoCartoGeneric

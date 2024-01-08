@@ -35,8 +35,6 @@ class algoBCCoverDistributedSubdomainStaticCollaborator : AbstractModel.abstract
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Finalization method to process results communication to the coordinator *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

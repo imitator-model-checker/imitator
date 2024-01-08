@@ -35,7 +35,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator : AbstractModel.abstract
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
+		method initialize_carto_variables : unit
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -113,7 +113,7 @@ let printpendingqueue (colour : string) (thequeue : (State.state_index * int) li
 (************************************************************)
 (************************************************************)
 class algoNDFS (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -1229,15 +1229,6 @@ class algoNDFS (model : AbstractModel.abstract_model) (options : Options.imitato
 		counter_explore_using_strategy#stop;
 
 		(* The end *)
-		()
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-
-		(* Nothing to do *)
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

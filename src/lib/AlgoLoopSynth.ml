@@ -45,7 +45,7 @@ type has_loop =
 (************************************************************)
 (************************************************************)
 class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -73,16 +73,6 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Op
 	(* Class methods *)
 	(************************************************************)
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		(*** NOTE: duplicate operation ***)
-		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
-
-		(* The end *)
-		()
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

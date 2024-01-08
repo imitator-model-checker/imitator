@@ -33,7 +33,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoNZCUB (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
-	object (self) inherit algoLoopSynth model options as super
+	object (self) inherit algoLoopSynth model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -55,15 +55,6 @@ class algoNZCUB (model : AbstractModel.abstract_model) (options : Options.imitat
 	(* Class methods *)
 	(************************************************************)
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-
-		(* The end *)
-		()
-	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* When called, this method sets a flag that forces the algorithm to say that the returned constraint is an under-approximation *)

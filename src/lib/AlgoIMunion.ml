@@ -32,7 +32,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoIMK model options pval as super
+	object (self) inherit algoIMK model options pval (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -47,19 +47,6 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "IMunion"
-
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
-		
-		(* The end *)
-		()
-		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform when meeting a state with no successors: add the deadlock state to the list of last states *)

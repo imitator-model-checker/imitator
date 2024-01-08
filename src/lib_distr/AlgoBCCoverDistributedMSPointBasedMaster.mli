@@ -35,8 +35,6 @@ class virtual algoBCCoverDistributedMSPointBasedMaster : AbstractModel.abstract_
 		(************************************************************)
 		method virtual algorithm_name : string
 		
-		method initialize_variables : unit
-		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)

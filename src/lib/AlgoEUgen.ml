@@ -35,7 +35,7 @@ open State
 (************************************************************)
 (************************************************************)
 class virtual algoEUgen (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -60,18 +60,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (options : Option
 	(* Class methods *)
 	(************************************************************)
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		(*** NOTE: duplicate operation ***)
-		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
-
-		(* The end *)
-		()
-	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)

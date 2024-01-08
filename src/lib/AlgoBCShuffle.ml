@@ -152,8 +152,8 @@ class algoBCShuffle (model : AbstractModel.abstract_model) (options : Options.im
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
+	method! initialize_carto_variables =
+		super#initialize_carto_variables;
 		
 		(* Initialize the shuffled array *)
 		(* 1. Compute all points *)

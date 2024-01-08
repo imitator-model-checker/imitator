@@ -45,7 +45,7 @@ let debug_string_of_state state_index =
 (************************************************************)
 (************************************************************)
 class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
-	object (self) inherit algoPostStar model options as super
+	object (self) inherit algoPostStar model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -71,25 +71,7 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 	(* Class methods *)
 	(************************************************************)
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		self#print_algo_message Verbose_low "Initializing variables…";
-		
-		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
-		);
-		
-		(* The end *)
-		()
-	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Computing the p_nnconvex_constraint for which there may exist a deadlock from a given state; the second argument is the list of successors (in case we may want to consider not all successors, typically in backward exploration) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

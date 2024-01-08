@@ -2,8 +2,8 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
- * 
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
+ *
  * Module description: root of the class hierarchy of algorithms. Only most basic functions are defined.
  * 
  * File contributors : Étienne André
@@ -42,21 +42,20 @@ class virtual algoGeneric : AbstractModel.abstract_model -> Options.imitator_opt
 		(* Class methods *)
 		(************************************************************)
 		
-		(** Write a message preceeded by "[algorithm_name]" *)
+		(** Write a message preceded by "[algorithm_name]" *)
 		method print_algo_message : verbose_mode -> string -> unit
 		
-		(** Write a message preceeded by "\n[algorithm_name]" *)
+		(** Write a message preceded by "\n[algorithm_name]" *)
 		method print_algo_message_newline : verbose_mode -> string -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Write an error message preceeded by "[algorithm_name]" *)
+		(** Write an error message preceded by "[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_error : string -> unit
 
-		(** Variable initialization (to be defined in subclasses) *)
-		method virtual initialize_variables : unit
-		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Main method to run the algorithm: virtual method to be defined in subclasses *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual run : Result.imitator_result
 		
 (************************************************************)

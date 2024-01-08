@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  *
- * Université Paris 13, LIPN, CNRS, France
+ * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
@@ -241,19 +241,14 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(************************************************************)
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Write a message preceeded by "[algorithm_name]" *)
+		(** Write a message preceded by "[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message : verbose_mode -> string -> unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Write a message preceeded by "\n[algorithm_name]" *)
+		(** Write a message preceded by "\n[algorithm_name]" *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message_newline : verbose_mode -> string -> unit
-
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Variable initialization (to be defined in subclasses) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method initialize_variables : unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Methods to simplify the option handling *)

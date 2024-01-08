@@ -35,8 +35,6 @@ class algoBCCoverLearning : AbstractModel.abstract_model -> Options.imitator_opt
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

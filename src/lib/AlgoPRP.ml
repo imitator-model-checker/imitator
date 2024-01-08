@@ -35,7 +35,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoIMK model options pval as super
+	object (self) inherit algoIMK model options pval (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -44,7 +44,8 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 	val mutable bad_state_found: bool = false
 
 	(* Convex constraint ensuring unreachability of the bad states *)
-	val mutable good_constraint : LinearConstraint.p_linear_constraint = LinearConstraint.p_true_constraint ()
+	(* Parameter valuations cannot go beyond what is defined in the initial state of the model *)
+	val mutable good_constraint : LinearConstraint.p_linear_constraint = (LinearConstraint.p_copy model.initial_p_constraint)
 
 	(* Non-necessarily convex constraint ensuring reachability of at least one bad state *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
@@ -59,22 +60,6 @@ class algoPRP (model : AbstractModel.abstract_model) (options : Options.imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "PRP"
 
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-
-		bad_state_found <- false;
-
-		(* Parameter valuations cannot go beyond what is defined in the initial state of the model *)
-		good_constraint <- LinearConstraint.p_copy (self#get_initial_p_constraint_or_die);
-
-		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
-
-		(* The end *)
-		()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

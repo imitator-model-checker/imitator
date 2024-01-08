@@ -29,14 +29,9 @@ class virtual algoLoopSynth : AbstractModel.abstract_model -> Options.imitator_o
 		(* Class variables *)
 		(************************************************************)
 
-(* 		method algorithm_name : string *)
-		
-
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
-		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)

@@ -33,7 +33,7 @@ open State
 (************************************************************)
 (************************************************************)
 class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Options.imitator_options) (full_synthesis : bool) (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -55,7 +55,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 	(*------------------------------------------------------------*)
 	
 	(*** TODO/BADPROG: replace with Option type ***)
-    val mutable t_start = ref max_float; (* Start time for t_found and t_done *)
+    val mutable t_start = ref (Unix.gettimeofday()); (* Start time for t_found and t_done *)
     val mutable t_found = ref max_float; (* Time to the first time that the target location is reached *)
     val mutable t_done = ref max_float; (* Time to the end of the algorithm *)
 	
@@ -96,18 +96,6 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) (options : Option
 	method virtual str_optimum : string
 	method virtual str_upper_lower : string
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	method! initialize_variables =
-		super#initialize_variables;
-
-		(* Timing info *)
-        t_start := Unix.gettimeofday();
-
-		(* The end *)
-		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Shortcuts methods *)

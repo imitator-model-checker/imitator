@@ -54,7 +54,7 @@ type learning_result =
 (************************************************************)
 (************************************************************)
 class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit algoBCCover model options v0 step algo_instance_function tiles_manager_type as super
+	object (self) inherit algoBCCover model options v0 step algo_instance_function tiles_manager_type (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -85,15 +85,6 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Opti
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "BC (full coverage with learning-based abstraction)"
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		(* The end *)
-		()
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

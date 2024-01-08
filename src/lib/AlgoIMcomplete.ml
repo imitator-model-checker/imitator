@@ -32,7 +32,7 @@ open AlgoIMK
 (************************************************************)
 (************************************************************)
 class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoIMK model options pval as super
+	object (self) inherit algoIMK model options pval (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -51,15 +51,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.i
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! algorithm_name = "IM"
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		(* The end *)
-		()
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Checks a new state for pi0-compatibility .*)

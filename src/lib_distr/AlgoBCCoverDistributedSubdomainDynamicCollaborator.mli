@@ -35,9 +35,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator : AbstractModel.abstrac
 		(************************************************************)
 		method algorithm_name : string
 		
-		method initialize_variables : unit
-		
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Generic algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

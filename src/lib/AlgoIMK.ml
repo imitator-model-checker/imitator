@@ -34,7 +34,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -52,18 +52,7 @@ class algoIMK (model : AbstractModel.abstract_model) (options : Options.imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "IMK"
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		nb_random_selections <- 0;
 
-		(* The end *)
-		()
-	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the reference valuation *)

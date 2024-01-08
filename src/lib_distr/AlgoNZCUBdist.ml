@@ -475,7 +475,10 @@ class algoNZCUBdist (model : AbstractModel.abstract_model) =
 					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is starting running algorithm " ^ self#algorithm_name ^ "…\n");
 					(* Variable initialization *)
 					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is initializing the algorithm local variables…");
-					self#initialize_variables;
+
+					(*** NOTE: deleted by ÉA (2024/01/08) ***)
+(* 					self#initialize_variables; *)
+
 					(* Debut prints *)
 					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is starting exploring the parametric zone graph from the following initial state:");
 					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] Desired initial state" ^ ModelPrinter.string_of_state model init_state);

@@ -43,7 +43,7 @@ open State
 (************************************************************)
 (************************************************************)
 class algoEFtminQueue (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -833,16 +833,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	
 		(* The end *)
 		()
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		(* Nothing to do *)
-		()
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state space (if indeed needed) *)

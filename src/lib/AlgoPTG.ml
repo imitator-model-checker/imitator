@@ -312,16 +312,7 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "PTG"
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-		(*** NOTE: duplicate operation ***)
-		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
-		(* The end *)
-		()
-	
 	val mutable termination_status = Regular_termination
 
 	
@@ -645,8 +636,6 @@ class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)	
 	method run =
-		(*** NOTE: actually not even useful… ***)
-(* 		self#initialize_variables; *)
 
 		start_time <- Unix.gettimeofday();
 

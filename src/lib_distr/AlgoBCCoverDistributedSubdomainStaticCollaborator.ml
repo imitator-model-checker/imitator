@@ -52,16 +52,6 @@ class algoBCCoverDistributedSubdomainStaticCollaborator (model : AbstractModel.a
 	method algorithm_name = "BC (full cov) distr StaticSubdomain collaborator#" ^ (string_of_int collaborator_rank)
 
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-(* 		super#initialize_variables; *)
-		
-		(* The end *)
-		()
-
-
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Initialization method (only non-empty for coordinator) *)

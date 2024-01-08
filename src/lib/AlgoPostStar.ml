@@ -29,7 +29,7 @@ open AlgoStateBased
 (************************************************************)
 (************************************************************)
 class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
-	object (self) inherit algoStateBased model options as super
+	object (self) inherit algoStateBased model options (*as super*)
 	
 	
 	(************************************************************)
@@ -46,15 +46,6 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		(* Nothing to do *)
-		()
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

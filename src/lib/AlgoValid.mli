@@ -35,8 +35,6 @@ class algoValid : AbstractModel.abstract_model -> Options.imitator_options ->
 		(* Class methods *)
 		(************************************************************)
 		
-		method initialize_variables : unit
-		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)

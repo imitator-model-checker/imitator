@@ -45,7 +45,7 @@ type phase =
 (************************************************************)
 
 class algoBCRandomSeq (model : AbstractModel.abstract_model) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoCartoGeneric model options v0 step algo_instance_function tiles_manager_type as super
+	object (self) inherit algoCartoGeneric model options v0 step algo_instance_function tiles_manager_type (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
@@ -65,18 +65,7 @@ class algoBCRandomSeq (model : AbstractModel.abstract_model) (options : Options.
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "BC (random(" ^ (string_of_int max_tries) ^ ") + sequential)"
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method! initialize_variables =
-		super#initialize_variables;
-		
-		phase <- Random_phase;
-		
-		(* The end *)
-		()
 
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -2619,21 +2619,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(* Class methods *)
 	(************************************************************)
 
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Variable initialization *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize_variables =
-		statespace_nature <- StateSpace.Unknown;
-		unexplored_successors <- UnexSucc_undef;
-
-		positive_examples <- [];
-		negative_examples <- [];
-
-		()
-		(* The end *)
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Methods to simplify the option handling *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5170,10 +5155,10 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		initial_p_constraint_option <- Some initial_constraint_projected_onto_p;
 		initial_p_nnconvex_constraint_option <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint initial_constraint_projected_onto_p);
 
-		(* Variable initialization *)
+(*		(* Variable initialization *)
 		(*** NOTE: must be done *after* the initial state computation and the initial constraint computation (for PRP notably) ***)
 		print_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
+		self#initialize_variables;*)
 
 		(* Print some information *)
 		(*** TODO: move to higher level (e.g., AlgoGeneric) ***)

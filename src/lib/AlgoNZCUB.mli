@@ -35,9 +35,6 @@ class algoNZCUB : AbstractModel.abstract_model -> Options.imitator_options ->
 		(* Class methods *)
 		(************************************************************)
 		
-		method initialize_variables : unit
-		
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* When called, this method sets a flag that forces the algorithm to say that the returned constraint is an under-approximation *)
 		(*** NOTE: used when NZ CUB is called after a CUB-detection for which the constraint does not cover all parameter valuations ***)
