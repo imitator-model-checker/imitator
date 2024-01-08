@@ -21,7 +21,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAF : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class algoAF : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)

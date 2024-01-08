@@ -34,7 +34,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEUgen (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
+class virtual algoEUgen (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
@@ -285,7 +285,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (options : Option
 			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
-			self#terminate_if_witness;
+			self#terminate_if_witness (Input.get_property());
 		); (* end if target *)
 
 

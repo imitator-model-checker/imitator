@@ -31,8 +31,8 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMcomplete (model : AbstractModel.abstract_model) (options : Options.imitator_options) (pval : PVal.pval) =
-	object (self) inherit algoIMK model options pval (*as super*)
+class algoIMcomplete (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (pval : PVal.pval) =
+	object (self) inherit algoIMK model abstract_property options pval (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

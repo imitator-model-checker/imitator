@@ -354,7 +354,7 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method terminate_if_witness : unit
+		method terminate_if_witness : AbstractProperty.abstract_property -> unit
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

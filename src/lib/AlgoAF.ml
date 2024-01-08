@@ -31,7 +31,7 @@ open Result
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAF (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class algoAF (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property)  (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoGeneric model options (*as super*)
 
 	

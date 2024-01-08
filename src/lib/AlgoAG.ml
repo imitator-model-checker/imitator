@@ -28,8 +28,8 @@ open AlgoAGnot
 (************************************************************)
 (************************************************************)
 (*** NOTE: AG is implemented as AGnot called on the **negation** of the state predicate ***)
-class algoAG (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAGnot model options (State_predicate_term (State_predicate_factor (State_predicate_factor_NOT (State_predicate state_predicate)))) (*as super*)
+class algoAG (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoAGnot model abstract_property options (State_predicate_term (State_predicate_factor (State_predicate_factor_NOT (State_predicate state_predicate)))) (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

@@ -22,7 +22,7 @@ open AlgoIMK
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMunion : AbstractModel.abstract_model -> Options.imitator_options -> PVal.pval ->
+class algoIMunion : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> PVal.pval ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

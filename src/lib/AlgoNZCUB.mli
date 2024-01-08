@@ -22,7 +22,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoNZCUB : AbstractModel.abstract_model -> Options.imitator_options ->
+class algoNZCUB : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options ->
 	object inherit algoLoopSynth
 		(************************************************************)
 		(* Class variables *)

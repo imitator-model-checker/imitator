@@ -33,8 +33,8 @@ open AlgoEUgen
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEU (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model options (Some state_predicate_phi) state_predicate_psi (*as super*)
+class algoEU (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (self) inherit algoEUgen model abstract_property options (Some state_predicate_phi) state_predicate_psi (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoLoopSynth : AbstractModel.abstract_model -> Options.imitator_options ->
+class virtual algoLoopSynth : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)

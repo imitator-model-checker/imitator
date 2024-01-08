@@ -244,11 +244,11 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (options : Opti
 		(* Select the right algorithm according to the analysis type *)
 		let algo_instance = match analysis_type with
 			(* If counter-exemple: run EF on the parametric trace *)
-			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEF.algoEF new_model options state_predicate in myalgo
+			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEF.algoEF new_model {synthesis_type = Synthesis; property = EF state_predicate; projection = (*** TODO: if one day one allows for projection on cartography ***) None} options state_predicate in myalgo
 			
 			(* If abstraction: run PRP on this abstraction *)
 			(*** NOTE: the current valuation (current_point) is already set in Input ***)
-			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP new_model options current_point state_predicate in myalgo
+			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP new_model {synthesis_type = Synthesis; property = PRP(state_predicate, current_point); projection = (*** TODO: if one day one allows for projection on cartography ***) None} options current_point state_predicate in myalgo
 		in
 		current_algo_instance <- algo_instance;
 		

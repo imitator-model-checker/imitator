@@ -3992,9 +3992,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method terminate_if_witness : unit =
-		let property = Input.get_property() in
-		if property.synthesis_type = Witness then(
+	method terminate_if_witness (abstract_property : AbstractProperty.abstract_property) : unit =
+		if abstract_property.synthesis_type = Witness then(
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";

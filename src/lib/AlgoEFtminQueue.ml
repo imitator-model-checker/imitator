@@ -42,7 +42,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFtminQueue (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+class algoEFtminQueue (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)

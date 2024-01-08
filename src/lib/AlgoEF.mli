@@ -21,7 +21,7 @@ open AlgoEUgen
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEF : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class algoEF : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
 	object inherit algoEUgen
 		(************************************************************)
 		(* Class variables *)

@@ -286,7 +286,7 @@ let (#<--) (queue1 : 'a waitingList) (queue2 : 'a waitingList) = queue1#add_all 
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (abstract_property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	(************************************************************)

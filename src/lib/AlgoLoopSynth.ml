@@ -44,7 +44,7 @@ type has_loop =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
+class virtual algoLoopSynth (model : AbstractModel.abstract_model) ((*abstract_property*)_ : AbstractProperty.abstract_property) (options : Options.imitator_options) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
@@ -277,7 +277,7 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) (options : Op
 			);
 
 			(* If witness: raise TerminateAnalysis! *)
-			self#terminate_if_witness;
+			self#terminate_if_witness (Input.get_property());
 		);
 		
 		(* The end *)

@@ -249,7 +249,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) model options dummy_pval in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) model {synthesis_type = Synthesis; property = IMK dummy_pval; projection = None} options dummy_pval in myalgo
 	
 	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
 	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)

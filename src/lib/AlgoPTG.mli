@@ -41,7 +41,7 @@ end
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoPTG : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate -> stateSpacePTG ->
+class algoPTG : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> stateSpacePTG ->
 	object inherit algoGeneric
 
 		(************************************************************)

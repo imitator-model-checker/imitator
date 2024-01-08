@@ -21,7 +21,7 @@ open AlgoAGnot
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAG : AbstractModel.abstract_model -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class algoAG : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
 	object inherit algoAGnot
 		(************************************************************)
 		(* Class variables *)
