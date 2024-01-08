@@ -127,25 +127,6 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) (options : Options
 				self#print_algo_message Verbose_medium ("The local good constraint (allowing exit) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names good_constraint_s));
 			);
 		) successors;
-			
-(*			(* Compute the difference True^+ \ good_constraint_s *)
-		(*** TODO: add a field clocks_and_parameters to abstract_model ***)
-		let trueplus = LinearConstraint.px_constraint_of_nonnegative_variables (list_union model.clocks model.parameters) in
-		let px_bad_constraint_s = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint trueplus in
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("px_bad_constraint_s ('trueplus') is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_bad_constraint_s));
-		);
-
-		LinearConstraint.px_nnconvex_difference px_bad_constraint_s good_constraint_s;
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("px_bad_constraint_s (True \ good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_bad_constraint_s));
-		);
-		
-		*)
 
 		(* Compute the difference s \ good_constraint_s *)
 		let nnconvex_s = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint s_constraint in
