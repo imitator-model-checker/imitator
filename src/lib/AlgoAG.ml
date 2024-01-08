@@ -4,7 +4,7 @@
  *
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
- * Module description: "AG not" algorithm (global invariant)
+ * Module description: "AG" algorithm (global invariant)
  *
  * File contributors : Étienne André
  * Created           : 2023/12/22
