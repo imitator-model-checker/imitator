@@ -60,9 +60,6 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
 		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint
-		
-(*		(* Add to the list of last states *)
-		last_states <- state_index :: last_states*)
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -77,8 +74,6 @@ class algoIMunion (model : AbstractModel.abstract_model) (options : Options.imit
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
 		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint
-		(* Add to the list of last states *)
-(* 		last_states <- state_index :: last_states *)
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
