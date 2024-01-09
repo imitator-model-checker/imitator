@@ -114,11 +114,11 @@ let make_cartography_tile_file_name cartography_file_prefix file_index =
 (*------------------------------------------------------------*)
 (** Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
 (*------------------------------------------------------------*)
-let graph_color_of_int tile_index polyhedron_nature dotted =
+let graph_color_of_int (tile_index : int) (with_property : bool) (polyhedron_nature : polyhedron_nature) (dotted : bool) : string =
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
-	if Input.has_property() then(
+	if with_property then(
 		(* Go for a good / bad coloring *)
 		match polyhedron_nature with
 		| Good -> 2 (* green *)
@@ -145,11 +145,11 @@ exception CartographyError
 
 
 (** Get the reference hyper rectangle for properties that have one, or return None otherwise *)
-let get_v0_option () =
+let get_v0_option = function
 	(* First check whether there is a property *)
-	if Input.has_property() then(
-
-		match (Input.get_property()).property with
+	| Some property ->
+		let result =
+		match property.property with
 			| Valid
 
 			| EF _
@@ -184,10 +184,11 @@ let get_v0_option () =
 			| PRPC (_, v0, _)
 
 				-> Some v0
-	) else None
+		in result
+	| None -> None
 
 
-let draw_cartography (model : AbstractModel.abstract_model) (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * polyhedron_nature) list) cartography_file_prefix =
+let draw_cartography (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * polyhedron_nature) list) cartography_file_prefix : unit =
 	(* Create counter *)
 	let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard in
 
@@ -199,7 +200,7 @@ try(
 	let options = Input.get_options () in
 	
 	(* Get the reference hyper rectangle from the property, if any *)
-	let v0_option = get_v0_option () in
+	let v0_option : HyperRectangle.hyper_rectangle option = get_v0_option property_option in
 
 	(* No reason to draw a cartography: exception! *)
 	if not (AbstractAlgorithm.cartography_drawing_possible options#imitator_mode) then(
@@ -644,8 +645,8 @@ try(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index polyhedron_nature true) ^ " --fill-fraction 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index polyhedron_nature false) ^ " --fill-fraction 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index (property_option <> None) polyhedron_nature true) ^ " --fill-fraction 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index (property_option <> None) polyhedron_nature false) ^ " --fill-fraction 0.7 " ^ file_name ^ " "
 		;
 	in
 	
@@ -1076,7 +1077,7 @@ let dot_colors = [
 ]
 
 (** Convert a graph to a dot file *)
-let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (algorithm_name : string) (*~fancy*) =
+let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) : (string * string) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -1089,12 +1090,13 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 	
 	(* Local function checking whether a state is a target state *)
 	let is_target_state (state : state) : bool =
-		if Input.has_property() then(
+		match property_option with
+		| Some property ->
 			
 			(* Try to get the state predicate*)
 			let state_predicate_list : state_predicate list =
 			
-			match (Input.get_property()).property with
+			match property.property with
 				| EF state_predicate
 				| AGnot state_predicate
 				| AG state_predicate
@@ -1137,11 +1139,9 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 				(* Check whether the current state matches ths state predicate *)
 				State.match_state_predicate model state_predicate state
 			) state_predicate_list
-		)else(
+		| None ->
 			(* No property: no target state *)
 			false
-		)
-
 	in
 	
 	(* Coloring function for each location *)
@@ -1235,8 +1235,10 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 				^
 				(* Add the projection onto selected parameters, if any *)
 				(
-				if Input.has_property() then(
-				match (Input.get_property()).projection with
+				match property_option with
+				| Some property ->
+					let result =
+					match property.projection with
 					| None -> ""
 					| Some parameter_indices_to_be_projected_onto ->
 						(* Compute variables to eliminate *)
@@ -1247,10 +1249,10 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 						(* Print *)
 						"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameter_indices_to_be_projected_onto)) ^ "}:"
 						^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint);
-				)else(
+					in result
+				| None ->
 					(* No property, no projection: empty string *)
 					""
-				)
 				)
 				;
 			) state_indexes;
@@ -1431,8 +1433,10 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 					^
 					(* Add the projection onto selected parameters, if any *)
 					(
-					if Input.has_property() then(
-						match (Input.get_property()).projection with
+					match property_option with
+					| Some property ->
+						let result =
+						match property.projection with
 							| None -> ""
 							| Some parameters ->
 								(* Compute variables to eliminate *)
@@ -1443,10 +1447,10 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (state_space : Stat
 								let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
 								(* Print *)
 								"|" ^ (escape_string_for_dot (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint));
-					)else(
+						in result
+					| None ->
 						(* No property, no projection: empty string *)
 						""
-					)
 					)
 					^ "}"
 					) else ""
@@ -1560,7 +1564,7 @@ let dot dot_image_extension radical dot_source_file : (string option) =
 	
 
 (** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
-let draw_statespace_if_requested (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) algorithm_name radical : unit =
+let draw_statespace_if_requested (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) algorithm_name radical : unit =
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -1574,7 +1578,7 @@ let draw_statespace_if_requested (model : AbstractModel.abstract_model) (state_s
 			print_warning "State space is empty: not drawing";
 		)else(
 
-			let dot_model, states = dot_of_statespace model state_space algorithm_name in
+			let dot_model, states = dot_of_statespace model property_option state_space algorithm_name in
 
 			(* Write states file if needed *)
 			if options#states_description then (

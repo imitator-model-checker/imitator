@@ -36,8 +36,8 @@ open AlgoBCCover
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedMSRandomSeqMaster (model : AbstractModel.abstract_model) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster model v0 step algo_instance_function tiles_manager_type as super
+class algoBCCoverDistributedMSRandomSeqMaster (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster model property v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

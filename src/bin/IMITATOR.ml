@@ -633,7 +633,7 @@ match options#imitator_mode with
 		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
 
 		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result model Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
+		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
 			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 			)) ) None;
 
@@ -1014,7 +1014,7 @@ match options#imitator_mode with
 
 			(* Cartography *)
 			| Cover_cartography (hyper_rectangle, step) when options#distribution_mode = Non_distributed ->
-				let bc_algo = new AlgoBCCover.algoBCCover model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCCover.algoBCCover model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1022,7 +1022,7 @@ match options#imitator_mode with
 			(*** NOTE: this part is kept on purpose despite being odd (actual code followed by a `raise` NotImplemented), so that at least the AlgoBCCoverLearning module is compiled and kept up-to-date with new global code modifications. ***)
 			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
-				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning model options state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning model property options state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 (* 				myalgo *)
 				(*** NOTE: we use #name to avoid a warning (unused variable) ***)
@@ -1030,7 +1030,7 @@ match options#imitator_mode with
 
 			(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
-				let bc_algo = new AlgoBCShuffle.algoBCShuffle model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCShuffle.algoBCShuffle model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1040,19 +1040,19 @@ match options#imitator_mode with
 
 			(* Randomly pick up values for a given number of iterations *)
 			| Random_cartography (hyper_rectangle, max_tries, step) ->
-				let bc_algo = new AlgoBCRandom.algoBCRandom model options hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCRandom.algoBCRandom model property options hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
 			(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 			| RandomSeq_cartography (hyper_rectangle, max_tries, step) ->
-				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq model options hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq model property options hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
 			(* Parametric reachability preservation *)
 			| PRPC (state_predicate, hyper_rectangle, step) ->
-				let bc_algo = new AlgoBCCover.algoBCCover model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP model {synthesis_type = property.synthesis_type; property = PRP (state_predicate, pval); projection = property.projection} options pval state_predicate in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				let bc_algo = new AlgoBCCover.algoBCCover model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP model {synthesis_type = property.synthesis_type; property = PRP (state_predicate, pval); projection = property.projection} options pval state_predicate in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -1125,7 +1125,7 @@ match options#imitator_mode with
 				); (* end export *)
 
 				(* Call the NZ emptiness check *)
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist cub_model options in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist cub_model property options in myalgo
 			*)
 
 			(*** NOTE: only one distribution mode so far ***)
@@ -1136,22 +1136,22 @@ match options#imitator_mode with
 				| Distributed_ms_sequential ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 				(* Distributed mode: Master worker with sequential pi0 shuffled *)
 				| Distributed_ms_shuffle ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1159,11 +1159,11 @@ match options#imitator_mode with
 				| Distributed_ms_random nb_tries ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster model options hyper_rectangle step nb_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster model property options hyper_rectangle step nb_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1171,11 +1171,11 @@ match options#imitator_mode with
 				| Distributed_ms_subpart ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1183,11 +1183,11 @@ match options#imitator_mode with
 				| Distributed_static ->
 					(* Branch between collaborator and coordinator *)
 					if DistributedUtilities.is_coordinator() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator model options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator model property options hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM model {synthesis_type = property.synthesis_type; property = ConvexIM pval; projection = property.projection} options pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -1223,7 +1223,7 @@ match options#imitator_mode with
 		counter_main_algorithm#stop;
 
 		(* Process *)
-		ResultProcessor.process_result model result concrete_algorithm#algorithm_name None;
+		ResultProcessor.process_result model property_option result concrete_algorithm#algorithm_name None;
 
 	end; (* match type of abstract algorithm *)
 

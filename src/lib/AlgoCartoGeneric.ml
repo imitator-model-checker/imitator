@@ -214,7 +214,7 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	
@@ -737,7 +737,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (options :
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method create_auxiliary_files imitator_result =
 		let file_prefix = options#files_prefix ^ "-" ^ (string_of_int current_iteration) in
-		ResultProcessor.process_result model imitator_result current_algo_instance#algorithm_name (Some file_prefix);
+		ResultProcessor.process_result model (Some property) imitator_result current_algo_instance#algorithm_name (Some file_prefix);
 		
 		(* The end *)
 		()

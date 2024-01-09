@@ -39,8 +39,8 @@ exception Stop_loop of more_points
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCShuffle (model : AbstractModel.abstract_model) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoCartoGeneric model options v0 step algo_instance_function tiles_manager_type as super
+class algoBCShuffle (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric model property options v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

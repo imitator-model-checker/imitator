@@ -21,7 +21,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomainStatic : AbstractModel.abstract_model -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class virtual algoBCCoverDistributedSubdomainStatic : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain
 	
 		(************************************************************)

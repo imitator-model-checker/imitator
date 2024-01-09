@@ -24,7 +24,7 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCRandomSeq : AbstractModel.abstract_model -> Options.imitator_options -> HyperRectangle.hyper_rectangle -> NumConst.t -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
+class algoBCRandomSeq : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> HyperRectangle.hyper_rectangle -> NumConst.t -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)

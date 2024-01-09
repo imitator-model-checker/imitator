@@ -17,10 +17,10 @@
 val string_of_good_or_bad_constraint : (int -> string) -> Result.good_or_bad_constraint -> string
 
 
-(** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
-val process_result : AbstractModel.abstract_model -> Result.imitator_result -> string -> string option -> unit
+(** Process the result of IMITATOR. The 5th optional argument is the file name prefix (otherwise options#files_prefix is used). *)
+val process_result : AbstractModel.abstract_model -> AbstractProperty.abstract_property option -> Result.imitator_result -> string -> string option -> unit
 
-(** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then successfully terminate program. *)
+(** Process the result of IMITATOR. The 4th optional argument is the file name prefix (otherwise options#files_prefix is used). Then successfully terminate program. *)
 val process_result_and_terminate : AbstractModel.abstract_model -> Result.imitator_result -> string -> string option -> Statistics.timeCounter -> unit
 
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate program with failure. *)

@@ -187,8 +187,8 @@ let init_state_list model initial_loc_array =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNZCUBdist (model : AbstractModel.abstract_model) =
-	object (self) inherit algoNZCUB model as super
+class algoNZCUBdist (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) =
+	object (self) inherit algoNZCUB model property options as super
 	
 	(************************************************************)
 	(* Class variables *)
