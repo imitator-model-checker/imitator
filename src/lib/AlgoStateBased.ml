@@ -2422,6 +2422,69 @@ let reconstruct_counterexample (model : AbstractModel.abstract_model) (state_spa
 	concrete_run_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
 
+(************************************************************)
+(* Class-independent functions on constraints *)
+(************************************************************)
+
+(* Project a p_constraint on selected parameters if requested by the property, or return the constraint unchanged *)
+let project_p_constraint_if_requested (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (p_linear_constraint : LinearConstraint.p_linear_constraint) : LinearConstraint.p_linear_constraint =
+	match property.projection with
+	(* No projection: return the p-constraint unchanged *)
+	| None -> p_linear_constraint
+	(* Project *)
+	| Some parameters ->
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "Projecting the constraint onto some of the parameters.";
+			print_message Verbose_medium "Before projection:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_linear_constraint);
+		);
+
+		(* Compute the parameters to eliminate *)
+		let all_but_projectparameters = list_diff model.parameters parameters in
+
+		(* Eliminate other parameters *)
+		let projected_synthesized_constraint = LinearConstraint.p_hide all_but_projectparameters p_linear_constraint in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "After projection:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_synthesized_constraint);
+		);
+
+		(* Return *)
+		projected_synthesized_constraint
+
+
+(* Project a p_nnconvex_constraint on selected parameters if requested by the property, or return the constraint unchanged *)
+let project_p_nnconvex_constraint_if_requested (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint) : LinearConstraint.p_nnconvex_constraint =
+	match property.projection with
+	(* No projection: return the p-constraint unchanged *)
+	| None -> p_nnconvex_constraint
+	(* Project *)
+	| Some parameters ->
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "Projecting the constraint onto some of the parameters.";
+			print_message Verbose_medium "Before projection:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_nnconvex_constraint);
+		);
+
+		(* Compute the parameters to eliminate *)
+		let all_but_projectparameters = list_diff model.parameters parameters in
+
+		(* Eliminate other parameters *)
+		let projected_synthesized_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters p_nnconvex_constraint in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "After projection:";
+			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_synthesized_constraint);
+		);
+
+		(* Return *)
+		projected_synthesized_constraint
+
 
 (************************************************************)
 (************************************************************)

@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
+(* open OCamlUtilities *)
 open ImitatorUtilities
 open Exceptions
 open Statistics
@@ -193,30 +193,8 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) (property : A
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 		
-		(* Projecting onto SOME parameters if required *)
-		(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
-		begin
-			match property.projection with
-			(* Unchanged *)
-			| None -> ()
-			(* Project *)
-			| Some parameters ->
-				(* Print some information *)
-				if verbose_mode_greater Verbose_high then
-					self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
-
-				(*** TODO! do only once for all… ***)
-				let all_but_projectparameters = list_diff model.parameters parameters in
-				
-				(* Eliminate other parameters *)
-				LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-				);
-		end;
-		(* end if projection *)
+		(* Projecting onto some parameters if required by the property *)
+		let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
 
 		(* Update the loop constraint using the current constraint *)
 		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;

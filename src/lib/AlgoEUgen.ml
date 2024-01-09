@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
+(* open OCamlUtilities *)
 open ImitatorUtilities
 open AbstractModel
 open AbstractProperty
@@ -90,30 +90,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				(*** NOTE: here, we use the mini-cache system ***)
 				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
 
-				(* Projecting onto SOME parameters if required *)
-				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-				begin
-					match property.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						(* Print some information *)
-						if verbose_mode_greater Verbose_high then
-							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
-
-						(*** TODO! do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-				end;
-				(* end if projection *)
+				(* Projecting onto some parameters if required by the property *)
+				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
 
 				(* Statistics *)
 				counter_found_target#increment;

@@ -18,11 +18,11 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
+(* open OCamlUtilities *)
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
-open AbstractProperty
+(* open AbstractProperty *)
 open Result
 open AlgoIMK
 open State
@@ -73,30 +73,8 @@ class algoPRP (model : AbstractModel.abstract_model) (property : AbstractPropert
 				(* Project onto the parameters *)
 				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 
-				(* Projecting onto SOME parameters if required *)
-				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
-				begin
-					match property.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						(* Print some information *)
-						if verbose_mode_greater Verbose_high then
-							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
-
-						(*** TODO! do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-				end;
-				(* end if projection *)
+				(* Projecting onto some parameters if required by the property *)
+				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
 
 				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a state violating the property.";

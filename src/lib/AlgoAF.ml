@@ -17,7 +17,7 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-open OCamlUtilities
+(* open OCamlUtilities *)
 open ImitatorUtilities
 open Exceptions
 open AbstractProperty
@@ -91,36 +91,8 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 
-		(* Projecting onto SOME parameters if required *)
-		(*** NOTE: Useless test as we are in AF, so there is a property ***)
-		let result =
-			match property.projection with
-				(* No projection: copy the initial p constraint *)
-				| None -> synthesized_constraint
-				(* Project *)
-				| Some parameters ->
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
-						self#print_algo_message Verbose_medium "Before projection:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
-					);
-
-					(*** TODO! do only once for all… ***)
-					let all_but_projectparameters = list_diff model.parameters parameters in
-
-					(* Eliminate other parameters *)
-					let projected_synthesized_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters synthesized_constraint in
-
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "After projection:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_synthesized_constraint);
-					);
-
-					(* Return *)
-					projected_synthesized_constraint
-		in
+		(* Projecting onto some parameters if required by the property *)
+		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** TODO: double check ***)
