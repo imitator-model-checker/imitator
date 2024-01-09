@@ -1,0 +1,2 @@
+property := #synth EF (loc[pta] = lF);
+projectresult(p1);

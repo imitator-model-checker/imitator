@@ -7112,6 +7112,66 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result without projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-noprojection.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 0
+ & 5 > p2
+ & p2 > p1
+ OR
+   p1 > 8
+ & 9 > p2
+ & p2 > p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result with projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-projection.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  5 > p1
+ & p1 > 0
+ OR
+   9 > p1
+ & p1 > 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
