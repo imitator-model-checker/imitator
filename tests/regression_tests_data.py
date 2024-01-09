@@ -7240,6 +7240,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -7247,7 +7248,7 @@ Constraint nature                       : good
 		# Test since               : 2024/01/09
 		# Last modified            : 2024/01/09
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot: basic reachability property',
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result without projection',
 		'tags'       : 'semantic',
 		'input_files': ['safety/safety-simple.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
@@ -7268,6 +7269,31 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result with projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['safety/safety-simple.imi', 'safety/safety-simple.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  11 >= p2
+ & p2 >= 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
