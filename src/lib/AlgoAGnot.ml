@@ -72,6 +72,8 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 		
 		(* Retrieve the initial parameter constraint *)
 		let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = self#get_initial_p_nnconvex_constraint_or_die in
+		(* Copy *)
+		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint in
 
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
@@ -79,9 +81,6 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 			self#print_algo_message Verbose_medium "As a reminder, the result constraint is:";
 			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 		);
-
-		(* Projecting onto some parameters if required by the property *)
-		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property (LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint) in
 
 (*
 
@@ -118,7 +117,9 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 		(* Perform the difference *)
 		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
 		
-		
+		(* Projecting onto some parameters if required by the property *)
+		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property result in
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message_newline Verbose_medium (

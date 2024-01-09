@@ -73,8 +73,8 @@ class algoPRP (model : AbstractModel.abstract_model) (property : AbstractPropert
 				(* Project onto the parameters *)
 				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 
-				(* Projecting onto some parameters if required by the property *)
-				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
+(*				(* Projecting onto some parameters if required by the property *)
+				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in*)
 
 				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a state violating the property.";

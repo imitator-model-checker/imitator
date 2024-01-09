@@ -90,8 +90,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				(*** NOTE: here, we use the mini-cache system ***)
 				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
 
-				(* Projecting onto some parameters if required by the property *)
-				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
+(*				(* Projecting onto some parameters if required by the property *)
+				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in*)
 
 				(* Statistics *)
 				counter_found_target#increment;

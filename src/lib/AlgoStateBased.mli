@@ -159,8 +159,8 @@ val reconstruct_counterexample : AbstractModel.abstract_model -> StateSpace.stat
 (* Class-independent functions on constraints *)
 (************************************************************)
 
-(* Project a p-constraint on selected parameters if requested by the property, or return the constraint unchanged *)
-val project_p_constraint_if_requested : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
+(*(* Project a p-constraint on selected parameters if requested by the property, or return the constraint unchanged *)
+val project_p_constraint_if_requested : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint*)
 (* Project a p_nnconvex_constraint on selected parameters if requested by the property, or return the constraint unchanged *)
 val project_p_nnconvex_constraint_if_requested : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> LinearConstraint.p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint
 

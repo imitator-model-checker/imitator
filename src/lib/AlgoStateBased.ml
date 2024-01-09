@@ -2426,7 +2426,7 @@ let reconstruct_counterexample (model : AbstractModel.abstract_model) (state_spa
 (* Class-independent functions on constraints *)
 (************************************************************)
 
-(* Project a p_constraint on selected parameters if requested by the property, or return the constraint unchanged *)
+(*(* Project a p_constraint on selected parameters if requested by the property, or return the constraint unchanged *)
 let project_p_constraint_if_requested (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (p_linear_constraint : LinearConstraint.p_linear_constraint) : LinearConstraint.p_linear_constraint =
 	match property.projection with
 	(* No projection: return the p-constraint unchanged *)
@@ -2453,7 +2453,7 @@ let project_p_constraint_if_requested (model : AbstractModel.abstract_model) (pr
 		);
 
 		(* Return *)
-		projected_synthesized_constraint
+		projected_synthesized_constraint*)
 
 
 (* Project a p_nnconvex_constraint on selected parameters if requested by the property, or return the constraint unchanged *)

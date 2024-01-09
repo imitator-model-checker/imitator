@@ -193,8 +193,8 @@ class virtual algoLoopSynth (model : AbstractModel.abstract_model) (property : A
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 		
-		(* Projecting onto some parameters if required by the property *)
-		let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in
+(*		(* Projecting onto some parameters if required by the property *)
+		let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in*)
 
 		(* Update the loop constraint using the current constraint *)
 		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
