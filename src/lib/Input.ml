@@ -18,7 +18,6 @@ open Exceptions
 
 (* internal references to global data structures *)
 let model_ref = ref None
-let property_ref = ref None
 let options_ref = ref None
 
 
@@ -35,18 +34,6 @@ let get_model () =
 		| None ->
 			raise (InternalError "Input model not yet available");
 		| Some model -> model
-
-let set_property property =
-	property_ref := Some property
-
-
-let get_property () =
-	match !property_ref with
-		| None ->
-			raise (InternalError "Input property not yet available");
-		| Some property -> property
-
-let has_property () = !property_ref <> None
 
 let get_options () =
 	match !options_ref with
