@@ -1,1 +1,2 @@
 property := #synth pattern(if press then eventually coffee within 20);
+projectresult(p_coffee);

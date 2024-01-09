@@ -7652,13 +7652,60 @@ END CONSTRAINT
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF with observer + depth-limit',
+		'tags'       : 'semantic,projection',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within.imiprop'],
 		'options'    : '-depth-limit 10',
 		'expectations' : [
+				# WARNING (2024/01/09): this result was NOT manually checked!
 			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
- False
+  p_button > 0
+ & p_add_sugar > 0
+ & p_coffee > 0
+ & 20 >= p_add_sugar + p_coffee
+ OR
+   15 > 2*p_button
+ & p_add_sugar > 0
+ & 2*p_button > p_add_sugar
+ & p_add_sugar + p_coffee > 20
+ OR
+   p_add_sugar > 0
+ & 15 > p_button
+ & p_add_sugar + p_coffee > 20
+ & p_button > p_add_sugar
+ & 2*p_button >= 15
+ OR
+   p_add_sugar >= 2*p_button
+ & p_add_sugar + p_coffee > 20
+ & 3*p_button > p_add_sugar
+ & 5 > p_button
+
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within-project.imiprop'],
+		'options'    : '-depth-limit 10',
+		'expectations' : [
+				# WARNING (2024/01/09): this result was manually checked, but only by projection from the former result
+			{'file': 'coffeeDrinker.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_coffee > 0
 END CONSTRAINT
 """
 			} # end result file
