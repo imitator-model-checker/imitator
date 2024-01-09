@@ -60,11 +60,8 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (property : Abs
 	(* Class variables *)
 	(************************************************************)
 
-	(** Backup the original model (for final postprocessing) *)
+	(** Backup the original model *)
 	val original_model : AbstractModel.abstract_model = model
-
-(*	(** Backup the original property (for final postprocessing) *)
-	val original_property = Input.get_property ()*)
 
 	(** Backup the original model file names *)
 	val original_file = (Input.get_options ())#model_file_name
@@ -222,9 +219,6 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (property : Abs
 		let new_model, _ = ParsingUtility.compile_model_and_property options in
 		counter_reparsing#stop;
 		
-		(* Set model *)
-		Input.set_model new_model;
-		
 		(* Print some information *)
 		print_message Verbose_standard ("Original model: " ^ (string_of_int original_model.nb_automata) ^ " automata. New model: " ^ (string_of_int new_model.nb_automata) ^ "");
 		
@@ -272,9 +266,6 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (property : Abs
 		(*** TODO (not implemented yet as we need to create files manually for now...) ***)
 
 		
-		(* Set model and property back to their original value *)
-		Input.set_model original_model;
-(* 		Input.set_property original_property; *)
 		(* Set model name and model prefix name back to their original value *)
 		options#set_file original_file;
 		options#set_files_prefix original_files_prefix;

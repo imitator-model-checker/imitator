@@ -16,9 +16,6 @@
 
 open Options
 
-val set_model: AbstractModel.abstract_model -> unit
-val get_model: unit -> AbstractModel.abstract_model
-
 val get_options: unit -> imitator_options
 val set_options: imitator_options -> unit
 

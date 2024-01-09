@@ -17,23 +17,12 @@
 open Exceptions
 
 (* internal references to global data structures *)
-let model_ref = ref None
 let options_ref = ref None
 
 
 (************************************************************)
 (* Set / get functions *)
 (************************************************************)
-(** Local set function *)
-let set_model model =
-	model_ref := Some model
-
-
-let get_model () =
-	match !model_ref with
-		| None ->
-			raise (InternalError "Input model not yet available");
-		| Some model -> model
 
 let get_options () =
 	match !options_ref with

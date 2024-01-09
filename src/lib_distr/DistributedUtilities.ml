@@ -1050,7 +1050,6 @@ let send_continue source_rank =
 
 let receive_work () =
 	(* Get the model *)
-(* 	let model = Input.get_model() in *)
 
 	let ( w, _, tag ) =
 	Mpi.receive_status master_rank Mpi.any_tag Mpi.comm_world in

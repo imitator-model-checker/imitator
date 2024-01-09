@@ -50,7 +50,7 @@ class virtual algoBCCoverDistributed (model : AbstractModel.abstract_model) (pro
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
 		let dummy_pval = new PVal.pval in
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) (Input.get_model()) dummy_pval in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK (*** HACK for now! ***) model dummy_pval in myalgo
 	
 
 	(************************************************************)

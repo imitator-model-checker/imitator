@@ -133,12 +133,8 @@ parsing_counter#start;
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
 (*------------------------------------------------------------*)
-(* Set both abstract structures *)
+(* End of parsing *)
 (*------------------------------------------------------------*)
-
-print_message Verbose_low "Set the model.";
-Input.set_model model;
-
 (* End of parsing *)
 parsing_counter#stop;
 
@@ -910,8 +906,6 @@ match options#imitator_mode with
 					print_message Verbose_standard ("Generating the transformed model…");
 
 					let cub_model = CUBchecker.cubpta_of_pta model in
-					(*** HACK: set the model in the input module too ***)
-					Input.set_model cub_model;
 
 					print_message Verbose_standard ("Transformation completed");
 
@@ -1085,8 +1079,6 @@ match options#imitator_mode with
 				print_message Verbose_standard ("Generating the transformed model…");
 
 				let cub_model = CUBchecker.cubpta_of_pta model in
-				(*** HACK: set the model in the input module too ***)
-				Input.set_model cub_model;
 
 				print_message Verbose_standard ("Transformation completed");
 

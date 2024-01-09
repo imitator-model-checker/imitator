@@ -32,7 +32,6 @@ let dl_instantiate_discrete_after_seq (state_space : StateSpace.stateSpace) stat
 
     (* Copy location where we perform the destructive sequential updates*)
     let location = DiscreteState.copy_location glob_location in
-    let model = Input.get_model() in 
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in

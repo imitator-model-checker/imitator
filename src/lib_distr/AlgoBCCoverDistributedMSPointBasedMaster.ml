@@ -142,7 +142,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster (model : AbstractModel.ab
 
 			(* Print some information *)
 			self#print_algo_message Verbose_standard("Sending point to worker " ^ (string_of_int worker_rank ) ^ "");
-			self#print_algo_message Verbose_standard (ModelPrinter.string_of_pval (Input.get_model()) pi0);
+			self#print_algo_message Verbose_standard (ModelPrinter.string_of_pval model pi0);
 
 			(* Send to node *)
 			DistributedUtilities.send_pi0 pi0 worker_rank;
