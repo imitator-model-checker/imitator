@@ -14,7 +14,6 @@
 # File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2023/12/22
 #************************************************************
 
 
@@ -32,8 +31,8 @@ tests = [
 	#{
 		## Test version             : 1
 		## Test author              : XXXXXXXXXX
-		## Test since               : 2023/03/33
-		## Last modified            : 2023/03/33
+		## Test since               : 2024/03/33
+		## Last modified            : 2024/03/33
 		## Test for IMITATOR version: 3.4
 		#'purpose'    : 'Test something',
 		#'tags'       : 'syntax,semantic,translation',
@@ -7181,7 +7180,34 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property',
+		'tags'       : 'semantic',
+		'input_files': ['safety/safety-simple.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  p1 >= 0
+ & p2 >= 0
+ & 3 > p2
+ OR
+   p2 >= 3
+ & p1 >= p2
+ & 11 >= p2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
+	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
