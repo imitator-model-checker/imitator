@@ -1561,6 +1561,21 @@ class stateSpace (guessed_nb_transitions : int) =
 	in result
 
 
+	(* Checks whether a state exists in the state space (using equality comparison); a global clock may optionally be passed, in which case the comparison is done *after* eliminating that clock *)
+	method state_exists (global_time_clock_option : Automaton.clock_index option) (state_to_look_for : State.state) : bool =
+		(* Check for existence using equality check *)
+		match self#find_state_index Equality_check global_time_clock_option state_to_look_for with
+		(* Not found *)
+		| None -> false
+		(* Found *)
+		| Some (State_already_present _) -> true
+		(* Impossible situation: the state space would be modified, which is impossible using Equality_check *)
+		| Some (State_replacing _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `State_replacing` denotes that the state space may have been defined in a function presumably without side-effects")
+		(* Impossible situation: this does not happen *)
+		| Some (New_state _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `New_state` cannot happen as find_state_index does not create new states")
+
+
+
 	(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
 	method add_state (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (new_state : state) : addition_result =

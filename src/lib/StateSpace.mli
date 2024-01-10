@@ -231,6 +231,16 @@ class stateSpace : int ->
 
 
 		(************************************************************)
+		(* Methods checking things on the state space without modifications *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Checks whether a state exists in the state space (using equality comparison); a global clock may optionally be passed, in which case the comparison is done *after* eliminating that clock *)
+		(*------------------------------------------------------------*)
+		method state_exists : Automaton.clock_index option -> State.state -> bool
+
+
+		(************************************************************)
 		(* Methods computing things from the state space without modifications *)
 		(************************************************************)
 
