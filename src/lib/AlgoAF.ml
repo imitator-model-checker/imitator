@@ -66,6 +66,39 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Main body of AF (recursive version) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
+	method private af_rec (symbolic_state : State.state) : LinearConstraint.p_nnconvex_constraint =
+
+		(* Useful shortcut *)
+		let state_px_constraint = symbolic_state.px_constraint in
+
+		(* Case 1: target state found: return the associated constraint *)
+		if State.match_state_predicate model state_predicate symbolic_state then(
+			(* Return the constraint projected onto the parameters *)
+			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
+		)else(
+			(* Case 2: state already met *)
+			if state_space#state_exists (*model.global_time_clock*) None symbolic_state then(
+				(* Return false *)
+				LinearConstraint.false_p_nnconvex_constraint ()
+			)else(
+
+				(* Dummy recursive call *)
+				let _ = self#af_rec symbolic_state in ();
+
+				(* Dummy return for now *)
+				LinearConstraint.false_p_nnconvex_constraint ()
+			)
+		)
+
+
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run : Result.imitator_result =
