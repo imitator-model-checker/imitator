@@ -1421,158 +1421,176 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 
+	(* Check if a state belong to the state space and, if yes, return the state index; otherwise return None *)
+	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
+	method private find_state_index (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (state_to_look_for : State.state) : addition_result option =
+		let result : addition_result option =
+
+		let location_index = self#new_location_index state_to_look_for.global_location in
+
+		(* Shortcut: If no check requested: does not test anything *)
+		if state_comparison = No_check then (
+			(* Since the state does NOT belong to the state space: say not found *)
+			None
+		) else (
+		try (
+			(* use hash table to find all states with same locations*)
+			let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
+			if verbose_mode_greater Verbose_total then (
+				let nb_old = List.length old_states in
+				print_message Verbose_total ("The list of states with the same location has length " ^ (string_of_int nb_old));
+
+(* 					print_message Verbose_total (self#debug_string); *)
+			);
+
+			(* Statistics *)
+			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " old state" ^ (s_of_int (List.length old_states)) ^ ".");
+
+(* 			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states); *)
+
+(* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
+			if verbose_mode_greater Verbose_medium then(
+				let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
+				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " state comparison" ^ (s_of_int nb_comparisons) ^ ".");
+			);
+
+			(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
+			(* Retrieve the input options *)
+			let options = Input.get_options () in
+			let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
+				match global_time_clock_option with
+				(* Nothing to do *)
+				| None -> []
+				(* Nothing to do *)
+				| Some global_time_clock -> [global_time_clock]
+			)else(
+				(* Nothing to remove *)
+				[]
+			)
+			in
+
+			(* Iterate on each state *)
+			List.iter (fun (state_index : State.state_index) ->
+				let state = self#get_state state_index in
+
+				print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
+
+
+				(* Branch depending on the check function used for state comparison *)
+				match state_comparison with
+
+					(* No_check: case considered above already *)
+					| No_check -> raise (InternalError("Case `No_check` should have been handled before, in function StateSpace.add_state"))
+
+					(* Equality: check for equality *)
+					| Equality_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_equals state_to_look_for state clocks_to_remove_in_comparisons then raise (Found_old state_index)
+
+					(* Inclusion: check for new <= old *)
+					| Inclusion_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_included_in state_to_look_for state clocks_to_remove_in_comparisons then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old state_index)
+						)
+
+					(* Inclusion: check for new >= old *)
+					| Including_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_included_in state state_to_look_for clocks_to_remove_in_comparisons then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_including#increment;
+
+							(* Check if equality, i.e., reverse direction *)
+							if State.state_included_in state_to_look_for state clocks_to_remove_in_comparisons then(
+								(* Print some information *)
+								print_message Verbose_medium ("Found an old state = the new state");
+
+								(* Statistics *)
+								statespace_dcounter_nb_states_included#increment;
+
+								raise (Found_old state_index)
+							)else(
+								(* Print some information *)
+								print_message Verbose_medium ("Found an old state < the new state");
+
+								(* Replace old with new *)
+								self#replace_constraint state_index state_to_look_for.px_constraint;
+
+								(* Stop looking for states *)
+								raise (Found_new state_index)
+							)
+						)
+
+					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
+					| Double_inclusion_check ->
+						(* First check: new <= old *)
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_included_in state_to_look_for state clocks_to_remove_in_comparisons then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old state_index)
+						)
+						(* Second check: old <= new *)
+						else(
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_included_in state state_to_look_for clocks_to_remove_in_comparisons then (
+							(* Print some information *)
+							print_message Verbose_medium ("Found an old state < the new state");
+
+							(* Replace old with new *)
+							self#replace_constraint state_index state_to_look_for.px_constraint;
+
+							(* Statistics *)
+							statespace_dcounter_nb_states_including#increment;
+
+							(* Stop looking for states *)
+							raise (Found_new state_index)
+						))
+
+			) old_states;
+
+			(* Not found! *)
+			None
+		)	with
+			| Found_old state_index -> Some (State_already_present state_index)
+			| Found_new state_index -> Some (State_replacing state_index)
+	)
+	in result
+
+
 	(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
-	method add_state state_comparison (global_time_clock_option : Automaton.clock_index option) (new_state : state) : addition_result =
+	method add_state (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (new_state : state) : addition_result =
 		(* Statistics *)
 		counter_add_state#increment;
 		counter_add_state#start;
 
 		let result : addition_result =
 
+		(* Try to find the state index associated to the state in the state space, if any *)
+		match self#find_state_index state_comparison global_time_clock_option new_state with
+		(* Not found: insert state *)
+		| None ->
 			let location_index = self#new_location_index new_state.global_location in
-		(* If no check requested: does not test anything *)
-		if state_comparison = No_check then (
-			(* Since the state does NOT belong to the state space: insert directly and find the state index *)
 			let new_state_index = self#insert_state location_index new_state in
-			(* Return state_index  *)
+
+			(* Print some information *)
+			print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
+
+			(* Return *)
 			New_state new_state_index
-		) else (
-			try (
-				(* use hash table to find all states with same locations*)
-				let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
-				if verbose_mode_greater Verbose_total then (
-					let nb_old = List.length old_states in
-					print_message Verbose_total ("The list of states with the same location has length " ^ (string_of_int nb_old));
-
-(* 					print_message Verbose_total (self#debug_string); *)
-				);
-
-				(* Statistics *)
-				print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " old state" ^ (s_of_int (List.length old_states)) ^ ".");
-
-	(* 			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states); *)
-
-	(* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
-				if verbose_mode_greater Verbose_medium then(
-					let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
-					print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " state comparison" ^ (s_of_int nb_comparisons) ^ ".");
-				);
-
-				(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
-				(* Retrieve the input options *)
-				let options = Input.get_options () in
-				let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
-					match global_time_clock_option with
-					(* Nothing to do *)
-					| None -> []
-					(* Nothing to do *)
-					| Some global_time_clock -> [global_time_clock]
-				)else(
-					(* Nothing to remove *)
-					[]
-				)
-				in
-
-				(* Iterate on each state *)
-				List.iter (fun (state_index : State.state_index) ->
-					let state = self#get_state state_index in
-
-					print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
-
-
-					(* Branch depending on the check function used for state comparison *)
-					match state_comparison with
-
-						(* No_check: case considered above already *)
-						| No_check -> raise (InternalError("Case `No_check` should have been handled before, in function StateSpace.add_state"))
-
-						(* Equality: check for equality *)
-						| Equality_check ->
-							statespace_dcounter_nb_state_comparisons#increment;
-							if State.state_equals new_state state clocks_to_remove_in_comparisons then raise (Found_old state_index)
-
-						(* Inclusion: check for new <= old *)
-						| Inclusion_check ->
-							statespace_dcounter_nb_state_comparisons#increment;
-							if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
-								(* Statistics *)
-								statespace_dcounter_nb_states_included#increment;
-								raise (Found_old state_index)
-							)
-
-						(* Inclusion: check for new >= old *)
-						| Including_check ->
-							statespace_dcounter_nb_state_comparisons#increment;
-							if State.state_included_in state new_state clocks_to_remove_in_comparisons then(
-								(* Statistics *)
-								statespace_dcounter_nb_states_including#increment;
-
-								(* Check if equality, i.e., reverse direction *)
-								if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
-									(* Print some information *)
-									print_message Verbose_medium ("Found an old state = the new state");
-
-									(* Statistics *)
-									statespace_dcounter_nb_states_included#increment;
-
-									raise (Found_old state_index)
-								)else(
-									(* Print some information *)
-									print_message Verbose_medium ("Found an old state < the new state");
-
-									(* Replace old with new *)
-									self#replace_constraint state_index new_state.px_constraint;
-
-									(* Stop looking for states *)
-									raise (Found_new state_index)
-								)
-							)
-
-						(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
-						| Double_inclusion_check ->
-							(* First check: new <= old *)
-							statespace_dcounter_nb_state_comparisons#increment;
-							if State.state_included_in new_state state clocks_to_remove_in_comparisons then(
-								(* Statistics *)
-								statespace_dcounter_nb_states_included#increment;
-								raise (Found_old state_index)
-							)
-							(* Second check: old <= new *)
-							else(
-							statespace_dcounter_nb_state_comparisons#increment;
-							if State.state_included_in state new_state clocks_to_remove_in_comparisons then (
-								(* Print some information *)
-								print_message Verbose_medium ("Found an old state < the new state");
-
-								(* Replace old with new *)
-								self#replace_constraint state_index new_state.px_constraint;
-
-								(* Statistics *)
-								statespace_dcounter_nb_states_including#increment;
-
-								(* Stop looking for states *)
-								raise (Found_new state_index)
-							))
-
-				) old_states;
-
-				(* Not found -> insert state *)
-				let new_state_index = self#insert_state location_index new_state in
-
-				(* Print some information *)
-				print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
-
-				(* Return *)
-				New_state new_state_index
-			)	with
-				| Found_old state_index -> State_already_present state_index
-				| Found_new state_index -> State_replacing state_index
-		)
+		(* Found: return it directly *)
+		| Some addition_result ->
+			addition_result
 
 		in
+
 		(* Statistics *)
 		counter_add_state#stop;
+
 		result
 
 
