@@ -70,7 +70,10 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
-	method private af_rec (symbolic_state : State.state) : LinearConstraint.p_nnconvex_constraint =
+	method private af_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
+
+		(* Get state *)
+		let symbolic_state : State.state = state_space#get_state state_index in
 
 		(* Useful shortcut *)
 		let state_px_constraint = symbolic_state.px_constraint in
@@ -81,7 +84,7 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 		)else(
 			(* Case 2: state already met *)
-			if state_space#state_exists (*model.global_time_clock*) None symbolic_state then(
+			if List.mem state_index passed then(
 				(* Return false *)
 				LinearConstraint.false_p_nnconvex_constraint ()
 			)else(
@@ -95,6 +98,8 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				(* For each successor *)
 				List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
 
+					(*** TODO : get new state index ***)
+(*
 					(* Recursive call to AF on the successor *)
 					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor in
 
@@ -106,14 +111,15 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 					LinearConstraint.p_nnconvex_union_assign k_good k_block;
 					LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
+					(* k_live <- k_live U (C ^ g)\past *)
+					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor);*)
 
 
 					()
 				) transitions_and_successors_list;
 				(* End for each successor *)
 
-				(* Dummy recursive call *)
-				let _ = self#af_rec symbolic_state in ();
+
 
 				(* Dummy return for now *)
 				LinearConstraint.false_p_nnconvex_constraint ()
