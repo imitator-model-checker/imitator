@@ -245,6 +245,9 @@ class imitator_options =
 		(* Name for the file containing the property *)
 		val mutable property_file_name				= None
 
+		(* Options for controller generation in PTG *)
+		val mutable ptg_controller_mode = AbstractAlgorithm.No_Generation
+
 		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
 		val mutable ptg_notonthefly					= false
 
@@ -369,6 +372,7 @@ class imitator_options =
 		method precomputepi0						= precomputepi0
 		method property_file_name					= property_file_name
 
+		method ptg_controller_mode = ptg_controller_mode
 		method ptg_notonthefly						= ptg_notonthefly
 		method ptg_propagate_losing_states			= ptg_propagate_losing_states
 
@@ -731,6 +735,18 @@ class imitator_options =
 					exit(1);
 				)
 
+			and set_ptg_controller mode =
+				if mode = "no-draw" then 
+					ptg_controller_mode <- No_Draw
+				else if mode = "draw" then 
+						ptg_controller_mode <- Draw
+				else(
+						print_error ("The value of `-PTG-generate-controller` `" ^ mode ^ "` is not valid.");
+						Arg.usage speclist usage_msg;
+						abort_program ();
+						exit(1);
+				)
+
 
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
@@ -1007,6 +1023,12 @@ class imitator_options =
 				");
 
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
+				");
+
+
+				("-PTG-generate-controller", String set_ptg_controller, " Generate a valid controller after running the PTG algorithm.
+				Use value `no-draw` to only generate the .imi file.
+       	Use value `draw` to also generate a graphical representation of the controller.
 				");
 
 				("-PTG-no-onthefly", Unit (fun _ -> ptg_notonthefly <- true), " In game algorithms: do not perform the algorithm on-the-fly, but rather first build the state space, and then synthesize. Default: false, i.e., algorithm computes on-the-fly.

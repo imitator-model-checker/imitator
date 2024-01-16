@@ -121,6 +121,12 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Controller mode for AlgoPTG **)
+type ptg_controller_mode = 
+	| No_Generation
+	| Draw
+	| No_Draw
+
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
 

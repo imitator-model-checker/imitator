@@ -611,26 +611,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let winning_parameters = project_params (self#initial_constraint () &&& fst @@ WinningZone.find init) in
 		synthesized_constraint <- winning_parameters
 
-
-	method private print_strategy = 
-		let strategy_tbl_entry_to_string = fun ((action_index, state_index), winning_move) -> 
-			(Printf.sprintf "[%s] --%s-> s_%d" (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names winning_move)) (model.action_names action_index) state_index
-		in
-		let winning_zone_tbl_entry_to_string = fun (state_index, (_, winning_moves) : state_index * (LinearConstraint.px_nnconvex_constraint * AlgoPTGStrategyGenerator.winningMovesPerState)) -> 
-			let strategy_tbl_string = winning_moves#fold (fun state winning_moves_per_action acc -> 
-																												winning_moves_per_action#fold (
-																													fun action zone inner_acc -> Printf.sprintf "%s\n%s" inner_acc (strategy_tbl_entry_to_string ((action, state), zone))) acc) "" in
-			(Printf.sprintf "s_%d: %s" state_index strategy_tbl_string)
-		in
-
-		let all_states_strategy_string_seq = Seq.map (winning_zone_tbl_entry_to_string) @@ WinningZone.to_seq () in
-		let all_states_strategy_string = Seq.fold_left (fun acc s -> Printf.sprintf "%s\n%s" acc s) "" all_states_strategy_string_seq in
-			
-		self#print_algo_message Verbose_standard (Printf.sprintf "Winning strategy: %s" (all_states_strategy_string));
-	 
-
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)	
@@ -642,7 +622,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#compute_PTG;
 
 		(* Compute the strategy *)
-		AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space options;
+		if options#ptg_controller_mode != AbstractAlgorithm.No_Generation then 
+			AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space options;
 
 		(* Return the result *)
 		self#compute_result;
@@ -662,11 +643,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#print_algo_message_newline Verbose_standard (
 			Printf.sprintf "Size of explored state space: %d" (state_space#nb_states);
 		);
-
-
-
-		(* Print strategy *)
-		self#print_strategy;
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 

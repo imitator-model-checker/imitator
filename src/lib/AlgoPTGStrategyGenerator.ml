@@ -211,23 +211,24 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
   in
 
 
+  print_highlighted_message Shell_result Verbose_standard ("\nStrategy generation results:");
   (* Write controller to file *)
   let imi_file_name = options#files_prefix ^ "-controller.imi" in
   let controller_imi_file = open_out imi_file_name in
   output_string controller_imi_file @@ ModelPrinter.string_of_model model; 
   close_out controller_imi_file;
-  print_message Verbose_standard ("Controller file `" ^ imi_file_name ^ "` succesfully created.");
+  print_highlighted_message Shell_result Verbose_standard ("Controller model `" ^ imi_file_name ^ "` succesfully created.");
 
   (* Generate graphical representation of controller *)
-  print_message Verbose_medium ("Translating generated controller model to a graphics…");
-  let translated_model = PTA2JPG.string_of_model model in
-  if verbose_mode_greater Verbose_high then(
-    print_message Verbose_high ("\n" ^ translated_model ^ "\n");
-  );
+  if options#ptg_controller_mode == AbstractAlgorithm.Draw then
+    begin
+      print_message Verbose_medium ("Translating generated controller model to a graphics…");
+      let translated_model = PTA2JPG.string_of_model model in
 
-  let dot_created_file_option = Graphics.dot "pdf" (options#files_prefix ^ "-controller") translated_model in
-  begin
-  match dot_created_file_option with
-  | None -> print_error "Oops…! Something went wrong with dot."
-  | Some created_file -> print_message Verbose_standard ("File `" ^ created_file ^ "` successfully created.");
-  end;
+      let dot_created_file_option = Graphics.dot "pdf" (options#files_prefix ^ "-controller") translated_model in
+      begin
+      match dot_created_file_option with
+      | None -> print_error "Oops…! Something went wrong with dot."
+      | Some created_file -> print_highlighted_message Shell_result Verbose_standard ("Graphical representation of controller `" ^ created_file ^ "` successfully created.");
+      end;
+    end;
