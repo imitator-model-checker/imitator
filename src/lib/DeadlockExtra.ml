@@ -12,6 +12,7 @@
 
  (* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
 
+open ImitatorUtilities
 open LinearConstraint
 open DiscreteExpressionEvaluator
 open State
@@ -116,10 +117,32 @@ let dl_predecessor (model : AbstractModel.abstract_model) state_space state_inde
     constr_pxd
 
 
-let dl_weakest_precondition (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) s1_index transition s2_index =
+let dl_weakest_precondition (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (s1_index : State.state_index) (transition : StateSpace.combined_transition) (s2_index : State.state_index) =
     let z1 = (state_space#get_state s1_index).px_constraint in
     let z2 = (state_space#get_state s2_index).px_constraint in
   
     let guard = state_space#get_guard model s1_index transition in
  
     dl_predecessor model state_space s1_index z1 guard z2 transition
+
+
+(* Compute all live valuations, i.e., the global precondition allowing to leave a state to a successor via a transition *)
+let live_valuations_precondition (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) (state_index : State.state_index) (combined_transition : StateSpace.combined_transition) (state_index' : State.state_index) : px_linear_constraint =
+    let precondition = dl_weakest_precondition model state_space state_index combined_transition state_index' in
+    if verbose_mode_greater Verbose_medium then(
+        print_message Verbose_medium ("Direct Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
+    );
+
+    dl_inverse_time model state_space state_index precondition;
+    if verbose_mode_greater Verbose_medium then(
+        print_message Verbose_medium ("Timed  Precondition:\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names precondition));
+    );
+
+    let precondition_px = dl_instantiate_discrete model state_space state_index precondition in
+    if verbose_mode_greater Verbose_medium then(
+        print_message Verbose_medium ("Hidden Precondition:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names precondition_px));
+    );
+
+    (* Return *)
+    precondition_px
+
