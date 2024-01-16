@@ -4,7 +4,7 @@
  * Title            : BRPAAPP21_RC
  * Description      : Bounded Retransmission Protocol [version slightly modified]
  * Correctness      : 
- * Scalable         : no
+ * Scalable         : yes (numbers of retransmissions and of chunks)
  * Generated        : no
  * Categories       : Protocol
  * Source           : "Iterative bounded synthesis for efficient cycle detection in parametric timed automata", TACAS 2021
