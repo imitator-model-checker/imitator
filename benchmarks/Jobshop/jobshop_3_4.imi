@@ -4,7 +4,7 @@
  * Title            : jobshop_3_4
  * Description      : Jobshop case study
  * Correctness      : All tasks performed on time
- * Scalable         : 
+ * Scalable         : yes
  * Generated        : 
  * Categories       : RTS ; Scheduling
  * Source           : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaïm and Oded Maler, CAV 2001 (??))
