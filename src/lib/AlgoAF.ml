@@ -85,6 +85,32 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				(* Return false *)
 				LinearConstraint.false_p_nnconvex_constraint ()
 			)else(
+				(* Instantiate local variables *)
+				let k		: LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
+				let k_live	: LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint () in
+
+				(* Compute all successors via all possible outgoing transitions *)
+				let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional model symbolic_state in
+
+				(* For each successor *)
+				List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
+
+					(* Recursive call to AF on the successor *)
+					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor in
+
+					(* k_block <- T \ successor|_P *)
+					let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
+					LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
+
+					(* K <- K ^ (k_good U k_block) *)
+					LinearConstraint.p_nnconvex_union_assign k_good k_block;
+					LinearConstraint.p_nnconvex_intersection_assign k k_good;
+
+
+
+					()
+				) transitions_and_successors_list;
+				(* End for each successor *)
 
 				(* Dummy recursive call *)
 				let _ = self#af_rec symbolic_state in ();
