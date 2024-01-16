@@ -121,6 +121,9 @@ class imitator_options :
 
 		method output_tiles_files			: bool
 
+		(* In game algorithms: set the mode for generation of controller *)
+		method ptg_controller_mode			: ptg_controller_mode
+
 		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
 		method ptg_notonthefly				: bool
 
