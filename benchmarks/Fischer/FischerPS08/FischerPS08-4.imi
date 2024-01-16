@@ -15,7 +15,7 @@
  * License          : 
  * 
  * Created          : 
- * Last modified    : 2021/08/30
+ * Last modified    : 2024/01/16
  * Model version    : 
  * 
  * IMITATOR version : 3.1
@@ -35,7 +35,7 @@ var
 	: parameter;
 
 automaton process1
-	synclabs: Start1, SetX1, Enter1, SetX01;
+	actions: Start1, SetX1, Enter1, SetX01;
 
 	loc idle1: invariant True
 		when True sync Start1 do {x1 := 0} goto trying1;
@@ -52,7 +52,7 @@ automaton process1
 end
 
 automaton process2
-	synclabs: Start2, SetX2, Enter2, SetX02;
+	actions: Start2, SetX2, Enter2, SetX02;
 
 	loc idle2: invariant True
 		when True sync Start2 do {x2 := 0} goto trying2;
@@ -69,7 +69,7 @@ automaton process2
 end
 
 automaton process3
-	synclabs: Start3, SetX3, Enter3, SetX03;
+	actions: Start3, SetX3, Enter3, SetX03;
 
 	loc idle3: invariant True
 		when True sync Start3 do {x3 := 0} goto trying3;
@@ -86,7 +86,7 @@ automaton process3
 end
 
 automaton process4
-	synclabs: Start4, SetX4, Enter4, SetX04;
+	actions: Start4, SetX4, Enter4, SetX04;
 
 	loc idle4: invariant True
 		when True sync Start4 do {x4 := 0} goto trying4;
@@ -103,7 +103,7 @@ automaton process4
 end
 
 automaton variable
-	synclabs:
+	actions:
 	Start1, SetX1, Enter1, SetX01, Start2, SetX2, Enter2, SetX02, Start3, SetX3, Enter3, SetX03, Start4, SetX4, Enter4, SetX04;
 
 	loc Val0: invariant True

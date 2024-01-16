@@ -13,9 +13,9 @@
  # Script authors  : Michal Knapick, Étienne André
  #
  # Created         : 2015/05/15
- # Last modified   : 2021/09/01
+ # Last modified   : 2024/01/16
  #
- # IMITATOR version: 3.1
+ # IMITATOR version: 3.4
  ############################################################
 
 import sys
@@ -32,7 +32,7 @@ def getVars(n):
 def getProcess(i):
 
     autStr = """automaton process{0}
-\tsynclabs: Start{0}, SetX{0}, Enter{0}, SetX0{0};
+\tactions: Start{0}, SetX{0}, Enter{0}, SetX0{0};
 
 \tloc idle{0}: invariant True
 	\twhen True sync Start{0} do {{x{0} := 0}} goto trying{0};
@@ -70,7 +70,7 @@ def getVar(n):
 
     print("automaton variable")
 
-    print("\tsynclabs:")
+    print("\tactions:")
     labs = ["Start", "SetX", "Enter", "SetX0"]
     print("\t"+", ".join([lab + str(i) for i in range(1, n+1) for lab in labs]) + ";")
 
