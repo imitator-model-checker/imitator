@@ -757,7 +757,7 @@ val p_nnconvex_p_intersection_assign  : p_nnconvex_constraint -> p_linear_constr
 val px_nnconvex_px_intersection_assign  : px_nnconvex_constraint -> px_linear_constraint -> unit
 
 (** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not **)
-val p_nnconvex_intersection_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
+val p_nnconvex_intersection_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 val px_nnconvex_intersection_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
