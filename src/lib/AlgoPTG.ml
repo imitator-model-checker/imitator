@@ -642,7 +642,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#compute_PTG;
 
 		(* Compute the strategy *)
-		AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space;
+		AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space options;
 
 		(* Return the result *)
 		self#compute_result;
