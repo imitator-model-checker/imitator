@@ -60,6 +60,9 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 	(*** TODO ***)
 	val mutable termination_status : Result.state_based_algorithm_termination = Regular_termination
 
+	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
+(* 	val parameters_consistent_with_init : LinearConstraint.px_linear_constraint = LinearConstraint.px_of_p_constraint model.initial_p_constraint *)
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -90,7 +93,7 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 			)else(
 				(* Instantiate local variables *)
 				let k		: LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
-				let k_live	: LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint () in
+				let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
 				(* Compute all successors via all possible outgoing transitions *)
 				let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional model symbolic_state in
@@ -98,11 +101,21 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				(* For each successor *)
 				List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
 
-					(*** TODO : get new state index ***)
-(*
-					(* Recursive call to AF on the successor *)
-					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor in
+					(* Add or get the state_index of the successor *)
+					(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
+					let addition_result = state_space#add_state Equality_check None successor in
+					let successor_state_index = match addition_result with
+					| New_state state_index
+					| State_already_present state_index
+					| State_replacing state_index
+						-> state_index
+					in
 
+					(*** TODO: add state and transition to the state space ***)
+
+					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor_state_index (state_index :: passed) in
+
+					(* Recursive call to AF on the successor *)
 					(* k_block <- T \ successor|_P *)
 					let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
 					LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
@@ -112,17 +125,22 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 					LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
 					(* k_live <- k_live U (C ^ g)\past *)
-					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor);*)
+					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index);
 
 
 					()
 				) transitions_and_successors_list;
 				(* End for each successor *)
 
+				(* k <- k \ (True \ k_live)|_P *)
+				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
+				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
+				(*** TODO: intersect with parameters_consistent_with_init first? ***)
+				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
+				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
 
-
-				(* Dummy return for now *)
-				LinearConstraint.false_p_nnconvex_constraint ()
+				(* return k *)
+				k
 			)
 		)
 
