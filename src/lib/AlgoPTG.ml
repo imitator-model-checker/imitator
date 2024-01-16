@@ -469,7 +469,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					if save then 
 						(match winning_moves_opt with 
 						| Some winning_moves -> 
-							(winning_moves#find state')#replace (edge.action) pred
+							(winning_moves#find edge.state')#replace (edge.action) pred
 						| None -> ());
 					pred
 				)
@@ -642,7 +642,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#compute_PTG;
 
 		(* Compute the strategy *)
-		(*AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space; *)
+		AlgoPTGStrategyGenerator.generate_controller model (fun x -> WinningZone.find x |> snd) state_space;
 
 		(* Return the result *)
 		self#compute_result;

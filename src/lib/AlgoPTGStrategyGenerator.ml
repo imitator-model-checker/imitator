@@ -5,22 +5,24 @@ open State
 open ImitatorUtilities
 
 type winning_moves_key = Automaton.action_index * state_index
-module TransitionSet = Set.Make(struct type t = {source : state_index; action : Automaton.action_index; dest : state_index} let compare = Stdlib.compare end)
-
-
 
 class virtual ['a, 'b] hashTable = object (self)
   val mutable internal_tbl : ('a, 'b) Hashtbl.t = Hashtbl.create 100
-	method replace key zone = Hashtbl.replace internal_tbl key zone
+	method replace key value = Hashtbl.replace internal_tbl key value
 	method find key =  try Hashtbl.find internal_tbl key with
                       Not_found -> 
-                        Hashtbl.replace internal_tbl key self#bot; self#bot
+                        let x = self#bot in Hashtbl.replace internal_tbl key x; x 
 	method iter f = Hashtbl.iter f internal_tbl
   method fold : 'c. ('a -> 'b -> 'c -> 'c) -> 'c -> 'c = 
     fun f init -> Hashtbl.fold f internal_tbl init
+  method is_empty = Hashtbl.length internal_tbl = 0
   method virtual bot : 'b
 end 
 
+class ['a] array (ls : 'a list) = object
+  val internal_array : 'a Array.t = Array.of_list ls
+  method get = Array.get internal_array 
+end
 
 class winningMovesPerAction = object 
   inherit([action_index, LinearConstraint.px_nnconvex_constraint] hashTable) 
@@ -30,6 +32,24 @@ end
 class winningMovesPerState = object
   inherit ([state_index, winningMovesPerAction] hashTable)
   method bot = new winningMovesPerAction
+end
+
+class transitionsPerAction = object
+  inherit ([action_index, transition_index list] hashTable)
+  method bot = []
+end
+class transitionsPerLocation = object 
+  inherit ([location_index, transitionsPerAction] hashTable)
+  method bot = new transitionsPerAction
+end
+class actionsPerLocation = object
+  inherit ([location_index, stateIndexSet] hashTable)
+  method bot = new stateIndexSet
+end
+
+class locationPerStateIndex = object 
+  inherit ([state_index, location_index] hashTable)
+  method bot = -1
 end
 
 (************************************************************)
@@ -208,31 +228,68 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
 
 
 let generate_controller (system_model : AbstractModel.abstract_model) (get_winning_moves : state_index -> winningMovesPerState) (state_space : stateSpace) = 
+  let initial_state_index = state_space#get_initial_state_index in
   let transition_descriptions = Hashtbl.create 100 in
-  let transitions = Hashtbl.create 100 in 
+  let transitions = new transitionsPerLocation in 
+  let actions_per_location = new actionsPerLocation in
   let transition_counter = ref 0 in 
   let location_counter = ref 0 in 
   let explored = new stateIndexSet in 
-  let locations = ref [] in 
+  let invariants = ref [] in
+  let accepting = ref [] in
+  let location_names = ref [] in 
+  let location_per_state_index = new locationPerStateIndex in
 
-  let fresh_location () = 
-      let loc = !location_counter in 
-      locations := loc :: !locations;
-      location_counter := !location_counter + 1;
-      loc 
+  let get_invariant state_index = 
+    let zone = (state_space#get_state state_index).px_constraint in
+    Continuous_guard (LinearConstraint.pxd_of_px_constraint zone)
+  in
+
+  let is_accepting state_index = 
+    let global_location = state_space#get_location state_index in
+    DiscreteState.is_accepting system_model.is_accepting global_location 
+  in
+
+  let location_name state_index = 
+    let global_location = state_space#get_location state_index in 
+    let locations = DiscreteState.get_locations global_location in 
+    system_model.location_names 0 (Array.get locations 0)
+  in
+
+  let state_to_location state_index = 
+    if location_per_state_index#find state_index != -1 then 
+      location_per_state_index#find state_index
+    else
+      begin 
+        let fresh_loc = !location_counter in
+        location_counter := !location_counter + 1;
+        location_per_state_index#replace state_index fresh_loc;
+
+        let invariant = get_invariant state_index in
+        invariants := invariant::!invariants;
+
+        let is_accepting = is_accepting state_index in 
+        accepting := is_accepting::!accepting;
+
+        let name = location_name state_index in
+        location_names := name::!location_names;
+
+        fresh_loc
+      end;
   in 
 
   let add_transition src (transition : transition) = 
+    (* Update transition descriptions *)
     Hashtbl.add transition_descriptions !transition_counter transition;
-    let transitions_per_action = match Hashtbl.find_opt transitions src with 
-      | Some x -> x
-      | None -> let x = Hashtbl.create 100 in Hashtbl.add transitions src x; x in
-    let transition_list = match Hashtbl.find_opt transitions_per_action transition.action with 
-      | Some l -> l
-      | None -> [] in
+    (* Update transitions table *)
+    let transitions_per_action = transitions#find src in 
+    let transition_list = transitions_per_action#find transition.action in 
     let transition_list' = !transition_counter::transition_list in 
-    Hashtbl.add transitions_per_action transition.action transition_list';
+    transitions_per_action#replace transition.action transition_list';
     transition_counter := !transition_counter + 1;
+    (* Update actions per location table *)
+    let actions = actions_per_location#find src in 
+    actions#add transition.action
   in 
 
   (* Name: Winning-move-guided exploration *)
@@ -244,24 +301,29 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
           explore state_index location_index;
         end
     in
+
     let successors_with_combined_transitions = state_space#get_successors_with_combined_transitions state_index in 
-    let uncontrollable_successors = List.filter (
-      fun (t,_) -> 
+    let relevant_uncontrollable_successors = List.filter (
+      fun (t, state_index') -> 
         let action = StateSpace.get_action_from_combined_transition system_model t in
-        not @@ system_model.is_controllable_action action 
+        let is_uncontrollable = not @@ system_model.is_controllable_action action in
+        let has_winning_moves = not @@ (get_winning_moves state_index')#is_empty in
+        is_uncontrollable && has_winning_moves
       ) successors_with_combined_transitions in
     List.iter (
       fun (t,state_index') ->
-        let location_index' = fresh_location () in              (* TODO: Generalize to multiple automata *)
-        let old_transition = system_model.transitions_description (List.hd t) in
-        let new_transition = {old_transition with target = location_index'} in 
-        add_transition state_index new_transition;
+        let location_index' = state_to_location state_index' in             
+        let old_transition = system_model.transitions_description (List.hd t) in  (* TODO: Generalize to multiple automata *)
+        let new_transition = {old_transition with target = location_index'; updates = (No_potential_update, [])} in 
+        add_transition location_index new_transition;
         continue_exploring state_index' location_index'
-    ) uncontrollable_successors;
+    ) relevant_uncontrollable_successors;
+
+
     let winning_moves = get_winning_moves state_index in
     winning_moves#iter (
       fun state_index' winning_moves_per_action ->
-        let location_index' = fresh_location () in   
+        let location_index' = state_to_location state_index' in   
         winning_moves_per_action#iter (
         fun action_index nnconv_constr -> 
         if not @@ LinearConstraint.px_nnconvex_constraint_is_false nnconv_constr then
@@ -282,8 +344,20 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
         continue_exploring state_index' location_index'
     )
   in
-  explore state_space#get_initial_state_index (fresh_location ());
+  explore initial_state_index (state_to_location initial_state_index);
 
+
+  let invariants_array = new array @@ List.rev !invariants in
+  let accepting_array = new array @@ List.rev !accepting in
+  let location_names_array = new array @@ List.rev !location_names in 
+
+
+  let print_list list f = print_message Verbose_standard (String.concat ";" (List.map f list))
+  in
+
+  print_list !accepting string_of_bool;
+  print_list !location_names (fun x -> x);
+    
   (* DEBUG *)
   Hashtbl.iter 
   (fun transition_index {action = a; guard = g;_} -> 
@@ -294,16 +368,23 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     | _ -> ()
   )
   transition_descriptions;
-  Hashtbl.iter 
+  transitions#iter 
   (fun state_index transitions_per_action -> 
-    Hashtbl.iter 
+    transitions_per_action#iter 
     (fun action_index transition_index_list -> 
       print_message Verbose_standard 
       (Printf.sprintf "transitions for location %d, action %d: %s" state_index action_index 
       (String.concat ";" (List.map (fun n -> string_of_int n) transition_index_list)))
-    ) transitions_per_action
-  )
-  transitions;
+    )
+  );
+
+  actions_per_location#iter 
+  (fun location_index actions -> 
+      print_message Verbose_standard 
+      (Printf.sprintf "actions for location %d: %s" location_index 
+      (String.concat ";" (List.map (fun n -> string_of_int n) actions#all_elements)))
+  );
+
 
 
   let controller : simple_abstract_model = {
@@ -320,39 +401,53 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     has_invariants = system_model.has_invariants;
     has_complex_updates = system_model.has_complex_updates;
     bounded_parameters = system_model.bounded_parameters;
-    parameters_bounds = (fun x -> {upper = AbstractModel.Unbounded; lower = AbstractModel.Unbounded});
+    parameters_bounds = system_model.parameters_bounds;
     clocks = system_model.clocks;
-    is_clock = (fun var_id -> false);
-    discrete = [];
-    discrete_rationals = [];
-    is_discrete = (fun var_id -> false);
-    parameters = [];
-    clocks_and_discrete = [];
-    parameters_and_discrete = [];
-    parameters_and_clocks = [];
-    variable_names = (fun var_id -> "name");
-    discrete_names_by_type_group = [];
-    type_of_variables = (fun var_id -> Var_type_clock);
+    is_clock = system_model.is_clock;
+    discrete = system_model.discrete;
+    discrete_rationals = system_model.discrete_rationals;
+    is_discrete = system_model.is_discrete;
+    parameters = system_model.parameters;
+    clocks_and_discrete = system_model.clocks_and_discrete;
+    parameters_and_discrete = system_model.parameters_and_discrete;
+    parameters_and_clocks = system_model.parameters_and_clocks;
+    variable_names = system_model.variable_names;
+    discrete_names_by_type_group = system_model.discrete_names_by_type_group;
+    type_of_variables = system_model.type_of_variables;
     automata = [0];
-    automata_names = (fun automata_id -> "name");
-    locations_per_automaton = (fun automata_id -> []);
-    location_names = (fun automata_id -> fun location_id -> "name");
-    is_accepting = (fun automata_id -> fun location_id -> false);
+    automata_names = (fun automata_index -> system_model.automata_names automata_index ^ "_controller");
+    locations_per_automaton = (fun _ -> List.init (!location_counter) (fun x -> (x-1) + 1));
+    location_names = (fun _ location_id -> location_names_array#get location_id ^ "__#" ^ string_of_int location_id);
+    is_accepting = (fun _ -> accepting_array#get);
     is_urgent = (fun automata_id -> fun location_id -> false);
-    actions = [];
-    controllable_actions = [];
-    action_names = (fun action_id -> "name");
-    action_types = (fun action_id -> Action_type_sync);
-    actions_per_automaton = (fun automata_id -> []);
-    automata_per_action = (fun action_id -> []);
-    actions_per_location = (fun automata_id -> fun location_id -> []);
-    is_controllable_action = (fun action_id -> false);
-    invariants = (fun automaton_index location_index -> True_guard);
-    transitions = (fun automaton_index location_index action_index -> []);
-    transitions_description = (fun transition_index -> {action = 0; guard = True_guard; updates = (No_potential_update, []); target = 0});
-    automaton_of_transition = (fun transition_index -> 0);
+    actions = system_model.actions;
+    controllable_actions = system_model.controllable_actions;
+    action_names = system_model.action_names;
+    action_types = system_model.action_types;
+    actions_per_automaton = system_model.actions_per_automaton;
+    automata_per_action = (fun _ -> [0]);
+    actions_per_location = (fun _ -> fun location_index -> (actions_per_location#find location_index)#all_elements);
+    is_controllable_action = system_model.is_controllable_action;
+    invariants = (fun _ -> invariants_array#get);
+    transitions = (fun _ location_index action_index -> (transitions#find location_index)#find action_index);
+    transitions_description = (fun transition_index -> Hashtbl.find transition_descriptions transition_index);
+    automaton_of_transition = (fun _ -> 0);
     initial_location = DiscreteState.make_location [] [];
     initial_constraint = LinearConstraint.px_false_constraint();
     initial_p_constraint = LinearConstraint.p_false_constraint();
   } in
-  ()
+  let abstract_model = generate_abstract_model controller in
+  print_message Verbose_standard @@ ModelPrinter.string_of_model abstract_model;
+  print_message Verbose_medium ("Translating model to a graphics…");
+		let translated_model = PTA2JPG.string_of_model abstract_model in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+		);
+		(*** NOTE: not so nice… ***)
+
+		let dot_created_file_option = Graphics.dot "pdf" ("test123-pta") translated_model in
+		begin
+		match dot_created_file_option with
+		| None -> print_error "Oops…! Something went wrong with dot."
+		| Some created_file -> print_message Verbose_standard ("File `" ^ created_file ^ "` successfully created.");
+		end;

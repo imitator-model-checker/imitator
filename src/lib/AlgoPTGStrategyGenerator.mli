@@ -10,6 +10,7 @@ class winningMovesPerAction : object
 	method find : action_index -> LinearConstraint.px_nnconvex_constraint    
     method iter : (action_index -> LinearConstraint.px_nnconvex_constraint -> unit) -> unit
     method fold : 'c. (action_index -> LinearConstraint.px_nnconvex_constraint -> 'c -> 'c) -> 'c -> 'c
+	method is_empty : bool
     method bot : LinearConstraint.px_nnconvex_constraint
 end
 
@@ -19,6 +20,7 @@ class winningMovesPerState : object
 	method find : state_index -> winningMovesPerAction    
     method iter : (state_index -> winningMovesPerAction -> unit) -> unit
     method fold : 'c. (state_index -> winningMovesPerAction -> 'c -> 'c) -> 'c -> 'c
+	method is_empty : bool
     method bot : winningMovesPerAction
 end
 
