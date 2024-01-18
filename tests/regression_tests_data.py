@@ -16080,7 +16080,106 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: unsatisfiable initial location',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial-unsatisfiable.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-unsatisfiable.res' , 'content' : """
+Error                                   : unsatisfiable initial conditions
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false (no accepting location)',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-false-noaccepting.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location restricted by an invariant',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial-invariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-invariant.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 > p
+& p >= 0
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false due to no invariant',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-false-noinvariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noinvariant.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
@@ -16811,6 +16910,7 @@ Constraint nature             : good
 """
 			} #end result file
 			,
+
 			{'file': 'PDFC1-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
@@ -16841,6 +16941,32 @@ Constraint nature             : good
   s_1 -> s_1 via "a"
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test PDFC: very basic example; variant with 1 clock',
+		'tags'       : 'deadlock',
+		'input_files': ['deadlock/PDFC1-1clock.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC1-1clock.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
