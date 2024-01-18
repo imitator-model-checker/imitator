@@ -1341,6 +1341,17 @@ let create_initial_state (model : AbstractModel.abstract_model) (abort_if_unsati
 			ClocksElimination.dynamic_clock_elimination model initial_location current_constraint;
 		);
 
+		(* Check whether initial state is still satisfied *)
+		if LinearConstraint.px_is_false current_constraint then(
+			(* Print some information *)
+			print_message Verbose_low ("Initial continuous constraint is NOT satisfiable!");
+
+			if abort_if_unsatisfiable_initial_state then(
+				print_warning ("The constraint of the initial state is not satisfiable.");
+
+				raise UnsatisfiableInitialConditions
+			);
+		);
 
 		(* Return the initial state *)
 		{global_location = initial_location; px_constraint = current_constraint}
@@ -2886,7 +2897,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 			(* Get the initial state after time elapsing *)
 			let init_state_after_time_elapsing : state = create_initial_state model (self#abort_if_unsatisfiable_initial_state) in
-			let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
+			(*** NOTE: test already done in create_initial_state ***)
+(*			let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 			(* Check the satisfiability *)
 			let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
@@ -2897,7 +2909,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				);
 			)else(
 				print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
-			);
+			);*)
 			(* Print the initial state after time elapsing *)
 			if verbose_mode_greater Verbose_medium then
 				print_message Verbose_medium ("\nInitial state computed:\n" ^ (ModelPrinter.string_of_state model init_state_after_time_elapsing) ^ "\n");
