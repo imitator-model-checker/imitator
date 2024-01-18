@@ -92,7 +92,7 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				LinearConstraint.false_p_nnconvex_constraint ()
 			)else(
 				(* Instantiate local variables *)
-				let k		: LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
+				let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.true_p_nnconvex_constraint () in
 				let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
 				(* Compute all successors via all possible outgoing transitions *)
@@ -100,6 +100,8 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 				(* For each successor *)
 				List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
+					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+					state_space#increment_nb_gen_states;
 
 					(* Add or get the state_index of the successor *)
 					(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
@@ -111,11 +113,13 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 						-> state_index
 					in
 
-					(*** TODO: add state and transition to the state space ***)
+					(* Add the transition to the state space *)
+					state_space#add_transition (state_index, combined_transition, successor_state_index);
 
-					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor_state_index (state_index :: passed) in
 
 					(* Recursive call to AF on the successor *)
+					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor_state_index (state_index :: passed) in
+
 					(* k_block <- T \ successor|_P *)
 					let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
 					LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
@@ -126,7 +130,6 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 					(* k_live <- k_live U (C ^ g)\past *)
 					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index);
-
 
 					()
 				) transitions_and_successors_list;
@@ -155,8 +158,24 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 		start_time <- Unix.gettimeofday();
 
-		(*** TODO ***)
-		raise (NotImplemented "AF is not implemented")
+		(* Build initial state *)
+		let initial_state : State.state = AlgoStateBased.create_initial_state model true (* abort_if_unsatisfiable_initial_state *) in
+
+		(* Add it to the state space *)
+		(*** BEGIN copied from AlgoStateBased ***)
+		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
+		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state with
+			(* The state is necessarily new as the state space was empty *)
+			| StateSpace.New_state state_index -> state_index
+			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
+		in
+		(*** END copied from AlgoStateBased ***)
+
+		(* Increment the number of computed states *)
+		state_space#increment_nb_gen_states;
+
+		(* Main call to the AF dedicated function *)
+		synthesized_constraint <- self#af_rec init_state_index [];
 
 		(* Return the result *)
 		self#compute_result;

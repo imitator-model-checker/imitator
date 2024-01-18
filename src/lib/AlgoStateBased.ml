@@ -3265,14 +3265,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		(* Expand the transition *)
 		let source_state_index, combined_transition, target_state_index = transition in
 
-		(* Print some information *)
-(*  		print_message Verbose_total ("About to update the state space…");  *)
-
 		(* Update state space *)
 		state_space#add_transition (source_state_index, combined_transition, target_state_index);
-
-		(* Print some information *)
-(*  		print_message Verbose_total ("State space updated");  *)
 
  		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
@@ -5248,7 +5242,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		(* No initial termination: continue *)
 		| None ->
 
-			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
+			(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
 			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
