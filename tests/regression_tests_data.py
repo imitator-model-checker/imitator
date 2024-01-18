@@ -16051,6 +16051,41 @@ Constraint nature                       : good
 
 	,
 	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# AF
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# ??
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
