@@ -161,6 +161,11 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 		(* Build initial state *)
 		let initial_state : State.state = AlgoStateBased.create_initial_state model true (* abort_if_unsatisfiable_initial_state *) in
 
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "The initial state has been created";
+			self#print_algo_message Verbose_high (ModelPrinter.string_of_state model initial_state);
+		);
+
 		(* Add it to the state space *)
 		(*** BEGIN copied from AlgoStateBased ***)
 		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
