@@ -237,6 +237,8 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 	let ppl_nncc_intersection_assign = create_hybrid_counter_and_register "nncc_intersection_assign" PPL_counter Verbose_low
 
+	let ppl_nncc_add_space_dimensions = create_hybrid_counter_and_register "nncc_add_space_dimensions" PPL_counter Verbose_low
+
 	let ppl_nncc_remove_higher_space_dimensions = create_hybrid_counter_and_register "nncc_remove_higher_space_dimensions" PPL_counter Verbose_low
 
 
@@ -630,6 +632,9 @@ let ippl_nncc_add_disjunct nnconvex_constraint p_linear_constraint=
 
 let ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint' =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign nnconvex_constraint nnconvex_constraint') ppl_nncc_difference_assign
+
+let ippl_nncc_add_dimensions nb_dimensions nnconvex_constraint =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_add_space_dimensions_and_project nnconvex_constraint nb_dimensions) ppl_nncc_add_space_dimensions
 
 let ippl_nncc_remove_higher_space_dimensions nnconvex_constraint new_dimensions =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_remove_higher_space_dimensions nnconvex_constraint new_dimensions) ppl_nncc_remove_higher_space_dimensions
@@ -4009,6 +4014,21 @@ let nnconvex_copy nnconvex_constraint = ippl_nncc_copy nnconvex_constraint
 let p_nnconvex_copy = nnconvex_copy
 let px_nnconvex_copy = nnconvex_copy
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Conversion between types of constraints } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+let px_nnconvex_constraint_of_p_nnconvex_constraint (p_nnconvex_constraint : p_nnconvex_constraint) : px_nnconvex_constraint =
+	(* First copy *)
+	let px_constraint : px_nnconvex_constraint = px_nnconvex_copy p_nnconvex_constraint in
+	(* Extend number of dimensions *)
+	ippl_nncc_add_dimensions (!px_dim - !p_dim) px_constraint;
+	(* Assert *)
+	nncc_assert_dimensions !px_dim px_constraint;
+	(* Return *)
+	px_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
