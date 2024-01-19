@@ -83,16 +83,29 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 		(* Case 1: target state found: return the associated constraint *)
 		if State.match_state_predicate model state_predicate symbolic_state then(
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message Verbose_low ("Target state found");
+				self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
+			);
+
 			(* Return the constraint projected onto the parameters *)
 			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 		)else(
 			(* Case 2: state already met *)
 			if List.mem state_index passed then(
+
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
+				);
+
 				(* Return false *)
 				LinearConstraint.false_p_nnconvex_constraint ()
 			)else(
 				(* Instantiate local variables *)
-				let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.true_p_nnconvex_constraint () in
+				let k		: LinearConstraint.p_nnconvex_constraint ref  = ref (LinearConstraint.true_p_nnconvex_constraint ()) in
 				let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
 				(* Compute all successors via all possible outgoing transitions *)
@@ -113,37 +126,95 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 						-> state_index
 					in
 
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
+					);
+
 					(* Add the transition to the state space *)
 					state_space#add_transition (state_index, combined_transition, successor_state_index);
 
 
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message_newline Verbose_high ("Calling recursively AF(" ^ (string_of_int successor_state_index) ^ ")…");
+					);
+
 					(* Recursive call to AF on the successor *)
 					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor_state_index (state_index :: passed) in
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message_newline Verbose_high ("Result of AF(" ^ (string_of_int successor_state_index) ^ "):");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
+					);
 
 					(* k_block <- T \ successor|_P *)
 					let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
 					LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
 
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message_newline Verbose_high ("Blocking constraint:");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block);
+					);
+
 					(* K <- K ^ (k_good U k_block) *)
 					LinearConstraint.p_nnconvex_union_assign k_good k_block;
-					LinearConstraint.p_nnconvex_intersection_assign k k_good;
+					LinearConstraint.p_nnconvex_intersection_assign (!k) k_good;
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high ("k:");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names (!k));
+					);
 
 					(* k_live <- k_live U (C ^ g)\past *)
 					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index);
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high ("k_live:");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names k_live);
+					);
 
 					()
 				) transitions_and_successors_list;
 				(* End for each successor *)
 
-				(* k <- k \ (True \ k_live)|_P *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message_newline Verbose_high ("Finalizing the result of AF(" ^ (string_of_int state_index) ^ ")…");
+				);
+
+(*				(* k <- k \ (True \ k_live)|_P *)
 				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
 				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
 				(*** TODO: intersect with parameters_consistent_with_init first? ***)
 				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
-				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
+				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;*)
+
+				(* k <- (k \ (True \ k_live))|_P *)
+				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
+				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
+				let px_k : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_p_nnconvex_constraint (!k) in
+				(*** TODO: intersect with parameters_consistent_with_init first? ***)
+				LinearConstraint.px_nnconvex_difference_assign px_k not_k_live;
+				k := LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse px_k;
+
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high ("Negation of k_live");
+					self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names not_k_live);
+				);
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message_newline Verbose_medium ("Final constraint in AF(" ^ (string_of_int state_index) ^ ")…");
+					self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names (!k));
+				);
 
 				(* return k *)
-				k
+				!k
 			)
 		)
 
