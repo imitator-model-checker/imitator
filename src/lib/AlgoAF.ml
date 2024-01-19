@@ -62,6 +62,7 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
 (* 	val parameters_consistent_with_init : LinearConstraint.px_linear_constraint = LinearConstraint.px_of_p_constraint model.initial_p_constraint *)
+	val mutable parameters_consistent_with_init : LinearConstraint.p_linear_constraint = LinearConstraint.p_false_constraint () (* Dummy initialization *)
 
 
 	(************************************************************)
@@ -200,7 +201,6 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				(* k <- k \ (C \ k_live)|_P *)
 				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (LinearConstraint.px_copy state_px_constraint) in
 				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
-				(*** TODO: intersect with parameters_consistent_with_init first? ***)
 				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
 				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
 
@@ -219,6 +219,10 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 					self#print_algo_message Verbose_high ("Projection of not(k_live)");
 					self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_not_k_live);
 				);
+
+				(* Intersect with initial parameter domain *)
+				LinearConstraint.p_nnconvex_p_intersection_assign k parameters_consistent_with_init;
+
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					self#print_algo_message_newline Verbose_medium ("Final constraint in AF(" ^ (string_of_int state_index) ^ ")…");
@@ -261,6 +265,10 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 		(* Increment the number of computed states *)
 		state_space#increment_nb_gen_states;
+
+		(* Update initial parameter constraint *)
+		let initial_px_constraint = initial_state.px_constraint in
+		parameters_consistent_with_init <- LinearConstraint.px_hide_nonparameters_and_collapse initial_px_constraint;
 
 		(* Main call to the AF dedicated function *)
 		synthesized_constraint <- self#af_rec init_state_index [];
