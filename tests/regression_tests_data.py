@@ -16224,7 +16224,6 @@ END CONSTRAINT
 BEGIN CONSTRAINT
 p = 5
 END CONSTRAINT
-
 		"""
 			} # end result file
 			,
@@ -16256,7 +16255,6 @@ BEGIN CONSTRAINT
  & 5 > p2
  & p1 = 5
 END CONSTRAINT
-
 		"""
 			} # end result file
 			,
@@ -16266,6 +16264,59 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-loop.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 6
+ & 9 > p
+ OR
+   p > 5
+ & 6 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop for all valuations',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-loop-false.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop-false.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
