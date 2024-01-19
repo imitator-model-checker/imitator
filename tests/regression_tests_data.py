@@ -16208,6 +16208,36 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-simple.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple.res' , 'content' : """
+BEGIN CONSTRAINT
+  5 >= p
+ & p > 2
+ OR
+   2 > p
+ & p >= 0
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
