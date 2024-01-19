@@ -105,7 +105,7 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				LinearConstraint.false_p_nnconvex_constraint ()
 			)else(
 				(* Instantiate local variables *)
-				let k		: LinearConstraint.p_nnconvex_constraint ref  = ref (LinearConstraint.true_p_nnconvex_constraint ()) in
+				let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in
 				let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
 				(* Compute all successors via all possible outgoing transitions *)
@@ -161,20 +161,30 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 
 					(* K <- K ^ (k_good U k_block) *)
 					LinearConstraint.p_nnconvex_union_assign k_good k_block;
-					LinearConstraint.p_nnconvex_intersection_assign (!k) k_good;
+					LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
 						self#print_algo_message Verbose_high ("k:");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names (!k));
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 					);
 
 					(* k_live <- k_live U (C ^ g)\past *)
-					LinearConstraint.px_nnconvex_px_union_assign k_live (DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index);
+					let eventually_exiting_valuations = DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index in
+
+					(*** TEST: intersect with C ***)
+					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint];
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high ("k_live:");
+						self#print_algo_message Verbose_high ("Eventually exiting valuations:");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names eventually_exiting_valuations);
+					);
+					LinearConstraint.px_nnconvex_px_union_assign k_live eventually_exiting_valuations;
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high ("k_live after adding exiting valuations:");
 						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names k_live);
 					);
 
@@ -187,34 +197,36 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 					self#print_algo_message_newline Verbose_high ("Finalizing the result of AF(" ^ (string_of_int state_index) ^ ")…");
 				);
 
-(*				(* k <- k \ (True \ k_live)|_P *)
-				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
+				(* k <- k \ (C \ k_live)|_P *)
+				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (LinearConstraint.px_copy state_px_constraint) in
 				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
 				(*** TODO: intersect with parameters_consistent_with_init first? ***)
 				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
-				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;*)
+				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
 
-				(* k <- (k \ (True \ k_live))|_P *)
+(*				(* k <- (k \ (True \ k_live))|_P *)
 				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
 				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
 				let px_k : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_p_nnconvex_constraint (!k) in
 				(*** TODO: intersect with parameters_consistent_with_init first? ***)
 				LinearConstraint.px_nnconvex_difference_assign px_k not_k_live;
-				k := LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse px_k;
+				k := LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse px_k;*)
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message Verbose_high ("Negation of k_live");
 					self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names not_k_live);
+					self#print_algo_message Verbose_high ("Projection of not(k_live)");
+					self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_not_k_live);
 				);
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					self#print_algo_message_newline Verbose_medium ("Final constraint in AF(" ^ (string_of_int state_index) ^ ")…");
-					self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names (!k));
+					self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 				);
 
 				(* return k *)
-				!k
+				k
 			)
 		)
 
