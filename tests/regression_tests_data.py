@@ -16317,6 +16317,33 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with negative flows and deadlock',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-negflow.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+  15 >= p1
+ & p1 >= 0
+ & p2 > 5 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
