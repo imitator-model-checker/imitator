@@ -172,8 +172,8 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 					(* k_live <- k_live U (C ^ g)\past *)
 					let eventually_exiting_valuations = DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index in
 
-					(*** TEST: intersect with C ***)
-					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint];
+					(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
+(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
