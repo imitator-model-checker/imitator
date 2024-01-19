@@ -62,6 +62,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		controllable_actions	= merged_controllable_actions;
 		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
 		fun_definitions = 		List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
+        template_definitions    = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
 		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
@@ -72,7 +73,8 @@ let unzip l = List.fold_left
 	{
 		controllable_actions	= Parsed_no_controllable_actions;
 		variable_declarations	= [];
-    fun_definitions = [];
+        fun_definitions = [];
+        template_definitions = [];
 		automata				= [];
 		init_definition			= [];
 	}
@@ -109,7 +111,7 @@ let unzip l = List.fold_left
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
-	CT_THEN CT_TO CT_TRUE
+	CT_TEMPLATE CT_THEN CT_TO CT_TRUE
 	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
@@ -139,25 +141,26 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists automata init_definition_option
+	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions	= $1 in
 		let declarations			= $3 in
 		let fun_definitions 		= $4 in
-		let automata				= $5 in
-		let init_definition			= $6 in
+        let template_definitions    = $5 in
+		let automata				= $6 in
+		let init_definition			= $7 in
 
 		let main_model =
 		{
 			controllable_actions	= controllable_actions;
 			variable_declarations	= declarations;
 			fun_definitions			= fun_definitions;
+            template_definitions    = template_definitions;
 			automata				= automata;
 			init_definition			= init_definition;
 		}
 		in
-
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
@@ -368,6 +371,41 @@ loop_dir:
   | CT_TO { Parsed_for_loop_up }
   | CT_DOWNTO { Parsed_for_loop_down }
 ;
+
+/************************************************************/
+
+/************************************************************
+  TEMPLATE
+************************************************************/
+
+/************************************************************/
+
+template_defs:
+    | template_def template_defs { $1 :: $2 }
+    | { [] }
+;
+
+template_def:
+    | CT_TEMPLATE NAME LPAREN template_parameter_list RPAREN prolog locations CT_END {
+        let body = ($6, $7) in
+        { template_name       = $2
+        ; template_parameters = List.rev $4
+        ; template_body       = body
+        }
+    }
+;
+
+template_parameter_list:
+    | { [] }
+    | template_parameter_nonempty_list { $1 }
+;
+
+/* TODO: var_type correctly represents the types accepted by templates? */
+template_parameter_nonempty_list:
+    | NAME COLON var_type { [(($1, Parsing.symbol_start ()), $3)] }
+    | template_parameter_list COMMA NAME COLON var_type { (($3, Parsing.symbol_start ()), $5) :: $1 }
+;
+
 
 /************************************************************/
 

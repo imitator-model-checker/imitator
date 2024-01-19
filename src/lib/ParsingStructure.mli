@@ -17,6 +17,7 @@
 
 type variable_index = int
 type automaton_name	= string
+type template_name	= string
 type location_name	= string
 type action_name	= string
 
@@ -240,6 +241,11 @@ type parsed_location = {
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
 
+type parsed_template_definition = {
+    template_name       : template_name;
+    template_parameters : (variable_ref * DiscreteType.var_type) list; (* TODO: not all types are allowed in templates *)
+    template_body       : action_name list * parsed_location list
+}
 
 
 (****************************************************************)
@@ -277,6 +283,7 @@ type parsed_model = {
 	controllable_actions	: parsed_controllable_actions;
 	variable_declarations	: variable_declarations;
 	fun_definitions         : parsed_fun_definition_list;
+    template_definitions    : parsed_template_definition list;
 	automata				: parsed_automaton list;
 	init_definition			: init_definition;
 }

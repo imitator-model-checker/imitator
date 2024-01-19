@@ -108,6 +108,7 @@ rule token = parse
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
+    | "template"       { CT_TEMPLATE }
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }
 	| "True"           { CT_TRUE }
