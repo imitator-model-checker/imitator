@@ -248,6 +248,10 @@ type parsed_template_definition = {
 }
 
 
+type parsed_template_call =
+ (* name             template used   parameters passed to template *)
+    automaton_name * template_name * (parsed_boolean_expression list)
+
 (****************************************************************)
 (* Init definition *)
 (****************************************************************)
@@ -285,6 +289,7 @@ type parsed_model = {
 	fun_definitions         : parsed_fun_definition_list;
     template_definitions    : parsed_template_definition list;
 	automata				: parsed_automaton list;
+    template_calls          : parsed_template_call list;
 	init_definition			: init_definition;
 }
 

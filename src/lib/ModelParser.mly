@@ -64,6 +64,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		fun_definitions = 		List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
         template_definitions    = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
 		automata				= List.append parsed_model.automata parsed_model_list.automata;
+        template_calls          = List.append parsed_model.template_calls parsed_model_list.template_calls;
 		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
 ;;
@@ -76,6 +77,7 @@ let unzip l = List.fold_left
         fun_definitions = [];
         template_definitions = [];
 		automata				= [];
+        template_calls          = [];
 		init_definition			= [];
 	}
 	(List.rev l)
@@ -141,15 +143,16 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata init_definition_option
+	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
-		let controllable_actions	= $1 in
-		let declarations			= $3 in
-		let fun_definitions 		= $4 in
-        let template_definitions    = $5 in
-		let automata				= $6 in
-		let init_definition			= $7 in
+		let controllable_actions = $1 in
+		let declarations         = $3 in
+		let fun_definitions      = $4 in
+    let template_definitions = $5 in
+		let automata             = $6 in
+    let template_calls       = $7 in
+		let init_definition      = $7 in
 
 		let main_model =
 		{
@@ -158,6 +161,7 @@ main:
 			fun_definitions			= fun_definitions;
             template_definitions    = template_definitions;
 			automata				= automata;
+            template_calls          = template_calls;
 			init_definition			= init_definition;
 		}
 		in
@@ -421,14 +425,27 @@ automata:
 	| { [] }
 ;
 
-
-
 /************************************************************/
 
 automaton:
 	| CT_AUTOMATON NAME prolog locations CT_END
 	{
 		($2, $3, $4)
+	}
+;
+
+/************************************************************/
+
+/************************************************************/
+
+template_calls:
+    | template_call template_calls { $1 :: $2 }
+    | { [] }
+
+template_call:
+	| NAME OP_ASSIGN NAME LPAREN function_argument_fol RPAREN
+	{
+		($1, $3, $5)
 	}
 ;
 
