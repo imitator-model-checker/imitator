@@ -41,7 +41,6 @@ var 	x1, x2
   automaton plant
 (************************************************************)
 actions: startHeating, tooHot, triggerAlarm, startWatering, endWatering, restart;
-initially normal;
 
 loc normal: invariant True
 	when True do {x1 := 0, x2 := 0} sync startHeating goto heating;
