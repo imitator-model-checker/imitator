@@ -678,7 +678,7 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
         | Clock_assignment (clock_index, expr) ->
             json_struct [|
-                json_property "ref" (model.variable_names clock_index);
+                json_property "ref" (json_quoted (model.variable_names clock_index));
                 json_property "value" (DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr)
             |]
 
@@ -1027,8 +1027,13 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
                         jani_boolean_strings.and_operator
                         invariant
                         der_clock
-                else
-                    invariant ^ jani_separator ^ der_clock
+                else (
+                    if invariant <> "" && der_clock = ""
+                        then invariant
+                    else if invariant = "" && der_clock <> ""
+                        then der_clock
+                        else invariant ^ jani_separator ^ der_clock
+                )
             )
         )
 	))
