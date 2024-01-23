@@ -465,10 +465,21 @@ let string_of_array_of_string_with_sep sep a =
 		!the_string ^ a.(length - 1)
 	)
 
+(* Compute the number of non-empty elements in an array *)
+let length_of_array_without_empty_elements a =
+	let classic_array_length = Array.length a in
+	let number_non_empty_elements = ref 0 in
+	for i = 0 to classic_array_length - 1 do
+		if a.(i) <> "" then number_non_empty_elements := (!number_non_empty_elements) + 1;
+	done;
+	!number_non_empty_elements
+
 (* Convert an array of string into a string with separators removing empty strings *)
 let string_of_array_of_string_with_sep_without_empty_strings sep a =
 	let length = Array.length a in
-	if length = 0 then "" else (
+	let number_elements_non_empty = length_of_array_without_empty_elements a in
+	if number_elements_non_empty = 0 then "" else (
+		if number_elements_non_empty = 1 then a.(0) else (
 		let the_string = ref "" in
 		for i = 0 to length - 2 do
 		    let s = a.(i) in
@@ -476,7 +487,7 @@ let string_of_array_of_string_with_sep_without_empty_strings sep a =
 			    the_string := (!the_string) ^ s ^ sep;
 		done;
 		!the_string ^ a.(length - 1)
-	)
+	))
 
 (** Convert a list of string into a string with separators *)
 let rec string_of_list_of_string_with_sep sep = function
