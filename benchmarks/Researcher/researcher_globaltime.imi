@@ -43,16 +43,16 @@ var
 (************************************************************)
   automaton researcher
 (************************************************************)
-actions: done, drink, drunk, restart;
+actions: finished, drink, drunk, restart;
 
 loc working: invariant x <= pTotal
 	when x >= 0.8 pTotal goto workingFast;
-	when x = pTotal sync done do {x := 0, t := 0} goto finished;
+	when x = pTotal sync finished do {x := 0, t := 0} goto finished;
 	when t >= pNeed & nb <= MAXBREAK - 1 sync drink do {t := 0, nb := nb + 1} goto coffeeing;
 
 loc workingFast: invariant x <= pTotal flow{x' = 2}
 	when True goto working;
-	when x = pTotal sync done do {x := 0, t := 0} goto finished;
+	when x = pTotal sync finished do {x := 0, t := 0} goto finished;
 	when t >= 0.6 * pNeed & nb <= MAXBREAK - 1 sync drink do {t := 0, nb := nb + 1} goto coffeeing;
 
 loc coffeeing: invariant t <= pCoffee stop{x}
