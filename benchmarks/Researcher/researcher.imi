@@ -1,23 +1,23 @@
 (*******************************************************************************
- *                                IMITATOR MODEL
- *
+ *                                IMITATOR MODEL                               
+ * 
  * Title            : researcher
  * Description      : Researcher writing papers and drinking coffee
  * Correctness      : Depends on the property
- * Scalable         :
- * Generated        :
+ * Scalable         : 
+ * Generated        : 
  * Categories       : Toy ; Education
  * Source           : Own work
- * bibkey           :
+ * bibkey           : 
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2021/01/26
  * Last modified    : 2023/11/16
- * Model version    :
- *
+ * Model version    : 
+ * 
  * IMITATOR version : 3.4-beta
  ******************************************************************************)
 

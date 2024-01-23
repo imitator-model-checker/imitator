@@ -3,7 +3,7 @@
  * 
  * Title            : BRPAAPP21_GFSinRC
  * Description      : Bounded Retransmission Protocol [version slightly modified]
- * Correctness      :
+ * Correctness      : 
  * Scalable         : yes (numbers of retransmissions and of chunks)
  * Generated        : no
  * Categories       : Protocol
