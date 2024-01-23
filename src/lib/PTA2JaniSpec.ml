@@ -679,7 +679,7 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
         | Clock_assignment (clock_index, expr) ->
             json_struct [|
                 json_property "ref" (json_quoted (model.variable_names clock_index));
-                json_property "value" (DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr)
+                json_property "value" (string_of_rational_arithmetic_expression model.variable_names expr)
             |]
 
         | Local_decl _
