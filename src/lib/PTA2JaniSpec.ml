@@ -693,7 +693,7 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
     let string_of_seq_code_bloc seq_code_bloc =
         let str_instructions = List.map string_of_instruction seq_code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep "" str_instructions
+        OCamlUtilities.string_of_list_of_string_with_sep jani_separator str_instructions
     in
     string_of_seq_code_bloc (* seq_code_bloc *)
 
