@@ -2583,6 +2583,17 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		converted_observer_structure_option
 
 
+(* TODO: Move these somewhere else? *)
+let instantiate_automaton templates parsed_template_call =
+    let user_name, template_called_name, args = parsed_template_call in
+    let template = List.find (fun t -> t.template_name = template_called_name) templates in
+    let actions, locs = template.template_body in
+    failwith "sorry"
+
+
+let instantiate_automata templates insts =
+    List.map (instantiate_automaton templates) insts
+
 (************************************************************)
 (************************************************************)
 (** MODEL AND PROPERTY CONVERSION *)
@@ -2611,6 +2622,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			print_message verbose_level ((string_of_int i) ^ " -> " ^ e)
 		)
 	in
+
+    let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
+    let all_automata = parsed_model.automata @ instantiated_automata in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)

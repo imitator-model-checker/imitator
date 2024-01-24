@@ -442,8 +442,10 @@ template_calls:
     | template_call template_calls { $1 :: $2 }
     | { [] }
 
+/************************************************************/
+
 template_call:
-	| NAME OP_ASSIGN NAME LPAREN function_argument_fol RPAREN
+	| NAME OP_ASSIGN NAME LPAREN function_argument_fol RPAREN SEMICOLON
 	{
 		($1, $3, $5)
 	}

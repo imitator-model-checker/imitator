@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -a
+set -x
 
 # check OS
 case $(uname) in
