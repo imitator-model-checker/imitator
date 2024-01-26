@@ -4,10 +4,10 @@
  * 
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * 
- * Module description: "AF" algorithm (always eventually)
+ * Module description: "AU" algorithm (always … until …)
  * 
  * File contributors : Étienne André
- * Created           : 2024/01/08
+ * Created           : 2024/01/26
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@ open AlgoAUgen
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAF : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
+class algoAF : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
 	object inherit algoAUgen
 		(************************************************************)
 		(* Class variables *)
