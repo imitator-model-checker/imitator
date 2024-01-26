@@ -5,8 +5,6 @@ open State
 open ImitatorUtilities
 open AlgoPTGStrategyGeneratorUtilities
 
-type winning_moves_key = Automaton.action_index * state_index
-
 class virtual ['a, 'b] hashTable = object (self)
   val mutable internal_tbl : ('a, 'b) Hashtbl.t = Hashtbl.create 100
 	method replace key value = Hashtbl.replace internal_tbl key value
@@ -49,89 +47,111 @@ class actionsPerLocation = object
 end
 
 class locationPerStateIndex = object 
-  inherit ([state_index, location_index] hashTable)
-  method bot = -1
+  inherit ([state_index, location_index option] hashTable)
+  method bot = None
 end
 
+type location_info = {
+  invariant : invariant;
+  is_accepting : bool;
+  is_urgent : bool;
+  location_name : location_name;
+}
+let get_location_info_from_state (state_space : stateSpace) (model : abstract_model) state_index : location_info = 
+  let zone = (state_space#get_state state_index).px_constraint in
+  let global_location = state_space#get_location state_index in
+  let locations = DiscreteState.get_locations global_location in 
 
+  let invariant = Continuous_guard (LinearConstraint.pxd_of_px_constraint zone) in
+  let is_accepting = DiscreteState.is_accepting model.is_accepting global_location in
+  let is_urgent = AbstractModelUtilities.is_global_location_urgent model global_location in
+  let location_name = model.location_names 0 (Array.get locations 0) in 
 
-let generate_controller (system_model : AbstractModel.abstract_model) (get_winning_moves : state_index -> winningMovesPerState) (state_space : stateSpace) (options : Options.imitator_options) = 
-  let initial_state_index = state_space#get_initial_state_index in
-  let transitions_description_tbl = Hashtbl.create 100 in
-  let transitions_tbl = new transitionsPerLocation in 
-  let actions_per_location_tbl = new actionsPerLocation in
-  let transition_counter = ref 0 in 
-  let location_counter = ref 0 in 
-  let explored = new stateIndexSet in 
-  let invariants = ref [] in
-  let accepting = ref [] in
-  let urgent = ref [] in
-  let location_names = ref [] in 
-  let location_per_state_index = new locationPerStateIndex in
+  {
+    invariant = invariant;
+    is_accepting;
+    is_urgent;
+    location_name;
+  }
 
-  let get_invariant state_index = 
-    let zone = (state_space#get_state state_index).px_constraint in
-    Continuous_guard (LinearConstraint.pxd_of_px_constraint zone)
-  in
+let cached_array_indexing_from_list list array_opt_ref =
+  match !array_opt_ref with 
+      None -> 
+        let array = new array @@ List.rev !list in 
+        array_opt_ref := Some array;
+        array#get
+    | Some array -> array#get
 
-  let is_accepting state_index = 
-    let global_location = state_space#get_location state_index in
-    DiscreteState.is_accepting system_model.is_accepting global_location 
-  in
-
-  let is_urgent state_index = 
-    let global_location = state_space#get_location state_index in   
-    AbstractModelUtilities.is_global_location_urgent system_model global_location
-  in
-
-  let location_name state_index = 
-    let global_location = state_space#get_location state_index in 
-    let locations = DiscreteState.get_locations global_location in 
-    system_model.location_names 0 (Array.get locations 0)
-  in
-
-  let get_location state_index = 
+class locationManager initial_count state_space model = object
+  val mutable invariants = ref []
+  val mutable accepting = ref []
+  val mutable urgent = ref []
+  val mutable location_names = ref []
+  val mutable location_counter = ref initial_count
+  val location_per_state_index = new locationPerStateIndex
+  method get_location state_index = 
+    match location_per_state_index#find state_index with 
     (* Find it if we already created it *)
-    if location_per_state_index#find state_index != -1 then 
-      location_per_state_index#find state_index
-    else
+      Some location_index -> location_index
+
     (* Otherwise create a new one *)
-      begin 
-        let fresh_loc = !location_counter in
-        location_counter := !location_counter + 1;
-        location_per_state_index#replace state_index fresh_loc;
+    | None ->
+        begin 
+          let fresh_loc = !location_counter in
+          location_counter := !location_counter + 1;
+          location_per_state_index#replace state_index @@ Some fresh_loc;
 
-        let invariant = get_invariant state_index in
-        invariants := invariant::!invariants;
+          let location_info = get_location_info_from_state state_space model state_index in
+          invariants := location_info.invariant::!invariants;
+          accepting := location_info.is_accepting::!accepting;
+          urgent := location_info.is_urgent::!urgent;
+          location_names := location_info.location_name::!location_names;
 
-        let is_accepting = is_accepting state_index in 
-        accepting := is_accepting::!accepting;
+          fresh_loc
+        end;
+  val mutable accepting_array = ref None 
+  val mutable invariants_array = ref None
+  val mutable urgent_array = ref None 
+  val mutable location_names_array = ref None
+  method nb_locations = !location_counter
+  method is_accepting = (fun (_ : state_index) -> cached_array_indexing_from_list accepting accepting_array)
+  method invariants = (fun (_ : state_index) -> cached_array_indexing_from_list invariants invariants_array)
+  method is_urgent =  (fun (_ : state_index) -> cached_array_indexing_from_list urgent urgent_array)
+  method location_names =  (fun (_ : state_index) -> cached_array_indexing_from_list location_names location_names_array)
+end
 
-        let is_urgent = is_urgent state_index in
-        urgent := is_urgent::!urgent;
-
-        let name = location_name state_index in
-        location_names := name::!location_names;
-
-        fresh_loc
-      end;
-  in 
-
-  let add_transition src (transition : transition) = 
+class transitionManager = object 
+  val descriptions = Hashtbl.create 100
+  val mutable transition_counter = ref 0
+  val transitions_per_location = new transitionsPerLocation
+  val actions_per_location = new actionsPerLocation
+  method add_transition (src : location_index) (transition : transition) : unit =
     (* Update transition descriptions *)
-    Hashtbl.add transitions_description_tbl !transition_counter transition;
-    
+    Hashtbl.add descriptions !transition_counter transition;
+
     (* Update transitions table *)
-    let transitions_per_action = transitions_tbl#find src in 
+    let transitions_per_action = transitions_per_location#find src in 
     let transition_list = transitions_per_action#find transition.action in 
     let transition_list' = !transition_counter::transition_list in 
     transitions_per_action#replace transition.action transition_list';
     transition_counter := !transition_counter + 1;
     
     (* Update actions per location table *)
-    let actions = actions_per_location_tbl#find src in 
+    let actions = actions_per_location#find src in 
     actions#add transition.action
-  in 
+  method actions_per_location = (fun (_ : state_index) location_index -> (actions_per_location#find location_index)#all_elements)
+  method transitions = (fun (_ : state_index) location_index action_index -> (transitions_per_location#find location_index)#find action_index)
+  method transitions_description = Hashtbl.find descriptions
+  method nb_transitions = !transition_counter
+end
+
+
+
+let generate_controller (system_model : AbstractModel.abstract_model) (get_winning_moves : state_index -> winningMovesPerState) (state_space : stateSpace) (options : Options.imitator_options) = 
+  let initial_state_index = state_space#get_initial_state_index in
+  let explored = new stateIndexSet in 
+  let location_manager = new locationManager 0 state_space system_model in 
+  let transition_manager = new transitionManager in
 
   (* Name: Winning-move-guided exploration *)
   let rec explore state_index location_index = 
@@ -154,10 +174,10 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
 
     List.iter (
       fun (t,state_index') ->
-        let location_index' = get_location state_index' in             
+        let location_index' = location_manager#get_location state_index' in             
         let old_transition = system_model.transitions_description (List.hd t) in  (* TODO: Generalize to multiple automata *)
         let new_transition = {old_transition with target = location_index'; updates = (No_potential_update, [])} in 
-        add_transition location_index new_transition;
+        transition_manager#add_transition location_index new_transition;
         continue_exploring state_index' location_index'
     ) relevant_uncontrollable_successors;
 
@@ -165,7 +185,7 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     let winning_moves = get_winning_moves state_index in
     winning_moves#iter (
       fun state_index' winning_moves_per_action ->
-        let location_index' = get_location state_index' in   
+        let location_index' = location_manager#get_location state_index' in   
         winning_moves_per_action#iter (
         fun action_index nnconv_constr -> 
         if not @@ LinearConstraint.px_nnconvex_constraint_is_false nnconv_constr then
@@ -180,34 +200,24 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
                 updates = (No_potential_update, []);
                 target = location_index'}
                 ; in
-              add_transition location_index transition
+              transition_manager#add_transition location_index transition
               ) constituent_constrs
           end);
         continue_exploring state_index' location_index'
     )
   in
-  explore initial_state_index (get_location initial_state_index);
-
-  let invariants_array = new array @@ List.rev !invariants in
-  let accepting_array = new array @@ List.rev !accepting in
-  let urgent_array = new array @@ List.rev !urgent in 
-  let location_names_array = new array @@ List.rev !location_names in 
-
-  let location_names = (fun _ location_id -> location_names_array#get location_id ^ "__#" ^ string_of_int location_id) in
-  let actions_per_location = (fun _ -> fun location_index -> (actions_per_location_tbl#find location_index)#all_elements) in
-  let transitions = (fun _ location_index action_index -> (transitions_tbl#find location_index)#find action_index) in
-  let transitions_description = (fun transition_index -> Hashtbl.find transitions_description_tbl transition_index) in
+  explore initial_state_index (location_manager#get_location initial_state_index);
 
   let model = generate_abstract_controller_model system_model 
-    ~nb_locations:!location_counter 
-    ~nb_transitions:!transition_counter
-    ~invariants:(fun _ -> invariants_array#get)
-    ~is_accepting:(fun _ -> accepting_array#get)
-    ~is_urgent:(fun _ -> urgent_array#get)
-    ~location_names
-    ~transitions
-    ~actions_per_location
-    ~transitions_description
+    ~nb_locations: location_manager#nb_locations 
+    ~invariants: location_manager#invariants
+    ~is_accepting: location_manager#is_accepting
+    ~is_urgent: location_manager#is_urgent
+    ~location_names: location_manager#location_names
+    ~nb_transitions: transition_manager#nb_transitions
+    ~transitions: transition_manager#transitions
+    ~actions_per_location: transition_manager#actions_per_location
+    ~transitions_description: transition_manager#transitions_description
   in
 
 
