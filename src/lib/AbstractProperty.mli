@@ -86,7 +86,10 @@ type property =
 	(* Unavoidability *)
 	| AF of state_predicate
 
-	
+	(* Always until *)
+	| AU of state_predicate * state_predicate
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)

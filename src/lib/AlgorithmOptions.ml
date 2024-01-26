@@ -59,6 +59,10 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(*** TODO: decide heuristics ***)
 		-> Equality_check
 
+	(* Always until *)
+	| AU _
+	(*** TODO: decide heuristics ***)
+		-> Equality_check
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -191,6 +195,12 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 
 	(* Unavoidability *)
 	| AF _
+		(*** TODO: decide heuristics ***)
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+	(* Always until *)
+	| AU _
 		(*** TODO: decide heuristics ***)
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
@@ -336,6 +346,10 @@ let merge_needed property =
 
 	(* Unavoidability *)
 	| AF _
+	(*** TODO: decide heuristics ***)
+		-> false
+
+	| AU _
 	(*** TODO: decide heuristics ***)
 		-> false
 
@@ -584,6 +598,8 @@ let supports_witness property =
 	
 	(* Unavoidability *)
 	| AF _
+	(* Always until *)
+	| AU _
 		-> false
 
 	(*------------------------------------------------------------*)
@@ -779,6 +795,9 @@ let text_of_property property =
 
 	(* Unavoidability *)
 	| AF _ -> "unavoidability " ^ synthesis_or_witness
+
+	(* Always until *)
+	| AU _ -> "always until " ^ synthesis_or_witness
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)

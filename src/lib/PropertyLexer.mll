@@ -45,6 +45,7 @@ rule token = parse
  	| "#synth"         { CT_SYNTH }
 
  	(* Keywords for properties *)
+	| "A"              { CT_A }
 	| "AccCycle"       { CT_ACCEPTINGCYCLE }
 	| "AcceptingCycle" { CT_ACCEPTINGCYCLE }
 	| "AccLoop"        { CT_ACCEPTINGCYCLE }
@@ -52,7 +53,6 @@ rule token = parse
 	| "AF"             { CT_AF }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
- 	| "DeadlockFree"   { CT_DEADLOCKFREE }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }
  	| "BClearn"        { CT_BCLEARN }
  	| "BCshuffle"      { CT_BCSHUFFLE }
@@ -61,6 +61,7 @@ rule token = parse
  	| "BCrandomseq"    { CT_BCRANDOMSEQ }
 	| "Cycle"          { CT_INFCYCLE }
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
+ 	| "DeadlockFree"   { CT_DEADLOCKFREE }
 	| "EF"             { CT_EF }
 	| "E"              { CT_E }
 	| "EFpmax"         { CT_EFpmax }

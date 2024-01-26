@@ -1007,6 +1007,9 @@ let string_of_abstract_property model property =
 		(* Unavoidability *)
 		| AF state_predicate -> "AF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
+		(* Always until *)
+		| AU (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)

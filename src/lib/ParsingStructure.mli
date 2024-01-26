@@ -388,13 +388,16 @@ type parsed_property_type =
 	(* Global invariant *)
 	| Parsed_AG of parsed_state_predicate
 
-	(* Until *)
+	(* Exists until *)
 	| Parsed_EU of parsed_state_predicate * parsed_state_predicate
 
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
 	
-	
+	(* Always until *)
+	| Parsed_AU of parsed_state_predicate * parsed_state_predicate
+
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)

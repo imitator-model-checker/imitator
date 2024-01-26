@@ -791,6 +791,13 @@ match options#imitator_mode with
 			| AF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAF model property options state_predicate in myalgo
 
+			(************************************************************)
+			(* Always until *)
+			(************************************************************)
+			| AU (state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAU.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
+
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

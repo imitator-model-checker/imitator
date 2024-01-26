@@ -26,7 +26,7 @@ open AlgoAUgen
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+class algoAU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
 	object (*(self)*) inherit algoAUgen model property options (Some state_predicate_phi) state_predicate_psi (*as super*)
 
 	

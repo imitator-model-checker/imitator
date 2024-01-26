@@ -53,7 +53,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AG CT_AGnot CT_ALWAYS
+	CT_A CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -145,11 +145,14 @@ property:
 	/* Global invariant */
 	| CT_AG state_predicate { Parsed_AG $2 }
 
-	/* Until */
+	/* Exists until */
 	| CT_E state_predicate CT_U state_predicate { Parsed_EU ($2, $4) }
 
 	/* Unavoidability */
 	| CT_AF state_predicate { Parsed_AF $2 }
+
+	/* Always until */
+	| CT_A state_predicate CT_U state_predicate { Parsed_AU ($2, $4) }
 
 
 	/*------------------------------------------------------------*/

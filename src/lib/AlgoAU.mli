@@ -21,7 +21,7 @@ open AlgoAUgen
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAF : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
+class algoAU : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
 	object inherit algoAUgen
 		(************************************************************)
 		(* Class variables *)
