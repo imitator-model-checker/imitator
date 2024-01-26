@@ -37,7 +37,7 @@ class algoAU (model : AbstractModel.abstract_model) (property : AbstractProperty
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AF"
+	method algorithm_name = "AU"
 
 
 (************************************************************)
