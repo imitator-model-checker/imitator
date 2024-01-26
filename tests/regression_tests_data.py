@@ -16085,11 +16085,60 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
 		# Last modified            : 2024/01/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: unsatisfiable initial location',
 		'tags'       : 'AF',
 		'input_files': ['AF/AF-initial-unsatisfiable.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-unsatisfiable.res' , 'content' : """
+Error                                   : unsatisfiable initial conditions
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: unsatisfiable initial location (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial-unsatisfiable.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'AF-initial-unsatisfiable.res' , 'content' : """
@@ -16133,11 +16182,63 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false (no accepting location) (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-false-noaccepting.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
 		# Last modified            : 2024/01/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: initial accepting location restricted by an invariant',
 		'tags'       : 'AF',
 		'input_files': ['AF/AF-initial-invariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-invariant.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 > p
+& p >= 0
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location restricted by an invariant (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial-invariant.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'AF-initial-invariant.res' , 'content' : """
@@ -16186,11 +16287,65 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 10 >= p
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
 		# Last modified            : 2024/01/19
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: no invariant but guard bounded from below',
 		'tags'       : 'AF',
 		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 10 >= p
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
@@ -16238,11 +16393,67 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-simple.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
 		# Last modified            : 2024/01/19
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: simple reachability (variant with 2 parameters)',
 		'tags'       : 'AF',
 		'input_files': ['AF/AF-simple2.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple2.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 > 5
+ & 10 >= p2
+ & p1 = 5
+ OR
+   p2 >= 0
+ & 5 > p2
+ & p1 = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability (variant with 2 parameters)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-simple2.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'AF-simple2.res' , 'content' : """
@@ -16298,11 +16509,65 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-loop.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 6
+ & 9 > p
+ OR
+   p > 5
+ & 6 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
 		# Last modified            : 2024/01/19
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: simple example with a loop for all valuations',
 		'tags'       : 'AF',
 		'input_files': ['AF/AF-loop-false.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop-false.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop for all valuations',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-loop-false.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'AF-loop-false.res' , 'content' : """
@@ -16344,6 +16609,34 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with negative flows and deadlock (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-negflow.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+  15 >= p1
+ & p1 >= 0
+ & p2 > 5 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
