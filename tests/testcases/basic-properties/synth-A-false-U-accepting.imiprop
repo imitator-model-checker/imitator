@@ -1,0 +1,1 @@
+property := #synth A (False) U (accepting);
