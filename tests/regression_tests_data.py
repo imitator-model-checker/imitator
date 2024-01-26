@@ -16637,6 +16637,45 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/26
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AU: simple example',
+		'tags'       : 'AU',
+		'input_files': ['AF/AU-simple1.imi' , 'AF/AU-simple1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AU-simple1.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 > 5
+ & 10 >= p2
+ & p1 = 5
+ OR
+   p2 > 3
+ & 5 > p2
+ & p1 = 5
+ OR
+   p2 > 2
+ & 3 > p2
+ & p1 = 5
+ OR
+   p2 >= 0
+ & 2 > p2
+ & p1 = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# ??
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
