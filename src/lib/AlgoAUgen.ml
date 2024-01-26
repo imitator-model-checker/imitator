@@ -89,8 +89,27 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Return the constraint projected onto the parameters *)
 			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 		)else(
+			(* Case 1b: For AU, if the state does not satisfy phi, then false *)
+			let falsified_phi = match state_predicate_phi_option with
+				(* AF: no phi, no reason to return False *)
+				| None -> false
+				(* AU: some phi *)
+				| Some state_predicate_phi ->
+					(* If unsatisfied: return false *)
+					let unsatisfied = not (State.match_state_predicate model state_predicate_phi symbolic_state) in
+					(* Print some information *)
+					if verbose_mode_greater Verbose_low then(
+						self#print_algo_message Verbose_low ("The state does not match phi: discard!");
+						self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
+					);
+					unsatisfied
+			in
+			if falsified_phi then(
+				(* Return false *)
+				LinearConstraint.false_p_nnconvex_constraint ()
+			)
 			(* Case 2: state already met *)
-			if List.mem state_index passed then(
+			else if List.mem state_index passed then(
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
