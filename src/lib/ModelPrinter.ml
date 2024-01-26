@@ -1001,7 +1001,7 @@ let string_of_abstract_property model property =
 		(* Global invariant *)
 		| AG state_predicate -> "AG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
-		(* Until *)
+		(* Exists until *)
 		| EU (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
 		(* Unavoidability *)
@@ -1009,6 +1009,9 @@ let string_of_abstract_property model property =
 
 		(* Always until *)
 		| AU (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Always weak until *)
+		| AW (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")W(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

@@ -89,6 +89,9 @@ type property =
 	(* Always until *)
 	| AU of state_predicate * state_predicate
 
+	(* Always weak until *)
+	| AW of state_predicate * state_predicate
+
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)

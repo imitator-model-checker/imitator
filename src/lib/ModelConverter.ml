@@ -1893,6 +1893,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* Until *)
 		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		| Parsed_AU (parsed_state_predicate_phi, parsed_state_predicate_psi)
+		| Parsed_AW (parsed_state_predicate_phi, parsed_state_predicate_psi)
 			->
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_phi)
@@ -2251,6 +2252,18 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
 			,
 			None
+
+		(* Always until *)
+		| Parsed_AW (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			(* Return a property and no observer *)
+			AW
+				(PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
 
 
 		(*------------------------------------------------------------*)

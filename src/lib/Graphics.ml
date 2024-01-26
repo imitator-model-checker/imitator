@@ -158,6 +158,7 @@ let get_v0_option = function
 			| EU _
 			| AF _
 			| AU _
+			| AW _
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
@@ -1112,6 +1113,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 
 				| EU (state_predicate_1, state_predicate_2)
 				| AU (state_predicate_1, state_predicate_2)
+				| AW (state_predicate_1, state_predicate_2)
 					-> [state_predicate_1; state_predicate_2]
 
 				| Cycle_through_generalized state_predicate_list

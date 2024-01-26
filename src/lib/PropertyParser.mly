@@ -70,7 +70,7 @@ let resolve_property l =
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_U
 	CT_VALID
-	CT_WIN CT_WITHIN
+	CT_W CT_WIN CT_WITHIN
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -153,6 +153,9 @@ property:
 
 	/* Always until */
 	| CT_A state_predicate CT_U state_predicate { Parsed_AU ($2, $4) }
+
+	/* Always weak until */
+	| CT_A state_predicate CT_W state_predicate { Parsed_AW ($2, $4) }
 
 
 	/*------------------------------------------------------------*/

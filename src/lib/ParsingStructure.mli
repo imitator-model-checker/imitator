@@ -397,6 +397,9 @@ type parsed_property_type =
 	(* Always until *)
 	| Parsed_AU of parsed_state_predicate * parsed_state_predicate
 
+	(* Always weak until *)
+	| Parsed_AW of parsed_state_predicate * parsed_state_predicate
+
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)

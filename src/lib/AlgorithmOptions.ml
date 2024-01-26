@@ -64,6 +64,11 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(*** TODO: decide heuristics ***)
 		-> Equality_check
 
+	(* Always weak until *)
+	| AW _
+	(*** TODO: decide heuristics ***)
+		-> Equality_check
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
@@ -205,6 +210,12 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 
+	(* Always weak until *)
+	| AW _
+		(*** TODO: decide heuristics ***)
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
@@ -340,7 +351,7 @@ let merge_needed property =
 	(* Global invariant *)
 	| AG _
 
-	(* Until *)
+	(* Exists until *)
 	| EU _
 		-> true
 
@@ -349,7 +360,13 @@ let merge_needed property =
 	(*** TODO: decide heuristics ***)
 		-> false
 
+	(* Always until *)
 	| AU _
+	(*** TODO: decide heuristics ***)
+		-> false
+
+	(* Always weak until *)
+	| AW _
 	(*** TODO: decide heuristics ***)
 		-> false
 
@@ -600,6 +617,8 @@ let supports_witness property =
 	| AF _
 	(* Always until *)
 	| AU _
+	(* Always weak until *)
+	| AW _
 		-> false
 
 	(*------------------------------------------------------------*)
@@ -790,7 +809,7 @@ let text_of_property property =
 	(* Global invariant *)
 	| AG _ -> "global invariant " ^ synthesis_or_witness
 
-	(* Until *)
+	(* Exists until *)
 	| EU _ -> "until " ^ synthesis_or_witness
 
 	(* Unavoidability *)
@@ -798,6 +817,9 @@ let text_of_property property =
 
 	(* Always until *)
 	| AU _ -> "always until " ^ synthesis_or_witness
+
+	(* Always weak until *)
+	| AW _ -> "always weak until " ^ synthesis_or_witness
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)

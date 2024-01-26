@@ -80,6 +80,7 @@ rule token = parse
  	| "TracePreservation" { CT_TRACEPRESERVATION }
 	| "U"              { CT_U }
  	| "Valid"          { CT_VALID }
+	| "W"              { CT_W }
 
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }

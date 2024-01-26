@@ -779,7 +779,7 @@ match options#imitator_mode with
 
 
 			(************************************************************)
-			(* Until *)
+			(* Exists until *)
 			(************************************************************)
 			| EU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo
@@ -791,11 +791,20 @@ match options#imitator_mode with
 			| AF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAF model property options state_predicate in myalgo
 
+
 			(************************************************************)
 			(* Always until *)
 			(************************************************************)
 			| AU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAU.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
+
+			(************************************************************)
+			(* Always weak until *)
+			(************************************************************)
+			| AW (state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAW.algoAW model property options state_predicate_phi state_predicate_psi in
+					raise (NotImplemented "AW not implemented")
+(* 				myalgo *)
 
 
 
