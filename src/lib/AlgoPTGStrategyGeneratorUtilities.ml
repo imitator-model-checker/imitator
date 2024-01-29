@@ -228,9 +228,9 @@ let generate_simple_model (system_model : abstract_model)
     transitions;
     transitions_description;
     automaton_of_transition = (fun _ -> 0);
-    initial_location = DiscreteState.make_location [] [];
-    initial_constraint = LinearConstraint.px_false_constraint();
-    initial_p_constraint = LinearConstraint.p_false_constraint();
+    initial_location = DiscreteState.make_location [(0,0)] [];
+    initial_constraint = system_model.initial_constraint;
+    initial_p_constraint = system_model.initial_p_constraint;
   }
 
 let generate_abstract_controller_model (system_model : abstract_model)
