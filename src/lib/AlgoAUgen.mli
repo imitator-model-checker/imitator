@@ -21,7 +21,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoAUgen : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
+class virtual algoAUgen : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> bool -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)

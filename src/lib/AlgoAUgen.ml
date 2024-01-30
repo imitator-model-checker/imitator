@@ -31,7 +31,7 @@ open Result
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoAUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
+class virtual algoAUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (weak : bool) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
 	object (self) inherit algoGeneric model options (*as super*)
 
 	
@@ -111,13 +111,26 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Case 2: state already met *)
 			else if List.mem state_index passed then(
 
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
-				);
+				(* If weak version: loop (necessarily over phi) => found good valuations! *)
+				if weak then(
+					(* Print some information *)
+					if verbose_mode_greater Verbose_low then(
+						self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
+					);
 
-				(* Return false *)
-				LinearConstraint.false_p_nnconvex_constraint ()
+					(* Return the state constraint *)
+					LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
+
+				(* Normal version: a loop means False *)
+				)else(
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
+					);
+
+					(* Return false *)
+					LinearConstraint.false_p_nnconvex_constraint ()
+				)
 			)else(
 				(* Instantiate local variables *)
 				let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in

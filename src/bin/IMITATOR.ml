@@ -802,9 +802,7 @@ match options#imitator_mode with
 			(* Always weak until *)
 			(************************************************************)
 			| AW (state_predicate_phi, state_predicate_psi) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAW.algoAW model property options state_predicate_phi state_predicate_psi in
-					raise (NotImplemented "AW not implemented")
-(* 				myalgo *)
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAW.algoAW model property options state_predicate_phi state_predicate_psi in myalgo
 
 
 

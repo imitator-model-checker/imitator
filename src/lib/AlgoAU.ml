@@ -27,7 +27,7 @@ open AlgoAUgen
 (************************************************************)
 (************************************************************)
 class algoAU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAUgen model property options (Some state_predicate_phi) state_predicate_psi (*as super*)
+	object (*(self)*) inherit algoAUgen model property options false (Some state_predicate_phi) state_predicate_psi (*as super*)
 
 	
 	(************************************************************)
