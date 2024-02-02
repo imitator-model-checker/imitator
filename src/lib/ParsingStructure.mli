@@ -66,7 +66,7 @@ type parsed_boolean_expression =
 	| Parsed_discrete_bool_expr of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
-    | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
+  | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
 	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -99,7 +99,7 @@ and parsed_discrete_factor =
 	| Parsed_variable of variable_ref
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
-    | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+  | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_nested_expr of parsed_discrete_arithmetic_expression
 	| Parsed_unary_min of parsed_discrete_factor
 	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
@@ -247,10 +247,15 @@ type parsed_template_definition = {
     template_body       : action_name list * parsed_location list
 }
 
+type parsed_template_arg =
+  | ARG_NAME  of string
+  | ARG_INT   of NumConst.t
+  | ARG_FLOAT of NumConst.t
+  | ARG_BOOL  of bool
 
 type parsed_template_call =
  (* name             template used   parameters passed to template *)
-    automaton_name * template_name * (parsed_boolean_expression list)
+    automaton_name * template_name * (parsed_template_arg list)
 
 (****************************************************************)
 (* Init definition *)
