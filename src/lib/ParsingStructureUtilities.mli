@@ -57,6 +57,24 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
+type parsing_structure_leaf_modifier =
+  { variable_modifier : variable_ref -> variable_ref
+  ; constant_modifier : ParsedValue.parsed_value -> ParsedValue.parsed_value
+  ; fun_modifier      : variable_name -> variable_name
+  }
+
+val map_parsed_boolean_expression : parsing_structure_leaf_modifier -> parsed_boolean_expression -> parsed_boolean_expression
+val map_parsed_discrete_boolean_expression : parsing_structure_leaf_modifier -> parsed_discrete_boolean_expression -> parsed_discrete_boolean_expression
+val map_parsed_discrete_arithmetic_expression : parsing_structure_leaf_modifier -> parsed_discrete_arithmetic_expression -> parsed_discrete_arithmetic_expression
+val map_parsed_discrete_term : parsing_structure_leaf_modifier -> parsed_discrete_term -> parsed_discrete_term
+val map_parsed_discrete_factor : parsing_structure_leaf_modifier -> parsed_discrete_factor -> parsed_discrete_factor
+
+val fold_parsed_boolean_expression : ('a -> 'a -> 'a) -> 'a -> 'a parsing_structure_leaf_callback -> parsed_boolean_expression -> 'a
+val fold_parsed_discrete_boolean_expression : ('a -> 'a -> 'a) -> 'a -> 'a parsing_structure_leaf_callback -> parsed_discrete_boolean_expression -> 'a
+val fold_parsed_discrete_arithmetic_expression : ('a -> 'a -> 'a) -> 'a -> 'a parsing_structure_leaf_callback -> parsed_discrete_arithmetic_expression -> 'a
+val fold_parsed_discrete_term : ('a -> 'a -> 'a) -> 'a -> 'a parsing_structure_leaf_callback -> parsed_discrete_term -> 'a
+val fold_parsed_discrete_factor : ('a -> 'a -> 'a) -> 'a -> 'a parsing_structure_leaf_callback -> parsed_discrete_factor -> 'a
+
 val fold_parsed_seq_code_bloc : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_seq_code_bloc -> 'a
 val fold_parsed_fun_def : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> parsed_fun_definition -> 'a
 val fold_parsed_normal_update : ('a -> 'a -> 'a) -> 'a -> ?decl_callback:'a variable_declaration_callback -> 'a seq_code_bloc_leaf_callback -> 'a parsing_structure_leaf_callback -> normal_update -> 'a

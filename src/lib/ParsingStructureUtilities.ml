@@ -59,6 +59,71 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
+(* Apply a function inside a parsing structure, modifying its leafs *)
+
+type parsing_structure_leaf_modifier =
+  { variable_modifier : variable_ref -> variable_ref
+  ; constant_modifier : ParsedValue.parsed_value -> ParsedValue.parsed_value
+  ; fun_modifier      : variable_name -> variable_name
+  }
+
+let rec map_parsed_boolean_expression leaf_mod = function
+  | Parsed_conj_dis (e1, e2, c) ->
+      let e1' = map_parsed_boolean_expression leaf_mod e1 in
+      let e2' = map_parsed_boolean_expression leaf_mod e2 in
+      Parsed_conj_dis (e1', e2', c)
+	| Parsed_discrete_bool_expr e ->
+    Parsed_discrete_bool_expr (map_parsed_discrete_boolean_expression leaf_mod e)
+
+and map_parsed_discrete_boolean_expression leaf_mod = function
+  | Parsed_arithmetic_expr e -> Parsed_arithmetic_expr (map_parsed_discrete_arithmetic_expression leaf_mod e)
+	| Parsed_comparison (e1, op, e2) ->
+      let e1' = map_parsed_discrete_boolean_expression leaf_mod e1 in
+      let e2' = map_parsed_discrete_boolean_expression leaf_mod e2 in
+      Parsed_comparison (e1', op, e2')
+	| Parsed_comparison_in (e1, e2, e3) ->
+      let e1' = map_parsed_discrete_arithmetic_expression leaf_mod e1 in
+      let e2' = map_parsed_discrete_arithmetic_expression leaf_mod e2 in
+      let e3' = map_parsed_discrete_arithmetic_expression leaf_mod e3 in
+      Parsed_comparison_in (e1', e2', e3')
+	| Parsed_nested_bool_expr e -> Parsed_nested_bool_expr (map_parsed_boolean_expression leaf_mod e)
+	| Parsed_not e -> Parsed_not (map_parsed_boolean_expression leaf_mod e)
+
+and map_parsed_discrete_arithmetic_expression leaf_mod = function
+  | Parsed_sum_diff (e, t, sum_diff) ->
+      let e' = map_parsed_discrete_arithmetic_expression leaf_mod e in
+      let t' = map_parsed_discrete_term leaf_mod t in
+      Parsed_sum_diff (e', t', sum_diff)
+  | Parsed_term t -> Parsed_term (map_parsed_discrete_term leaf_mod t)
+
+and map_parsed_discrete_term leaf_mod = function
+  | Parsed_product_quotient (t, f, product_quotient) ->
+      let t' = map_parsed_discrete_term leaf_mod t in
+      let f' = map_parsed_discrete_factor leaf_mod f in
+      Parsed_product_quotient (t', f', product_quotient)
+  | Parsed_factor f -> Parsed_factor (map_parsed_discrete_factor leaf_mod f)
+
+and map_parsed_discrete_factor leaf_mod =
+  function
+    | Parsed_variable variable_ref ->
+        Parsed_variable (leaf_mod.variable_modifier variable_ref)
+    | Parsed_constant value -> Parsed_constant (leaf_mod.constant_modifier value)
+    | Parsed_sequence (expr_list, tp) ->
+        let expr_list' = List.map (map_parsed_boolean_expression leaf_mod) expr_list in
+        Parsed_sequence (expr_list', tp)
+    | Parsed_access (factor, pos) ->
+        let factor' = map_parsed_discrete_factor leaf_mod factor in
+        let pos' = map_parsed_discrete_arithmetic_expression leaf_mod pos in
+        Parsed_access (factor', pos')
+    | Parsed_nested_expr expr ->
+        let expr' = map_parsed_discrete_arithmetic_expression leaf_mod expr in
+        Parsed_nested_expr expr'
+    | Parsed_unary_min factor -> map_parsed_discrete_factor leaf_mod factor
+    | Parsed_function_call (name, args) ->
+        let args' = List.map (map_parsed_boolean_expression leaf_mod) args in
+        let name' = leaf_mod.fun_modifier name in
+        Parsed_function_call (name', args')
+
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
 let rec fold_parsed_boolean_expression operator base leaf_fun = function
