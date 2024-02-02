@@ -57,11 +57,7 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
-type parsing_structure_leaf_modifier =
-  { variable_modifier : variable_ref -> variable_ref
-  ; constant_modifier : ParsedValue.parsed_value -> ParsedValue.parsed_value
-  ; fun_modifier      : variable_name -> variable_name
-  }
+type parsing_structure_leaf_modifier = parsing_structure_leaf -> parsing_structure_leaf
 
 val map_parsed_boolean_expression : parsing_structure_leaf_modifier -> parsed_boolean_expression -> parsed_boolean_expression
 val map_parsed_discrete_boolean_expression : parsing_structure_leaf_modifier -> parsed_discrete_boolean_expression -> parsed_discrete_boolean_expression

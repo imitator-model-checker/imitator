@@ -61,11 +61,7 @@ type 'a variable_declaration_callback = (variable_name * var_type_discrete * int
 
 (* Apply a function inside a parsing structure, modifying its leafs *)
 
-type parsing_structure_leaf_modifier =
-  { variable_modifier : variable_ref -> variable_ref
-  ; constant_modifier : ParsedValue.parsed_value -> ParsedValue.parsed_value
-  ; fun_modifier      : variable_name -> variable_name
-  }
+type parsing_structure_leaf_modifier = parsing_structure_leaf -> parsing_structure_leaf
 
 let rec map_parsed_boolean_expression leaf_mod = function
   | Parsed_conj_dis (e1, e2, c) ->
@@ -105,9 +101,18 @@ and map_parsed_discrete_term leaf_mod = function
 
 and map_parsed_discrete_factor leaf_mod =
   function
-    | Parsed_variable variable_ref ->
-        Parsed_variable (leaf_mod.variable_modifier variable_ref)
-    | Parsed_constant value -> Parsed_constant (leaf_mod.constant_modifier value)
+    | Parsed_variable variable_ref -> begin
+        match leaf_mod (Leaf_variable variable_ref) with
+          | Leaf_variable variable_ref' -> Parsed_variable variable_ref'
+          | Leaf_constant value -> Parsed_constant value
+          | Leaf_fun name -> Parsed_function_call (name, []) (* ? what do we do here *)
+        end
+    | Parsed_constant value -> begin
+      match leaf_mod (Leaf_constant value) with
+        | Leaf_variable variable_ref -> Parsed_variable variable_ref
+        | Leaf_constant value' -> Parsed_constant value'
+        | Leaf_fun name -> Parsed_function_call (name, [])  (* ... *)
+      end
     | Parsed_sequence (expr_list, tp) ->
         let expr_list' = List.map (map_parsed_boolean_expression leaf_mod) expr_list in
         Parsed_sequence (expr_list', tp)
@@ -120,9 +125,12 @@ and map_parsed_discrete_factor leaf_mod =
         Parsed_nested_expr expr'
     | Parsed_unary_min factor -> map_parsed_discrete_factor leaf_mod factor
     | Parsed_function_call (name, args) ->
-        let args' = List.map (map_parsed_boolean_expression leaf_mod) args in
-        let name' = leaf_mod.fun_modifier name in
-        Parsed_function_call (name', args')
+        match leaf_mod (Leaf_fun name) with
+          | Leaf_variable variable_ref -> Parsed_variable variable_ref
+          | Leaf_constant value -> Parsed_constant value
+          | Leaf_fun name' ->
+              let args' = List.map (map_parsed_boolean_expression leaf_mod) args in
+              Parsed_function_call (name', args')
 
 (** Fold a parsing structure using operator applying custom function on leafs **)
 
