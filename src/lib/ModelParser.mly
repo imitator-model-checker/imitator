@@ -59,26 +59,26 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		in
 
 	{
-		controllable_actions	= merged_controllable_actions;
-		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
-		fun_definitions = 		List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
-        template_definitions    = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
-		automata				= List.append parsed_model.automata parsed_model_list.automata;
-        template_calls          = List.append parsed_model.template_calls parsed_model_list.template_calls;
-		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
+		controllable_actions  = merged_controllable_actions;
+		variable_declarations = List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
+		fun_definitions       = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
+    template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+		automata              = List.append parsed_model.automata parsed_model_list.automata;
+    template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+		init_definition       = List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-		controllable_actions	= Parsed_no_controllable_actions;
-		variable_declarations	= [];
-        fun_definitions = [];
-        template_definitions = [];
-		automata				= [];
-        template_calls          = [];
-		init_definition			= [];
+		controllable_actions  = Parsed_no_controllable_actions;
+		variable_declarations = [];
+    fun_definitions       = [];
+    template_definitions  = [];
+		automata              = [];
+    template_calls        = [];
+		init_definition       = [];
 	}
 	(List.rev l)
 ;;
@@ -156,13 +156,13 @@ main:
 
 		let main_model =
 		{
-			controllable_actions	= controllable_actions;
-			variable_declarations	= declarations;
-			fun_definitions			= fun_definitions;
-            template_definitions    = template_definitions;
-			automata				= automata;
-            template_calls          = template_calls;
-			init_definition			= init_definition;
+			controllable_actions  = controllable_actions;
+			variable_declarations = declarations;
+			fun_definitions       = fun_definitions;
+      template_definitions  = template_definitions;
+			automata              = automata;
+      template_calls        = template_calls;
+			init_definition       = init_definition;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -379,37 +379,71 @@ loop_dir:
 /************************************************************/
 
 /************************************************************
-  TEMPLATE
+  TEMPLATES
 ************************************************************/
 
 /************************************************************/
 
 template_defs:
-    | template_def template_defs { $1 :: $2 }
-    | { [] }
+  | template_def template_defs { $1 :: $2 }
+  | { [] }
 ;
+
+/************************************************************/
 
 template_def:
-    | CT_TEMPLATE NAME LPAREN template_parameter_list RPAREN prolog locations CT_END {
-        let body = ($6, $7) in
-        { template_name       = $2
-        ; template_parameters = List.rev $4
-        ; template_body       = body
-        }
-    }
+  | CT_TEMPLATE NAME LPAREN template_parameter_list RPAREN prolog locations CT_END {
+      let body = ($6, $7) in
+      { template_name       = $2
+      ; template_parameters = List.rev $4
+      ; template_body       = body
+      }
+  }
 ;
 
+/************************************************************/
+
 template_parameter_list:
-    | { [] }
-    | template_parameter_nonempty_list { $1 }
+  | { [] }
+  | template_parameter_nonempty_list { $1 }
 ;
+
+/************************************************************/
 
 /* TODO: var_type correctly represents the types accepted by templates? */
 template_parameter_nonempty_list:
-    | NAME COLON var_type { [(($1, Parsing.symbol_start ()), $3)] }
-    | template_parameter_list COMMA NAME COLON var_type { (($3, Parsing.symbol_start ()), $5) :: $1 }
+  | NAME COLON var_type { [(($1, Parsing.symbol_start ()), $3)] }
+  | template_parameter_nonempty_list COMMA NAME COLON var_type { (($3, Parsing.symbol_start ()), $5) :: $1 }
 ;
 
+/************************************************************/
+
+template_calls:
+  | template_call template_calls { $1 :: $2 }
+  | { [] }
+;
+
+/************************************************************/
+
+template_call:
+	| NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+	{
+		($1, $3, $5)
+	}
+;
+
+template_args_list:
+  | { [] }
+  | template_args_nonempty_list { $1 }
+;
+
+template_args_nonempty_list:
+  | template_args_nonempty_list COMMA NAME     { ARG_NAME $3 :: $1 }
+  | template_args_nonempty_list COMMA integer  { ARG_INT $3 :: $1 }
+  | template_args_nonempty_list COMMA float    { ARG_FLOAT $3 :: $1 }
+  | template_args_nonempty_list COMMA CT_TRUE  { ARG_BOOL true :: $1 }
+  | template_args_nonempty_list COMMA CT_FALSE { ARG_BOOL false :: $1 }
+;
 
 /************************************************************/
 
@@ -431,23 +465,6 @@ automaton:
 	| CT_AUTOMATON NAME prolog locations CT_END
 	{
 		($2, $3, $4)
-	}
-;
-
-/************************************************************/
-
-/************************************************************/
-
-template_calls:
-    | template_call template_calls { $1 :: $2 }
-    | { [] }
-
-/************************************************************/
-
-template_call:
-	| NAME OP_ASSIGN NAME LPAREN function_argument_fol RPAREN SEMICOLON
-	{
-		($1, $3, $5)
 	}
 ;
 
