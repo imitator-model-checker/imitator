@@ -59,7 +59,7 @@ type 'a linear_expression_leaf_callback = linear_expression_leaf -> 'a
 
 type 'a variable_declaration_callback = (variable_name * var_type_discrete * int -> 'a) option
 
-(* Apply a function inside a parsing structure, modifying its leafs *)
+(** Apply a function inside a parsing structure, modifying its leafs *)
 
 type parsing_structure_leaf_modifier = parsing_structure_leaf -> parsing_structure_leaf
 
@@ -105,13 +105,13 @@ and map_parsed_discrete_factor leaf_mod =
         match leaf_mod (Leaf_variable variable_ref) with
           | Leaf_variable variable_ref' -> Parsed_variable variable_ref'
           | Leaf_constant value -> Parsed_constant value
-          | Leaf_fun name -> Parsed_function_call (name, []) (* ? what do we do here *)
+          | Leaf_fun name -> Parsed_function_call (name, [])
         end
     | Parsed_constant value -> begin
       match leaf_mod (Leaf_constant value) with
         | Leaf_variable variable_ref -> Parsed_variable variable_ref
         | Leaf_constant value' -> Parsed_constant value'
-        | Leaf_fun name -> Parsed_function_call (name, [])  (* ... *)
+        | Leaf_fun name -> Parsed_function_call (name, [])
       end
     | Parsed_sequence (expr_list, tp) ->
         let expr_list' = List.map (map_parsed_boolean_expression leaf_mod) expr_list in
