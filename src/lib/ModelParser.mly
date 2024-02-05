@@ -438,11 +438,16 @@ template_args_list:
 ;
 
 template_args_nonempty_list:
-  | template_args_nonempty_list COMMA NAME     { ARG_NAME $3 :: $1 }
-  | template_args_nonempty_list COMMA integer  { ARG_INT $3 :: $1 }
-  | template_args_nonempty_list COMMA float    { ARG_FLOAT $3 :: $1 }
-  | template_args_nonempty_list COMMA CT_TRUE  { ARG_BOOL true :: $1 }
-  | template_args_nonempty_list COMMA CT_FALSE { ARG_BOOL false :: $1 }
+  | template_args_nonempty_list COMMA template_args_elem { $3 :: $1 }
+  | template_args_elem { [$1] }
+;
+
+template_args_elem:
+  | NAME     { Arg_name $1    }
+  | integer  { Arg_int $1     }
+  | float    { Arg_float $1   }
+  | CT_TRUE  { Arg_bool true  }
+  | CT_FALSE { Arg_bool false }
 ;
 
 /************************************************************/
