@@ -2242,8 +2242,8 @@ This algorithm requires a clock named \styleIMI{global\_time} to be defined in t
 \section{Exists-until-synthesis}\label{section:algorithm:EU}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Exists-until (``EU'' in CTL) denotes that a property holds \emph{until} another property holds.
-The second property must eventually hold, and might even hold from the first state, in which case the first property does not need to hold.
+Exists-until (``EU'' in CTL) denotes that a state predicate holds \emph{until} another state predicate holds.
+The second state predicate must eventually hold, and might even hold from the first state, in which case the first state predicate does not need to hold.
 
 The property syntax is as follows:
 
@@ -2252,6 +2252,30 @@ property := #synth E (state_predicate) U (state_predicate);
 \end{IMITATORproperty}
 
 Most remarks for EF (see \cref{section:algorithm:EFsynth}) also hold for EU.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Unavoidability synthesis: AF, AU, AW}\label{section:algorithm:AF}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Unavoidability synthesis denotes that a state is always eventually reachable (for all paths).
+It comes in three flavors in \imitator{}:
+\begin{enumerate}
+	\item Unavoidability-synthesis (``AF'' in CTL), where a state predicate must always eventually hold;
+	\item Always-until-synthesis (``AU'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds;
+	\item Always-weak-until-synthesis (``AW'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds---unless the first one holds forever.
+\end{enumerate}
+
+If the second state predicate holds from the first state, the first state predicate does not need to hold.
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth AF (state_predicate);
+property := #synth A (state_predicate) U (state_predicate);
+property := #synth A (state_predicate) W (state_predicate);
+\end{IMITATORproperty}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2887,7 +2911,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Global invariant                 & \styleIMI{AG(state\_predicate)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 			\hline
-			Until                 & \styleIMI{E(sp\_1)U(sp\_2)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
+			Exists-until                 & \styleIMI{E(sp\_1)U(sp\_2)}               & \cellYes{} & \cellYes{}  & \cellYes{} \\
 
 			% Optimized reachability
 
@@ -2897,6 +2921,12 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{}  & \cellNo{} \\
 			\hline
 			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{}  & \cellYes{} \\
+
+			% AF
+			\hline
+			Unavoidability                 & \styleIMI{AF(state\_predicate)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Unavoidability                 & \styleIMI{A(sp\_1)U(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Unavoidability                 & \styleIMI{A(sp\_1)W(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
 			% Cycles
 
@@ -2988,7 +3018,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			\hline
 			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \styleOption{inclusion} \\
 			\hline
-			Until           & \styleIMI{E(sp\_1)U(sp\_2)}                  & \cellYes{} & \styleOption{inclusion} \\
+			Exists-until           & \styleIMI{E(sp\_1)U(sp\_2)}                  & \cellYes{} & \styleOption{inclusion} \\
 
 			% Optimized reachability
 
@@ -2998,6 +3028,12 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \styleOption{inclusion} \\
 			\hline
 			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \styleOption{inclusion} \\
+
+			% AF
+			\hline
+			Unavoidability           & \styleIMI{AF(state\_predicate)}                  & \cellNo{} & \styleOption{equality} \\
+			Unavoidability           & \styleIMI{A(sp\_1)U(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
+			Unavoidability           & \styleIMI{A(sp\_1)W(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 
 			% Cycles
 
@@ -3808,7 +3844,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}) and for unavoidability (\cref{section:algorithm:AF}, \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
@@ -5493,13 +5529,19 @@ We define each of those two components below.
 	$|$ & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{AG} \nt{state\_predicate}                                                                               \\
-	$|$ & \styleIMI{E} \nt{state\_predicate} \styleIMI{U} \nt{state\_predicate} \\
+	$|$ & \styleIMI{E} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 
 	% Optimized reachability
 
 	$|$ & \styleIMI{EFpmin} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)}                     \\
 	$|$ & \styleIMI{EFpmax} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)}                     \\
 	$|$ & \styleIMI{EFtmin} \nt{state\_predicate}                                                                              \\
+
+	% AF
+
+	$|$ & \styleIMI{AF} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{W} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 
 	% Cycles
 

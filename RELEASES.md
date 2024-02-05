@@ -8,6 +8,7 @@
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
 * New AG ("global invariant") algorithm
 * New EU ("Exists … until") algorithm
+* New AF ("always eventually") algorithm, and variants AU ("always … until") and AW ("always … weak until")
 
 ### Syntax changes in the model
 * Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
