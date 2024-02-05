@@ -155,10 +155,10 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
 
   (* Name: Winning-move-guided exploration *)
   let rec explore state_index location_index = 
+    explored#add state_index;
     let continue_exploring state_index location_index = 
       if not @@ explored#mem state_index then
         begin
-          explored#add state_index;
           explore state_index location_index;
         end
     in
