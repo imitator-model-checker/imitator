@@ -390,7 +390,7 @@ let print_contributors()  =
 	print_string (" * Daphne Dussaud                 (2010)\n");
 	print_string (" * Sami Evangelista               (2014)\n");
 	print_string (" * Ulrich Kühne                   (2010 - 2011)\n");
-	print_string (" * Benjamin Loillier              (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string (" * Benjamin Loillier              (2021 - 2023)\n");
 	print_string (" * Dylan Marinho                  (2021 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string (" * Nguyễn Hoàng Gia               (2014 - 2016)\n");
 	print_string (" * Laure Petrucci                 (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
