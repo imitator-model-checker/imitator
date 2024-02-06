@@ -139,14 +139,14 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option variables_declarations decl_fun_lists automata init_definition_option
+	controllable_actions_option include_file_list variables_declarations decl_fun_lists automata init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions	= $1 in
-		let declarations			= $2 in
-		let fun_definitions 		= $3 in
-		let automata				= $4 in
-		let init_definition			= $5 in
+		let declarations			= $3 in
+		let fun_definitions 		= $4 in
+		let automata				= $5 in
+		let init_definition			= $6 in
 
 		let main_model =
 		{
@@ -190,7 +190,7 @@ controllable_actions_option:
 /************************************************************/
 
 variables_declarations:
-	| include_file_list CT_VAR decl_var_lists { $3 }
+	| CT_VAR decl_var_lists { $2 }
 	| { []}
 ;
 
