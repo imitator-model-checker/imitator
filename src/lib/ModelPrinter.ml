@@ -1001,11 +1001,20 @@ let string_of_abstract_property model property =
 		(* Global invariant *)
 		| AG state_predicate -> "AG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
+		(* Exists release *)
+		| ER (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
 		(* Exists until *)
 		| EU (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
+		(* Exists weak until *)
+		| EW (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")W(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
 		(* Unavoidability *)
 		| AF state_predicate -> "AF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		(* Always release *)
+		| AR (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
 		(* Always until *)
 		| AU (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"

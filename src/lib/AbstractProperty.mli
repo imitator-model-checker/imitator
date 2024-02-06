@@ -80,11 +80,20 @@ type property =
 	(* Global invariant *)
 	| AG of state_predicate
 
-	(* Until *)
+	(* Exists until *)
 	| EU of state_predicate * state_predicate
+
+	(* Exists release *)
+	| ER of state_predicate * state_predicate
+
+	(* Exists weak until *)
+	| EW of state_predicate * state_predicate
 
 	(* Unavoidability *)
 	| AF of state_predicate
+
+	(* Always release *)
+	| AR of state_predicate * state_predicate
 
 	(* Always until *)
 	| AU of state_predicate * state_predicate

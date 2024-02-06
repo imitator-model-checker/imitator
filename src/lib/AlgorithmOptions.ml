@@ -49,24 +49,33 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(* Global invariant *)
 	| AG _
 
-	(* Reachability *)
+	(* Exists until *)
 	| EU _
 
 		-> Inclusion_check
 
+	(*** TODO: decide heuristics ***)
+	(* Exists release *)
+	| ER _
+
+	(* Exists weak until *)
+	| EW _
+
+		-> Equality_check
+
+	(*** TODO: decide heuristics ***)
 	(* Unavoidability *)
 	| AF _
-	(*** TODO: decide heuristics ***)
-		-> Equality_check
+
+	(* Always release *)
+	| AR _
 
 	(* Always until *)
 	| AU _
-	(*** TODO: decide heuristics ***)
-		-> Equality_check
 
 	(* Always weak until *)
 	| AW _
-	(*** TODO: decide heuristics ***)
+
 		-> Equality_check
 
 	(*------------------------------------------------------------*)
@@ -193,26 +202,33 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(* Global invariant *)
 	| AG _
 
-	(* Until *)
+	(* Exists until *)
 	| EU _
 		(* All comparison operators preserve correctness *)
 		-> true
 
+	(*** TODO: decide heuristics ***)
+	(* Exists release *)
+	| ER _
+
+	(* Exists weak until *)
+	| EW _
+
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+
+		(*** TODO: decide heuristics ***)
 	(* Unavoidability *)
 	| AF _
-		(*** TODO: decide heuristics ***)
-		(* No inclusion allowed *)
-		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+	(* Always release *)
+	| AR _
 
 	(* Always until *)
 	| AU _
-		(*** TODO: decide heuristics ***)
-		(* No inclusion allowed *)
-		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 
 	(* Always weak until *)
 	| AW _
-		(*** TODO: decide heuristics ***)
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 
@@ -355,19 +371,26 @@ let merge_needed property =
 	| EU _
 		-> true
 
+	(*** TODO: decide heuristics ***)
+	(* Exists release *)
+	| ER _
+
+	(* Exists weak until *)
+	| EW _
+		-> false
+
+	(*** TODO: decide heuristics ***)
 	(* Unavoidability *)
 	| AF _
-	(*** TODO: decide heuristics ***)
-		-> false
+
+	(* Always release *)
+	| AR _
 
 	(* Always until *)
 	| AU _
-	(*** TODO: decide heuristics ***)
-		-> false
 
 	(* Always weak until *)
 	| AW _
-	(*** TODO: decide heuristics ***)
 		-> false
 
 	(*------------------------------------------------------------*)
@@ -608,13 +631,23 @@ let supports_witness property =
 	(* Global invariant *)
 	| AG _
 
-	(* Until *)
+	(* Exists until *)
 	| EU _
 
 		-> true
 	
+	(*** TODO (2024/02): should probably be easy! ***)
+	(* Exists release *)
+	| ER _
+	(* Exists weak until *)
+	| EW _
+		-> false
+
+
 	(* Unavoidability *)
 	| AF _
+	(* Always release *)
+	| AR _
 	(* Always until *)
 	| AU _
 	(* Always weak until *)
@@ -741,8 +774,8 @@ let supports_exemplification property =
 (*	(* Global invariant *)
 	| AG _*)
 
-(*	(* Until *)
-	| EU _*)
+	(* Until *)
+	| EU _
 		-> true
 	(*------------------------------------------------------------*)
 	(* Cycles *)
@@ -809,11 +842,20 @@ let text_of_property property =
 	(* Global invariant *)
 	| AG _ -> "global invariant " ^ synthesis_or_witness
 
+	(* Exists release *)
+	| ER _ -> "exists release " ^ synthesis_or_witness
+
 	(* Exists until *)
-	| EU _ -> "until " ^ synthesis_or_witness
+	| EU _ -> "exists until " ^ synthesis_or_witness
+
+	(* Exists weak until *)
+	| EW _ -> "exists weak until " ^ synthesis_or_witness
 
 	(* Unavoidability *)
 	| AF _ -> "unavoidability " ^ synthesis_or_witness
+
+	(* Always release *)
+	| AR _ -> "always release " ^ synthesis_or_witness
 
 	(* Always until *)
 	| AU _ -> "always until " ^ synthesis_or_witness

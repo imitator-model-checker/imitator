@@ -410,18 +410,19 @@ let all_components_used_in_property_option parsed_property_option =
 		| Parsed_AF parsed_state_predicate
             -> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
 
+		(* Exists release *)
+		| Parsed_ER (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		(* Exists until *)
-		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi) ->
-            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_phi;
-            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_psi
-
+		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Exists weak until *)
+		| Parsed_EW (parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Always release *)
+		| Parsed_AR (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		(* Always until *)
-		| Parsed_AU (parsed_state_predicate_phi, parsed_state_predicate_psi) ->
-            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_phi;
-            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_psi
-
+		| Parsed_AU (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		(* Always weak until *)
-		| Parsed_AW (parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+		| Parsed_AW (parsed_state_predicate_phi, parsed_state_predicate_psi)
+            ->
             ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_phi;
             ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_psi
 

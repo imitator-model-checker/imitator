@@ -779,6 +779,13 @@ match options#imitator_mode with
 
 
 			(************************************************************)
+			(* Exists release *)
+			(************************************************************)
+			| ER (state_predicate_phi, state_predicate_psi) ->
+				raise (NotImplemented("ER"))
+(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
+
+			(************************************************************)
 			(* Exists until *)
 			(************************************************************)
 			| EU (state_predicate_phi, state_predicate_psi) ->
@@ -786,10 +793,25 @@ match options#imitator_mode with
 
 
 			(************************************************************)
+			(* Exists weak until *)
+			(************************************************************)
+			| EW (state_predicate_phi, state_predicate_psi) ->
+				raise (NotImplemented("EW"))
+(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
+
+			(************************************************************)
 			(* Unavoidability *)
 			(************************************************************)
 			| AF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAF model property options state_predicate in myalgo
+
+
+			(************************************************************)
+			(* Always release *)
+			(************************************************************)
+			| AR (state_predicate_phi, state_predicate_psi) ->(*
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAU model property options state_predicate_phi state_predicate_psi in myalgo*)
+				raise (NotImplemented("AR"))
 
 
 			(************************************************************)

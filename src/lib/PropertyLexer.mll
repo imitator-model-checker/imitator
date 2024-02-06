@@ -77,6 +77,7 @@ rule token = parse
 	| "NZCycle"        { CT_NZCYCLE }
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
+	| "R"              { CT_R }
  	| "TracePreservation" { CT_TRACEPRESERVATION }
 	| "U"              { CT_U }
  	| "Valid"          { CT_VALID }

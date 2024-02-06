@@ -66,6 +66,7 @@ let resolve_property l =
 	CT_ONCE
 	CT_PATTERN CT_PROJECTRESULT CT_PROPERTY CT_PRP CT_PRPC
 	CT_QUEUE
+	CT_R
 	CT_SEQUENCE CT_STACK CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_U
@@ -145,11 +146,20 @@ property:
 	/* Global invariant */
 	| CT_AG state_predicate { Parsed_AG $2 }
 
+	/* Exists release */
+	| CT_E state_predicate CT_R state_predicate { Parsed_ER ($2, $4) }
+
 	/* Exists until */
 	| CT_E state_predicate CT_U state_predicate { Parsed_EU ($2, $4) }
 
+	/* Exists weak until */
+	| CT_E state_predicate CT_W state_predicate { Parsed_EW ($2, $4) }
+
 	/* Unavoidability */
 	| CT_AF state_predicate { Parsed_AF $2 }
+
+	/* Always release */
+	| CT_A state_predicate CT_R state_predicate { Parsed_AR ($2, $4) }
 
 	/* Always until */
 	| CT_A state_predicate CT_U state_predicate { Parsed_AU ($2, $4) }

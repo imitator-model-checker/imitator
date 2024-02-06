@@ -155,8 +155,11 @@ let get_v0_option = function
 			| EF _
 			| AGnot _
 			| AG _
+			| ER _
 			| EU _
+			| EW _
 			| AF _
+			| AR _
 			| AU _
 			| AW _
 			| EFpmin _
@@ -1111,7 +1114,10 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 				| Win (state_predicate)
 					-> [state_predicate]
 
+				| ER (state_predicate_1, state_predicate_2)
 				| EU (state_predicate_1, state_predicate_2)
+				| EW (state_predicate_1, state_predicate_2)
+				| AR (state_predicate_1, state_predicate_2)
 				| AU (state_predicate_1, state_predicate_2)
 				| AW (state_predicate_1, state_predicate_2)
 					-> [state_predicate_1; state_predicate_2]

@@ -1890,8 +1890,11 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
-		(* Until *)
+		(* Until and variants *)
+		| Parsed_ER (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
+		| Parsed_EW (parsed_state_predicate_phi, parsed_state_predicate_psi)
+		| Parsed_AR (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		| Parsed_AU (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		| Parsed_AW (parsed_state_predicate_phi, parsed_state_predicate_psi)
 			->
@@ -2224,6 +2227,17 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 
+		(* Exists release *)
+		| Parsed_ER (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			(* Return a property and no observer *)
+			ER
+				(PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
 		(* Exists until *)
 		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
 			->
@@ -2235,10 +2249,32 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 
+		(* Exists weak until *)
+		| Parsed_EW (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			(* Return a property and no observer *)
+			EW
+				(PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
 		(* Unavoidability *)
 		| Parsed_AF parsed_state_predicate ->
 			(* Return a property and no observer *)
 			AF (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
+		(* Always release *)
+		| Parsed_AR (parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			(* Return a property and no observer *)
+			AR
+				(PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
 			,
 			None
 

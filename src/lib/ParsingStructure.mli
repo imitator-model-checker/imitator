@@ -388,12 +388,21 @@ type parsed_property_type =
 	(* Global invariant *)
 	| Parsed_AG of parsed_state_predicate
 
+	(* Exists release *)
+	| Parsed_ER of parsed_state_predicate * parsed_state_predicate
+
 	(* Exists until *)
 	| Parsed_EU of parsed_state_predicate * parsed_state_predicate
+
+	(* Exists weak until *)
+	| Parsed_EW of parsed_state_predicate * parsed_state_predicate
 
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
 	
+	(* Always release *)
+	| Parsed_AR of parsed_state_predicate * parsed_state_predicate
+
 	(* Always until *)
 	| Parsed_AU of parsed_state_predicate * parsed_state_predicate
 
