@@ -307,7 +307,7 @@ fun_parameter_list:
 /* Function parameters list (separated by whitespace) */
 fun_parameter_nonempty_list:
   | NAME COLON var_type_discrete { [(($1, Parsing.symbol_start ()), $3)] }
-  | fun_parameter_list COMMA NAME COLON var_type_discrete { (($3, Parsing.symbol_start ()), $5) :: $1 }
+  | fun_parameter_nonempty_list COMMA NAME COLON var_type_discrete { (($3, Parsing.symbol_start ()), $5) :: $1 }
 ;
 
 seq_code_bloc:
