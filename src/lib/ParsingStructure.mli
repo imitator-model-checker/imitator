@@ -248,10 +248,10 @@ type parsed_template_definition = {
 }
 
 type parsed_template_arg =
-  | ARG_NAME  of string
-  | ARG_INT   of NumConst.t
-  | ARG_FLOAT of NumConst.t
-  | ARG_BOOL  of bool
+  | Arg_name  of string
+  | Arg_int   of NumConst.t
+  | Arg_float of NumConst.t
+  | Arg_bool  of bool
 
 type parsed_template_call =
  (* name             template used   parameters passed to template *)
