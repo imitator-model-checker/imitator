@@ -2582,92 +2582,120 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		,
 		converted_observer_structure_option
 
-let rec instantiate_boolean_expression param_map = function
-  | Parsed_conj_dis (e1, e2, c) ->
-    let e1' = instantiate_boolean_expression param_map e1 in
-    let e2' = instantiate_boolean_expression param_map e2 in
-    Parsed_conj_dis (e1', e2', c)
-	| Parsed_discrete_bool_expr e -> Parsed_discrete_bool_expr (instantiate_discrete_boolean_expression param_map e)
+(* Instantiation of parameters *)
 
-and instantiate_discrete_boolean_expression param_map = function
-  | Parsed_arithmetic_expr e -> Parsed_arithmetic_expr (instantiate_discrete_arithmetic_expression param_map e)
-	| Parsed_comparison (e1, op, e2) ->
-    let e1' = instantiate_discrete_boolean_expression param_map e1 in
-    let e2' = instantiate_discrete_boolean_expression param_map e2 in
-    Parsed_comparison (e1', op, e2')
-	| Parsed_comparison_in (e1, e2, e3) ->
-    let e1' = instantiate_discrete_arithmetic_expression param_map e1 in
-    let e2' = instantiate_discrete_arithmetic_expression param_map e2 in
-    let e3' = instantiate_discrete_arithmetic_expression param_map e3 in
-    Parsed_comparison_in (e1', e2', e3')
-	| Parsed_nested_bool_expr e -> Parsed_nested_bool_expr (instantiate_boolean_expression param_map e)
-	| Parsed_not e -> Parsed_not (instantiate_boolean_expression param_map e)
+let instantiate_leaf param_map leaf =
+  let open ParsingStructureUtilities in
+  match leaf with
+    | Leaf_variable (name, id) -> begin
+        match Hashtbl.find_opt param_map name with
+           | None                  -> Leaf_variable (name, id)
+           | Some (Arg_name name') -> Leaf_variable (name', id)
+           | Some (Arg_int i)      -> Leaf_constant (ParsedValue.Weak_number_value i)
+           | Some (Arg_float f)    -> Leaf_constant (ParsedValue.Rat_value f)
+           | Some (Arg_bool b)     -> Leaf_constant (Bool_value b)
+    end
+    | leaf -> leaf
 
-and instantiate_discrete_arithmetic_expression param_map = function
-  | Parsed_sum_diff (e, t, sum_diff) ->
-    let e' = instantiate_discrete_arithmetic_expression param_map e in
-    let t' = instantiate_discrete_term param_map t in
-    Parsed_sum_diff (e', t', sum_diff)
-  | Parsed_term t -> Parsed_term (instantiate_discrete_term param_map t)
+let instantiate_discrete_boolean_expression param_map =
+  ParsingStructureUtilities.map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
 
-and instantiate_discrete_term param_map = function
-  | Parsed_product_quotient (t, f, product_quotient) ->
-    let t' = instantiate_discrete_term param_map t in
-    let f' = instantiate_discrete_factor param_map f in
-    Parsed_product_quotient (t', f', product_quotient)
-  | Parsed_factor f -> Parsed_factor (instantiate_discrete_factor param_map f)
+let instantiate_boolean_expression param_map =
+  ParsingStructureUtilities.map_parsed_boolean_expression (instantiate_leaf param_map)
 
-and instantiate_discrete_factor param_map f =
-  match f with
-    | Parsed_variable (name, id) -> begin
-      match Hashtbl.find_opt param_map name with
-      | None -> Parsed_variable (name, id)
-      | Some (ARG_NAME name') -> Parsed_variable (name', id) (* TODO: should we change the id here? *)
-      | _ -> failwith "unexpected argument for template (expecting name)" (* TODO: argument can be a value *)
-      end
-    | Parsed_constant _ -> f
-    | Parsed_sequence _ -> failwith "sorry"
-    | Parsed_access _ -> failwith "sorry"
-    | Parsed_nested_expr e ->
-      let e' = instantiate_discrete_arithmetic_expression param_map e in
-      Parsed_nested_expr e'
-    | Parsed_unary_min _ -> failwith "sorry"
-    | Parsed_function_call (name, args) ->
-      let args' = List.map (instantiate_boolean_expression param_map) args in
-      Parsed_function_call (name, args')
+let instantiate_discrete_arithmetic_expression param_map =
+  ParsingStructureUtilities.map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
 
-(* let instantiate_constraint param_map constr = *) 
-(*   ParsingStructureUtilities.fold_parsed_discrete_boolean_expression *)
-(*     (function *)
-(*        | _ -> failwith "sorry" *)
-(*     ) constr *)
-
-let instantiate_invariant param_map inv =
-  let _ = List.map (instantiate_discrete_boolean_expression param_map) inv in
-  inv
+let instantiate_convex_predicate param_map inv =
+  List.map (instantiate_discrete_boolean_expression param_map) inv
 
 let instantiate_stopped param_map clocks =
   List.map (fun clock ->
     match Hashtbl.find_opt param_map clock with
     | None                 -> clock
-    | Some (ARG_NAME name) -> name
-    | Some _               -> failwith "unexpected argument for template (expecting name)" (* how to properly raise an exception here? *)
-    (* This last case would probably be catched by type checking *)
+    | Some (Arg_name name) -> name
+    | Some _               -> failwith "unexpected argument for template (expecting name)" (* TODO: how to properly raise an exception here? *)
+    (* This last case would be catched by type checking *)
   ) clocks
 
 let instantiate_flows param_map flows =
   let instantiate_flow (clock, rate) =
     match Hashtbl.find_opt param_map clock with
     | None                 -> (clock, rate)
-    | Some (ARG_NAME name) -> (name, rate)
+    | Some (Arg_name name) -> (name, rate)
     | Some _               -> failwith "unexpected argument for template (expecting name)"
   in
   List.map instantiate_flow flows
 
-let instantiate_transitions param_map trans = failwith "sorry"
+let rec instantiate_instructions param_map = function
+  | [] -> []
+  | Parsed_local_decl ((name, id), tp, init) :: tl -> begin
+      match Hashtbl.find_opt param_map name with
+        | None ->
+            let tl' = instantiate_instructions param_map tl in
+            let init' = instantiate_boolean_expression param_map init in
+            Parsed_local_decl ((name, id), tp, init') :: tl'
+        | Some v ->
+            Hashtbl.remove param_map name;
+            let tl' = instantiate_instructions param_map tl in
+            let init' = instantiate_boolean_expression param_map init in
+            Hashtbl.add param_map name v;
+            Parsed_local_decl ((name, id), tp, init') :: tl'
+  end
+  | inst :: tl ->
+      let tl' = instantiate_instructions param_map tl in
+      match inst with
+        | Parsed_assignment (Parsed_scalar_update (name, id), rhs) -> begin
+            let rhs' = instantiate_boolean_expression param_map rhs in
+            match Hashtbl.find_opt param_map name with
+              | None -> Parsed_assignment (Parsed_scalar_update (name, id), rhs') :: tl'
+              | Some (Arg_name name') -> Parsed_assignment (Parsed_scalar_update (name', id), rhs') :: tl'
+              | Some _ -> failwith "unexpected argument for template (expecting name)"
+        end
+        | Parsed_assignment (Parsed_indexed_update (name, index), rhs) ->
+            let rhs' = instantiate_boolean_expression param_map rhs in
+            Parsed_assignment (Parsed_indexed_update (name, index), rhs') :: tl'
+        | Parsed_instruction expr ->
+            let expr' = instantiate_boolean_expression param_map expr in
+            Parsed_instruction expr' :: tl'
+        | Parsed_for_loop ((name, id), left_expr, right_expr, up_down, body) -> begin
+            match Hashtbl.find_opt param_map name with
+              | None ->
+                  let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
+                  let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
+                  let body' = instantiate_instructions param_map body in
+                  Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
+              | Some v ->
+                  (* No need to isolate this one since the local variable is only scoped at `body` *)
+                  let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
+                  let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
+                  Hashtbl.remove param_map name;
+                  let body' = instantiate_instructions param_map body in
+                  Hashtbl.add param_map name v;
+                  Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
+        end
+        | Parsed_while_loop (cond, body) ->
+           let cond' = instantiate_boolean_expression param_map cond in
+           let body' = instantiate_instructions param_map body in
+           Parsed_while_loop (cond', body') :: tl'
+        | Parsed_if (cond, then_branch, else_branch_opt) ->
+            let cond' = instantiate_boolean_expression param_map cond in
+            let then_branch' = instantiate_instructions param_map then_branch in
+            let else_branch_opt' = Option.map (instantiate_instructions param_map) else_branch_opt in
+            Parsed_if (cond', then_branch', else_branch_opt') :: tl'
+        | Parsed_local_decl _ -> raise (InternalError "This point of code is unreachable (instantiate_instructions)") 
+
+let instantiate_transition param_map (guard, bloc, sync, loc_name) =
+  let guard' = instantiate_convex_predicate param_map guard in
+  let bloc' = instantiate_instructions param_map bloc in
+  (* TODO: Ignoring actions for now (unchanged sync) *)
+  (guard', bloc', sync, loc_name)
+
+let instantiate_transitions param_map =
+  List.map (instantiate_transition param_map)
 
 let instantiate_loc param_map loc =
-  { loc with invariant   = instantiate_invariant param_map loc.invariant;
+  { loc with invariant   = instantiate_convex_predicate param_map loc.invariant;
              stopped     = instantiate_stopped param_map loc.stopped;
              flow        = instantiate_flows param_map loc.flow;
              transitions = instantiate_transitions param_map loc.transitions
@@ -2683,10 +2711,9 @@ let instantiate_automaton templates parsed_template_call =
     let param_names                                  = List.map name_of_param template.template_parameters in
     assert (List.length template.template_parameters = List.length args);
     let param_map                                    = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
-    let actions, locs                                = template.template_body in (* Ignoring actions for now *)
+    let actions, locs                                = template.template_body in (* TODO: Ignoring actions for now *)
     let instantiated_locs                            = List.map (instantiate_loc param_map) locs in
     (user_name, actions, instantiated_locs)
-
 
 let instantiate_automata templates insts =
     List.map (instantiate_automaton templates) insts
@@ -2721,8 +2748,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
-    let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
-    let all_automata = parsed_model.automata @ instantiated_automata in
+  let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
+  let all_automata = parsed_model.automata @ instantiated_automata in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)
