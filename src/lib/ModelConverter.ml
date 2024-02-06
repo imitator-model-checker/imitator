@@ -2614,7 +2614,8 @@ let instantiate_stopped param_map clocks =
     match Hashtbl.find_opt param_map clock with
     | None                 -> clock
     | Some (Arg_name name) -> name
-    | Some _               -> failwith "unexpected argument for template (expecting name)" (* TODO: how to properly raise an exception here? *)
+    | Some _               -> failwith "unexpected argument for template (expecting name)"
+    (* TODO: how to properly raise an exception here? *)
     (* This last case would be catched by type checking *)
   ) clocks
 
@@ -2707,7 +2708,7 @@ let instantiate_loc param_map loc =
 let instantiate_automaton templates parsed_template_call =
     let user_name, template_name, args               = parsed_template_call in
     let template                                     = List.find (fun t -> t.template_name = template_name) templates in
-    let name_of_param ((name, _), _)                 = name in
+    let name_of_param (name, _)                      = name in
     let param_names                                  = List.map name_of_param template.template_parameters in
     assert (List.length template.template_parameters = List.length args);
     let param_map                                    = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
@@ -2732,11 +2733,15 @@ let instantiate_automata templates insts =
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-    print_message Verbose_high ("\n*** Link variables to declarations.");
-    (* Recompute model to link variables to their declarations, and return all variables declarations *)
-    let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+  (* Instantiate the template calls *)
+  let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
+  let parsed_model = { parsed_model with automata = (parsed_model.automata @ instantiated_automata) } in
 
-    print_message Verbose_high ("\n*** Linking variables finished.");
+  print_message Verbose_high ("\n*** Link variables to declarations.");
+  (* Recompute model to link variables to their declarations, and return all variables declarations *)
+  let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+
+  print_message Verbose_high ("\n*** Linking variables finished.");
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
@@ -2748,8 +2753,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
-  let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
-  let all_automata = parsed_model.automata @ instantiated_automata in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)
@@ -3002,6 +3005,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	(* Remove unused variables *)
 	(*------------------------------------------------------------*)
+
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
 	let clock_names, _, parameter_names, discrete_names_by_type, removed_variable_names =

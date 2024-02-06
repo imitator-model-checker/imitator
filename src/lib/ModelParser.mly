@@ -106,7 +106,7 @@ let unzip l = List.fold_left
 	CT_ELSE CT_END
 	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_IN CT_INIT CT_INSIDE CT_INT CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_OR
@@ -412,8 +412,8 @@ template_parameter_list:
 
 /* TODO: var_type correctly represents the types accepted by templates? */
 template_parameter_nonempty_list:
-  | NAME COLON var_type { [(($1, Parsing.symbol_start ()), $3)] }
-  | template_parameter_nonempty_list COMMA NAME COLON var_type { (($3, Parsing.symbol_start ()), $5) :: $1 }
+  | NAME COLON var_type { [($1, $3)] }
+  | template_parameter_nonempty_list COMMA NAME COLON var_type { ($3, $5) :: $1 }
 ;
 
 /************************************************************/
@@ -426,9 +426,9 @@ template_calls:
 /************************************************************/
 
 template_call:
-	| NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+	| CT_INSTANTIATE NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
 	{
-		($1, $3, List.rev $5)
+		($2, $4, List.rev $6)
 	}
 ;
 

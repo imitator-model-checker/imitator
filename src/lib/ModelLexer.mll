@@ -91,6 +91,7 @@ rule token = parse
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
 	| "init"           { CT_INIT }
+  | "instantiate"    { CT_INSTANTIATE }
 	| "int"            { CT_INT }
   	| "inside"         { CT_INSIDE }
 	| "invariant"      { CT_INVARIANT }
