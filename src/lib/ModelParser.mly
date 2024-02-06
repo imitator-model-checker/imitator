@@ -570,9 +570,9 @@ transition:
 update_synchronization:
 	| { [], NoSync }
 	| updates { $1, NoSync }
-	| sync_label { [], (Sync $1) }
-	| updates sync_label { $1, (Sync $2) }
-	| sync_label updates { $2, (Sync $1) }
+	| sync_action { [], (Sync $1) }
+	| updates sync_action { $1, (Sync $2) }
+	| sync_action updates { $2, (Sync $1) }
 ;
 
 /************************************************************/
@@ -583,7 +583,7 @@ updates:
 
 /************************************************************/
 
-sync_label:
+sync_action:
 	CT_SYNC NAME { $2 }
 ;
 
