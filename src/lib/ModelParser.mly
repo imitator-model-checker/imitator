@@ -428,7 +428,7 @@ template_calls:
 template_call:
 	| NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
 	{
-		($1, $3, $5)
+		($1, $3, List.rev $5)
 	}
 ;
 
