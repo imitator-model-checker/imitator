@@ -397,7 +397,7 @@ automaton:
 /************************************************************/
 
 prolog:
-	| sync_labels { $1 }
+	| actions_declarations { $1 }
 	| { [] }
 ;
 
@@ -406,7 +406,7 @@ prolog:
 
 /************************************************************/
 
-sync_labels:
+actions_declarations:
 	| CT_ACTIONS COLON name_list SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
 	| CT_SYNCLABS COLON name_list SEMICOLON {
@@ -785,7 +785,6 @@ function_argument_fol:
 number:
 	| integer { ParsedValue.Weak_number_value $1 }
 	| float { ParsedValue.Rat_value $1 }
-	/*| integer OP_DIV pos_integer { ( ParsedValue.Rat_value (NumConst.div $1 $3)) }*/
 ;
 
 binary_word:
