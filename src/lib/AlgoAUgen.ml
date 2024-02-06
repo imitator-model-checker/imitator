@@ -4,7 +4,7 @@
  *
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
- * Module description: generic algorithm for "AU" and "AF" algorithms
+ * Module description: algorithms based on "AU": "AF", "AU", "AW"
  *
  * File contributors : Étienne André
  * Created           : 2024/01/26
@@ -28,7 +28,7 @@ open Result
 
 (************************************************************)
 (************************************************************)
-(* Class definition *)
+(* Class definition: AU (virtual) *)
 (************************************************************)
 (************************************************************)
 class virtual algoAUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (weak : bool) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
@@ -341,6 +341,86 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Termination *)
 			termination			= termination_status;
 		}
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AF *)
+(************************************************************)
+(************************************************************)
+class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoAUgen model property options false None state_predicate (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AF"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AU *)
+(************************************************************)
+(************************************************************)
+class algoAU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoAUgen model property options false (Some state_predicate_phi) state_predicate_psi (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AU"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AW *)
+(************************************************************)
+(************************************************************)
+class algoAW (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoAUgen model property options true (Some state_predicate_phi) state_predicate_psi (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AW"
+
 
 (************************************************************)
 (************************************************************)

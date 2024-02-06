@@ -789,20 +789,20 @@ match options#imitator_mode with
 			(* Unavoidability *)
 			(************************************************************)
 			| AF state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAF model property options state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAF model property options state_predicate in myalgo
 
 
 			(************************************************************)
 			(* Always until *)
 			(************************************************************)
 			| AU (state_predicate_phi, state_predicate_psi) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAU.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
 
 			(************************************************************)
 			(* Always weak until *)
 			(************************************************************)
 			| AW (state_predicate_phi, state_predicate_psi) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAW.algoAW model property options state_predicate_phi state_predicate_psi in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAW model property options state_predicate_phi state_predicate_psi in myalgo
 
 
 
