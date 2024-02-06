@@ -2259,19 +2259,23 @@ Most remarks for EF (see \cref{section:algorithm:EFsynth}) also hold for EU.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Unavoidability synthesis denotes that a state is always eventually reachable (for all paths).
-It comes in three flavors in \imitator{}:
+It comes in four flavors in \imitator{}:
 \begin{enumerate}
 	\item Unavoidability-synthesis (``AF'' in CTL), where a state predicate must always eventually hold;
+	\item Always-release-synthesis (``AR'' in CTL), where a first state predicate must always eventually release a second state predicate;
 	\item Always-until-synthesis (``AU'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds;
 	\item Always-weak-until-synthesis (``AW'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds---unless the first one holds forever.
 \end{enumerate}
 
-If the second state predicate holds from the first state, the first state predicate does not need to hold.
+Except for~AR, note that if the second state predicate holds from the first state, the first state predicate does not need to hold.
+
+Also note that $A \varphi R \psi$ is directly implemented as $A \psi W (\varphi \land \psi)$.
 
 The property syntax is as follows:
 
 \begin{IMITATORproperty}
 property := #synth AF (state_predicate);
+property := #synth A (state_predicate) R (state_predicate);
 property := #synth A (state_predicate) U (state_predicate);
 property := #synth A (state_predicate) W (state_predicate);
 \end{IMITATORproperty}
@@ -2925,6 +2929,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			% AF
 			\hline
 			Unavoidability                 & \styleIMI{AF(state\_predicate)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Unavoidability                 & \styleIMI{A(sp\_1)R(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)U(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)W(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
@@ -3032,6 +3037,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			% AF
 			\hline
 			Unavoidability           & \styleIMI{AF(state\_predicate)}                  & \cellNo{} & \styleOption{equality} \\
+			Unavoidability           & \styleIMI{A(sp\_1)R(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)U(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)W(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 

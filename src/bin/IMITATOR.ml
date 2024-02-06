@@ -809,9 +809,15 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Always release *)
 			(************************************************************)
-			| AR (state_predicate_phi, state_predicate_psi) ->(*
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAU model property options state_predicate_phi state_predicate_psi in myalgo*)
-				raise (NotImplemented("AR"))
+			(*** NOTE: implemented as A phi R psi === A psi W (phi ∧ psi) ***)
+			| AR (state_predicate_phi, state_predicate_psi) ->
+				print_message Verbose_standard "The `A phi R psi` formula is translated into `A psi R (phi and psi)`.";
+				let phi_and_psi : state_predicate = State_predicate_term (State_predicate_term_AND
+					(State_predicate_factor (State_predicate state_predicate_phi)
+					,
+					State_predicate_factor (State_predicate state_predicate_psi))
+				) in
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAW model property options state_predicate_psi phi_and_psi in myalgo
 
 
 			(************************************************************)
