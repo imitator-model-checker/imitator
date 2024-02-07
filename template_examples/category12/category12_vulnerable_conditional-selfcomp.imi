@@ -1,0 +1,263 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Case study for side channel timing attack
+ *
+ * Description     : Encoding of a java program.
+ * Correctness     : No information leakage
+ * Source          : https://github.com/Apogee-Research/STAC/blob/master/Canonical_Examples/Source/Category2_not_vulnerable.java
+ * Author          : https://github.com/Apogee-Research/STAC
+ * Modeling        : Sun Jun, Étienne André, Li Jiaying
+ * Input by        : Li Jiaying, Étienne André
+ * License         : MIT License
+ *
+ * Created         : 2018/11/16
+ * Last modified   : 2024/01/22
+ *
+ * IMITATOR version: 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	cl_1,
+ 	cl_2,
+
+ 	abs_clock,
+		: clock;
+
+(* Discrete *)
+	flag_1,
+	flag_2,
+		: bool;
+
+(* Parameters *)
+	(* Global parameters necessary for the general encoding and our method *)
+	epsilon,
+ 	abs_ptime,
+
+ 	(* Local parameters to encode symbolic data *)
+	xnonletters_1,
+	userInput_length_1,
+	first_mismatch_1,
+
+	xnonletters_2,
+	userInput_length_2,
+	first_mismatch_2,
+		: parameter;
+
+	maxInputLen = 10,
+	
+	delay = 5000000,
+	delay2 = 80000,
+	
+		: constant;
+
+(* Analyzing manually the code:
+	private static void checkChar(String candidate, int charNumber) {
+        if (charNumber > password.length()) {
+            exceedPasswordLen++;
+        } else if (password.charAt(charNumber - 1) == candidate.charAt(charNumber - 1)) {
+			/* executed for each char until the first incorrect char */
+            if (subsequentCorrect + 1 == charNumber) {
+                subsequentCorrect++;
+                delay();
+            }
+        }
+} *)
+
+(************************************************************)
+  automaton pta_1
+(************************************************************)
+actions: setupserver_1, readx_1, verifycredentials_1;
+
+(*server = new ServerSocket(port);
+Socket client;
+PrintWriter out;
+BufferedReader in;
+String userInput;
+boolean correct;*)
+loc l1: invariant cl_1 <= epsilon 
+	when cl_1 <= epsilon do {cl_1 := 0} sync setupserver_1 goto l2;
+
+(*client = server.accept();
+out = new PrintWriter(client.getOutputStream(), true);
+in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+userInput = in.readLine();*)
+loc l2: invariant cl_1 <= epsilon
+	when cl_1 <= epsilon do {cl_1 := 0} sync readx_1 goto l3;
+
+(*  if (userInput.length() <= maxInputLen && userInput.matches("[a-z]+")) { *)
+loc l3: invariant cl_1 <= epsilon
+	when cl_1 <= epsilon & userInput_length_1 > maxInputLen do {cl_1 := 0} goto final1;
+	when cl_1 <= epsilon & xnonletters_1 > 0 do {cl_1 := 0} goto final1;
+	when cl_1 <= epsilon & userInput_length_1 <= maxInputLen & xnonletters_1 = 0 do {cl_1 := 0} goto l4;
+
+(*  out.println("Invalid Input"); *)
+loc final1: invariant True
+
+(*  correct = verifyCredentials(userInput); *)
+loc l4: invariant cl_1 <= epsilon
+	when cl_1 <= epsilon do {cl_1 := 0} sync verifycredentials_1 goto l5;
+
+(*  subsequentCorrect = exceedPasswordLen = 0; *)
+loc l5: invariant cl_1 <= epsilon
+	(* Duplicate to ensure first_mismatch_1 is an integer *)
+	(* Case incorrect password *)
+	when cl_1 <= epsilon & first_mismatch_1 = 0 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 1 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 2 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 3 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 4 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 5 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 6 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 7 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 8 do {cl_1 := 0} goto l6;
+	when cl_1 <= epsilon & first_mismatch_1 = 9 do {cl_1 := 0} goto l6;
+	(* Case correct password *)
+	when cl_1 <= epsilon & first_mismatch_1 = 10 & flag_1 = False (*** NOTE: flag_1 = false is just to avoid the automatic removing of the flag by IMITATOR… ***) do {cl_1 := 0, flag_1 := True} goto l6;
+
+(* Abstraction of  private static void checkChar(String candidate, int charNumber) { *)
+loc l6: invariant cl_1 <= (*delay * *)5000000 first_mismatch_1
+		(*** NOTE: IMITATOR does not allow constant * parameter :( ***)
+	when cl_1 = (*delay * *)5000000 first_mismatch_1 do {cl_1 := 0} goto l7;
+
+(*  delay(); *)
+loc l7: invariant cl_1 <= delay + epsilon
+	when delay - epsilon <= cl_1 & cl_1 <= delay + epsilon do {cl_1 := 0} goto l8;
+
+(* close server *)
+loc l8: invariant cl_1 <= epsilon
+	when epsilon <= cl_1 & cl_1 <= epsilon & abs_clock = abs_ptime do {cl_1 := 0} goto final2;
+
+loc final2: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta_2
+(************************************************************)
+actions: setupserver_2, readx_2, verifycredentials_2;
+
+(*server = new ServerSocket(port);
+Socket client;
+PrintWriter out;
+BufferedReader in;
+String userInput;
+boolean correct;*)
+loc l1: invariant cl_2 <= epsilon
+	when cl_2 <= epsilon do {cl_2 := 0} sync setupserver_2 goto l2;
+
+(*client = server.accept();
+out = new PrintWriter(client.getOutputStream(), true);
+in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+userInput = in.readLine();*)
+loc l2: invariant cl_2 <= epsilon
+	when cl_2 <= epsilon do {cl_2 := 0} sync readx_2 goto l3;
+
+(*  if (userInput.length() <= maxInputLen && userInput.matches("[a-z]+")) { *)
+loc l3: invariant cl_2 <= epsilon
+	when cl_2 <= epsilon & userInput_length_2 > maxInputLen do {cl_2 := 0} goto final1;
+	when cl_2 <= epsilon & xnonletters_2 > 0 do {cl_2 := 0} goto final1;
+	when cl_2 <= epsilon & userInput_length_2 <= maxInputLen & xnonletters_2 = 0 do {cl_2 := 0} goto l4;
+
+(*  out.println("Invalid Input"); *)
+loc final1: invariant True
+
+(*  correct = verifyCredentials(userInput); *)
+loc l4: invariant cl_2 <= epsilon
+	when cl_2 <= epsilon do {cl_2 := 0} sync verifycredentials_2 goto l5;
+
+(*  subsequentCorrect = exceedPasswordLen = 0; *)
+loc l5: invariant cl_2 <= epsilon
+	(* Duplicate to ensure first_mismatch_2 is an integer *)
+	(* Case incorrect password *)
+	when cl_2 <= epsilon & first_mismatch_2 = 0 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 1 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 2 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 3 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 4 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 5 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 6 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 7 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 8 do {cl_2 := 0} goto l6;
+	when cl_2 <= epsilon & first_mismatch_2 = 9 do {cl_2 := 0} goto l6;
+	(* Case correct password *)
+	when cl_2 <= epsilon & first_mismatch_2 = 10 & flag_2 = False (*** NOTE: flag_2 = false is just to avoid the automatic removing of the flag by IMITATOR… ***) do {cl_2 := 0, flag_2 := True} goto l6;
+
+(* Abstraction of  private static void checkChar(String candidate, int charNumber) { *)
+loc l6: invariant cl_2 <= (*delay * *)5000000 first_mismatch_2
+		(*** NOTE: IMITATOR does not allow constant * parameter :( ***)
+	when cl_2 = (*delay * *)5000000 first_mismatch_2 do {cl_2 := 0} goto l7;
+
+(*  delay(); *)
+loc l7: invariant cl_2 <= delay + epsilon
+	when delay - epsilon <= cl_2 & cl_2 <= delay + epsilon do {cl_2 := 0} goto l8;
+
+(* close server *)
+loc l8: invariant cl_2 <= epsilon
+	when epsilon <= cl_2 & cl_2 <= epsilon & abs_clock = abs_ptime do {cl_2 := 0} goto final2;
+
+loc final2: invariant True
+
+end (* pta *)
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta_1] := l1,
+		loc[pta_2] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		flag_1 := False,
+		flag_2 := False,
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+ 	& cl_1 = 0
+ 	& cl_2 = 0
+ 	& abs_clock = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	& abs_ptime >= 0
+
+	& userInput_length_1 >= 0
+	& first_mismatch_1 >= 0 & first_mismatch_1 <= maxInputLen
+	& xnonletters_1 >= 0
+
+	& userInput_length_2 >= 0
+	& first_mismatch_2 >= 0 & first_mismatch_2 <= maxInputLen
+	& xnonletters_2 >= 0
+
+	& epsilon >= 0
+	(* Quite arbitrary *)
+	& epsilon <= 1
+
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
