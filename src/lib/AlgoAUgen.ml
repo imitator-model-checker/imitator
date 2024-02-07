@@ -65,11 +65,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Main body of AF (recursive version) *)
+	(** Main body of AU (recursive version) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
-	method private af_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
+	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
 		(* Get state *)
 		let symbolic_state : State.state = state_space#get_state state_index in
@@ -165,15 +165,15 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Calling recursively AF(" ^ (string_of_int successor_state_index) ^ ")…");
+						self#print_algo_message_newline Verbose_high ("Calling recursively AU(" ^ (string_of_int successor_state_index) ^ ")…");
 					);
 
 					(* Recursive call to AF on the successor *)
-					let k_good : LinearConstraint.p_nnconvex_constraint = self#af_rec successor_state_index (state_index :: passed) in
+					let k_good : LinearConstraint.p_nnconvex_constraint = self#au_rec successor_state_index (state_index :: passed) in
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Result of AF(" ^ (string_of_int successor_state_index) ^ "):");
+						self#print_algo_message_newline Verbose_high ("Result of AU(" ^ (string_of_int successor_state_index) ^ "):");
 						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
 					);
 
@@ -222,7 +222,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message_newline Verbose_high ("Finalizing the result of AF(" ^ (string_of_int state_index) ^ ")…");
+					self#print_algo_message_newline Verbose_high ("Finalizing the result of AU(" ^ (string_of_int state_index) ^ ")…");
 				);
 
 				(* k <- k \ (C \ k_live)|_P *)
@@ -252,7 +252,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message_newline Verbose_medium ("Final constraint in AF(" ^ (string_of_int state_index) ^ ")…");
+					self#print_algo_message_newline Verbose_medium ("Final constraint in AU(" ^ (string_of_int state_index) ^ ")…");
 					self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 				);
 
@@ -298,7 +298,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		parameters_consistent_with_init <- LinearConstraint.px_hide_nonparameters_and_collapse initial_px_constraint;
 
 		(* Main call to the AF dedicated function *)
-		synthesized_constraint <- self#af_rec init_state_index [];
+		synthesized_constraint <- self#au_rec init_state_index [];
 
 		(* Return the result *)
 		self#compute_result;
@@ -330,7 +330,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			result				= Good_constraint (result, soundness);
 
 			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing AF";
+			constraint_description = "constraint guaranteeing " ^ self#algorithm_name;
 
 			(* Explored state space *)
 			state_space			= state_space;
