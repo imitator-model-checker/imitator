@@ -105,13 +105,15 @@ and map_parsed_discrete_factor leaf_mod =
         match leaf_mod (Leaf_variable variable_ref) with
           | Leaf_variable variable_ref' -> Parsed_variable variable_ref'
           | Leaf_constant value -> Parsed_constant value
-          | Leaf_fun name -> Parsed_function_call (name, [])
+          | Leaf_fun _ -> failwith
+              "[map_parsed_discrete_factor]: the leaf modifier is not supposed to map variables to functions."
         end
     | Parsed_constant value -> begin
       match leaf_mod (Leaf_constant value) with
         | Leaf_variable variable_ref -> Parsed_variable variable_ref
         | Leaf_constant value' -> Parsed_constant value'
-        | Leaf_fun name -> Parsed_function_call (name, [])
+        | Leaf_fun _ -> failwith
+            "[map_parsed_discrete_factor]: the leaf modifier is not supposed to map constants to functions."
       end
     | Parsed_sequence (expr_list, tp) ->
         let expr_list' = List.map (map_parsed_boolean_expression leaf_mod) expr_list in
