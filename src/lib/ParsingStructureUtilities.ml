@@ -68,22 +68,22 @@ let rec map_parsed_boolean_expression leaf_mod = function
       let e1' = map_parsed_boolean_expression leaf_mod e1 in
       let e2' = map_parsed_boolean_expression leaf_mod e2 in
       Parsed_conj_dis (e1', e2', c)
-	| Parsed_discrete_bool_expr e ->
+  | Parsed_discrete_bool_expr e ->
     Parsed_discrete_bool_expr (map_parsed_discrete_boolean_expression leaf_mod e)
 
 and map_parsed_discrete_boolean_expression leaf_mod = function
   | Parsed_arithmetic_expr e -> Parsed_arithmetic_expr (map_parsed_discrete_arithmetic_expression leaf_mod e)
-	| Parsed_comparison (e1, op, e2) ->
+  | Parsed_comparison (e1, op, e2) ->
       let e1' = map_parsed_discrete_boolean_expression leaf_mod e1 in
       let e2' = map_parsed_discrete_boolean_expression leaf_mod e2 in
       Parsed_comparison (e1', op, e2')
-	| Parsed_comparison_in (e1, e2, e3) ->
+  | Parsed_comparison_in (e1, e2, e3) ->
       let e1' = map_parsed_discrete_arithmetic_expression leaf_mod e1 in
       let e2' = map_parsed_discrete_arithmetic_expression leaf_mod e2 in
       let e3' = map_parsed_discrete_arithmetic_expression leaf_mod e3 in
       Parsed_comparison_in (e1', e2', e3')
-	| Parsed_nested_bool_expr e -> Parsed_nested_bool_expr (map_parsed_boolean_expression leaf_mod e)
-	| Parsed_not e -> Parsed_not (map_parsed_boolean_expression leaf_mod e)
+  | Parsed_nested_bool_expr e -> Parsed_nested_bool_expr (map_parsed_boolean_expression leaf_mod e)
+  | Parsed_not e -> Parsed_not (map_parsed_boolean_expression leaf_mod e)
 
 and map_parsed_discrete_arithmetic_expression leaf_mod = function
   | Parsed_sum_diff (e, t, sum_diff) ->
