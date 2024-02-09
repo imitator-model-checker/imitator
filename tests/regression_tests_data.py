@@ -688,10 +688,34 @@ END CONSTRAINT
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test auto-removed parameter does not crash the initial constraint checking',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/parameter-autoremove.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'parameter-autoremove.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: strange way to check valid syntax
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
 		# Test since               : 2023/03/09
 		# Last modified            : 2023/03/09
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test auto-removed variable doesn’t crash a function return',
+		'tags'       : 'syntax,functions',
 		'input_files': ['functions/removed-function.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
