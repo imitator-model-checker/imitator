@@ -111,6 +111,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			else if List.mem state_index passed then(
 
 				(* If weak version: loop (necessarily over phi) => found good valuations! *)
+				(*** NOTE: this is a loop because state_index is met twice on the *same* path, i.e., of the form (state_index , …, state_index) ***)
 				if weak then(
 					(* Print some information *)
 					if verbose_mode_greater Verbose_low then(
