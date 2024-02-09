@@ -19,9 +19,11 @@ val merge_needed				: AbstractProperty.abstract_property -> bool
 
 (* val default_exploration_order : AbstractProperty.abstract_property -> AbstractAlgorithm.exploration_order *)
 
-val supports_witness			: AbstractProperty.abstract_property -> bool
+val supports_cumulative_pruning	: AbstractProperty.abstract_property -> bool
 
 val supports_exemplification	: AbstractProperty.abstract_property -> bool
+
+val supports_witness			: AbstractProperty.abstract_property -> bool
 
 val is_cartography				: AbstractProperty.abstract_property -> bool
 (* Gives a textual description of a property *)

@@ -751,6 +751,95 @@ let supports_witness property =
 
 
 (*------------------------------------------------------------*)
+(** Is the "cumulative pruning" option relevant for this property? *)
+(*------------------------------------------------------------*)
+let supports_cumulative_pruning property =
+	match property.property with
+	(*------------------------------------------------------------*)
+	(* Basic properties *)
+	(*------------------------------------------------------------*)
+	| Valid -> false
+
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+	| EF _
+	| AGnot _
+	| AG _
+	| EU _
+		-> true
+
+	(*** TODO (2024/02): should probably be easy! ***)
+	| ER _
+	| EW _
+		-> false
+
+	| AF _
+	| AR _
+	| AU _
+	| AW _
+		-> false
+
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	| EFpmin _
+	| EFpmax _
+	| EFtmin _
+		-> true
+
+
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	| Cycle_through _
+	| Cycle_through_generalized _
+	| NZ_Cycle
+		-> true
+
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+
+	| Deadlock_Freeness
+		-> false
+
+
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	| IM _
+	| ConvexIM _
+	| IMK _
+	| IMunion _
+	| PRP _
+		-> true
+
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+
+	| Cover_cartography _
+	| Learning_cartography _
+	| Shuffle_cartography _
+	| Border_cartography _
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC _
+		-> false
+
+	(*------------------------------------------------------------*)
+	(* Games *)
+	(*------------------------------------------------------------*)
+
+	(* Parametric timed game: reachability condition *)
+	(*** TODO: double check ***)
+	| Win _ -> true
+
+
+(*------------------------------------------------------------*)
 (** Does the property support the #exemplification mode? *)
 (*------------------------------------------------------------*)
 

@@ -1319,34 +1319,11 @@ class imitator_options =
 				)else(
 					let property = get_option_property() in
 
-					(*** HACK: hard-coded => to externalize somewhere? ***)
-					match property.property with
-					(* Reachability *)
-					| EF _
-					(* Safety *)
-					| AGnot _
-					(* Reachability with minimization of a parameter valuation *)
-					| EFpmin _
-					(* Reachability with maximization of a parameter valuation *)
-					| EFpmax _
-					(* Reachability with minimal-time *)
-					| EFtmin _
-					(* Accepting infinite-run (cycle) through a state predicate *)
-					| Cycle_through _
-					(* Accepting infinite-run (cycle) through a state predicate *)
-					| Cycle_through_generalized _
-					(* Parametric reachability preservation *)
-(* 					| PRP _ *)
-					(* Parametric reachability preservation *)
-(* 					| PRPC _ *)
-						(* This option is allowed *)
-						-> ()
-					| _ ->
-						(* This option is irrelevant *)
+					if not (AlgorithmOptions.supports_cumulative_pruning property) then(
 						print_warning ("The option `-no-cumulative-pruning` is irrelevant for this algorithm. It will thus be ignored.");
+					);
 				);
 			);
-
 
 			(*------------------------------------------------------------*)
 			(* Option no_global_time_in_comparison is useless if no global time clock *)
