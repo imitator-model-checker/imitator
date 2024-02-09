@@ -64,8 +64,8 @@ class algoBCCoverLearning (model : AbstractModel.abstract_model) (property : Abs
 	val original_model : AbstractModel.abstract_model = model
 
 	(** Backup the original model file names *)
-	val original_file = (Input.get_options ())#model_file_name
-	val original_files_prefix = (Input.get_options ())#files_prefix
+	val original_file = options#model_file_name
+	val original_files_prefix = options#files_prefix
 	
 	val counter_interface = create_hybrid_counter_and_register "learning" Algorithm_counter Verbose_standard
 	val counter_reparsing = create_hybrid_counter_and_register "learning: re-parsing" Algorithm_counter Verbose_standard

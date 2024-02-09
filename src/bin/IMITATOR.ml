@@ -599,11 +599,11 @@ match options#imitator_mode with
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
 			| Translation IMI		-> ModelPrinter.string_of_model
-			| Translation HyTech	-> PTA2HyTech.string_of_model
-			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
-			| Translation Uppaal	-> PTA2Uppaal.string_of_model
-      | Translation JaniSpec	-> PTA2JaniSpec.string_of_model
-			| Translation DOT       -> PTA2JPG.string_of_model
+			| Translation HyTech	-> PTA2HyTech.string_of_model options
+			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model options
+			| Translation Uppaal	-> PTA2Uppaal.string_of_model options
+			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
+			| Translation DOT       -> PTA2JPG.string_of_model options
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -638,7 +638,7 @@ match options#imitator_mode with
 	(* Translation to a graphics *)
 	| Translation JPG | Translation PDF | Translation PNG ->
 		print_message Verbose_medium ("Translating model to a graphics…");
-		let translated_model = PTA2JPG.string_of_model model in
+		let translated_model = PTA2JPG.string_of_model options model in
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 		);
@@ -977,7 +977,7 @@ match options#imitator_mode with
 						(* Then transform to a graphics *)
 						(*** TODO: not necessary? (but so far useful to test) ***)
 
-						let translated_model = PTA2JPG.string_of_model cub_model in
+						let translated_model = PTA2JPG.string_of_model options cub_model in
 						if verbose_mode_greater Verbose_high then(
 							print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 						);
@@ -1144,7 +1144,7 @@ match options#imitator_mode with
 					(* Then transform to a graphics *)
 					(*** TODO: not necessary? (but so far useful to test) ***)
 
-					let translated_model = PTA2JPG.string_of_model cub_model in
+					let translated_model = PTA2JPG.string_of_model options cub_model in
 					if verbose_mode_greater Verbose_high then(
 						print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 					);

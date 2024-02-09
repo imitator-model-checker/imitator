@@ -15,12 +15,6 @@
  ************************************************************)
 
 
-open AbstractModel
 
-
-
-(**************************************************)
-(** model *)
-(**************************************************)
-(* Convert a model into a string *)
-val string_of_model : abstract_model -> string
+(* Convert a model into a string in the HyTech format *)
+val string_of_model : Options.imitator_options -> AbstractModel.abstract_model -> string

@@ -233,7 +233,7 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
   if options#ptg_controller_mode == AbstractAlgorithm.Draw then
     begin
       print_message Verbose_medium ("Translating generated controller model to a graphics…");
-      let translated_model = PTA2JPG.string_of_model model in
+      let translated_model = PTA2JPG.string_of_model options model in
 
       let dot_created_file_option = Graphics.dot "pdf" (options#files_prefix ^ "-controller") translated_model in
       begin

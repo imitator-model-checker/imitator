@@ -134,9 +134,6 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (property : Abstract
 	(** Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method! compute_result =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in IMcomplete.compute_result")

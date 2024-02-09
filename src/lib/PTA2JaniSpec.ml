@@ -637,8 +637,7 @@ let strings_of_nonlinear_constraint variable_names (* nonlinear_constraint *) =
 (************************************************************)
 
 (* Add a header to the model *)
-let string_of_header _ =
-    let options = Input.get_options () in
+let string_of_header (options : Options.imitator_options) =
     json_property "jani-version" jani_version ^ jani_separator
     ^ json_property "name" (json_quoted options#model_file_name) ^ jani_separator
     ^ json_property "type" (json_quoted jani_type) ^ jani_separator
@@ -1167,7 +1166,7 @@ let string_of_system model =
 (************************************************************)
 
 (* Convert the model into a string *)
-let string_of_model model =
+let string_of_model (options : Options.imitator_options) model =
 	(* Add a warning due to semantic difference *)
 	print_warning "Translation to JANI is mostly correct, but may feature some subtle differences in semantics. Notably, JANI assumes that a guard x=1 followed by an invariant x>=2 *can* be fired, which is not the case in IMITATOR semantics.";
 	
@@ -1182,7 +1181,7 @@ let string_of_model model =
     let variables = string_of_variables model in
     let ugly_json_model =
         json_struct [|
-            string_of_header model;
+            string_of_header options;
             string_of_custom_datatypes;
             string_of_custom_user_functions model;
             string_of_actions model;

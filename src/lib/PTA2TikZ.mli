@@ -12,12 +12,5 @@
  ****************************************************************)
 
 
-open AbstractModel
-
-
-(**************************************************)
-(* model *)
-(**************************************************)
-
-(** Convert a model into a string *)
-val tikz_string_of_model : abstract_model -> string
+(** Convert a model into a string in the LaTeX TikZ format *)
+val tikz_string_of_model : Options.imitator_options -> AbstractModel.abstract_model -> string
