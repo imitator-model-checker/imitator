@@ -160,7 +160,7 @@ class stateSpacePTG_OTF model options = object
 	inherit stateSpacePTG
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
-		let state = AlgoStateBased.create_initial_state model false in
+		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
 	method compute_symbolic_successors source_state_index = 
 		if passed_states#mem source_state_index then 
@@ -169,7 +169,7 @@ class stateSpacePTG_OTF model options = object
 		begin
 			passed_states#add source_state_index;
 			let state = state_space#get_state source_state_index in 
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional model state in 
+			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
 			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
 			(fun addition_result transition -> 
 				match addition_result with 
@@ -187,11 +187,11 @@ class stateSpacePTG_full model options = object
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
 		print_exp ("PTG: Generating full statespace (not on the fly)");
-		let state = AlgoStateBased.create_initial_state model false in
+		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
 		let process_successors_from_state_index source_state_index = 
 			let state = state_space#get_state source_state_index in 
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional model state in 
+			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
 			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
 			(fun addition_result transition -> 
 				match addition_result with 

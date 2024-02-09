@@ -501,7 +501,7 @@ class virtual algoCartoGeneric (model : AbstractModel.abstract_model) (property 
 		(* Get the initial state after time elapsing *)
 		(*** NOTE: here is the call to AlgoStateBased *)
 		(*** NOTE: Boolean true denoting abortion whenever unsatisfiable initial state *)
-		let init_state_after_time_elapsing : state = AlgoStateBased.create_initial_state model true in
+		let init_state_after_time_elapsing : state = AlgoStateBased.create_initial_state options model true in
 		let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 

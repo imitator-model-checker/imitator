@@ -926,10 +926,7 @@ let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (
 (* guards          : guard constraints per automaton          *)
 (* clock_updates   : updated clock variables                  *)
 (*------------------------------------------------------------*)
-let compute_new_constraint (model : AbstractModel.abstract_model) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : DiscreteState.global_location) (target_location : DiscreteState.global_location) guards clock_updates =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
+let compute_new_constraint (options : Options.imitator_options) (model : AbstractModel.abstract_model) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : DiscreteState.global_location) (target_location : DiscreteState.global_location) guards clock_updates =
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("\n***********************************");
 		print_message Verbose_total ("Entering compute_new_constraint");
@@ -1212,10 +1209,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-let create_initial_state (model : AbstractModel.abstract_model) (abort_if_unsatisfiable_initial_state : bool) : State.state =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
+let create_initial_state (options : Options.imitator_options) (model : AbstractModel.abstract_model) (abort_if_unsatisfiable_initial_state : bool) : State.state =
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 	if not model.has_non_1rate_clocks then(
@@ -1369,7 +1363,7 @@ let create_initial_state (model : AbstractModel.abstract_model) (abort_if_unsati
 (* returns Some state, or None if the constraint is unsatisfiable    *)
 (*------------------------------------------------------------*)
 
-let post_from_one_state_via_one_transition (model : AbstractModel.abstract_model) (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
+let post_from_one_state_via_one_transition (options : Options.imitator_options) (model : AbstractModel.abstract_model) (source_location : DiscreteState.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 	(* Compute the new location for the current combination of transitions *)
 	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates model source_location combined_transition in
 
@@ -1408,7 +1402,7 @@ let post_from_one_state_via_one_transition (model : AbstractModel.abstract_model
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
 
 		(* Check the satisfiability *)
 		match new_constraint with
@@ -1472,10 +1466,7 @@ let apply_extrapolation (extrapolation : extrapolation) (state : State.state) : 
 (** Compute the list of successor states of a given state, and returns the list of new states *)
 (************************************************************)
 (*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
-let combined_transitions_and_states_from_one_state_functional (model : AbstractModel.abstract_model) (source_state : State.state) : (combined_transition * State.state) list =
-
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
+let combined_transitions_and_states_from_one_state_functional (options : Options.imitator_options) (model : AbstractModel.abstract_model) (source_state : State.state) : (combined_transition * State.state) list =
 
 	(* Statistics *)
 	(*** TODO ***)
@@ -1646,7 +1637,7 @@ let combined_transitions_and_states_from_one_state_functional (model : AbstractM
 			) involved_automata_indices) in
 
 			(* Compute the successor constraint from the current state via this combined_transition *)
-			let successor_option : State.state option = post_from_one_state_via_one_transition model source_location source_constraint discrete_constr combined_transition in
+			let successor_option : State.state option = post_from_one_state_via_one_transition options model source_location source_constraint discrete_constr combined_transition in
 
 			(* Check if new states were indeed computed *)
 			begin
@@ -2798,7 +2789,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 
 			(* Get the initial state after time elapsing *)
-			let init_state_after_time_elapsing : state = create_initial_state model (self#abort_if_unsatisfiable_initial_state) in
+			let init_state_after_time_elapsing : state = create_initial_state options model (self#abort_if_unsatisfiable_initial_state) in
 			(*** NOTE: test already done in create_initial_state ***)
 (*			let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
@@ -3107,7 +3098,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				end;*)
 
 				(* Compute the successor constraint from the current state via this combined_transition *)
-				let successor_option : State.state option = post_from_one_state_via_one_transition model source_location (recompute_source_constraint ()) discrete_constr combined_transition in
+				let successor_option : State.state option = post_from_one_state_via_one_transition options model source_location (recompute_source_constraint ()) discrete_constr combined_transition in
 
 				let successors = match successor_option with
 					| Some successor ->

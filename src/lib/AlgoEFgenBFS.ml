@@ -116,7 +116,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		start_time <- Unix.gettimeofday();
 
 		(* Build initial state *)
-		let initial_state : State.state = AlgoStateBased.create_initial_state model true (* abort_if_unsatisfiable_initial_state *) in
+		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in
 
 		if verbose_mode_greater Verbose_high then(
 			self#print_algo_message Verbose_high "The initial state has been created";
