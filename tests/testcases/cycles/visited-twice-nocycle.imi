@@ -1,0 +1,100 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test that visiting twice a state does not (necessarily) mean a cycle
+ * Description      : Toy model to test that visiting twice a state does not (necessarily) mean a cycle
+ * Correctness      : loop
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/09
+ * Last modified    : 2024/02/09
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1
+		: parameter;
+
+(* Integers *)
+ 	i,
+		: int;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 5
+	(* To the fake goal if p1 <= 5 *)
+	when x = p1 & x = 5 goto lF;
+
+	(* To an intermediate location if p1 = 5 *)
+	when x = p1 goto l2;
+
+loc l2: invariant x = 5
+	(* To an intermediate location if p1 = 5 *)
+	when x = p1 goto l3;
+
+loc l3: invariant x = 5
+	(* To the fake goal *)
+	when x = p1 goto lF;
+
+accepting loc lF: invariant x = 5
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p1 & p1 <= 10
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

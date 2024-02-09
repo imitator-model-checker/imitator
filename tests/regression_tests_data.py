@@ -14596,6 +14596,56 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test LoopSynth: no loop but state met twice (BFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test LoopSynth: no loop but state met twice (NDFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
 		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
@@ -15216,6 +15266,56 @@ Constraint nature                       : good
 ------------------------------------------------------------
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AccLoopSynth: no loop but state met twice (BFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-cyclethrough-accepting.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AccLoopSynth: no loop but state met twice (NDFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-cyclethrough-accepting.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -16722,6 +16822,31 @@ BEGIN CONSTRAINT
  & 10 >= p2
  & p1 = 5
 
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AW: no loop over phi',
+		'tags'       : 'AW',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'cycles/visited-twice-nocycle-AW.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
 END CONSTRAINT
 		"""
 			} # end result file
