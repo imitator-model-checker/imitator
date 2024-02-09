@@ -97,7 +97,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					(* If unsatisfied: return false *)
 					let unsatisfied = not (State.match_state_predicate model state_predicate_phi symbolic_state) in
 					(* Print some information *)
-					if verbose_mode_greater Verbose_low then(
+					if unsatisfied && verbose_mode_greater Verbose_low then(
 						self#print_algo_message Verbose_low ("The state does not match phi: discard!");
 						self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
 					);
