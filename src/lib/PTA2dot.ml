@@ -6,7 +6,7 @@
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Convert an IMITATOR model to a .jpg (or PNG, PDF…) file generated using the dot utility
+ * Module description: Convert an IMITATOR model to a dot file
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
