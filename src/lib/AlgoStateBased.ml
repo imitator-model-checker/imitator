@@ -2556,45 +2556,6 @@ exception FoundLargerZone
 
 
 
-(*(************************************************************)
-(************************************************************)
-(* Class definition for state_index waiting lists *)
-(************************************************************)
-(************************************************************)
-class waiting_list =
-	object(self)
-
-	(************************************************************)
-	(* Class variables *)
-	(************************************************************)
-	val mutable waiting_list = []
-
-
-	(************************************************************)
-	(* Class methods *)
-	(************************************************************)
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Add a state to the waiting list *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add (state_index : State.state_index) =
-		waiting_list <- state_index :: waiting_list;
-		()
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Get all states from the waiting list (in the form of a list) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private to_list =
-		waiting_list
-
-
-(************************************************************)
-(************************************************************)
-end;;
-(************************************************************)
-(************************************************************)*)
-
-
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -2805,65 +2766,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			self#print_algo_message Verbose_medium "No. It is not included.";
 			false
 		)
-
-(*
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Update the nature of the trace set *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method update_statespace_nature (state : state) =
-		if Input.has_property() then(
-			let property = Input.get_property() in
-
-			match property.property with
-				(* Reachability *)
-				| EF state_predicate
-				| AGnot state_predicate
-				| AG state_predicate
-				| AF state_predicate
-				| EFpmin (state_predicate, _)
-				| EFpmax (state_predicate, _)
-				| EFtmin state_predicate
-				| Cycle_through state_predicate
-				| PRP (state_predicate , _)
-				| PRPC (state_predicate , _, _)
-				| Win state_predicate
-				->
-					(* Check whether the current state matches the state predicate *)
-					if State.match_state_predicate model state_predicate state then(
-						statespace_nature <- StateSpace.Bad;
-					);
-
-
-				| EU _
-
-				| Cycle_through_generalized _
-
-				| NZ_Cycle
-
-				| Valid
-
-				| Deadlock_Freeness
-
-				(* Inverse method *)
-				| IM _
-				| ConvexIM _
-				| IMK _
-				| IMunion _
-
-				(* Cartography *)
-				| Cover_cartography _
-				| Learning_cartography _
-				| Shuffle_cartography _
-				| Border_cartography _
-				| Random_cartography _
-				| RandomSeq_cartography _
-					->
-					(* Cannot conclude anything from a single state yet *)
-					()
-
-		)*)
-
-
 
 
 

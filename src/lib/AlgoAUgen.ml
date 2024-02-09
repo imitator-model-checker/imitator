@@ -56,7 +56,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	val mutable termination_status : Result.state_based_algorithm_termination = Regular_termination
 
 	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
-(* 	val parameters_consistent_with_init : LinearConstraint.px_linear_constraint = LinearConstraint.px_of_p_constraint model.initial_p_constraint *)
 	val mutable parameters_consistent_with_init : LinearConstraint.p_linear_constraint = LinearConstraint.p_false_constraint () (* Dummy initialization *)
 
 
@@ -230,14 +229,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
 				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
 				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
-
-(*				(* k <- (k \ (True \ k_live))|_P *)
-				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.true_px_nnconvex_constraint () in
-				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
-				let px_k : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_p_nnconvex_constraint (!k) in
-				(*** TODO: intersect with parameters_consistent_with_init first? ***)
-				LinearConstraint.px_nnconvex_difference_assign px_k not_k_live;
-				k := LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse px_k;*)
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_high then(
