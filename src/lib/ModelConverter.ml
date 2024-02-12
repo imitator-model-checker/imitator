@@ -2614,7 +2614,7 @@ let instantiate_stopped param_map clocks =
     match Hashtbl.find_opt param_map clock with
     | None                 -> clock
     | Some (Arg_name name) -> name
-    | Some _               -> failwith "unexpected argument for template (expecting name)"
+    | Some _               -> failwith "[instantiate_stopped]: unexpected argument for template (expecting name)"
     (* TODO: how to properly raise an exception here? *)
     (* This last case would be catched by type checking *)
   ) clocks
@@ -2624,7 +2624,7 @@ let instantiate_flows param_map flows =
     match Hashtbl.find_opt param_map clock with
     | None                 -> (clock, rate)
     | Some (Arg_name name) -> (name, rate)
-    | Some _               -> failwith "unexpected argument for template (expecting name)"
+    | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
   in
   List.map instantiate_flow flows
 
@@ -2651,7 +2651,7 @@ let rec instantiate_instructions param_map = function
             match Hashtbl.find_opt param_map name with
               | None -> Parsed_assignment (Parsed_scalar_update (name, id), rhs') :: tl'
               | Some (Arg_name name') -> Parsed_assignment (Parsed_scalar_update (name', id), rhs') :: tl'
-              | Some _ -> failwith "unexpected argument for template (expecting name)"
+              | Some _ -> failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
         end
         | Parsed_assignment (Parsed_indexed_update (name, index), rhs) ->
             let rhs' = instantiate_boolean_expression param_map rhs in
@@ -2684,13 +2684,22 @@ let rec instantiate_instructions param_map = function
             let then_branch' = instantiate_instructions param_map then_branch in
             let else_branch_opt' = Option.map (instantiate_instructions param_map) else_branch_opt in
             Parsed_if (cond', then_branch', else_branch_opt') :: tl'
-        | Parsed_local_decl _ -> raise (InternalError "This point of code is unreachable (instantiate_instructions)") 
+        | Parsed_local_decl _ -> raise (InternalError "[instantiate_instructions]: This point of code is unreachable") 
+
+let instantiate_sync param_map =
+  function
+    | NoSync -> NoSync
+    | Sync action_name ->
+        match Hashtbl.find_opt param_map action_name with
+          | None -> Sync action_name
+          | Some (Arg_name action_name') -> Sync action_name'
+          | Some _ -> failwith "[instantiate_sync]: unexpected argument for template (expecting name)"
 
 let instantiate_transition param_map (guard, bloc, sync, loc_name) =
   let guard' = instantiate_convex_predicate param_map guard in
   let bloc' = instantiate_instructions param_map bloc in
-  (* TODO: Ignoring actions for now (unchanged sync) *)
-  (guard', bloc', sync, loc_name)
+  let sync' = instantiate_sync param_map sync in
+  (guard', bloc', sync', loc_name)
 
 let instantiate_transitions param_map =
   List.map (instantiate_transition param_map)
@@ -2706,15 +2715,18 @@ let instantiate_loc param_map loc =
 (* This is just instantiation, we do type checking somewhere else *)
 (* Should return parsed automaton *)
 let instantiate_automaton templates parsed_template_call =
-    let user_name, template_name, args               = parsed_template_call in
-    let template                                     = List.find (fun t -> t.template_name = template_name) templates in
-    let name_of_param (name, _)                      = name in
-    let param_names                                  = List.map name_of_param template.template_parameters in
+    let user_name, template_name, args = parsed_template_call in
+    let template                       = List.find (fun t -> t.template_name = template_name) templates in
     assert (List.length template.template_parameters = List.length args);
-    let param_map                                    = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
-    let actions, locs                                = template.template_body in (* TODO: Ignoring actions for now *)
-    let instantiated_locs                            = List.map (instantiate_loc param_map) locs in
-    (user_name, actions, instantiated_locs)
+    let name_of_param (name, _)        = name in
+    let param_names                    = List.map name_of_param template.template_parameters in
+    let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
+    let actions, locs                  = template.template_body in
+    let rename_action action_name      = 
+      if List.mem action_name param_names then action_name else action_name ^ "_" ^ user_name in
+    let renamed_actions                = List.map rename_action actions in
+    let instantiated_locs              = List.map (instantiate_loc param_map) locs in
+    (user_name, renamed_actions, instantiated_locs)
 
 let instantiate_automata templates insts =
     List.map (instantiate_automaton templates) insts
