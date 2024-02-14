@@ -2582,6 +2582,9 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		,
 		converted_observer_structure_option
 
+(* TODO (Tomaz): move all template stuff to its own file *)
+
+
 (* Instantiation of parameters *)
 
 let instantiate_leaf param_map leaf =
@@ -2615,7 +2618,7 @@ let instantiate_stopped param_map clocks =
     | None                 -> clock
     | Some (Arg_name name) -> name
     | Some _               -> failwith "[instantiate_stopped]: unexpected argument for template (expecting name)"
-    (* TODO: how to properly raise an exception here? *)
+    (* TODO (Tomaz): how to properly raise an exception here? *)
     (* This last case would be catched by type checking *)
   ) clocks
 
@@ -2711,7 +2714,6 @@ let instantiate_loc param_map loc =
              transitions = instantiate_transitions param_map loc.transitions
   }
 
-(* TODO: Move these somewhere else? *)
 (* This is just instantiation, we do type checking somewhere else *)
 (* Should return parsed automaton *)
 let instantiate_automaton templates parsed_template_call =
