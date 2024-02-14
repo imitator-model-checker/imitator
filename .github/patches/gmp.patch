@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 2e54a3c..dbc1bf5 100644
+index 2e54a3c..6cee915 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -2,10 +2,10 @@
@@ -29,3 +29,16 @@ index 2e54a3c..dbc1bf5 100644
  #CFLAGS_MISC=
  CFLAGS_INCLUDE= -I $(OCAML_LIBDIR) $(GMP_INCLUDES)
  CFLAGS= $(CFLAGS_MISC) $(CFLAGS_INCLUDE)
+@@ -86,10 +86,10 @@
+ 	$(OCAMLOPT) $+ -o $@
+
+ test_suite:	gmp.cma test_suite.cmo
+-	$(OCAMLC) -custom $+ -o $@
++	$(OCAMLC) -custom -I $(GMP_LIBDIR) $+ -o $@
+
+ test_suite.opt:	gmp.cmxa test_suite.cmx
+-	$(OCAMLOPT) $+ -o $@
++	$(OCAMLOPT) -I $(GMP_LIBDIR) $+ -o $@
+
+ clean:
+ 	rm -f *.o *.cm* $(PROGRAMS) *.a
