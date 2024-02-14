@@ -99,7 +99,7 @@ let unzip l = List.fold_left
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
+	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
@@ -235,6 +235,12 @@ decl_var_list:
 ;
 
 /************************************************************/
+
+/* TODO (Tomaz): Add a check to forbid queues, stacks and constants here */
+template_var_type:
+  | var_type { Regular_type $1 }
+  | CT_ACTION { Template_action_var }
+;
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
@@ -412,8 +418,8 @@ template_parameter_list:
 
 /* TODO: var_type correctly represents the types accepted by templates? */
 template_parameter_nonempty_list:
-  | NAME COLON var_type { [($1, $3)] }
-  | template_parameter_nonempty_list COMMA NAME COLON var_type { ($3, $5) :: $1 }
+  | NAME COLON template_var_type { [($1, $3)] }
+  | template_parameter_nonempty_list COMMA NAME COLON template_var_type { ($3, $5) :: $1 }
 ;
 
 /************************************************************/

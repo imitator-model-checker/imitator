@@ -2584,7 +2584,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 
 (* TODO (Tomaz): move all template stuff to its own file *)
 
-
 (* Instantiation of parameters *)
 
 let instantiate_leaf param_map leaf =
@@ -2689,20 +2688,10 @@ let rec instantiate_instructions param_map = function
             Parsed_if (cond', then_branch', else_branch_opt') :: tl'
         | Parsed_local_decl _ -> raise (InternalError "[instantiate_instructions]: This point of code is unreachable") 
 
-let instantiate_sync param_map =
-  function
-    | NoSync -> NoSync
-    | Sync action_name ->
-        match Hashtbl.find_opt param_map action_name with
-          | None -> Sync action_name
-          | Some (Arg_name action_name') -> Sync action_name'
-          | Some _ -> failwith "[instantiate_sync]: unexpected argument for template (expecting name)"
-
 let instantiate_transition param_map (guard, bloc, sync, loc_name) =
   let guard' = instantiate_convex_predicate param_map guard in
   let bloc' = instantiate_instructions param_map bloc in
-  let sync' = instantiate_sync param_map sync in
-  (guard', bloc', sync', loc_name)
+  (guard', bloc', sync, loc_name)
 
 let instantiate_transitions param_map =
   List.map (instantiate_transition param_map)
@@ -2714,20 +2703,52 @@ let instantiate_loc param_map loc =
              transitions = instantiate_transitions param_map loc.transitions
   }
 
+let rename_action_decls param_map user_name action_decls =
+  let rename_action_decl action_name =
+    match Hashtbl.find_opt param_map action_name with
+      | None -> action_name ^ "_" ^ user_name
+      | Some (Arg_name action_name') -> action_name'
+      | Some _ -> failwith "[rename_action_decl]: unexpected argument for template (expecting name)"
+  in
+  List.map rename_action_decl action_decls
+
+let rename_action_locs param_map user_name locs =
+  let rename_action_sync sync =
+    match sync with
+    | NoSync -> NoSync
+    | Sync action_name ->
+        match Hashtbl.find_opt param_map action_name with
+          | None -> Sync (action_name ^ "_" ^ user_name)
+          | Some (Arg_name action_name') -> Sync (action_name')
+          | _ -> failwith "[rename_action_sync]: unexpected argument for template (expecting name)"
+  in
+  let rename_action_transition (guard, bloc, sync, loc_name) =
+    let sync' = rename_action_sync sync in
+    (guard, bloc, sync', loc_name)
+  in
+  let rename_action_transitions loc =
+    { loc with transitions = List.map rename_action_transition loc.transitions }
+  in
+  List.map rename_action_transitions locs
+
+let rename_actions param_map user_name template =
+  let action_decls, locs = template.template_body in
+  let action_decls'      = rename_action_decls param_map user_name action_decls in
+  let locs'              = rename_action_locs param_map user_name locs in
+  { template with template_body = (action_decls', locs') }
+
 (* This is just instantiation, we do type checking somewhere else *)
-(* Should return parsed automaton *)
 let instantiate_automaton templates parsed_template_call =
     let user_name, template_name, args = parsed_template_call in
     let template                       = List.find (fun t -> t.template_name = template_name) templates in
     assert (List.length template.template_parameters = List.length args);
-    let name_of_param (name, _)        = name in
-    let param_names                    = List.map name_of_param template.template_parameters in
+    let param_names                    = List.map fst template.template_parameters in
     let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
-    let actions, locs                  = template.template_body in
-    let rename_action action_name      = 
-      if List.mem action_name param_names then action_name else action_name ^ "_" ^ user_name in
-    let renamed_actions                = List.map rename_action actions in
-    let instantiated_locs              = List.map (instantiate_loc param_map) locs in
+    (* Replace action names *)
+    let template'                      = rename_actions param_map user_name template in
+    let renamed_actions, renamed_locs  = template'.template_body in
+    (* Instantiate other parameters *)
+    let instantiated_locs              = List.map (instantiate_loc param_map) renamed_locs in
     (user_name, renamed_actions, instantiated_locs)
 
 let instantiate_automata templates insts =

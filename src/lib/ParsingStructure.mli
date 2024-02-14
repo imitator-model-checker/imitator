@@ -243,7 +243,8 @@ type parsed_automaton = automaton_name * action_name list * parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
-    template_parameters : (variable_name * DiscreteType.var_type) list; (* TODO: not all types are allowed in templates *)
+    (* TODO (Tomaz): not all types are allowed in templates *)
+    template_parameters : (variable_name * DiscreteType.template_var_type) list;
     template_body       : action_name list * parsed_location list
 }
 
