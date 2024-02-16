@@ -152,7 +152,7 @@ main:
     let template_definitions = $5 in
 		let automata             = $6 in
     let template_calls       = $7 in
-		let init_definition      = $7 in
+		let init_definition      = $8 in
 
 		let main_model =
 		{
