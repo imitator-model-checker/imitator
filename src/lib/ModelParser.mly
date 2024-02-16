@@ -236,7 +236,6 @@ decl_var_list:
 
 /************************************************************/
 
-/* TODO (Tomaz): Add a check to forbid queues, stacks and constants here */
 template_var_type:
   | var_type { Regular_type $1 }
   | CT_ACTION { Template_action_var }
