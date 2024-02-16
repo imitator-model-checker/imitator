@@ -1,6 +1,6 @@
 (* EXAMPLE 2 *)
 var
-    x1, x2 : clock;
+    x1_, x2 : clock;
     id : int;
     k = 2 : constant;
     IDLE = -1 : int;
@@ -8,14 +8,14 @@ var
 automaton p1
 
 loc A: invariant True
-  when id = IDLE do { x1 := 0 } goto req;
+  when id = IDLE do { x1_ := 0 } goto req;
 
-loc req: invariant x1 <= k
-  when x1 <= k do { x1 := 0; id := 0 } goto waiting;
+loc req: invariant x1_ <= k
+  when x1_ <= k do { x1_ := 0; id := 0 } goto waiting;
 
 loc waiting: invariant True
-  when id = IDLE do { x1 := 0 } goto req;
-  when id = 0 & x1 > k goto cs;
+  when id = IDLE do { x1_ := 0 } goto req;
+  when id = 0 & x1_ > k goto cs;
 
 loc cs: invariant True
   when True do { id := IDLE } goto A;
@@ -49,7 +49,7 @@ init := {
     ;
 
     continuous =
-        x1 = 0
+        x1_ = 0
       & x2 = 0
     ;
 }
