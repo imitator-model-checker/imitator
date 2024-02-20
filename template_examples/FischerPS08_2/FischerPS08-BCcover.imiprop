@@ -1,4 +1,0 @@
-property := #synth BCcover(
-	delta = 0..5
-	Delta = 0..5
-);

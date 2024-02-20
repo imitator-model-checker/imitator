@@ -1,7 +1,0 @@
-(*
-property := unreachable loc[pta_1] = final2 & flag_1 = 0 & loc[pta_2] = final2 & flag_2 = 1;
-projectresult(abs_ptime)
-*)
-
-property := #synth EF(loc[pta_1] = final2 & not(flag_1) & loc[pta_2] = final2 & flag_2);
-projectresult(abs_ptime);

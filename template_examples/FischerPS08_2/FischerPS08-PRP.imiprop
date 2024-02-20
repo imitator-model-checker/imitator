@@ -1,5 +1,0 @@
-property := #synth PRP(
-	loc[observer] = obs_BAD,
-	delta = 3
-	Delta = 4
-);
