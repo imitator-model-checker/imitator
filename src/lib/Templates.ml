@@ -13,7 +13,7 @@ let instantiate_leaf param_map leaf =
            | Some (Arg_float f)    -> Leaf_constant (ParsedValue.Rat_value f)
            | Some (Arg_bool b)     -> Leaf_constant (Bool_value b)
     end
-    | leaf -> leaf
+    | _ -> leaf
 
 let instantiate_discrete_boolean_expression param_map =
   ParsingStructureUtilities.map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
