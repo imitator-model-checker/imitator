@@ -136,7 +136,7 @@ let rename_action_locs param_map user_name locs =
         match Hashtbl.find_opt param_map action_name with
           | None -> Sync (action_name ^ "_" ^ user_name)
           | Some (Arg_name action_name') -> Sync (action_name')
-          | _ -> failwith "[rename_action_sync]: unexpected argument for template (expecting name)"
+          | Some _ -> failwith "[rename_action_sync]: unexpected argument for template (expecting name)"
   in
   let rename_action_transition (guard, bloc, sync, loc_name) =
     let sync' = rename_action_sync sync in
