@@ -3,7 +3,9 @@ open ParsingStructureUtilities;;
 
 (* Instantiation of parameters *)
 
-let instantiate_leaf param_map leaf =
+type var_map = (variable_name, parsed_template_arg) Hashtbl.t
+
+let instantiate_leaf (param_map : var_map) (leaf : parsing_structure_leaf) : parsing_structure_leaf =
   match leaf with
     | Leaf_variable (name, id) -> begin
         match Hashtbl.find_opt param_map name with
@@ -15,19 +17,19 @@ let instantiate_leaf param_map leaf =
     end
     | _ -> leaf
 
-let instantiate_discrete_boolean_expression param_map =
+let instantiate_discrete_boolean_expression (param_map : var_map) : parsed_discrete_boolean_expression -> parsed_discrete_boolean_expression =
   map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
 
-let instantiate_boolean_expression param_map =
+let instantiate_boolean_expression (param_map : var_map) : parsed_boolean_expression -> parsed_boolean_expression =
   map_parsed_boolean_expression (instantiate_leaf param_map)
 
-let instantiate_discrete_arithmetic_expression param_map =
+let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_discrete_arithmetic_expression -> parsed_discrete_arithmetic_expression =
   map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
 
-let instantiate_convex_predicate param_map inv =
+let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
   List.map (instantiate_discrete_boolean_expression param_map) inv
 
-let instantiate_stopped param_map clocks =
+let instantiate_stopped (param_map : var_map) (clocks : variable_name list) : variable_name list =
   List.map (fun clock ->
     match Hashtbl.find_opt param_map clock with
     | None                 -> clock
@@ -36,7 +38,7 @@ let instantiate_stopped param_map clocks =
     (* This last case would be catched by type checking *)
   ) clocks
 
-let instantiate_flows param_map flows =
+let instantiate_flows (param_map : var_map) (flows : (variable_name * NumConst.t) list) : (variable_name * NumConst.t) list =
   let instantiate_flow (clock, rate) =
     match Hashtbl.find_opt param_map clock with
     | None                 -> (clock, rate)
@@ -45,7 +47,7 @@ let instantiate_flows param_map flows =
   in
   List.map instantiate_flow flows
 
-let rec instantiate_instructions param_map = function
+let rec instantiate_instructions (param_map : var_map) : parsed_instruction list -> parsed_instruction list = function
   | [] -> []
   | Parsed_local_decl ((name, id), tp, init) :: tl -> begin
       match Hashtbl.find_opt param_map name with
@@ -104,22 +106,22 @@ let rec instantiate_instructions param_map = function
         | Parsed_local_decl _ ->
             raise (Exceptions.InternalError "[instantiate_instructions]: This point of code is unreachable") 
 
-let instantiate_transition param_map (guard, bloc, sync, loc_name) =
+let instantiate_transition (param_map : var_map) ((guard, bloc, sync, loc_name) : transition) : transition =
   let guard' = instantiate_convex_predicate param_map guard in
   let bloc' = instantiate_instructions param_map bloc in
   (guard', bloc', sync, loc_name)
 
-let instantiate_transitions param_map =
+let instantiate_transitions (param_map : var_map) : transition list -> transition list =
   List.map (instantiate_transition param_map)
 
-let instantiate_loc param_map loc =
+let instantiate_loc (param_map : var_map) (loc : parsed_location) : parsed_location =
   { loc with invariant   = instantiate_convex_predicate param_map loc.invariant;
              stopped     = instantiate_stopped param_map loc.stopped;
              flow        = instantiate_flows param_map loc.flow;
              transitions = instantiate_transitions param_map loc.transitions
   }
 
-let rename_action_decls param_map user_name action_decls =
+let rename_action_decls (param_map : var_map) (user_name : variable_name) (action_decls : variable_name list) : variable_name list =
   let rename_action_decl action_name =
     match Hashtbl.find_opt param_map action_name with
       | None -> action_name ^ "_" ^ user_name
@@ -128,7 +130,7 @@ let rename_action_decls param_map user_name action_decls =
   in
   List.map rename_action_decl action_decls
 
-let rename_action_locs param_map user_name locs =
+let rename_action_locs (param_map : var_map) (user_name : variable_name) (locs : parsed_location list) : parsed_location list =
   let rename_action_sync sync =
     match sync with
     | NoSync -> NoSync
@@ -147,14 +149,14 @@ let rename_action_locs param_map user_name locs =
   in
   List.map rename_action_transitions locs
 
-let rename_actions param_map user_name template =
+let rename_actions (param_map : var_map) (user_name : variable_name) (template : parsed_template_definition) : parsed_template_definition =
   let action_decls, locs = template.template_body in
   let action_decls'      = rename_action_decls param_map user_name action_decls in
   let locs'              = rename_action_locs param_map user_name locs in
   { template with template_body = (action_decls', locs') }
 
 (* This is just instantiation, we do type checking somewhere else *)
-let instantiate_automaton templates parsed_template_call =
+let instantiate_automaton (templates : parsed_template_definition list) (parsed_template_call : parsed_template_call) : parsed_automaton =
     let user_name, template_name, args = parsed_template_call in
     let template                       = List.find (fun t -> t.template_name = template_name) templates in
     assert (List.length template.template_parameters = List.length args);
@@ -167,7 +169,7 @@ let instantiate_automaton templates parsed_template_call =
     let instantiated_locs              = List.map (instantiate_loc param_map) renamed_locs in
     (user_name, renamed_actions, instantiated_locs)
 
-let instantiate_automata templates insts =
+let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : parsed_automaton list =
     List.map (instantiate_automaton templates) insts
 
 
