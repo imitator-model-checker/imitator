@@ -66,7 +66,7 @@ type parsed_boolean_expression =
 	| Parsed_discrete_bool_expr of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
-  | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
+       | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
 	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -99,7 +99,7 @@ and parsed_discrete_factor =
 	| Parsed_variable of variable_ref
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
-  | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+       | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_nested_expr of parsed_discrete_arithmetic_expression
 	| Parsed_unary_min of parsed_discrete_factor
 	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
@@ -289,13 +289,13 @@ type parsed_projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_model = {
-	controllable_actions	: parsed_controllable_actions;
-	variable_declarations	: variable_declarations;
-	fun_definitions         : parsed_fun_definition_list;
-    template_definitions    : parsed_template_definition list;
-	automata				: parsed_automaton list;
-    template_calls          : parsed_template_call list;
-	init_definition			: init_definition;
+	controllable_actions  : parsed_controllable_actions;
+	variable_declarations : variable_declarations;
+	fun_definitions       : parsed_fun_definition_list;
+       template_definitions  : parsed_template_definition list;
+	automata              : parsed_automaton list;
+       template_calls        : parsed_template_call list;
+	init_definition       : init_definition;
 }
 
 

@@ -62,9 +62,9 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		controllable_actions  = merged_controllable_actions;
 		variable_declarations = List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
 		fun_definitions       = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
-    template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+		template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
 		automata              = List.append parsed_model.automata parsed_model_list.automata;
-    template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+		template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
 		init_definition       = List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
 ;;
@@ -77,7 +77,7 @@ let unzip l = List.fold_left
     fun_definitions       = [];
     template_definitions  = [];
 		automata              = [];
-    template_calls        = [];
+		template_calls        = [];
 		init_definition       = [];
 	}
 	(List.rev l)
@@ -149,9 +149,9 @@ main:
 		let controllable_actions = $1 in
 		let declarations         = $3 in
 		let fun_definitions      = $4 in
-    let template_definitions = $5 in
+		let template_definitions = $5 in
 		let automata             = $6 in
-    let template_calls       = $7 in
+		let template_calls       = $7 in
 		let init_definition      = $8 in
 
 		let main_model =
@@ -159,9 +159,9 @@ main:
 			controllable_actions  = controllable_actions;
 			variable_declarations = declarations;
 			fun_definitions       = fun_definitions;
-      template_definitions  = template_definitions;
+			template_definitions  = template_definitions;
 			automata              = automata;
-      template_calls        = template_calls;
+			template_calls        = template_calls;
 			init_definition       = init_definition;
 		}
 		in

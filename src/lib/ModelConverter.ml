@@ -2616,7 +2616,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)
 	in
 
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2868,7 +2867,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	(* Remove unused variables *)
 	(*------------------------------------------------------------*)
-
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
 	let clock_names, _, parameter_names, discrete_names_by_type, removed_variable_names =
