@@ -46,7 +46,7 @@ rule token = parse
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
-			let p : ParsingStructure.parsed_model = ModelParser.main token lb in
+			let p : ParsingStructure.parsed_model_with_templates = ModelParser.main token lb in
 			INCLUDE p
     }
 

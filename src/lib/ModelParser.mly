@@ -32,7 +32,7 @@ let parse_error _ =
 let include_list = ref [];;
 
 let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
-	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.controllable_actions, parsed_model_list.controllable_actions with
+	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.model.controllable_actions, parsed_model_list.model.controllable_actions with
 			| Parsed_no_controllable_actions, Parsed_no_controllable_actions
 				-> Parsed_no_controllable_actions
 
@@ -59,26 +59,32 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		in
 
 	{
-		controllable_actions  = merged_controllable_actions;
-		variable_declarations = List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
-		fun_definitions       = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
-		template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
-		automata              = List.append parsed_model.automata parsed_model_list.automata;
-		template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
-		init_definition       = List.append parsed_model.init_definition parsed_model_list.init_definition;
+                model =
+                {
+                        controllable_actions  = merged_controllable_actions;
+                        variable_declarations = List.append parsed_model.model.variable_declarations parsed_model_list.model.variable_declarations;
+                        fun_definitions       = List.append parsed_model.model.fun_definitions parsed_model_list.model.fun_definitions;
+                        automata              = List.append parsed_model.model.automata parsed_model_list.model.automata;
+                        init_definition       = List.append parsed_model.model.init_definition parsed_model_list.model.init_definition;
+                };
+                template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+                template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-		controllable_actions  = Parsed_no_controllable_actions;
-		variable_declarations = [];
-    fun_definitions       = [];
-    template_definitions  = [];
-		automata              = [];
-		template_calls        = [];
-		init_definition       = [];
+                model =
+                {
+                        controllable_actions  = Parsed_no_controllable_actions;
+                        variable_declarations = [];
+                        fun_definitions       = [];
+                        automata              = [];
+                        init_definition       = [];
+                };
+                template_definitions  = [];
+                template_calls        = [];
 	}
 	(List.rev l)
 ;;
@@ -90,7 +96,7 @@ let unzip l = List.fold_left
 %token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
-%token <ParsingStructure.parsed_model> INCLUDE
+%token <ParsingStructure.parsed_model_with_templates> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -138,7 +144,7 @@ let unzip l = List.fold_left
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_model> main
+%type <ParsingStructure.parsed_model_with_templates> main
 %%
 
 /************************************************************/
@@ -156,13 +162,16 @@ main:
 
 		let main_model =
 		{
-			controllable_actions  = controllable_actions;
-			variable_declarations = declarations;
-			fun_definitions       = fun_definitions;
-			template_definitions  = template_definitions;
-			automata              = automata;
-			template_calls        = template_calls;
-			init_definition       = init_definition;
+                        model =
+                        {
+                                controllable_actions  = controllable_actions;
+                                variable_declarations = declarations;
+                                fun_definitions       = fun_definitions;
+                                automata              = automata;
+                                init_definition       = init_definition;
+                        };
+                        template_definitions  = template_definitions;
+                        template_calls        = template_calls;
 		}
 		in
 		let included_model = unzip !include_list in

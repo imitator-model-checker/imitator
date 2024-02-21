@@ -296,13 +296,15 @@ type parsed_model = {
 	controllable_actions  : parsed_controllable_actions;
 	variable_declarations : variable_declarations;
 	fun_definitions       : parsed_fun_definition_list;
-       template_definitions  : parsed_template_definition list;
 	automata              : parsed_automaton list;
-       template_calls        : parsed_template_call list;
 	init_definition       : init_definition;
 }
 
-
+type parsed_model_with_templates = {
+        model                : parsed_model;
+        template_definitions : parsed_template_definition list;
+        template_calls       : parsed_template_call list;
+}
 
 (****************************************************************)
 (* Parsed valuation and valuation domains *)
