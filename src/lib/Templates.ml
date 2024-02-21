@@ -159,7 +159,8 @@ let rename_actions (param_map : var_map) (automaton_name : variable_name) (templ
 let instantiate_automaton (templates : parsed_template_definition list) (parsed_template_call : parsed_template_call) : parsed_automaton =
     let automaton_name, template_name, args = parsed_template_call in
     let template                       = List.find (fun t -> t.template_name = template_name) templates in
-    assert (List.length template.template_parameters = List.length args);
+    if List.length template.template_parameters <> List.length args then
+      failwith ("[instantiate_automaton]: The number of arguments provided for " ^ automaton_name ^ " is incorrect.");
     let param_names                    = List.map fst template.template_parameters in
     let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
     (* Replace action names *)
