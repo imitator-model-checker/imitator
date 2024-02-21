@@ -1,9 +1,9 @@
 open ParsingStructure;;
+open ParsingStructureUtilities;;
 
 (* Instantiation of parameters *)
 
 let instantiate_leaf param_map leaf =
-  let open ParsingStructureUtilities in
   match leaf with
     | Leaf_variable (name, id) -> begin
         match Hashtbl.find_opt param_map name with
@@ -16,13 +16,13 @@ let instantiate_leaf param_map leaf =
     | _ -> leaf
 
 let instantiate_discrete_boolean_expression param_map =
-  ParsingStructureUtilities.map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
+  map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
 
 let instantiate_boolean_expression param_map =
-  ParsingStructureUtilities.map_parsed_boolean_expression (instantiate_leaf param_map)
+  map_parsed_boolean_expression (instantiate_leaf param_map)
 
 let instantiate_discrete_arithmetic_expression param_map =
-  ParsingStructureUtilities.map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
+  map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
 
 let instantiate_convex_predicate param_map inv =
   List.map (instantiate_discrete_boolean_expression param_map) inv
