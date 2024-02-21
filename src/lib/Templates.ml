@@ -187,4 +187,7 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : parsed_automaton list =
     List.map (instantiate_automaton templates) insts
 
+let instantiate_model parsed_model_with_templates =
+    let instantiated_automata = instantiate_automata parsed_model_with_templates.template_definitions parsed_model_with_templates.template_calls in
+    { parsed_model_with_templates.model with automata = (parsed_model_with_templates.model.automata @ instantiated_automata) }
 
