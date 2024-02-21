@@ -7,7 +7,7 @@ let instantiate_leaf param_map leaf =
   match leaf with
     | Leaf_variable (name, id) -> begin
         match Hashtbl.find_opt param_map name with
-           | None                  -> Leaf_variable (name, id)
+           | None                  -> leaf
            | Some (Arg_name name') -> Leaf_variable (name', id)
            | Some (Arg_int i)      -> Leaf_constant (ParsedValue.Weak_number_value i)
            | Some (Arg_float f)    -> Leaf_constant (ParsedValue.Rat_value f)
