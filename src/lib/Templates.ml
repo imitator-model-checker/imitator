@@ -121,22 +121,22 @@ let instantiate_loc (param_map : var_map) (loc : parsed_location) : parsed_locat
              transitions = instantiate_transitions param_map loc.transitions
   }
 
-let rename_action_decls (param_map : var_map) (user_name : variable_name) (action_decls : variable_name list) : variable_name list =
+let rename_action_decls (param_map : var_map) (automaton_name : variable_name) (action_decls : variable_name list) : variable_name list =
   let rename_action_decl action_name =
     match Hashtbl.find_opt param_map action_name with
-      | None -> action_name ^ "_" ^ user_name
+      | None -> action_name ^ "_" ^ automaton_name
       | Some (Arg_name action_name') -> action_name'
       | Some _ -> failwith "[rename_action_decl]: unexpected argument for template (expecting name)"
   in
   List.map rename_action_decl action_decls
 
-let rename_action_locs (param_map : var_map) (user_name : variable_name) (locs : parsed_location list) : parsed_location list =
+let rename_action_locs (param_map : var_map) (automaton_name : variable_name) (locs : parsed_location list) : parsed_location list =
   let rename_action_sync sync =
     match sync with
     | NoSync -> NoSync
     | Sync action_name ->
         match Hashtbl.find_opt param_map action_name with
-          | None -> Sync (action_name ^ "_" ^ user_name)
+          | None -> Sync (action_name ^ "_" ^ automaton_name)
           | Some (Arg_name action_name') -> Sync (action_name')
           | Some _ -> failwith "[rename_action_sync]: unexpected argument for template (expecting name)"
   in
@@ -149,25 +149,25 @@ let rename_action_locs (param_map : var_map) (user_name : variable_name) (locs :
   in
   List.map rename_action_transitions locs
 
-let rename_actions (param_map : var_map) (user_name : variable_name) (template : parsed_template_definition) : parsed_template_definition =
+let rename_actions (param_map : var_map) (automaton_name : variable_name) (template : parsed_template_definition) : parsed_template_definition =
   let action_decls, locs = template.template_body in
-  let action_decls'      = rename_action_decls param_map user_name action_decls in
-  let locs'              = rename_action_locs param_map user_name locs in
+  let action_decls'      = rename_action_decls param_map automaton_name action_decls in
+  let locs'              = rename_action_locs param_map automaton_name locs in
   { template with template_body = (action_decls', locs') }
 
 (* This is just instantiation, we do type checking somewhere else *)
 let instantiate_automaton (templates : parsed_template_definition list) (parsed_template_call : parsed_template_call) : parsed_automaton =
-    let user_name, template_name, args = parsed_template_call in
+    let automaton_name, template_name, args = parsed_template_call in
     let template                       = List.find (fun t -> t.template_name = template_name) templates in
     assert (List.length template.template_parameters = List.length args);
     let param_names                    = List.map fst template.template_parameters in
     let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
     (* Replace action names *)
-    let template'                      = rename_actions param_map user_name template in
+    let template'                      = rename_actions param_map automaton_name template in
     let renamed_actions, renamed_locs  = template'.template_body in
     (* Instantiate other parameters *)
     let instantiated_locs              = List.map (instantiate_loc param_map) renamed_locs in
-    (user_name, renamed_actions, instantiated_locs)
+    (automaton_name, renamed_actions, instantiated_locs)
 
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : parsed_automaton list =
     List.map (instantiate_automaton templates) insts
