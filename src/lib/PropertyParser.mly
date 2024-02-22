@@ -518,11 +518,12 @@ positive_rational_with_div:
 ;
 
 */
-
+/*** NOTE: unused as of 2024/02/22
 positive_rational:
 	| pos_integer { NumConst.numconst_of_int $1 }
 	| pos_float { $1 }
 ;
+*/
 
 pos_integer:
 	| INT { $1 }
@@ -534,9 +535,6 @@ pos_float:
 	}
 ;
 
-binary_word:
-        BINARYWORD { ParsedValue.Bin_value (BinaryWord.binaryword_of_string $1) }
-;
 
 /************************************************************/
 projection_definition:
