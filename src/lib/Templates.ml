@@ -1,12 +1,10 @@
 open ParsingStructure;;
 open ParsingStructureUtilities;;
 
-(* Instantiation of parameters *)
-
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
 
-let instantiate_leaf (param_map : var_map) (leaf : parsing_structure_leaf) : parsing_structure_leaf =
-  match leaf with
+let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
+  fun leaf -> match leaf with
     | Leaf_variable (name, id) -> begin
         match Hashtbl.find_opt param_map name with
            | None                  -> leaf
@@ -38,7 +36,7 @@ let instantiate_stopped (param_map : var_map) (clocks : variable_name list) : va
     (* This last case would be catched by type checking *)
   ) clocks
 
-let instantiate_flows (param_map : var_map) (flows : (variable_name * NumConst.t) list) : (variable_name * NumConst.t) list =
+let instantiate_flows (param_map : var_map) (flows : parsed_flow) : parsed_flow =
   let instantiate_flow (clock, rate) =
     match Hashtbl.find_opt param_map clock with
     | None                 -> (clock, rate)
@@ -47,64 +45,66 @@ let instantiate_flows (param_map : var_map) (flows : (variable_name * NumConst.t
   in
   List.map instantiate_flow flows
 
-let rec instantiate_instructions (param_map : var_map) : parsed_instruction list -> parsed_instruction list = function
-  | [] -> []
-  | Parsed_local_decl ((name, id), tp, init) :: tl -> begin
-      match Hashtbl.find_opt param_map name with
-        | None ->
-            let tl' = instantiate_instructions param_map tl in
-            let init' = instantiate_boolean_expression param_map init in
-            Parsed_local_decl ((name, id), tp, init') :: tl'
-        | Some v ->
-            Hashtbl.remove param_map name;
-            let tl' = instantiate_instructions param_map tl in
-            let init' = instantiate_boolean_expression param_map init in
-            Hashtbl.add param_map name v;
-            Parsed_local_decl ((name, id), tp, init') :: tl'
-  end
-  | inst :: tl ->
-      let tl' = instantiate_instructions param_map tl in
-      match inst with
-        | Parsed_assignment (Parsed_scalar_update (name, id), rhs) -> begin
-            let rhs' = instantiate_boolean_expression param_map rhs in
-            match Hashtbl.find_opt param_map name with
-              | None -> Parsed_assignment (Parsed_scalar_update (name, id), rhs') :: tl'
-              | Some (Arg_name name') -> Parsed_assignment (Parsed_scalar_update (name', id), rhs') :: tl'
-              | Some _ -> failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
-        end
-        | Parsed_assignment (Parsed_indexed_update (name, index), rhs) ->
-            let rhs' = instantiate_boolean_expression param_map rhs in
-            Parsed_assignment (Parsed_indexed_update (name, index), rhs') :: tl'
-        | Parsed_instruction expr ->
-            let expr' = instantiate_boolean_expression param_map expr in
-            Parsed_instruction expr' :: tl'
-        | Parsed_for_loop ((name, id), left_expr, right_expr, up_down, body) -> begin
-            match Hashtbl.find_opt param_map name with
-              | None ->
-                  let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
-                  let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
-                  let body' = instantiate_instructions param_map body in
-                  Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
-              | Some v ->
-                  (* No need to isolate this one since the local variable is only scoped at `body` *)
-                  let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
-                  let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
-                  Hashtbl.remove param_map name;
-                  let body' = instantiate_instructions param_map body in
-                  Hashtbl.add param_map name v;
-                  Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
-        end
-        | Parsed_while_loop (cond, body) ->
-           let cond' = instantiate_boolean_expression param_map cond in
-           let body' = instantiate_instructions param_map body in
-           Parsed_while_loop (cond', body') :: tl'
-        | Parsed_if (cond, then_branch, else_branch_opt) ->
-            let cond' = instantiate_boolean_expression param_map cond in
-            let then_branch' = instantiate_instructions param_map then_branch in
-            let else_branch_opt' = Option.map (instantiate_instructions param_map) else_branch_opt in
-            Parsed_if (cond', then_branch', else_branch_opt') :: tl'
-        | Parsed_local_decl _ ->
-            raise (Exceptions.InternalError "[instantiate_instructions]: This point of code is unreachable") 
+let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc -> parsed_seq_code_bloc =
+  function
+    | [] -> []
+    | Parsed_local_decl ((name, id), tp, init) :: tl -> begin
+        match Hashtbl.find_opt param_map name with
+          | None ->
+              let tl' = instantiate_instructions param_map tl in
+              let init' = instantiate_boolean_expression param_map init in
+              Parsed_local_decl ((name, id), tp, init') :: tl'
+          | Some v ->
+              Hashtbl.remove param_map name;
+              let tl' = instantiate_instructions param_map tl in
+              let init' = instantiate_boolean_expression param_map init in
+              Hashtbl.add param_map name v;
+              Parsed_local_decl ((name, id), tp, init') :: tl'
+    end
+    | inst :: tl ->
+        let tl' = instantiate_instructions param_map tl in
+        match inst with
+          | Parsed_assignment (Parsed_scalar_update (name, id), rhs) -> begin
+              let rhs' = instantiate_boolean_expression param_map rhs in
+              match Hashtbl.find_opt param_map name with
+                | None -> Parsed_assignment (Parsed_scalar_update (name, id), rhs') :: tl'
+                | Some (Arg_name name') -> Parsed_assignment (Parsed_scalar_update (name', id), rhs') :: tl'
+                | Some _ ->
+                        failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
+          end
+          | Parsed_assignment (Parsed_indexed_update (name, index), rhs) ->
+              let rhs' = instantiate_boolean_expression param_map rhs in
+              Parsed_assignment (Parsed_indexed_update (name, index), rhs') :: tl'
+          | Parsed_instruction expr ->
+              let expr' = instantiate_boolean_expression param_map expr in
+              Parsed_instruction expr' :: tl'
+          | Parsed_for_loop ((name, id), left_expr, right_expr, up_down, body) -> begin
+              match Hashtbl.find_opt param_map name with
+                | None ->
+                    let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
+                    let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
+                    let body' = instantiate_instructions param_map body in
+                    Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
+                | Some v ->
+                    (* No need to isolate this one since the local variable is only scoped at `body` *)
+                    let left_expr' = instantiate_discrete_arithmetic_expression param_map left_expr in
+                    let right_expr' = instantiate_discrete_arithmetic_expression param_map right_expr in
+                    Hashtbl.remove param_map name;
+                    let body' = instantiate_instructions param_map body in
+                    Hashtbl.add param_map name v;
+                    Parsed_for_loop ((name, id), left_expr', right_expr', up_down, body') :: tl'
+          end
+          | Parsed_while_loop (cond, body) ->
+             let cond' = instantiate_boolean_expression param_map cond in
+             let body' = instantiate_instructions param_map body in
+             Parsed_while_loop (cond', body') :: tl'
+          | Parsed_if (cond, then_branch, else_branch_opt) ->
+              let cond' = instantiate_boolean_expression param_map cond in
+              let then_branch' = instantiate_instructions param_map then_branch in
+              let else_branch_opt' = Option.map (instantiate_instructions param_map) else_branch_opt in
+              Parsed_if (cond', then_branch', else_branch_opt') :: tl'
+          | Parsed_local_decl _ ->
+              raise (Exceptions.InternalError "[instantiate_instructions]: This point of code is unreachable") 
 
 let instantiate_transition (param_map : var_map) ((guard, bloc, sync, loc_name) : transition) : transition =
   let guard' = instantiate_convex_predicate param_map guard in
