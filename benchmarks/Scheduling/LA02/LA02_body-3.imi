@@ -23,7 +23,7 @@
 
 automaton checker
 
-synclabs: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing,m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing,m_1_job_3_beginning, m_1_job_3_finishing, m_2_job_3_beginning, m_2_job_3_finishing, m_4_job_3_beginning, m_4_job_3_finishing, m_0_job_3_beginning, m_0_job_3_finishing, m_3_job_3_beginning, m_3_job_3_finishing, DEADLINE;
+actions: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing,m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing,m_1_job_3_beginning, m_1_job_3_finishing, m_2_job_3_beginning, m_2_job_3_finishing, m_4_job_3_beginning, m_4_job_3_finishing, m_0_job_3_beginning, m_0_job_3_finishing, m_3_job_3_beginning, m_3_job_3_finishing, DEADLINE;
 
 
 loc check_1: invariant time <= deadline
@@ -141,7 +141,7 @@ end
 
 automaton job_1
 
-synclabs: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing, m_4_job_2_beginning, m_2_job_2_beginning, m_0_job_2_beginning, m_1_job_2_beginning, m_3_job_2_beginning, m_4_job_3_beginning, m_2_job_3_beginning, m_0_job_3_beginning, m_1_job_3_beginning, m_3_job_3_beginning;
+actions: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing, m_4_job_2_beginning, m_2_job_2_beginning, m_0_job_2_beginning, m_1_job_2_beginning, m_3_job_2_beginning, m_4_job_3_beginning, m_2_job_3_beginning, m_0_job_3_beginning, m_1_job_3_beginning, m_3_job_3_beginning;
 
 (* -- TASK 1 -- *)
 
@@ -361,7 +361,7 @@ end
 automaton job_2
 
 
-synclabs: m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing, m_0_job_1_beginning, m_3_job_1_beginning, m_1_job_1_beginning, m_4_job_1_beginning, m_2_job_1_beginning,  m_4_job_3_beginning, m_2_job_3_beginning, m_0_job_3_beginning, m_1_job_3_beginning, m_3_job_3_beginning;
+actions: m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing, m_0_job_1_beginning, m_3_job_1_beginning, m_1_job_1_beginning, m_4_job_1_beginning, m_2_job_1_beginning,  m_4_job_3_beginning, m_2_job_3_beginning, m_0_job_3_beginning, m_1_job_3_beginning, m_3_job_3_beginning;
 
 (* -- TASK 1 -- *)
 
@@ -579,7 +579,7 @@ end
 automaton job_3
 (* --1 72 2 23 4 28 0 58 3 99-- *)
 
-synclabs: m_1_job_3_beginning, m_1_job_3_finishing, m_2_job_3_beginning, m_2_job_3_finishing, m_4_job_3_beginning, m_4_job_3_finishing, m_0_job_3_beginning, m_0_job_3_finishing, m_3_job_3_beginning, m_3_job_3_finishing,  m_0_job_1_beginning, m_3_job_1_beginning, m_1_job_1_beginning, m_4_job_1_beginning, m_2_job_1_beginning, m_4_job_2_beginning, m_2_job_2_beginning, m_0_job_2_beginning, m_1_job_2_beginning, m_3_job_2_beginning;
+actions: m_1_job_3_beginning, m_1_job_3_finishing, m_2_job_3_beginning, m_2_job_3_finishing, m_4_job_3_beginning, m_4_job_3_finishing, m_0_job_3_beginning, m_0_job_3_finishing, m_3_job_3_beginning, m_3_job_3_finishing,  m_0_job_1_beginning, m_3_job_1_beginning, m_1_job_1_beginning, m_4_job_1_beginning, m_2_job_1_beginning, m_4_job_2_beginning, m_2_job_2_beginning, m_0_job_2_beginning, m_1_job_2_beginning, m_3_job_2_beginning;
 
 (* -- TASK 1 -- *)
 

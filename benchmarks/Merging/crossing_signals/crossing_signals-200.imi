@@ -1,8 +1,8 @@
-(************************************************************
- *                                IMITATOR MODEL
- *
- * Title            : Small example to demonstrate EFexemplify; interesting to demonstrate the use of merging
- * Description      : Property: "if s_1 and s_2 cross each other NB times, then after exactly p time units we have s_1 = 3 s_2"
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : crossing_signals-200
+ * Description      : Small example to demonstrate EFexemplify; interesting to demonstrate the use of merging. Property: "if s_1 and s_2 cross each other NB times, then after exactly p time units we have s_1 = 3 s_2"
  * Correctness      : reachability property
  * Scalable         : yes
  * Generated        : no
@@ -13,13 +13,13 @@
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2021/06/04
  * Last modified    : 2023/05/12
  * Model version    : 0.2
- *
+ * 
  * IMITATOR version : 3.4
- ************************************************************)
+ ******************************************************************************)
 
 var
 
@@ -105,7 +105,7 @@ end (* signal_2 *)
 (************************************************************)
 
 init := {
-	
+
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
@@ -120,7 +120,7 @@ init := {
 
     ;
 
-    continuous =        
+    continuous =
 		(*------------------------------------------------------------*)
 		(* Initial clock constraints *)
 		(*------------------------------------------------------------*)

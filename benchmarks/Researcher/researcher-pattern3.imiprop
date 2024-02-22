@@ -5,4 +5,4 @@
  * Author           : Étienne André
  ******************************************************************************)
 
-property := #synth pattern(always sequence (drink, done));
+property := #synth pattern(always sequence (drink, finished));

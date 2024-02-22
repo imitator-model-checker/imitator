@@ -36,7 +36,7 @@ var
 (************************************************************)
   automaton train
 (************************************************************)
-synclabs: approach, inn, out, exit;
+actions: approach, inn, out, exit;
 
 loc train0: invariant True
 	when True sync approach do {x := 0} goto train1;
@@ -56,7 +56,7 @@ end (*train*)
 (************************************************************)
   automaton gate
 (************************************************************)
-synclabs: lower, up, down, raise;
+actions: lower, up, down, raise;
 
 (* Gate is open *)
 loc gate0: invariant True
@@ -79,7 +79,7 @@ end (*gate*)
 (************************************************************)
   automaton controller
 (************************************************************)
-synclabs: approach, lower, exit, raise;
+actions: approach, lower, exit, raise;
 
 loc controller0: invariant True
 	when True sync approach do {z := 0} goto controller1;

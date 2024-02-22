@@ -1,25 +1,25 @@
-(************************************************************
- *                                IMITATOR MODEL
- *
- * Title            : Toy example of an ATM to evaluate parametric timed opacity
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : ATM_PTO
  * Description      : Toy example of an ATM to evaluate parametric timed opacity; the model works by the self-composition of two copies of the PTA, with a Boolean "cash_spotted" encoding the secret action (getting cash), following the method in [ALMS22]
  * Correctness      : Timed opacity, i.e., valuation of the (unique) timing parameter `p_total` for which the system is timed-opaque  for the execution time also denoted by `p_total`
  * Scalable         : no
  * Generated        : no
- * Categories       : Education, Security, Toy
+ * Categories       : Education ; Security ; Toy
  * Source           : Own work
- * bibkey           : [ABLM2x]
+ * bibkey           : [ABLM22]
  * Author           : Étienne André
  * Modeling         : Étienne André
  * Input by         : Étienne André
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
+ * 
  * Created          : 2022/07/15
  * Last modified    : 2022/07/18
  * Model version    : 0.1
- *
+ * 
  * IMITATOR version : 3.3
- ************************************************************)
+ ******************************************************************************)
 
 var
 
@@ -28,7 +28,7 @@ var
  	y_1, (* used for constant-time opaque behavior *)
  	x_2, (* used for local actions such as timeouts *)
  	y_2, (* used for constant-time opaque behavior *)
- 	
+
  	t_total,
 		: clock;
 
@@ -45,7 +45,7 @@ var
 	MAXnbFailedAmount   = 2,
 	MAXnbRestart        = 1,
 		: int;
-	
+
 	cash_spotted_1,
 	cash_spotted_2,
 		: bool;
@@ -57,7 +57,7 @@ var
 (************************************************************)
   automaton ATM_1
 (************************************************************)
-synclabs:
+actions:
 	(* Controllable: system *)
 	askPassword_1, finish, start_1,
 	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)
@@ -135,10 +135,10 @@ loc displayingBalance: invariant x_1 <= 10 (* & t_total <= p_total *)
 
 loc terminating: invariant y_1 <= p_total & t_total <= p_total
 	when y_1 = p_total & t_total = p_total sync finish goto the_end;
-	
+
 loc cancelling: invariant y_1 <= p_total & t_total <= p_total
 	when y_1 = p_total & t_total = p_total sync finish goto the_end;
-	
+
 loc the_end: invariant True
 
 end (* ATM *)
@@ -147,7 +147,7 @@ end (* ATM *)
 (************************************************************)
   automaton ATM_2
 (************************************************************)
-synclabs:
+actions:
 	(* Controllable: system *)
 	askPassword_2, finish, start_2,
 	(* Controllable: user (i.e., that can be disabled by removing the choice in the system) *)
@@ -225,10 +225,10 @@ loc displayingBalance: invariant x_2 <= 10 (* & t_total <= p_total *)
 
 loc terminating: invariant y_2 <= p_total & t_total <= p_total
 	when y_2 = p_total & t_total = p_total sync finish goto the_end;
-	
+
 loc cancelling: invariant y_2 <= p_total & t_total <= p_total
 	when y_2 = p_total & t_total = p_total sync finish goto the_end;
-	
+
 loc the_end: invariant True
 
 end (* ATM *)
@@ -239,7 +239,7 @@ end (* ATM *)
 (************************************************************)
 
 init := {
-	
+
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
@@ -253,23 +253,23 @@ init := {
 		nbFailedAmount_1   := 0,
 		nbFailedPassword_1 := 0,
 		nbRestart_1        := 0,
-		
+
 		nbFailedAmount_2   := 0,
 		nbFailedPassword_2 := 0,
 		nbRestart_2        := 0,
-		
+
 		cash_spotted_1     := False,
 		cash_spotted_2     := False,
     ;
 
-    continuous =        
+    continuous =
 		(*------------------------------------------------------------*)
 		(* Initial clock constraints *)
 		(*------------------------------------------------------------*)
 		& x_1     = 0
 		& y_1     = 0
 		& t_total = 0
-		
+
 		& p_total >= 0
 	;
 }

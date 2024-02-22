@@ -52,7 +52,7 @@ var 	x1, x2, x12, y12, x21, y21
 (************************************************************)
   automaton node1
 (************************************************************)
-synclabs: snd_ack12, rcv_ack21, snd_idle12, rcv_idle21, snd_req12, rcv_req21, root1, child1;
+actions: snd_ack12, rcv_ack21, snd_idle12, rcv_idle21, snd_req12, rcv_req21, root1, child1;
 
 urgent loc rcont1: invariant True
 	when True sync snd_idle12 do {x1 := 0} goto fast1;
@@ -104,7 +104,7 @@ end
 (************************************************************)
   automaton node2
 (************************************************************)
-synclabs: snd_ack21, rcv_ack12, snd_idle21, rcv_idle12, snd_req21, rcv_req12, root2, child2;
+actions: snd_ack21, rcv_ack12, snd_idle21, rcv_idle12, snd_req21, rcv_req12, root2, child2;
 
 urgent loc rcont2: invariant True
 	when True sync snd_idle21 do {x2 := 0} goto fast2;
@@ -156,7 +156,7 @@ end
 (************************************************************)
   automaton wire12
 (************************************************************)
-synclabs: snd_ack12, rcv_ack12,
+actions: snd_ack12, rcv_ack12,
 	snd_idle12, rcv_idle12,
 	snd_req12, rcv_req12;
 
@@ -196,7 +196,7 @@ end
 (************************************************************)
   automaton wire21
 (************************************************************)
-synclabs: snd_ack21, rcv_ack21,
+actions: snd_ack21, rcv_ack21,
 	snd_idle21, rcv_idle21,
 	snd_req21, rcv_req21;
 
@@ -235,7 +235,7 @@ end
 (************************************************************)
   automaton s1o (*Safety 1 Observer*)
 (************************************************************)
-synclabs: child1, child2,
+actions: child1, child2,
 	root1, root2;
 
 loc S1oStart: invariant True

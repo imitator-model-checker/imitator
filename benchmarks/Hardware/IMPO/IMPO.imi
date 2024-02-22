@@ -38,7 +38,7 @@ var 	ckNot1, ckNot2, ckAnd, ckEnv1, ckEnv2
 (************************************************************)
   automaton Not1Gate
 (************************************************************)
-synclabs: i1Up, i1Down, n1Up, n1Down;
+actions: i1Up, i1Down, n1Up, n1Down;
 
 (* Unstable *)
 loc Not100: invariant ckNot1 <= dNot1_u
@@ -65,7 +65,7 @@ end (*Not1Gate*)
 (************************************************************)
   automaton Not2Gate
 (************************************************************)
-synclabs: i2Up, i2Down, n2Up, n2Down;
+actions: i2Up, i2Down, n2Up, n2Down;
 
 (* Unstable *)
 loc Not200: invariant ckNot2 <= dNot2_u
@@ -92,7 +92,7 @@ end (*Not2Gate*)
 (************************************************************)
   automaton AndGate
 (************************************************************)
-synclabs: n1Up, n1Down, n2Up, n2Down, qUp, qDown;
+actions: n1Up, n1Down, n2Up, n2Down, qUp, qDown;
 
 (* Stable *)
 loc And000: invariant True
@@ -145,7 +145,7 @@ end (*AndGate*)
 (************************************************************)
   automaton EnvI1
 (************************************************************)
-synclabs: i1Up, i1Down;
+actions: i1Up, i1Down;
 
 (* Unstable *)
 loc EnvI11: invariant ckEnv1 <= di1_u
@@ -161,7 +161,7 @@ end (*EnvI1*)
 (************************************************************)
   automaton EnvI2
 (************************************************************)
-synclabs: i2Up, i2Down;
+actions: i2Up, i2Down;
 
 (* Unstable *)
 loc EnvI20: invariant ckEnv2 <= di2_u

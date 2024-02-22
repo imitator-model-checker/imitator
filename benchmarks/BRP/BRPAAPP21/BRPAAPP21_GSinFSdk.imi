@@ -58,7 +58,7 @@ AUTOMATA
 automaton monitor
 (************************************************************)
 
-synclabs: S_in, S_OK, S_NOK, S_DK, sndD;
+actions: S_in, S_OK, S_NOK, S_DK, sndD;
 
 loc s0: invariant True
     	when True sync sndD goto s0;
@@ -77,7 +77,7 @@ end (* monitor *)
 (****************************************************)
 automaton sender
 (****************************************************)
-synclabs: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
+actions: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
 
 loc idleS: invariant x>=0
 	when True sync S_in do {b1:=True,x:=0} goto next_frame;
@@ -105,7 +105,7 @@ end (* sender *)
 (****************************************************)
 automaton receiver
 (****************************************************)
-synclabs: rcvD, sndA, R_NOK, R_OK, R_FST, R_INC;
+actions: rcvD, sndA, R_NOK, R_OK, R_FST, R_INC;
 
 loc new_file: invariant True
 	when True sync rcvD do {z:=0} goto fst_safe;
@@ -137,7 +137,7 @@ end (* receiver *)
 (****************************************************)
 automaton channelK
 (****************************************************)
-synclabs: sndD, rcvD, lostK;
+actions: sndD, rcvD, lostK;
 
 loc startK: invariant u>=0
 	when True sync sndD do {u:=0} goto in_transitK;
@@ -154,7 +154,7 @@ end (* channelK *)
 (****************************************************)
 automaton channelL
 (****************************************************)
-synclabs: sndA, rcvA, lostL;
+actions: sndA, rcvA, lostL;
 
 loc startL: invariant v>=0
 	when True sync sndA do {v:=0} goto in_transitL;

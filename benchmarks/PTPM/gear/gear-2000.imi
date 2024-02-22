@@ -45,7 +45,7 @@ MEANING OF THE EVENTS
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: A, B, C, D, dollar, start;
+actions: A, B, C, D, dollar, start;
 
 loc pre_s0: invariant True
 	(* First try immediately the pattern in 0-time *)
@@ -87,7 +87,7 @@ end (* pta *)
 (************************************************************)
   automaton word
 (************************************************************)
-synclabs: A, B, C, D;
+actions: A, B, C, D;
 
 	(* BEGIN GENERATED *)
 	loc w1: invariant xabs <= 2.32

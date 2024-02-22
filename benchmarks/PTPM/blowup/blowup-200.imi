@@ -39,7 +39,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a, b, dollar, start;
+actions: a, b, dollar, start;
 
 loc pre_s0: invariant True
 	(* First try immediately the pattern in 0-time *)
@@ -76,7 +76,7 @@ end (* pta *)
 (************************************************************)
   automaton word
 (************************************************************)
-synclabs: a, b;
+actions: a, b;
 
 	(* BEGIN AUTOMATICALLY GENERATED *)
 	loc w0: invariant xabs <= 5/100
