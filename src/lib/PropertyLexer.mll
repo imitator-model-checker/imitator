@@ -83,6 +83,9 @@ rule token = parse
  	| "Valid"          { CT_VALID }
 	| "W"              { CT_W }
 
+	| "inf"            { CT_INFINITY }
+	| "infinity"       { CT_INFINITY }
+
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
 	| "and"            { SYMBOL_AND }
