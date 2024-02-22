@@ -15,10 +15,10 @@
  * License          : 
  * 
  * Created          : 
- * Last modified    : 2021/08/30
+ * Last modified    : 2024/02/22
  * Model version    : 
  * 
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.4
  ******************************************************************************)
 
 
@@ -29,7 +29,7 @@ var
 	: clock;
 
 	nb
-	: discrete;
+	: int;
 
 	delta, Delta
 	: parameter;
