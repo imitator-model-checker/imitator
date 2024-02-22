@@ -13,7 +13,7 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
  * IMITATOR version: 3.1
  ************************************************************)
@@ -57,7 +57,7 @@
   automaton InputStation_1
 (************************************************************)
 
-synclabs: L3_in_I1, I_L3_I1, O_L3_TU3_1;
+actions: L3_in_I1, I_L3_I1, O_L3_TU3_1;
 
 loc InputStation_1_I0(*-*- ACCEPTING -*-*): invariant True
 	when True sync L3_in_I1 do {clock_L3_in_I1 := 0} goto I1;
@@ -75,7 +75,7 @@ end (* InputStation_1 *)
 (************************************************************)
   automaton InputStation_2
 (************************************************************)
-synclabs: L3_in_I2, I_L3_I2, O_L3_TU3_2;
+actions: L3_in_I2, I_L3_I2, O_L3_TU3_2;
 
 loc InputStation_2_I0(*-*- ACCEPTING -*-*): invariant True
 	when True sync L3_in_I2 do {clock_L3_in_I2 := 0} goto InputStation_2_I0;
@@ -89,7 +89,7 @@ end (* InputStation_2 *)
 (************************************************************)
   automaton  AssemblyStation_1
 (************************************************************)
-synclabs:
+actions:
 I_L1_TU1_1, O_L1_AS1_1, task1A, task1B, I_L1_AS1_1, O_L1_TU1_1,
 I_L1_TU1_2, O_L1_AS1_2, I_L1_AS1_2, O_L1_TU1_2;
 
@@ -128,7 +128,7 @@ end (*  AssemblyStation_1  *)
 (************************************************************)
   automaton  TransportUnit_1
 (************************************************************)
-synclabs:
+actions:
 I_CL_TU3_1, O_CL_TU1_1, I_L1_TU1_1, O_L1_AS1_1,
 I_L1_AS1_1, O_L1_TU1_1, I_CL_TU1_1,
 I_CL_TU2_2, O_CL_TU1_2, I_L1_TU1_2, O_L1_AS1_2,
@@ -179,7 +179,7 @@ end (*  TransportUnit_1 *)
 (************************************************************)
   automaton  TransportUnit_3A
 (************************************************************)
-synclabs:
+actions:
 I_L3_I1, L3_out_TU3_1, O_L3_TU3_1, I_CL_TU3_1, O_CL_TU1_1;
 
 loc TransportUnit_3A_T0(*-*- ACCEPTING -*-*): invariant True
@@ -209,7 +209,7 @@ end (*  TransportUnit_3A *)
 (************************************************************)
   automaton OutputStation
 (************************************************************)
-synclabs: I_L3_TU3_1, O_L3_I1, product1, I_L3_TU3_2, O_L3_I2, product2;
+actions: I_L3_TU3_1, O_L3_I1, product1, I_L3_TU3_2, O_L3_I2, product2;
 
 loc OutputStation_I0(*-*- ACCEPTING -*-*): invariant True
 	when True sync I_L3_TU3_1 do {clock_I_L3_TU3_1 := 0} goto I1;
@@ -232,7 +232,7 @@ end (* OutputStation *)
 (************************************************************)
   automaton  TransportUnit_2
 (************************************************************)
-synclabs:
+actions:
 I_CL_TU1_1, O_CL_TU2_1, I_L2_TU2_1, O_L2_AS2_1,
 I_L2_AS2_1, O_L2_TU2_1, I_CL_TU2_1,
 I_CL_TU3_2, O_CL_TU2_2, I_L2_TU2_2, O_L2_AS2_2,
@@ -280,7 +280,7 @@ end (*  TransportUnit_2 *)
 (************************************************************)
   automaton  TransportUnit_3B
 (************************************************************)
-synclabs:
+actions:
 I_L3_I2, L3_out_TU3_2, O_L3_TU3_2, I_CL_TU3_2, O_CL_TU2_2;
 
 loc TransportUnit_3B_T0(*-*- ACCEPTING -*-*): invariant True
@@ -303,7 +303,7 @@ end (*  TransportUnit_3B *)
 (************************************************************)
   automaton  TransportUnit_3C
 (************************************************************)
-synclabs:
+actions:
 I_CL_TU2_1, O_CL_TU3_1, I_L3_TU3_1, I_CL_TU1_2, O_CL_TU3_2, I_L3_TU3_2;
 
 loc TransportUnit_3C_T0(*-*- ACCEPTING -*-*): invariant True
@@ -332,7 +332,7 @@ end (*  TransportUnit_3C *)
 (************************************************************)
   automaton  AssemblyStation_2
 (************************************************************)
-synclabs:
+actions:
 I_L2_TU2_1, O_L2_AS2_1, task2A, task2B, I_L2_AS2_1, O_L2_TU2_1,
 I_L2_TU2_2, O_L2_AS2_2, I_L2_AS2_2, O_L2_TU2_2;
 
@@ -374,7 +374,7 @@ end (*  AssemblyStation_2  *)
 (************************************************************)
   automaton  Spec_9
 (************************************************************)
-synclabs:
+actions:
 L3_in_I1, L3_out_TU3_1;
 
 loc Spec_9_T0: invariant True

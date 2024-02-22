@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/01
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -33,7 +33,7 @@ var
 (************************************************************)
   automaton input
 (************************************************************)
-synclabs: input, send, ack;
+actions: input, send, ack;
 
 loc I0: invariant True
 	when xa <= 1 sync input do {xi := 0} goto I1;
@@ -49,7 +49,7 @@ end (* input *)
 (************************************************************)
   automaton output
 (************************************************************)
-synclabs: output, send, ack;
+actions: output, send, ack;
 
 loc O0: invariant True
 	when True sync send do {xs := 0} goto O1;
@@ -65,7 +65,7 @@ end (* output *)
 (************************************************************)
   automaton Mphihat
 (************************************************************)
-synclabs: input, output;
+actions: input, output;
 
 loc P0: invariant True
 	when xo > 5 sync input do {xi := 0} goto Pviolated;

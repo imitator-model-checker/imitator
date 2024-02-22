@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/07
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -65,7 +65,7 @@ var
 (************************************************************)
   automaton Conveyor1
 (************************************************************)
-synclabs: B1_in, I_B1_C1, O_B1_R1;
+actions: B1_in, I_B1_C1, O_B1_R1;
 
 loc C1_0: while True wait {}
 	when True sync B1_in do {c_B1_in := 0} goto C1_1;
@@ -82,7 +82,7 @@ end (* Conveyor1 *)
 (************************************************************)
   automaton Conveyor2
 (************************************************************)
-synclabs: B2_in, I_B2_C2, O_B2_R3;
+actions: B2_in, I_B2_C2, O_B2_R3;
 
 loc C2_0: while True wait {}
 	when True sync B2_in do {c_B2_in := 0} goto C2_1;
@@ -99,7 +99,7 @@ end (* Conveyor1 *)
 (************************************************************)
   automaton Mill
 (************************************************************)
-synclabs: I_B3_R1, B3_in_M, B3_out_M, I_B3_M, O_B3_R2, O_B3_M;
+actions: I_B3_R1, B3_in_M, B3_out_M, I_B3_M, O_B3_R2, O_B3_M;
 
 loc M0: while True wait {}
 	when True sync I_B3_R1 do {xI_B3_R1 := 0} goto M1;
@@ -123,7 +123,7 @@ end (* Mill *)
 (************************************************************)
   automaton Lathe
 (************************************************************)
-synclabs: I_B4_R3, B4_in_L, B4_out_L, O_B4_L, I_B4_L, O_B4_R4;
+actions: I_B4_R3, B4_in_L, B4_out_L, O_B4_L, I_B4_L, O_B4_R4;
 
 loc L0: while True wait {}
 	when True sync I_B4_R3 do {xI_B4_R3 := 0} goto L1;
@@ -147,7 +147,7 @@ end (* Lathe *)
 (************************************************************)
   automaton Robot1
 (************************************************************)
-synclabs: I_B1_C1, B1_out, O_B1_R1, B3_in_R1, I_B3_R1, O_B3_M;
+actions: I_B1_C1, B1_out, O_B1_R1, B3_in_R1, I_B3_R1, O_B3_M;
 
 loc R1_0: while True wait {}
 	when True sync I_B1_C1 do {c_I_B1_C1 := 0} goto R1_1;
@@ -173,7 +173,7 @@ end (* Robot1 *)
 (************************************************************)
   automaton Robot2
 (************************************************************)
-synclabs: I_B3_M, B3_out_R2, O_B3_R2, B5_in_R2, I_B5_R2, O_B5_A;
+actions: I_B3_M, B3_out_R2, O_B3_R2, B5_in_R2, I_B5_R2, O_B5_A;
 
 loc R2_0: while True wait {}
 	when True sync I_B3_M do {xI_B3_M := 0} goto R2_1;
@@ -199,7 +199,7 @@ end (* Robot2 *)
 (************************************************************)
   automaton Robot3
 (************************************************************)
-synclabs: I_B2_C2, B2_out, O_B2_R3, B4_in_R3, I_B4_R3, O_B4_L;
+actions: I_B2_C2, B2_out, O_B2_R3, B4_in_R3, I_B4_R3, O_B4_L;
 
 loc R3_0: while True wait {}
 	when True sync I_B2_C2 do {c_I_B2_C2 := 0} goto R3_1;
@@ -225,7 +225,7 @@ end (* Robot3 *)
 (************************************************************)
   automaton Robot4
 (************************************************************)
-synclabs: I_B4_L, B4_out_R4, O_B4_R4, B6_in_R4, I_B6_R4, O_B6_A;
+actions: I_B4_L, B4_out_R4, O_B4_R4, B6_in_R4, I_B6_R4, O_B6_A;
 
 loc R4_0: while True wait {}
 	when True sync I_B4_L do {xI_B4_L := 0} goto R4_1;
@@ -251,7 +251,7 @@ end (* Robot4 *)
 (************************************************************)
   automaton AssemblyStation
 (************************************************************)
-synclabs: I_B5_R2, B5_out_A, O_B5_A, I_B6_R4, B6_out_A, O_B6_A, product;
+actions: I_B5_R2, B5_out_A, O_B5_A, I_B6_R4, B6_out_A, O_B6_A, product;
 
 loc A0: while True wait {}
 	when True sync I_B5_R2 do {xI_B5_R2 := 0} goto A1;
@@ -280,7 +280,7 @@ end (* AssemblyStation *)
 (************************************************************)
   automaton Spec1
 (************************************************************)
-synclabs: B1_in, B1_out;
+actions: B1_in, B1_out;
 
 loc S0: while True wait {}
 	when True sync B1_in do {c_B1_in := 0} goto S1;

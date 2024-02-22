@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -53,7 +53,7 @@ var
 (************************************************************)
   automaton Conveyor1
 (************************************************************)
-synclabs: B1_in, I_B1_C1, O_B1_R1;
+actions: B1_in, I_B1_C1, O_B1_R1;
 
 loc C0: invariant True
 	when True sync B1_in do {c_B1_in := 0} goto C1;
@@ -69,7 +69,7 @@ end (* Conveyor1 *)
 (************************************************************)
   automaton Mill
 (************************************************************)
-synclabs: I_B3_R1, B3_in_M, B3_out_M, I_B3_M, O_B3_R2, O_B3_M;
+actions: I_B3_R1, B3_in_M, B3_out_M, I_B3_M, O_B3_R2, O_B3_M;
 
 loc M0: invariant True
 	when True sync I_B3_R1 do {xI_B3_R1 := 0} goto M1;
@@ -92,7 +92,7 @@ end (* Mill *)
 (************************************************************)
   automaton Robot1
 (************************************************************)
-synclabs: I_B1_C1, B1_out, O_B1_R1, B3_in_R1, I_B3_R1, O_B3_M;
+actions: I_B1_C1, B1_out, O_B1_R1, B3_in_R1, I_B3_R1, O_B3_M;
 
 loc R1_0: invariant True
 	when True sync I_B1_C1 do {c_I_B1_C1 := 0} goto R1_1;
@@ -117,7 +117,7 @@ end (* Robot1 *)
 (************************************************************)
   automaton Robot2
 (************************************************************)
-synclabs: I_B3_M, B3_out_R2, O_B3_R2, B5_in_R2, I_B5_R2, O_B5_A;
+actions: I_B3_M, B3_out_R2, O_B3_R2, B5_in_R2, I_B5_R2, O_B5_A;
 
 loc R2_0: invariant True
 	when True sync I_B3_M do {xI_B3_M := 0} goto R2_1;
@@ -142,7 +142,7 @@ end (* Robot2 *)
 (************************************************************)
   automaton AssemblyStation
 (************************************************************)
-synclabs: I_B5_R2, B5_out_A, O_B5_A, product;
+actions: I_B5_R2, B5_out_A, O_B5_A, product;
 
 loc A0: invariant True
 	when True sync I_B5_R2 do {xI_B5_R2 := 0} goto A1;
@@ -162,7 +162,7 @@ end (* AssemblyStation *)
 (************************************************************)
   automaton Spec1
 (************************************************************)
-synclabs: B1_in, B1_out;
+actions: B1_in, B1_out;
 
 loc S0: invariant True
 	when True sync B1_in do {c_B1_in := 0} goto S1;
@@ -182,7 +182,7 @@ end (* Spec1 *)
 (************************************************************)
   automaton Spec3
 (************************************************************)
-synclabs: O_B3_M, I_B3_M;
+actions: O_B3_M, I_B3_M;
 
 loc S0: invariant True
 	when True sync O_B3_M do {xO_B3_M := 0} goto S1;
@@ -200,7 +200,7 @@ end (* Spec3 *)
 (************************************************************)
   automaton Spec5
 (************************************************************)
-synclabs: B5_in_R2, B5_out_A;
+actions: B5_in_R2, B5_out_A;
 
 loc S0: invariant True
 	when True sync B5_in_R2 do {xB5_in_R2 := 0} goto S1;
