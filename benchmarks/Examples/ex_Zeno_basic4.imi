@@ -7,9 +7,9 @@
  * Author          : Sun Jun
  *
  * Created         : 2015/05/07
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -27,7 +27,6 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
 
 loc l1: invariant True
 	when True do {x := 0} goto l2;

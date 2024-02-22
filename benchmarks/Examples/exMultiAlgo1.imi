@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/02/22
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
  * IMITATOR version: 3.1
  ************************************************************)
@@ -32,7 +32,6 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
 
 loc l0: invariant y <= p2
 	when x = 1 & x > p1 goto l1;
@@ -45,7 +44,7 @@ loc l2: invariant y <= 1
 	when y = 1 & y < p1 goto l3;
 
 loc l3: invariant True
-	when x >= p2 do {x := 0, y'=0} goto l3;
+	when x >= p2 do {x := 0, y := 0} goto l3;
 end (* pta *)
 
 

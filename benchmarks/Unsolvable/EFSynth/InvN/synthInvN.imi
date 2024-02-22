@@ -15,10 +15,10 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2021/01/21
- * Last modified    : 2021/08/31
+ * Last modified    : 2024/02/22
  * Model version    :
  *
- * IMITATOR version : 3.1
+ * IMITATOR version : 3.4
  ******************************************************************************)
 
 var
@@ -36,7 +36,6 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
 
 loc l1: invariant x <= 1
 	when x = p do {x := 0} goto l1;

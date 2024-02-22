@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/03/30
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -30,7 +30,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a, b, dollar, start;
+actions: a, b, dollar, start;
 
 loc pre_s0: invariant True
 	when True sync a do {x := 0} goto pre_s0_prime;
@@ -65,7 +65,7 @@ end (* pta *)
 (************************************************************)
   automaton word
 (************************************************************)
-synclabs: a, b;
+actions: a, b;
 
 loc w0: invariant xabs <= 0.5
 	when xabs = 0.5 sync a goto w1;

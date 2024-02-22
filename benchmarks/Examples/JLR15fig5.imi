@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2016/10/21
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
  * IMITATOR version: 3.1
  ************************************************************)
@@ -32,7 +32,6 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
 
 loc l0: invariant True
 	when x >= 2 & x <= a goto l1;
