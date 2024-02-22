@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2010/03/19
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 
@@ -49,7 +49,7 @@ var 	ckNor1, ckNor2, s
   automaton norGate1
 (************************************************************)
 
-synclabs: R_Up, R_Down, overQ_Up, overQ_Down,
+actions: R_Up, R_Down, overQ_Up, overQ_Down,
 	Q_Up, Q_Down;
 
 (* UNSTABLE *)
@@ -104,7 +104,7 @@ end (*norGate1*)
   automaton norGate2
 (************************************************************)
 
-synclabs: Q_Up, Q_Down, S_Up, S_Down,
+actions: Q_Up, Q_Down, S_Up, S_Down,
 	overQ_Up, overQ_Down;
 
 (* UNSTABLE *)
@@ -158,7 +158,7 @@ end (*norGate2*)
   automaton env
 (************************************************************)
 
-synclabs: R_Down, R_Up, S_Down, S_Up;
+actions: R_Down, R_Up, S_Down, S_Up;
 
 (*-- loc env_R: invariant s <= t_down
 -- 	when s = t_down sync R_Down do {} goto env_final;

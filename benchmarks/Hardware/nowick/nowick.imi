@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2014/08/29
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
  var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
@@ -78,7 +78,7 @@
   automaton Or3Gate
 (************************************************************)
 
-synclabs: fUp, fDown, gUp, gDown,
+actions: fUp, fDown, gUp, gDown,
 	yUp, yDown;
 
 (* Stable *)
@@ -131,7 +131,7 @@ end (* OrGate *)
 (************************************************************)
   automaton Or2Gate
 (************************************************************)
-synclabs: eUp, eDown, fUp, fDown,
+actions: eUp, eDown, fUp, fDown,
 	xUp, xDown;
 
 (* Stable *)
@@ -184,7 +184,7 @@ end (*OrGate*)
 (************************************************************)
   automaton Or1Gate
 (************************************************************)
-synclabs: kUp, kDown, cUp, cDown,
+actions: kUp, kDown, cUp, cDown,
 	hUp, hDown;
 
 (* Configuration : kch *)
@@ -240,7 +240,7 @@ end (*OrGate*)
   automaton And1Gate
 (************************************************************)
 
-synclabs: hUp, hDown, aUp, aDown, kUp, kDown;
+actions: hUp, hDown, aUp, aDown, kUp, kDown;
 
 (* Stable *)
 loc And1_000: invariant True
@@ -293,7 +293,7 @@ end (*And1Gate*)
   automaton ii3And2Gate
 (************************************************************)
 
-synclabs: hUp, hDown, aUp, aDown,bUp, bDown,
+actions: hUp, hDown, aUp, aDown,bUp, bDown,
 	fUp, fDown;
 
 
@@ -408,7 +408,7 @@ end (*ii3And2Gate*)
   automaton ii3And1Gate
 (************************************************************)
 
-synclabs: cUp, cDown, aUp, aDown,bUp, bDown,
+actions: cUp, cDown, aUp, aDown,bUp, bDown,
 	eUp, eDown;
 
 (* Stable *)
@@ -522,7 +522,7 @@ end (*ii3And1Gate*)
   automaton iiAndGate
 (************************************************************)
 
-synclabs: hUp, hDown, bUp, bDown,
+actions: hUp, hDown, bUp, bDown,
 	gUp, gDown;
 
 (* Stable *)
@@ -575,7 +575,7 @@ end (*iiAndGate*)
 (*(************************************************************)
   automaton InputC
 (************************************************************)
-synclabs: cUp, cDown;
+actions: cUp, cDown;
 
 loc InputC_0: invariant ckInputC <= 6
 	when ckInputC >= 4 sync cUp do {ckInputC := 0} goto InputC_1;
@@ -589,7 +589,7 @@ end (*InputC*)
 (************************************************************)
   automaton InputA
 (************************************************************)
-synclabs: aUp, aDown;
+actions: aUp, aDown;
 
 loc InputA_0: invariant ckInputA <= 9
 	when ckInputA >= 2 sync aUp do {ckInputA := 0} goto InputA_1;
@@ -603,7 +603,7 @@ end (*InputA*)
 (************************************************************)
   automaton InputB
 (************************************************************)
-synclabs: bUp, bDown;
+actions: bUp, bDown;
 
 loc InputB_0: invariant ckInputB <= 6
 	when ckInputB >= 3 sync bUp do {ckInputB := 0} goto InputB_1;
@@ -617,7 +617,7 @@ end (*InputB*)*)
 (************************************************************)
   automaton InputaManagement
 (************************************************************)
-synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
+actions: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
 
 	  loc inputa_Low : invariant True
 	      when True sync yDown do {x_a := 0} goto inputa_rising;
@@ -653,7 +653,7 @@ end (*InputaManagement*)
 (************************************************************)
   automaton InputbManagement
 (************************************************************)
-synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
+actions: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
 
 	  loc inputb_Low : invariant True
 	      when True sync yDown do {x_b := 0} goto inputb_rising;
@@ -687,7 +687,7 @@ end (*InputaManagement*)
 (************************************************************)
   automaton InputcManagement
 (************************************************************)
-synclabs: cUp, cDown, xUp, xDown, yUp(*, yDown*);
+actions: cUp, cDown, xUp, xDown, yUp(*, yDown*);
 
 	  loc inputc_Low : invariant True
 	      when True sync xUp do {} goto inputc_xUp;
@@ -727,7 +727,7 @@ end (*InputcManagement*)
 (*(************************************************************)
   automaton environment
 (************************************************************)
-synclabs: aUp, aDown, bUp, bDown, cUp, cDown;
+actions: aUp, aDown, bUp, bDown, cUp, cDown;
 
 loc env0: invariant True
 	when True sync aUp goto env1;
@@ -757,7 +757,7 @@ end (* environment with input only *)*)
 (*(************************************************************)
   automaton environment
 (************************************************************)
-synclabs: aUp, aDown, bUp, bDown, cUp, cDown, xUp, xDown, yUp, yDown;
+actions: aUp, aDown, bUp, bDown, cUp, cDown, xUp, xDown, yUp, yDown;
 
 loc env0: invariant True
 	when True sync aUp goto env1;

@@ -6,9 +6,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 	ckiiAnd
@@ -21,7 +21,7 @@ var 	ckiiAnd
 (************************************************************)
   automaton iiAndGate
 (************************************************************)
-synclabs: i1Up, i1Down, i2Up, i2Down,
+actions: i1Up, i1Down, i2Up, i2Down,
 	sUp, sDown;
 
 (* Stable *)

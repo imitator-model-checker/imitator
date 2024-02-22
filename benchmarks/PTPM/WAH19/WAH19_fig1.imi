@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/09/30
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -57,7 +57,7 @@ var
 (************************************************************)
   automaton monitor
 (************************************************************)
-synclabs: update, epsilon;
+actions: update, epsilon;
 
 loc l0: invariant True
 	(*** HACK: still no "<>", so we use 2 transitions instead ***)
@@ -101,7 +101,7 @@ end (* monitor *)
 (************************************************************)
   automaton word
 (************************************************************)
-synclabs: update;
+actions: update;
 
 (* "@0 update (a , 0)" *)
 loc word_0: invariant tabs <= 0
