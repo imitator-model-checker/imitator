@@ -3580,6 +3580,39 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test implication in Boolean expressions',
+		'tags'       : 'syntax,boolean',
+		'input_files': ['boolean_expressions/bool-implication.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-implication.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 0
+OR
+  p = 2
+OR
+  p = 4
+OR
+  p = 6
+OR
+  p = 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Toy example for exemplifying specifications over Booleans only',
 		'author':'lbinria',
 		'tags':'boolean, computing, toy',
