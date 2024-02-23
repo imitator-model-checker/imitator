@@ -3585,7 +3585,7 @@ Error                                   : invalid model
 		# Test since               : 2024/02/23
 		# Last modified            : 2024/02/23
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test implication in Boolean expressions',
+		'purpose'    : 'Test implication in Boolean expressions (model)',
 		'tags'       : 'syntax,boolean',
 		'input_files': ['boolean_expressions/bool-implication.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
@@ -3601,6 +3601,35 @@ OR
   p = 6
 OR
   p = 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test implication in Boolean expressions (property)',
+		'tags'       : 'syntax,boolean',
+		'input_files': ['boolean_expressions/bool-implication-property.imi', 'boolean_expressions/bool-implication-property.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-implication-property.res' , 'content' : """
+BEGIN CONSTRAINT
+  p_1 = 2
+ & p_2 = 2
+ OR
+   p_1 >= 0
+ & p_2 = 3
 END CONSTRAINT
 		"""
 			} # end result file

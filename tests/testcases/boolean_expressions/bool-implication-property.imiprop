@@ -1,0 +1,1 @@
+property := #synth EF(accepting & (loc[pta_1] = l3 => loc[pta_2] = l2));
