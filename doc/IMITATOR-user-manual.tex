@@ -837,7 +837,7 @@ The opposite function (int of rational) is \emph{not} allowed, as an overflow ca
 %------------------------------------------------------------
 
 % \emph{Boolean variables} are boolean-valued variables.
-\imitator{} features Boolean-valued variables and Boolean operators 	.
+\imitator{} features Boolean-valued variables and Boolean operators.
 % BEGIN USELESS ?
 % The set of Boolean variables is $\BVar = \{ \bvar_1, \dots, \bvar_\BVarCard \} $;
 % a Boolean variable valuation is a function $\bval : \BVar \rightarrow \setB$, where $\setB = \{\BTrue, \BFalse \}$.
@@ -848,6 +848,7 @@ The opposite function (int of rational) is \emph{not} allowed, as an overflow ca
 \begin{itemize}
 	\item \styleIMI{b1 | b2} -- Disjunction
 	\item \styleIMI{b1 \& b2} -- Conjunction
+	\item \styleIMI{b1 => b2} -- Implication
 	\item \styleIMI{not(b)} -- Negation
 	\item \styleIMI{b1 = b2} -- Comparison (equality)
 	\item \styleIMI{b1 <> b2} -- Comparison (inequality)
@@ -5126,6 +5127,7 @@ We define each of those two components below.
 \begin{longtable}{p{1em} p{.88\textwidth}}
 	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
 	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
+	$|$ & \nt{boolean\_expression} \styleIMI{=>} \nt{boolean\_expression}    \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 	$|$ & \nt{discrete\_boolean\_expression}                                 \\
 \end{longtable}
@@ -5664,7 +5666,8 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
+	$|$ & \nt{state\_predicate} \styleIMI{$|$} \nt{state\_predicate} \\
+	$|$ & \nt{state\_predicate} \styleIMI{$ => $} \nt{state\_predicate} \\
 	$|$ & \nt{state\_predicate\_term}                                  \\
 	$|$ & \styleIMI{True}                                              \\
 	$|$ & \styleIMI{False}                                             \\

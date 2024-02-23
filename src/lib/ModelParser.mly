@@ -92,7 +92,7 @@ let unzip l = List.fold_left
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
+%token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT IMPLIES PIPE SEMICOLON
 
 %token
 	CT_ACCEPTING CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
@@ -123,7 +123,8 @@ let unzip l = List.fold_left
 %right OP_ASSIGN
 %right OP_EQ
 
-%left PIPE /* CT_OR */        /* lowest precedence */
+%left IMPLIES           /* lowest precedence */
+%left PIPE /* CT_OR */
 %left AMPERSAND CT_AND  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
@@ -853,7 +854,9 @@ linear_constraint:
 boolean_expression:
 	| discrete_boolean_expression { Parsed_discrete_bool_expr $1 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
-  | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	| boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	/* Translate 'a => b' to 'NOT a OR b' */
+	| boolean_expression IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
 ;
 
 discrete_boolean_expression:

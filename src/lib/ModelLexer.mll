@@ -130,19 +130,29 @@ rule token = parse
   | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 (*	| '"' [^'"']* '"' as lxm { STRING lxm } *) (* a string between double quotes *)
 
+	(* Comparison operators *)
 	| "<="             { OP_LEQ }
 	| ">="             { OP_GEQ }
 	| '<'              { OP_L }
 	| '='              { OP_EQ }
 	| "<>"             { OP_NEQ }
 	| '>'              { OP_G }
+
+	(* Assignment *)
 	| ":="             { OP_ASSIGN }
 
+	(* Boolean operators *)
+	| '&'              { AMPERSAND }
+	| "=>"             { IMPLIES }
+	| '|'              { PIPE }
+
+	(* Arithmetic operators *)
 	| '+'              { OP_PLUS }
 	| '-'              { OP_MINUS }
 	| '*'              { OP_MUL }
 	| '/'              { OP_DIV }
 
+	(* Parentheses and the like *)
 	| '('              { LPAREN }
 	| ')'              { RPAREN }
 	| '{'              { LBRACE }
@@ -150,12 +160,10 @@ rule token = parse
 	| '['              { LSQBRA }
 	| ']'              { RSQBRA }
 
-	| '&'              { AMPERSAND }
-	| ".."             { DOUBLEDOT }
-	| ','              { COMMA }
 	| '\''             { APOSTROPHE }
-	| '|'              { PIPE }
 	| ':'              { COLON }
+	| ','              { COMMA }
+	| ".."             { DOUBLEDOT }
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}
