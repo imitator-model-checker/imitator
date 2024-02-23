@@ -59,22 +59,26 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		in
 
 	{
-		controllable_actions	= merged_controllable_actions;
-		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
-		fun_definitions = 		List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
-		automata				= List.append parsed_model.automata parsed_model_list.automata;
-		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
+		controllable_actions  = merged_controllable_actions;
+		variable_declarations = List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
+		fun_definitions       = List.append parsed_model.fun_definitions parsed_model_list.fun_definitions;
+		template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+		automata              = List.append parsed_model.automata parsed_model_list.automata;
+		template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+		init_definition       = List.append parsed_model.init_definition parsed_model_list.init_definition;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-		controllable_actions	= Parsed_no_controllable_actions;
-		variable_declarations	= [];
-    fun_definitions = [];
-		automata				= [];
-		init_definition			= [];
+		controllable_actions  = Parsed_no_controllable_actions;
+		variable_declarations = [];
+    fun_definitions       = [];
+    template_definitions  = [];
+		automata              = [];
+		template_calls        = [];
+		init_definition       = [];
 	}
 	(List.rev l)
 ;;
@@ -95,20 +99,20 @@ let unzip l = List.fold_left
 %token APOSTROPHE COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTIONS CT_ARRAY CT_AUTOMATON
+  CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
 	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INT CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
-	CT_THEN CT_TO CT_TRUE
+	CT_TEMPLATE CT_THEN CT_TO CT_TRUE
 	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
@@ -139,25 +143,28 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists automata init_definition_option
+	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
-		let controllable_actions	= $1 in
-		let declarations			= $3 in
-		let fun_definitions 		= $4 in
-		let automata				= $5 in
-		let init_definition			= $6 in
+		let controllable_actions = $1 in
+		let declarations         = $3 in
+		let fun_definitions      = $4 in
+		let template_definitions = $5 in
+		let automata             = $6 in
+		let template_calls       = $7 in
+		let init_definition      = $8 in
 
 		let main_model =
 		{
-			controllable_actions	= controllable_actions;
-			variable_declarations	= declarations;
-			fun_definitions			= fun_definitions;
-			automata				= automata;
-			init_definition			= init_definition;
+			controllable_actions  = controllable_actions;
+			variable_declarations = declarations;
+			fun_definitions       = fun_definitions;
+			template_definitions  = template_definitions;
+			automata              = automata;
+			template_calls        = template_calls;
+			init_definition       = init_definition;
 		}
 		in
-
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
@@ -228,6 +235,11 @@ decl_var_list:
 ;
 
 /************************************************************/
+
+template_var_type:
+  | var_type { Regular_type $1 }
+  | CT_ACTION { Template_action_var }
+;
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
@@ -372,6 +384,80 @@ loop_dir:
 /************************************************************/
 
 /************************************************************
+  TEMPLATES
+************************************************************/
+
+/************************************************************/
+
+template_defs:
+  | template_def template_defs { $1 :: $2 }
+  | { [] }
+;
+
+/************************************************************/
+
+template_def:
+  | CT_TEMPLATE NAME LPAREN template_parameter_list RPAREN prolog locations CT_END {
+      let body = ($6, $7) in
+      { template_name       = $2
+      ; template_parameters = List.rev $4
+      ; template_body       = body
+      }
+  }
+;
+
+/************************************************************/
+
+template_parameter_list:
+  | { [] }
+  | template_parameter_nonempty_list { $1 }
+;
+
+/************************************************************/
+
+/* TODO: var_type correctly represents the types accepted by templates? */
+template_parameter_nonempty_list:
+  | NAME COLON template_var_type { [($1, $3)] }
+  | template_parameter_nonempty_list COMMA NAME COLON template_var_type { ($3, $5) :: $1 }
+;
+
+/************************************************************/
+
+template_calls:
+  | template_call template_calls { $1 :: $2 }
+  | { [] }
+;
+
+/************************************************************/
+
+template_call:
+	| CT_INSTANTIATE NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+	{
+		($2, $4, List.rev $6)
+	}
+;
+
+template_args_list:
+  | { [] }
+  | template_args_nonempty_list { $1 }
+;
+
+template_args_nonempty_list:
+  | template_args_nonempty_list COMMA template_args_elem { $3 :: $1 }
+  | template_args_elem { [$1] }
+;
+
+template_args_elem:
+  | NAME     { Arg_name $1    }
+  | integer  { Arg_int $1     }
+  | float    { Arg_float $1   }
+  | CT_TRUE  { Arg_bool true  }
+  | CT_FALSE { Arg_bool false }
+;
+
+/************************************************************/
+
+/************************************************************
   AUTOMATA
 ************************************************************/
 
@@ -382,8 +468,6 @@ automata:
 	| include_file automata { include_list := $1 :: !include_list; $2 }
 	| { [] }
 ;
-
-
 
 /************************************************************/
 

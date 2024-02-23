@@ -25489,6 +25489,174 @@ Constraint nature                       : good
 		#] # end expectations
 	#} # end test case
 	##------------------------------------------------------------]
+    # TESTING TEMPLATES
+    {
+        'purpose'      : 'Test correct instantiation of templates (FischerPS08-2)',
+        'input_files'  : ['templates/FischerPS08-2.imi', 'templates/FischerPS08-AGnot.imiprop'],
+        'options'      : '-verbose mute',
+        'expectations' : [{
+            'file'   : 'FischerPS08-2.res',
+            'content': """
+BEGIN CONSTRAINT
+ delta >= 0
+& Delta >= delta
+END CONSTRAINT
 
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 38
+Number of transitions                   : 47
+Number of computed states               : 48
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (Pipeline_KP12_2_3)',
+        'input_files'  : ['templates/Pipeline_KP12_2_3.imi', 'templates/Pipeline_KP12_2_3-EF.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'Pipeline_KP12_2_3.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (12 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 47
+Number of transitions                   : 70
+Number of computed states               : 71
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (SLAF14_5)',
+        'input_files'  : ['templates/SLAF14_5.imi', 'templates/SLAF14_5-AGnot.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'SLAF14_5.res',
+            'content': """
+BEGIN CONSTRAINT
+ t5_C >= 10
+& t4_C >= 10
+& 50 >= t4_C
+& 50 >= t5_C
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : depth limit (100 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 492
+Number of transitions                   : 1300
+Number of computed states               : 1301
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (category12_vulnerable_conditional-selfcomp)',
+        'input_files'  : ['templates/category12_vulnerable_conditional-selfcomp.imi', 'templates/category12_vulnerable_conditional-selfcomp.imiprop'],
+        'options'      : '-verbose mute -depth-limit=10',
+        'expectations' : [{
+            'file'   : 'category12_vulnerable_conditional-selfcomp.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (68 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 255
+Number of transitions                   : 432
+Number of computed states               : 433
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (category14_not_vulnerable-selfcomp)',
+        'input_files'  : ['templates/category14_not_vulnerable-selfcomp.imi', 'templates/category14_not_vulnerable-selfcomp.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'category14_not_vulnerable-selfcomp.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (9 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 67
+Number of transitions                   : 116
+Number of computed states               : 117
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (fischerHRSV02_3)',
+        'input_files'  : ['templates/fischerHRSV02_3.imi', 'templates/fischerHRSV02_3-AGnot.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'fischerHRSV02_3.res',
+            'content': """
+BEGIN CONSTRAINT
+ max_delay > min_delay
+& min_delay >= 0
+& max_rw > min_rw
+& min_rw >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : depth limit (422 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 914
+Number of transitions                   : 1476
+Number of computed states               : 1477
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (fischer_orig)',
+        'input_files'  : ['templates/fischer_orig.imi', 'templates/fischer_orig.imiprop'],
+        'options'      : '-verbose mute',
+        'expectations' : [{
+            'file'   : 'fischer_orig.res',
+            'content': """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 25
+Number of transitions                   : 36
+Number of computed states               : 37
+"""
+        }]
+    }
+    ,
 ### THE END
 ]

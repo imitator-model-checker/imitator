@@ -17,6 +17,7 @@
 
 type variable_index = int
 type automaton_name	= string
+type template_name	= string
 type location_name	= string
 type action_name	= string
 
@@ -65,7 +66,7 @@ type parsed_boolean_expression =
 	| Parsed_discrete_bool_expr of parsed_discrete_boolean_expression
 
 and parsed_discrete_boolean_expression =
-    | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
+       | Parsed_arithmetic_expr of parsed_discrete_arithmetic_expression
 	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_comparison of parsed_discrete_boolean_expression * parsed_relop * parsed_discrete_boolean_expression
 	(* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
@@ -98,7 +99,7 @@ and parsed_discrete_factor =
 	| Parsed_variable of variable_ref
 	| Parsed_constant of ParsedValue.parsed_value
 	| Parsed_sequence of parsed_boolean_expression list * parsed_sequence_type
-    | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
+       | Parsed_access of parsed_discrete_factor * parsed_discrete_arithmetic_expression
 	| Parsed_nested_expr of parsed_discrete_arithmetic_expression
 	| Parsed_unary_min of parsed_discrete_factor
 	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
@@ -240,7 +241,21 @@ type parsed_location = {
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
 
+type parsed_template_definition = {
+    template_name       : template_name;
+    template_parameters : (variable_name * DiscreteType.template_var_type) list;
+    template_body       : action_name list * parsed_location list
+}
 
+type parsed_template_arg =
+  | Arg_name  of string
+  | Arg_int   of NumConst.t
+  | Arg_float of NumConst.t
+  | Arg_bool  of bool
+
+type parsed_template_call =
+ (* name             template used   parameters passed to template *)
+    automaton_name * template_name * (parsed_template_arg list)
 
 (****************************************************************)
 (* Init definition *)
@@ -274,11 +289,13 @@ type parsed_projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_model = {
-	controllable_actions	: parsed_controllable_actions;
-	variable_declarations	: variable_declarations;
-	fun_definitions         : parsed_fun_definition_list;
-	automata				: parsed_automaton list;
-	init_definition			: init_definition;
+	controllable_actions  : parsed_controllable_actions;
+	variable_declarations : variable_declarations;
+	fun_definitions       : parsed_fun_definition_list;
+       template_definitions  : parsed_template_definition list;
+	automata              : parsed_automaton list;
+       template_calls        : parsed_template_call list;
+	init_definition       : init_definition;
 }
 
 
