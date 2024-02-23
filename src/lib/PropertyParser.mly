@@ -60,7 +60,7 @@ let resolve_property l =
 	CT_E CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_INFINITY CT_IS
+	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_INFINITY CT_IS
 	CT_LIST CT_LOC
 	CT_NEXT CT_NOT CT_NZCYCLE
 	CT_ONCE
@@ -405,17 +405,6 @@ discrete_boolean_predicate:
 	| arithmetic_expression CT_IN LSQBRA arithmetic_expression DOUBLEDOT arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
 ;
 
-/*
-discrete_boolean_expression:
-	| arithmetic_expression { Parsed_arithmetic_expr $1 }
-	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	| LPAREN boolean_expression RPAREN { Parsed_nested_bool_expr $2 }
-	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_not $3 }
-;
-*/
-
 arithmetic_expression:
 	| arithmetic_expression sum_diff discrete_term { Parsed_sum_diff ($1, $3, $2) }
 	| discrete_term { Parsed_term $1 }
@@ -480,7 +469,6 @@ function_argument_fol:
 number:
 	| integer { ParsedValue.Weak_number_value $1 }
 	| float { ParsedValue.Rat_value $1 }
-	/*| integer OP_DIV pos_integer { ( ParsedValue.Rat_value (NumConst.div $1 $3)) }*/
 ;
 
 binary_word:
