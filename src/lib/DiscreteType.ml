@@ -39,6 +39,9 @@ type var_type =
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
+type template_var_type =
+  | Regular_type of var_type
+  | Template_action_var
 
 (************************************************************)
 (* Type functions  *)

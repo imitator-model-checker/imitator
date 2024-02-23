@@ -31,6 +31,7 @@ open ParsingStructureGraph
 open DiscreteType
 open CustomModules
 open JsonFormatter
+open Templates
 
 
 (************************************************************)
@@ -2582,7 +2583,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		,
 		converted_observer_structure_option
 
-
 (************************************************************)
 (************************************************************)
 (** MODEL AND PROPERTY CONVERSION *)
@@ -2596,11 +2596,15 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-    print_message Verbose_high ("\n*** Link variables to declarations.");
-    (* Recompute model to link variables to their declarations, and return all variables declarations *)
-    let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+  (* Instantiate the template calls *)
+  let instantiated_automata = instantiate_automata parsed_model.template_definitions parsed_model.template_calls in
+  let parsed_model = { parsed_model with automata = (parsed_model.automata @ instantiated_automata) } in
 
-    print_message Verbose_high ("\n*** Linking variables finished.");
+  print_message Verbose_high ("\n*** Link variables to declarations.");
+  (* Recompute model to link variables to their declarations, and return all variables declarations *)
+  let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
+
+  print_message Verbose_high ("\n*** Linking variables finished.");
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)

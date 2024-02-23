@@ -64,6 +64,7 @@ rule token = parse
 
  	(* All keywords *)
  	| "accepting"      { CT_ACCEPTING }
+	| "action"         { CT_ACTION }
 	| "actions"        { CT_ACTIONS }
   	| "array"          { CT_ARRAY }
 	| "automaton"      { CT_AUTOMATON }
@@ -90,6 +91,7 @@ rule token = parse
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
 	| "init"           { CT_INIT }
+  | "instantiate"    { CT_INSTANTIATE }
 	| "int"            { CT_INT }
   	| "inside"         { CT_INSIDE }
 	| "invariant"      { CT_INVARIANT }
@@ -107,6 +109,7 @@ rule token = parse
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
+	| "template"       { CT_TEMPLATE }
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }
 	| "True"           { CT_TRUE }
