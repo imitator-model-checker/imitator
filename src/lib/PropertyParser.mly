@@ -78,14 +78,13 @@ let resolve_property l =
 
 %token EOF
 
-%left OP_IMPLIES             /* lowest precedence */
-%left OP_DISJUNCTION         /* low precedence */
-%left OP_CONJUNCTION         /* medium precedence */
-%left DOUBLEDOT              /* high precedence */
-%nonassoc CT_NOT             /* highest precedence */
+%left OP_DISJUNCTION OP_IMPLIES /* lowest precedence */
+%left OP_CONJUNCTION            /* medium precedence */
+%left DOUBLEDOT                 /* high precedence */
+%nonassoc CT_NOT                /* highest precedence */
 
-%left OP_PLUS OP_MINUS       /* lowest precedence */
-%left OP_MUL OP_DIV          /* highest precedence */
+%left OP_PLUS OP_MINUS          /* lowest precedence */
+%left OP_MUL OP_DIV             /* highest precedence */
 
 
 %start main             /* the entry point */
@@ -345,6 +344,10 @@ state_predicate:
 non_empty_state_predicate:
 /************************************************************/
 	| non_empty_state_predicate OP_DISJUNCTION state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
+
+	/* Translate 'a => b' to 'NOT a OR b' */
+	| non_empty_state_predicate OP_IMPLIES state_predicate_term { Parsed_state_predicate_OR (Parsed_state_predicate_term (Parsed_state_predicate_factor (Parsed_state_predicate_factor_NOT (Parsed_state_predicate ($1)))), Parsed_state_predicate_term $3) }
+
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
