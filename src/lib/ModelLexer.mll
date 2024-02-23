@@ -119,6 +119,9 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 
+	(* Unused in models but added to avoid conflicts with properties *)
+	| "inf"            { CT_INFINITY }
+	| "infinity"       { CT_INFINITY }
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
