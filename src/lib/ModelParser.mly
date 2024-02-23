@@ -523,7 +523,7 @@ locations:
 
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing guard_nonlinear_convex_predicate stopwatches_and_flow_opt wait_opt transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		let stopwatches, flow = $6 in
@@ -641,7 +641,7 @@ transitions:
 /************************************************************/
 
 transition:
-	| CT_WHEN nonlinear_convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN guard_nonlinear_convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
@@ -712,7 +712,7 @@ old_init_expression_fol:
 /* Used in the init definition */
 old_init_state_predicate:
 	| old_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-    | linear_constraint { Parsed_linear_predicate $1 }
+    | init_linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 old_init_loc_predicate:
@@ -777,7 +777,7 @@ init_continuous_expression_nonempty_list :
 
 init_continuous_state_predicate:
     | LPAREN init_continuous_state_predicate RPAREN { $2 }
-    | linear_constraint { Parsed_linear_predicate $1 }
+    | init_linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 init_loc_predicate:
@@ -875,19 +875,14 @@ binary_word:
 ;
 
 /************************************************************/
-/** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
+/* LINEAR EXPRESSIONS IN INIT DEFINITIONS */
 /************************************************************/
 
-/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
-nonlinear_convex_predicate:
-	| ampersand_opt nonlinear_convex_predicate_fol { $2 }
+init_linear_constraint:
+	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Parsed_true_constraint }
+	| CT_FALSE { Parsed_false_constraint }
 ;
-
-nonlinear_convex_predicate_fol:
-	| discrete_boolean_expression OP_CONJUNCTION nonlinear_convex_predicate_fol { $1 :: $3 }
-	| discrete_boolean_expression { [$1] }
-;
-
 
 /* Linear expression over variables and rationals */
 linear_expression:
@@ -923,16 +918,19 @@ rational_linear_term:
 	| LPAREN rational_linear_expression RPAREN { $2 }
 ;
 
-linear_constraint:
-	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
-	| CT_TRUE { Parsed_true_constraint }
-	| CT_FALSE { Parsed_false_constraint }
+/************************************************************/
+/** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
+/************************************************************/
+
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
+guard_nonlinear_convex_predicate:
+	| ampersand_opt guard_nonlinear_convex_predicate_fol { $2 }
 ;
 
-
-/************************************************************/
-/** BOOLEAN EXPRESSIONS */
-/************************************************************/
+guard_nonlinear_convex_predicate_fol:
+	| discrete_boolean_expression OP_CONJUNCTION guard_nonlinear_convex_predicate_fol { $1 :: $3 }
+	| discrete_boolean_expression { [$1] }
+;
 
 /** NOTE: more general than a Boolean expression!! notably includes all expressions */
 boolean_expression:
