@@ -78,9 +78,9 @@ let resolve_property l =
 
 %token EOF
 
-%left IMPLIES                /* lowest precedence */
-%left OP_DISJUNCTION     /* low precedence */
-%left OP_CONJUNCTION     /* medium precedence */
+%left OP_IMPLIES             /* lowest precedence */
+%left OP_DISJUNCTION         /* low precedence */
+%left OP_CONJUNCTION         /* medium precedence */
 %left DOUBLEDOT              /* high precedence */
 %nonassoc CT_NOT             /* highest precedence */
 
@@ -391,7 +391,7 @@ boolean_expression:
 	| boolean_expression OP_CONJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
 	| boolean_expression OP_DISJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 	/* Translate 'a => b' to 'NOT a OR b' */
-	| boolean_expression IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
+	| boolean_expression OP_IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
 ;
 
 /************************************************************/
