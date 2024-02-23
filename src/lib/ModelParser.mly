@@ -817,13 +817,6 @@ product_quotient:
   | OP_DIV { Parsed_div }
 ;
 
-/*
-postfix_arithmetic_factor:
-  | arithmetic_factor { Parsed_factor $1 }
-  | postfix_arithmetic_factor LSQBRA pos_integer RSQBRA { Parsed_access ($1, NumConst.to_int $3) }
-;
-*/
-
 arithmetic_factor:
   | arithmetic_factor LSQBRA arithmetic_expression RSQBRA { Parsed_access ($1, $3) }
   | NAME LPAREN function_argument_fol RPAREN { Parsed_function_call ($1, $3) }
@@ -928,6 +921,7 @@ guard_nonlinear_convex_predicate:
 ;
 
 guard_nonlinear_convex_predicate_fol:
+	/** NOTE: this part of the code is necessary (?) to detect convex constraints (with parameters), BUT forbids the use of Boolean expressions without parentheses */
 	| discrete_boolean_expression OP_CONJUNCTION guard_nonlinear_convex_predicate_fol { $1 :: $3 }
 	| discrete_boolean_expression { [$1] }
 ;
@@ -943,13 +937,14 @@ boolean_expression:
 
 discrete_boolean_expression:
 	| arithmetic_expression { Parsed_arithmetic_expr $1 }
+
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| discrete_boolean_expression relop discrete_boolean_expression { Parsed_comparison ($1, $2, $3) }
+
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
-	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	/* allowed for convenience */
-	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
-	/* Parsed boolean expression of the form Expr ~ Expr, with ~ = { &, | } or not (Expr) */
+	| arithmetic_expression CT_INSIDE LSQBRA arithmetic_expression semicolon_or_comma arithmetic_expression RSQBRA { Parsed_comparison_in ($1, $4, $6) }
+
+	/* Parsed boolean expression of the form Expr ~ Expr, with ~ in { & | } or not (Expr) */
 	| LPAREN boolean_expression RPAREN { Parsed_nested_bool_expr $2 }
 	| CT_NOT LPAREN boolean_expression RPAREN { Parsed_not $3 }
 ;
