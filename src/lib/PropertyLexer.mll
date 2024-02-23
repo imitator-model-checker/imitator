@@ -88,7 +88,7 @@ rule token = parse
 
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
-	| "and"            { SYMBOL_AND }
+	| "and"            { OP_CONJUNCTION }
 	| "before"         { CT_BEFORE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
@@ -102,7 +102,7 @@ rule token = parse
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
-	| "or"             { SYMBOL_OR }
+	| "or"             { OP_DISJUNCTION }
 	| "pattern"        { CT_PATTERN }
  	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
@@ -136,11 +136,11 @@ rule token = parse
 	| ":="             { OP_ASSIGN }
 
 	(* Boolean operators *)
-	| "=>"             { IMPLIES }
-	| '&'              { SYMBOL_AND }
-	| "&&"             { SYMBOL_AND }
-	| '|'              { SYMBOL_OR }
-	| "||"             { SYMBOL_OR }
+	| '&'              { OP_CONJUNCTION }
+	| "&&"             { OP_CONJUNCTION }
+	| '|'              { OP_DISJUNCTION }
+	| "||"             { OP_DISJUNCTION }
+	| "=>"             { OP_IMPLIES }
 
 	(* Arithmetic operators *)
 	| '+'              { OP_PLUS }

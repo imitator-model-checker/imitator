@@ -141,9 +141,11 @@ rule token = parse
 	| ":="             { OP_ASSIGN }
 
 	(* Boolean operators *)
-	| '&'              { AMPERSAND }
-	| "=>"             { IMPLIES }
-	| '|'              { PIPE }
+	| '&'              { OP_CONJUNCTION }
+	| "&&"             { OP_CONJUNCTION }
+	| '|'              { OP_DISJUNCTION }
+	| "||"             { OP_DISJUNCTION }
+	| "=>"             { OP_IMPLIES }
 
 	(* Arithmetic operators *)
 	| '+'              { OP_PLUS }

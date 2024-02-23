@@ -50,7 +50,7 @@ let resolve_property l =
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token COLON COMMA DOUBLEDOT IMPLIES SEMICOLON SYMBOL_AND SYMBOL_OR
+%token COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
 	CT_A CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AG CT_AGnot CT_ALWAYS
@@ -79,8 +79,8 @@ let resolve_property l =
 %token EOF
 
 %left IMPLIES                /* lowest precedence */
-%left SYMBOL_OR              /* low precedence */
-%left SYMBOL_AND             /* medium precedence */
+%left OP_DISJUNCTION     /* low precedence */
+%left OP_CONJUNCTION     /* medium precedence */
 %left DOUBLEDOT              /* high precedence */
 %nonassoc CT_NOT             /* highest precedence */
 
@@ -344,12 +344,12 @@ state_predicate:
 /************************************************************/
 non_empty_state_predicate:
 /************************************************************/
-	| non_empty_state_predicate SYMBOL_OR state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
+	| non_empty_state_predicate OP_DISJUNCTION state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term SYMBOL_AND state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
+	| state_predicate_term OP_CONJUNCTION state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
 	| state_predicate_factor { Parsed_state_predicate_factor $1 }
 ;
 
@@ -388,8 +388,8 @@ loc_predicate:
 
 boolean_expression:
 	| discrete_boolean_predicate { Parsed_discrete_bool_expr $1 }
-	| boolean_expression SYMBOL_AND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
-	| boolean_expression SYMBOL_OR boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	| boolean_expression OP_CONJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+	| boolean_expression OP_DISJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
 	/* Translate 'a => b' to 'NOT a OR b' */
 	| boolean_expression IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
 ;
@@ -673,7 +673,7 @@ constant_atom:
 /************************************************************/
 
 and_opt:
-	| SYMBOL_AND {}
+	| OP_CONJUNCTION {}
 	| {}
 ;
 
