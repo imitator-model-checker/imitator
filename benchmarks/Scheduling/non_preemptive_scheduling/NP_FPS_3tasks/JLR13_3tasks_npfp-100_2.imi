@@ -34,7 +34,7 @@ var
 (************************************************************)
 automaton act1
 (************************************************************)
-synclabs: r1;
+actions: r1;
 loc waiting1 : invariant p1<=a
     when p1>=a sync r1 do {p1 := 0} goto waiting1;
 end
@@ -42,7 +42,7 @@ end
 (************************************************************)
 automaton act2
 (************************************************************)
-synclabs: r2;
+actions: r2;
 loc waiting2 : invariant p2<=2*a+J2
     when p2>=2*a sync r2 do {p2 := 0} goto waiting2;
 end
@@ -50,7 +50,7 @@ end
 (************************************************************)
 automaton act3
 (************************************************************)
-synclabs: r3;
+actions: r3;
 loc waiting3 : invariant p3<=3*a
     when p3>=3*a sync r3 do {p3 := 0} goto waiting3;
 end
@@ -59,7 +59,7 @@ end
 (************************************************************)
 automaton sched
 (************************************************************)
-synclabs : r1, r2, r3;
+actions : r1, r2, r3;
 
 loc idle : invariant True
     when True sync r1 do {c1 := 0} goto x1R;

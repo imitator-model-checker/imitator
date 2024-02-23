@@ -90,7 +90,7 @@
 	    		-- ######### et incorporation de retard_q0 #########
 			-- ######### ce qui supprime l'autom. ret_q_0 ######*)
 (************************************************************)
-synclabs: down_wela, up_wela,
+actions: down_wela, up_wela,
 	    down_d_inta, up_d_inta,
 		qUp;
 
@@ -125,7 +125,7 @@ end (*not_net27*)
 (************************************************************)
 automaton f2_wela		(* wela <= net45a or net13a*)
 (************************************************************)
-synclabs: up_net45a, down_net45a,
+actions: up_net45a, down_net45a,
       up_net13a, down_net13a,
       up_wela, down_wela;
 
@@ -184,7 +184,7 @@ loc  e_11_X_wela: invariant x_wela <= d_up_wela
 (************************************************************)
 automaton not_net13a
 (************************************************************)
-synclabs: down_ck, up_ck,
+actions: down_ck, up_ck,
  down_net13a, up_net13a;
 
 loc  init_not_net13a : invariant True
@@ -206,7 +206,7 @@ end (*not_net13a*)
 (************************************************************)
 automaton reg_net45
 (************************************************************)
-synclabs: down_wen_h, up_wen_h,			(* inputs  (data)*)
+actions: down_wen_h, up_wen_h,			(* inputs  (data)*)
 	  down_en_latchwen, up_en_latchwen,	(* inputs (enable)*)
 	  down_net45a, up_net45a ;		(* outputs*)
 
@@ -253,7 +253,7 @@ loc e1d1_1_reg_net45: invariant True
 (************************************************************)
 automaton reg_d_int
 (************************************************************)
-synclabs: down_d_h, up_d_h,			(* inputs  (data)*)
+actions: down_d_h, up_d_h,			(* inputs  (data)*)
 	  down_en_latchd, up_en_latchd,		(* inputs (enable)*)
 	  down_d_inta, up_d_inta ;		(* outputs*)
 
@@ -300,7 +300,7 @@ loc e1d1_1_reg_d_int: invariant True
 (************************************************************)
 automaton not_en_latchd
 (************************************************************)
-synclabs: down_ck, up_ck,
+actions: down_ck, up_ck,
  down_en_latchd, up_en_latchd;
 
 loc  init_not_en_latchd : invariant True
@@ -322,7 +322,7 @@ end (*not_en_latchd*)
 (************************************************************)
 automaton not_en_latchwen
 (************************************************************)
-synclabs: down_ck, up_ck,
+actions: down_ck, up_ck,
  down_en_latchwen, up_en_latchwen;
 
 loc  init_not_en_latchwen : invariant True
@@ -343,7 +343,7 @@ end (*not_en_latchwen*)
 (************************************************************)
 automaton retard_wen_h
 (************************************************************)
-synclabs: down_wen, up_wen,
+actions: down_wen, up_wen,
  down_wen_h, up_wen_h;
 
 loc  init_ret_wen_h : invariant True
@@ -365,7 +365,7 @@ end (*not_wen_h*)
 (************************************************************)
 automaton retard_d_h
 (************************************************************)
-synclabs: down_d_0, up_d_0,
+actions: down_d_0, up_d_0,
  down_d_h, up_d_h;
 
 
@@ -386,7 +386,7 @@ end (*not_d_h*)
 (************************************************************)
 automaton env
 (************************************************************)
-synclabs: up_d_0, down_d_0, up_wen, down_wen,
+actions: up_d_0, down_d_0, up_wen, down_wen,
 	  down_ck, up_ck;
 
 loc init_env : invariant s <= tHI + tLO - tsetupd
@@ -419,7 +419,7 @@ end (*env*)
 (************************************************************)
 automaton observer
 (************************************************************)
-synclabs: qUp, CHECKED_______GOOD, CHECKED_______BAD, CHECKED_______TOO_LATE ;
+actions: qUp, CHECKED_______GOOD, CHECKED_______BAD, CHECKED_______TOO_LATE ;
 
 loc waiting : invariant True
 (* -- 	when s < 2 tHI + tLO sync up_d_inta do {} goto waiting; *)

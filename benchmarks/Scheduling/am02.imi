@@ -11,7 +11,7 @@ var time: clock;
 
 automaton checker
 
-synclabs: DEADLINE, m3_j1_finished, m2_j2_finished, m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m2_j2_begin;
+actions: DEADLINE, m3_j1_finished, m2_j2_finished, m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m2_j2_begin;
 
 loc nop: invariant time <= deadline
 	when time < deadline sync m3_j1_finished goto nop_1;
@@ -49,7 +49,7 @@ end
 
 automaton job1
 
-synclabs: m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m3_j1_finished, m2_j2_begin;
+actions: m1_j1_begin, m1_j1_finished, m2_j1_begin, m2_j1_finished, m3_j1_begin, m3_j1_finished, m2_j2_begin;
 
 
 loc m1_begin: invariant True
@@ -95,7 +95,7 @@ end
 
 automaton job2
 
-synclabs: m2_j2_begin, m2_j1_begin, m2_j2_finished;
+actions: m2_j2_begin, m2_j1_begin, m2_j2_finished;
 
 
 loc m2_begin: invariant True stop{c2}

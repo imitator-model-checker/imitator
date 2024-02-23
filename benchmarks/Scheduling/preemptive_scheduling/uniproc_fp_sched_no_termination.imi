@@ -1,18 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL
- *
- *        IMITATOR uniproc-fp-sched-no-termination.imi uniproc-fp-sched-no-termination.pi0 -mode inversemethod -incl -merge
- *
- * Author: Giuseppe Lipari
- * Date: January 2014
- * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by
- *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
- *
- * Created: < 2015/10/30
- * Last modified: 2021/10/12
- * IMITATOR version: 3.2
- * Others: The analysis for this model will never terminate.
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : uniproc_fp_sched_no_termination
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
+ * bibkey           : 
+ * Author           : Giuseppe Lipari
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : 2020/08/18
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
 
 var
     t1_c, t1_d, t1_urgent, t1_arr_x, t2_c, t2_d, t2_urgent, t2_arr_x, CPU1_urgent : clock;
@@ -22,7 +29,7 @@ var
 
 
 automaton Task_t1
-synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
+actions : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
 loc t1_loc_idle : invariant True
     when True sync t1_arr_event do { t1_urgent := 0 } goto t1_loc_act_event;
 loc t1_loc_act_event : invariant t1_urgent <= 0
@@ -44,14 +51,14 @@ end
 
 
 automaton Periodic_t1_arr
-synclabs : t1_arr_event;
+actions : t1_arr_event;
 loc t1_arr_loc_arr : invariant t1_arr_x<=t1_arr_P
     when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x :=  0 } goto t1_arr_loc_arr;
 end
 
 
 automaton Task_t2
-synclabs : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
+actions : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
 loc t2_loc_idle : invariant True
     when True sync t2_arr_event do { t2_urgent := 0 } goto t2_loc_act_event;
 loc t2_loc_act_event : invariant t2_urgent <= 0
@@ -73,14 +80,14 @@ end
 
 
 automaton Periodic_t2_arr
-synclabs : t2_arr_event;
+actions : t2_arr_event;
 loc t2_arr_loc_arr : invariant t2_arr_x<=t2_arr_P
     when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x :=  0 } goto t2_arr_loc_arr;
 end
 
 
 automaton sched_CPU1
-synclabs : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end;
+actions : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end;
 loc CPU1_loc_ : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
@@ -116,7 +123,7 @@ end
 
 
 automaton OBS_dline
-synclabs : t1_miss , t2_miss;
+actions : t1_miss , t2_miss;
 loc dline_loc_nomiss : invariant True
     when True sync t1_miss do { stop_flag := True } goto dline_loc_miss;
     when True sync t2_miss do { stop_flag := True } goto dline_loc_miss;

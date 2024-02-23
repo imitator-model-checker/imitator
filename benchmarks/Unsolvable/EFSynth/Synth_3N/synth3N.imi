@@ -1,0 +1,84 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : synth3N
+ * Description      : Toy benchmark for which the result is "p = 3i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Correctness      : Reachability
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Toy ; Unsolvable
+ * Source           : Göller, S., & Hilaire, M. (2021). Reachability in two-parametric timed automata with one parameter is EXPSPACE-complete.
+ * bibkey           : GH21
+ * Author           : 
+ * Modeling         : Dylan Marinho
+ * Input by         : Dylan Marinho
+ * License          : Creative Commons Attribution 4.0 International (CC BY 4.0)
+ * 
+ * Created          : 2021/09/16
+ * Last modified    : 2021/09/19
+ * Model version    : 
+ * 
+ * IMITATOR version : 3.1
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+	when x = 3 do {x := 0} goto l1;
+	when y = p goto l2;
+
+loc l2: invariant True
+  when x = 0 goto lGoal;
+
+loc lGoal: invariant True
+  when x >= 0 goto lGoal;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+  discrete =
+  	(*------------------------------------------------------------*)
+  	(* Initial location *)
+  	(*------------------------------------------------------------*)
+  	loc[pta] := l1,
+  ;
+
+  continuous =
+  	(*------------------------------------------------------------*)
+  	(* Initial clock constraints *)
+  	(*------------------------------------------------------------*)
+  	& x = 0
+  	& y = 0
+
+  	(*------------------------------------------------------------*)
+  	(* Parameter constraints *)
+  	(*------------------------------------------------------------*)
+  	& p >= 0
+  ;
+}
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

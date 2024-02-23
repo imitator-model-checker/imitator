@@ -5,7 +5,7 @@ var
 
 automaton act_Ptp
 
-synclabs: Release_PTP;
+actions: Release_PTP;
 
 loc WFO: invariant cPtp <= ptpOff
 	when cPtp = ptpOff sync Release_PTP do {cPtp := 0} goto WFP;
@@ -18,7 +18,7 @@ end
 automaton act_Audio
 
 
-synclabs: Release_Audio;
+actions: Release_Audio;
 
 loc WFO: invariant cAudio <= audOff
 	when cAudio = audOff sync Release_Audio do {cAudio := 0} goto WFP;
@@ -31,7 +31,7 @@ end
 
 automaton Audio_Checker
 
-synclabs: Release_PTP, Release_Audio, Ending_Audio;
+actions: Release_PTP, Release_Audio, Ending_Audio;
 
 loc idle: invariant True stop{rAudioChecker}
 	when True sync Release_Audio do {cAudioChecker := 0, rAudioChecker := C2} goto check;

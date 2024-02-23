@@ -5,4 +5,4 @@
  * Author           : Étienne André
  ******************************************************************************)
 
-property := #witness pattern(everytime restart then eventually done within 5);
+property := #witness pattern(everytime restart then eventually finished within 5);

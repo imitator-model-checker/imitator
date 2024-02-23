@@ -36,7 +36,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a;
+actions: a;
 
 accepting loc l0: invariant y <= p
 	when x >= 5 do {y := 0} goto l0;

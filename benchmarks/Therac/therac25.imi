@@ -1,21 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL
- *
- * Simplified model of the Therac 25 bug
- *
- * Description     : Simplified model of the Therac 25 bug
- * Correctness     : The patient should not be given a massive dose of radiation
- * Source          : "The failure only occurred when a particular nonstandard sequence of keystrokes was entered on the VT-100 terminal which controlled the PDP-11 computer: an X to (erroneously) select 25MV photon mode followed by ↑, E to (correctly) select 25 MeV Electron mode, then Enter, all within eight seconds."
- * Author          : Étienne André
- * Modeling        : Étienne André
- * Input by        : Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
- * Created         : 2017/03/10
- * Last modified   : 2021/10/12
- *
- * IMITATOR version: 3.2
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : therac25
+ * Description      : Simplified model of the Therac 25 bug
+ * Correctness      : The patient should not be given a massive dose of radiation
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : 
+ * Source           : "The failure only occurred when a particular nonstandard sequence of keystrokes was entered on the VT-100 terminal which controlled the PDP-11 computer: an X to (erroneously) select 25MV photon mode followed by ↑, E to (correctly) select 25 MeV Electron mode, then Enter, all within eight seconds."
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2017/03/10
+ * Last modified    : 2021/10/12
+ * Model version    : 
+ * 
+ * IMITATOR version : 3.2
+ ******************************************************************************)
 
 var
 
@@ -50,7 +54,7 @@ MODE25MeV = 2,
  automaton engineer
 (************************************************************)
 (* Every at least 30 seconds, the engineer either selects E and enter, or selects X, up, E and enter; the time between each key stroke is p_key *)
-synclabs: key_E, key_X, key_enter, key_up;
+actions: key_E, key_X, key_enter, key_up;
 
 loc engineer_idle: invariant True
 	(* Non-deterministically goes into the correct or incorrect behavior *)
@@ -81,7 +85,7 @@ end (* engineer *)
   automaton buffer_copier
 (************************************************************)
 (* Copies the buffer of the VT-100 into the buffer of the PDP-11 every 8 seconds *)
-synclabs: copy_25MV, copy_25MeV;
+actions: copy_25MV, copy_25MeV;
 
 loc loc_buffer_copier: invariant x_buffer <= p_period
 	when x_buffer = p_period & buffer_VT100 = MODE25MV sync copy_25MV do {buffer_PDP11 := MODE25MV, x_buffer := 0} goto loc_buffer_copier;
@@ -94,7 +98,7 @@ end (* buffer_copier *)
   automaton PDP11
 (************************************************************)
 (* The PDP-11 computer reacts to key strokes: select the mode, or send what is in its buffer when asked to do so *)
-synclabs: key_E, key_X, key_enter, send_25MV, send_25MeV;
+actions: key_E, key_X, key_enter, send_25MV, send_25MeV;
 
 loc loc_PDP11: invariant True
 	(* Select MODE25MV mode *)
@@ -118,7 +122,7 @@ end (* PDP11 *)
   automaton observer
 (************************************************************)
 (* The observer just waits until a send_25MV radiations *)
-synclabs: send_25MV;
+actions: send_25MV;
 
 loc obs_ok: invariant True
 	when True sync send_25MV goto obs_nok;

@@ -53,7 +53,7 @@ var 	s, ckG1, ckG2, ckG3, ckG4
 (************************************************************)
   automaton input
 (************************************************************)
-synclabs: dUp, dDown, ckUp, ckDown;
+actions: dUp, dDown, ckUp, ckDown;
 
 loc Input0: invariant s <= tLO - tSetup
 	when s = tLO - tSetup sync dUp do {} goto Input1;
@@ -78,7 +78,7 @@ end (* input *)
 (*Input : D, ck, qG2
 Output : qG1*)
 
-synclabs: dUp, dDown, ckUp, ckDown, qG2Up, qG2Down, qG1Up, qG1Down;
+actions: dUp, dDown, ckUp, ckDown, qG2Up, qG2Down, qG1Up, qG1Down;
 
 loc G10000: invariant ckG1 <= dG1_u
 	when True sync dUp do {ckG1 := 0} goto G11000;
@@ -177,7 +177,7 @@ end (* g1 *)
 (*Input : qG1, ck
 Output : qG2*)
 
-synclabs: qG1Up, qG1Down, ckUp, ckDown, qG2Up, qG2Down;
+actions: qG1Up, qG1Down, ckUp, ckDown, qG2Up, qG2Down;
 
 loc G2001: invariant ckG2 >= 0
 	when True sync qG1Up do {} goto G2101;
@@ -224,7 +224,7 @@ end (* g2 *)
 (*Input : q, ck, qG2
 Output : qG3*)
 
-synclabs: qUp, qDown, ckUp, ckDown, qG2Up, qG2Down, qG3Up, qG3Down;
+actions: qUp, qDown, ckUp, ckDown, qG2Up, qG2Down, qG3Up, qG3Down;
 
 loc G30000: invariant ckG3 <= dG3_u
 	when True sync qUp do {ckG3 := 0} goto G31000;
@@ -323,7 +323,7 @@ end (* g3 *)
 (*Input : qG3
 Output : q*)
 
-synclabs: qG3Up, qG3Down, qUp, qDown;
+actions: qG3Up, qG3Down, qUp, qDown;
 
 loc G401: invariant ckG4 >= 0
 	when True sync qG3Up do {ckG4 := 0} goto G411;

@@ -9,7 +9,7 @@
  *
  * Author          : Étienne André
  * Created         : 2015/02/11
- * Last modified   : 2021/10/07
+ * Last modified   : 2024/02/22
  * IMITATOR version: 3.1
  ************************************************************)
 
@@ -40,7 +40,7 @@ var
 (************************************************************)
   automaton LRI
 (************************************************************)
-synclabs: AP, AS, VP, VS;
+actions: AP, AS, VP, VS;
 
 loc LRI: invariant t_LRI <= TLRI - TAVI
 	when True sync VP do {t_LRI := 0} goto LRI;
@@ -59,7 +59,7 @@ end (*LRI*)
 (************************************************************)
   automaton AVI
 (************************************************************)
-synclabs: AP, AS, VP, VS;
+actions: AP, AS, VP, VS;
 
 loc Idle: invariant True
 	when True sync AP do {t_AVI := 0, AVIisIdle := False} goto AVI;
@@ -82,7 +82,7 @@ end (*AVI*)
 (************************************************************)
   automaton URI
 (************************************************************)
-synclabs: VP, VS;
+actions: VP, VS;
 
 loc URI: invariant True
 	when True sync VP do {clk := 0} goto URI;
@@ -95,7 +95,7 @@ end (*URI*)
 (************************************************************)
   automaton PVARP
 (************************************************************)
-synclabs: AR, AS, Aget, VP, VS, PVARPbacktoIdle;
+actions: AR, AS, Aget, VP, VS, PVARPbacktoIdle;
 
 loc Idle: invariant True
 	when True sync VP do {t_PVARP := 0, PVARPisIdle := False} goto PVAB;
@@ -145,7 +145,7 @@ end (*PVARP*)
 (************************************************************)
   automaton VRP
 (************************************************************)
-synclabs: AP, AS, Aget, Vget, VP, VS, PVARPbacktoIdle;
+actions: AP, AS, Aget, Vget, VP, VS, PVARPbacktoIdle;
 
 loc Idle: invariant True
 	when True sync Vget do {t_VRP := 0} goto inter;
@@ -215,7 +215,7 @@ end (*VRP*)
 (************************************************************)
   automaton RHM
 (************************************************************)
-synclabs: Aget, AP;
+actions: Aget, AP;
 
 loc AReady: invariant x < Amaxwait
 	when True sync AP do {x := 0} goto AReady;
@@ -228,7 +228,7 @@ end (*RHM*)
   automaton monitor5a
 (*  figure 5a of the paper  *)
 (************************************************************)
-synclabs: VP, VS;
+actions: VP, VS;
 
 loc wait_1st: invariant True
 	when True sync VP do {t_5a := 0} goto wait_2nd;

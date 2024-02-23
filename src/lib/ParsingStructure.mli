@@ -381,6 +381,14 @@ type parsed_pattern =
 	| Parsed_Sequence_cyclic of action_name list
 
 
+type parsed_interval =
+	| Parsed_closed_closed_interval of parsed_duration * parsed_duration
+	| Parsed_closed_open_interval of parsed_duration * parsed_duration
+	| Parsed_open_closed_interval of parsed_duration * parsed_duration
+	| Parsed_open_open_interval of parsed_duration * parsed_duration
+	| Parsed_closed_infinity_interval of parsed_duration
+	| Parsed_open_infinity_interval of parsed_duration
+
 
 type parsed_property_type =
 
@@ -399,6 +407,9 @@ type parsed_property_type =
 	(* Reachability *)
 	| Parsed_EF of parsed_state_predicate
 	
+	(* Reachability with timing constraint *)
+	| Parsed_EF_timed of parsed_interval * parsed_state_predicate
+
 	(* Safety *)
 	| Parsed_AGnot of parsed_state_predicate
 	

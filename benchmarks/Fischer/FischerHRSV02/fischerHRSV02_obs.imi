@@ -13,9 +13,9 @@
  *
  * Created         : 2013/12/10
  * Fork from fischerHRSV02.imi : 2014/04/08
- * Last modified    : 2021/07/09
+ * Last modified    : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 
@@ -38,7 +38,7 @@ var
 (************************************************************)
 automaton pta_1
 (************************************************************)
-synclabs: enter_1, leave_1;
+actions: enter_1, leave_1;
 
 loc start_1: invariant x_1 <= max_rw
 	when lock <> 0 & x_1 > min_rw do {x_1 := 0} goto start_1;
@@ -65,7 +65,7 @@ end (*pta_1*)
 (************************************************************)
 automaton pta_2
 (************************************************************)
-synclabs: enter_2, leave_2;
+actions: enter_2, leave_2;
 
 loc start_2: invariant x_2 <= max_rw
 	when lock <> 0 & x_2 > min_rw do {x_2 := 0} goto start_2;
@@ -93,7 +93,7 @@ end (*pta_2*)
 (************************************************************)
 automaton observer
 (************************************************************)
-synclabs : enter_1, enter_2, leave_1, leave_2;
+actions : enter_1, enter_2, leave_1, leave_2;
 
 loc obs_waiting: invariant True
 	when True sync enter_1 goto obs_1;

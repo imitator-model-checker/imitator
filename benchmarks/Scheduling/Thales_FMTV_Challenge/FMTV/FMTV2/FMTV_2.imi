@@ -69,7 +69,7 @@ var
 (** Task T6 **)
 
 automaton T6
-synclabs: T6_arr, T6_start, T6_dis, T6_pre, T6_act, T7_act, T5_act, T6_end, miss_event;
+actions: T6_arr, T6_start, T6_dis, T6_pre, T6_act, T7_act, T5_act, T6_end, miss_event;
 
 loc T6_idle: invariant p6 <= P6      (*ing for activation *)
     when p6 = P6
@@ -215,7 +215,7 @@ end
 (** Task T5 **)
 
 automaton T5
-synclabs: T5_arr, T5_end, T5_pre, T5_dis, T5_act, T6_act;
+actions: T5_arr, T5_end, T5_pre, T5_dis, T5_act, T6_act;
 
 loc T5_idle: invariant True
     when True
@@ -259,7 +259,7 @@ end
 
 (* Task T7 *)
 automaton T7
-synclabs: T7_act, T7_arr, T7_end, T7_dis, T7_pre, T7_finish;
+actions: T7_act, T7_arr, T7_end, T7_dis, T7_pre, T7_finish;
 
 loc T7_idle: invariant True
     when True
@@ -306,7 +306,7 @@ end
 
 (* AUTOMATON T2 *)
 automaton T2
-synclabs: T2_arr, T2_dis, T2_pre, T2_end;
+actions: T2_arr, T2_dis, T2_pre, T2_end;
 
 loc T2_idle: invariant p2 <= P2_uncertain
     when p2 = P2_uncertain
@@ -340,7 +340,7 @@ end
 (* Observer Automaton *)
 
 automaton Observer
-synclabs: miss_event, T6_start, T7_finish;
+actions: miss_event, T6_start, T7_finish;
 
 loc Obs_idle: invariant True
     when True
@@ -375,7 +375,7 @@ end
 
 
 automaton sched_sched
-synclabs : T2_arr, T2_dis, T2_pre, T2_end, T6_arr, T6_dis, T6_pre, T6_end, T5_arr, T5_dis, T5_pre, T5_end, T7_arr, T7_dis, T7_pre, T7_end;
+actions : T2_arr, T2_dis, T2_pre, T2_end, T6_arr, T6_dis, T6_pre, T6_end, T5_arr, T5_dis, T5_pre, T5_end, T7_arr, T7_dis, T7_pre, T7_end;
 loc sched_loc_ : invariant True
     when True sync T2_arr do {sched_urgent := 0} goto sched_loc_AT2;
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_AT6;

@@ -40,7 +40,7 @@ var
 (************************************************************)
   automaton machine
 (************************************************************)
-synclabs: press, cup, coffee, sleep;
+actions: press, cup, coffee, sleep;
 
 loc idle: invariant True
 	when True sync press do {x := 0, y := 0} goto add_sugar;

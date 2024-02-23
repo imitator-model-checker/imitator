@@ -6,9 +6,9 @@
  * Author          : "Reviewer 1" (input by Étienne André)
  *
  * Created         : 2015/03/26
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 	x, y
@@ -29,7 +29,6 @@ var 	x, y
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: ;
 
 loc l1: invariant True
 	when x = 1 do {x := 0} goto l2;

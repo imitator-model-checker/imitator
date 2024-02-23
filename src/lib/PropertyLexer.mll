@@ -83,9 +83,12 @@ rule token = parse
  	| "Valid"          { CT_VALID }
 	| "W"              { CT_W }
 
+	| "inf"            { CT_INFINITY }
+	| "infinity"       { CT_INFINITY }
+
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
-	| "and"            { SYMBOL_AND }
+	| "and"            { OP_CONJUNCTION }
 	| "before"         { CT_BEFORE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
@@ -99,7 +102,7 @@ rule token = parse
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
-	| "or"             { SYMBOL_OR }
+	| "or"             { OP_DISJUNCTION }
 	| "pattern"        { CT_PATTERN }
  	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
@@ -121,19 +124,31 @@ rule token = parse
   | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
+	(* Comparison operators *)
 	| "<="             { OP_LEQ }
 	| ">="             { OP_GEQ }
 	| '<'              { OP_L }
 	| '='              { OP_EQ }
 	| "<>"             { OP_NEQ }
 	| '>'              { OP_G }
+
+	(* Assignment *)
 	| ":="             { OP_ASSIGN }
 
+	(* Boolean operators *)
+	| '&'              { OP_CONJUNCTION }
+	| "&&"             { OP_CONJUNCTION }
+	| '|'              { OP_DISJUNCTION }
+	| "||"             { OP_DISJUNCTION }
+	| "=>"             { OP_IMPLIES }
+
+	(* Arithmetic operators *)
 	| '+'              { OP_PLUS }
 	| '-'              { OP_MINUS }
 	| '/'              { OP_DIV }
 	| '*'              { OP_MUL }
 
+	(* Parentheses and the like *)
 	| '('              { LPAREN }
 	| ')'              { RPAREN }
 	| '{'              { LBRACE }
@@ -141,13 +156,9 @@ rule token = parse
 	| '['              { LSQBRA }
 	| ']'              { RSQBRA }
 
-	| '&'              { SYMBOL_AND }
-	| "&&"             { SYMBOL_AND }
-	| ".."             { DOUBLEDOT }
-	| ','              { COMMA }
-	| '|'              { SYMBOL_OR }
-	| "||"             { SYMBOL_OR }
 	| ':'              { COLON }
+	| ','              { COMMA }
+	| ".."             { DOUBLEDOT }
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}

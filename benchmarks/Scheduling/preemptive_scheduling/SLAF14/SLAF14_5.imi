@@ -31,7 +31,7 @@ var
 
 
 automaton Task_t1
-synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
+actions : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
 loc t1_loc_idle : invariant True
     when True sync t1_arr_event do { t1_urgent := 0 } goto t1_loc_act_event;
 loc t1_loc_act_event : invariant t1_urgent <= 0
@@ -49,14 +49,14 @@ end
 
 
 automaton Periodic_t1_arr
-synclabs : t1_arr_event;
+actions : t1_arr_event;
 loc t1_arr_loc_arr : invariant t1_arr_x<=t1_arr_P
     when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x :=  0 } goto t1_arr_loc_arr;
 end
 
 
 automaton Task_t2
-synclabs : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
+actions : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
 loc t2_loc_idle : invariant True
     when True sync t2_arr_event do { t2_urgent := 0 } goto t2_loc_act_event;
 loc t2_loc_act_event : invariant t2_urgent <= 0
@@ -74,14 +74,14 @@ end
 
 
 automaton Periodic_t2_arr
-synclabs : t2_arr_event;
+actions : t2_arr_event;
 loc t2_arr_loc_arr : invariant t2_arr_x<=t2_arr_P
     when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x :=  0 } goto t2_arr_loc_arr;
 end
 
 
 automaton Task_t3
-synclabs : t3_arr_event , t3_arr , t3_dis , t3_pre , t3_end , t3_miss;
+actions : t3_arr_event , t3_arr , t3_dis , t3_pre , t3_end , t3_miss;
 loc t3_loc_idle : invariant True
     when True sync t3_arr_event do { t3_urgent := 0 } goto t3_loc_act_event;
 loc t3_loc_act_event : invariant t3_urgent <= 0
@@ -99,14 +99,14 @@ end
 
 
 automaton Periodic_t3_arr
-synclabs : t3_arr_event;
+actions : t3_arr_event;
 loc t3_arr_loc_arr : invariant t3_arr_x<=t3_arr_P
     when t3_arr_x=t3_arr_P sync t3_arr_event do { t3_arr_x :=  0 } goto t3_arr_loc_arr;
 end
 
 
 automaton Task_t4
-synclabs : t4_arr_event , t4_arr , t4_dis , t4_pre , t4_end , t4_miss;
+actions : t4_arr_event , t4_arr , t4_dis , t4_pre , t4_end , t4_miss;
 loc t4_loc_idle : invariant True
     when True sync t4_arr_event do { t4_urgent := 0 } goto t4_loc_act_event;
 loc t4_loc_act_event : invariant t4_urgent <= 0
@@ -124,14 +124,14 @@ end
 
 
 automaton Periodic_t4_arr
-synclabs : t4_arr_event;
+actions : t4_arr_event;
 loc t4_arr_loc_arr : invariant t4_arr_x<=t4_arr_P
     when t4_arr_x=t4_arr_P sync t4_arr_event do { t4_arr_x :=  0 } goto t4_arr_loc_arr;
 end
 
 
 automaton Task_t5
-synclabs : t5_arr_event , t5_arr , t5_dis , t5_pre , t5_end , t5_miss;
+actions : t5_arr_event , t5_arr , t5_dis , t5_pre , t5_end , t5_miss;
 loc t5_loc_idle : invariant True
     when True sync t5_arr_event do { t5_urgent := 0 } goto t5_loc_act_event;
 loc t5_loc_act_event : invariant t5_urgent <= 0
@@ -149,14 +149,14 @@ end
 
 
 automaton Periodic_t5_arr
-synclabs : t5_arr_event;
+actions : t5_arr_event;
 loc t5_arr_loc_arr : invariant t5_arr_x<=t5_arr_P
     when t5_arr_x=t5_arr_P sync t5_arr_event do { t5_arr_x :=  0 } goto t5_arr_loc_arr;
 end
 
 
 automaton sched_CPU1
-synclabs : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end, t3_arr, t3_dis, t3_pre, t3_end, t4_arr, t4_dis, t4_pre, t4_end, t5_arr, t5_dis, t5_pre, t5_end;
+actions : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end, t3_arr, t3_dis, t3_pre, t3_end, t4_arr, t4_dis, t4_pre, t4_end, t5_arr, t5_dis, t5_pre, t5_end;
 loc CPU1_loc_ : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
@@ -514,7 +514,7 @@ end
 
 
 automaton OBS_dline
-synclabs : t1_miss , t2_miss , t3_miss , t4_miss , t5_miss;
+actions : t1_miss , t2_miss , t3_miss , t4_miss , t5_miss;
 loc dline_loc_nomiss : invariant True
     when True sync t1_miss  do {t1_d := 0} goto dline_loc_miss;
     when True sync t2_miss  do {t1_d := 0} goto dline_loc_miss;

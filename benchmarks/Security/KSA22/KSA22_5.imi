@@ -1,0 +1,214 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : KSA22_5
+ * Description      : model from "Protecting Smart Homes from Unintended Application Actions"
+ * Correctness      : TODO
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Security
+ * Source           : "Protecting Smart Homes from Unintended Application Actions" (ICCPS 2022) (10.1109/ICCPS54341.2022.00031)
+ * bibkey           : KSA22
+ * Author           : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Modeling         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Input by         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal, Dylan Marinho
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : <2022/08
+ * Last modified    : 2023/05/11
+ * Model version    : 1.1
+ * 
+ * IMITATOR version : 3.4
+ ******************************************************************************)
+
+(* The default output should be  5 > minutesLater_3
+ & minutesLater_3 > 0. The observer model checks here if a given appliance is turned off within delta time*)
+
+var
+	(* Clocks *)
+	switch_switch_1_sensor_clk,
+	timer_switch_switch_1,
+	clk_runIn_turnOffSwitch,
+	app_clk,
+	location_clk,
+		:clock;
+
+	(* Parameters *)
+	minutesLater_3,
+		:parameter;
+
+	app,
+	location,
+	switch_switch_1,
+	trigger_turnOffSwitch,
+	delta,
+		:discrete;
+
+(* check if a change location mode event has been issued*)
+(************************************************************)
+	automaton location_Env
+(************************************************************)
+	actions: location_Evt;
+
+	loc mode0: invariant True
+		when location_clk > 0 sync location_Evt do {location:=0, location_clk:=0} goto mode0;
+		when location_clk > 0 sync location_Evt do {location:=1, location_clk:=0} goto mode0;
+
+	end
+
+(* check if app has been tapped*)
+(************************************************************)
+	automaton app_Env
+(************************************************************)
+	actions: app_Evt;
+
+	loc mode0: invariant True
+		when app_clk > 0 sync app_Evt do {app:=0, app_clk:=0} goto mode0;
+		when app_clk > 0 sync app_Evt do {app:=1, app_clk:=0} goto mode0;
+
+	end
+
+(* switch device model *)
+(************************************************************)
+	automaton switch_switch_Dev_1
+(************************************************************)
+	actions: switch_switch_1_automata_3_turnOffSwitch_0, switch_switch_Evt_1, switch_switch_1_BigTurnON0_0, switch_switch_1_BigTurnON1_0;
+
+	loc mode0: invariant True
+		when switch_switch_1_sensor_clk > 0 sync switch_switch_Evt_1 do {switch_switch_1:=96} goto mode1;
+		when switch_switch_1_sensor_clk > 0 sync switch_switch_Evt_1 do {switch_switch_1:=97} goto mode1;
+
+	loc mode1: invariant True
+		when switch_switch_1_sensor_clk > 0 sync switch_switch_1_BigTurnON1_0 do {} goto mode2;
+		when switch_switch_1_sensor_clk > 0 sync switch_switch_1_BigTurnON0_0 do {} goto mode2;
+		when switch_switch_1_sensor_clk > 0 sync switch_switch_1_automata_3_turnOffSwitch_0 do {} goto mode2;
+
+	urgent loc mode2: invariant True
+		when True sync switch_switch_Evt_1 do {} goto mode1;
+
+	end
+
+(* turn a switch on when location mode change evt is received *)
+(************************************************************)
+	automaton BigTurnON0
+(************************************************************)
+	actions: location_Evt, switch_switch_1_BigTurnON0_0;
+
+	loc mode0: invariant True
+		when True sync location_Evt do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when location > 0 sync switch_switch_1_BigTurnON0_0 do {switch_switch_1:=97} goto mode0;
+		when location <= 0 do {} goto mode0;
+
+	end
+
+(* turn a switch on when app is tapped *)
+(************************************************************)
+	automaton BigTurnON1
+(************************************************************)
+	actions: app_Evt, switch_switch_1_BigTurnON1_0;
+
+	loc mode0: invariant True
+		when True sync app_Evt do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when app > 0 sync switch_switch_1_BigTurnON1_0 do {switch_switch_1:=97} goto mode0;
+		when app <= 0 do {} goto mode0;
+
+	end
+
+(************************************************************)
+	automaton automata_3_turnOffSwitch
+(************************************************************)
+	actions: runIn_turnOffSwitch_sync, switch_switch_1_automata_3_turnOffSwitch_0;
+
+	loc mode0: invariant True
+		when True sync runIn_turnOffSwitch_sync do {clk_runIn_turnOffSwitch:=0} goto mode1;
+
+	loc mode1: invariant clk_runIn_turnOffSwitch <= 60 * minutesLater_3
+		when clk_runIn_turnOffSwitch >= 60 * minutesLater_3 sync switch_switch_1_automata_3_turnOffSwitch_0 do {switch_switch_1:=96, trigger_turnOffSwitch:=0} goto mode0;
+
+	end
+
+(* power allowance app which turns a switch off after minutes_Later_3 *)
+(************************************************************)
+	automaton PowerAllowance0
+(************************************************************)
+	actions: switch_switch_Evt_1, runIn_turnOffSwitch_sync;
+
+	loc mode0: invariant True
+		when True sync switch_switch_Evt_1 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when switch_switch_1 = 97 do {} goto mode2;
+		when switch_switch_1 < 97 do {} goto mode0;
+		when switch_switch_1 > 97 do {} goto mode0;
+
+	urgent loc mode2: invariant True
+		when trigger_turnOffSwitch = 0 sync runIn_turnOffSwitch_sync do {trigger_turnOffSwitch:=1} goto mode0;
+		when trigger_turnOffSwitch = 1 do {} goto mode0;
+
+	end
+
+(************************************************************)
+	automaton switch_on_deadline_switch
+(************************************************************)
+	actions: switch_switch_Evt_1, switch_switch_1_BigTurnON0_0, switch_switch_1_BigTurnON1_0, switch_switch_1_automata_3_turnOffSwitch_0, badstate;
+
+	loc mode0: invariant True
+		when True sync switch_switch_1_BigTurnON0_0 do {} goto mode1;
+		when True sync switch_switch_1_BigTurnON1_0 do {} goto mode1;
+		when True sync switch_switch_1_automata_3_turnOffSwitch_0 do {} goto mode1;
+		when True sync switch_switch_Evt_1 goto mode1;
+
+	urgent loc mode1: invariant True
+		when switch_switch_1 = 97  do {timer_switch_switch_1:=0} goto mode2;
+		when switch_switch_1 < 97  do {} goto mode0;
+		when switch_switch_1 > 97  do {} goto mode0;
+
+	loc mode2: invariant True
+		when timer_switch_switch_1 >= delta sync badstate do {} goto conflict;
+		when timer_switch_switch_1 < delta sync switch_switch_1_BigTurnON0_0 goto mode3;
+		when timer_switch_switch_1 < delta sync switch_switch_1_BigTurnON1_0 goto mode3;
+		when timer_switch_switch_1 < delta sync switch_switch_1_automata_3_turnOffSwitch_0 goto mode3;
+		when timer_switch_switch_1 < delta sync switch_switch_Evt_1 goto mode3;
+
+	urgent loc mode3: invariant True
+		when switch_switch_1 = 97  do {} goto mode2;
+		when switch_switch_1 < 97  do {} goto mode0;
+		when switch_switch_1 > 97  do {} goto mode0;
+
+	loc conflict: invariant True
+
+	end
+
+
+init := {
+	discrete =
+		loc[location_Env] := mode0,
+		loc[BigTurnON1] := mode0,
+		loc[switch_switch_Dev_1] := mode0,
+		loc[app_Env] := mode0,
+		loc[PowerAllowance0] := mode0,
+		loc[BigTurnON0] := mode0,
+		loc[automata_3_turnOffSwitch] := mode0,
+		loc[switch_on_deadline_switch] := mode0
+	;
+
+	continuous =
+		& app = 0
+		& switch_switch_1 = 0
+		& trigger_turnOffSwitch = 0
+		& delta = 300
+		& location = 0
+
+		& minutesLater_3 > 0
+
+		& clk_runIn_turnOffSwitch = 0
+		& timer_switch_switch_1 = 0
+		& switch_switch_1_sensor_clk = 0
+	;
+}
+
+end

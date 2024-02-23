@@ -35,7 +35,7 @@ var 	xPot, xTimer
 (************************************************************)
   automaton system
 (************************************************************)
-synclabs: startTimer, ring, boilover, miam;
+actions: startTimer, ring, boilover, miam;
 
 loc heating: invariant xPot <= dPot
 	when True do {xTimer := 0} sync startTimer goto ticking;

@@ -4,7 +4,7 @@ var
 
 automaton act_t1
 
-synclabs: Release1;
+actions: Release1;
 
 loc WFO: invariant clock_1 <= O_1
 	when clock_1 = O_1 sync Release1 do {clock_1 := 0} goto WFP;
@@ -16,7 +16,7 @@ end
 
 automaton act_t2
 
-synclabs: Release2;
+actions: Release2;
 
 loc WFO: invariant clock_2 <= O_2
 	when clock_2 = O_2 sync Release2 do {clock_2 := 0} goto WFP;
@@ -28,7 +28,7 @@ end
 
 automaton scheduler_1
 
-synclabs: Release1, Busy_idle1, Check_idle1, Check_error1;
+actions: Release1, Busy_idle1, Check_idle1, Check_error1;
 
 loc idle: invariant SC_1r <= D_1 stop{SC_1r}
 	when True sync Release1 do {SC_1x := 0, SC_1r :=  C_1} goto busy;
@@ -51,7 +51,7 @@ end
 
 automaton scheduler_2
 
-synclabs: Release1, Release2, Busy_idle2, Check_idle2, Check_error2;
+actions: Release1, Release2, Busy_idle2, Check_idle2, Check_error2;
 
 loc idle: invariant SC_2r <= D_2 stop{SC_2r}
 	when True sync Release1 do {SC_2x := 0, SC_2r :=  C_1} goto busy;

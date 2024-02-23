@@ -40,7 +40,7 @@ var
 (************************************************************)
   automaton medium
 (************************************************************)
-synclabs: send1, send2, end1, end2, busy1, busy2, cd;
+actions: send1, send2, end1, end2, busy1, busy2, cd;
 
 loc Init: invariant True
 		when True sync send1 do {y := 0} goto Transmit;
@@ -66,7 +66,7 @@ end (* medium *)
 (************************************************************)
   automaton sender1
 (************************************************************)
-synclabs: send1, end1, busy1, cd, prob1;
+actions: send1, end1, busy1, cd, prob1;
 
 loc Init1: invariant True
 	when True sync send1 do {} goto Transmit1;
@@ -725,7 +725,7 @@ end (* sender1 *)
 (************************************************************)
   automaton sender2
 (************************************************************)
-synclabs: send2, end2, busy2, cd, prob2;
+actions: send2, end2, busy2, cd, prob2;
 
 loc Init2: invariant x2 = 0
 	when x2 = 0 sync send2 do {} goto Transmit2;

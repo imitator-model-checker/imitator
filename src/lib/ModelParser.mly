@@ -96,20 +96,19 @@ let unzip l = List.fold_left
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
+%token APOSTROPHE COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
+  CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
 	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_IN CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
+	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
-	CT_OR
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
@@ -128,8 +127,9 @@ let unzip l = List.fold_left
 %right OP_ASSIGN
 %right OP_EQ
 
-%left PIPE CT_OR        /* lowest precedence */
-%left AMPERSAND CT_AND  /* medium precedence */
+%left OP_IMPLIES           /* lowest precedence */
+%left OP_DISJUNCTION /* CT_OR */
+%left OP_CONJUNCTION  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
 
@@ -706,7 +706,7 @@ old_init_expression:
 old_init_expression_fol:
 	| old_init_state_predicate { [ $1 ] }
 	| LPAREN old_init_expression_fol RPAREN { $2 }
-	| old_init_expression_fol AMPERSAND old_init_expression_fol { $1 @ $3 }
+	| old_init_expression_fol OP_CONJUNCTION old_init_expression_fol { $1 @ $3 }
 ;
 
 /* Used in the init definition */
@@ -771,7 +771,7 @@ init_continuous_expression:
 ;
 
 init_continuous_expression_nonempty_list :
-	| init_continuous_state_predicate AMPERSAND init_continuous_expression_nonempty_list  { $1 :: $3 }
+	| init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list  { $1 :: $3 }
 	| init_continuous_state_predicate ampersand_opt { [ $1 ] }
 ;
 
@@ -884,7 +884,7 @@ nonlinear_convex_predicate:
 ;
 
 nonlinear_convex_predicate_fol:
-	| discrete_boolean_expression AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
+	| discrete_boolean_expression OP_CONJUNCTION nonlinear_convex_predicate_fol { $1 :: $3 }
 	| discrete_boolean_expression { [$1] }
 ;
 
@@ -893,7 +893,7 @@ nonlinear_convex_predicate_fol:
 linear_expression:
 	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
 ;
 
 /* Linear term over variables and rationals (no recursion, no division) */
@@ -937,8 +937,10 @@ linear_constraint:
 /** NOTE: more general than a Boolean expression!! notably includes all expressions */
 boolean_expression:
 	| discrete_boolean_expression { Parsed_discrete_bool_expr $1 }
-	| boolean_expression AMPERSAND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
-  | boolean_expression PIPE boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	| boolean_expression OP_CONJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+	| boolean_expression OP_DISJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	/* Translate 'a => b' to 'NOT a OR b' */
+	| boolean_expression OP_IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
 ;
 
 discrete_boolean_expression:
@@ -1014,6 +1016,6 @@ semicolon_opt:
 ;
 
 ampersand_opt:
-	| AMPERSAND { }
+	| OP_CONJUNCTION { }
 	| { }
 ;

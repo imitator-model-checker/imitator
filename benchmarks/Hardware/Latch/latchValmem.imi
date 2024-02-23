@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2007/12
- * Last modified   : 2021/10/07
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
@@ -42,7 +42,7 @@ var 	s, ckClock, ckD, ckNot1, ckNot2, ckXor, ckAnd, ckLatch
 (************************************************************)
 automaton clock1
 (************************************************************)
-synclabs: clockUp1;
+actions: clockUp1;
 
 loc ClockLow1: invariant ckClock <= dClockLow
 	when ckClock >= dClockLow sync clockUp1 do {ckClock := 0} goto ClockHigh1;
@@ -55,7 +55,7 @@ end (*clock1*)
 (************************************************************)
 automaton d1
 (************************************************************)
-synclabs: clockUp1, dUp1, dDown1;
+actions: clockUp1, dUp1, dDown1;
 
 loc DLow1: invariant ckD<=dClockLow-dSetup
 		when ckD=dClockLow-dSetup sync dUp1 do {ckD := 0} goto DHigh1;
@@ -75,7 +75,7 @@ end (*d1*)
 (************************************************************)
 automaton not1
 (************************************************************)
-synclabs: clockUp1,
+actions: clockUp1,
 	not1Down1;
 
 loc Not1High1: invariant ckNot1 >= 0
@@ -92,7 +92,7 @@ end (*not1*)
 (************************************************************)
 automaton not2
 (************************************************************)
-synclabs: not1Down1,
+actions: not1Down1,
 	not2Up1;
 
 loc Not2Low1: invariant ckNot2 >= 0
@@ -109,7 +109,7 @@ end (*not2*)
 (************************************************************)
 automaton xor1
 (************************************************************)
-synclabs: clockUp1, not2Up1,
+actions: clockUp1, not2Up1,
 	xorUp1, xorDown1;
 
 loc XorLow1: invariant ckXor >= 0
@@ -132,7 +132,7 @@ end (*xor1*)
 (************************************************************)
 automaton and1
 (************************************************************)
-synclabs: clockUp1, xorDown1,
+actions: clockUp1, xorDown1,
 	andUp1, andDown1;
 
 loc AndLow1: invariant ckAnd >= 0
@@ -155,7 +155,7 @@ end (*and1*)
 (************************************************************)
 automaton latch1
 (************************************************************)
-synclabs: dUp1, dDown1, andUp1, andDown1,
+actions: dUp1, dDown1, andUp1, andDown1,
 	latchUp1;
 
 loc LatchD0E0: invariant ckLatch >= 0

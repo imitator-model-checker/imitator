@@ -1,0 +1,246 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : KSA22_3
+ * Description      : model from "Protecting Smart Homes from Unintended Application Actions"
+ * Correctness      : TODO
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Security
+ * Source           : "Protecting Smart Homes from Unintended Application Actions" (ICCPS 2022) (10.1109/ICCPS54341.2022.00031)
+ * bibkey           : KSA22
+ * Author           : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Modeling         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Input by         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal, Dylan Marinho
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : <2022/08
+ * Last modified    : 2023/05/11
+ * Model version    : 1.1
+ * 
+ * IMITATOR version : 3.4
+ ******************************************************************************)
+
+(* The default output should be False. The observer model checks here if door is locked after being unlocked with delta time *)
+
+var
+	(* Clocks *)
+	presenceSensor_presence_1_sensor_clk,
+	lock_lock_1_sensor_clk,
+	schedule_clock,
+	timer_lock_lock_1
+		:clock;
+
+	(* Parameters *)
+	time_14,
+	sendPushMessage_14,
+	phone_14,
+		:parameter;
+
+	presenceSensor_presence_1,
+	lock_lock_1,
+	r2_0,
+	lock_1_size,
+	anyLocked_2_0_0,
+	push_msg,
+	contactSensor_contact_1,
+	msg_14_0_1,
+	send_sms,
+	msg_14_0_2,
+	delta,
+	contactSensor_1,
+		:discrete;
+
+(* dev model for presence sensor *)
+(************************************************************)
+	automaton presenceSensor_presence_Dev_1
+(************************************************************)
+	actions: presenceSensor_presence_Evt_1;
+
+	loc mode0: invariant True
+		when presenceSensor_presence_1_sensor_clk > 0 sync presenceSensor_presence_Evt_1 do {presenceSensor_presence_1:=88,presenceSensor_presence_1_sensor_clk:=0} goto mode0;
+		when presenceSensor_presence_1_sensor_clk > 0 sync presenceSensor_presence_Evt_1 do {presenceSensor_presence_1:=89,presenceSensor_presence_1_sensor_clk:=0} goto mode0;
+
+	end
+
+(* dev model for a lock device *)
+(************************************************************)
+	automaton lock_lock_Dev_1
+(************************************************************)
+	actions: lock_lock_1_UnlockItWhenIArrive0_1, lock_lock_1_Lockitataspecifictime0_4, lock_lock_1_Lockitataspecifictime0_7, lock_lock_Evt_1;
+
+	loc mode0: invariant True
+		when lock_lock_1_sensor_clk > 0 sync lock_lock_Evt_1 do {lock_lock_1:=126,lock_lock_1_sensor_clk:=0} goto mode1;
+		when lock_lock_1_sensor_clk > 0 sync lock_lock_Evt_1 do {lock_lock_1:=127,lock_lock_1_sensor_clk:=0} goto mode1;
+		when lock_lock_1_sensor_clk > 0 sync lock_lock_Evt_1 do {lock_lock_1:=128,lock_lock_1_sensor_clk:=0} goto mode1;
+		when lock_lock_1_sensor_clk > 0 sync lock_lock_Evt_1 do {lock_lock_1:=129,lock_lock_1_sensor_clk:=0} goto mode1;
+
+	loc mode1: invariant True
+		when True sync lock_lock_1_UnlockItWhenIArrive0_1 do {} goto mode2;
+		when True sync lock_lock_1_Lockitataspecifictime0_4 do {} goto mode2;
+		when True sync lock_lock_1_Lockitataspecifictime0_7 do {} goto mode2;
+
+	urgent loc mode2: invariant True
+		when True sync lock_lock_Evt_1 do {} goto mode1;
+
+	end
+
+(* app that unlocks a door when presence is sensed *)
+(************************************************************)
+	automaton UnlockItWhenIArrive0
+(************************************************************)
+	actions: presenceSensor_presence_Evt_1, push_msg_UnlockItWhenIArrive0_0, lock_lock_1_UnlockItWhenIArrive0_1;
+
+	loc mode0: invariant True
+		when True sync presenceSensor_presence_Evt_1 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when presenceSensor_presence_1 = 88 do {} goto mode2;
+		when presenceSensor_presence_1 < 88 do {} goto mode0;
+		when presenceSensor_presence_1 > 88 do {} goto mode0;
+
+	urgent loc mode2: invariant True
+		when lock_lock_1 = 128 do {r2_0:=1} goto mode3;
+		when lock_lock_1 < 128 do {r2_0:=0} goto mode3;
+		when lock_lock_1 > 128 do {r2_0:=0} goto mode3;
+
+	urgent loc mode3: invariant True
+		when r2_0 > lock_1_size do {anyLocked_2_0_0:=1} goto mode4;
+		when r2_0 < lock_1_size do {anyLocked_2_0_0:=1} goto mode4;
+		when r2_0 = lock_1_size do {anyLocked_2_0_0:=0} goto mode4;
+
+	urgent loc mode4: invariant True
+		when anyLocked_2_0_0 > 0 sync push_msg_UnlockItWhenIArrive0_0 do {push_msg:=1} goto mode5;
+		when anyLocked_2_0_0 <= 0 do {} goto mode0;
+
+	urgent loc mode5: invariant True
+		when True sync lock_lock_1_UnlockItWhenIArrive0_1 do {lock_lock_1:=128} goto mode0;
+
+	end
+
+(* app that locka a door at a specific time *)
+(************************************************************)
+	automaton Lockitataspecifictime0
+(************************************************************)
+	actions: push_msg_Lockitataspecifictime0_0, send_sms_Lockitataspecifictime0_1, push_msg_Lockitataspecifictime0_2, send_sms_Lockitataspecifictime0_3, lock_lock_1_Lockitataspecifictime0_4, push_msg_Lockitataspecifictime0_5, send_sms_Lockitataspecifictime0_6, lock_lock_1_Lockitataspecifictime0_7;
+
+	loc mode0: invariant schedule_clock <= time_14
+		when schedule_clock >= time_14 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when contactSensor_1 > 0 do {} goto mode2;
+		when contactSensor_1 <= 0 do {msg_14_0_1:=208} goto mode10;
+
+	urgent loc mode2: invariant True
+		when contactSensor_contact_1 = 39 do {msg_14_0_1:=179} goto mode3;
+		when contactSensor_contact_1 < 39 do {msg_14_0_2:=208} goto mode6;
+		when contactSensor_contact_1 > 39 do {msg_14_0_2:=208} goto mode6;
+
+	urgent loc mode3: invariant True
+		when sendPushMessage_14 > 0 sync push_msg_Lockitataspecifictime0_0 do {push_msg:=1} goto mode4;
+		when sendPushMessage_14 <= 0 do {} goto mode4;
+
+	urgent loc mode4: invariant True
+		when phone_14 > 0 sync send_sms_Lockitataspecifictime0_1 do {send_sms:=1} goto mode5;
+		when phone_14 <= 0 do {} goto mode5;
+
+	urgent loc mode5: invariant True
+		when True do {} goto mode9;
+
+	urgent loc mode6: invariant True
+		when sendPushMessage_14 > 0 sync push_msg_Lockitataspecifictime0_2 do {push_msg:=1} goto mode7;
+		when sendPushMessage_14 <= 0 do {} goto mode7;
+
+	urgent loc mode7: invariant True
+		when phone_14 > 0 sync send_sms_Lockitataspecifictime0_3 do {send_sms:=1} goto mode8;
+		when phone_14 <= 0 do {} goto mode8;
+
+	urgent loc mode8: invariant True
+		when True sync lock_lock_1_Lockitataspecifictime0_4 do {lock_lock_1:=127} goto mode9;
+
+	urgent loc mode9: invariant True
+		when True do {} goto mode13;
+
+	urgent loc mode10: invariant True
+		when sendPushMessage_14 > 0 sync push_msg_Lockitataspecifictime0_5 do {push_msg:=1} goto mode11;
+		when sendPushMessage_14 <= 0 do {} goto mode11;
+
+	urgent loc mode11: invariant True
+		when phone_14 > 0 sync send_sms_Lockitataspecifictime0_6 do {send_sms:=1} goto mode12;
+		when phone_14 <= 0 do {} goto mode12;
+
+	urgent loc mode12: invariant True
+		when True sync lock_lock_1_Lockitataspecifictime0_7 do {lock_lock_1:=127} goto mode13;
+
+	loc mode13: invariant True
+
+	end
+
+(* model that check if lock is locked after being unlocked with delta time *)
+(************************************************************)
+	automaton unlock_deadline_lock
+(************************************************************)
+	actions: lock_lock_Evt_1, lock_lock_1_UnlockItWhenIArrive0_1, lock_lock_1_Lockitataspecifictime0_4, lock_lock_1_Lockitataspecifictime0_7, badstate;
+
+	loc mode0: invariant True
+		when True sync lock_lock_1_UnlockItWhenIArrive0_1 do {} goto mode1;
+		when True sync lock_lock_1_Lockitataspecifictime0_4 do {} goto mode1;
+		when True sync lock_lock_1_Lockitataspecifictime0_7 do {} goto mode1;
+		when True sync lock_lock_Evt_1 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when lock_lock_1 = 128 do {timer_lock_lock_1:=0} goto mode2;
+		when lock_lock_1 < 128 do {} goto mode0;
+		when lock_lock_1 > 128 do {} goto mode0;
+
+	loc mode2: invariant timer_lock_lock_1 <= delta
+		when timer_lock_lock_1 >= delta sync badstate do {} goto conflict;
+		when timer_lock_lock_1 < delta sync lock_lock_1_UnlockItWhenIArrive0_1 do {} goto mode3;
+		when timer_lock_lock_1 < delta sync lock_lock_1_Lockitataspecifictime0_4 do {} goto mode3;
+		when timer_lock_lock_1 < delta sync lock_lock_1_Lockitataspecifictime0_7 do {} goto mode3;
+		when timer_lock_lock_1 < delta sync lock_lock_Evt_1 do {} goto mode3;
+
+	urgent loc mode3: invariant True
+		when lock_lock_1 = 128 do {} goto mode2;
+		when lock_lock_1 < 128 do {} goto mode0;
+		when lock_lock_1 > 128 do {} goto mode0;
+
+	loc conflict: invariant True
+
+	end
+
+init := {
+	discrete =
+		loc[Lockitataspecifictime0] := mode0,
+		loc[lock_lock_Dev_1] := mode0,
+		loc[presenceSensor_presence_Dev_1] := mode0,
+		loc[UnlockItWhenIArrive0] := mode0,
+		loc[unlock_deadline_lock] := mode0,
+	;
+
+	continuous =
+		& presenceSensor_presence_1 = 0
+		& lock_lock_1 = 0
+		& r2_0 = 0
+		& lock_1_size = 1
+		& anyLocked_2_0_0 = 0
+		& push_msg = 0
+		& phone_14 = 1
+		& send_sms = 0
+		& msg_14_0_2 = 0
+		& delta = 120
+		& contactSensor_1 = 1
+		& contactSensor_contact_1 = 0
+		& msg_14_0_1 = 0
+
+		& schedule_clock = 0
+		& presenceSensor_presence_1_sensor_clk = 0
+		& lock_lock_1_sensor_clk = 0
+
+		& time_14 > 0
+		& time_14 <= 86400
+		& sendPushMessage_14 >= 174
+		& sendPushMessage_14 <= 175
+	;
+}
+end

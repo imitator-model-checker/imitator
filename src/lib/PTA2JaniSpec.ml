@@ -677,8 +677,8 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
         | Clock_assignment (clock_index, expr) ->
             json_struct [|
-                json_property "ref" (model.variable_names clock_index);
-                json_property "value" (DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr)
+                json_property "ref" (json_quoted (model.variable_names clock_index));
+                json_property "value" (string_of_rational_arithmetic_expression model.variable_names expr)
             |]
 
         | Local_decl _
@@ -692,7 +692,7 @@ let string_of_seq_code_bloc model (* seq_code_bloc *) =
 
     let string_of_seq_code_bloc seq_code_bloc =
         let str_instructions = List.map string_of_instruction seq_code_bloc in
-        OCamlUtilities.string_of_list_of_string_with_sep "" str_instructions
+        OCamlUtilities.string_of_list_of_string_with_sep jani_separator str_instructions
     in
     string_of_seq_code_bloc (* seq_code_bloc *)
 
@@ -1026,8 +1026,13 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
                         jani_boolean_strings.and_operator
                         invariant
                         der_clock
-                else
-                    invariant ^ jani_separator ^ der_clock
+                else (
+                    if invariant <> "" && der_clock = ""
+                        then invariant
+                    else if invariant = "" && der_clock <> ""
+                        then der_clock
+                        else invariant ^ jani_separator ^ der_clock
+                )
             )
         )
 	))

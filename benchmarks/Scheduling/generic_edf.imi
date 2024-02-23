@@ -14,7 +14,7 @@ var time :clock;
 -- STOPPER Used for Analysis Only		--
 -----------------------------------------*)
 automaton stopper
-synclabs: done1, require2, done2;
+actions: done1, require2, done2;
 
 loc f_1_r: invariant time<= deadlineBasic
 	when True sync done1 goto f_2_r;
@@ -82,7 +82,7 @@ end
 
 automaton scheduler_EDF
 
-synclabs:require1, require2, require3, done1, done2, done3;
+actions:require1, require2, require3, done1, done2, done3;
 
 loc non1_non2_non3: invariant True stop{x1,x2,x3}
 	when True sync require1 do {x1 := x1, x2 := x2, x3 := x3, d1 := 0} goto ok1_non2_non3;
@@ -156,7 +156,7 @@ end
 
 automaton T_1
 
-synclabs: done1, require1;
+actions: done1, require1;
 
 loc init_s: invariant t_1 <= Off1
 	when t_1 = Off1 sync require1 do {t_1 := 0} goto waiting;
@@ -171,7 +171,7 @@ end
 
 automaton T_2
 
-synclabs: done2, require2;
+actions: done2, require2;
 
 loc init_s: invariant t_2 <= Off2
 	when t_2 = Off2 sync require2 do {t_2 := 0} goto waiting;
@@ -186,7 +186,7 @@ end
 
 automaton T_3
 
-synclabs: done3, require3;
+actions: done3, require3;
 
 loc init_s: invariant t_3 <= Off3
 	when t_3 = Off3 sync require3 do {t_3 := 0} goto waiting;

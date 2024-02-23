@@ -10,6 +10,9 @@
 * New EU ("Exists … until") algorithm
 * New AF ("always eventually") algorithm, and variants AU ("always … until") and AW ("always … weak until")
 
+### Syntax improvement
+* The Boolean implication (`a => b`) is now allowed both in the model and in the property.
+
 ### Syntax changes in the model
 * Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
 * Terminate backward-compatibility on updates syntax: updates are now only defined using the `var := expr` syntax

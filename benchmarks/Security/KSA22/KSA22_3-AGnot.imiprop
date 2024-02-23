@@ -1,0 +1,1 @@
+property := #synth AGnot ( loc[unlock_deadline_lock] = conflict );

@@ -38,7 +38,7 @@ var
 (************************************************************)
   automaton FFS
 (************************************************************)
-synclabs: fillm, shipm, resumem, errpm;
+actions: fillm, shipm, resumem, errpm;
 
 loc f0: invariant True
 	when True sync fillm do {x := 0} goto f1;
@@ -56,7 +56,7 @@ end
 (************************************************************)
 automaton Monitor
 (************************************************************)
-synclabs: packm, fillm, shipm, errpm, resolvem, resumem;
+actions: packm, fillm, shipm, errpm, resolvem, resumem;
 
 loc m0: invariant True
 	when True sync fillm do {} goto m1;
@@ -90,7 +90,7 @@ end
 automaton Packaging
 (************************************************************)
 
-synclabs: packm, resolvem, errpm;
+actions: packm, resolvem, errpm;
 
 loc p0: invariant y <= 5
 	when True sync packm do {y := 0} goto p0;

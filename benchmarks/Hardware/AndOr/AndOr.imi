@@ -41,7 +41,7 @@ var
 (************************************************************)
   automaton input
 (************************************************************)
-synclabs: aUp, aDown, bUp, bDown;
+actions: aUp, aDown, bUp, bDown;
 
 loc InputInit: invariant ckb <= dB_High_u
 	when ckb >= dB_High_l sync bDown do {ckb := 0} goto Input2;
@@ -68,7 +68,7 @@ end (*input*)
  Output : x
 *)
 
-synclabs: tUp, tDown, bUp, bDown,
+actions: tUp, tDown, bUp, bDown,
 	xUp, xDown;
 
 loc And000: invariant ckAnd >= 0
@@ -117,7 +117,7 @@ end (*andGate*)
  Input 2 : a
  Output : t
 *)
-synclabs: xUp, xDown, aUp, aDown,
+actions: xUp, xDown, aUp, aDown,
 	tUp, tDown;
 
 loc Or000: invariant ckOr >= 0

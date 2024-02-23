@@ -50,7 +50,7 @@ let resolve_property l =
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
+%token COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
 	CT_A CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AG CT_AGnot CT_ALWAYS
@@ -60,7 +60,7 @@ let resolve_property l =
 	CT_E CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
+	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN /* CT_INFACCCYCLE */ CT_INFCYCLE CT_INFCYCLETHROUGH CT_INFINITY CT_IS
 	CT_LIST CT_LOC
 	CT_NEXT CT_NOT CT_NZCYCLE
 	CT_ONCE
@@ -78,8 +78,9 @@ let resolve_property l =
 
 %token EOF
 
-%left SYMBOL_OR              /* lowest precedence */
-%left SYMBOL_AND             /* medium precedence */
+%left OP_IMPLIES             /* lowest precedence */
+%left OP_DISJUNCTION         /* low precedence */
+%left OP_CONJUNCTION         /* medium precedence */
 %left DOUBLEDOT              /* high precedence */
 %nonassoc CT_NOT             /* highest precedence */
 
@@ -139,6 +140,9 @@ property:
 
 	/* Reachability */
 	| CT_EF state_predicate { Parsed_EF $2 }
+
+	/* Reachability (timed version) */
+	| CT_EF interval state_predicate { Parsed_EF_timed ($2, $3) }
 
 	/* Safety */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
@@ -307,6 +311,14 @@ pattern:
 ;
 
 /************************************************************/
+interval:
+/************************************************************/
+	/** TODO: add other forms of intervals */
+	| LSQBRA linear_expression COMMA linear_expression RSQBRA { Parsed_closed_closed_interval ($2, $4) }
+	| LSQBRA linear_expression COMMA CT_INFINITY RSQBRA { Parsed_closed_infinity_interval ($2) }
+;
+
+/************************************************************/
 state_predicate_list:
 /************************************************************/
 	| non_empty_state_predicate_list { $1 }
@@ -332,12 +344,12 @@ state_predicate:
 /************************************************************/
 non_empty_state_predicate:
 /************************************************************/
-	| non_empty_state_predicate SYMBOL_OR state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
+	| non_empty_state_predicate OP_DISJUNCTION state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term SYMBOL_AND state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
+	| state_predicate_term OP_CONJUNCTION state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
 	| state_predicate_factor { Parsed_state_predicate_factor $1 }
 ;
 
@@ -376,8 +388,10 @@ loc_predicate:
 
 boolean_expression:
 	| discrete_boolean_predicate { Parsed_discrete_bool_expr $1 }
-	| boolean_expression SYMBOL_AND boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
-	| boolean_expression SYMBOL_OR boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	| boolean_expression OP_CONJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_and) }
+	| boolean_expression OP_DISJUNCTION boolean_expression { Parsed_conj_dis ($1, $3, Parsed_or) }
+	/* Translate 'a => b' to 'NOT a OR b' */
+	| boolean_expression OP_IMPLIES boolean_expression { Parsed_conj_dis ((Parsed_discrete_bool_expr (Parsed_not $1)), $3, Parsed_or) }
 ;
 
 /************************************************************/
@@ -461,7 +475,7 @@ literal_array_fol:
 function_argument_fol:
   | boolean_expression COMMA function_argument_fol { $1 :: $3 }
   | boolean_expression { [$1] }
-
+;
 
 number:
 	| integer { ParsedValue.Weak_number_value $1 }
@@ -507,11 +521,12 @@ positive_rational_with_div:
 ;
 
 */
-
+/*** NOTE: unused as of 2024/02/22
 positive_rational:
 	| pos_integer { NumConst.numconst_of_int $1 }
 	| pos_float { $1 }
 ;
+*/
 
 pos_integer:
 	| INT { $1 }
@@ -523,9 +538,6 @@ pos_float:
 	}
 ;
 
-binary_word:
-        BINARYWORD { ParsedValue.Bin_value (BinaryWord.binaryword_of_string $1) }
-;
 
 /************************************************************/
 projection_definition:
@@ -661,7 +673,7 @@ constant_atom:
 /************************************************************/
 
 and_opt:
-	| SYMBOL_AND {}
+	| OP_CONJUNCTION {}
 	| {}
 ;
 
