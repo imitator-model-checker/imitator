@@ -105,7 +105,6 @@ let unzip l = List.fold_left
 	CT_IF CT_IN CT_INIT CT_INSIDE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
-	CT_OR
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
 	CT_STOP CT_SYNC CT_SYNCLABS
@@ -124,7 +123,7 @@ let unzip l = List.fold_left
 %right OP_ASSIGN
 %right OP_EQ
 
-%left PIPE CT_OR        /* lowest precedence */
+%left PIPE /* CT_OR */        /* lowest precedence */
 %left AMPERSAND CT_AND  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */

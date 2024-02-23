@@ -98,7 +98,7 @@ rule token = parse
 	| "list"           { CT_LIST }
 	| "loc"            { CT_LOC }
 	| "not"            { CT_NOT }
-	| "or"             { CT_OR }
+(* 	| "or"             { CT_OR } *)
 	| "parameter"      { CT_PARAMETER }
 	| "queue"          { CT_QUEUE }
   	| "rat"            { CT_RATIONAL }
