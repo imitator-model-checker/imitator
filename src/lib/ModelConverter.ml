@@ -1851,6 +1851,41 @@ let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_
 
 
 (*------------------------------------------------------------*)
+(** Check a parsed interval *)
+(*------------------------------------------------------------*)
+let check_parsed_interval (useful_parsing_model_information : useful_parsing_model_information) = function
+	| Parsed_closed_closed_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_closed_open_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_open_closed_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_open_open_interval (parsed_duration_1, parsed_duration_2)
+		->
+		let variable_infos = useful_parsing_model_information.variable_infos in
+			let check1 = ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message parsed_duration_1 in
+			let check2 = (if ParsingStructureMeta.no_variables_in_linear_expression variable_infos parsed_duration_1
+						then true
+						else (print_error("No variable is allowed in the left-side bound of the interval of a TCTL operator in the property definition (only constants and parameters are allowed)."); false))
+			in
+			let check3 = ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message parsed_duration_2 in
+			let check4 = (if ParsingStructureMeta.no_variables_in_linear_expression variable_infos parsed_duration_2
+						then true
+						else (print_error("No variable is allowed in the right-side bound of the interval of a TCTL operator in the property definition (only constants and parameters are allowed)."); false))
+			in
+			check1 && check2 && check3 && check4
+
+	| Parsed_closed_infinity_interval parsed_duration
+	| Parsed_open_infinity_interval parsed_duration
+		->
+		let variable_infos = useful_parsing_model_information.variable_infos in
+			let check1 = ParsingStructureMeta.all_variables_defined_in_linear_expression variable_infos undeclared_variable_in_linear_constraint_message parsed_duration in
+			let check2 = (if ParsingStructureMeta.no_variables_in_linear_expression variable_infos parsed_duration
+						then true
+						else (print_error("No variable is allowed in the left-side bound of an infinite interval of a TCTL operator in the property definition (only constants and parameters are allowed)."); false))
+			in
+			check1 && check2
+
+
+
+(*------------------------------------------------------------*)
 (** Check the correctness property declaration       *)
 (*------------------------------------------------------------*)
 let check_property_option (useful_parsing_model_information : useful_parsing_model_information) (parsed_property_option : ParsingStructure.parsed_property option) =
@@ -1902,6 +1937,18 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_phi)
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL: timed version *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF_timed (parsed_interval, parsed_state_predicate)
+			->
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+				(check_parsed_interval useful_parsing_model_information parsed_interval)
+
 
 
 		(*------------------------------------------------------------*)
@@ -2176,8 +2223,6 @@ type converted_observer_structure = {
 
 
 
-
-
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
 let convert_property_option (useful_parsing_model_information : useful_parsing_model_information) (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 
@@ -2302,6 +2347,18 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			None
 
 
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL (timed version) *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF_timed (parsed_interval, parsed_state_predicate) ->
+			(* Return a property and no observer *)
+			EF_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

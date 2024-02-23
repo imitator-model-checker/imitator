@@ -14,4 +14,7 @@
 open ParsingStructure
 open AbstractProperty
 
+(** Convert a ParsingStructure.parsed_interval into a AbstractProperty.timed_interval *)
+val timed_interval_of_parsed_interval : ParsingStructure.useful_parsing_model_information -> ParsingStructure.parsed_interval -> AbstractProperty.timed_interval
+
 val convert_state_predicate : useful_parsing_model_information -> parsed_state_predicate -> state_predicate

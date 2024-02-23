@@ -373,9 +373,27 @@ let all_components_used_in_property_option parsed_property_option =
         let left, _ = List.split parsed_pval in left
     in
 
+    (*** NOTE: used for cartography-like algorithms ***)
     let get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle =
         (* Return the left part of all triples *)
         List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle
+    in
+
+    (*** NOTE: used for timed CTL with intervals ***)
+    let get_variables_in_parsed_interval = function
+	| Parsed_closed_closed_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_closed_open_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_open_closed_interval (parsed_duration_1, parsed_duration_2)
+	| Parsed_open_open_interval (parsed_duration_1, parsed_duration_2)
+        ->
+        StringSet.union
+            (ParsingStructureMeta.get_variables_in_linear_expression parsed_duration_1)
+            (ParsingStructureMeta.get_variables_in_linear_expression parsed_duration_2)
+
+	| Parsed_closed_infinity_interval parsed_duration
+	| Parsed_open_infinity_interval parsed_duration
+        ->
+        ParsingStructureMeta.get_variables_in_linear_expression parsed_duration
     in
 
 	(* First create the set *)
@@ -427,6 +445,17 @@ let all_components_used_in_property_option parsed_property_option =
             ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_psi
 
 
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL: timed version *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF_timed (parsed_interval, parsed_state_predicate)
+            ->
+			(* First get the variables in the state predicate *)
+			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
+
+			(* Then add the parsed interval *)
+			variables_used_ref := StringSet.union !variables_used_ref (get_variables_in_parsed_interval parsed_interval)
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
@@ -533,19 +562,19 @@ let all_components_used_in_property_option parsed_property_option =
 			-> ()
 
 		(* a within d *)
-		| Parsed_pattern (Parsed_action_deadline (_ , duration)) ->
-(*			get_variables_in_linear_expression variables_used_ref duration*)
-            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
+		| Parsed_pattern (Parsed_action_deadline (_ , parsed_duration)) ->
+(*			get_variables_in_linear_expression variables_used_ref parsed_duration*)
+            variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression parsed_duration
 
 
 		(* if a2 then a1 happened within d before *)
-		| Parsed_pattern (Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration))
+		| Parsed_pattern (Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, parsed_duration))
 		(* everytime a2 then a1 happened within d before *)
-		| Parsed_pattern (Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration))
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, parsed_duration))
 		(* everytime a2 then a1 happened once within d before *)
-		| Parsed_pattern (Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)) ->
-(*			get_variables_in_linear_expression variables_used_ref duration*)
-				variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression duration
+		| Parsed_pattern (Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, parsed_duration)) ->
+(*			get_variables_in_linear_expression variables_used_ref parsed_duration*)
+				variables_used_ref := ParsingStructureMeta.get_variables_in_linear_expression parsed_duration
 
 		(* if a1 then eventually a2 within d *)
 		| Parsed_pattern (Parsed_TB_response_acyclic (_, _, parsed_duration))

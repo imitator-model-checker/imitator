@@ -15,6 +15,31 @@ open ParsingStructure
 open AbstractProperty
 open TypedStructure
 
+
+(** Convert a ParsingStructure.parsed_interval into a AbstractProperty.timed_interval *)
+let timed_interval_of_parsed_interval (useful_parsing_model_information : ParsingStructure.useful_parsing_model_information) (parsed_interval : ParsingStructure.parsed_interval) : AbstractProperty.timed_interval =
+	(* Retrieve variable information *)
+    let variable_infos = useful_parsing_model_information.variable_infos in
+
+    (* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
+	let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
+
+	match parsed_interval with
+	| Parsed_closed_closed_interval (parsed_duration_1, parsed_duration_2) ->
+		Closed_closed_interval (p_linear_term_of_parsed_duration parsed_duration_1, p_linear_term_of_parsed_duration parsed_duration_2)
+	| Parsed_closed_open_interval (parsed_duration_1, parsed_duration_2) ->
+		Closed_open_interval (p_linear_term_of_parsed_duration parsed_duration_1, p_linear_term_of_parsed_duration parsed_duration_2)
+	| Parsed_open_closed_interval (parsed_duration_1, parsed_duration_2) ->
+		Open_closed_interval (p_linear_term_of_parsed_duration parsed_duration_1, p_linear_term_of_parsed_duration parsed_duration_2)
+	| Parsed_open_open_interval (parsed_duration_1, parsed_duration_2) ->
+		Open_open_interval (p_linear_term_of_parsed_duration parsed_duration_1, p_linear_term_of_parsed_duration parsed_duration_2)
+	| Parsed_closed_infinity_interval parsed_duration ->
+		Closed_infinity_interval (p_linear_term_of_parsed_duration parsed_duration)
+	| Parsed_open_infinity_interval parsed_duration ->
+		Open_infinity_interval (p_linear_term_of_parsed_duration parsed_duration)
+
+
+
 (* Convert parsed_loc_predicate *)
 let loc_predicate_of_typed_loc_predicate model_info = function
 	| Typed_loc_predicate_EQ (automaton_name, location_name) ->

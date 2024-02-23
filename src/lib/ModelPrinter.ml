@@ -884,6 +884,25 @@ let string_of_initial_state model =
 (** Property *)
 (************************************************************)
 
+(** Convert a timed_interval to a string *)
+let string_of_timed_interval (model : AbstractModel.abstract_model) = function
+	| Closed_closed_interval (duration_1, duration_2) ->
+		"[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_1) ^ ", " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_2) ^ "]"
+
+	| Closed_open_interval (duration_1, duration_2) ->
+		"[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_1) ^ ", " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_2) ^ ")"
+
+	| Open_closed_interval (duration_1, duration_2) ->
+		"(" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_1) ^ ", " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_2) ^ "]"
+
+	| Open_open_interval (duration_1, duration_2) ->
+		"(" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_1) ^ ", " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_2) ^ ")"
+
+	| Closed_infinity_interval duration ->
+		"[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration) ^ ", infinity]"
+
+	| Open_infinity_interval duration ->
+		"(" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration) ^ ", infinity]"
 
 
 (** Convert a state_predicate to a string *)
@@ -928,7 +947,7 @@ and string_of_state_predicate_term model = function
 		string_of_state_predicate_factor model state_predicate_factor
 
 
-and string_of_state_predicate model = function
+and string_of_state_predicate (model : AbstractModel.abstract_model) = function
 	| State_predicate_OR (state_predicate_1 , state_predicate_2) ->
 		(string_of_state_predicate model state_predicate_1)
 		^
@@ -943,7 +962,7 @@ and string_of_state_predicate model = function
 
 
 (** Convert the projection to a string, if any *)
-let string_of_projection model property =
+let string_of_projection (model : AbstractModel.abstract_model) property =
 	match property.projection with
 	| None -> ""
 	| Some parameter_index_list ->
@@ -951,7 +970,7 @@ let string_of_projection model property =
 
 
 (** Convert a property to a string *)
-let string_of_abstract_property model property =
+let string_of_abstract_property (model : AbstractModel.abstract_model) property =
 	let header = property_header() in
 	let prefix = "property := " in
 	
@@ -1021,6 +1040,12 @@ let string_of_abstract_property model property =
 
 		(* Always weak until *)
 		| AW (state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")W(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL: timed version *)
+		(*------------------------------------------------------------*)
+		| EF_timed (timed_interval, state_predicate) -> "EF" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

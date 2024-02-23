@@ -57,6 +57,15 @@ and state_predicate =
 
 type duration = LinearConstraint.p_linear_term
 
+type timed_interval =
+	| Closed_closed_interval of duration * duration
+	| Closed_open_interval of duration * duration
+	| Open_closed_interval of duration * duration
+	| Open_open_interval of duration * duration
+	| Closed_infinity_interval of duration
+	| Open_infinity_interval of duration
+
+
 type property =
 
 	(*------------------------------------------------------------*)
@@ -73,7 +82,10 @@ type property =
 
 	(* Reachability *)
 	| EF of state_predicate
-	
+	(* Reachability with timing constraint *)
+	| EF_timed of timed_interval * state_predicate
+
+
 	(* Safety *)
 	| AGnot of state_predicate
 	
