@@ -800,7 +800,7 @@ nonlinear_convex_predicate:
 ;
 
 nonlinear_convex_predicate_fol:
-	| discrete_boolean_expression OP_CONJUNCTION nonlinear_convex_predicate { $1 :: $3 }
+	| discrete_boolean_expression OP_CONJUNCTION nonlinear_convex_predicate_fol { $1 :: $3 }
 	| discrete_boolean_expression { [$1] }
 ;
 
@@ -809,7 +809,7 @@ nonlinear_convex_predicate_fol:
 linear_expression:
 	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
 ;
 
 /* Linear term over variables and rationals (no recursion, no division) */
