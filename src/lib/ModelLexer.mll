@@ -65,7 +65,6 @@ rule token = parse
  	(* All keywords *)
  	| "accepting"      { CT_ACCEPTING }
 	| "actions"        { CT_ACTIONS }
-	| "and"            { CT_AND }
   	| "array"          { CT_ARRAY }
 	| "automaton"      { CT_AUTOMATON }
 	| "begin"          { CT_BEGIN }

@@ -95,7 +95,7 @@ let unzip l = List.fold_left
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT IMPLIES PIPE SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTIONS CT_AND CT_ARRAY CT_AUTOMATON
+	CT_ACCEPTING CT_ACTIONS CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
@@ -125,7 +125,7 @@ let unzip l = List.fold_left
 
 %left IMPLIES           /* lowest precedence */
 %left PIPE /* CT_OR */
-%left AMPERSAND CT_AND  /* medium precedence */
+%left AMPERSAND  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
 
