@@ -1,7 +1,7 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : Test Boolean implication in properties
+ * Title            : Test Boolean implication in properties; version mixing location and int predicates
  * Description      : Test Boolean implication
  * Correctness      : N/A
  * Scalable         : no
@@ -23,6 +23,9 @@
 
 var
 
+(* Integer *)
+	i : int;
+
 (* Parameters *)
 	p_1, p_2 : parameter;
 
@@ -33,8 +36,8 @@ var
 actions: a;
 
 loc l1: invariant True
-	when p_1 = 2 sync a goto l2;
-	when p_1 = 3 goto l3;
+	when p_1 = 2 sync a do {i := 2} goto l2;
+	when p_1 = 3 do {i := 3} goto l3;
 
 accepting loc l2: invariant True
 accepting loc l3: invariant True
@@ -48,8 +51,8 @@ end (* pta *)
 actions: a;
 
 loc l1: invariant True
-	when p_2 = 2 sync a goto l2;
-	when p_2 = 3 goto l3;
+	when p_2 = 2 sync a do {i := 2} goto l2;
+	when p_2 = 3 do {i := 3} goto l3;
 
 accepting loc l2: invariant True
 accepting loc l3: invariant True
@@ -74,6 +77,7 @@ init := {
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
+		i := 0,
     ;
 
     continuous =
