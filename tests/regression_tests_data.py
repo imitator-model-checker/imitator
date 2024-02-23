@@ -3585,6 +3585,68 @@ Error                                   : invalid model
 		# Test since               : 2024/02/23
 		# Last modified            : 2024/02/23
 		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test Boolean operator priority',
+		'tags'       : 'boolean,semantic',
+		'input_files': ['boolean_expressions/bool-priorities.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-priorities.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 0
+OR
+  p = 2
+OR
+  p = 4
+OR
+  p = 6
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test Boolean and arithmetic operator priority',
+		'tags'       : 'boolean,semantic',
+		'input_files': ['boolean_expressions/bool-arithmetic-priorities.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-arithmetic-priorities.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 22
+ OR
+   p = 8
+ OR
+   p = 24
+ OR
+   p = 150
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test implication in Boolean expressions (model)',
 		'tags'       : 'syntax,boolean',
 		'input_files': ['boolean_expressions/bool-implication.imi', 'basic-properties/synth-EF-accepting.imiprop'],

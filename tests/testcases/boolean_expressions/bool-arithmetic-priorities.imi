@@ -1,0 +1,87 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test Boolean and arithmetic priorities
+ * Description      : Test Boolean and arithmetic priorities
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/23
+ * Last modified    : 2024/02/23
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Parameters *)
+	p : parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+loc l1: invariant True
+
+	(* Good: even values for p *)
+	(* Correct: 22 (incorrect: 52, 70) *)
+	when (True | True & False) & p = 5 * 2 + 4 * 3 goto l2;
+	(* Correct: 8 (incorrect: 12) *)
+	when (True & False | True) & p = 2 * 2 + 4 goto l2;
+	(* Correct: 24 (incorrect: 60) *)
+	when (False & True | True) & p = 4 + 2 * 10 goto l2;
+	(* Correct: 150 (incorrect: 50/3) *)
+	when (True & False | True | False & False) & p = 100 / 2 * 3 goto l2;
+
+	(* Bad: odd values for p *)
+	when ((True | True) & False) & p = 1 goto l2;
+	when (False | (True & False)) & p = 3 goto l2;
+	when (False & (True | True)) & p = 5 goto l2;
+	when (True & False | False & True) & p = 7 goto l2;
+	when (True & False | True & False) & p = 9 goto l2;
+
+accepting loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
