@@ -78,5 +78,11 @@ exception InvalidExpression of string
 (* Used when an expression is ill-typed formed or when computing on not compatible types *)
 exception TypeError of string
 
+(* Used when a template is instantiated with a value with the wrong type *)
+exception TemplateInvalidArgument
+
+(* Used when a template is instantiate with an incorrect number of parameters *)
+exception TemplateIncorrectNumberArguments of string
+
 (* Used when a function isn't found *)
 exception UndefinedFunction of string

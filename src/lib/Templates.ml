@@ -1,3 +1,4 @@
+open Exceptions;;
 open ParsingStructure;;
 open ParsingStructureUtilities;;
 
@@ -51,7 +52,7 @@ let instantiate_flows (param_map : var_map) (flows : parsed_flow) : parsed_flow 
               | None -> rate
               | Some (Arg_int i)   -> Flow_rat_value i
               | Some (Arg_float f) -> Flow_rat_value f
-              | Some _ -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+              | Some _ -> failwith "[instantiate_flows]: unexpected argument for template (expecting number)"
             end
         | Flow_rat_value _ -> rate
     in
@@ -174,7 +175,7 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
     let automaton_name, template_name, args = parsed_template_call in
     let template                       = List.find (fun t -> t.template_name = template_name) templates in
     if List.length template.template_parameters <> List.length args then
-      failwith ("[instantiate_automaton]: The number of arguments provided for " ^ automaton_name ^ " is incorrect.");
+      raise (TemplateIncorrectNumberArguments automaton_name);
     let param_names                    = List.map fst template.template_parameters in
     let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
     (* Replace action names *)
