@@ -1596,6 +1596,42 @@ end
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/27
+		# Last modified            : 2024/02/27
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test something',
+		'tags'       : 'syntax,semantic,translation',
+		'input_files': ['autoremove/detection-bool-var.imi', 'autoremove/detection-bool-var-EF.imiprop'],
+		'options'    : '-states-description',
+		'expectations' : [
+			{'file': 'detection-bool-var.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+			{'file': 'detection-bool-var.res' , 'content' : """
+			Number of states                        : 2
+		"""
+			} # end result file
+			,
+			{'file': 'detection-bool-var-statespace.states' , 'content' : """
+  pta: l0, i = 0 ==>
+&True
+		"""
+			} # end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
