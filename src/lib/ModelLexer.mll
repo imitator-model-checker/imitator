@@ -91,9 +91,9 @@ rule token = parse
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
 	| "init"           { CT_INIT }
-  | "instantiate"    { CT_INSTANTIATE }
+	| "instantiate"    { CT_INSTANTIATE }
 	| "int"            { CT_INT }
-  	| "inside"         { CT_INSIDE }
+	| "inside"         { CT_INSIDE }
 	| "invariant"      { CT_INVARIANT }
 	| "is"             { CT_IS }
 	| "list"           { CT_LIST }
@@ -155,6 +155,7 @@ rule token = parse
 	| '-'              { OP_MINUS }
 	| '*'              { OP_MUL }
 	| '/'              { OP_DIV }
+	| '%'              { OP_MOD }
 
 	(* Parentheses and the like *)
 	| '('              { LPAREN }

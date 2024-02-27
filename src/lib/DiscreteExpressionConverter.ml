@@ -515,7 +515,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
                 Variable (value, variable_name)
             (* Other cases are non-linears, so it's impossible to make the conversion, we raise an exception *)
             | _ ->
-                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+                raise (InvalidExpression ("A non-linear arithmetic expression (with multiplication) involves clock(s) / parameter(s)"))
         )
     | Parsed_product_quotient (term, factor, Parsed_div) ->
         (* Check consistency of division, if it keep constants we can convert to a linear term *)
@@ -530,7 +530,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
                 Constant value
             (* Other cases are non-linear, so it's impossible to make the conversion, we raise an exception *)
             | _ ->
-                raise (InvalidExpression ("A non-linear arithmetic expression involve clock(s) / parameter(s)"))
+                raise (InvalidExpression ("A non-linear arithmetic expression (with division) involves clock(s) / parameter(s)"))
         )
     (* Try to convert factor *)
     | Parsed_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor

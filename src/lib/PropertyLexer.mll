@@ -147,6 +147,7 @@ rule token = parse
 	| '-'              { OP_MINUS }
 	| '/'              { OP_DIV }
 	| '*'              { OP_MUL }
+	| '%'              { OP_MOD }
 
 	(* Parentheses and the like *)
 	| '('              { LPAREN }

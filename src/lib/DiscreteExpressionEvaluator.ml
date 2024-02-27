@@ -282,6 +282,7 @@ and eval_int_expression_with_context variable_names functions_table_opt eval_con
             let b = eval_int_factor_with_context factor in
             (match product_quotient with
             | Mul -> Int32.mul a b
+            | Mod -> Int32.rem a b
             | Div ->
                 let numerator, denominator = a, b in
 

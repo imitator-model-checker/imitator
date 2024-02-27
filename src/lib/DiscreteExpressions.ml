@@ -41,6 +41,7 @@ type sum_diff =
 type product_quotient =
     | Mul
     | Div
+    | Mod
 
 (* For loop direction *)
 type loop_dir =
