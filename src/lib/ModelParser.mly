@@ -631,7 +631,6 @@ flow_value:
         | rational_linear_expression { Flow_rat_value $1 }
         | NAME { Flow_var $1 }
 
-
 /************************************************************/
 
 stopwatches:
