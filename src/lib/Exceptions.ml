@@ -84,5 +84,8 @@ exception TemplateInvalidArgument
 (* Used when a template is instantiate with an incorrect number of parameters *)
 exception TemplateIncorrectNumberArguments of string
 
+(* Used when a template have repeated parameters *)
+exception TemplateRepeatedParam of string * string
+
 (* Used when a function isn't found *)
 exception UndefinedFunction of string

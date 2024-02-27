@@ -35,6 +35,7 @@ type error_type =
 	| PropertyParsing_error			of string
 	
   | TemplateIncorrectNumberArguments_error
+  | TemplateRepeatedParam
 	| Unsatisfiable_initial_conditions
 
 

@@ -186,6 +186,15 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
     (automaton_name, renamed_actions, instantiated_locs)
 
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : parsed_automaton list =
+    let rec check_repeated_names template_name = function
+      | [] -> ()
+      | hd :: tl ->
+          if List.mem hd tl then
+            raise (TemplateRepeatedParam (template_name, hd));
+          check_repeated_names template_name tl
+    in
+    List.iter (fun template ->
+      check_repeated_names template.template_name (List.map fst template.template_parameters)) templates;
     List.map (instantiate_automaton templates) insts
 
 let instantiate_model parsed_model_with_templates =

@@ -270,8 +270,11 @@ let compile_model_and_property (options : Options.imitator_options) =
 		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
 	) with
     | TemplateInvalidArgument -> failwith "sorry" (* TODO *)
-    | TemplateIncorrectNumberArguments automaton_name ->
-        let failure_message = ("[instantiate_automaton]: The number of arguments provided for " ^ automaton_name ^ " is incorrect.") in
+    | TemplateRepeatedParam (template_name, param_name) ->
+        let failure_message = ("The template " ^ template_name ^ " have a repeated parameter: " ^ param_name ^ ".") in
+        print_error_and_abort options failure_message Result.TemplateRepeatedParam
+    | TemplateIncorrectNumberArguments template_name ->
+        let failure_message = ("The number of arguments provided for " ^ template_name ^ " is incorrect.") in
         print_error_and_abort options failure_message Result.TemplateIncorrectNumberArguments_error
 		| InvalidModel ->
 			(* Abort properly *)
