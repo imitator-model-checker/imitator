@@ -8469,6 +8469,40 @@ Termination                             : regular termination
 	,
 
 	#------------------------------------------------------------
+	# BEGIN : Test timed EF
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EFtmin: toy model, one parameter in the model',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic.imi', 'timed_properties/test-timedEF-basic.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+ 4 >= p
+& p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test timed EF
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
 		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
