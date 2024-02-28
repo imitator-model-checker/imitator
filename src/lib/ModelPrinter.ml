@@ -886,6 +886,12 @@ let string_of_initial_state model =
 
 (** Convert a timed_interval to a string *)
 let string_of_timed_interval (model : AbstractModel.abstract_model) = function
+	| Zero_closed_interval duration ->
+		"[0, " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration) ^ "]"
+
+	| Zero_open_interval duration ->
+		"[0, " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration) ^ ")"
+
 	| Closed_closed_interval (duration_1, duration_2) ->
 		"[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_1) ^ ", " ^ (LinearConstraint.string_of_p_linear_term model.variable_names duration_2) ^ "]"
 

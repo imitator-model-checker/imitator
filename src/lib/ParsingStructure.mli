@@ -382,6 +382,8 @@ type parsed_pattern =
 
 
 type parsed_interval =
+	| Parsed_zero_closed_interval of parsed_duration
+	| Parsed_zero_open_interval of parsed_duration
 	| Parsed_closed_closed_interval of parsed_duration * parsed_duration
 	| Parsed_closed_open_interval of parsed_duration * parsed_duration
 	| Parsed_open_closed_interval of parsed_duration * parsed_duration

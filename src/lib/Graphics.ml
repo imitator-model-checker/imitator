@@ -162,6 +162,7 @@ let get_v0_option = function
 			| AR _
 			| AU _
 			| AW _
+			| EF_timed _
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
@@ -1109,6 +1110,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate
+				| EF_timed (_, state_predicate)
 				| Cycle_through state_predicate
 				| PRP (state_predicate, _)
 				| Win (state_predicate)

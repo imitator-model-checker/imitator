@@ -312,9 +312,11 @@ pattern:
 /************************************************************/
 interval:
 /************************************************************/
+
 	/** TODO: add other forms of intervals */
 	| LSQBRA linear_expression COMMA linear_expression RSQBRA { Parsed_closed_closed_interval ($2, $4) }
-	| LSQBRA linear_expression COMMA CT_INFINITY RSQBRA { Parsed_closed_infinity_interval ($2) }
+	| LSQBRA linear_expression COMMA CT_INFINITY RPAREN { Parsed_closed_infinity_interval ($2) }
+	/** NOTE/TODO: [0, infinity) reduces to normal EF */
 ;
 
 /************************************************************/

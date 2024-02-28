@@ -58,6 +58,8 @@ and state_predicate =
 type duration = LinearConstraint.p_linear_term
 
 type timed_interval =
+	| Zero_closed_interval of duration
+	| Zero_open_interval of duration
 	| Closed_closed_interval of duration * duration
 	| Closed_open_interval of duration * duration
 	| Open_closed_interval of duration * duration

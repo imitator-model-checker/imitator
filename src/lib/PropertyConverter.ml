@@ -25,6 +25,10 @@ let timed_interval_of_parsed_interval (useful_parsing_model_information : Parsin
 	let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
 
 	match parsed_interval with
+	| Parsed_zero_closed_interval parsed_duration ->
+		Zero_closed_interval (p_linear_term_of_parsed_duration parsed_duration)
+	| Parsed_zero_open_interval parsed_duration ->
+		Zero_open_interval (p_linear_term_of_parsed_duration parsed_duration)
 	| Parsed_closed_closed_interval (parsed_duration_1, parsed_duration_2) ->
 		Closed_closed_interval (p_linear_term_of_parsed_duration parsed_duration_1, p_linear_term_of_parsed_duration parsed_duration_2)
 	| Parsed_closed_open_interval (parsed_duration_1, parsed_duration_2) ->

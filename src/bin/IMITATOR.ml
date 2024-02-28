@@ -833,6 +833,15 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAW model property options state_predicate_phi state_predicate_psi in myalgo
 
 
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL: timed version *)
+		(*------------------------------------------------------------*)
+			(************************************************************)
+			(* Reachability *)
+			(************************************************************)
+			| EF_timed (timed_interval, state_predicate) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model property options state_predicate in myalgo
+				(*** TODO ***)
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
