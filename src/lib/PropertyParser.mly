@@ -141,7 +141,13 @@ property:
 	| CT_EF state_predicate { Parsed_EF $2 }
 
 	/* Reachability (timed version) */
-	| CT_EF_timed interval state_predicate { Parsed_EF_timed ($2, $3) }
+	| CT_EF_timed timed_interval state_predicate {
+		(* Optimization: `EF_timed [0, infinity) sp` is actually `EF sp` *)
+		match $2 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_EF $3
+		| _ -> Parsed_EF_timed ($2, $3)
+	}
 
 	/* Safety */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
@@ -310,18 +316,22 @@ pattern:
 ;
 
 /************************************************************/
-interval:
+timed_interval:
 /************************************************************/
 
 	| LSQBRA linear_expression COMMA linear_expression RSQBRA {
-		(*** TODO: same mechanism for other left-closed intervals ***)
 		if ($2 = Linear_term (Constant NumConst.zero)) then
 			Parsed_zero_closed_interval $4
 		else
 			Parsed_closed_closed_interval ($2, $4)
 	}
 
-	| LSQBRA linear_expression COMMA linear_expression RPAREN { Parsed_closed_open_interval ($2, $4) }
+	| LSQBRA linear_expression COMMA linear_expression RPAREN {
+		if ($2 = Linear_term (Constant NumConst.zero)) then
+			Parsed_zero_open_interval $4
+		else
+			Parsed_closed_open_interval ($2, $4)
+	}
 
 	| LPAREN linear_expression COMMA linear_expression RSQBRA { Parsed_open_closed_interval ($2, $4) }
 
@@ -330,7 +340,6 @@ interval:
 	| LSQBRA linear_expression COMMA CT_INFINITY RPAREN { Parsed_closed_infinity_interval ($2) }
 
 	| LPAREN linear_expression COMMA CT_INFINITY RPAREN { Parsed_open_infinity_interval ($2) }
-	/** NOTE/TODO: [0, infinity) reduces to normal EF */
 ;
 
 
