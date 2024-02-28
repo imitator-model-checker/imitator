@@ -22,6 +22,10 @@
 ### Internal
 * Source code entirely moved and restructured as a more standard tree
 
+### Known issues
+* Some divisions by zero (e.g., explicitly written `0 / 0` in the model) may not be detected; dynamic divisions by zero (`j := 2 / i`, with `i = 0`) are however in principle detected.
+
+
 
 *******************************************************
 ## release 3.3 (2022-07-21) Cheese Caramel au beurre salé
