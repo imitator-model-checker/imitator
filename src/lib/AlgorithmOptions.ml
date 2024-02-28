@@ -516,6 +516,50 @@ let merge_needed property =
 	(* Parametric timed game: reachability condition *)
 	| Win _ -> false
 
+(*------------------------------------------------------------*)
+(** Returns whether the property requires a global clock measuring the absolute time *)
+(*------------------------------------------------------------*)
+
+let needs_global_clock property =
+	match property.property with
+	| Valid
+	| EF _
+	| AGnot _
+	| AG _
+	| EU _
+	| ER _
+	| EW _
+	| AF _
+	| AR _
+	| AU _
+	| AW _
+	| EFpmin _
+	| EFpmax _
+	| Cycle_through _
+	| Cycle_through_generalized _
+	| NZ_Cycle
+	| Deadlock_Freeness
+	| IM _
+	| ConvexIM _
+	| PRP _
+	| IMK _
+	| IMunion _
+	| Cover_cartography _
+	| Learning_cartography _
+	| Shuffle_cartography _
+	| Border_cartography _
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC _
+	| Win _
+		-> false
+
+	| EFtmin _
+	| EF_timed _
+		-> true
+
+
+
 
 (*------------------------------------------------------------*)
 (* Exploration order *)

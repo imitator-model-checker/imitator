@@ -19,6 +19,9 @@ val is_state_comparison_correct	: AbstractProperty.abstract_property -> Abstract
 
 val merge_needed				: AbstractProperty.abstract_property -> bool
 
+(** Returns whether the property requires a global clock measuring the absolute time *)
+val needs_global_clock          : AbstractProperty.abstract_property -> bool
+
 (* val default_exploration_order : AbstractProperty.abstract_property -> AbstractAlgorithm.exploration_order *)
 
 val supports_cumulative_pruning	: AbstractProperty.abstract_property -> bool

@@ -707,15 +707,8 @@ match options#imitator_mode with
 		(************************************************************)
 
 		begin
-		let algorithm_requires_global_clock =
-			match property.property with
-			| EFtmin _
-			| EF_timed _
-				-> true
-			| _ -> false
-		in
 		(* Abstract clock required for selected algorithms OR for exemplification *)
-		if algorithm_requires_global_clock || property.synthesis_type = Exemplification then(
+		if (AlgorithmOptions.needs_global_clock property) || property.synthesis_type = Exemplification then(
 			match model.global_time_clock with
 				| Some _ -> ()
 				| _ ->
