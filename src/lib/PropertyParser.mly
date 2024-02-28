@@ -14,8 +14,10 @@
 
 
 %{
-open ParsingStructure;;
-open Exceptions;;
+
+open Exceptions
+open ImitatorUtilities
+open ParsingStructure
 
 
 let parse_error _ =
@@ -594,7 +596,13 @@ linear_term:
 rational:
 	| integer { $1 }
 	| float { $1 }
-	| integer OP_DIV pos_integer { (NumConst.div $1 (NumConst.numconst_of_int $3)) }
+	| integer OP_DIV pos_integer {
+		if $3 = 0 then(
+			print_error "Division by 0 spotted during the parsing!";
+			raise (InvalidModel)
+		)else
+			NumConst.div $1 (NumConst.numconst_of_int $3)
+	}
 ;
 
 integer:
@@ -671,7 +679,13 @@ constant_arithmetic_expr:
 
 constant_expr_mult:
 	| constant_expr_mult OP_MUL constant_neg_atom { NumConst.mul $1 $3 }
-	| constant_expr_mult OP_DIV constant_neg_atom { NumConst.div $1 $3 } /** TODO: check division by zero somewhere! */
+	| constant_expr_mult OP_DIV constant_neg_atom {
+		if NumConst.equal $3 NumConst.zero then(
+			print_error "Division by 0 spotted during the parsing!";
+			raise (InvalidModel)
+		)else
+			NumConst.div $1 $3
+	}
 	| constant_neg_atom { $1 }
 ;
 

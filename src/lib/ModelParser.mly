@@ -900,7 +900,13 @@ rational_linear_expression:
 	| rational_linear_term { $1 }
 	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
 	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
-	| rational_linear_expression OP_DIV rational_linear_term { NumConst.div $1 $3 }
+	| rational_linear_expression OP_DIV rational_linear_term {
+		if NumConst.equal $3 NumConst.zero then(
+			print_error "Division by 0 spotted during the parsing!";
+			raise (InvalidModel)
+		)else
+			NumConst.div $1 $3
+		}
 	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
 ;
 
@@ -966,7 +972,13 @@ relop:
 rational:
 	| integer { $1 }
 	| float { $1 }
-	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
+	| integer OP_DIV pos_integer {
+		if NumConst.equal $3 NumConst.zero then(
+			print_error "Division by 0 spotted during the parsing!";
+			raise (InvalidModel)
+		)else
+			NumConst.div $1 $3
+	}
 ;
 
 integer:
