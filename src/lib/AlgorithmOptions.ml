@@ -1040,3 +1040,99 @@ let text_of_property property =
 
 	(* Parametric timed game: reachability condition *)
 	| Win _ -> "parametric timed game with reachability condition (" ^ synthesis_or_witness ^ ")"
+
+
+(************************************************************)
+(** Get the v0 of a property, if any *)
+(************************************************************)
+let v0_option_of_property property : AbstractModel.v0 option =
+	match property.property with
+	| Valid
+
+	| EF _
+	| AGnot _
+	| AG _
+	| ER _
+	| EU _
+	| EW _
+	| AF _
+	| AR _
+	| AU _
+	| AW _
+	| EF_timed _
+	| EFpmin _
+	| EFpmax _
+	| EFtmin _
+	| Cycle_through _
+	| Cycle_through_generalized _
+	| PRP _
+
+	| NZ_Cycle
+
+	| Deadlock_Freeness
+	| IM _
+	| ConvexIM _
+	| IMK _
+	| IMunion _
+
+	| Win _
+		-> None
+
+	| Cover_cartography (v0, _)
+	| Learning_cartography (_ , v0, _)
+	| Shuffle_cartography (v0, _)
+	| Border_cartography (v0, _)
+	| Random_cartography (v0, _, _)
+	| RandomSeq_cartography (v0, _, _)
+	| PRPC (_, v0, _)
+
+		-> Some v0
+
+
+(************************************************************)
+(** Get the list of state predicates defined in a property (or [] if none) *)
+(************************************************************)
+let state_predicates_of_property property : AbstractProperty.state_predicate list =
+	match property.property with
+	| EF state_predicate
+	| AGnot state_predicate
+	| AG state_predicate
+	| AF state_predicate
+	| EFpmin (state_predicate , _)
+	| EFpmax (state_predicate , _)
+	| EFtmin state_predicate
+	| EF_timed (_, state_predicate)
+	| Cycle_through state_predicate
+	| PRP (state_predicate, _)
+	| Win (state_predicate)
+		-> [state_predicate]
+
+	| ER (state_predicate_1, state_predicate_2)
+	| EU (state_predicate_1, state_predicate_2)
+	| EW (state_predicate_1, state_predicate_2)
+	| AR (state_predicate_1, state_predicate_2)
+	| AU (state_predicate_1, state_predicate_2)
+	| AW (state_predicate_1, state_predicate_2)
+		-> [state_predicate_1; state_predicate_2]
+
+	| Cycle_through_generalized state_predicate_list
+		-> state_predicate_list
+
+	| Valid
+
+	| NZ_Cycle
+	| Deadlock_Freeness
+	| IM _
+	| ConvexIM _
+	| IMK _
+	| IMunion _
+
+	| Cover_cartography _
+	| Learning_cartography _
+	| Shuffle_cartography _
+	| Border_cartography _
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC _
+
+		-> []

@@ -147,50 +147,7 @@ exception CartographyError
 (** Get the reference hyper rectangle for properties that have one, or return None otherwise *)
 let get_v0_option = function
 	(* First check whether there is a property *)
-	| Some property ->
-		let result =
-		match property.property with
-			| Valid
-
-			| EF _
-			| AGnot _
-			| AG _
-			| ER _
-			| EU _
-			| EW _
-			| AF _
-			| AR _
-			| AU _
-			| AW _
-			| EF_timed _
-			| EFpmin _
-			| EFpmax _
-			| EFtmin _
-			| Cycle_through _
-			| Cycle_through_generalized _
-			| PRP _
-
-			| NZ_Cycle
-
-			| Deadlock_Freeness
-			| IM _
-			| ConvexIM _
-			| IMK _
-			| IMunion _
-
-			| Win _
-				-> None
-
-			| Cover_cartography (v0, _)
-			| Learning_cartography (_ , v0, _)
-			| Shuffle_cartography (v0, _)
-			| Border_cartography (v0, _)
-			| Random_cartography (v0, _, _)
-			| RandomSeq_cartography (v0, _, _)
-			| PRPC (_, v0, _)
-
-				-> Some v0
-		in result
+	| Some property -> AlgorithmOptions.v0_option_of_property property
 	| None -> None
 
 
@@ -1100,52 +1057,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		| Some property ->
 			
 			(* Try to get the state predicate*)
-			let state_predicate_list : state_predicate list =
-			
-			match property.property with
-				| EF state_predicate
-				| AGnot state_predicate
-				| AG state_predicate
-				| AF state_predicate
-				| EFpmin (state_predicate , _)
-				| EFpmax (state_predicate , _)
-				| EFtmin state_predicate
-				| EF_timed (_, state_predicate)
-				| Cycle_through state_predicate
-				| PRP (state_predicate, _)
-				| Win (state_predicate)
-					-> [state_predicate]
-
-				| ER (state_predicate_1, state_predicate_2)
-				| EU (state_predicate_1, state_predicate_2)
-				| EW (state_predicate_1, state_predicate_2)
-				| AR (state_predicate_1, state_predicate_2)
-				| AU (state_predicate_1, state_predicate_2)
-				| AW (state_predicate_1, state_predicate_2)
-					-> [state_predicate_1; state_predicate_2]
-
-				| Cycle_through_generalized state_predicate_list
-					-> state_predicate_list
-
-				| Valid
-
-				| NZ_Cycle
-				| Deadlock_Freeness
-				| IM _
-				| ConvexIM _
-				| IMK _
-				| IMunion _
-				
-				| Cover_cartography _
-				| Learning_cartography _
-				| Shuffle_cartography _
-				| Border_cartography _
-				| Random_cartography _
-				| RandomSeq_cartography _
-				| PRPC _
-				
-					-> []
-			in
+			let state_predicate_list : state_predicate list = AlgorithmOptions.state_predicates_of_property property in
 
 			(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
 			List.exists (fun state_predicate ->

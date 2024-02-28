@@ -28,3 +28,9 @@ val supports_witness			: AbstractProperty.abstract_property -> bool
 val is_cartography				: AbstractProperty.abstract_property -> bool
 (* Gives a textual description of a property *)
 val text_of_property			: AbstractProperty.abstract_property -> string
+
+(** Get the v0 of a property, if any *)
+val v0_option_of_property       : AbstractProperty.abstract_property -> AbstractModel.v0 option
+
+(** Get the list of state predicates defined in a property (or [] if none) *)
+val state_predicates_of_property : AbstractProperty.abstract_property -> AbstractProperty.state_predicate list
