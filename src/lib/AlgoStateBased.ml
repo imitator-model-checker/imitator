@@ -2543,7 +2543,14 @@ let px_linear_constraint_of_timed_interval (model : AbstractModel.abstract_model
 	| Some global_time_clock -> global_time_clock
 	| None -> raise (InternalError "A global time clock must be defined when creating the linear constraint associated to a timed interval")
 	in
-	px_linear_constraint_of_timed_interval_and_clock_index global_time_clock timed_interval
+	let result = px_linear_constraint_of_timed_interval_and_clock_index global_time_clock timed_interval in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium "\nLinear constraint of timed interval:";
+		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names result);
+	);
+	(* Return result *)
+	result
 
 
 (************************************************************)

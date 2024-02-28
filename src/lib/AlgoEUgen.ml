@@ -95,9 +95,30 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 					self#print_algo_message Verbose_medium "Projecting onto the parameters (using the cache)…";
 				);
 
+				(* If timed version: first add the timed_interval_constraint_option to the resulting state *)
+				let state_constraint_for_projection : LinearConstraint.px_linear_constraint = match timed_interval_constraint_option with
+				| None -> state_constraint
+				| Some timed_interval_constraint ->
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "The new state constraint is:";
+						print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names state_constraint);
+					);
+
+					(*** WARNING: this was done already before in `match_state_predicate_and_timed_constraint`! ***)
+					let intersection : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [state_constraint ; timed_interval_constraint] in
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "The new state constraint before projection onto the parameters is now:";
+						print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names intersection);
+					);
+					intersection
+				in
+
 				(* Project onto the parameters *)
 				(*** NOTE: here, we use the mini-cache system ***)
-				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
+				let p_constraint = self#compute_p_constraint_with_minicache state_constraint_for_projection in
 
 (*				(* Projecting onto some parameters if required by the property *)
 				let p_constraint = AlgoStateBased.project_p_constraint_if_requested model property p_constraint in*)
