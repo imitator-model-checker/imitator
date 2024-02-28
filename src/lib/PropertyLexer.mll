@@ -63,6 +63,7 @@ rule token = parse
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
  	| "DeadlockFree"   { CT_DEADLOCKFREE }
 	| "EF"             { CT_EF }
+	| "EF_"            { CT_EF_timed }
 	| "E"              { CT_E }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
