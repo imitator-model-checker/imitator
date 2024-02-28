@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEUgen : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
+class virtual algoEUgen : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval option ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)

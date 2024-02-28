@@ -33,7 +33,7 @@ open AlgoEUgen
 (************************************************************)
 (*** NOTE: AG is implemented as the negation of EF ***)
 class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model property options None state_predicate (*as super*)
+	object (self) inherit algoEUgen model property options None state_predicate None (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)

@@ -390,6 +390,8 @@ let all_components_used_in_property_option parsed_property_option =
             (ParsingStructureMeta.get_variables_in_linear_expression parsed_duration_1)
             (ParsingStructureMeta.get_variables_in_linear_expression parsed_duration_2)
 
+	| Parsed_zero_closed_interval parsed_duration
+	| Parsed_zero_open_interval parsed_duration
 	| Parsed_closed_infinity_interval parsed_duration
 	| Parsed_open_infinity_interval parsed_duration
         ->

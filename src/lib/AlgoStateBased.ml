@@ -2488,6 +2488,64 @@ let project_p_nnconvex_constraint_if_requested (model : AbstractModel.abstract_m
 		projected_synthesized_constraint
 
 
+(*------------------------------------------------------------*)
+(** Converts a timed interval into a linear constraint of the form `clock_index \in interval` (e.g., `clock_index > c` for an interval `(c, infinity)`, or `d1 <= clock_index < d2` for an interval `[d1, d2]` *)
+(*------------------------------------------------------------*)
+let px_linear_constraint_of_timed_interval_and_clock_index (clock_index : Automaton.clock_index) (timed_interval : AbstractProperty.timed_interval) : LinearConstraint.px_linear_constraint =
+	match timed_interval with
+	(* x <= d *)
+	| Zero_closed_interval duration ->
+		LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration true
+
+	(* x < d *)
+	| Zero_open_interval duration ->
+		LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration true
+
+	(* d1 <= x <= d2 *)
+	| Closed_closed_interval (duration_1, duration_2) ->
+		LinearConstraint.px_intersection
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 true;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 false]
+
+	(* d1 <= x < d2 *)
+	| Closed_open_interval (duration_1, duration_2) ->
+		LinearConstraint.px_intersection
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 true;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 false]
+
+	(* d1 < x <= d2 *)
+	| Open_closed_interval (duration_1, duration_2) ->
+		LinearConstraint.px_intersection
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 true;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 false]
+
+	(* d1 < x < d2 *)
+	| Open_open_interval (duration_1, duration_2) ->
+		LinearConstraint.px_intersection
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 true;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 false]
+
+	(* x >= d *)
+	| Closed_infinity_interval duration ->
+		LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration false
+
+	(* x > d *)
+	| Open_infinity_interval duration  ->
+		LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration false
+
+
+
+(*------------------------------------------------------------*)
+(** Converts a timed interval into a linear constraint of the form `global_clock \in interval` (e.g., `global_clock > c` for an interval `(c, infinity)`, or `d1 <= global_clock < d2` for an interval `[d1, d2]` *)
+(*------------------------------------------------------------*)
+let px_linear_constraint_of_timed_interval (model : AbstractModel.abstract_model) (timed_interval : AbstractProperty.timed_interval) : LinearConstraint.px_linear_constraint =
+	let global_time_clock = match model.global_time_clock with
+	| Some global_time_clock -> global_time_clock
+	| None -> raise (InternalError "A global time clock must be defined when creating the linear constraint associated to a timed interval")
+	in
+	px_linear_constraint_of_timed_interval_and_clock_index global_time_clock timed_interval
+
+
 (************************************************************)
 (************************************************************)
 (* Types *)

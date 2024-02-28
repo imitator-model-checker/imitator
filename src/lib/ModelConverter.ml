@@ -1872,6 +1872,8 @@ let check_parsed_interval (useful_parsing_model_information : useful_parsing_mod
 			in
 			check1 && check2 && check3 && check4
 
+	| Parsed_zero_closed_interval parsed_duration
+	| Parsed_zero_open_interval parsed_duration
 	| Parsed_closed_infinity_interval parsed_duration
 	| Parsed_open_infinity_interval parsed_duration
 		->

@@ -19,6 +19,7 @@
 (************************************************************)
 (************************************************************)
 (* open OCamlUtilities *)
+open Exceptions
 open ImitatorUtilities
 open AbstractModel
 open AbstractProperty
@@ -34,13 +35,22 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
+class virtual algoEUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
 	object (self) inherit algoStateBased model options (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
+	(*------------------------------------------------------------*)
+	(* Constants *)
+	(*------------------------------------------------------------*)
+	(** The constraint to be added to a symbolic state to check whether it matches the timed interval (if any) *)
+	val timed_interval_constraint_option : LinearConstraint.px_linear_constraint option =
+		match timed_interval_option with
+		| Some timed_interval -> Some (AlgoStateBased.px_linear_constraint_of_timed_interval model timed_interval)
+		| None -> None
+
 	(*------------------------------------------------------------*)
 	(* Counters *)
 	(*------------------------------------------------------------*)
@@ -55,10 +65,28 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
 
+
 	
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
+
+	method private match_state_predicate_and_timed_interval model state_predicate_psi state =
+		(* If the state predicate is not match: discard *)
+		if not (State.match_state_predicate model state_predicate_psi state) then false else
+		(
+			(* From here, the state predicate is matched *)
+			match timed_interval_constraint_option with
+			(* No timed constraint: state predicate is matched *)
+			| None -> true
+
+			(* Timed constraint *)
+			| Some timed_interval_constraint ->
+				(* Intersect with the state constraint *)
+				let state_constraint_and_timed_interval_constraint : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [ state.px_constraint ; timed_interval_constraint] in
+				(* Check whether satisfied *)
+				not (LinearConstraint.px_is_false state_constraint_and_timed_interval_constraint)
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -79,7 +107,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		
 		let to_be_added =
 			(* Check whether the current location matches one of the target (final) locations *)
-			if State.match_state_predicate model state_predicate_psi state then(
+			if self#match_state_predicate_and_timed_interval model state_predicate_psi state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(

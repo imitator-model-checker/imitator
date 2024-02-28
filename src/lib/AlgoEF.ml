@@ -4,7 +4,7 @@
  * 
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * 
- * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
+ * Module description: "EF" algorithm (reachability-synthesis) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2023/12/18
@@ -33,7 +33,7 @@ open AlgoEUgen
 (************************************************************)
 (************************************************************)
 class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model property options None state_predicate (*as super*)
+	object (self) inherit algoEUgen model property options None state_predicate None (*as super*)
 
 	(************************************************************)
 	(* Class variables *)

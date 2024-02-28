@@ -79,6 +79,13 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 		-> Equality_check
 
 	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		-> Inclusion_check
+
+	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -231,6 +238,15 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	| AW _
 		(* No inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		(* All comparison operators preserve correctness *)
+		-> true
+
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -392,6 +408,13 @@ let merge_needed property =
 	(* Always weak until *)
 	| AW _
 		-> false
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		-> true
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -655,6 +678,13 @@ let supports_witness property =
 		-> false
 
 	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		-> true
+
+	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -782,6 +812,13 @@ let supports_cumulative_pruning property =
 		-> false
 
 	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		-> true
+
+	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	| EFpmin _
@@ -867,6 +904,13 @@ let supports_exemplification property =
 	| EU _
 		-> true
 	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _
+		-> true
+
+	(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
@@ -951,6 +995,12 @@ let text_of_property property =
 
 	(* Always weak until *)
 	| AW _ -> "always weak until " ^ synthesis_or_witness
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+	(* Reachability *)
+	| EF_timed _ -> "timed reachability " ^ synthesis_or_witness
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)

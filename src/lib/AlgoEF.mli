@@ -4,7 +4,7 @@
  *
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  *
- * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
+ * Module description: "EF" algorithm (reachability-synthesis) [JLR15]
  *
  * File contributors : Étienne André
  * Created           : 2023/12/18

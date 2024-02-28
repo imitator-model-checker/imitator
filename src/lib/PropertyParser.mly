@@ -313,11 +313,27 @@ pattern:
 interval:
 /************************************************************/
 
-	/** TODO: add other forms of intervals */
-	| LSQBRA linear_expression COMMA linear_expression RSQBRA { Parsed_closed_closed_interval ($2, $4) }
+	| LSQBRA linear_expression COMMA linear_expression RSQBRA {
+		(*** TODO: same mechanism for other left-closed intervals ***)
+		if ($2 = Linear_term (Constant NumConst.zero)) then
+			Parsed_zero_closed_interval $4
+		else
+			Parsed_closed_closed_interval ($2, $4)
+	}
+
+	| LSQBRA linear_expression COMMA linear_expression RPAREN { Parsed_closed_open_interval ($2, $4) }
+
+	| LPAREN linear_expression COMMA linear_expression RSQBRA { Parsed_open_closed_interval ($2, $4) }
+
+	| LPAREN linear_expression COMMA linear_expression RPAREN { Parsed_open_open_interval ($2, $4) }
+
 	| LSQBRA linear_expression COMMA CT_INFINITY RPAREN { Parsed_closed_infinity_interval ($2) }
+
+	| LPAREN linear_expression COMMA CT_INFINITY RPAREN { Parsed_open_infinity_interval ($2) }
 	/** NOTE/TODO: [0, infinity) reduces to normal EF */
 ;
+
+
 
 /************************************************************/
 state_predicate_list:
