@@ -92,7 +92,7 @@ let unzip l = List.fold_left
 /* %token <string> STRING */
 %token <ParsingStructure.parsed_model> INCLUDE
 
-%token OP_PLUS OP_MINUS OP_MUL OP_DIV OP_MOD
+%token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
@@ -134,7 +134,7 @@ let unzip l = List.fold_left
 %nonassoc CT_NOT           /* highest precedence */
 
 %left OP_PLUS OP_MINUS     /* lowest precedence */
-%left OP_MUL OP_DIV OP_MOD /* highest precedence */
+%left OP_MUL OP_DIV        /* highest precedence */
 
 
 %start main             /* the entry point */
@@ -815,7 +815,6 @@ arithmetic_term:
 product_quotient:
   | OP_MUL { Parsed_mul }
   | OP_DIV { Parsed_div }
-  | OP_MOD { Parsed_mod }
 ;
 
 arithmetic_factor:

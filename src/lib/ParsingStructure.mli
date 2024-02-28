@@ -94,7 +94,6 @@ and parsed_discrete_term =
 and parsed_product_quotient =
     | Parsed_mul
     | Parsed_div
-    | Parsed_mod
 
 and parsed_discrete_factor =
 	| Parsed_variable of variable_ref
