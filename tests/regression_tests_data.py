@@ -8505,9 +8505,86 @@ END CONSTRAINT
 		# Test since               : 2024/02/28
 		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property',
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, wrong interval',
 		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop.imiprop'],
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-wronginterval.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, closed]',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, closed]',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openclosed.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, open)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
@@ -8523,6 +8600,85 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, open)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openopen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, infinity)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, infinity)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openinfinite.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	# END : Test timed EF
 	#------------------------------------------------------------
