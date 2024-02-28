@@ -2504,26 +2504,26 @@ let px_linear_constraint_of_timed_interval_and_clock_index (clock_index : Automa
 	(* d1 <= x <= d2 *)
 	| Closed_closed_interval (duration_1, duration_2) ->
 		LinearConstraint.px_intersection
-			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 true;
-			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 false]
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 false;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 true]
 
 	(* d1 <= x < d2 *)
 	| Closed_open_interval (duration_1, duration_2) ->
 		LinearConstraint.px_intersection
-			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 true;
-			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 false]
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_1 false;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 true]
 
 	(* d1 < x <= d2 *)
 	| Open_closed_interval (duration_1, duration_2) ->
 		LinearConstraint.px_intersection
-			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 true;
-			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 false]
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 false;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 true]
 
 	(* d1 < x < d2 *)
 	| Open_open_interval (duration_1, duration_2) ->
 		LinearConstraint.px_intersection
-			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 true;
-			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 false]
+			[LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_1 false;
+			LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 true]
 
 	(* x >= d *)
 	| Closed_infinity_interval duration ->
