@@ -911,6 +911,123 @@ Error                                   : division by 0
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (discrete int in init definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-int-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-int-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (discrete rational in init definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-rational-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-rational-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (constant int in definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-int-def.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-int-def.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (constant rational in definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-rational-def.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-rational-def.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected in property',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-property.imi', 'syntax/division-by-zero-property.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'division-by-zero-property.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test variable elimination in Boolean expressions',
