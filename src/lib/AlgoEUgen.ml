@@ -19,7 +19,6 @@
 (************************************************************)
 (************************************************************)
 (* open OCamlUtilities *)
-open Exceptions
 open ImitatorUtilities
 open AbstractModel
 open AbstractProperty
@@ -71,24 +70,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Class methods *)
 	(************************************************************)
 
-	method private match_state_predicate_and_timed_interval model state_predicate_psi state =
-		(* If the state predicate is not match: discard *)
-		if not (State.match_state_predicate model state_predicate_psi state) then false else
-		(
-			(* From here, the state predicate is matched *)
-			match timed_interval_constraint_option with
-			(* No timed constraint: state predicate is matched *)
-			| None -> true
-
-			(* Timed constraint *)
-			| Some timed_interval_constraint ->
-				(* Intersect with the state constraint *)
-				let state_constraint_and_timed_interval_constraint : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [ state.px_constraint ; timed_interval_constraint] in
-				(* Check whether satisfied *)
-				not (LinearConstraint.px_is_false state_constraint_and_timed_interval_constraint)
-		)
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -107,7 +88,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		
 		let to_be_added =
 			(* Check whether the current location matches one of the target (final) locations *)
-			if self#match_state_predicate_and_timed_interval model state_predicate_psi state then(
+			if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(

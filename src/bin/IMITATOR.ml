@@ -835,8 +835,7 @@ match options#imitator_mode with
 			(* Reachability *)
 			(************************************************************)
 			| EF_timed (timed_interval, state_predicate) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model property options state_predicate in myalgo
-				(*** TODO ***)
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEFtimed model property options state_predicate timed_interval in myalgo
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

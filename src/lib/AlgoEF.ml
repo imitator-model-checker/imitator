@@ -29,11 +29,11 @@ open AlgoEUgen
 
 (************************************************************)
 (************************************************************)
-(* Class definition *)
+(* Class definition: algoEFtimedgen *)
 (************************************************************)
 (************************************************************)
-class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model property options None state_predicate None (*as super*)
+class virtual algoEFtimedgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
+	object (self) inherit algoEUgen model property options None state_predicate timed_interval_option (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -42,7 +42,7 @@ class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EF"
+(* 	method algorithm_name = "EF" *)
 	
 	(************************************************************)
 	(* Class methods *)
@@ -114,6 +114,54 @@ class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty
 				termination			= termination_status;
 			}
 		)
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: algoEF *)
+(************************************************************)
+(************************************************************)
+class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoEFtimedgen model property options state_predicate None (*as super*)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EF"
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: algoEFtimed *)
+(************************************************************)
+(************************************************************)
+class algoEFtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
+	object (*(self)*) inherit algoEFtimedgen model property options state_predicate (Some timed_interval) (*as super*)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EF (timed)"
 
 (************************************************************)
 (************************************************************)

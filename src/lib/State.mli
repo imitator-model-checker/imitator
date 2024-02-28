@@ -67,9 +67,12 @@ val state_included_in : state -> state -> Automaton.clock_index list -> bool
 (** Tests whether a state matches `state_predicate`; takes the model as argument, notably needed for the function tables and to access the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index`, since both of them can be used in the state_predicate),  *)
 val match_state_predicate : AbstractModel.abstract_model -> AbstractProperty.state_predicate -> state -> bool
 
+(** Tests whether a state matches `state_predicate` and a timed constraint, if any *)
+val match_state_predicate_and_timed_constraint : AbstractModel.abstract_model -> AbstractProperty.state_predicate -> LinearConstraint.px_linear_constraint option -> state -> bool
+
 
 (************************************************************)
-(** Constraints satisfaction *)
+(* Constraints satisfaction *)
 (************************************************************)
 
 

@@ -151,6 +151,23 @@ let state_included_in = states_compare LinearConstraint.px_is_leq   "inclusion"
 let match_state_predicate (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
 	DiscreteExpressionEvaluator.match_state_predicate (Some model.variable_names) (Some model.functions_table) model.is_accepting state.global_location state_predicate
 
+(** Tests whether a state matches `state_predicate` and a timed constraint, if any *)
+let match_state_predicate_and_timed_constraint (model : AbstractModel.abstract_model) (state_predicate : AbstractProperty.state_predicate) (timed_interval_constraint_option : LinearConstraint.px_linear_constraint option) (state : state) =
+		(* If the state predicate is not match: discard *)
+		if not (match_state_predicate model state_predicate state) then false else
+		(
+			(* From here, the state predicate is matched *)
+			match timed_interval_constraint_option with
+			(* No timed constraint: state predicate is matched *)
+			| None -> true
+
+			(* Timed constraint *)
+			| Some timed_interval_constraint ->
+				(* Intersect with the state constraint *)
+				let state_constraint_and_timed_interval_constraint : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [ state.px_constraint ; timed_interval_constraint] in
+				(* Check whether satisfied *)
+				not (LinearConstraint.px_is_false state_constraint_and_timed_interval_constraint)
+		)
 
 
 (************************************************************)
