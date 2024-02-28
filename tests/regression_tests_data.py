@@ -8479,7 +8479,7 @@ Termination                             : regular termination
 		# Test since               : 2024/02/28
 		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EFtmin: toy model, one parameter in the model',
+		'purpose'    : 'Test timed EF: toy model, one parameter in the model',
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic.imi', 'timed_properties/test-timedEF-basic.imiprop'],
 		'options'    : '',
@@ -8498,6 +8498,31 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	# END : Test timed EF
 	#------------------------------------------------------------
