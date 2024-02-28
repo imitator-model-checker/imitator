@@ -622,8 +622,14 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| NAME APOSTROPHE OP_EQ rational_linear_expression { ($1, $4) }
+	| NAME APOSTROPHE OP_EQ flow_value { ($1, $4) }
 ;
+
+/************************************************************/
+
+flow_value:
+        | rational_linear_expression { Flow_rat_value $1 }
+        | NAME { Flow_var $1 }
 
 /************************************************************/
 

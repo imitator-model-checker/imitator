@@ -38,10 +38,24 @@ let instantiate_stopped (param_map : var_map) (clocks : variable_name list) : va
 
 let instantiate_flows (param_map : var_map) (flows : parsed_flow) : parsed_flow =
   let instantiate_flow (clock, rate) =
-    match Hashtbl.find_opt param_map clock with
-    | None                 -> (clock, rate)
-    | Some (Arg_name name) -> (name, rate)
-    | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+    let clock' =
+      match Hashtbl.find_opt param_map clock with
+      | None                 -> clock
+      | Some (Arg_name name) -> name
+      | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+    in
+    let rate' =
+      match rate with
+        | Flow_var name -> begin
+            match Hashtbl.find_opt param_map name with
+              | None -> rate
+              | Some (Arg_int i)   -> Flow_rat_value i
+              | Some (Arg_float f) -> Flow_rat_value f
+              | Some _ -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+            end
+        | Flow_rat_value _ -> rate
+    in
+    (clock', rate')
   in
   List.map instantiate_flow flows
 

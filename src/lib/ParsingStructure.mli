@@ -211,8 +211,12 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
+type flow_value =
+        | Flow_rat_value of NumConst.t
+        | Flow_var of variable_name
+
 (** A list of pairs (clock, rational) *)
-type parsed_flow = (variable_name * NumConst.t) list
+type parsed_flow = (variable_name * flow_value) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
