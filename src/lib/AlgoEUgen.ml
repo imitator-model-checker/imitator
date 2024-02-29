@@ -50,6 +50,12 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		| Some timed_interval -> Some (AlgoStateBased.px_linear_constraint_of_timed_interval model timed_interval)
 		| None -> None
 
+	(** The constraint to check whether a constraint is already beyond the upper bound of an interval *)
+	val timed_interval_upper_bound_constraint_option : LinearConstraint.px_linear_constraint option =
+		match timed_interval_option with
+		| Some timed_interval -> AlgoStateBased.upper_bound_px_linear_constraint_option_of_timed_interval model timed_interval
+		| None -> None
+
 	(*------------------------------------------------------------*)
 	(* Counters *)
 	(*------------------------------------------------------------*)
@@ -158,23 +164,49 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				
 			) (* end if match state predicate *)
 			else(
-				self#print_algo_message Verbose_medium "State not matching a final location.";
-				
-				(* In case algorithm EU: check whether the first predicate (temporary, "phi") is matched *)
-				match state_predicate_phi_option with
-				| Some state_predicate_phi ->
-					(* Check whether the current location matches one of the target phi predicates *)
-					if State.match_state_predicate model state_predicate_phi state then(
-						self#print_algo_message Verbose_medium "State matching a phi predicate: keep";
-						true
-					)else(
-						self#print_algo_message Verbose_medium "State NOT matching a phi predicate: discard";
-						false
-					)
+				self#print_algo_message Verbose_medium "State not matching a target location.";
 
-				| None ->
-					(* No phi predicate (a.k.a. True) -> Keep the state *)
-					true
+				(* Case timed version: Cut branch if we went too far time-wise *)
+				let time_went_too_far =
+				match timed_interval_upper_bound_constraint_option with
+				| Some timed_interval_upper_bound_constraint ->
+					let checking_time_went_too_far : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [state_constraint; timed_interval_upper_bound_constraint] in
+
+					(* Unsatisfiable: cut branch! *)
+					if LinearConstraint.px_is_false checking_time_went_too_far then(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							self#print_algo_message Verbose_medium "Cut branch as the state constraint:";
+							print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names state_constraint);
+							self#print_algo_message Verbose_medium "is beyond the timed operator:";
+							print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names timed_interval_upper_bound_constraint);
+						);
+						true
+					)else false
+
+				| None -> false
+				in
+				if time_went_too_far then(
+					(* Cut branch! *)
+					false
+				)else(
+					(* Normal case *)
+					(* In case algorithm EU: check whether the first predicate (temporary, "phi") is matched *)
+					match state_predicate_phi_option with
+					| Some state_predicate_phi ->
+						(* Check whether the current location matches one of the target phi predicates *)
+						if State.match_state_predicate model state_predicate_phi state then(
+							self#print_algo_message Verbose_medium "State matching a phi predicate: keep";
+							true
+						)else(
+							self#print_algo_message Verbose_medium "State NOT matching a phi predicate: discard";
+							false
+						)
+
+					| None ->
+						(* No phi predicate (a.k.a. True) -> Keep the state *)
+						true
+				) (* end if time went too far *)
 			) (* end if not match state predicate *)
 		
 		in

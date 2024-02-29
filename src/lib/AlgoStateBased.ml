@@ -2541,7 +2541,7 @@ let px_linear_constraint_of_timed_interval_and_clock_index (clock_index : Automa
 let px_linear_constraint_of_timed_interval (model : AbstractModel.abstract_model) (timed_interval : AbstractProperty.timed_interval) : LinearConstraint.px_linear_constraint =
 	let global_time_clock = match model.global_time_clock with
 	| Some global_time_clock -> global_time_clock
-	| None -> raise (InternalError "A global time clock must be defined when creating the linear constraint associated to a timed interval")
+	| None -> raise (InternalError "A global time clock must be defined when creating the linear constraint associated to a timed interval in function `px_linear_constraint_of_timed_interval`")
 	in
 	let result = px_linear_constraint_of_timed_interval_and_clock_index global_time_clock timed_interval in
 	(* Print some information *)
@@ -2551,6 +2551,63 @@ let px_linear_constraint_of_timed_interval (model : AbstractModel.abstract_model
 	);
 	(* Return result *)
 	result
+
+
+(*------------------------------------------------------------*)
+(** Converts a timed interval into a linear constraint of the form `clock_index \leq term` where `term` is the upper bound of a timed interval, or returns None for intervals with no upper bound (e.g. (5, infinity) *)
+(*------------------------------------------------------------*)
+let upper_bound_px_linear_constraint_option_of_timed_interval_and_clock_index (clock_index : Automaton.clock_index) (timed_interval : AbstractProperty.timed_interval) : LinearConstraint.px_linear_constraint option =
+	match timed_interval with
+	(* `[0, d]` converted to `x <= d` *)
+	| Zero_closed_interval duration ->
+		Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration true)
+
+	(* `[0, d)` converted to `x < d` *)
+	| Zero_open_interval duration ->
+		Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration true)
+
+	(* `[d1, d2]` converted to `x <= d2` *)
+	| Closed_closed_interval (_, duration_2)
+	(* `(d1, d2]` converted to `x > d2` *)
+	| Open_closed_interval (_, duration_2)
+		->
+		Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_ge duration_2 true)
+
+	(* `[d1, d2)` converted to `x < d2` *)
+	| Closed_open_interval (_, duration_2)
+	| Open_open_interval (_, duration_2)
+		->
+		Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters clock_index LinearConstraint.Op_g duration_2 true)
+
+	(* `[d, infinity)` converted to None *)
+	| Closed_infinity_interval _
+	(* `(d, infinity)` converted to None *)
+	| Open_infinity_interval _
+		->
+		None
+
+(*------------------------------------------------------------*)
+(** Converts a timed interval into a linear constraint of the form `global_clock \leq term` where `term` is the upper bound of a timed interval, or returns None for intervals with no upper bound (e.g. (5, infinity) *)
+(*------------------------------------------------------------*)
+let upper_bound_px_linear_constraint_option_of_timed_interval (model : AbstractModel.abstract_model) (timed_interval : AbstractProperty.timed_interval) : LinearConstraint.px_linear_constraint option =
+	let global_time_clock = match model.global_time_clock with
+	| Some global_time_clock -> global_time_clock
+	| None -> raise (InternalError "A global time clock must be defined when creating the linear constraint encoding the upper bound of a timed interval in function `upper_bound_px_linear_constraint_option_of_timed_interval`")
+	in
+	let result = upper_bound_px_linear_constraint_option_of_timed_interval_and_clock_index global_time_clock timed_interval in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium "\nLinear constraint of timed interval:";
+		print_message Verbose_medium (
+			match result with
+			| None -> "none"
+			| Some px_linear_constraint ->
+			LinearConstraint.string_of_px_linear_constraint model.variable_names px_linear_constraint
+		);
+	);
+	(* Return result *)
+	result
+
 
 
 (************************************************************)

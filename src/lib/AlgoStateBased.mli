@@ -169,6 +169,12 @@ val project_p_nnconvex_constraint_if_requested : AbstractModel.abstract_model ->
 (*------------------------------------------------------------*)
 val px_linear_constraint_of_timed_interval : AbstractModel.abstract_model -> AbstractProperty.timed_interval -> LinearConstraint.px_linear_constraint
 
+(*------------------------------------------------------------*)
+(** Converts a timed interval into a linear constraint of the form `global_clock \leq term` where `term` is the upper bound of a timed interval, or returns None for intervals with no upper bound (e.g. (5, infinity) *)
+(*------------------------------------------------------------*)
+val upper_bound_px_linear_constraint_option_of_timed_interval : AbstractModel.abstract_model -> AbstractProperty.timed_interval -> LinearConstraint.px_linear_constraint option
+
+
 (*
 (************************************************************)
 (************************************************************)
