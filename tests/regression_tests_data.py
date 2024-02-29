@@ -8598,7 +8598,7 @@ Termination                             : regular termination
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test timed EF: toy model, one parameter in the model',
 		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic.imi', 'timed_properties/test-timedEF-basic.imiprop'],
+		'input_files': ['timed_properties/test-timedEF-basic.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test-timedEF-basic.res' , 'content' : """
