@@ -84,8 +84,6 @@ type property =
 
 	(* Reachability *)
 	| EF of state_predicate
-	(* Reachability with timing constraint *)
-	| EF_timed of timed_interval * state_predicate
 
 
 	(* Safety *)
@@ -114,6 +112,35 @@ type property =
 
 	(* Always weak until *)
 	| AW of state_predicate * state_predicate
+
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability with timing constraint *)
+	| EF_timed of timed_interval * state_predicate
+
+	(* Exists until *)
+	| EU_timed of timed_interval * state_predicate * state_predicate
+
+	(* Exists release *)
+	| ER_timed of timed_interval * state_predicate * state_predicate
+
+	(* Exists weak until *)
+	| EW_timed of timed_interval * state_predicate * state_predicate
+
+	(* Unavoidability *)
+	| AF_timed of timed_interval * state_predicate
+
+	(* Always release *)
+	| AR_timed of timed_interval * state_predicate * state_predicate
+
+	(* Always until *)
+	| AU_timed of timed_interval * state_predicate * state_predicate
+
+	(* Always weak until *)
+	| AW_timed of timed_interval * state_predicate * state_predicate
 
 
 	(*------------------------------------------------------------*)

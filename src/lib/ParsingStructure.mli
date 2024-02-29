@@ -413,9 +413,6 @@ type parsed_property_type =
 	(* Reachability *)
 	| Parsed_EF of parsed_state_predicate
 	
-	(* Reachability with timing constraint *)
-	| Parsed_EF_timed of parsed_interval * parsed_state_predicate
-
 	(* Safety *)
 	| Parsed_AGnot of parsed_state_predicate
 	
@@ -442,6 +439,41 @@ type parsed_property_type =
 
 	(* Always weak until *)
 	| Parsed_AW of parsed_state_predicate * parsed_state_predicate
+
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL (timed version) *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability with timing constraint *)
+	| Parsed_EF_timed of parsed_interval * parsed_state_predicate
+
+	(* Safety *)
+	| Parsed_AGnot_timed of parsed_interval * parsed_state_predicate
+
+	(* Global invariant *)
+	| Parsed_AG_timed of parsed_interval * parsed_state_predicate
+
+	(* Exists release *)
+	| Parsed_ER_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
+
+	(* Exists until *)
+	| Parsed_EU_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
+
+	(* Exists weak until *)
+	| Parsed_EW_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
+
+	(* Unavoidability *)
+	| Parsed_AF_timed of parsed_interval * parsed_state_predicate
+
+	(* Always release *)
+	| Parsed_AR_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
+
+	(* Always until *)
+	| Parsed_AU_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
+
+	(* Always weak until *)
+	| Parsed_AW_timed of parsed_interval * parsed_state_predicate * parsed_state_predicate
 
 
 	(*------------------------------------------------------------*)
