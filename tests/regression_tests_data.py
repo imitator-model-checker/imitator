@@ -8823,6 +8823,39 @@ END CONSTRAINT
 	,
 
 	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/02/29
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: check no exploration beyond timed interval',
+		'tags'       : 'semantic,optimization',
+		'input_files': ['timed_properties/test-timedEF-cutbranch.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			# NOTE: check correctness first
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+			# NOTE: check optimization
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+Number of states                        : 4
+Number of transitions                   : 3
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
 	# END : Test timed EF
 	#------------------------------------------------------------
 
