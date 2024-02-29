@@ -8586,6 +8586,40 @@ Termination                             : regular termination
 	,
 
 	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/02/29
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (different reachable times)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['timed_properties/test-timedEU.imi', 'timed_properties/test-untimedEU.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEU.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 1
+ OR
+   p = 3
+ OR
+   p = 4
+ OR
+   p = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
 	# BEGIN : Test timed EF
 	#------------------------------------------------------------
 
