@@ -2610,6 +2610,31 @@ let upper_bound_px_linear_constraint_option_of_timed_interval (model : AbstractM
 
 
 
+(*------------------------------------------------------------*)
+(** `intersect_with_timed_interval_constraint_option model c_option c` returns the same constraint `c` if `c_option = None`, and a new constraint `c ^ c_option` otherwise. The model is only used for pretty printing (variable names). *)
+(*------------------------------------------------------------*)
+let intersect_with_timed_interval_constraint_option  (model : AbstractModel.abstract_model) (timed_interval_constraint_option : LinearConstraint.px_linear_constraint option) (state_constraint : LinearConstraint.px_linear_constraint) : LinearConstraint.px_linear_constraint =
+	match timed_interval_constraint_option with
+	| None -> state_constraint
+	| Some timed_interval_constraint ->
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "The new state constraint is:";
+			print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names state_constraint);
+		);
+
+		(*** WARNING: this was done already before in `match_state_predicate_and_timed_constraint`! ***)
+		let intersection : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [state_constraint ; timed_interval_constraint] in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium "The new state constraint before projection onto the parameters is now:";
+			print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names intersection);
+		);
+		intersection
+
+
+
 (************************************************************)
 (************************************************************)
 (* Types *)

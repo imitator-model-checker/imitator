@@ -174,6 +174,12 @@ val px_linear_constraint_of_timed_interval : AbstractModel.abstract_model -> Abs
 (*------------------------------------------------------------*)
 val upper_bound_px_linear_constraint_option_of_timed_interval : AbstractModel.abstract_model -> AbstractProperty.timed_interval -> LinearConstraint.px_linear_constraint option
 
+(*------------------------------------------------------------*)
+(** `intersect_with_timed_interval_constraint_option model c_option c` returns the same constraint `c` if `c_option = None`, and a new constraint `c ^ c_option` otherwise. The model is only used for pretty printing (variable names). *)
+(*------------------------------------------------------------*)
+val intersect_with_timed_interval_constraint_option : AbstractModel.abstract_model -> LinearConstraint.px_linear_constraint option -> LinearConstraint.px_linear_constraint -> LinearConstraint.px_linear_constraint
+
+
 
 (*
 (************************************************************)

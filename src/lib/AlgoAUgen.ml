@@ -31,7 +31,7 @@ open Result
 (* Class definition: AU (virtual) *)
 (************************************************************)
 (************************************************************)
-class virtual algoAUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (weak : bool) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) =
+class virtual algoAUgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (weak : bool) (state_predicate_phi_option : AbstractProperty.state_predicate option) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
 	object (self) inherit algoGeneric model options (*as super*)
 
 	
@@ -39,6 +39,21 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Class variables *)
 	(************************************************************)
 	
+	(*------------------------------------------------------------*)
+	(* Constants *)
+	(*------------------------------------------------------------*)
+	(** The constraint to be added to a symbolic state to check whether it matches the timed interval (if any) *)
+	val timed_interval_constraint_option : LinearConstraint.px_linear_constraint option =
+		match timed_interval_option with
+		| Some timed_interval -> Some (AlgoStateBased.px_linear_constraint_of_timed_interval model timed_interval)
+		| None -> None
+
+	(** The constraint to check whether a constraint is already beyond the upper bound of an interval *)
+	val timed_interval_upper_bound_constraint_option : LinearConstraint.px_linear_constraint option =
+		match timed_interval_option with
+		| Some timed_interval -> AlgoStateBased.upper_bound_px_linear_constraint_option_of_timed_interval model timed_interval
+		| None -> None
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithms) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -77,7 +92,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		let state_px_constraint = symbolic_state.px_constraint in
 
 		(* Case 1: target state found: return the associated constraint *)
-		if State.match_state_predicate model state_predicate_psi symbolic_state then(
+		if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option symbolic_state  then(
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
@@ -85,8 +100,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 				self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
 			);
 
+			(* If timed version: first add the timed_interval_constraint_option to the resulting state *)
+			let state_constraint_for_projection : LinearConstraint.px_linear_constraint = AlgoStateBased.intersect_with_timed_interval_constraint_option model timed_interval_constraint_option state_px_constraint in
+
 			(* Return the constraint projected onto the parameters *)
-			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
+			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_constraint_for_projection)
 		)else(
 			(* Case 1b: For AU, if the state does not satisfy phi, then false *)
 			let falsified_phi = match state_predicate_phi_option with
@@ -348,7 +366,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAUgen model property options false None state_predicate (*as super*)
+	object (*(self)*) inherit algoAUgen model property options false None state_predicate None (*as super*)
 
 
 	(************************************************************)
@@ -374,7 +392,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class algoAU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAUgen model property options false (Some state_predicate_phi) state_predicate_psi (*as super*)
+	object (*(self)*) inherit algoAUgen model property options false (Some state_predicate_phi) state_predicate_psi None (*as super*)
 
 
 	(************************************************************)
@@ -401,7 +419,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class algoAW (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAUgen model property options true (Some state_predicate_phi) state_predicate_psi (*as super*)
+	object (*(self)*) inherit algoAUgen model property options true (Some state_predicate_phi) state_predicate_psi None (*as super*)
 
 
 	(************************************************************)
