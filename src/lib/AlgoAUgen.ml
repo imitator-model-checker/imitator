@@ -91,186 +91,211 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Useful shortcut *)
 		let state_px_constraint = symbolic_state.px_constraint in
 
-		(* Case 1: target state found: return the associated constraint *)
-		if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option symbolic_state  then(
+		(* Case 0 (timed version): Cut branch if we went too far time-wise *)
+		let time_went_too_far =
+		match timed_interval_upper_bound_constraint_option with
+		| Some timed_interval_upper_bound_constraint ->
+			let checking_time_went_too_far : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [state_px_constraint; timed_interval_upper_bound_constraint] in
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message Verbose_low ("Target state found");
-				self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
-			);
+			(* Unsatisfiable: cut branch! *)
+			if LinearConstraint.px_is_false checking_time_went_too_far then(
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Cut branch as the state constraint:";
+					print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names state_px_constraint);
+					self#print_algo_message Verbose_medium "is beyond the timed operator:";
+					print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names timed_interval_upper_bound_constraint);
+				);
+				true
+			)else false
 
-			(* If timed version: first add the timed_interval_constraint_option to the resulting state *)
-			let state_constraint_for_projection : LinearConstraint.px_linear_constraint = AlgoStateBased.intersect_with_timed_interval_constraint_option model timed_interval_constraint_option state_px_constraint in
+		| None -> false
+		in
 
-			(* Return the constraint projected onto the parameters *)
-			LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_constraint_for_projection)
+		if time_went_too_far then(
+			(* Return false *)
+			LinearConstraint.false_p_nnconvex_constraint ()
 		)else(
-			(* Case 1b: For AU, if the state does not satisfy phi, then false *)
-			let falsified_phi = match state_predicate_phi_option with
-				(* AF: no phi, no reason to return False *)
-				| None -> false
-				(* AU: some phi *)
-				| Some state_predicate_phi ->
-					(* If unsatisfied: return false *)
-					let unsatisfied = not (State.match_state_predicate model state_predicate_phi symbolic_state) in
-					(* Print some information *)
-					if unsatisfied && verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_low ("The state does not match phi: discard!");
-						self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
-					);
-					unsatisfied
-			in
-			if falsified_phi then(
-				(* Return false *)
-				LinearConstraint.false_p_nnconvex_constraint ()
-			)
-			(* Case 2: state already met *)
-			else if List.mem state_index passed then(
+			(* Case 1: target state found: return the associated constraint *)
+			if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option symbolic_state  then(
 
-				(* If weak version: loop (necessarily over phi) => found good valuations! *)
-				(*** NOTE: this is a loop because state_index is met twice on the *same* path, i.e., of the form (state_index , …, state_index) ***)
-				if weak then(
-					(* Print some information *)
-					if verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
-					);
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message Verbose_low ("Target state found");
+					self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
+				);
 
-					(* Return the state constraint *)
-					LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
+				(* If timed version: first add the timed_interval_constraint_option to the resulting state *)
+				let state_constraint_for_projection : LinearConstraint.px_linear_constraint = AlgoStateBased.intersect_with_timed_interval_constraint_option model timed_interval_constraint_option state_px_constraint in
 
-				(* Normal version: a loop means False *)
-				)else(
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
-					);
-
+				(* Return the constraint projected onto the parameters *)
+				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_constraint_for_projection)
+			)else(
+				(* Case 1b: For AU, if the state does not satisfy phi, then false *)
+				let falsified_phi = match state_predicate_phi_option with
+					(* AF: no phi, no reason to return False *)
+					| None -> false
+					(* AU: some phi *)
+					| Some state_predicate_phi ->
+						(* If unsatisfied: return false *)
+						let unsatisfied = not (State.match_state_predicate model state_predicate_phi symbolic_state) in
+						(* Print some information *)
+						if unsatisfied && verbose_mode_greater Verbose_low then(
+							self#print_algo_message Verbose_low ("The state does not match phi: discard!");
+							self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
+						);
+						unsatisfied
+				in
+				if falsified_phi then(
 					(* Return false *)
 					LinearConstraint.false_p_nnconvex_constraint ()
 				)
-			)else(
-				(* Instantiate local variables *)
-				let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in
-				let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
+				(* Case 2: state already met *)
+				else if List.mem state_index passed then(
 
-				(* Compute all successors via all possible outgoing transitions *)
-				let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
+					(* If weak version: loop (necessarily over phi) => found good valuations! *)
+					(*** NOTE: this is a loop because state_index is met twice on the *same* path, i.e., of the form (state_index , …, state_index) ***)
+					if weak then(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_low then(
+							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
+						);
 
-				(* For each successor *)
-				List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
-					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
-					state_space#increment_nb_gen_states;
+						(* Return the state constraint *)
+						LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 
-					(* Add or get the state_index of the successor *)
-					(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
-					let addition_result = state_space#add_state Equality_check None successor in
-					let successor_state_index = match addition_result with
-					| New_state state_index
-					| State_already_present state_index
-					| State_replacing state_index
-						-> state_index
-					in
+					(* Normal version: a loop means False *)
+					)else(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
+						);
+
+						(* Return false *)
+						LinearConstraint.false_p_nnconvex_constraint ()
+					)
+				)else(
+					(* Valuate local variables *)
+					let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in
+					let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
+
+					(* Compute all successors via all possible outgoing transitions *)
+					let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
+
+					(* For each successor *)
+					List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
+						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+						state_space#increment_nb_gen_states;
+
+						(* Add or get the state_index of the successor *)
+						(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
+						let addition_result = state_space#add_state Equality_check None successor in
+						let successor_state_index = match addition_result with
+						| New_state state_index
+						| State_already_present state_index
+						| State_replacing state_index
+							-> state_index
+						in
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
+						);
+
+						(* Add the transition to the state space *)
+						state_space#add_transition (state_index, combined_transition, successor_state_index);
+
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Calling recursively AU(" ^ (string_of_int successor_state_index) ^ ")…");
+						);
+
+						(* Recursive call to AF on the successor *)
+						let k_good : LinearConstraint.p_nnconvex_constraint = self#au_rec successor_state_index (state_index :: passed) in
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Result of AU(" ^ (string_of_int successor_state_index) ^ "):");
+							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
+						);
+
+						(* k_block <- T \ successor|_P *)
+						let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
+						LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Blocking constraint:");
+							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block);
+						);
+
+						(* K <- K ^ (k_good U k_block) *)
+						LinearConstraint.p_nnconvex_union_assign k_good k_block;
+						LinearConstraint.p_nnconvex_intersection_assign k k_good;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message Verbose_high ("k:");
+							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
+						);
+
+						(* k_live <- k_live U (C ^ g)\past *)
+						let eventually_exiting_valuations = DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index in
+
+						(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
+	(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message Verbose_high ("Eventually exiting valuations:");
+							self#print_algo_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names eventually_exiting_valuations);
+						);
+						LinearConstraint.px_nnconvex_px_union_assign k_live eventually_exiting_valuations;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message Verbose_high ("k_live after adding exiting valuations:");
+							self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names k_live);
+						);
+
+						()
+					) transitions_and_successors_list;
+					(* End for each successor *)
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
+						self#print_algo_message_newline Verbose_high ("Finalizing the result of AU(" ^ (string_of_int state_index) ^ ")…");
 					);
 
-					(* Add the transition to the state space *)
-					state_space#add_transition (state_index, combined_transition, successor_state_index);
-
+					(* k <- k \ (C \ k_live)|_P *)
+					let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (LinearConstraint.px_copy state_px_constraint) in
+					LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
+					let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
+					LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Calling recursively AU(" ^ (string_of_int successor_state_index) ^ ")…");
+						self#print_algo_message Verbose_high ("Negation of k_live");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names not_k_live);
+						self#print_algo_message Verbose_high ("Projection of not(k_live)");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_not_k_live);
 					);
 
-					(* Recursive call to AF on the successor *)
-					let k_good : LinearConstraint.p_nnconvex_constraint = self#au_rec successor_state_index (state_index :: passed) in
+					(* Intersect with initial parameter domain *)
+					LinearConstraint.p_nnconvex_p_intersection_assign k parameters_consistent_with_init;
 
 					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Result of AU(" ^ (string_of_int successor_state_index) ^ "):");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message_newline Verbose_medium ("Final constraint in AU(" ^ (string_of_int state_index) ^ ")…");
+						self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 					);
 
-					(* k_block <- T \ successor|_P *)
-					let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
-					LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
-
-					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Blocking constraint:");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block);
-					);
-
-					(* K <- K ^ (k_good U k_block) *)
-					LinearConstraint.p_nnconvex_union_assign k_good k_block;
-					LinearConstraint.p_nnconvex_intersection_assign k k_good;
-
-					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high ("k:");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
-					);
-
-					(* k_live <- k_live U (C ^ g)\past *)
-					let eventually_exiting_valuations = DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index in
-
-					(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
-(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
-
-					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high ("Eventually exiting valuations:");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names eventually_exiting_valuations);
-					);
-					LinearConstraint.px_nnconvex_px_union_assign k_live eventually_exiting_valuations;
-
-					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high ("k_live after adding exiting valuations:");
-						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names k_live);
-					);
-
-					()
-				) transitions_and_successors_list;
-				(* End for each successor *)
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message_newline Verbose_high ("Finalizing the result of AU(" ^ (string_of_int state_index) ^ ")…");
-				);
-
-				(* k <- k \ (C \ k_live)|_P *)
-				let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (LinearConstraint.px_copy state_px_constraint) in
-				LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
-				let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
-				LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message Verbose_high ("Negation of k_live");
-					self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names not_k_live);
-					self#print_algo_message Verbose_high ("Projection of not(k_live)");
-					self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_not_k_live);
-				);
-
-				(* Intersect with initial parameter domain *)
-				LinearConstraint.p_nnconvex_p_intersection_assign k parameters_consistent_with_init;
-
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message_newline Verbose_medium ("Final constraint in AU(" ^ (string_of_int state_index) ^ ")…");
-					self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
-				);
-
-				(* return k *)
-				k
+					(* return k *)
+					k
+				)
 			)
-		)
-
+		) (* end elseif time went too far *)
 
 
 
