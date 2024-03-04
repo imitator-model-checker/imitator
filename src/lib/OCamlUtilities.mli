@@ -250,6 +250,10 @@ val evaluate_and : bool -> bool -> bool
 (** Evaluate both part of an 'or' comparison and return the disjunction *)
 val evaluate_or : bool -> bool -> bool
 
+(** Evaluate all parts of a list and return the conjunction *)
+(*** WARNING: this is NOT a List.exists! We WANT all elements to be evaluated without laziness ***)
+val evaluate_all : bool list -> bool
+
 (** XOR: returns true if both are different *)
 val xor : bool -> bool -> bool
 

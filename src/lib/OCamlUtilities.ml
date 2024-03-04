@@ -551,6 +551,11 @@ let evaluate_and a b =
 	computed_a && computed_b*)
 	a && b
 
+(** Evaluate all parts of a list and return the conjunction *)
+(*** WARNING: this is NOT a List.exists! We WANT all elements to be evaluated without laziness ***)
+let evaluate_all =
+	List.fold_left (fun current_result element -> evaluate_and current_result element) true
+
 (** Evaluate both part of an 'or' comparison and return the disjunction *)
 let evaluate_or a b =
 	a || b
