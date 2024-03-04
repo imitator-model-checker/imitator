@@ -776,7 +776,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists release *)
 			(************************************************************)
-			| ER (state_predicate_phi, state_predicate_psi) ->
+			| ER _ (*(state_predicate_phi, state_predicate_psi)*) ->
 				raise (NotImplemented("ER"))
 (* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
 
@@ -790,7 +790,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists weak until *)
 			(************************************************************)
-			| EW (state_predicate_phi, state_predicate_psi) ->
+			| EW _ (*(state_predicate_phi, state_predicate_psi)*) ->
 				raise (NotImplemented("EW"))
 (* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
 
@@ -832,10 +832,47 @@ match options#imitator_mode with
 		(* Non-nested CTL: timed version *)
 		(*------------------------------------------------------------*)
 			(************************************************************)
-			(* Reachability *)
+			(* Reachability with timing constraint *)
 			(************************************************************)
 			| EF_timed (timed_interval, state_predicate) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEFtimed model property options state_predicate timed_interval in myalgo
+
+			(************************************************************)
+			(* Exists until with timing constraint *)
+			(************************************************************)
+			| EU_timed _ -> raise (NotImplemented "timed EU")
+
+			(************************************************************)
+			(* Exists release with timing constraint *)
+			(************************************************************)
+			| ER_timed _ -> raise (NotImplemented "timed ER")
+
+			(************************************************************)
+			(* Exists weak until with timing constraint *)
+			(************************************************************)
+			| EW_timed  _ -> raise (NotImplemented "timed EW")
+
+			(************************************************************)
+			(* Unavoidability with timing constraint *)
+			(************************************************************)
+			| AF_timed  _ -> raise (NotImplemented "timed AF")
+
+			(************************************************************)
+			(* Always release with timing constraint *)
+			(************************************************************)
+			| AR_timed  _ -> raise (NotImplemented "timed AR")
+
+			(************************************************************)
+			(* Always until with timing constraint *)
+			(************************************************************)
+			| AU_timed  _ -> raise (NotImplemented "timed AU")
+
+			(************************************************************)
+			(* Always weak until with timing constraint *)
+			(************************************************************)
+			| AW_timed  _ -> raise (NotImplemented "timed AW")
+
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

@@ -81,9 +81,33 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _
+
+	(* Exists until with timing constraint *)
+	| EU_timed _
 		-> Inclusion_check
+
+	(*** TODO: decide heuristics ***)
+	(* Exists release with timing constraint *)
+	| ER_timed _
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _
+		-> Equality_check
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _
+
+	(* Always release with timing constraint *)
+	| AR_timed _
+
+	(* Always until with timing constraint *)
+	| AU_timed _
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _
+		-> Equality_check
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -242,11 +266,36 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _
+
+	(* Exists until with timing constraint *)
+	| EU_timed _
 		(* All comparison operators preserve correctness *)
 		-> true
 
+	(*** TODO: decide heuristics ***)
+	(* Exists release with timing constraint *)
+	| ER_timed _
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _
+
+	(* Always release with timing constraint *)
+	| AR_timed _
+
+	(* Always until with timing constraint *)
+	| AU_timed _
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -412,9 +461,34 @@ let merge_needed property =
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _
+
+	(* Exists until with timing constraint *)
+	| EU_timed _
 		-> true
+
+	(*** TODO: decide heuristics ***)
+	(* Exists release with timing constraint *)
+	| ER_timed _
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _
+		-> false
+
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _
+
+	(* Always release with timing constraint *)
+	| AR_timed _
+
+	(* Always until with timing constraint *)
+	| AU_timed _
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _
+		-> false
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -556,9 +630,14 @@ let needs_global_clock property =
 
 	| EFtmin _
 	| EF_timed _
+	| EU_timed _
+	| ER_timed _
+	| EW_timed _
+	| AF_timed _
+	| AR_timed _
+	| AU_timed _
+	| AW_timed _
 		-> true
-
-
 
 
 (*------------------------------------------------------------*)
@@ -724,9 +803,34 @@ let supports_witness property =
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _
+
+	(* Exists until with timing constraint *)
+	| EU_timed _
 		-> true
+
+	(*** TODO: decide heuristics ***)
+	(* Exists release with timing constraint *)
+	| ER_timed _
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _
+		-> false
+
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _
+
+	(* Always release with timing constraint *)
+	| AR_timed _
+
+	(* Always until with timing constraint *)
+	| AU_timed _
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _
+		-> false
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -858,8 +962,29 @@ let supports_cumulative_pruning property =
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _
+
+	(* Exists until with timing constraint *)
+	| EU_timed _
+
+	(* Exists release with timing constraint *)
+	| ER_timed _
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _
+
+	(* Always release with timing constraint *)
+	| AR_timed _
+
+	(* Always until with timing constraint *)
+	| AU_timed _
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _
 		-> true
 
 	(*------------------------------------------------------------*)
@@ -1043,8 +1168,32 @@ let text_of_property property =
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL (timed version) *)
 	(*------------------------------------------------------------*)
-	(* Reachability *)
+	(* Reachability with timing constraint *)
 	| EF_timed _ -> "timed reachability " ^ synthesis_or_witness
+
+	(* Exists until with timing constraint *)
+	| EU_timed _ -> "timed exists until " ^ synthesis_or_witness
+
+	(*** TODO: decide heuristics ***)
+	(* Exists release with timing constraint *)
+	| ER_timed _ -> "timed exists release " ^ synthesis_or_witness
+
+	(* Exists weak until with timing constraint *)
+	| EW_timed _ -> "timed exists weak until " ^ synthesis_or_witness
+
+
+	(* Unavoidability with timing constraint *)
+	| AF_timed _ -> "timed unavoidability " ^ synthesis_or_witness
+
+	(* Always release with timing constraint *)
+	| AR_timed _ -> "timed always release " ^ synthesis_or_witness
+
+	(* Always until with timing constraint *)
+	| AU_timed _ -> "timed always until " ^ synthesis_or_witness
+
+	(* Always weak until with timing constraint *)
+	| AW_timed _ -> "timed always weak until " ^ synthesis_or_witness
+
 
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -1154,6 +1303,13 @@ let v0_option_of_property property : AbstractModel.v0 option =
 	| AU _
 	| AW _
 	| EF_timed _
+	| EU_timed _
+	| ER_timed _
+	| EW_timed _
+	| AF_timed _
+	| AR_timed _
+	| AU_timed _
+	| AW_timed _
 	| EFpmin _
 	| EFpmax _
 	| EFtmin _
@@ -1196,6 +1352,8 @@ let state_predicates_of_property property : AbstractProperty.state_predicate lis
 	| EFpmax (state_predicate , _)
 	| EFtmin state_predicate
 	| EF_timed (_, state_predicate)
+	| AF_timed (_, state_predicate)
+
 	| Cycle_through state_predicate
 	| PRP (state_predicate, _)
 	| Win (state_predicate)
@@ -1207,6 +1365,13 @@ let state_predicates_of_property property : AbstractProperty.state_predicate lis
 	| AR (state_predicate_1, state_predicate_2)
 	| AU (state_predicate_1, state_predicate_2)
 	| AW (state_predicate_1, state_predicate_2)
+
+	| ER_timed (_, state_predicate_1, state_predicate_2)
+	| EU_timed (_, state_predicate_1, state_predicate_2)
+	| EW_timed (_, state_predicate_1, state_predicate_2)
+	| AR_timed (_, state_predicate_1, state_predicate_2)
+	| AU_timed (_, state_predicate_1, state_predicate_2)
+	| AW_timed (_, state_predicate_1, state_predicate_2)
 		-> [state_predicate_1; state_predicate_2]
 
 	| Cycle_through_generalized state_predicate_list

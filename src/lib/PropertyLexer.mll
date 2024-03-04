@@ -51,6 +51,7 @@ rule token = parse
 	| "AccLoop"        { CT_ACCEPTINGCYCLE }
 	| "AcceptingLoop"  { CT_ACCEPTINGCYCLE }
 	| "AF"             { CT_AF }
+	| "AF_timed"       { CT_AF_timed }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }
@@ -62,9 +63,9 @@ rule token = parse
 	| "Cycle"          { CT_INFCYCLE }
 	| "CycleThrough"   { CT_INFCYCLETHROUGH }
  	| "DeadlockFree"   { CT_DEADLOCKFREE }
+	| "E"              { CT_E }
 	| "EF"             { CT_EF }
 	| "EF_"            { CT_EF_timed }
-	| "E"              { CT_E }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
@@ -79,10 +80,13 @@ rule token = parse
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
 	| "R"              { CT_R }
+	| "R_"             { CT_R_timed }
  	| "TracePreservation" { CT_TRACEPRESERVATION }
 	| "U"              { CT_U }
+	| "U_"             { CT_U_timed }
  	| "Valid"          { CT_VALID }
 	| "W"              { CT_W }
+	| "W_"             { CT_W_timed }
 
 	| "inf"            { CT_INFINITY }
 	| "infinity"       { CT_INFINITY }

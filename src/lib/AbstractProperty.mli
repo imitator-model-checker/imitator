@@ -121,25 +121,25 @@ type property =
 	(* Reachability with timing constraint *)
 	| EF_timed of timed_interval * state_predicate
 
-	(* Exists until *)
+	(* Exists until with timing constraint *)
 	| EU_timed of timed_interval * state_predicate * state_predicate
 
-	(* Exists release *)
+	(* Exists release with timing constraint *)
 	| ER_timed of timed_interval * state_predicate * state_predicate
 
-	(* Exists weak until *)
+	(* Exists weak until with timing constraint *)
 	| EW_timed of timed_interval * state_predicate * state_predicate
 
-	(* Unavoidability *)
+	(* Unavoidability with timing constraint *)
 	| AF_timed of timed_interval * state_predicate
 
-	(* Always release *)
+	(* Always release with timing constraint *)
 	| AR_timed of timed_interval * state_predicate * state_predicate
 
-	(* Always until *)
+	(* Always until with timing constraint *)
 	| AU_timed of timed_interval * state_predicate * state_predicate
 
-	(* Always weak until *)
+	(* Always weak until with timing constraint *)
 	| AW_timed of timed_interval * state_predicate * state_predicate
 
 

@@ -1949,13 +1949,35 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL: timed version *)
 		(*------------------------------------------------------------*)
-		(* Reachability *)
+		(* Reachability with timing constraint *)
 		| Parsed_EF_timed (parsed_interval, parsed_state_predicate)
+		(* Unavoidability with timing constraint *)
+		| Parsed_AF_timed (parsed_interval, parsed_state_predicate)
 			->
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 				(check_parsed_interval useful_parsing_model_information parsed_interval)
 
+		(* Exists release with timing constraint *)
+		| Parsed_ER_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Exists until with timing constraint *)
+		| Parsed_EU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Exists weak until with timing constraint *)
+		| Parsed_EW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Always release with timing constraint *)
+		| Parsed_AR_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Always until with timing constraint *)
+		| Parsed_AU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+		(* Always weak until with timing constraint *)
+		| Parsed_AW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+			->
+			evaluate_all [
+				check_parsed_interval useful_parsing_model_information parsed_interval
+				;
+				check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				;
+				check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_psi
+				]
 
 
 		(*------------------------------------------------------------*)
@@ -2366,6 +2388,90 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
+
+
+		(* Unavoidability with timing constraint *)
+		| Parsed_AF_timed (parsed_interval, parsed_state_predicate) ->
+			(* Return a property and no observer *)
+			AF_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
+		(* Exists release with timing constraint *)
+		| Parsed_ER_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			ER_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
+		(* Exists until with timing constraint *)
+		| Parsed_EU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			EU_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
+		(* Exists weak until with timing constraint *)
+		| Parsed_EW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			EW_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
+		(* Always release with timing constraint *)
+		| Parsed_AR_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			AR_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
+		(* Always until with timing constraint *)
+		| Parsed_AU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			AU_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
+		(* Always weak until with timing constraint *)
+		| Parsed_AW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi) ->
+			(* Return a property and no observer *)
+			AW_timed
+				(PropertyConverter.timed_interval_of_parsed_interval useful_parsing_model_information parsed_interval
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_phi
+				,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate_psi)
+			,
+			None
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

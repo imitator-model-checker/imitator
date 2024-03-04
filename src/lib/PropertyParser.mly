@@ -55,7 +55,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-	CT_A CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AG CT_AGnot CT_ALWAYS
+	CT_A CT_ACCEPTING CT_ACCEPTINGCYCLE CT_AF CT_AF_timed CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -68,12 +68,12 @@ let resolve_property l =
 	CT_ONCE
 	CT_PATTERN CT_PROJECTRESULT CT_PROPERTY CT_PRP CT_PRPC
 	CT_QUEUE
-	CT_R
+	CT_R CT_R_timed
 	CT_SEQUENCE CT_STACK CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
-	CT_U
+	CT_U CT_U_timed
 	CT_VALID
-	CT_W CT_WIN CT_WITHIN
+	CT_W CT_W_timed CT_WIN CT_WITHIN
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -142,15 +142,6 @@ property:
 	/* Reachability */
 	| CT_EF state_predicate { Parsed_EF $2 }
 
-	/* Reachability (timed version) */
-	| CT_EF_timed timed_interval state_predicate {
-		(* Optimization: `EF_timed [0, infinity) sp` is actually `EF sp` *)
-		match $2 with
-		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_EF $3
-		| _ -> Parsed_EF_timed ($2, $3)
-	}
-
 	/* Safety */
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
 
@@ -177,6 +168,83 @@ property:
 
 	/* Always weak until */
 	| CT_A state_predicate CT_W state_predicate { Parsed_AW ($2, $4) }
+
+
+	/*------------------------------------------------------------*/
+	/* Non-nested CTL (timed version) */
+	/*------------------------------------------------------------*/
+	/* Reachability (timed version) */
+	| CT_EF_timed timed_interval state_predicate {
+		(* Optimization: `EF_timed [0, infinity) sp` is actually `EF sp` *)
+		match $2 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_EF $3
+		| _ -> Parsed_EF_timed ($2, $3)
+	}
+
+	/* ER (timed version) */
+	| CT_E state_predicate CT_R_timed timed_interval state_predicate {
+		(* Optimization: `ER_timed [0, infinity) sp sp` is actually `ER sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_ER ($2, $5)
+		| _ -> Parsed_ER_timed ($4, $2, $5)
+	}
+
+	/* EU (timed version) */
+	| CT_E state_predicate CT_U_timed timed_interval state_predicate {
+		(* Optimization: `EU_timed [0, infinity) sp sp` is actually `EU sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_EU ($2, $5)
+		| _ -> Parsed_EU_timed ($4, $2, $5)
+	}
+
+	/* EW (timed version) */
+	| CT_E state_predicate CT_W_timed timed_interval state_predicate {
+		(* Optimization: `EW_timed [0, infinity) sp sp` is actually `EW sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_EW ($2, $5)
+		| _ -> Parsed_EW_timed ($4, $2, $5)
+	}
+
+	/* AF (timed version) */
+	| CT_AF_timed timed_interval state_predicate {
+		(* Optimization: `AF_timed [0, infinity) sp` is actually `AF sp` *)
+		match $2 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_AF $3
+		| _ -> Parsed_AF_timed ($2, $3)
+	}
+
+	/* AR (timed version) */
+	| CT_A state_predicate CT_R_timed timed_interval state_predicate {
+		(* Optimization: `AR_timed [0, infinity) sp sp` is actually `AR sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_AR ($2, $5)
+		| _ -> Parsed_AR_timed ($4, $2, $5)
+	}
+
+	/* AU (timed version) */
+	| CT_A state_predicate CT_U_timed timed_interval state_predicate {
+		(* Optimization: `AU_timed [0, infinity) sp sp` is actually `AU sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_AU ($2, $5)
+		| _ -> Parsed_AU_timed ($4, $2, $5)
+	}
+
+	/* AW (timed version) */
+	| CT_A state_predicate CT_W_timed timed_interval state_predicate {
+		(* Optimization: `AW_timed [0, infinity) sp sp` is actually `AW sp sp` *)
+		match $4 with
+		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
+			Parsed_AW ($2, $5)
+		| _ -> Parsed_AW_timed ($4, $2, $5)
+	}
+
 
 
 	/*------------------------------------------------------------*/

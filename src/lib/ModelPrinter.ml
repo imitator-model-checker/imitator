@@ -1050,7 +1050,29 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL: timed version *)
 		(*------------------------------------------------------------*)
-		| EF_timed (timed_interval, state_predicate) -> "EF" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		(* Reachability with timing constraint *)
+		| EF_timed (timed_interval, state_predicate) -> "EF_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		(* Exists until with timing constraint *)
+		| EU_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Exists release with timing constraint *)
+		| ER_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Exists weak until with timing constraint *)
+		| EW_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")W_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Unavoidability with timing constraint *)
+		| AF_timed (timed_interval, state_predicate) -> "AF_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		(* Always release with timing constraint *)
+		| AR_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Always until with timing constraint *)
+		| AU_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")U_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
+
+		(* Always weak until with timing constraint *)
+		| AW_timed (timed_interval, state_predicate_phi, state_predicate_psi) -> "A(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")W_" ^ (string_of_timed_interval model timed_interval) ^ "(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 
 
 		(*------------------------------------------------------------*)

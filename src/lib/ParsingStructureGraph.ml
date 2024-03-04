@@ -450,14 +450,37 @@ let all_components_used_in_property_option parsed_property_option =
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL: timed version *)
 		(*------------------------------------------------------------*)
-		(* Reachability *)
+		(* Reachability with timing constraint *)
 		| Parsed_EF_timed (parsed_interval, parsed_state_predicate)
+        (* Unavoidability with timing constraint *)
+        | Parsed_AF_timed (parsed_interval, parsed_state_predicate)
             ->
 			(* First get the variables in the state predicate *)
 			ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate;
-
 			(* Then add the parsed interval *)
 			variables_used_ref := StringSet.union !variables_used_ref (get_variables_in_parsed_interval parsed_interval)
+
+
+        (* Exists release with timing constraint *)
+        | Parsed_ER_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+        (* Exists until with timing constraint *)
+        | Parsed_EU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+        (* Exists weak until with timing constraint *)
+        | Parsed_EW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+        (* Always release with timing constraint *)
+        | Parsed_AR_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+        (* Always until with timing constraint *)
+        | Parsed_AU_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+        (* Always weak until with timing constraint *)
+        | Parsed_AW_timed (parsed_interval, parsed_state_predicate_phi, parsed_state_predicate_psi)
+            ->
+			(* First get the variables in the state predicates *)
+            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_phi;
+            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate_psi;
+			(* Then add the parsed interval *)
+			variables_used_ref := StringSet.union !variables_used_ref (get_variables_in_parsed_interval parsed_interval)
+
+
 
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
