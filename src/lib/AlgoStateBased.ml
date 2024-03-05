@@ -4226,28 +4226,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
+	(** Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private bfs_print_warnings_limit =
 		match termination_status with
-			| Some Result.Regular_termination -> ()
-
-			| Some (Result.Depth_limit nb_unexplored_successors) -> print_warning (
-				"The limit depth has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
-			)
-
-			| Some (Result.States_limit nb_unexplored_successors) -> print_warning (
-				"The limit number of states has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
-			)
-
-			| Some (Result.Time_limit nb_unexplored_successors) -> print_warning (
-				"The time limit has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore at this iteration."
-					(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
-			)
-
-			| Some (Result.Target_found) -> print_warning (
-				"A target state has been found. The exploration now stops, although there are still some unexplored states."
-			)
+			| Some termination_status -> ResultProcessor.print_warnings_of_termination_status termination_status;
 
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 

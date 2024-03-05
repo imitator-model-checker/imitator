@@ -261,6 +261,32 @@ let add_custom_details _ =
     else
         ""
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Print warning(s) if the limit of an exploration has been reached *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let print_warnings_of_termination_status (termination_status : Result.state_based_algorithm_termination) : unit =
+	match termination_status with
+		| Result.Regular_termination -> ()
+
+		| (Result.Depth_limit nb_unexplored_successors) -> print_warning (
+			"The maximum depth to explore has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+		)
+
+		| (Result.States_limit nb_unexplored_successors) -> print_warning (
+			"The maximum number of states to explore has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+		)
+
+		| (Result.Time_limit nb_unexplored_successors) -> print_warning (
+			"The maximum execution time for " ^ (Constants.program_name) ^ " has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+				(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
+		)
+
+		| (Result.Target_found) -> print_warning (
+			"A target state has been found. The exploration now stops, although there are still some unexplored states."
+		)
+
+
 (************************************************************)
 (* I/O functions *)
 (************************************************************)
