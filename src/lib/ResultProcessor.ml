@@ -75,18 +75,24 @@ let string_of_lu_status = function
 
 	
 
-let string_of_bfs_algorithm_termination = function
+let string_of_state_based_algorithm_termination (state_based_algorithm_termination : Result.state_based_algorithm_termination) =
+	let string_of_unexplored_successors (unexplored_successors : Result.unexplored_successors) =
+		match unexplored_successors with
+		| Unknown_number -> "some successor(s) unexplored"
+		| Number nb_unexplored_successors -> (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored"
+	in
+	match state_based_algorithm_termination with
 	(* Fixpoint-like termination *)
 	| Regular_termination -> "regular termination"
 	(* Termination due to time limit reached *)
-	| Time_limit nb_unexplored_successors -> "time limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	| Time_limit unexplored_successors -> "time limit (" ^ (string_of_unexplored_successors unexplored_successors) ^ ")"
 	(* Termination due to state space depth limit reached *)
-	| Depth_limit nb_unexplored_successors -> "depth limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	| Depth_limit unexplored_successors -> "depth limit (" ^ (string_of_unexplored_successors unexplored_successors) ^ ")"
 	(* Termination due to a number of explored states reached *)
-	| States_limit nb_unexplored_successors -> "states limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	| States_limit unexplored_successors -> "states limit (" ^ (string_of_unexplored_successors unexplored_successors) ^ ")"
 	(* Termination due to a target state found *)
 	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-	| Target_found -> "terminated after reaching a target state (some states may have been unexplored)"
+	| Witness_found -> "terminated after reaching a target state (some states may have been unexplored)"
 
 
 let string_of_bc_algorithm_termination = function
@@ -266,23 +272,26 @@ let add_custom_details _ =
 (** Print warning(s) if the limit of an exploration has been reached *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let print_warnings_of_termination_status (termination_status : Result.state_based_algorithm_termination) : unit =
+	let although_explore_of_unexplored_successors = function
+	| Unknown_number -> "although there were still some state(s) to explore."
+	| Number nb_unexplored_successors -> "although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+	in
 	match termination_status with
 		| Result.Regular_termination -> ()
 
-		| (Result.Depth_limit nb_unexplored_successors) -> print_warning (
-			"The maximum depth to explore has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+		| (Result.Depth_limit unexplored_successors) -> print_warning (
+			"The maximum depth to explore has been reached. The exploration now stops, " ^ (although_explore_of_unexplored_successors unexplored_successors)
 		)
 
-		| (Result.States_limit nb_unexplored_successors) -> print_warning (
-			"The maximum number of states to explore has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
+		| (Result.States_limit unexplored_successors) -> print_warning (
+			"The maximum number of states to explore has been reached. The exploration now stops, " ^ (although_explore_of_unexplored_successors unexplored_successors)
 		)
 
-		| (Result.Time_limit nb_unexplored_successors) -> print_warning (
-			"The maximum execution time for " ^ (Constants.program_name) ^ " has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore."
-				(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
+		| (Result.Time_limit unexplored_successors) -> print_warning (
+			"The maximum execution time for " ^ (Constants.program_name) ^ " has been reached. The exploration now stops, " ^ (although_explore_of_unexplored_successors unexplored_successors)
 		)
 
-		| (Result.Target_found) -> print_warning (
+		| (Result.Witness_found) -> print_warning (
 			"A target state has been found. The exploration now stops, although there are still some unexplored states."
 		)
 
@@ -360,7 +369,7 @@ let abstract_statespace_statistics abstract_state_space total_time =
 (* Return a string made of some information concerning the result *)
 let result_nature_statistics (soundness_str : string) termination (constraint_nature_str : string) =
 	    "Constraint soundness                    : " ^ soundness_str
-	^ "\nTermination                             : " ^ (string_of_bfs_algorithm_termination termination)
+	^ "\nTermination                             : " ^ (string_of_state_based_algorithm_termination termination)
 	^ "\nConstraint nature                       : " ^ constraint_nature_str
 
 (* Return a string made of some information concerning the result (for multiple_synthesis_result) *)

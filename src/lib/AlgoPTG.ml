@@ -557,7 +557,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			| None -> false
 		in
 
-		if time_out then termination_status <- Time_limit state_space#nb_states;
+		if time_out then termination_status <- Time_limit (Result.Number state_space#nb_states);
 
 		queue_empty || init_lost ||	init_exact || init_has_winning_witness || time_out
 

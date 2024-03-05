@@ -42,24 +42,29 @@ type error_type =
 (************************************************************)
 type nb_unexplored_successors = int
 
+type unexplored_successors =
+	| Unknown_number
+	| Number of nb_unexplored_successors
+	(*** TODO some day for selected algorithms ***)
+(* 	| List_of_indexes (state_index list) *)
+
 (** Termination for state-space based algorithms *)
 type state_based_algorithm_termination =
 	(* Fixpoint-like termination *)
 	| Regular_termination
 
 	(* Termination due to time limit reached *)
-	(*** TODO: list of state indexes instead of nb ??? ***)
-	| Time_limit of nb_unexplored_successors
+	| Time_limit of unexplored_successors
 	
 	(* Termination due to state space depth limit reached *)
-	| Depth_limit of nb_unexplored_successors
+	| Depth_limit of unexplored_successors
 	
 	(* Termination due to a number of explored states reached *)
-	| States_limit of nb_unexplored_successors
+	| States_limit of unexplored_successors
 	
 	(* Termination due to a target state found *)
 	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-	| Target_found
+	| Witness_found
 
 
 (** Termination for cartography algorithms *)

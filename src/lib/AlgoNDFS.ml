@@ -250,14 +250,14 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 	
 	method private set_termination () : unit =
 		(* For synthesis: we do not stop immediately *)
-		termination_status <- Some Target_found;
+		termination_status <- Some Witness_found;
 		()
 	
 	method private set_termination_if_synthesis () : unit =
 	(* For synthesis: we do not stop immediately *)
 		if (property.synthesis_type = Synthesis) then
 			termination_status <- Some Regular_termination
-		else termination_status <- Some Target_found;
+		else termination_status <- Some Witness_found;
 		()
 
 
@@ -560,13 +560,13 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 			| Keep_going (*when termination_status <> None*) -> ()
 
 			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (Hashtbl.length cyan)); execute_again <- false
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (Number (Hashtbl.length cyan))); execute_again <- false
 
 			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Some (Result.States_limit (Hashtbl.length cyan)) ; execute_again <- false
+			| States_limit_reached -> termination_status <- Some (Result.States_limit (Number (Hashtbl.length cyan))) ; execute_again <- false
 
 			(* Termination due to state space depth limit reached *)
-			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (Hashtbl.length cyan))
+			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (Number (Hashtbl.length cyan)))
 			
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
@@ -722,7 +722,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
-						else termination_status <- Some Target_found;
+						else termination_status <- Some Witness_found;
 						let pzone = self#find_or_compute_pzone astate in
 						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -766,7 +766,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 											(state_space#get_state astate));
 									self#print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
-								termination_status <- Some Target_found;
+								termination_status <- Some Witness_found;
 								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -828,7 +828,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
-						else termination_status <- Some Target_found;
+						else termination_status <- Some Witness_found;
 						let pzone = self#find_or_compute_pzone astate in
 						LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -875,7 +875,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
-								else termination_status <- Some Target_found;
+								else termination_status <- Some Witness_found;
 								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -949,7 +949,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
-								else termination_status <- Some Target_found;
+								else termination_status <- Some Witness_found;
 								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -998,7 +998,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
-										else termination_status <- Some Target_found;
+										else termination_status <- Some Witness_found;
 										let pzone = self#find_or_compute_pzone astate in
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -1075,7 +1075,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
-								else termination_status <- Some Target_found;
+								else termination_status <- Some Witness_found;
 								let pzone = self#find_or_compute_pzone astate in
 								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
@@ -1125,7 +1125,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
-										else termination_status <- Some Target_found;
+										else termination_status <- Some Witness_found;
 										let pzone = self#find_or_compute_pzone astate in
 										LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;

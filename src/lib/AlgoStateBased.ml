@@ -3075,7 +3075,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(* Update termination status *)
 			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int (List.length positive_examples)) ^ " is the maximum number sought. Terminating…");
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			termination_status <- Some Target_found;
+			termination_status <- Some Result.Witness_found;
 
 			raise TerminateAnalysis;
 		)else(
@@ -4150,7 +4150,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";
-			termination_status <- Some Target_found;
+			termination_status <- Some Result.Witness_found;
 
 			raise TerminateAnalysis;
 		)
@@ -4186,38 +4186,19 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private check_and_update_queue_bfs_limit =
 		(* Check all limits *)
-
-		(* Depth limit *)
 		try(
-		(* States limit *)
-		begin
-		match options#states_limit with
-			| None -> ()
-			| Some limit -> if state_space#nb_states > limit then(
-(* 				termination_status <- States_limit; *)
-				raise (LimitDetectedException States_limit_reached)
-			)
-		end
-		;
-		(* Time limit *)
-		begin
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if time_from start_time > (float_of_int limit) then(
-(* 				termination_status <- Time_limit; *)
-				raise (LimitDetectedException Time_limit_reached)
-			)
-		end
-		;
-		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
-		begin
-		match patator_termination_function with
-			| None -> ()
-			| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
-		end
-		;
-		(* If reached here, then everything is fine: keep going *)
-		()
+		(* Check all standard limits *)
+			check_limits options None (Some state_space#nb_states) (Some start_time);
+
+			(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+			begin
+			match patator_termination_function with
+				| None -> ()
+				| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+			end
+			;
+			(* If reached here, then everything is fine: keep going *)
+			()
 		)
 		(* If exception caught, then update termination status, and return the reason *)
 		with LimitDetectedException reason ->
@@ -4960,13 +4941,13 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| Keep_going (*when termination_status <> None*) -> ()
 
 			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (Number nb_unexplored_successors))
 
 			(* Termination due to state space depth limit reached *)
 			| Depth_limit_reached -> raise (InternalError("A depth limit should not be met in Queue-based BFS"))
 
 			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit (Number nb_unexplored_successors))
 
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
@@ -5187,13 +5168,13 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| Keep_going (*when termination_status <> None*) -> ()
 
 			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (Number nb_unexplored_successors))
 
 			(* Termination due to state space depth limit reached *)
-			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit nb_unexplored_successors)
+			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (Number nb_unexplored_successors))
 
 			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit (Number nb_unexplored_successors))
 
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)

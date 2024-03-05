@@ -85,6 +85,9 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
+		(* First check limits, which may raise exceptions *)
+		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
+
 		(* Get state *)
 		let symbolic_state : State.state = state_space#get_state state_index in
 
@@ -333,7 +336,31 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		parameters_consistent_with_init <- LinearConstraint.px_hide_nonparameters_and_collapse initial_px_constraint;
 
 		(* Main call to the AF dedicated function *)
-		synthesized_constraint <- self#au_rec init_state_index [];
+		begin
+		try(
+			synthesized_constraint <- self#au_rec init_state_index [];
+		) with AlgoStateBased.LimitDetectedException reason ->
+		match reason with
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Result.Time_limit Result.Unknown_number
+
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> termination_status <- Result.Depth_limit Result.Unknown_number
+
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Result.States_limit Result.Unknown_number
+
+			| _ -> ()
+(*
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+
+
+			(* Termination because a witness has been found *)
+			(*** NOTE/TODO: add a new result termination type? ***)
+			| Witness_found -> termination_status <- Some (Result.Regular_termination)*)
+
+		end;
 
 		(* Return the result *)
 		self#compute_result;
