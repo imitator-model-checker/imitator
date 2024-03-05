@@ -37,7 +37,7 @@ type unexplored_successors =
 
 
 (*** NOTE: made public only because used in AlgoEFOptQueue ***)
-type bfs_limit_reached =
+type exploration_limit_reached =
 	(* No limit *)
 	| Keep_going
 
@@ -53,6 +53,8 @@ type bfs_limit_reached =
 	(* Termination because a witness has been found *)
 	| Witness_found
 
+
+exception LimitDetectedException of exploration_limit_reached
 
 (************************************************************)
 (* Statistics *)
@@ -244,7 +246,7 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 
 		(** Variable to remain of the termination *)
 		(*** NOTE: public only for AlgoEFoptQueue ***)
-		val mutable limit_reached : bfs_limit_reached
+		val mutable limit_reached : exploration_limit_reached
 
 		(** Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
 		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint

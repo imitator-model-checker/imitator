@@ -2656,7 +2656,7 @@ type unexplored_successors =
 (************************************************************)
 (************************************************************)
 
-type bfs_limit_reached =
+type exploration_limit_reached =
 	(* No limit *)
 	| Keep_going
 
@@ -2673,7 +2673,7 @@ type bfs_limit_reached =
 	| Witness_found
 
 
-exception BFS_Limit_detected of bfs_limit_reached
+exception LimitDetectedException of exploration_limit_reached
 
 
 (*GIA**)
@@ -4126,7 +4126,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| None -> ()
 			| Some limit -> if bfs_current_depth >= limit then(
 (* 				termination_status <- Depth_limit; *)
-				raise (BFS_Limit_detected Depth_limit_reached)
+				raise (LimitDetectedException Depth_limit_reached)
 			)
 		end
 		;
@@ -4136,7 +4136,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| None -> ()
 			| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
-				raise (BFS_Limit_detected States_limit_reached)
+				raise (LimitDetectedException States_limit_reached)
 			)
 		end
 		;
@@ -4146,7 +4146,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| None -> ()
 			| Some limit -> if time_from start_time > (float_of_int limit) then(
 (* 				termination_status <- Time_limit; *)
-				raise (BFS_Limit_detected Time_limit_reached)
+				raise (LimitDetectedException Time_limit_reached)
 			)
 		end
 		;
@@ -4161,7 +4161,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		()
 		)
 		(* If exception caught, then update termination status *)
-		with BFS_Limit_detected reason ->
+		with LimitDetectedException reason ->
 			limit_reached <- reason
 
 
@@ -4180,7 +4180,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| None -> ()
 			| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
-				raise (BFS_Limit_detected States_limit_reached)
+				raise (LimitDetectedException States_limit_reached)
 			)
 		end
 		;
@@ -4190,7 +4190,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			| None -> ()
 			| Some limit -> if time_from start_time > (float_of_int limit) then(
 (* 				termination_status <- Time_limit; *)
-				raise (BFS_Limit_detected Time_limit_reached)
+				raise (LimitDetectedException Time_limit_reached)
 			)
 		end
 		;
@@ -4205,7 +4205,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		()
 		)
 		(* If exception caught, then update termination status, and return the reason *)
-		with BFS_Limit_detected reason ->
+		with LimitDetectedException reason ->
 			limit_reached <- reason
 
 

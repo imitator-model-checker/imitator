@@ -34,12 +34,6 @@ open State
 (************************************************************)
 (************************************************************)
 
-(************************************************************)
-(** Exception for NDFS *)
-(************************************************************)
-exception DFS_Limit_detected of bfs_limit_reached
-
-
 
 (************************************************************)
 (* Type *)
@@ -163,7 +157,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 		| None -> ()
 		| Some limit -> if state_space#nb_states > limit then(
 (* 				termination_status <- States_limit; *)
-			raise (DFS_Limit_detected States_limit_reached)
+			raise (AlgoStateBased.LimitDetectedException States_limit_reached)
 		)
 	end
 	;
@@ -173,7 +167,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 		| None -> ()
 		| Some limit -> if time_from start_time > (float_of_int limit) then(
 (* 				termination_status <- Time_limit; *)
-			raise (DFS_Limit_detected Time_limit_reached)
+			raise (AlgoStateBased.LimitDetectedException Time_limit_reached)
 		)
 	end
 	;
@@ -181,7 +175,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 	()
 	)
 	(* If exception caught, then update termination status, and return the reason *)
-	with DFS_Limit_detected reason ->
+	with AlgoStateBased.LimitDetectedException reason ->
 		limit_reached <- reason
 
 
