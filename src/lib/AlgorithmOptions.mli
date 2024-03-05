@@ -39,4 +39,8 @@ val text_of_property			: AbstractProperty.abstract_property -> string
 val v0_option_of_property       : AbstractProperty.abstract_property -> AbstractModel.v0 option
 
 (** Get the list of state predicates defined in a property (or [] if none) *)
-val state_predicates_of_property : AbstractProperty.abstract_property -> AbstractProperty.state_predicate list
+(*** NOTE: unused so far ***)
+(* val state_predicates_of_property : AbstractProperty.abstract_property -> AbstractProperty.state_predicate list *)
+
+(** Get the list of accepting state predicates defined in a property (or [] if none) *)
+val accepting_state_predicates_of_property : AbstractProperty.abstract_property -> AbstractProperty.state_predicate list

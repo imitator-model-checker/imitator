@@ -1057,7 +1057,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		| Some property ->
 			
 			(* Try to get the state predicate*)
-			let state_predicate_list : state_predicate list = AlgorithmOptions.state_predicates_of_property property in
+			let state_predicate_list : state_predicate list = AlgorithmOptions.accepting_state_predicates_of_property property in
 
 			(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
 			List.exists (fun state_predicate ->

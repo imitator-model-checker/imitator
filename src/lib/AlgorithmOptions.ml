@@ -1339,8 +1339,9 @@ let v0_option_of_property property : AbstractModel.v0 option =
 		-> Some v0
 
 
-(************************************************************)
+(*(************************************************************)
 (** Get the list of state predicates defined in a property (or [] if none) *)
+(*** NOTE: unused so far ***)
 (************************************************************)
 let state_predicates_of_property property : AbstractProperty.state_predicate list =
 	match property.property with
@@ -1373,6 +1374,63 @@ let state_predicates_of_property property : AbstractProperty.state_predicate lis
 	| AU_timed (_, state_predicate_1, state_predicate_2)
 	| AW_timed (_, state_predicate_1, state_predicate_2)
 		-> [state_predicate_1; state_predicate_2]
+
+	| Cycle_through_generalized state_predicate_list
+		-> state_predicate_list
+
+	| Valid
+
+	| NZ_Cycle
+	| Deadlock_Freeness
+	| IM _
+	| ConvexIM _
+	| IMK _
+	| IMunion _
+
+	| Cover_cartography _
+	| Learning_cartography _
+	| Shuffle_cartography _
+	| Border_cartography _
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC _
+
+		-> []*)
+
+(************************************************************)
+(** Get the list of **accepting** state predicates defined in a property (or [] if none) *)
+(************************************************************)
+let accepting_state_predicates_of_property property : AbstractProperty.state_predicate list =
+	match property.property with
+	| EF state_predicate
+	| AGnot state_predicate
+	| AG state_predicate
+	| AF state_predicate
+	| EFpmin (state_predicate , _)
+	| EFpmax (state_predicate , _)
+	| EFtmin state_predicate
+	| EF_timed (_, state_predicate)
+	| AF_timed (_, state_predicate)
+
+	| Cycle_through state_predicate
+	| PRP (state_predicate, _)
+	| Win (state_predicate)
+		-> [state_predicate]
+
+	| ER (_, state_predicate_2)
+	| EU (_, state_predicate_2)
+	| EW (_, state_predicate_2)
+	| AR (_, state_predicate_2)
+	| AU (_, state_predicate_2)
+	| AW (_, state_predicate_2)
+
+	| ER_timed (_, _, state_predicate_2)
+	| EU_timed (_, _, state_predicate_2)
+	| EW_timed (_, _, state_predicate_2)
+	| AR_timed (_, _, state_predicate_2)
+	| AU_timed (_, _, state_predicate_2)
+	| AW_timed (_, _, state_predicate_2)
+		-> [state_predicate_2]
 
 	| Cycle_through_generalized state_predicate_list
 		-> state_predicate_list
