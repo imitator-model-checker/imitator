@@ -49,6 +49,26 @@ exception Unsat_exception
 (* exception Division_by_0_while_evaluating_discrete *)
 
 
+type exploration_limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit_reached
+
+	(* Termination due to a number of explored states reached *)
+	| States_limit_reached
+
+	(* Termination because a witness has been found *)
+	| Witness_found
+
+
+exception LimitDetectedException of exploration_limit_reached
+
+
 (************************************************************)
 (* Local type *)
 (************************************************************)
@@ -2424,6 +2444,47 @@ let reconstruct_counterexample (model : AbstractModel.abstract_model) (state_spa
 	concrete_run_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
 
+
+
+
+(*------------------------------------------------------------*)
+(** Check if any limit is reached, and raises the necessary exception. Type `option` are used for algorithms which might not encode all such data. *)
+(*------------------------------------------------------------*)
+let check_limits (options : Options.imitator_options) (current_depth_option : int option) (current_nb_states_option : int option) (start_time_option : float option)  : unit =
+	(* Depth limit *)
+	begin
+	match options#depth_limit, current_depth_option with
+		| Some limit, Some current_depth ->
+			if current_depth >= limit then(
+				raise (LimitDetectedException Depth_limit_reached)
+			)
+		| _ -> ()
+	end
+	;
+	(* States limit *)
+	begin
+	match options#states_limit, current_nb_states_option with
+		| Some limit, Some current_nb_states -> if current_nb_states > limit then(
+			raise (LimitDetectedException States_limit_reached)
+		)
+		| _ -> ()
+	end
+	;
+	(* Time limit *)
+	begin
+	match options#time_limit, start_time_option with
+		| Some limit, Some start_time ->
+			if time_from start_time > (float_of_int limit) then(
+				raise (LimitDetectedException Time_limit_reached)
+			)
+		| _ -> ()
+	end
+	;
+	()
+
+
+
+
 (************************************************************)
 (* Class-independent functions on constraints *)
 (************************************************************)
@@ -2635,6 +2696,8 @@ let intersect_with_timed_interval_constraint_option  (model : AbstractModel.abst
 
 
 
+
+
 (************************************************************)
 (************************************************************)
 (* Types *)
@@ -2655,25 +2718,6 @@ type unexplored_successors =
 (* Types and exceptions for layer-based BFS *)
 (************************************************************)
 (************************************************************)
-
-type exploration_limit_reached =
-	(* No limit *)
-	| Keep_going
-
-	(* Termination due to time limit reached *)
-	| Time_limit_reached
-
-	(* Termination due to state space depth limit reached *)
-	| Depth_limit_reached
-
-	(* Termination due to a number of explored states reached *)
-	| States_limit_reached
-
-	(* Termination because a witness has been found *)
-	| Witness_found
-
-
-exception LimitDetectedException of exploration_limit_reached
 
 
 (*GIA**)
@@ -4116,49 +4160,20 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private check_and_update_layer_bfs_limit =
-		(* Check all limits *)
-
-		(* Depth limit *)
+	method private check_and_update_layer_bfs_limit : unit =
 		try(
-		begin
-		match options#depth_limit with
-			| None -> ()
-			| Some limit -> if bfs_current_depth >= limit then(
-(* 				termination_status <- Depth_limit; *)
-				raise (LimitDetectedException Depth_limit_reached)
-			)
-		end
-		;
-		(* States limit *)
-		begin
-		match options#states_limit with
-			| None -> ()
-			| Some limit -> if state_space#nb_states > limit then(
-(* 				termination_status <- States_limit; *)
-				raise (LimitDetectedException States_limit_reached)
-			)
-		end
-		;
-		(* Time limit *)
-		begin
-		match options#time_limit with
-			| None -> ()
-			| Some limit -> if time_from start_time > (float_of_int limit) then(
-(* 				termination_status <- Time_limit; *)
-				raise (LimitDetectedException Time_limit_reached)
-			)
-		end
-		;
-		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
-		begin
-		match patator_termination_function with
-			| None -> ()
-			| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
-		end
-		;
-		(* If reached here, then everything is fine: keep going *)
-		()
+			(* Check all standard limits *)
+			check_limits options (Some bfs_current_depth) (Some state_space#nb_states) (Some start_time);
+
+			(* Check the distributed PaTATOR specific external function (would raise an exception in case of stop needed) *)
+			begin
+			match patator_termination_function with
+				| None -> ()
+				| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+			end
+			;
+			(* If reached here, then everything is fine: keep going *)
+			()
 		)
 		(* If exception caught, then update termination status *)
 		with LimitDetectedException reason ->
@@ -4213,7 +4228,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private bfs_print_warnings_limit () =
+	method private bfs_print_warnings_limit =
 		match termination_status with
 			| Some Result.Regular_termination -> ()
 
@@ -4978,7 +4993,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(* Print some information *)
 		(*** NOTE: must be done after setting the limit (above) ***)
-		self#bfs_print_warnings_limit ();
+		self#bfs_print_warnings_limit;
 
 		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
@@ -5205,7 +5220,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(* Print some information *)
 		(*** NOTE: must be done after setting the limit (above) ***)
-		self#bfs_print_warnings_limit ();
+		self#bfs_print_warnings_limit;
 
 		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");

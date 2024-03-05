@@ -151,28 +151,7 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 	method private check_and_update_queue_dfs_limit =
 
 	try(
-	(* States limit *)
-	begin
-	match options#states_limit with
-		| None -> ()
-		| Some limit -> if state_space#nb_states > limit then(
-(* 				termination_status <- States_limit; *)
-			raise (AlgoStateBased.LimitDetectedException States_limit_reached)
-		)
-	end
-	;
-	(* Time limit *)
-	begin
-	match options#time_limit with
-		| None -> ()
-		| Some limit -> if time_from start_time > (float_of_int limit) then(
-(* 				termination_status <- Time_limit; *)
-			raise (AlgoStateBased.LimitDetectedException Time_limit_reached)
-		)
-	end
-	;
-	(* If reached here, then everything is fine: keep going *)
-	()
+		AlgoStateBased.check_limits options None (*** TODO? should be easy to encode the current depth? ***) (Some state_space#nb_states) (Some start_time)
 	)
 	(* If exception caught, then update termination status, and return the reason *)
 	with AlgoStateBased.LimitDetectedException reason ->
