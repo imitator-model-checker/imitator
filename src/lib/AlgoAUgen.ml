@@ -340,26 +340,25 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		try(
 			synthesized_constraint <- self#au_rec init_state_index [];
 		) with AlgoStateBased.LimitDetectedException reason ->
-		match reason with
-			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Result.Time_limit Result.Unknown_number
+			begin
+			match reason with
 
-			(* Termination due to state space depth limit reached *)
-			| Depth_limit_reached -> termination_status <- Result.Depth_limit Result.Unknown_number
+				(*** TODO: add warnings ***)
 
-			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Result.States_limit Result.Unknown_number
+				(* Termination due to time limit reached *)
+				| Time_limit_reached -> termination_status <- Result.Time_limit Result.Unknown_number
 
-			| _ -> ()
-(*
-			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
-			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+				(* Termination due to state space depth limit reached *)
+				| Depth_limit_reached -> termination_status <- Result.Depth_limit Result.Unknown_number
 
+				(* Termination due to a number of explored states reached *)
+				| States_limit_reached -> termination_status <- Result.States_limit Result.Unknown_number
 
-			(* Termination because a witness has been found *)
-			(*** NOTE/TODO: add a new result termination type? ***)
-			| Witness_found -> termination_status <- Some (Result.Regular_termination)*)
-
+				| Keep_going
+				| Witness_found
+					-> raise (InternalError "Keep_going or Witness_found cannot be passed as exception in AlgoAU")
+			end;
+			ResultProcessor.print_warnings_of_termination_status termination_status;
 		end;
 
 		(* Return the result *)
