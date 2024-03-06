@@ -334,9 +334,14 @@ let model_statistics (model : AbstractModel.abstract_model) =
 	^ "\nAverage transitions per IPTA            : " ^ (round1_float ((float_of_int model.nb_transitions) /. (float_of_int model.nb_automata)))
 
 
+let property_information (property : AbstractProperty.abstract_property) : string =
+	(* Create the statistics *)
+	    "Property                                : " ^ (AlgorithmOptions.text_of_property property)
+	^ ""
+
 
 (* Return a string made of some statistics for the state space *)
-let statespace_statistics (state_space : StateSpace.stateSpace) total_time =
+let statespace_statistics (state_space : StateSpace.stateSpace) total_time : string =
 	(* Speed: number of states computed and still in the state space *)
 	let nb_states = state_space#nb_states in
 	let states_per_second = (float_of_int nb_states) /. total_time in
@@ -506,7 +511,7 @@ let export_to_file_noresult (model : AbstractModel.abstract_model) file_name =
 
 
 (* Write a single_synthesis_result to the result file *)
-let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model) file_name (single_synthesis_result : Result.single_synthesis_result) =
+let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (file_name : string) (single_synthesis_result : Result.single_synthesis_result) : unit =
 	(* Start counter *)
 	counter#start;
 
@@ -529,19 +534,24 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 		^ "\n" ^ (model_statistics model)
 		^ "\n------------------------------------------------------------"
 
-		(* 3) The actual result with delimiters *)
+		(* 3) Property *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (property_information property)
+		^ "\n------------------------------------------------------------"
+
+		(* 4) The actual result with delimiters *)
 		^ (add_constraints_delimiters result_str)
-		
-		(* 4) Statistics about result *)
+
+		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics soundness_str single_synthesis_result.termination constraint_nature_str)
 		
-		(* 5) Statistics about state space *)
+		(* 6) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
 		^ "\n" ^ (statespace_statistics single_synthesis_result.state_space single_synthesis_result.computation_time)
 		^ "\n------------------------------------------------------------"
 		
-		(* 6) General statistics *)
+		(* 7) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 	in
@@ -1022,6 +1032,12 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 		| None -> raise (InternalError "The model should have been defined in process_result_generic")
 	in
 
+	(* Useful to get the property ONLY in cases when it is defined *)
+	let get_property_from_property_option = function
+		| Some property -> property
+		| None -> raise (InternalError "The property should have been defined in process_result_generic")
+	in
+
 	(* Define the file prefix for all outputs *)
 	let file_prefix = match prefix_option with
 		(* Use the user-defined prefix *)
@@ -1124,6 +1140,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 	| Single_synthesis_result result ->
 		(* The model must be defined at this point *)
 		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+		let property : AbstractProperty.abstract_property = get_property_from_property_option property_option in
 
 		(* First print the result on the terminal *)
 		print_single_synthesis_or_point_based_result model result.result result.computation_time result.constraint_description;
@@ -1131,7 +1148,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_single_synthesis_result model file_name result;
+			export_to_file_single_synthesis_result model property file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
