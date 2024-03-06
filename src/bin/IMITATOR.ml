@@ -628,7 +628,7 @@ match options#imitator_mode with
 		write_to_file target_language_file translated_model;
 		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
 
-		(* Create a file with some statistics on the origina model if requested *)
+		(* Create a file with some statistics on the original model if requested *)
 		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
 			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 			)) ) None;

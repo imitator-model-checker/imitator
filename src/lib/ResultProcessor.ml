@@ -334,10 +334,10 @@ let model_statistics (model : AbstractModel.abstract_model) =
 	^ "\nAverage transitions per IPTA            : " ^ (round1_float ((float_of_int model.nb_transitions) /. (float_of_int model.nb_automata)))
 
 
-let property_information (property : AbstractProperty.abstract_property) : string =
+let property_information (property : AbstractProperty.abstract_property) (algorithm_name : string) : string =
 	(* Create the statistics *)
 	    "Property                                : " ^ (AlgorithmOptions.text_of_property property)
-	^ ""
+	^ "\nAlgorithm                               : " ^ algorithm_name
 
 
 (* Return a string made of some statistics for the state space *)
@@ -511,7 +511,7 @@ let export_to_file_noresult (model : AbstractModel.abstract_model) file_name =
 
 
 (* Write a single_synthesis_result to the result file *)
-let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (file_name : string) (single_synthesis_result : Result.single_synthesis_result) : unit =
+let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (algorithm_name : string) (file_name : string) (single_synthesis_result : Result.single_synthesis_result) : unit =
 	(* Start counter *)
 	counter#start;
 
@@ -535,8 +535,8 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 		^ "\n------------------------------------------------------------"
 
 		(* 3) Property *)
-		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (property_information property)
+		^ "\n\n------------------------------------------------------------"
+		^ "\n" ^ (property_information property algorithm_name)
 		^ "\n------------------------------------------------------------"
 
 		(* 4) The actual result with delimiters *)
@@ -992,7 +992,7 @@ let print_single_synthesis_or_point_based_result (model : AbstractModel.abstract
 
 
 
-let process_single_synthesis_or_point_based_result (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) file_prefix algorithm_name result state_space computation_time =
+let process_single_synthesis_or_point_based_result (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) file_prefix (algorithm_name : string) result state_space computation_time =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -1148,7 +1148,7 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			export_to_file_single_synthesis_result model property file_name result;
+			export_to_file_single_synthesis_result model property algorithm_name file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);

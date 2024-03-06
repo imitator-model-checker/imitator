@@ -29,4 +29,3 @@ val process_result_and_terminate : AbstractModel.abstract_model -> Result.imitat
 
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate program with failure. *)
 val process_result_and_abort : Result.error_type -> string -> string option -> Statistics.timeCounter -> unit
-
