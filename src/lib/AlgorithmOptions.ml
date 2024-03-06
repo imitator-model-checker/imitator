@@ -28,7 +28,7 @@ open AbstractProperty
 (** Inclusion *)
 (*------------------------------------------------------------*)
 
-let default_state_comparison property : AbstractAlgorithm.state_comparison_operator =
+let default_state_comparison (property : AbstractProperty.abstract_property) : AbstractAlgorithm.state_comparison_operator =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Basic properties *)
@@ -410,7 +410,7 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 (** Merge *)
 (*------------------------------------------------------------*)
 
-let merge_needed property =
+let merge_needed (property : AbstractProperty.abstract_property) : bool =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Basic properties *)
@@ -594,7 +594,7 @@ let merge_needed property =
 (** Returns whether the property requires a global clock measuring the absolute time *)
 (*------------------------------------------------------------*)
 
-let needs_global_clock property =
+let needs_global_clock (property : AbstractProperty.abstract_property) : bool =
 	match property.property with
 	| Valid
 	| EF _
@@ -756,7 +756,7 @@ let needs_global_clock property =
 (** Does the property support the #witness mode? *)
 (*------------------------------------------------------------*)
 
-let supports_witness property =
+let supports_witness (property : AbstractProperty.abstract_property) : bool =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Basic properties *)
@@ -931,7 +931,7 @@ let supports_witness property =
 (*------------------------------------------------------------*)
 (** Is the "cumulative pruning" option relevant for this property? *)
 (*------------------------------------------------------------*)
-let supports_cumulative_pruning property =
+let supports_cumulative_pruning (property : AbstractProperty.abstract_property) : bool =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Basic properties *)
@@ -1049,7 +1049,7 @@ let supports_cumulative_pruning property =
 (** Does the property support the #exemplification mode? *)
 (*------------------------------------------------------------*)
 
-let supports_exemplification property =
+let supports_exemplification (property : AbstractProperty.abstract_property) : bool =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Basic properties *)
@@ -1098,7 +1098,7 @@ let supports_exemplification property =
 
 
 (*------------------------------------------------------------*)
-let is_cartography property =
+let is_cartography (property : AbstractProperty.abstract_property) : bool =
 (*------------------------------------------------------------*)
 	match property.property with
 	| Cover_cartography _
@@ -1118,7 +1118,7 @@ let is_cartography property =
 (************************************************************)
 
 (** Gives a textual description of a property *)
-let text_of_property property =
+let text_of_property (property : AbstractProperty.abstract_property) : string =
 	let synthesis_or_witness = match property.synthesis_type with
 		| Exemplification	-> "exemplification"
 		| Synthesis			-> "synthesis"
@@ -1288,7 +1288,7 @@ let text_of_property property =
 (************************************************************)
 (** Get the v0 of a property, if any *)
 (************************************************************)
-let v0_option_of_property property : AbstractModel.v0 option =
+let v0_option_of_property (property : AbstractProperty.abstract_property) : AbstractModel.v0 option =
 	match property.property with
 	| Valid
 
@@ -1400,7 +1400,7 @@ let state_predicates_of_property property : AbstractProperty.state_predicate lis
 (************************************************************)
 (** Get the list of **accepting** state predicates defined in a property (or [] if none) *)
 (************************************************************)
-let accepting_state_predicates_of_property property : AbstractProperty.state_predicate list =
+let accepting_state_predicates_of_property (property : AbstractProperty.abstract_property) : AbstractProperty.state_predicate list =
 	match property.property with
 	| EF state_predicate
 	| AGnot state_predicate
