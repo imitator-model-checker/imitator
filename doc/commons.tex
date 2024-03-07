@@ -408,6 +408,8 @@
 \definecolor{filecontentcolor}{rgb}{.1, .4, .2}
 \newcommand{\styleFileContent}[1]{\textcolor{filecontentcolor}{\texttt{#1}}}
 
+\newcommand{\styleTCTL}[1]{\ensuremath{\mathsf{#1}}}
+
 \newcommand{\GitHubIMI}{\href{https://github.com/imitator-model-checker/imitator}{GitHub}}
 
 % \newcommand{\styleCommand}[1]{
@@ -603,7 +605,22 @@
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
   keywordstyle=\bfseries\color{keywordscolor},       % keyword style
 %   language=caml,                 % the language of the code
-  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, before, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime, eventually, happened, has, IM, loc, next, once, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  morekeywords={%
+	A, accepting, AF, AF_, AGnot, always,
+	BCcover, BCrandom, BCshuffle, before,
+	Cycle, CycleThrough,
+	DeadlockFree,
+	E, EF, EF_, EFpmin, EFpmax, EFtmin, everytime, eventually,
+	happened, has,
+	IM, infinity,
+	loc,
+	next,
+	once,
+	pattern, PRP, PRPC, property,
+	R, R_,
+	sequence, synth,
+	U, U_,
+	W, W_, within, witness},            % if you want to add more keywords to the set
   numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 %   numbersep=5pt,                   % how far the line-numbers are from the code
 %   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers

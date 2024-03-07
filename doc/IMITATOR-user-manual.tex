@@ -2069,13 +2069,13 @@ While all properties implement synthesis, not all of them implement emptiness; a
 In the following, we now describe the algorithms implemented in \imitator{}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Reachability (EF)}\label{section:algorithm:EFsynth}
+\section{Reachability (\styleTCTL{EF})}\label{section:algorithm:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
 
 The property syntax is as follows:\footnote{%
-	\imitator{} uses the TCTL syntax, where EF notably denotes reachability.
+	\imitator{} uses the TCTL syntax, where \styleTCTL{EF} notably denotes reachability.
 }
 
 \begin{IMITATORproperty}
@@ -2089,7 +2089,7 @@ State predicates allow conjunction, disjunction and the use of global discrete v
 
 
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
-Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
+Of course, the \styleTCTL{EF}-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
@@ -2151,7 +2151,7 @@ property := #synth EF(loc[pta] = l1 | (accepting & loc[pta] <> l2));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Safety (AGnot)}\label{section:algorithm:AGnot}
+\section{Safety (\styleTCTL{AGnot})}\label{section:algorithm:AGnot}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
@@ -2166,7 +2166,7 @@ Internally, this algorithm works exactly the same as the reachability-synthesis,
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Global invariant (AG)}\label{section:algorithm:AG}
+\section{Global invariant (\styleTCTL{AG})}\label{section:algorithm:AG}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Global invariant synthesis aims at synthesizing valuations for which the state predicate is true in any reachable state of the system.
@@ -2183,7 +2183,7 @@ Internally, this algorithm is implemented exactly as the safety-synthesis, where
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-minimization}\label{section:algorithm:EFmin}
+\section{\styleTCTL{EF}-minimization}\label{section:algorithm:EFmin}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
@@ -2201,7 +2201,7 @@ where \styleIMI{p} is the parameter the value of which must be minimized.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-maximization}\label{section:algorithm:EFmax}
+\section{\styleTCTL{EF}-maximization}\label{section:algorithm:EFmax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm is the dual of EF-minimization (see \cref{section:algorithm:EFmin}).
@@ -2214,7 +2214,7 @@ property := #synth EFpmax(state_predicate, p);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF with minimal time reachability}\label{section:algorithm:EFopt}
+\section{Minimal time reachability}\label{section:algorithm:EFopt}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the parameter valuations for which a given location is reachable in minimal time~\cite{ABPV19}.
@@ -2233,7 +2233,7 @@ This algorithm requires a clock named \styleIMI{global\_time} to be defined in t
 
 \begin{becareful}
 	This algorithm is not handling properly the strict inequalities; the result may therefore contain some ``hard-coded $\epsilon$'', creating a possibly strange looking constraint.
-	(Refactoring this part, \eg{} in the way EF-minimization and EF-maximization are handled, is on our todo-list.)
+	(Refactoring this part, \eg{} in the way \styleTCTL{EF}-minimization and \styleTCTL{EF}-maximization are handled, is on our todo-list.)
 \end{becareful}
 
 \emph{The maximum time reachability is currently not implemented.}
@@ -2243,7 +2243,7 @@ This algorithm requires a clock named \styleIMI{global\_time} to be defined in t
 \section{Exists-until-synthesis}\label{section:algorithm:EU}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Exists-until (``EU'' in CTL) denotes that a state predicate holds \emph{until} another state predicate holds.
+Exists-until (``\styleTCTL{EU}'' in CTL) denotes that a state predicate holds \emph{until} another state predicate holds.
 The second state predicate must eventually hold, and might even hold from the first state, in which case the first state predicate does not need to hold.
 
 The property syntax is as follows:
@@ -2252,25 +2252,25 @@ The property syntax is as follows:
 property := #synth E (state_predicate) U (state_predicate);
 \end{IMITATORproperty}
 
-Most remarks for EF (see \cref{section:algorithm:EFsynth}) also hold for EU.
+Most remarks for \styleTCTL{EF} (see \cref{section:algorithm:EFsynth}) also hold for~\styleTCTL{EU}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Unavoidability synthesis: AF, AU, AW}\label{section:algorithm:AF}
+\section{Unavoidability synthesis: \styleTCTL{AF}, \styleTCTL{AU}, \styleTCTL{AR}, \styleTCTL{AW}}\label{section:algorithm:AF}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Unavoidability synthesis denotes that a state is always eventually reachable (for all paths).
 It comes in four flavors in \imitator{}:
 \begin{enumerate}
-	\item Unavoidability-synthesis (``AF'' in CTL), where a state predicate must always eventually hold;
-	\item Always-release-synthesis (``AR'' in CTL), where a first state predicate must always eventually release a second state predicate;
-	\item Always-until-synthesis (``AU'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds;
-	\item Always-weak-until-synthesis (``AW'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds---unless the first one holds forever.
+	\item Unavoidability-synthesis (``\styleTCTL{AF}'' in CTL), where a state predicate must always eventually hold;
+	\item Always-release-synthesis (``\styleTCTL{AR}'' in CTL), where a first state predicate must always eventually release a second state predicate;
+	\item Always-until-synthesis (``\styleTCTL{AU}'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds;
+	\item Always-weak-until-synthesis (``\styleTCTL{AW}'' in CTL), where a first state predicate must hold until a second state predicate always eventually holds---unless the first one holds forever.
 \end{enumerate}
 
-Except for~AR, note that if the second state predicate holds from the first state, the first state predicate does not need to hold.
+Except for~\styleTCTL{AR}, note that if the second state predicate holds from the first state, the first state predicate does not need to hold.
 
-Also note that $A \varphi R \psi$ is directly implemented as $A \psi W (\varphi \land \psi)$.
+Also note that $\styleTCTL{A} \varphi \styleTCTL{R} \psi$ is directly implemented as $\styleTCTL{A} \psi \styleTCTL{W} (\varphi \land \psi)$.
 
 The property syntax is as follows:
 
@@ -2282,6 +2282,30 @@ property := #synth A (state_predicate) W (state_predicate);
 \end{IMITATORproperty}
 
 These algorithms work recursively using a depth-first search (DFS), as formalized in~\cite{JLR15}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Timed CTL}\label{section:algorithm:timedCTL}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Most of the flat timed TCTL operators can be indexed with a (unique) timed interval, possibly open, and possibly open towards infinity.
+Parameters can be used in the timed intervals.
+The list of supported CTL operators allowing timed indexes is:
+\begin{itemize}
+	\item \styleTCTL{EF}, \styleTCTL{EU}
+	\item \styleTCTL{AF}, \styleTCTL{AR}, \styleTCTL{AU}, \styleTCTL{AW}
+\end{itemize}
+
+Some examples of the supported syntax are:
+
+\begin{IMITATORproperty}
+property := #synth AF_[2, infinity) (state_predicate);
+property := #synth A (state_predicate) R_[2, 3] (state_predicate);
+property := #synth E (state_predicate) U_(1, p + 1] (state_predicate);
+property := #synth A (state_predicate) W_[-p, p] (state_predicate);
+\end{IMITATORproperty}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

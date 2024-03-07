@@ -4,11 +4,15 @@
 ## release 3.4 (202x-xx-xx) Cheese Durian
 
 ### Major features
-* Updates are now fully sequential in the model, including clock updates; WARNING: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
+* Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
 * New AG ("global invariant") algorithm
 * New EU ("Exists … until") algorithm
-* New AF ("always eventually") algorithm, and variants AU ("always … until") and AW ("always … weak until")
+* New AF ("always eventually") algorithm, and variants:
+	- AR ("always … release")
+	- AU ("always … until")
+	- AW ("always … weak until")
+* New timed variants of EF, EU, AF, AR, AU, AW
 
 ### Syntax improvement
 * The Boolean implication (`a => b`) is now allowed both in the model and in the property.
