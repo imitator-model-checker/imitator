@@ -51,7 +51,7 @@ rule token = parse
 	| "AccLoop"        { CT_ACCEPTINGCYCLE }
 	| "AcceptingLoop"  { CT_ACCEPTINGCYCLE }
 	| "AF"             { CT_AF }
-	| "AF_timed"       { CT_AF_timed }
+	| "AF_"            { CT_AF_timed }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }
