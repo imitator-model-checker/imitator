@@ -1,0 +1,1 @@
+property := #synth AF_[2,10)(accepting);

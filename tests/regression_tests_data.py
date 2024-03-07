@@ -8894,6 +8894,249 @@ Number of transitions                   : 3
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
+	# BEGIN : Test timed AF/AU
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: untimed property',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [0, infinity)',
+		'tags'       : 'semantic,AF,optimization',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'basic-properties/synth-AF-accepting-0-infinity.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+			# NOTE: check that AF_[0, infinity) means AF
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+Property                                : unavoidability synthesis
+Algorithm                               : AF
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [0, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-0-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [2, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property (2, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-open-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [2, 10)',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-10-open.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [10, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-10-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: parametric timed property [p, p]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-p-p.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: parametric timed property [p, p+1]',
+		'tags'       : 'semantic,AF,negativeparameter',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-p-p-plus-11.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+ p + 1 >= 0
+& 2 >= p
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test timed AF/AU
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
 		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
