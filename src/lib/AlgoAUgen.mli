@@ -100,11 +100,28 @@ class algoAU : AbstractModel.abstract_model -> AbstractProperty.abstract_propert
 		(*------------------------------------------------------------*)
 		method algorithm_name : string
 
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+end
+
+(************************************************************)
+(* Class definition: AU (timed) *)
+(************************************************************)
+class algoAUtimed : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval ->
+	object inherit algoAUgen
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
 
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-
 end
 
 
@@ -123,9 +140,29 @@ class algoAW : AbstractModel.abstract_model -> AbstractProperty.abstract_propert
 		(*------------------------------------------------------------*)
 		method algorithm_name : string
 
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+end
+
+
+(************************************************************)
+(* Class definition: AW (timed) *)
+(************************************************************)
+class algoAWtimed : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval ->
+	object inherit algoAUgen
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
 
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-
 end
+
+

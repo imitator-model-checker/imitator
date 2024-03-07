@@ -409,39 +409,13 @@ end;;
 (************************************************************)
 (************************************************************)
 
-
-
-(************************************************************)
-(************************************************************)
-(* Class definition: AF (generic for timed AF and AF) *)
-(************************************************************)
-(************************************************************)
-class virtual algoAF_timed_or_untimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAUgen model property options false None state_predicate None (*as super*)
-
-
-	(************************************************************)
-	(* Class variables *)
-	(************************************************************)
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Name of the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-
-(************************************************************)
-(************************************************************)
-end;;
-(************************************************************)
-(************************************************************)
-
 (************************************************************)
 (************************************************************)
 (* Class definition: AF *)
 (************************************************************)
 (************************************************************)
 class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoAF_timed_or_untimed model property options state_predicate (*as super*)
+	object (*(self)*) inherit algoAUgen model property options false None state_predicate None (*as super*)
 
 
 	(************************************************************)
@@ -463,10 +437,9 @@ end;;
 
 (************************************************************)
 (************************************************************)
-(* Class definition: AF *)
+(* Class definition: AF (timed) *)
 (************************************************************)
 (************************************************************)
-(*** TODO ***)
 class algoAFtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
 	object (*(self)*) inherit algoAUgen model property options false None state_predicate (Some timed_interval) (*as super*)
 
@@ -517,6 +490,33 @@ end;;
 
 (************************************************************)
 (************************************************************)
+(* Class definition: AU (timed) *)
+(************************************************************)
+(************************************************************)
+class algoAUtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
+	object (*(self)*) inherit algoAUgen model property options false (Some state_predicate_phi) state_predicate_psi (Some timed_interval) (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AU (timed)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
 (* Class definition: AW *)
 (************************************************************)
 (************************************************************)
@@ -539,3 +539,31 @@ class algoAW (model : AbstractModel.abstract_model) (property : AbstractProperty
 end;;
 (************************************************************)
 (************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AW (timed) *)
+(************************************************************)
+(************************************************************)
+class algoAWtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
+	object (*(self)*) inherit algoAUgen model property options true (Some state_predicate_phi) state_predicate_psi (Some timed_interval) (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AW (timed)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+

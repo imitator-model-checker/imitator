@@ -806,7 +806,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(*** NOTE: implemented as A phi R psi === A psi W (phi ∧ psi) ***)
 			| AR (state_predicate_phi, state_predicate_psi) ->
-				print_message Verbose_standard "The `A phi R psi` formula is translated into `A psi R (phi and psi)`.";
+				print_message Verbose_standard "The formula `A phi R psi` is translated into `A psi W (phi and psi)`.";
 				let phi_and_psi : state_predicate = State_predicate_term (State_predicate_term_AND
 					(State_predicate_factor (State_predicate state_predicate_phi)
 					,
@@ -861,17 +861,26 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Always release with timing constraint *)
 			(************************************************************)
-			| AR_timed  _ -> raise (NotImplemented "timed AR")
+			| AR_timed (timed_interval, state_predicate_phi, state_predicate_psi) ->
+				print_message Verbose_standard "The formula `A phi R psi` is translated into `A psi W (phi and psi)`.";
+				let phi_and_psi : state_predicate = State_predicate_term (State_predicate_term_AND
+					(State_predicate_factor (State_predicate state_predicate_phi)
+					,
+					State_predicate_factor (State_predicate state_predicate_psi))
+				) in
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAWtimed model property options state_predicate_psi phi_and_psi timed_interval in myalgo
 
 			(************************************************************)
 			(* Always until with timing constraint *)
 			(************************************************************)
-			| AU_timed  _ -> raise (NotImplemented "timed AU")
+			| AU_timed (timed_interval, state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAUtimed model property options state_predicate_phi state_predicate_psi timed_interval in myalgo
 
 			(************************************************************)
 			(* Always weak until with timing constraint *)
 			(************************************************************)
-			| AW_timed  _ -> raise (NotImplemented "timed AW")
+			| AW_timed (timed_interval, state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAWtimed model property options state_predicate_phi state_predicate_psi timed_interval in myalgo
 
 
 
