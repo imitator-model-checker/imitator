@@ -855,7 +855,8 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Unavoidability with timing constraint *)
 			(************************************************************)
-			| AF_timed  _ -> raise (NotImplemented "timed AF")
+			| AF_timed (timed_interval, state_predicate) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAFtimed model property options state_predicate timed_interval in myalgo
 
 			(************************************************************)
 			(* Always release with timing constraint *)
