@@ -840,7 +840,8 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists until with timing constraint *)
 			(************************************************************)
-			| EU_timed _ -> raise (NotImplemented "timed EU")
+			| EU_timed (timed_interval, state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEUtimed model property options state_predicate_phi state_predicate_psi timed_interval in myalgo
 
 			(************************************************************)
 			(* Exists release with timing constraint *)

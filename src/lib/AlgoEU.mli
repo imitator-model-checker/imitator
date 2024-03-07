@@ -20,7 +20,7 @@ open AlgoEUgen
 
 
 (************************************************************)
-(* Class definition *)
+(* Class definition: EU *)
 (************************************************************)
 class algoEU : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
 	object inherit algoEUgen
@@ -38,6 +38,31 @@ class algoEU : AbstractModel.abstract_model -> AbstractProperty.abstract_propert
 		(* Class methods *)
 		(************************************************************)
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Method packaging the result output by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_result : Result.imitator_result
+end
+
+(************************************************************)
+(* Class definition: EU (timed) *)
+(************************************************************)
+class algoEUtimed : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval ->
+	object inherit algoEUgen
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Name of the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method algorithm_name : string
+
+
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

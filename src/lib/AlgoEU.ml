@@ -31,18 +31,12 @@ open AlgoEUgen
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
-	object (self) inherit algoEUgen model property options (Some state_predicate_phi) state_predicate_psi None (*as super*)
+class virtual algoEU_timed_or_untimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
+	object (self) inherit algoEUgen model property options (Some state_predicate_phi) state_predicate_psi timed_interval_option (*as super*)
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Name of the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EU"
-	
 	
 	
 	(************************************************************)
@@ -123,3 +117,52 @@ class algoEU (model : AbstractModel.abstract_model) (property : AbstractProperty
 end;;
 (************************************************************)
 (************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: algoEU *)
+(************************************************************)
+(************************************************************)
+class algoEU (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoEU_timed_or_untimed model property options state_predicate_phi state_predicate_psi None (*as super*)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EU"
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(************************************************************)
+(* Class definition: EUtimed *)
+(************************************************************)
+(************************************************************)
+class algoEUtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
+	object (*(self)*) inherit algoEU_timed_or_untimed model property options state_predicate_phi state_predicate_psi (Some timed_interval) (*as super*)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EU (timed)"
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+

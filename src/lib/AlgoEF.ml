@@ -29,10 +29,10 @@ open AlgoEUgen
 
 (************************************************************)
 (************************************************************)
-(* Class definition: algoEFtimedgen *)
+(* Class definition: algoEF_timed_or_untimed *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFtimedgen (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
+class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval_option : AbstractProperty.timed_interval option) =
 	object (self) inherit algoEUgen model property options None state_predicate timed_interval_option (*as super*)
 
 	(************************************************************)
@@ -128,7 +128,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class algoEF (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
-	object (*(self)*) inherit algoEFtimedgen model property options state_predicate None (*as super*)
+	object (*(self)*) inherit algoEF_timed_or_untimed model property options state_predicate None (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
@@ -152,7 +152,7 @@ end;;
 (************************************************************)
 (************************************************************)
 class algoEFtimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (timed_interval : AbstractProperty.timed_interval) =
-	object (*(self)*) inherit algoEFtimedgen model property options state_predicate (Some timed_interval) (*as super*)
+	object (*(self)*) inherit algoEF_timed_or_untimed model property options state_predicate (Some timed_interval) (*as super*)
 
 	(************************************************************)
 	(* Class variables *)
