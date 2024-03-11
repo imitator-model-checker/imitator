@@ -69,6 +69,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
                 };
                 template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
                 template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                synt_declarations     = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
 
@@ -85,6 +86,7 @@ let unzip l = List.fold_left
                 };
                 template_definitions  = [];
                 template_calls        = [];
+                synt_declarations     = [];
 	}
 	(List.rev l)
 ;;
@@ -96,7 +98,7 @@ let unzip l = List.fold_left
 %token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
-%token <ParsingStructure.parsed_model_with_templates> INCLUDE
+%token <ParsingStructure.parsed_model_unexpanded> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -117,7 +119,7 @@ let unzip l = List.fold_left
 	CT_NOT
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
-	CT_STOP CT_SYNC CT_SYNCLABS
+	CT_STOP CT_SYNC CT_SYNCLABS CT_SYNT_VAR
 	CT_TEMPLATE CT_THEN CT_TO CT_TRUE
 	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
@@ -144,21 +146,22 @@ let unzip l = List.fold_left
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_model_with_templates> main
+%type <ParsingStructure.parsed_model_unexpanded> main
 %%
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list synt_var_decls variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions = $1 in
-		let declarations         = $3 in
-		let fun_definitions      = $4 in
-		let template_definitions = $5 in
-		let automata             = $6 in
-		let template_calls       = $7 in
-		let init_definition      = $8 in
+    let synt_declarations    = $3 in
+		let declarations         = $4 in
+		let fun_definitions      = $5 in
+		let template_definitions = $6 in
+		let automata             = $7 in
+		let template_calls       = $8 in
+		let init_definition      = $9 in
 
 		let main_model =
 		{
@@ -172,6 +175,7 @@ main:
                         };
                         template_definitions  = template_definitions;
                         template_calls        = template_calls;
+                        synt_declarations     = synt_declarations;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -198,6 +202,31 @@ controllable_actions_option:
 	| { Parsed_no_controllable_actions }
 ;
 
+/************************************************************
+  VARIABLE DECLARATIONS
+************************************************************/
+
+/************************************************************/
+
+synt_var_decls:
+  | CT_SYNT_VAR synt_var_lists { $2 }
+  | { [] }
+;
+
+synt_var_lists:
+  | synt_var_list COLON synt_var_type SEMICOLON synt_var_lists { ($3, $1) :: $5 }
+  | { [] }
+;
+
+synt_var_list:
+  | NAME comma_opt { [$1] }
+  | NAME COMMA synt_var_list { $1 :: $3 }
+;
+
+synt_var_type:
+  | CT_CLOCK CT_ARRAY LPAREN pos_integer RPAREN { Clock_synt_array (NumConst.to_bounded_int $4) }
+  | CT_ACTION CT_ARRAY LPAREN pos_integer RPAREN { Action_synt_array (NumConst.to_bounded_int $4) }
+;
 
 /************************************************************
   VARIABLE DECLARATIONS
@@ -207,7 +236,7 @@ controllable_actions_option:
 
 variables_declarations:
 	| CT_VAR decl_var_lists { $2 }
-	| { []}
+	| { [] }
 ;
 
 
@@ -517,7 +546,7 @@ name_list:
 /************************************************************/
 
 name_nonempty_list:
-	NAME COMMA name_nonempty_list { $1 :: $3}
+	NAME COMMA name_nonempty_list { $1 :: $3 }
 	| NAME comma_opt { [$1] }
 ;
 

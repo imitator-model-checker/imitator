@@ -187,7 +187,24 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : parsed_automaton list =
     List.map (instantiate_automaton templates) insts
 
-let instantiate_model parsed_model_with_templates =
-    let instantiated_automata = instantiate_automata parsed_model_with_templates.template_definitions parsed_model_with_templates.template_calls in
-    { parsed_model_with_templates.model with automata = (parsed_model_with_templates.model.automata @ instantiated_automata) }
+let expand_synt_decls (synt_decls : synt_var_decl list) : variable_declarations =
+  let aux ((len, kind), names) =
+    let ids = List.init len (fun i -> i + 1) in
+    let expand_name name =
+      List.fold_left (fun acc i -> (name ^ "__" ^ (Int.to_string i)) :: acc) [] ids in
+    let expanded_names = List.concat_map expand_name names in
+    let packed_expanded_names = List.map (fun name -> (name, None)) expanded_names in
+    match kind with
+      | Clock_synt_array ->
+          Some (DiscreteType.Var_type_clock, packed_expanded_names)
+      | Action_synt_array -> None
+  in
+  List.filter_map aux synt_decls
 
+let expand_model parsed_model_unexpanded =
+    let instantiated_automata = instantiate_automata parsed_model_unexpanded.template_definitions parsed_model_unexpanded.template_calls in
+    let expanded_decls = expand_synt_decls parsed_model_unexpanded.synt_declarations in
+    { parsed_model_unexpanded.model with
+        automata = (parsed_model_unexpanded.model.automata @ instantiated_automata);
+        variable_declarations = (parsed_model_unexpanded.model.variable_declarations @ expanded_decls)
+    }

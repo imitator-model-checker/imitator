@@ -34,4 +34,4 @@ exception InvalidProperty
 (* Conversion functions *)
 (****************************************************************)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
-val abstract_structures_of_parsing_structures : Options.imitator_options -> ParsingStructure.parsed_model_with_templates -> (ParsingStructure.parsed_property option) -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)
+val abstract_structures_of_parsing_structures : Options.imitator_options -> ParsingStructure.parsed_model_unexpanded -> (ParsingStructure.parsed_property option) -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)

@@ -287,6 +287,18 @@ type parsed_duration = linear_expression
 
 type parsed_projection = (variable_name list) option
 
+(****************************************************************)
+(** Syntetic Variables *)
+(****************************************************************)
+
+type synt_var_kind =
+  | Clock_synt_array
+  | Action_synt_array
+
+type synt_var_type = int * synt_var_kind
+
+type synt_var_decl =
+  synt_var_type * variable_name list
 
 (****************************************************************)
 (** Input model *)
@@ -300,10 +312,11 @@ type parsed_model = {
 	init_definition       : init_definition;
 }
 
-type parsed_model_with_templates = {
-        model                : parsed_model;
-        template_definitions : parsed_template_definition list;
-        template_calls       : parsed_template_call list;
+type parsed_model_unexpanded = {
+  model                : parsed_model;
+  template_definitions : parsed_template_definition list;
+  template_calls       : parsed_template_call list;
+  synt_declarations    : synt_var_decl list
 }
 
 (****************************************************************)
