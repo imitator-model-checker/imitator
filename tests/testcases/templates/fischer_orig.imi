@@ -1,8 +1,4 @@
 (* EXAMPLE 2 *)
-synt_var
-  arr : action array (3);
-
-
 var
     x1, x2 : clock;
     id : int;
