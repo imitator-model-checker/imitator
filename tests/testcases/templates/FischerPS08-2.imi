@@ -24,6 +24,9 @@
 
 (* Etienne: each automaton takes 4 actions and 1 clock. Problem: there is an additional variable automaton, the size of which depends on the number of processes. *)
 
+synt_var
+  acts : action array (3);
+
 var
 	x1, x2
 	: clock;
@@ -34,12 +37,12 @@ var
 	delta, Delta
 	: parameter;
 
-template process(x : clock, Start : action, SetX : action, Enter : action, SetX0 : action)
+template process(x : clock, Start : action, SetX : action, Enter : action, SetX0 : action, id : int)
 
-  actions: Start, SetX, Enter, SetX0;
+  actions: Start, SetX, Enter, SetX0, acts[id];
 
   loc idle: invariant True
-    when True sync Start do { x := 0 } goto trying;
+    when True sync acts[1] do { x := 0 } goto trying;
 
   loc trying: invariant True
     when x < delta sync SetX do { x := 0 } goto waiting;
@@ -84,8 +87,8 @@ automaton observer
 	loc obs_BAD: invariant True
 end (* observer *)
 
-instantiate process1 := process(x1, Start1, SetX1, Enter1, SetX01);
-instantiate process2 := process(x2, Start2, SetX2, Enter2, SetX02);
+instantiate process1 := process(x1, Start1, SetX1, Enter1, SetX01, 0);
+instantiate process2 := process(x2, Start2, SetX2, Enter2, SetX02, 1);
 
 init := {
 	discrete =

@@ -1128,8 +1128,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
                                 let numconst_of_flow_value = function
-                                        | Flow_rat_value r -> r
-                                        | Flow_var _ -> raise  (InternalError "[make_automata]: unreachable code")
+                                        | NumLiteral r -> r
+                                        | VarName _ -> raise  (InternalError "[make_automata]: unreachable code")
                                 in
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
@@ -2766,8 +2766,8 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model_unexpanded) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-  (* Instantiate the template calls *)
-  let parsed_model = instantiate_model parsed_model in
+  (* Instantiate the template calls and expand syntatic variables *)
+  let parsed_model = expand_model parsed_model in
 
   print_message Verbose_high ("\n*** Link variables to declarations.");
   (* Recompute model to link variables to their declarations, and return all variables declarations *)

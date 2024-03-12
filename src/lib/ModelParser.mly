@@ -31,8 +31,8 @@ let parse_error _ =
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
-	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.model.controllable_actions, parsed_model_list.model.controllable_actions with
+let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : parsed_model_unexpanded) =
+	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.unexpanded_controllable_actions, parsed_model_list.unexpanded_controllable_actions with
 			| Parsed_no_controllable_actions, Parsed_no_controllable_actions
 				-> Parsed_no_controllable_actions
 
@@ -59,34 +59,28 @@ let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
 		in
 
 	{
-                model =
-                {
-                        controllable_actions  = merged_controllable_actions;
-                        variable_declarations = List.append parsed_model.model.variable_declarations parsed_model_list.model.variable_declarations;
-                        fun_definitions       = List.append parsed_model.model.fun_definitions parsed_model_list.model.fun_definitions;
-                        automata              = List.append parsed_model.model.automata parsed_model_list.model.automata;
-                        init_definition       = List.append parsed_model.model.init_definition parsed_model_list.model.init_definition;
-                };
-                template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
-                template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
-                synt_declarations     = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
+                unexpanded_controllable_actions  = merged_controllable_actions;
+                unexpanded_variable_declarations = List.append parsed_model.unexpanded_variable_declarations parsed_model_list.unexpanded_variable_declarations;
+                unexpanded_fun_definitions       = List.append parsed_model.unexpanded_fun_definitions parsed_model_list.unexpanded_fun_definitions;
+                unexpanded_automata              = List.append parsed_model.unexpanded_automata parsed_model_list.unexpanded_automata;
+                unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
+                template_definitions             = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+                template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-                model =
-                {
-                        controllable_actions  = Parsed_no_controllable_actions;
-                        variable_declarations = [];
-                        fun_definitions       = [];
-                        automata              = [];
-                        init_definition       = [];
-                };
-                template_definitions  = [];
-                template_calls        = [];
-                synt_declarations     = [];
+                unexpanded_controllable_actions  = Parsed_no_controllable_actions;
+                unexpanded_variable_declarations = [];
+                unexpanded_fun_definitions       = [];
+                unexpanded_automata              = [];
+                unexpanded_init_definition       = [];
+                template_definitions             = [];
+                template_calls                   = [];
+                synt_declarations                = [];
 	}
 	(List.rev l)
 ;;
@@ -164,15 +158,12 @@ main:
 		let init_definition      = $9 in
 
 		let main_model =
-		{
-                        model =
-                        {
-                                controllable_actions  = controllable_actions;
-                                variable_declarations = declarations;
-                                fun_definitions       = fun_definitions;
-                                automata              = automata;
-                                init_definition       = init_definition;
-                        };
+{
+                        unexpanded_controllable_actions  = controllable_actions;
+                        unexpanded_variable_declarations = declarations;
+                        unexpanded_fun_definitions       = fun_definitions;
+                        unexpanded_automata              = automata;
+                        unexpanded_init_definition       = init_definition;
                         template_definitions  = template_definitions;
                         template_calls        = template_calls;
                         synt_declarations     = synt_declarations;
@@ -224,8 +215,8 @@ synt_var_list:
 ;
 
 synt_var_type:
-  | CT_CLOCK CT_ARRAY LPAREN pos_integer RPAREN { Clock_synt_array (NumConst.to_bounded_int $4) }
-  | CT_ACTION CT_ARRAY LPAREN pos_integer RPAREN { Action_synt_array (NumConst.to_bounded_int $4) }
+  | CT_CLOCK CT_ARRAY LPAREN pos_integer RPAREN { NumConst.to_bounded_int $4, Clock_synt_array }
+  | CT_ACTION CT_ARRAY LPAREN pos_integer RPAREN { NumConst.to_bounded_int $4, Action_synt_array }
 ;
 
 /************************************************************
@@ -529,11 +520,25 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON name_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON action_list SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON name_list SEMICOLON {
+	| CT_SYNCLABS COLON action_list SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
+;
+
+/************************************************************/
+
+action_list:
+	| action_nonempty_list { $1 }
+	| { [] }
+;
+
+/************************************************************/
+
+action_nonempty_list:
+	| name_or_synt_array_access COMMA action_nonempty_list { $1 :: $3 }
+	| name_or_synt_array_access comma_opt { [$1] }
 ;
 
 /************************************************************/
@@ -567,21 +572,21 @@ location:
 		let stopwatches, flow = $6 in
 		{
 			(* Name *)
-			name		= name;
+			unexpanded_name		= name;
 			(* Urgent or not? *)
-			urgency		= urgency;
+			unexpanded_urgency		= urgency;
 			(* Accepting or not? *)
-			acceptance	= accepting;
+			unexpanded_acceptance	= accepting;
 			(* Cost *)
-			cost		= cost;
+			unexpanded_cost		= cost;
 			(* Invariant *)
-			invariant	= $5;
+			unexpanded_invariant	= $5;
 			(* List of stopped clocks *)
-			stopped		= stopwatches;
+			unexpanded_stopped		= stopwatches;
 			(* Flow of clocks *)
-			flow		= flow;
+			unexpanded_flow		= flow;
 			(* Transitions starting from this location *)
-			transitions = $8;
+			unexpanded_transitions = $8;
 		}
 	}
 ;
@@ -660,14 +665,15 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| NAME APOSTROPHE OP_EQ flow_value { ($1, $4) }
+	| NAME APOSTROPHE OP_EQ name_or_num_lit { ($1, $4) }
 ;
 
 /************************************************************/
 
-flow_value:
-        | rational_linear_expression { Flow_rat_value $1 }
-        | NAME { Flow_var $1 }
+name_or_num_lit:
+  /* TODO: In case of array access, should not accept rational values, only integer */
+        | rational_linear_expression { NumLiteral $1 }
+        | NAME { VarName $1 }
 
 /************************************************************/
 
@@ -696,11 +702,11 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { [], NoSync }
-	| updates { $1, NoSync }
-	| sync_action { [], (Sync $1) }
-	| updates sync_action { $1, (Sync $2) }
-	| sync_action updates { $2, (Sync $1) }
+	| { [], UnexpandedNoSync }
+	| updates { $1, UnexpandedNoSync }
+	| sync_action { [], (UnexpandedSync $1) }
+	| updates sync_action { $1, (UnexpandedSync $2) }
+	| sync_action updates { $2, (UnexpandedSync $1) }
 ;
 
 /************************************************************/
@@ -712,10 +718,15 @@ updates:
 /************************************************************/
 
 sync_action:
-	CT_SYNC NAME { $2 }
+	CT_SYNC name_or_synt_array_access { $2 }
 ;
 
+/************************************************************/
 
+name_or_synt_array_access:
+  | NAME { Action_name $1 }
+  | NAME LSQBRA name_or_num_lit RSQBRA { Action_array_access ($1, $3) }
+;
 
 /************************************************************/
 /** INIT DEFINITION */

@@ -314,4 +314,3 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
-

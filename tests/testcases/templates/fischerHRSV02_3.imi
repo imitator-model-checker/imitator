@@ -23,6 +23,8 @@
 
 (* Etienne: scalable in the number of processes : very very similar to the former Uppaal Fischer protocol (one clock, one id per process) *)
 
+synt_var
+  y : clock array (3);
 
 var 
 	

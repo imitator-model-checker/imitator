@@ -211,12 +211,12 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type flow_value =
-        | Flow_rat_value of NumConst.t
-        | Flow_var of variable_name
+type name_or_num_lit =
+       | NumLiteral of NumConst.t
+       | VarName of variable_name
 
 (** A list of pairs (clock, rational) *)
-type parsed_flow = (variable_name * flow_value) list
+type parsed_flow = (variable_name * name_or_num_lit) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
@@ -241,14 +241,35 @@ type parsed_location = {
 	transitions : transition list;
 }
 
+type parsed_action =
+  | Action_name of action_name
+  | Action_array_access of action_name * name_or_num_lit
+
+type unexpanded_sync =
+	| UnexpandedSync of parsed_action
+	| UnexpandedNoSync
+
+type unexpanded_transition = guard * parsed_seq_code_bloc * unexpanded_sync * location_name
+
+type unexpanded_parsed_location = {
+	unexpanded_name        : location_name;
+	unexpanded_urgency     : parsed_urgency;
+	unexpanded_acceptance  : parsed_acceptance;
+	unexpanded_cost        : linear_expression option;
+	unexpanded_invariant   : invariant;
+	unexpanded_stopped     : (variable_name list);
+	unexpanded_flow        : parsed_flow;
+	unexpanded_transitions : unexpanded_transition list;
+}
 
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
+type unexpanded_parsed_automaton = automaton_name * parsed_action list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
     template_parameters : (variable_name * DiscreteType.template_var_type) list;
-    template_body       : action_name list * parsed_location list
+    template_body       : parsed_action list * unexpanded_parsed_location list
 }
 
 type parsed_template_arg =
@@ -288,7 +309,7 @@ type parsed_duration = linear_expression
 type parsed_projection = (variable_name list) option
 
 (****************************************************************)
-(** Syntetic Variables *)
+(** Syntatic Variables *)
 (****************************************************************)
 
 type synt_var_kind =
@@ -313,10 +334,15 @@ type parsed_model = {
 }
 
 type parsed_model_unexpanded = {
-  model                : parsed_model;
-  template_definitions : parsed_template_definition list;
-  template_calls       : parsed_template_call list;
-  synt_declarations    : synt_var_decl list
+  (* added prefix to avoid crashing type inference *)
+	unexpanded_controllable_actions  : parsed_controllable_actions;
+	unexpanded_variable_declarations : variable_declarations;
+	unexpanded_fun_definitions       : parsed_fun_definition_list;
+	unexpanded_automata              : unexpanded_parsed_automaton list;
+	unexpanded_init_definition       : init_definition;
+  template_definitions             : parsed_template_definition list;
+  template_calls                   : parsed_template_call list;
+  synt_declarations                : synt_var_decl list
 }
 
 (****************************************************************)
