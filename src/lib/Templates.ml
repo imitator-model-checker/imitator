@@ -228,6 +228,78 @@ let expand_synt_decls (synt_decls : synt_var_decl list) : variable_declarations 
   in
   List.filter_map aux synt_decls
 
+let rec get_const_disc_arith_expr = function
+  | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
+  | Parsed_sum_diff (lhs, rhs, Parsed_minus) -> NumConst.sub (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
+  | Parsed_term term -> get_const_disc_term term
+
+and get_const_disc_term = function
+  | Parsed_product_quotient (lhs, rhs, Parsed_mul) -> NumConst.mul (get_const_disc_term lhs) (get_const_disc_factor rhs) 
+  | Parsed_product_quotient (lhs, rhs, Parsed_div) -> NumConst.div (get_const_disc_term lhs) (get_const_disc_factor rhs) 
+  | Parsed_factor factor -> get_const_disc_factor factor
+
+and get_const_disc_factor = function
+  | Parsed_constant (ParsedValue.Weak_number_value value) -> value
+  | Parsed_unary_min factor -> NumConst.neg (get_const_disc_factor factor)
+  | Parsed_nested_expr expr -> get_const_disc_arith_expr expr
+  | _ -> failwith "[get_const_disc_factor]: argument is not an integer constant"
+
+(* Expand syntatic arrays - unfortunatelly this can't be implemented just with a map_parsed_boolean_expression *)
+let rec expand_parsed_boolean_expression synt_arrays = function
+  | Parsed_conj_dis (e1, e2, c) ->
+      let e1' = expand_parsed_boolean_expression synt_arrays e1 in
+      let e2' = expand_parsed_boolean_expression synt_arrays e2 in
+      Parsed_conj_dis (e1', e2', c)
+  | Parsed_discrete_bool_expr e ->
+    Parsed_discrete_bool_expr (expand_parsed_discrete_boolean_expression synt_arrays e)
+
+  and expand_parsed_discrete_boolean_expression synt_arrays = function
+  | Parsed_arithmetic_expr e -> Parsed_arithmetic_expr (expand_parsed_discrete_arithmetic_expression synt_arrays e)
+  | Parsed_comparison (e1, op, e2) ->
+      let e1' = expand_parsed_discrete_boolean_expression synt_arrays e1 in
+      let e2' = expand_parsed_discrete_boolean_expression synt_arrays e2 in
+      Parsed_comparison (e1', op, e2')
+  | Parsed_comparison_in (e1, e2, e3) ->
+      let e1' = expand_parsed_discrete_arithmetic_expression synt_arrays e1 in
+      let e2' = expand_parsed_discrete_arithmetic_expression synt_arrays e2 in
+      let e3' = expand_parsed_discrete_arithmetic_expression synt_arrays e3 in
+      Parsed_comparison_in (e1', e2', e3')
+  | Parsed_nested_bool_expr e -> Parsed_nested_bool_expr (expand_parsed_boolean_expression synt_arrays e)
+  | Parsed_not e -> Parsed_not (expand_parsed_boolean_expression synt_arrays e)
+
+and expand_parsed_discrete_arithmetic_expression synt_arrays = function
+  | Parsed_sum_diff (e, t, sum_diff) ->
+      let e' = expand_parsed_discrete_arithmetic_expression synt_arrays e in
+      let t' = expand_parsed_discrete_term synt_arrays t in
+      Parsed_sum_diff (e', t', sum_diff)
+  | Parsed_term t -> Parsed_term (expand_parsed_discrete_term synt_arrays t)
+
+and expand_parsed_discrete_term synt_arrays = function
+  | Parsed_product_quotient (t, f, product_quotient) ->
+      let t' = expand_parsed_discrete_term synt_arrays t in
+      let f' = expand_parsed_discrete_factor synt_arrays f in
+      Parsed_product_quotient (t', f', product_quotient)
+  | Parsed_factor f -> Parsed_factor (expand_parsed_discrete_factor synt_arrays f)
+
+and expand_parsed_discrete_factor synt_arrays = fun factor ->
+  let get_name_of_factor = function
+    | Parsed_variable (name, _) -> name
+    | _ -> failwith "[expand_parsed_discrete_factor]: Name of syntatic array was not a variable name."
+  in
+  match factor with
+    | Parsed_access (factor', index) -> begin
+        let arr_name = get_name_of_factor factor' in
+        match List.assoc_opt arr_name synt_arrays with
+          | None -> factor
+          | Some len ->
+              let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
+              if index_c < len then
+                let var_name = gen_access_id arr_name index_c in
+                Parsed_variable (var_name, 0)
+              else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
+    end
+    | _ -> factor
+
 let expand_action = function
   | Action_name act_name -> act_name
   | Action_array_access (arr_name, NumLiteral i) -> gen_access_id arr_name (NumConst.to_bounded_int i)
