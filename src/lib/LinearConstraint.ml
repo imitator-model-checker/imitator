@@ -4192,13 +4192,21 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Assert *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
 	if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("Test nncc_assert_dimensions " ^ (string_of_int nb_dimensions) ^ " passed!");
+			print_message Verbose_total ("Test that nncc_assert_dimensions = " ^ (string_of_int nb_dimensions) ^ " passed!");
+			print_message Verbose_total ("Now checking that linear_constraint has " ^ (string_of_int nb_dimensions) ^ ". Before check: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions.");
 	);
 
 	assert_dimensions nb_dimensions linear_constraint;
+	if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Test that dimensions of linear_constraint = " ^ (string_of_int nb_dimensions) ^ " passed!");
+	);
 
 	(* Perform union *)
 	ippl_nncc_add_disjunct nnconvex_constraint linear_constraint;
+
+	if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Now exiting `LinearConstraint.nnconvex_union_assign`");
+	);
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
 (* 	p_nn_simplify nnconvex_constraint; *)
