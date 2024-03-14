@@ -322,10 +322,12 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		in
 
 		(* Cache the result *)
-		Hashtbl.replace cache_result_AF state_index af_result;
+		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future ***)
+		Hashtbl.replace cache_result_AF state_index (LinearConstraint.p_nnconvex_copy af_result);
 
 		(* Return result *)
-		af_result
+		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future as the result of AF ***)
+		(LinearConstraint.p_nnconvex_copy af_result)
 		)
 
 
