@@ -96,7 +96,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		(* First check whether the result of AF(state_index) is known from the cache *)
 		if Hashtbl.mem cache_result_AF state_index then(
-			Hashtbl.find cache_result_AF state_index
+			LinearConstraint.p_nnconvex_copy (Hashtbl.find cache_result_AF state_index)
 		)else(
 
 		(* Get state *)
