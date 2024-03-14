@@ -211,12 +211,22 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type index_lit_or_name =
-       | Index_literal of NumConst.t
-       | Index_name of variable_name
+type const_or_name =
+  | Index_literal of NumConst.t
+  | Index_name of variable_name
+
+type name_or_access =
+  | Var_name of variable_name
+  | Var_array_access of variable_name * const_or_name
+
+type unexpanded_sync =
+	| UnexpandedSync of name_or_access
+	| UnexpandedNoSync
 
 (** A list of pairs (clock, rational) *)
-type parsed_flow = (variable_name * index_lit_or_name) list
+type parsed_flow = (variable_name * NumConst.t) list
+
+type unexpanded_parsed_flow = (name_or_access * const_or_name) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
@@ -241,14 +251,6 @@ type parsed_location = {
 	transitions : transition list;
 }
 
-type name_or_access =
-  | Var_name of variable_name
-  | Var_array_access of variable_name * index_lit_or_name
-
-type unexpanded_sync =
-	| UnexpandedSync of name_or_access
-	| UnexpandedNoSync
-
 type unexpanded_transition = guard * parsed_seq_code_bloc * unexpanded_sync * location_name
 
 type unexpanded_parsed_location = {
@@ -258,7 +260,7 @@ type unexpanded_parsed_location = {
 	unexpanded_cost        : linear_expression option;
 	unexpanded_invariant   : invariant;
 	unexpanded_stopped     : name_or_access list;
-	unexpanded_flow        : parsed_flow;
+	unexpanded_flow        : unexpanded_parsed_flow;
 	unexpanded_transitions : unexpanded_transition list;
 }
 

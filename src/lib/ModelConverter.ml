@@ -1127,17 +1127,12 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				if location.flow <> [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
-                                let numconst_of_flow_value = function
-                                        | Index_literal r -> r
-                                        | Index_name _ -> raise  (InternalError "[make_automata]: unreachable code")
-                                in
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
 					List.sort_uniq compare
 					(
 						List.map (fun (clock_name, flow_value) ->
-							(index_of_variable_name variable_infos clock_name),
-                                                        (numconst_of_flow_value flow_value)
+							(index_of_variable_name variable_infos clock_name), flow_value
 						) location.flow
 					);
 

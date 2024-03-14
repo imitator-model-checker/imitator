@@ -665,7 +665,7 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| NAME APOSTROPHE OP_EQ name_or_num_lit { ($1, $4) }
+	| name_or_array_access APOSTROPHE OP_EQ name_or_num_lit { ($1, $4) }
 ;
 
 /************************************************************/

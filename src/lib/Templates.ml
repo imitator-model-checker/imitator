@@ -33,9 +33,9 @@ let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) 
 let instantiate_array_index (param_map : var_map) (arr : variable_name) (id : variable_name) : name_or_access =
   match Hashtbl.find_opt param_map id with
     | None | Some (Arg_name _) -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a variable."
-    | Some (Arg_int i) -> Var_array_access (arr, Index_literal i)
-    | Some (Arg_float _) -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a float"
-    | Some (Arg_bool _) -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a boolean."
+    | Some (Arg_int i)         -> Var_array_access (arr, Index_literal i)
+    | Some (Arg_float _)       -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a float"
+    | Some (Arg_bool _)        -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a boolean."
 
 let instantiate_stopped (param_map : var_map) (clocks : name_or_access list) : name_or_access list =
   List.map (function
@@ -52,13 +52,18 @@ let instantiate_stopped (param_map : var_map) (clocks : name_or_access list) : n
   ) clocks
 
 
-let instantiate_flows (param_map : var_map) (flows : parsed_flow) : parsed_flow =
+let instantiate_flows (param_map : var_map) (flows : unexpanded_parsed_flow) : unexpanded_parsed_flow =
   let instantiate_flow (clock, rate) =
     let clock' =
-      match Hashtbl.find_opt param_map clock with
-      | None                 -> clock
-      | Some (Arg_name name) -> name
-      | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+      match clock with
+        | Var_name clock_name -> begin
+          match Hashtbl.find_opt param_map clock_name with
+            | None                 -> clock
+            | Some (Arg_name clock_name') -> Var_name clock_name'
+            | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
+        end
+        | Var_array_access (arr_name, Index_name id) -> instantiate_array_index param_map arr_name id
+        | Var_array_access (_, Index_literal _) -> clock
     in
     let rate' =
       match rate with
@@ -93,18 +98,25 @@ let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc ->
     end
     | inst :: tl ->
         let tl' = instantiate_instructions param_map tl in
+        let rec instantiate_indexed_update =
+          function
+            | Parsed_scalar_update (name, id) -> begin
+                match Hashtbl.find_opt param_map name with
+                  | None -> Parsed_scalar_update (name, id)
+                  | Some (Arg_name name') -> Parsed_scalar_update (name', id)
+                  | Some _ ->
+                      failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
+            end
+            | Parsed_indexed_update (arr, index) ->
+                let index' = instantiate_discrete_arithmetic_expression param_map index in
+                let arr' = instantiate_indexed_update arr in
+                Parsed_indexed_update (arr', index')
+        in
         match inst with
-          | Parsed_assignment (Parsed_scalar_update (name, id), rhs) -> begin
+          | Parsed_assignment (indexed_update, rhs) ->
+              let indexed_update' = instantiate_indexed_update indexed_update in
               let rhs' = instantiate_boolean_expression param_map rhs in
-              match Hashtbl.find_opt param_map name with
-                | None -> Parsed_assignment (Parsed_scalar_update (name, id), rhs') :: tl'
-                | Some (Arg_name name') -> Parsed_assignment (Parsed_scalar_update (name', id), rhs') :: tl'
-                | Some _ ->
-                        failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
-          end
-          | Parsed_assignment (Parsed_indexed_update (name, index), rhs) ->
-              let rhs' = instantiate_boolean_expression param_map rhs in
-              Parsed_assignment (Parsed_indexed_update (name, index), rhs') :: tl'
+              Parsed_assignment (indexed_update', rhs') :: tl'
           | Parsed_instruction expr ->
               let expr' = instantiate_boolean_expression param_map expr in
               Parsed_instruction expr' :: tl'
@@ -154,6 +166,7 @@ let instantiate_loc (param_map : var_map) (loc : unexpanded_parsed_location) : u
 let rename_action_decls (param_map : var_map) (automaton_name : variable_name) (action_decls : name_or_access list) : name_or_access list =
   let rename_action_decl parsed_action =
     match parsed_action with
+    (* If it is a syntatic array do we bypass the rule for isolating actions between instantiations? *)
       | Var_name action_name -> begin
           match Hashtbl.find_opt param_map action_name with
             | None -> Var_name (action_name ^ "_" ^ automaton_name)
@@ -322,17 +335,73 @@ let expand_sync : unexpanded_sync -> sync = function
       failwith ("[expand_sync]: " ^ var_index_err_msg arr_name var_name)
   | UnexpandedNoSync -> NoSync
 
+let rec expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
+  fun e ->
+    match e with
+      | Parsed_indexed_update (Parsed_scalar_update (name, _), index) -> begin
+          match List.assoc_opt name synt_vars with
+            | None -> e
+            | Some len ->
+                let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
+                if index_c < len then
+                  let new_name = gen_access_id name index_c in
+                  Parsed_scalar_update (new_name, 0)
+                else
+                  failwith "[expand_indexed_update]: Index is greater or equal to length of syntatic array"
+      end
+      | _ -> e
+
+let rec expand_instruction (synt_vars : synt_vars_data) : parsed_instruction -> parsed_instruction = function
+  | Parsed_local_decl (name, tp, init) ->
+      let init' = expand_parsed_boolean_expression synt_vars init in
+      Parsed_local_decl (name, tp, init')
+  | Parsed_assignment (upd, rhs) ->
+      let rhs' = expand_parsed_boolean_expression synt_vars rhs in
+      let upd' = expand_indexed_update synt_vars upd in
+      Parsed_assignment (upd', rhs')
+  | Parsed_instruction expr -> Parsed_instruction (expand_parsed_boolean_expression synt_vars expr)
+  | Parsed_for_loop (var_ref, left_expr, right_expr, dir, bloc) ->
+      let left_expr' = expand_parsed_discrete_arithmetic_expression synt_vars left_expr in
+      let right_expr' = expand_parsed_discrete_arithmetic_expression synt_vars right_expr in
+      let bloc' = expand_code_bloc synt_vars bloc in
+      Parsed_for_loop (var_ref, left_expr', right_expr', dir, bloc')
+  | Parsed_while_loop (cond, bloc) ->
+      let cond' = expand_parsed_boolean_expression synt_vars cond in
+      let bloc' = expand_code_bloc synt_vars bloc in
+      Parsed_while_loop (cond', bloc')
+  | Parsed_if (cond, then_branch, else_branch_opt) ->
+      let cond' = expand_parsed_boolean_expression synt_vars cond in
+      let then_branch' = expand_code_bloc synt_vars then_branch in
+      let else_branch_opt' = Option.map (fun expr -> expand_code_bloc synt_vars expr) else_branch_opt in
+      Parsed_if (cond', then_branch', else_branch_opt')
+
+and expand_code_bloc (synt_vars : synt_vars_data) : parsed_seq_code_bloc -> parsed_seq_code_bloc =
+  List.map (expand_instruction synt_vars)
+
 let expand_loc (synt_vars : synt_vars_data) (loc : unexpanded_parsed_location) : parsed_location =
   let expand_transition (guard, bloc, sync, loc_name) =
     let sync' = expand_sync sync in
     let guard' = List.map (expand_parsed_discrete_boolean_expression synt_vars) guard in
-    (guard', bloc, sync', loc_name)
+    let bloc' = expand_code_bloc synt_vars bloc in
+    (guard', bloc', sync', loc_name)
   in
-  let expanded_transitions =
-    List.map expand_transition loc.unexpanded_transitions
-  in
+  let expanded_transitions = List.map expand_transition loc.unexpanded_transitions in
   let expanded_invariant = List.map (expand_parsed_discrete_boolean_expression synt_vars) loc.unexpanded_invariant in
   let expanded_stopped = expand_name_or_access_list loc.unexpanded_stopped in
+  let expand_flow (clock, rate) =
+    let real_rate =
+      match rate with
+        | Index_literal r -> r
+        | Index_name _ -> failwith "[expand_flow]: Flows must be either literals or template variables."
+    in
+    match clock with
+      | Var_name name -> (name, real_rate)
+      | Var_array_access (arr_name, Index_literal id) ->
+          let new_name = gen_access_id arr_name (NumConst.to_bounded_int id) in
+          (new_name, real_rate)
+      | Var_array_access (_, Index_name _) -> failwith "[expand_flow]: Index of clock array must be a literal or a template variable."
+  in
+  let expanded_flow = List.map expand_flow loc.unexpanded_flow in
   {
     name        = loc.unexpanded_name;
     urgency     = loc.unexpanded_urgency;
@@ -340,7 +409,7 @@ let expand_loc (synt_vars : synt_vars_data) (loc : unexpanded_parsed_location) :
     acceptance  = loc.unexpanded_acceptance;
     invariant   = expanded_invariant;
     stopped     = expanded_stopped;
-    flow        = loc.unexpanded_flow;
+    flow        = expanded_flow;
     transitions = expanded_transitions;
   }
 
