@@ -67,7 +67,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Hash table for caching known results of AF *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 0 (*** TODO: change number? ***)
+	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
