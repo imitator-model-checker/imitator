@@ -323,8 +323,13 @@ let expand_sync : unexpanded_sync -> sync = function
   | UnexpandedNoSync -> NoSync
 
 let expand_loc (synt_vars : synt_vars_data) (loc : unexpanded_parsed_location) : parsed_location =
+  let expand_transition (guard, bloc, sync, loc_name) =
+    let sync' = expand_sync sync in
+    let guard' = List.map (expand_parsed_discrete_boolean_expression synt_vars) guard in
+    (guard', bloc, sync', loc_name)
+  in
   let expanded_transitions =
-    List.map (fun (guard, bloc, sync, loc_name) -> guard, bloc, expand_sync sync, loc_name) loc.unexpanded_transitions
+    List.map expand_transition loc.unexpanded_transitions
   in
   let expanded_invariant = List.map (expand_parsed_discrete_boolean_expression synt_vars) loc.unexpanded_invariant in
   let expanded_stopped = expand_name_or_access_list loc.unexpanded_stopped in
