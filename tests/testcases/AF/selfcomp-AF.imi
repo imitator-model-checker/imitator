@@ -1,0 +1,152 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Example of self-composition
+ * Description      : Example of self-composition
+ * Correctness      :
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Masaki Waga
+ * Modeling         : Masaki Waga
+ * Input by         : Étienne André and Masaki Waga
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/27
+ * Last modified    : 2024/03/14
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	c_1,
+ 	c_2,
+
+		: clock;
+
+(* Discrete: counting *)
+	COUNT_a_1,
+	COUNT_a_2,
+		: int;
+
+(* Discrete: encoding "location label" changes *)
+	UNCHANGED = 0,
+	CHANGED_UP = 1,
+	status_a_1,
+	status_b_1,
+	status_a_2,
+	status_b_2,
+		: int;
+
+(* Boolean denoting that at least one automaton changed something, and therefore `notify` can be taken *)
+	changed : bool;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta_1
+(************************************************************)
+actions: notify;
+
+loc l0: invariant c_1 < 3 (* label: a_1 *)
+	when p <= c_1 & c_1 < 3 do {changed := True; status_b_1 := CHANGED_UP; c_1 := 0} goto l0_l1;
+	(* Dummy self-loop to synchronize with other automata *)
+	when changed sync notify goto l0;
+
+urgent loc l0_l1: invariant True
+	when changed sync notify do {changed := False; status_a_1 := UNCHANGED; status_b_1 := UNCHANGED} goto l1;
+
+loc l1: invariant c_1 < 3 (* label: b_1 *)
+	when c_1 < 3 do {changed := True; status_a_1 := CHANGED_UP} goto l1_l0;
+	(* Dummy self-loop to synchronize with other automata *)
+	when changed sync notify goto l1;
+
+urgent loc l1_l0: invariant True
+	when changed sync notify do {changed := False; status_a_1 := UNCHANGED; status_b_1 := UNCHANGED; COUNT_a_1 := COUNT_a_1 + 1; c_LAST_a_1 := 0} goto l0;
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta_2
+(************************************************************)
+actions: notify;
+
+loc l0: invariant c_2 < 3 (* label: a_2 *)
+	when p <= c_2 & c_2 < 3 do {changed := True; status_b_2 := CHANGED_UP; c_2 := 0} goto l0_l1;
+	(* Dummy self-loop to synchronize with other automata *)
+	when changed sync notify goto l0;
+
+urgent loc l0_l1: invariant True
+	when changed sync notify do {changed := False; status_a_2 := UNCHANGED; status_b_2 := UNCHANGED} goto l1;
+
+loc l1: invariant c_2 < 3 (* label: b_2 *)
+	when c_2 < 3 do {changed := True; status_a_2 := CHANGED_UP} goto l1_l0;
+	(* Dummy self-loop to synchronize with other automata *)
+	when changed sync notify goto l1;
+
+urgent loc l1_l0: invariant True
+	when changed sync notify do {changed := False; status_a_2 := UNCHANGED; status_b_2 := UNCHANGED; COUNT_a_2 := COUNT_a_2 + 1; c_LAST_a_2 := 0} goto l0;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta_1] := l0,
+		loc[pta_2] := l0,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		(*** NOTE: In our definition, rising edge requires a "rising", i.e., there must be a previous timepoint with false. Therefore, the initial count is always 0 ***)
+		COUNT_a_1 := 0,
+		COUNT_a_2 := 0,
+
+		status_a_1 := UNCHANGED,
+		status_b_1 := UNCHANGED,
+		status_a_2 := UNCHANGED,
+		status_b_2 := UNCHANGED,
+
+		changed := False,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& c_1 = 0
+		& c_2 = 0
+
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

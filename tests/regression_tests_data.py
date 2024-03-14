@@ -17660,6 +17660,32 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Étienne André and Masaki Waga
+		# Test since               : 2024/03/14
+		# Last modified            : 2024/03/14
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AU: self-composition example',
+		'tags'       : 'AU',
+		'input_files': ['AF/selfcomp-AF.imi' , 'AF/selfcomp-AF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'selfcomp-AF.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 3 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/05
 		# Last modified            : 2024/02/05
