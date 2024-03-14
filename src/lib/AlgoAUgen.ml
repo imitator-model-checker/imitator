@@ -65,6 +65,12 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Hash table for caching known results of AF *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create 0 (*** TODO: change number? ***)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Status of the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO ***)
@@ -88,11 +94,18 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* First check limits, which may raise exceptions *)
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
 
+		(* First check whether the result of AF(state_index) is known from the cache *)
+		if Hashtbl.mem cache_result_AF state_index then(
+			Hashtbl.find cache_result_AF state_index
+		)else(
+
 		(* Get state *)
 		let symbolic_state : State.state = state_space#get_state state_index in
 
 		(* Useful shortcut *)
 		let state_px_constraint = symbolic_state.px_constraint in
+
+		let af_result =
 
 		(* Case 0 (timed version): Cut branch if we went too far time-wise *)
 		let time_went_too_far =
@@ -299,6 +312,14 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 				)
 			)
 		) (* end elseif time went too far *)
+		in
+
+		(* Cache the result *)
+		Hashtbl.replace cache_result_AF state_index af_result;
+
+		(* Return result *)
+		af_result
+		)
 
 
 
