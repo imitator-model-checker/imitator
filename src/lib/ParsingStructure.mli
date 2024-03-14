@@ -211,12 +211,12 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type name_or_num_lit =
-       | NumLiteral of NumConst.t
-       | VarName of variable_name
+type index_lit_or_name =
+       | Index_literal of NumConst.t
+       | Index_name of variable_name
 
 (** A list of pairs (clock, rational) *)
-type parsed_flow = (variable_name * name_or_num_lit) list
+type parsed_flow = (variable_name * index_lit_or_name) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
@@ -234,19 +234,19 @@ type parsed_location = {
 	(* Invariant *)
 	invariant   : invariant;
 	(* List of stopped clocks *)
-	stopped     : (variable_name list);
+	stopped     : variable_name list;
 	(* Flow of clocks *)
 	flow        : parsed_flow;
 	(* Transitions starting from this location *)
 	transitions : transition list;
 }
 
-type parsed_action =
-  | Action_name of action_name
-  | Action_array_access of action_name * name_or_num_lit
+type name_or_access =
+  | Var_name of variable_name
+  | Var_array_access of variable_name * index_lit_or_name
 
 type unexpanded_sync =
-	| UnexpandedSync of parsed_action
+	| UnexpandedSync of name_or_access
 	| UnexpandedNoSync
 
 type unexpanded_transition = guard * parsed_seq_code_bloc * unexpanded_sync * location_name
@@ -257,19 +257,19 @@ type unexpanded_parsed_location = {
 	unexpanded_acceptance  : parsed_acceptance;
 	unexpanded_cost        : linear_expression option;
 	unexpanded_invariant   : invariant;
-	unexpanded_stopped     : (variable_name list);
+	unexpanded_stopped     : name_or_access list;
 	unexpanded_flow        : parsed_flow;
 	unexpanded_transitions : unexpanded_transition list;
 }
 
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
-type unexpanded_parsed_automaton = automaton_name * parsed_action list * unexpanded_parsed_location list
+type unexpanded_parsed_automaton = automaton_name * name_or_access list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
     template_parameters : (variable_name * DiscreteType.template_var_type) list;
-    template_body       : parsed_action list * unexpanded_parsed_location list
+    template_body       : name_or_access list * unexpanded_parsed_location list
 }
 
 type parsed_template_arg =

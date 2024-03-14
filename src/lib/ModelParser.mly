@@ -520,25 +520,25 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON action_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON name_or_array_access_list SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON action_list SEMICOLON {
+	| CT_SYNCLABS COLON name_or_array_access_list SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
 ;
 
 /************************************************************/
 
-action_list:
-	| action_nonempty_list { $1 }
+name_or_array_access_list:
+	| name_or_array_access_nonempty_list { $1 }
 	| { [] }
 ;
 
 /************************************************************/
 
-action_nonempty_list:
-	| name_or_synt_array_access COMMA action_nonempty_list { $1 :: $3 }
-	| name_or_synt_array_access comma_opt { [$1] }
+name_or_array_access_nonempty_list:
+	| name_or_array_access COMMA name_or_array_access_nonempty_list { $1 :: $3 }
+	| name_or_array_access comma_opt { [$1] }
 ;
 
 /************************************************************/
@@ -672,13 +672,13 @@ single_flow:
 
 name_or_num_lit:
   /* TODO: In case of array access, should not accept rational values, only integer */
-        | rational_linear_expression { NumLiteral $1 }
-        | NAME { VarName $1 }
+        | rational_linear_expression { Index_literal $1 }
+        | NAME { Index_name $1 }
 
 /************************************************************/
 
 stopwatches:
-	| CT_STOP LBRACE name_list RBRACE { $3 }
+	| CT_STOP LBRACE name_or_array_access_list RBRACE { $3 }
 ;
 
 /************************************************************/
@@ -718,14 +718,14 @@ updates:
 /************************************************************/
 
 sync_action:
-	CT_SYNC name_or_synt_array_access { $2 }
+	CT_SYNC name_or_array_access { $2 }
 ;
 
 /************************************************************/
 
-name_or_synt_array_access:
-  | NAME { Action_name $1 }
-  | NAME LSQBRA name_or_num_lit RSQBRA { Action_array_access ($1, $3) }
+name_or_array_access:
+  | NAME { Var_name $1 }
+  | NAME LSQBRA name_or_num_lit RSQBRA { Var_array_access ($1, $3) }
 ;
 
 /************************************************************/

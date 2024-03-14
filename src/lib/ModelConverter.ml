@@ -1128,8 +1128,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
                                 let numconst_of_flow_value = function
-                                        | NumLiteral r -> r
-                                        | VarName _ -> raise  (InternalError "[make_automata]: unreachable code")
+                                        | Index_literal r -> r
+                                        | Index_name _ -> raise  (InternalError "[make_automata]: unreachable code")
                                 in
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
