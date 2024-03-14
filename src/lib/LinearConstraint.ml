@@ -67,7 +67,7 @@ exception EmptyConstraint
 (************************************************************)
 (* CONSTANTS *)
 (************************************************************)
-(** Check or not the number of dimensions of new polyhedra (not doing it may save around 0,5% of computation time, and no error ever occurred) *)
+(** Check or not the number of dimensions of new polyhedra (not doing it may save around 0.5% of computation time, and no error ever occurred) *)
 let check_assert_dimensions = true
 
 
@@ -591,11 +591,11 @@ let ippl_nncc_get_disjunct iterator =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_get_disjunct iterator) ppl_nncc_get_disjunct
 
 
-(** Check if a nnconvex_constraint is false *)
+(** Check if an nnconvex_constraint is false *)
 let ippl_nncc_is_empty nnconvex_constraint =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_is_empty nnconvex_constraint) ppl_nncc_is_empty
 
-(** Check if a nnconvex_constraint is true *)
+(** Check if an nnconvex_constraint is true *)
 let ippl_nncc_is_universe nnconvex_constraint =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_is_universe nnconvex_constraint) ppl_nncc_is_universe
 
@@ -655,22 +655,20 @@ let ippl_nncc_intersection_assign nnconvex_constraint nnconvex_constraint' =
 (** check the dimensionality of a polyhedron *)
 let assert_dimensions nb_dimensions poly =
 	
-(* 	(*** NOTE: disabled since check_assert_dimensions is false ***) *)
-	
 	if check_assert_dimensions then(
 		let ndim = ippl_space_dimension poly in
 		if ndim <> nb_dimensions then (
-			print_error ("Polyhedron does not have the expected number of dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int nb_dimensions) ^ ")");
+			print_error ("A polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
 			raise (InternalError "Inconsistent polyhedron found")
 		)
 	)
 
-(** check the dimensionality of a NNCC polyhedron *)
+(** check the dimensionality of an NNCC polyhedron *)
 let nncc_assert_dimensions nb_dimensions nncc =
 	if check_assert_dimensions then(
 		let ndim = ippl_nncc_space_dimension nncc in
 		if ndim <> nb_dimensions then (
-			print_error ("NCC polyhedron does not have the expected number of dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int nb_dimensions) ^ ")");
+			print_error ("An NCC polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
 			raise (InternalError "Inconsistent polyhedron found")
 		)
 	)
@@ -4009,7 +4007,7 @@ let px_nnconvex_constraint_of_px_linear_constraint c =
 	(* Return result *)
 	result
 
-(** Copy a nnconvex_constraint *)
+(** Copy an nnconvex_constraint *)
 let nnconvex_copy nnconvex_constraint = ippl_nncc_copy nnconvex_constraint
 let p_nnconvex_copy = nnconvex_copy
 let px_nnconvex_copy = nnconvex_copy
@@ -4079,18 +4077,18 @@ let get_disjuncts p_nnconvex_constraint =
 (* {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Check if a nnconvex_constraint is false *)
+(** Check if an nnconvex_constraint is false *)
 let p_nnconvex_constraint_is_false = ippl_nncc_is_empty
 let px_nnconvex_constraint_is_false = ippl_nncc_is_empty
 let x_nnconvex_constraint_is_false = ippl_nncc_is_empty
 
 
-(** Check if a nnconvex_constraint is true *)
+(** Check if an nnconvex_constraint is true *)
 let p_nnconvex_constraint_is_true = ippl_nncc_is_universe
 
 
-(** Check if a nnconvex_constraint is pi0-compatible *)
-(*** NOTE: here, we split the nnconvex_constraint into a list of convex constraints, and we perform the check; the other option would have been to create a nnconvex_constraint from the point, and check inclusion ***)
+(** Check if an nnconvex_constraint is pi0-compatible *)
+(*** NOTE: here, we split the nnconvex_constraint into a list of convex constraints, and we perform the check; the other option would have been to create an nnconvex_constraint from the point, and check inclusion ***)
 (*** WARNING: function not tested ***)
 let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 	(* 1) Get the constraints *)
@@ -4100,17 +4098,17 @@ let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 	List.exists (fun p_linear_constraint -> is_pi0_compatible pval p_linear_constraint) disjuncts
 
 
-(** Check if a nnconvex_constraint is included in another one *)
+(** Check if an nnconvex_constraint is included in another one *)
 let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
 	(*** NOTE: PPL works in the reverse order: the 2nd covers the 1st one ***)
 	ippl_nncc_geometrically_covers p_nnconvex_constraint' p_nnconvex_constraint
 
 let px_nnconvex_constraint_is_leq = p_nnconvex_constraint_is_leq
 
-(** Check if a nnconvex_constraint is equal to another one *)
+(** Check if an nnconvex_constraint is equal to another one *)
 let p_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 
-(** Check if a nnconvex_constraint is equal to another one *)
+(** Check if an nnconvex_constraint is equal to another one *)
 let px_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 
 
@@ -4188,13 +4186,18 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering `LinearConstraint.nnconvex_union_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
+			"Entering `LinearConstraint.nnconvex_union_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " dimensions for the nnconvex_constraint and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions for the linear_constraint (" ^ (string_of_p_linear_constraint debug_variable_names linear_constraint) ^ "). Both are expected to be " ^ (string_of_int nb_dimensions) ^ "."
 	);
 	
 	(* Assert *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
+	if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Test nncc_assert_dimensions " ^ (string_of_int nb_dimensions) ^ " passed!");
+	);
+
 	assert_dimensions nb_dimensions linear_constraint;
 
+	(* Perform union *)
 	ippl_nncc_add_disjunct nnconvex_constraint linear_constraint;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
@@ -4217,8 +4220,8 @@ let px_nnconvex_px_union_assign c =
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
 let p_nnconvex_union_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* Assert *)
-(*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
-	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint';*)
+	nncc_assert_dimensions !p_dim p_nnconvex_constraint;
+	nncc_assert_dimensions !p_dim p_nnconvex_constraint';
 
 	(* Get the disjuncts of the second p_nnconvex_constraint *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint' in
@@ -4404,7 +4407,7 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 (*** NOTE/BADPROG: I used essentially the SAME function as exhibit_point, but I prefer having two separate functions than always using the, probably less efficient, nnconvex_constraint function all the time ***)
 (*** TODO: merge them using a generic function taking as argument the dedicated instantiated functions? ***)
 
-(** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
+(** Exhibit a point in an nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
 	(* First quick check that the constraint is satisfiable *)
 	if ippl_nncc_is_empty nnconvex_constraint then raise EmptyConstraint;
