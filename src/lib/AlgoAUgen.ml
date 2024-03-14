@@ -247,6 +247,13 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						);
 
 						(* K <- K ^ (k_good U k_block) *)
+
+						if verbose_mode_greater Verbose_total then(
+							self#print_algo_message_newline Verbose_total ("About to compute k_good <- k_good U k_block:");
+							self#print_algo_message Verbose_total ("k_good = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good));
+							self#print_algo_message Verbose_total ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
+						);
+
 						LinearConstraint.p_nnconvex_union_assign k_good k_block;
 						LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
