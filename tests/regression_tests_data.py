@@ -1028,6 +1028,29 @@ END CONSTRAINT
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/15
+		# Last modified            : 2024/03/15
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that undeclared variables are detected in updates',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/undeclared-variable-update.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'undeclared-variable-update.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test variable elimination in Boolean expressions',
