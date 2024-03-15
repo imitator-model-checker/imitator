@@ -1389,6 +1389,8 @@ end;
 
 		| SerializationError msg -> abort_with_bad_exception ("Serialization error: " ^ msg ^ "")
 
+		| Out_of_memory -> abort_with_bad_exception ("Oops! Out of memory")
+
 		| _ -> abort_with_bad_exception ("Fatal exception `" ^ (Printexc.to_string e) ^ "`.")
 	end;
 
