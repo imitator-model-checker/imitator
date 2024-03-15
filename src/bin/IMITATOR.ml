@@ -1391,6 +1391,8 @@ end;
 
 		| Out_of_memory -> abort_with_bad_exception ("Oops! Out of memory")
 
+		| Stack_overflow -> abort_with_bad_exception ("Oops! Stack overflow")
+
 		| _ -> abort_with_bad_exception ("Fatal exception `" ^ (Printexc.to_string e) ^ "`.")
 	end;
 
