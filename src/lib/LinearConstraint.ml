@@ -646,34 +646,6 @@ let ippl_nncc_intersection_assign nnconvex_constraint nnconvex_constraint' =
 (*** TODO: more PPL interfaces ***)
 
 
-(************************************************************)
-(************************************************************)
-(* Useful Functions *)
-(************************************************************)
-(************************************************************)
-
-(** check the dimensionality of a polyhedron *)
-let assert_dimensions nb_dimensions poly =
-	
-	if check_assert_dimensions then(
-		let ndim = ippl_space_dimension poly in
-		if ndim <> nb_dimensions then (
-			print_error ("A polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
-			raise (InternalError "Inconsistent polyhedron found")
-		)
-	)
-
-(** check the dimensionality of an NNCC polyhedron *)
-let nncc_assert_dimensions nb_dimensions nncc =
-	if check_assert_dimensions then(
-		let ndim = ippl_nncc_space_dimension nncc in
-		if ndim <> nb_dimensions then (
-			print_error ("An NCC polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
-			raise (InternalError "Inconsistent polyhedron found")
-		)
-	)
-
-
 
 
 (************************************************************)
@@ -1513,7 +1485,7 @@ let string_of_right_term_of_pxd_linear_inequality = string_of_right_term_of_line
 
 
 (** Convert a linear inequality into a string *)
-let string_of_linear_inequality customized_string names (linear_inequality : linear_inequality) =
+let string_of_linear_inequality (customized_string : Constants.customized_boolean_string) names (linear_inequality : linear_inequality) =
 	let normal_ineq = normalize_inequality linear_inequality in
 	let lterm, rterm, (op : ppl_op) = split_linear_inequality normal_ineq in
 	let lstr = string_of_ppl_linear_term names lterm in
@@ -1703,7 +1675,32 @@ let substitute_variables sub linear_inequality =
 (************************************************************)
 (************************************************************)
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Useful functions (dimensionality) } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let debug_string_of_linear_constraint linear_constraint =
+	" " ^
+	(string_of_list_of_string_with_sep
+		" & "
+		(List.map (string_of_linear_inequality Constants.default_string debug_variable_names) (ippl_get_inequalities linear_constraint))
+	)
 
+(** check the dimensionality of a polyhedron *)
+let assert_dimensions nb_dimensions linear_constraint =
+
+	if check_assert_dimensions then(
+		let ndim = ippl_space_dimension linear_constraint in
+		if ndim <> nb_dimensions then (
+			print_error ("A polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
+
+			(* Debug print *)
+			print_error ("The failed polyhedron is:");
+			let debug_print_linear_constraint = debug_string_of_linear_constraint linear_constraint in
+			print_error (debug_print_linear_constraint);
+
+			raise (InternalError "Inconsistent polyhedron found!")
+		)
+	)
 
 
 
@@ -1970,7 +1967,11 @@ let px_contains_integer_point = ippl_contains_integer_point
 (* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(* Get the list of dimensions of a constraint *)
+(** Get the number of dimensions of a constraint *)
+let p_nb_dimensions = ippl_space_dimension
+let px_nb_dimensions = ippl_space_dimension
+
+(** Get the list of dimensions of a constraint *)
 (*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
 let p_get_dimensions_list _ =
 	OCamlUtilities.list_of_interval 0 (!p_dim - 1)
@@ -2199,7 +2200,7 @@ let string_of_true = default_string.true_string
 let string_of_and = default_string.and_operator
 
 (** Convert a linear constraint into a string *)
-let string_of_linear_constraint customized_string names linear_constraint =
+let string_of_linear_constraint (customized_string : Constants.customized_boolean_string) names linear_constraint =
 	(* First check if true *)
 	if is_true linear_constraint then customized_string.true_string
 	
@@ -3967,6 +3968,7 @@ let test_PDBMs () =
 (* {2 Non-necessarily convex linear Constraints} *)
 (************************************************************)
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3977,6 +3979,76 @@ type nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
 type p_nnconvex_constraint = nnconvex_constraint
 type x_nnconvex_constraint = nnconvex_constraint
 type px_nnconvex_constraint = nnconvex_constraint
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Useful functions (dimensionality)} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
+let get_disjuncts p_nnconvex_constraint =
+	(* Increment discrete counter *)
+	ppl_nncc_get_disjuncts#increment;
+
+	(* Start continuous counter *)
+	ppl_nncc_get_disjuncts#start;
+
+	(* Create ref for the result *)
+	let disjuncts = ref [] in
+
+	(* Create iterator *)
+	let iterator = ippl_nncc_begin_iterator p_nnconvex_constraint in
+	(* Create an iterator for the end *)
+	let end_iterator = ippl_nncc_end_iterator p_nnconvex_constraint in
+
+	(* Iterate until the end *)
+	(*** NOTE: apparently, ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator represents the index AFTER the last element, hence the following test is correct ***)
+	while not (ippl_nncc_equals_iterator iterator end_iterator) do
+		(* Get the current disjunct *)
+		let disjunct = ippl_nncc_get_disjunct iterator in
+
+		(* Add it to the list of disjuncts *)
+		disjuncts := disjunct :: !disjuncts;
+
+		(* Increment the iterator *)
+		ippl_nncc_increment_iterator iterator;
+	done;
+
+	(* Return disjuncts *)
+	let result = List.rev (!disjuncts) in
+
+	(* Start continuous counter *)
+	ppl_nncc_get_disjuncts#stop;
+
+	result
+
+
+let debug_string_of_nnconvex_constraint nnconvex_constraint =
+	(* Get the disjuncts *)
+	let disjuncts = get_disjuncts nnconvex_constraint in
+	(* Convert each disjunct into a string *)
+	let disjuncts_string = List.map (string_of_p_linear_constraint debug_variable_names) disjuncts in
+	(* Concatenate using an "OR" *)
+	"(" ^ (string_of_list_of_string_with_sep "\nOR\n " disjuncts_string) ^ ")"
+
+(** check the dimensionality of an NNCC polyhedron *)
+let nncc_assert_dimensions nb_dimensions nncc =
+	if check_assert_dimensions then(
+		let ndim = ippl_nncc_space_dimension nncc in
+		if ndim <> nb_dimensions then (
+			print_error ("An NCC polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
+			print_newline();
+
+			(* Debug print *)
+			print_error ("The failed NCC polyhedron is:");
+			print_newline();
+			let debug_print_linear_constraint : string = debug_string_of_nnconvex_constraint nncc in
+			print_error (debug_print_linear_constraint);
+
+			raise (InternalError "Inconsistent NCC polyhedron found")
+		)
+	)
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4013,6 +4085,16 @@ let p_nnconvex_copy = nnconvex_copy
 let px_nnconvex_copy = nnconvex_copy
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Get the number of dimensions of a p_nnconvex_constraint *)
+let p_nnconvex_constraint_get_nb_dimensions = ippl_nncc_space_dimension
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4027,49 +4109,6 @@ let px_nnconvex_constraint_of_p_nnconvex_constraint (p_nnconvex_constraint : p_n
 	nncc_assert_dimensions !px_dim px_constraint;
 	(* Return *)
 	px_constraint
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* {3 Access} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
-let get_disjuncts p_nnconvex_constraint =
-	(* Increment discrete counter *)
-	ppl_nncc_get_disjuncts#increment;
-	
-	(* Start continuous counter *)
-	ppl_nncc_get_disjuncts#start;
-
-	(* Create ref for the result *)
-	let disjuncts = ref [] in
-
-	(* Create iterator *)
-	let iterator = ippl_nncc_begin_iterator p_nnconvex_constraint in
-	(* Create an iterator for the end *)
-	let end_iterator = ippl_nncc_end_iterator p_nnconvex_constraint in
-	
-	(* Iterate until the end *)
-	(*** NOTE: apparently, ppl_Pointset_Powerset_NNC_Polyhedron_end_iterator represents the index AFTER the last element, hence the following test is correct ***)
-	while not (ippl_nncc_equals_iterator iterator end_iterator) do
-		(* Get the current disjunct *)
-		let disjunct = ippl_nncc_get_disjunct iterator in
-		
-		(* Add it to the list of disjuncts *)
-		disjuncts := disjunct :: !disjuncts;
-		
-		(* Increment the iterator *)
-		ippl_nncc_increment_iterator iterator;
-	done;
-	
-	(* Return disjuncts *)
-	let result = List.rev (!disjuncts) in
-
-	(* Start continuous counter *)
-	ppl_nncc_get_disjuncts#stop;
-	
-	result
-
 
 
 
@@ -4161,9 +4200,11 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	assert_dimensions nb_dimensions linear_constraint;
 	
 	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total (
-			"Entering `LinearConstraint.p_nnconvex_p_intersection_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
+			"Entering `LinearConstraint.p_nnconvex_p_intersection_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions.";
+		);
+		print_newline();
 	);
 
 	(* First retrieve inequalities *)
@@ -4184,21 +4225,25 @@ let px_nnconvex_px_intersection_assign c = nnconvex_intersection_assign !px_dim 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
-		print_message Verbose_total (
-			"Entering `LinearConstraint.nnconvex_union_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " dimensions for the nnconvex_constraint and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions for the linear_constraint (" ^ (string_of_p_linear_constraint debug_variable_names linear_constraint) ^ "). Both are expected to be " ^ (string_of_int nb_dimensions) ^ "."
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Entering `LinearConstraint.nnconvex_union_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " dimensions for the nnconvex_constraint and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions for the linear_constraint (" ^ (string_of_p_linear_constraint debug_variable_names linear_constraint) ^ "). Both are expected to be " ^ (string_of_int nb_dimensions) ^ ".");
+
+		print_newline();
 	);
-	
+
+
 	(* Assert *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
 	if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Test that nncc_assert_dimensions = " ^ (string_of_int nb_dimensions) ^ " passed!");
 			print_message Verbose_total ("Now checking that linear_constraint has " ^ (string_of_int nb_dimensions) ^ ". Before check: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions.");
+		print_newline();
 	);
 
 	assert_dimensions nb_dimensions linear_constraint;
 	if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Test that dimensions of linear_constraint = " ^ (string_of_int nb_dimensions) ^ " passed!");
+		print_newline();
 	);
 
 	(* Perform union *)
@@ -4206,6 +4251,7 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 
 	if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Now exiting `LinearConstraint.nnconvex_union_assign`");
+		print_newline();
 	);
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
@@ -4217,20 +4263,34 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_p_union_assign c =
-	print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_p_union_assign`");
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_p_union_assign`");
+		print_newline();
+	);
 	nnconvex_union_assign !p_dim c
 
 let px_nnconvex_px_union_assign c =
-	print_message Verbose_total ("Entering `LinearConstraint.px_nnconvex_px_union_assign`");
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Entering `LinearConstraint.px_nnconvex_px_union_assign`");
+		print_newline();
+	);
 	nnconvex_union_assign !px_dim c
 
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
 let p_nnconvex_union_assign p_nnconvex_constraint p_nnconvex_constraint' =
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_union_assign`");
+		print_newline();
+	);
 	(* Assert *)
 	nncc_assert_dimensions !p_dim p_nnconvex_constraint;
 	nncc_assert_dimensions !p_dim p_nnconvex_constraint';
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Assertions passed in `LinearConstraint.p_nnconvex_union_assign`");
+		print_newline();
+	);
 	(* Get the disjuncts of the second p_nnconvex_constraint *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint' in
 	
