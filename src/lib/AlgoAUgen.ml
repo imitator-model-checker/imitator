@@ -91,7 +91,10 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
-	print_string ("\n" ^ (string_of_int (List.length passed)));
+(* !!! NOTE : de-BUG !!! *)
+		print_string ("\n" ^ (string_of_int (List.length passed)));
+		print_newline();
+(* !!! NOTE : de-BUG !!! *)
 
 		(* First check limits, which may raise exceptions *)
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
@@ -105,7 +108,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		let symbolic_state : State.state = state_space#get_state state_index in
 
 		(* Useful shortcut *)
-		let state_px_constraint = symbolic_state.px_constraint in
+		let state_px_constraint = LinearConstraint.px_copy (symbolic_state.px_constraint) in
 
 		let af_result =
 
@@ -256,6 +259,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 							self#print_algo_message Verbose_total ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
 						);
 
+(* !!! NOTE : de-BUG !!! *)
+						print_string ("\nDim k_good = " ^ (string_of_int (LinearConstraint.p_nnconvex_constraint_get_nb_dimensions k_good)) ^  " / Dim k_block = " ^ (string_of_int (LinearConstraint.p_nnconvex_constraint_get_nb_dimensions k_block)) );
+						print_newline();
+(* !!! NOTE : de-BUG !!! *)
+
 						LinearConstraint.p_nnconvex_union_assign k_good k_block;
 						LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
@@ -266,7 +274,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						);
 
 						(* k_live <- k_live U (C ^ g)\past *)
-						let eventually_exiting_valuations = DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index in
+						let eventually_exiting_valuations : LinearConstraint.px_linear_constraint = LinearConstraint.px_copy ( DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index) in
 
 						(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
 	(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
