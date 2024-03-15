@@ -106,7 +106,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
 (* !!! NOTE : de-BUG !!! *)
-		debug_nb_AF_calls := debug_nb_AF_calls + 1;
+		debug_nb_AF_calls <- debug_nb_AF_calls + 1;
 		print_string ("\nDepth = " ^ (string_of_int (List.length passed)));
 		print_string ("\nCalls to AF = " ^ (string_of_int debug_nb_AF_calls));
 		print_newline();
