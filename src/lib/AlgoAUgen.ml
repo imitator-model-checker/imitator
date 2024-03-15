@@ -91,6 +91,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
+	print_string ("\n" ^ (string_of_int (List.length passed)));
+
 		(* First check limits, which may raise exceptions *)
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
 
@@ -228,7 +230,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						);
 
 						(* Recursive call to AF on the successor *)
-						let k_good : LinearConstraint.p_nnconvex_constraint = self#au_rec successor_state_index (state_index :: passed) in
+						let k_good : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy(self#au_rec successor_state_index (state_index :: passed)) in
 
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
