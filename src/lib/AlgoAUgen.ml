@@ -25,6 +25,18 @@ open AlgoGeneric
 open Result
 
 
+(************************************************************)
+(* p_linear_constraint cache definition *)
+(************************************************************)
+
+(*module PNNCLinearConstraintHash = Hashtbl.Make (
+	struct
+		type t		= LinearConstraint.p_nnconvex_constraint
+		let equal	= LinearConstraint.p_nnconvex_constraint_is_equal
+		let hash	= DiscreteState.hash_code
+	end
+)*)
+
 
 (************************************************************)
 (************************************************************)
@@ -69,6 +81,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
 
+	val mutable debug_nb_AF_calls : int = 0
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Status of the analysis *)
@@ -92,7 +106,9 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
 
 (* !!! NOTE : de-BUG !!! *)
-		print_string ("\n" ^ (string_of_int (List.length passed)));
+		debug_nb_AF_calls := debug_nb_AF_calls + 1;
+		print_string ("\nDepth = " ^ (string_of_int (List.length passed)));
+		print_string ("\nCalls to AF = " ^ (string_of_int debug_nb_AF_calls));
 		print_newline();
 (* !!! NOTE : de-BUG !!! *)
 
