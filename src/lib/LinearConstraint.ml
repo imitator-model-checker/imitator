@@ -68,7 +68,7 @@ exception EmptyConstraint
 (* CONSTANTS *)
 (************************************************************)
 (** Check or not the number of dimensions of new polyhedra (not doing it may save around 0.5% of computation time, and no error ever occurred) *)
-let check_assert_dimensions = true
+let cHECK_ASSERT_DIMENSIONS = true
 
 
 (************************************************************)
@@ -340,11 +340,12 @@ type time_direction = Time_forward | Time_backward
 (* {2 Valuations} *)
 (************************************************************)
 
-type p_valuation = (variable -> coef)
-type x_valuation = (variable -> coef)
-type px_valuation = (variable -> coef)
-type pxd_valuation = (variable -> coef)
-type d_valuation = (variable -> coef)
+type valuation		= (variable -> coef)
+type p_valuation	= (variable -> coef)
+type x_valuation	= (variable -> coef)
+type px_valuation	= (variable -> coef)
+type pxd_valuation	= (variable -> coef)
+type d_valuation	= (variable -> coef)
 
 	
 (************************************************************)
@@ -897,7 +898,7 @@ let p_get_variable_coefficient_in_internal_linear_term = get_variable_coefficien
 (*------------------------------------------------------------*)
 (** Evaluate a linear term (PPL) with a function assigning a value to each variable. *)
 (*------------------------------------------------------------*)
-let rec evaluate_linear_term_ppl valuation_function linear_term =
+let rec evaluate_linear_term_ppl (valuation_function : valuation) (linear_term : ppl_linear_term) =
 	match linear_term with
 		| Coefficient z -> NumConst.numconst_of_mpz z
 		| Variable v -> (
@@ -928,7 +929,7 @@ let string_of_coef = NumConst.string_of_numconst
 let jani_string_of_coef = NumConst.jani_string_of_numconst
 
 (** Convert a linear term into a string *)	
-let rec string_of_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
+let rec string_of_linear_term (names : (variable -> variable_name)) (linear_term : internal_linear_term) =
 	match linear_term with
 		| IR_Coef c -> string_of_coef c
 		
@@ -961,7 +962,7 @@ let string_of_p_linear_term = string_of_linear_term
 let string_of_pxd_linear_term = string_of_linear_term 
 
 (** Convert a linear term (PPL) into a string *)
-let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
+let rec string_of_ppl_linear_term (names : (variable -> variable_name)) (linear_term : ppl_linear_term) =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
 		
@@ -1001,7 +1002,7 @@ let rec string_of_ppl_linear_term (names : (variable -> string)) (linear_term : 
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
 (*TODO DYLAN: with it, we may be able to simplify some calls, check it*)
-let rec jani_string_of_ppl_linear_term (names : (variable -> string)) (linear_term : ppl_linear_term) =
+let rec jani_string_of_ppl_linear_term (names : (variable -> variable_name)) (linear_term : ppl_linear_term) =
 	match linear_term with
 		| Coefficient z -> jani_string_of_coef (NumConst.numconst_of_string (Gmp.Z.string_from z))
 		
@@ -1053,7 +1054,7 @@ let op_term_of_pxd_linear_term (linear_term : internal_linear_term) =
 		| IR_Minus _ -> "-"
 		| IR_Times _ -> "*"
 
-let left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
+let left_term_of_pxd_linear_term (names : (variable -> variable_name)) (linear_term : internal_linear_term) =
 	match linear_term with
 	(*  * linear_term to hack return type *)
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
@@ -1079,7 +1080,7 @@ let left_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : i
 				
 		| IR_Times (z, _) -> "Unary", (jani_string_of_coef z), linear_term
 
-let right_term_of_pxd_linear_term (names : (variable -> string)) (linear_term : internal_linear_term) =
+let right_term_of_pxd_linear_term (names : (variable -> variable_name)) (linear_term : internal_linear_term) =
 	match linear_term with
 	(*  * linear_term to hack return type *)
 		| IR_Coef z -> "Coefficient", jani_string_of_coef z, linear_term
@@ -1114,7 +1115,7 @@ let rec negate_linear_term = function
     | IR_Plus (l_term, r_term) -> IR_Plus (negate_linear_term l_term, negate_linear_term r_term)
     | IR_Minus (l_term, r_term) -> IR_Minus (negate_linear_term l_term, negate_linear_term r_term)
 
-let rec string_of_linear_term_for_jani variable_names linear_term = 
+let rec string_of_linear_term_for_jani (variable_names : (variable -> variable_name)) linear_term =
 	(*TODO DYLAN Update called funcitons and here with a new type insteed of tuple*)
 	if (pxd_linear_term_is_unary linear_term)
 	then (
@@ -1308,7 +1309,7 @@ let op_of_pxd_linear_inequality = op_of_linear_inequality
 
 
 (** evaluate a linear inequality for a given valuation *)
-let evaluate_linear_inequality valuation_function linear_inequality =
+let evaluate_linear_inequality (valuation_function : valuation) (linear_inequality : linear_inequality) =
 	match linear_inequality with 
 		| Less_Than (lterm, rterm) -> (
 				let lval = evaluate_linear_term_ppl valuation_function lterm in
@@ -1346,7 +1347,7 @@ let strict_to_not_strict_inequality inequality =
 (*------------------------------------------------------------*)
 
 (** Check if a linear inequality is pi0-compatible *)
-let is_pi0_compatible_inequality pi0 linear_inequality =
+let is_pi0_compatible_inequality (pi0 : p_valuation) (linear_inequality : linear_inequality) =
 	evaluate_linear_inequality pi0 linear_inequality
 
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
@@ -1466,7 +1467,7 @@ let normalize_inequality (ineq : linear_inequality) =
 
 
 (* Get the left-hand linear term of a linear inequality *)
-let string_of_left_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+let string_of_left_term_of_linear_inequality (names : (variable -> variable_name)) (linear_inequality : linear_inequality) : string =
 	(* First normalize *)
 	let normalized_linear_inequality = normalize_inequality linear_inequality in
 	let (left : ppl_linear_term), _, _ = split_linear_inequality normalized_linear_inequality in
@@ -1475,7 +1476,7 @@ let string_of_left_term_of_linear_inequality (names : (variable -> string)) (lin
 let string_of_left_term_of_pxd_linear_inequality = string_of_left_term_of_linear_inequality
 
 (* Get the right-hand linear term of a linear inequality *)
-let string_of_right_term_of_linear_inequality (names : (variable -> string)) (linear_inequality : linear_inequality) : string =
+let string_of_right_term_of_linear_inequality (names : (variable -> variable_name)) (linear_inequality : linear_inequality) : string =
 	(* First normalize *)
 	let normalized_linear_inequality = normalize_inequality linear_inequality in
 	let _, (right : ppl_linear_term), _ = split_linear_inequality normalized_linear_inequality in
@@ -1485,7 +1486,7 @@ let string_of_right_term_of_pxd_linear_inequality = string_of_right_term_of_line
 
 
 (** Convert a linear inequality into a string *)
-let string_of_linear_inequality (customized_string : Constants.customized_boolean_string) names (linear_inequality : linear_inequality) =
+let string_of_linear_inequality (customized_string : Constants.customized_boolean_string) (names : (variable -> variable_name)) (linear_inequality : linear_inequality) =
 	let normal_ineq = normalize_inequality linear_inequality in
 	let lterm, rterm, (op : ppl_op) = split_linear_inequality normal_ineq in
 	let lstr = string_of_ppl_linear_term names lterm in
@@ -1676,8 +1677,20 @@ let substitute_variables sub linear_inequality =
 (************************************************************)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* {3 Useful functions (dimensionality) } *)
+(* {3 Useful functions } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*------------------------------------------------------------*)
+(* Copy *)
+(*------------------------------------------------------------*)
+
+let copy = ippl_copy_linear_constraint
+let p_copy = ippl_copy_linear_constraint
+let px_copy = ippl_copy_linear_constraint
+let pxd_copy = ippl_copy_linear_constraint
+
+
+
 let debug_string_of_linear_constraint linear_constraint =
 	" " ^
 	(string_of_list_of_string_with_sep
@@ -1685,10 +1698,18 @@ let debug_string_of_linear_constraint linear_constraint =
 		(List.map (string_of_linear_inequality Constants.default_string debug_variable_names) (ippl_get_inequalities linear_constraint))
 	)
 
-(** check the dimensionality of a polyhedron *)
-let assert_dimensions nb_dimensions linear_constraint =
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Useful functions (dimensionality) } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	if check_assert_dimensions then(
+(** check the dimensionality of a polyhedron *)
+let assert_dimensions (nb_dimensions : int) (linear_constraint : linear_constraint) =
+
+
+	(*** NOTE/DEBUG/TODO: copy might not be necessary ***)
+	let linear_constraint = copy linear_constraint in
+
+	if cHECK_ASSERT_DIMENSIONS then(
 		let ndim = ippl_space_dimension linear_constraint in
 		if ndim <> nb_dimensions then (
 			print_error ("A polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
@@ -1864,15 +1885,6 @@ let pxd_make_polyhedron_time_elapsing_pta v = make_polyhedron_time_shift_pta !px
 let pxd_make_polyhedron_time_past_pta     v = make_polyhedron_time_shift_pta !pxd_dim Time_backward v
 
 
-
-(*------------------------------------------------------------*)
-(* Copy *)
-(*------------------------------------------------------------*)
-
-let copy = ippl_copy_linear_constraint
-let p_copy = ippl_copy_linear_constraint
-let px_copy = ippl_copy_linear_constraint
-let pxd_copy = ippl_copy_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2200,7 +2212,7 @@ let string_of_true = default_string.true_string
 let string_of_and = default_string.and_operator
 
 (** Convert a linear constraint into a string *)
-let string_of_linear_constraint (customized_string : Constants.customized_boolean_string) names linear_constraint =
+let string_of_linear_constraint (customized_string : Constants.customized_boolean_string) (names : (variable -> variable_name)) linear_constraint =
 	(* First check if true *)
 	if is_true linear_constraint then customized_string.true_string
 	
@@ -3052,7 +3064,7 @@ let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
-let is_pi0_compatible pi0 linear_constraint =
+let is_pi0_compatible (pi0 : p_valuation) (p_linear_constraint : p_linear_constraint) =
 	(* Increment discrete counter *)
 	tcounter_pi0_compatibility#increment;
 
@@ -3060,7 +3072,7 @@ let is_pi0_compatible pi0 linear_constraint =
 	tcounter_pi0_compatibility#start;
 
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ippl_get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_inequalities p_linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	let result =
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
@@ -3079,7 +3091,7 @@ let d_is_pi0_compatible = is_pi0_compatible
 
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
-let partition_pi0_compatible pi0 linear_constraint =
+let partition_pi0_compatible (pi0 : p_valuation) (linear_constraint : linear_constraint) =
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Partition *)
@@ -3991,7 +4003,7 @@ let px_nnconvex_copy = nnconvex_copy
 
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
-let get_disjuncts p_nnconvex_constraint =
+let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 	(* Increment discrete counter *)
 	ppl_nncc_get_disjuncts#increment;
 
@@ -4035,7 +4047,7 @@ let get_disjuncts p_nnconvex_constraint =
 	result
 
 
-let debug_string_of_nnconvex_constraint nnconvex_constraint =
+let debug_string_of_nnconvex_constraint (nnconvex_constraint : nnconvex_constraint) =
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts nnconvex_constraint in
 	(* Convert each disjunct into a string *)
@@ -4048,8 +4060,12 @@ let debug_string_of_nnconvex_constraint nnconvex_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** check the dimensionality of an NNCC polyhedron *)
-let nncc_assert_dimensions nb_dimensions nncc =
-	if check_assert_dimensions then(
+let nncc_assert_dimensions (nb_dimensions : int) (nncc : nnconvex_constraint) =
+	if cHECK_ASSERT_DIMENSIONS then(
+
+		(*** NOTE/DEBUG/TODO: copy might not be necessary ***)
+		let nncc = nnconvex_copy nncc in
+
 		let ndim = ippl_nncc_space_dimension nncc in
 		if ndim <> nb_dimensions then (
 			print_error ("An NCC polyhedron does not have the expected number of dimensions (found: " ^ (string_of_int ndim) ^ " / expected: " ^ (string_of_int nb_dimensions) ^ ")");
@@ -4072,20 +4088,20 @@ let nncc_assert_dimensions nb_dimensions nncc =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false non-necessarily convex constraint *)
-let false_p_nnconvex_constraint () = ippl_nncc_false_constraint !p_dim
-let false_px_nnconvex_constraint () = ippl_nncc_false_constraint !px_dim
+let false_p_nnconvex_constraint  () : p_nnconvex_constraint  = ippl_nncc_false_constraint !p_dim
+let false_px_nnconvex_constraint () : px_nnconvex_constraint = ippl_nncc_false_constraint !px_dim
 
 
 (** Create a true non-necessarily convex constraint *)
-let true_p_nnconvex_constraint () = ippl_nncc_true_constraint !p_dim
-let true_px_nnconvex_constraint () = ippl_nncc_true_constraint !px_dim
+let true_p_nnconvex_constraint  () : p_nnconvex_constraint  = ippl_nncc_true_constraint !p_dim
+let true_px_nnconvex_constraint () : px_nnconvex_constraint = ippl_nncc_true_constraint !px_dim
 
 
 (** Create a new nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) = ippl_nncc_from_poly p_linear_constraint
 let x_nnconvex_constraint_of_x_linear_constraint (x_linear_constraint : x_linear_constraint) = ippl_nncc_from_poly x_linear_constraint
 
-let px_nnconvex_constraint_of_px_linear_constraint c =
+let px_nnconvex_constraint_of_px_linear_constraint (c : px_linear_constraint) : px_nnconvex_constraint =
 	(* Assert *)
 	assert_dimensions !px_dim c;
 	(* Copy *)
@@ -4129,9 +4145,9 @@ let px_nnconvex_constraint_of_p_nnconvex_constraint (p_nnconvex_constraint : p_n
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if an nnconvex_constraint is false *)
-let p_nnconvex_constraint_is_false = ippl_nncc_is_empty
+let p_nnconvex_constraint_is_false  = ippl_nncc_is_empty
 let px_nnconvex_constraint_is_false = ippl_nncc_is_empty
-let x_nnconvex_constraint_is_false = ippl_nncc_is_empty
+let x_nnconvex_constraint_is_false  = ippl_nncc_is_empty
 
 
 (** Check if an nnconvex_constraint is true *)
@@ -4141,7 +4157,7 @@ let p_nnconvex_constraint_is_true = ippl_nncc_is_universe
 (** Check if an nnconvex_constraint is pi0-compatible *)
 (*** NOTE: here, we split the nnconvex_constraint into a list of convex constraints, and we perform the check; the other option would have been to create an nnconvex_constraint from the point, and check inclusion ***)
 (*** WARNING: function not tested ***)
-let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
+let p_nnconvex_constraint_is_pi0_compatible (pval : p_valuation) (p_nnconvex_constraint : p_nnconvex_constraint) =
 	(* 1) Get the constraints *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
@@ -4166,7 +4182,7 @@ let px_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Simplification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let p_nn_simplify p_nnconvex_constraint =
+let p_nn_simplify (p_nnconvex_constraint : p_nnconvex_constraint) =
 	ippl_nncc_pairwise_reduce p_nnconvex_constraint;
 	ippl_nncc_omega_reduce p_nnconvex_constraint;
 	()
@@ -4177,7 +4193,11 @@ let p_nn_simplify p_nnconvex_constraint =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
-let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
+let string_of_p_nnconvex_constraint (names : (variable -> variable_name)) (p_nnconvex_constraint : p_nnconvex_constraint)  =
+
+	(*** NOTE/DEBUG/TODO: copy might not be necessary ***)
+	let p_nnconvex_constraint = p_nnconvex_copy p_nnconvex_constraint in
+
 	(* First reduce (avoids identical disjuncts) *)
 	p_nn_simplify p_nnconvex_constraint;
 	
@@ -4206,7 +4226,13 @@ let string_of_x_nnconvex_constraint = string_of_p_nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constraint =
+let nnconvex_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nnconvex_constraint) (linear_constraint : linear_constraint) =
+
+
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let linear_constraint = copy linear_constraint in
+
+
 	(* Assert *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
 	assert_dimensions nb_dimensions linear_constraint;
@@ -4231,8 +4257,8 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	()
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_nnconvex_p_intersection_assign c = nnconvex_intersection_assign !p_dim c
-let px_nnconvex_px_intersection_assign c = nnconvex_intersection_assign !px_dim c
+let p_nnconvex_p_intersection_assign   (c : nnconvex_constraint) = nnconvex_intersection_assign !p_dim c
+let px_nnconvex_px_intersection_assign (c : nnconvex_constraint) = nnconvex_intersection_assign !px_dim c
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
 let nnconvex_union_assign nb_dimensions (nnconvex_constraint : nnconvex_constraint) (linear_constraint : linear_constraint) =
@@ -4320,15 +4346,21 @@ let p_nnconvex_union_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_n
 
 (** Performs the union of a px_nnconvex_constraint with another px_nnconvex_constraint; the first px_nnconvex_constraint is modified, the second is not *)
 let px_nnconvex_union_assign (px_nnconvex_constraint : px_nnconvex_constraint) (px_nnconvex_constraint_2 : px_nnconvex_constraint) =
+
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let px_nnconvex_constraint_2 = p_nnconvex_copy px_nnconvex_constraint_2 in
+
 	let disjuncts = get_disjuncts px_nnconvex_constraint_2 in
 	List.iter (px_nnconvex_px_union_assign px_nnconvex_constraint) disjuncts
 
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
 let p_nnconvex_difference_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
-	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
 
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
 	let p_nnconvex_constraint_2 = p_nnconvex_copy p_nnconvex_constraint_2 in
+
+	(*** NOTE/DEBUG/TODO/WARNING: why is this code commented? (and leads to errors) It should work! ***)
 	(* Assert *)
 (*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
 	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint_2;*)
@@ -4343,7 +4375,7 @@ let p_nnconvex_difference_assign (p_nnconvex_constraint : p_nnconvex_constraint)
 	()
 
 (** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
-let p_nnconvex_intersection_assign p_nnconvex_constraint p_nnconvex_constraint_2 =
+let p_nnconvex_intersection_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
 
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
 	let p_nnconvex_constraint_2 = p_nnconvex_copy p_nnconvex_constraint_2 in
@@ -4361,7 +4393,7 @@ let px_nnconvex_difference_assign = p_nnconvex_difference_assign
 let x_nnconvex_difference_assign = p_nnconvex_difference_assign
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
-let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint_2 =
+let p_nnconvex_difference (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
 	(* Copy*)
 	let p_nnconvex_constraint_copied = p_nnconvex_copy p_nnconvex_constraint in
 	(* Apply side-effects function *)
@@ -4431,9 +4463,11 @@ let px_nnconvex_constraint_of_px_linear_constraints (px_linear_constraints : px_
 	result
 
 
-let p_nnconvex_hide variables p_nnconvex_constraint =
+let p_nnconvex_hide (variables : variable list) (p_nnconvex_constraint : p_nnconvex_constraint) =
 	(* 1) Get disjuncts *)
-	let disjuncts = get_disjuncts p_nnconvex_constraint in
+
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let disjuncts = get_disjuncts (p_nnconvex_copy p_nnconvex_constraint) in
 	
 	(* 2) Hide in each disjuncts *)
 	let disjuncts_hidden = List.map (hide !p_dim variables) disjuncts in
@@ -4442,9 +4476,10 @@ let p_nnconvex_hide variables p_nnconvex_constraint =
 	p_nnconvex_constraint_of_p_linear_constraints disjuncts_hidden
 	
 
-let px_nnconvex_hide variables px_nnconvex_constraint =
+let px_nnconvex_hide (variables : variable list) (px_nnconvex_constraint : px_nnconvex_constraint) =
 	(* 1) Get disjuncts *)
-	let disjuncts = get_disjuncts px_nnconvex_constraint in
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let disjuncts = get_disjuncts (px_nnconvex_copy px_nnconvex_constraint) in
 	
 	(* 2) Hide in each disjuncts *)
 	let disjuncts_hidden = List.map (hide !px_dim variables) disjuncts in
@@ -4456,7 +4491,7 @@ let px_nnconvex_hide variables px_nnconvex_constraint =
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
-let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
+let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnconvex_constraint) =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
