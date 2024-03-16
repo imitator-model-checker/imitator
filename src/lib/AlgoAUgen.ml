@@ -514,7 +514,16 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		print_newline();
 (* !!! NOTE : de-BUG !!! *)
 
-						LinearConstraint.p_nnconvex_union_assign k_good k_block;
+(* !!! NOTE : de-BUG !!! *)
+		print_string ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
+(* !!! NOTE : de-BUG !!! *)
+
+
+						LinearConstraint.p_nnconvex_union_assign k_good (LinearConstraint.p_nnconvex_copy k_block);
+(* !!! NOTE : de-BUG !!! *)
+		print_string ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
+(* !!! NOTE : de-BUG !!! *)
+
 (* !!! NOTE : de-BUG !!! *)
 		debug_nb_instructions <- debug_nb_instructions + 1;
 		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
