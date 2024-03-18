@@ -77,9 +77,9 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(************************************************************)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
+	(** Process a symbolic state: returns a pair of Booleans (to_be_explored, is_target) such that to_be_explored = true if the state be added to the next states to explore, and is_target iff it is a target state ("psi predicate") *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state (state : State.state) : bool =
+	method private process_state (state : State.state) : (bool * bool) =
 	
 		(* Statistics *)
 		counter_process_state#increment;
@@ -92,7 +92,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		let state_constraint = state.px_constraint in
 		
-		let to_be_added =
+		let result =
 			(* Check whether the current location matches one of the target (final) locations *)
 			if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option state then(
 			
@@ -141,8 +141,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 					);
 				); (* end if new bad constraint *)
 				
-				(* Do NOT compute its successors; cut the branch *)
-				false
+				(* Do NOT compute its successors; cut the branch; and return it is a target state *)
+				false, true
 				
 			) (* end if match state predicate *)
 			else(
@@ -170,7 +170,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				in
 				if time_went_too_far then(
 					(* Cut branch! *)
-					false
+					false, false
 				)else(
 					(* Normal case *)
 					(* In case algorithm EU: check whether the first predicate (temporary, "phi") is matched *)
@@ -179,15 +179,15 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 						(* Check whether the current location matches one of the target phi predicates *)
 						if State.match_state_predicate model state_predicate_phi state then(
 							self#print_algo_message Verbose_medium "State matching a phi predicate: keep";
-							true
+							true, false
 						)else(
 							self#print_algo_message Verbose_medium "State NOT matching a phi predicate: discard";
-							false
+							false, false
 						)
 
 					| None ->
 						(* No phi predicate (a.k.a. True) -> Keep the state *)
-						true
+						true, false
 				) (* end if time went too far *)
 			) (* end if not match state predicate *)
 		
@@ -197,7 +197,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		counter_process_state#stop;
 
 		(* Return result *)
-		to_be_added
+		result
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -210,7 +210,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		let initial_state : State.state = {global_location = model.initial_location ; px_constraint = initial_px_constraint} in
 
 
-		if self#process_state initial_state then None
+		let to_be_explored, _ = self#process_state initial_state in
+		if to_be_explored then None
 		else(
 			(* Set termination status *)
 			termination_status <- Some (Result.Regular_termination);
@@ -259,10 +260,11 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			(*** NOTE: if the answer is false, then the new state is a target state ***)
 			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
-			let to_be_added = ref (self#process_state new_state) in
+			let is_to_be_added, is_a_target = self#process_state new_state in
+			let to_be_added = ref is_to_be_added in
 			
 			(* Update the target flag *)
-			is_target := not !to_be_added;
+			is_target := is_a_target;
 			
 			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
