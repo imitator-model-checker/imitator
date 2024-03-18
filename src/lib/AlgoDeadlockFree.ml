@@ -496,6 +496,16 @@ class algoDeadlockFree (model : AbstractModel.abstract_model) ((*property*)_ : A
 			
 			(* Perform result = initial_state|P \ bad_constraint *)
 			let good_under_result = LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				self#print_algo_message_newline Verbose_total "About to perform initial_state|P \ bad_constraint…";
+				self#print_algo_message_newline Verbose_total "initial_state|P =";
+				self#print_algo_message Verbose_total (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names good_under_result);
+				self#print_algo_message_newline Verbose_total "bad_constraint =";
+				self#print_algo_message Verbose_total (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+			);
+
 			LinearConstraint.p_nnconvex_difference_assign good_under_result bad_constraint;
 			
 			self#print_algo_message_newline Verbose_medium (
