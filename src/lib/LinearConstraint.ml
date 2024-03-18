@@ -4355,24 +4355,29 @@ let px_nnconvex_union_assign (px_nnconvex_constraint : px_nnconvex_constraint) (
 
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
-let p_nnconvex_difference_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
+let nnconvex_difference_assign (nb_dimensions : int) (nnconvex_constraint : nnconvex_constraint) (nnconvex_constraint_2 : nnconvex_constraint) =
 
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
-	let p_nnconvex_constraint_2 = p_nnconvex_copy p_nnconvex_constraint_2 in
+	let nnconvex_constraint_2 = p_nnconvex_copy nnconvex_constraint_2 in
 
-	(*** NOTE/DEBUG/TODO/WARNING: why is this code commented? (and leads to errors) It should work! ***)
 	(* Assert *)
-(*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
-	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint_2;*)
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint_2;
 
 	(* Execute *)
-	ippl_nncc_difference_assign p_nnconvex_constraint p_nnconvex_constraint_2;
+	ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint_2;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	p_nn_simplify p_nnconvex_constraint;
+	p_nn_simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
+
+(*** NOTE: important to pass p_nnconvex_constraint, otherwise !p_dim is statically evaluated ***)
+let p_nnconvex_difference_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) = nnconvex_difference_assign !p_dim p_nnconvex_constraint p_nnconvex_constraint_2
+let x_nnconvex_difference_assign (x_nnconvex_constraint : x_nnconvex_constraint) (x_nnconvex_constraint_2 : x_nnconvex_constraint) = nnconvex_difference_assign !px_dim x_nnconvex_constraint x_nnconvex_constraint_2
+let px_nnconvex_difference_assign (px_nnconvex_constraint : px_nnconvex_constraint) (px_nnconvex_constraint_2 : px_nnconvex_constraint) = nnconvex_difference_assign !px_dim px_nnconvex_constraint px_nnconvex_constraint_2
+
 
 (** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
 let p_nnconvex_intersection_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
@@ -4387,10 +4392,9 @@ let p_nnconvex_intersection_assign (p_nnconvex_constraint : p_nnconvex_constrain
 	p_nn_simplify p_nnconvex_constraint;
 	()	
 
+(* let p_nnconvex_intersection_assign  = p_nnconvex_intersection_assign *)
 let px_nnconvex_intersection_assign = p_nnconvex_intersection_assign
 
-let px_nnconvex_difference_assign = p_nnconvex_difference_assign
-let x_nnconvex_difference_assign = p_nnconvex_difference_assign
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
 let p_nnconvex_difference (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
