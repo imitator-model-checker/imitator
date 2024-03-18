@@ -4182,9 +4182,9 @@ let px_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Simplification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let p_nn_simplify (p_nnconvex_constraint : p_nnconvex_constraint) =
-	ippl_nncc_pairwise_reduce p_nnconvex_constraint;
-	ippl_nncc_omega_reduce p_nnconvex_constraint;
+let nn_simplify (nnconvex_constraint : nnconvex_constraint) =
+	ippl_nncc_pairwise_reduce nnconvex_constraint;
+	ippl_nncc_omega_reduce nnconvex_constraint;
 	()
 	
 
@@ -4199,7 +4199,7 @@ let string_of_p_nnconvex_constraint (names : (variable -> variable_name)) (p_nnc
 	let p_nnconvex_constraint = p_nnconvex_copy p_nnconvex_constraint in
 
 	(* First reduce (avoids identical disjuncts) *)
-	p_nn_simplify p_nnconvex_constraint;
+	nn_simplify p_nnconvex_constraint;
 	
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
@@ -4251,7 +4251,7 @@ let nnconvex_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nn
 	ippl_nncc_add_constraints nnconvex_constraint constraint_system;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	p_nn_simplify nnconvex_constraint;
+	nn_simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
@@ -4274,7 +4274,7 @@ let nnconvex_union_assign nb_dimensions (nnconvex_constraint : nnconvex_constrai
 	);
 
 
-	(* Assert *)
+	(* Assert dimensions *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
 	if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Test that nncc_assert_dimensions = " ^ (string_of_int nb_dimensions) ^ " passed!");
@@ -4297,26 +4297,34 @@ let nnconvex_union_assign nb_dimensions (nnconvex_constraint : nnconvex_constrai
 	);
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-(* 	p_nn_simplify nnconvex_constraint; *)
+(* 	nn_simplify nnconvex_constraint; *)
 	
 	(* The end *)
 	()
 
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_nnconvex_p_union_assign (nnconvex_constraint : nnconvex_constraint) =
+let p_nnconvex_p_union_assign (nnconvex_constraint : p_nnconvex_constraint) (linear_constraint : p_linear_constraint) =
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_p_union_assign`");
 		print_newline();
 	);
-	nnconvex_union_assign !p_dim nnconvex_constraint
+	(* Assert dimensions *)
+	nncc_assert_dimensions !p_dim nnconvex_constraint;
+	assert_dimensions !p_dim linear_constraint;
 
-let px_nnconvex_px_union_assign (nnconvex_constraint : nnconvex_constraint) =
+	nnconvex_union_assign !p_dim nnconvex_constraint linear_constraint
+
+let px_nnconvex_px_union_assign (nnconvex_constraint : px_nnconvex_constraint) (linear_constraint : px_linear_constraint) =
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Entering `LinearConstraint.px_nnconvex_px_union_assign`");
 		print_newline();
 	);
-	nnconvex_union_assign !px_dim nnconvex_constraint
+	(* Assert dimensions *)
+	nncc_assert_dimensions !px_dim nnconvex_constraint;
+	assert_dimensions !px_dim linear_constraint;
+
+	nnconvex_union_assign !px_dim nnconvex_constraint linear_constraint
 
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
@@ -4330,7 +4338,7 @@ let p_nnconvex_union_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_n
 		print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_union_assign`");
 		print_newline();
 	);
-	(* Assert *)
+	(* Assert dimensions *)
 	nncc_assert_dimensions !p_dim p_nnconvex_constraint;
 	nncc_assert_dimensions !p_dim p_nnconvex_constraint_2;
 
@@ -4342,13 +4350,22 @@ let p_nnconvex_union_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_n
 	let disjuncts = get_disjuncts p_nnconvex_constraint_2 in
 	
 	(* Add each of them as a union *)
-	List.iter (p_nnconvex_p_union_assign p_nnconvex_constraint) disjuncts
+(* 	List.iter (p_nnconvex_p_union_assign p_nnconvex_constraint) disjuncts *)
+	(*** NOTE/DEBUG/TODO: trying to replace List.iter with something else but most probably not necessary (and equivalent…) ***)
+	for i = 0 to List.length disjuncts - 1 do
+		p_nnconvex_p_union_assign p_nnconvex_constraint (List.nth disjuncts i);
+	done;
+	()
 
 (** Performs the union of a px_nnconvex_constraint with another px_nnconvex_constraint; the first px_nnconvex_constraint is modified, the second is not *)
 let px_nnconvex_union_assign (px_nnconvex_constraint : px_nnconvex_constraint) (px_nnconvex_constraint_2 : px_nnconvex_constraint) =
 
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
 	let px_nnconvex_constraint_2 = p_nnconvex_copy px_nnconvex_constraint_2 in
+
+	(* Assert dimensions *)
+	nncc_assert_dimensions !px_dim px_nnconvex_constraint;
+	nncc_assert_dimensions !px_dim px_nnconvex_constraint_2;
 
 	let disjuncts = get_disjuncts px_nnconvex_constraint_2 in
 	List.iter (px_nnconvex_px_union_assign px_nnconvex_constraint) disjuncts
@@ -4368,7 +4385,7 @@ let nnconvex_difference_assign (nb_dimensions : int) (nnconvex_constraint : nnco
 	ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint_2;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	p_nn_simplify nnconvex_constraint;
+	nn_simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
@@ -4379,29 +4396,42 @@ let x_nnconvex_difference_assign (x_nnconvex_constraint : x_nnconvex_constraint)
 let px_nnconvex_difference_assign (px_nnconvex_constraint : px_nnconvex_constraint) (px_nnconvex_constraint_2 : px_nnconvex_constraint) = nnconvex_difference_assign !px_dim px_nnconvex_constraint px_nnconvex_constraint_2
 
 
-(** Performs the intersection between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
-let p_nnconvex_intersection_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
+(** Performs the intersection between a first nnconvex_constraint and a second nnconvex_constraint; the first is modified, the second is not *)
+let nnconvex_nnc_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nnconvex_constraint) (nnconvex_constraint_2 : nnconvex_constraint) =
 
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
-	let p_nnconvex_constraint_2 = p_nnconvex_copy p_nnconvex_constraint_2 in
+	let nnconvex_constraint_2 = p_nnconvex_copy nnconvex_constraint_2 in
+
+	(* Assert *)
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint_2;
 
 	(* Execute *)
-	ippl_nncc_intersection_assign p_nnconvex_constraint p_nnconvex_constraint_2;
+	ippl_nncc_intersection_assign nnconvex_constraint nnconvex_constraint_2;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	p_nn_simplify p_nnconvex_constraint;
+	nn_simplify nnconvex_constraint;
 	()	
 
-(* let p_nnconvex_intersection_assign  = p_nnconvex_intersection_assign *)
-let px_nnconvex_intersection_assign = p_nnconvex_intersection_assign
+(*** NOTE: important to pass p_nnconvex_constraint, otherwise !p_dim is statically evaluated ***)
+let p_nnconvex_intersection_assign (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) = nnconvex_nnc_intersection_assign !p_dim p_nnconvex_constraint p_nnconvex_constraint_2
+let x_nnconvex_intersection_assign (x_nnconvex_constraint : x_nnconvex_constraint) (x_nnconvex_constraint_2 : x_nnconvex_constraint) = nnconvex_nnc_intersection_assign !px_dim x_nnconvex_constraint x_nnconvex_constraint_2
+let px_nnconvex_intersection_assign (px_nnconvex_constraint : px_nnconvex_constraint) (px_nnconvex_constraint_2 : px_nnconvex_constraint) = nnconvex_nnc_intersection_assign !px_dim px_nnconvex_constraint px_nnconvex_constraint_2
 
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
 let p_nnconvex_difference (p_nnconvex_constraint : p_nnconvex_constraint) (p_nnconvex_constraint_2 : p_nnconvex_constraint) =
+
 	(* Copy*)
 	let p_nnconvex_constraint_copied = p_nnconvex_copy p_nnconvex_constraint in
+
+	(* Assert dimensions *)
+	nncc_assert_dimensions !p_dim p_nnconvex_constraint;
+	nncc_assert_dimensions !p_dim p_nnconvex_constraint_2;
+
 	(* Apply side-effects function *)
 	p_nnconvex_difference_assign p_nnconvex_constraint_copied p_nnconvex_constraint_2;
+
 	(* Return *)
 	p_nnconvex_constraint_copied
 
@@ -4542,7 +4572,7 @@ let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnc
 (*** TODO: merge them using a generic function taking as argument the dedicated instantiated functions? ***)
 
 (** Exhibit a point in an nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
-let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
+let nnconvex_constraint_exhibit_point (nb_dimensions : int) (nnconvex_constraint : nnconvex_constraint) =
 	(* First quick check that the constraint is satisfiable *)
 	if ippl_nncc_is_empty nnconvex_constraint then raise EmptyConstraint;
 	
