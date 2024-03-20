@@ -211,13 +211,13 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type const_or_name =
-  | Index_literal of NumConst.t
-  | Index_name of variable_name
+type literal_or_const_var =
+  | Literal of NumConst.t
+  | Const_var of variable_name
 
 type name_or_access =
   | Var_name of variable_name
-  | Var_array_access of variable_name * const_or_name
+  | Var_array_access of variable_name * literal_or_const_var
 
 type unexpanded_sync =
 	| UnexpandedSync of name_or_access
@@ -226,7 +226,7 @@ type unexpanded_sync =
 (** A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
 
-type unexpanded_parsed_flow = (name_or_access * const_or_name) list
+type unexpanded_parsed_flow = (name_or_access * literal_or_const_var) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
@@ -318,9 +318,9 @@ type synt_var_kind =
   | Clock_synt_array
   | Action_synt_array
 
-type synt_var_type = int * synt_var_kind
+type synt_var_type = literal_or_const_var * synt_var_kind
 
-type synt_var_decl =
+type parsed_synt_var_decl =
   synt_var_type * variable_name list
 
 (****************************************************************)
@@ -335,7 +335,7 @@ type parsed_model = {
 	init_definition       : init_definition;
 }
 
-type parsed_model_unexpanded = {
+type unexpanded_parsed_model = {
   (* added prefix to avoid crashing type inference *)
 	unexpanded_controllable_actions  : parsed_controllable_actions;
 	unexpanded_variable_declarations : variable_declarations;
@@ -344,7 +344,7 @@ type parsed_model_unexpanded = {
 	unexpanded_init_definition       : init_definition;
   template_definitions             : parsed_template_definition list;
   template_calls                   : parsed_template_call list;
-  synt_declarations                : synt_var_decl list
+  synt_declarations                : parsed_synt_var_decl list
 }
 
 (****************************************************************)

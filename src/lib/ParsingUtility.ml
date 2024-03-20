@@ -209,7 +209,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
-	let parsed_model : ParsingStructure.parsed_model_unexpanded = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
+	let parsed_model : ParsingStructure.unexpanded_parsed_model = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
 
 	(* Statistics *)
 	parsing_counter#stop;

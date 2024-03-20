@@ -31,7 +31,7 @@ let parse_error _ =
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : parsed_model_unexpanded) =
+let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unexpanded_parsed_model) =
 	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.unexpanded_controllable_actions, parsed_model_list.unexpanded_controllable_actions with
 			| Parsed_no_controllable_actions, Parsed_no_controllable_actions
 				-> Parsed_no_controllable_actions
@@ -92,7 +92,7 @@ let unzip l = List.fold_left
 %token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
-%token <ParsingStructure.parsed_model_unexpanded> INCLUDE
+%token <ParsingStructure.unexpanded_parsed_model> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -140,7 +140,7 @@ let unzip l = List.fold_left
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_model_unexpanded> main
+%type <ParsingStructure.unexpanded_parsed_model> main
 %%
 
 /************************************************************/
@@ -215,8 +215,8 @@ synt_var_list:
 ;
 
 synt_var_type:
-  | CT_CLOCK CT_ARRAY LPAREN pos_integer RPAREN { NumConst.to_bounded_int $4, Clock_synt_array }
-  | CT_ACTION CT_ARRAY LPAREN pos_integer RPAREN { NumConst.to_bounded_int $4, Action_synt_array }
+  | CT_CLOCK CT_ARRAY LPAREN name_or_num_lit RPAREN { $4, Clock_synt_array }
+  | CT_ACTION CT_ARRAY LPAREN name_or_num_lit RPAREN { $4, Action_synt_array }
 ;
 
 /************************************************************
@@ -672,8 +672,8 @@ single_flow:
 
 name_or_num_lit:
   /* TODO: In case of array access, should not accept rational values, only integer */
-        | rational_linear_expression { Index_literal $1 }
-        | NAME { Index_name $1 }
+        | rational_linear_expression { Literal $1 }
+        | NAME { Const_var $1 }
 
 /************************************************************/
 

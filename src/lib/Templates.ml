@@ -33,7 +33,7 @@ let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) 
 let instantiate_array_index (param_map : var_map) (arr : variable_name) (id : variable_name) : name_or_access =
   match Hashtbl.find_opt param_map id with
     | None | Some (Arg_name _) -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a variable."
-    | Some (Arg_int i)         -> Var_array_access (arr, Index_literal i)
+    | Some (Arg_int i)         -> Var_array_access (arr, Literal i)
     | Some (Arg_float _)       -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a float"
     | Some (Arg_bool _)        -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a boolean."
 
@@ -47,8 +47,8 @@ let instantiate_stopped (param_map : var_map) (clocks : name_or_access list) : n
             failwith "[instantiate_stopped]: unexpected argument for template (expecting name)"
       (* This last case would be catched by type checking *)
     end
-    | Var_array_access (arr_name, Index_literal id) -> Var_array_access (arr_name, Index_literal id)
-    | Var_array_access (arr_name, Index_name id) -> instantiate_array_index param_map arr_name id
+    | Var_array_access (arr_name, Literal id) -> Var_array_access (arr_name, Literal id)
+    | Var_array_access (arr_name, Const_var id) -> instantiate_array_index param_map arr_name id
   ) clocks
 
 
@@ -62,19 +62,19 @@ let instantiate_flows (param_map : var_map) (flows : unexpanded_parsed_flow) : u
             | Some (Arg_name clock_name') -> Var_name clock_name'
             | Some _               -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
         end
-        | Var_array_access (arr_name, Index_name id) -> instantiate_array_index param_map arr_name id
-        | Var_array_access (_, Index_literal _) -> clock
+        | Var_array_access (arr_name, Const_var id) -> instantiate_array_index param_map arr_name id
+        | Var_array_access (_, Literal _) -> clock
     in
     let rate' =
       match rate with
-        | Index_name name -> begin
+        | Const_var name -> begin
             match Hashtbl.find_opt param_map name with
               | None -> rate
-              | Some (Arg_int i)   -> Index_literal i
-              | Some (Arg_float f) -> Index_literal f
+              | Some (Arg_int i)   -> Literal i
+              | Some (Arg_float f) -> Literal f
               | Some _ -> failwith "[instantiate_flows]: unexpected argument for template (expecting name)"
             end
-        | Index_literal _ -> rate
+        | Literal _ -> rate
     in
     (clock', rate')
   in
@@ -156,8 +156,8 @@ let instantiate_action (param_map : var_map) : name_or_access -> name_or_access 
           | None -> Var_name name
           | _ -> failwith "[instantiate_action]: Argument of type action must be a name."
     end
-    | Var_array_access (arr_name, Index_name i_name) -> instantiate_array_index param_map arr_name i_name
-    | Var_array_access (_, Index_literal _) -> action
+    | Var_array_access (arr_name, Const_var i_name) -> instantiate_array_index param_map arr_name i_name
+    | Var_array_access (_, Literal _) -> action
 
 let instantiate_actions (param_map : var_map) : name_or_access list -> name_or_access list =
   List.map (instantiate_action param_map)
@@ -204,21 +204,28 @@ let instantiate_automata (templates : parsed_template_definition list) (insts : 
   List.map (instantiate_automaton templates) insts
 
 (* The names and the corresponding array lengths of all syntatic variables in the problem *)
-type synt_vars_data = (variable_name * int) list
+type synt_vars_data = (variable_name * synt_var_kind * int) list
 
-let expand_synt_decls (synt_decls : synt_var_decl list) : variable_declarations =
-  let aux ((len, kind), names) =
-    let ids = List.init len Fun.id in
-    let expand_name name =
-      List.fold_left (fun acc i -> gen_access_id name i :: acc) [] ids in
-    let expanded_names = List.concat_map expand_name names in
-    let packed_expanded_names = List.map (fun name -> (name, None)) expanded_names in
+let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
+  let aux (name, kind, len) =
     match kind with
       | Clock_synt_array ->
-          Some (DiscreteType.Var_type_clock, packed_expanded_names)
+        let ids = List.init len Fun.id in
+        Some (List.map (fun i -> (gen_access_id name i, None)) ids)
       | Action_synt_array -> None
   in
-  List.filter_map aux synt_decls
+  let packed_decls = List.filter_map aux synt_decls in
+  List.map (fun packed_decl -> (DiscreteType.Var_type_clock, packed_decl)) packed_decls
+    (* let expand_name name = *)
+    (*   List.fold_left (fun acc i -> gen_access_id name i :: acc) [] ids in *)
+    (* let expanded_names = List.concat_map expand_name names in *)
+    (* let packed_expanded_names = List.map (fun name -> (name, None)) expanded_names in *)
+    (* match kind with *)
+    (*   | Clock_synt_array -> *)
+    (*       Some (DiscreteType.Var_type_clock, packed_expanded_names) *)
+    (*   | Action_synt_array -> None *)
+  (* in *)
+  (* List.filter_map aux synt_decls *)
 
 let rec get_const_disc_arith_expr = function
   | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
@@ -281,7 +288,7 @@ and expand_parsed_discrete_factor synt_arrays = fun factor ->
   match factor with
     | Parsed_access (factor', index) -> begin
         let arr_name = get_name_of_factor factor' in
-        match List.assoc_opt arr_name synt_arrays with
+        match List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None) synt_arrays with
           | None -> factor
           | Some len ->
               let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
@@ -294,17 +301,17 @@ and expand_parsed_discrete_factor synt_arrays = fun factor ->
 
 let expand_name_or_access = function
   | Var_name act_name -> act_name
-  | Var_array_access (arr_name, Index_literal i) -> gen_access_id arr_name (NumConst.to_bounded_int i)
-  | Var_array_access (arr_name, Index_name var_name) ->
+  | Var_array_access (arr_name, Literal i) -> gen_access_id arr_name (NumConst.to_bounded_int i)
+  | Var_array_access (arr_name, Const_var var_name) ->
       failwith "[expand_synt_arrays_automaton]: " ^ (var_index_err_msg arr_name var_name)
 
 let expand_name_or_access_list = List.map expand_name_or_access
 
 let expand_sync : unexpanded_sync -> sync = function
   | UnexpandedSync (Var_name act_name) -> Sync act_name
-  | UnexpandedSync (Var_array_access (arr_name, Index_literal id)) ->
+  | UnexpandedSync (Var_array_access (arr_name, Literal id)) ->
       Sync (gen_access_id arr_name (NumConst.to_bounded_int id))
-  | UnexpandedSync (Var_array_access (arr_name, Index_name var_name)) ->
+  | UnexpandedSync (Var_array_access (arr_name, Const_var var_name)) ->
       failwith ("[expand_sync]: " ^ var_index_err_msg arr_name var_name)
   | UnexpandedNoSync -> NoSync
 
@@ -312,7 +319,7 @@ let expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_
   fun e ->
     match e with
       | Parsed_indexed_update (Parsed_scalar_update (name, _), index) -> begin
-          match List.assoc_opt name synt_vars with
+          match List.find_map (fun (name', _, len) -> if name = name' then Some len else None) synt_vars with
             | None -> e
             | Some len ->
                 let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
@@ -364,15 +371,15 @@ let expand_loc (synt_vars : synt_vars_data) (loc : unexpanded_parsed_location) :
   let expand_flow (clock, rate) =
     let real_rate =
       match rate with
-        | Index_literal r -> r
-        | Index_name _ -> failwith "[expand_flow]: Flows must be either literals or template variables."
+        | Literal r -> r
+        | Const_var _ -> failwith "[expand_flow]: Flows must be either literals or template variables."
     in
     match clock with
       | Var_name name -> (name, real_rate)
-      | Var_array_access (arr_name, Index_literal id) ->
+      | Var_array_access (arr_name, Literal id) ->
           let new_name = gen_access_id arr_name (NumConst.to_bounded_int id) in
           (new_name, real_rate)
-      | Var_array_access (_, Index_name _) -> failwith "[expand_flow]: Index of clock array must be a literal or a template variable."
+      | Var_array_access (_, Const_var _) -> failwith "[expand_flow]: Index of clock array must be a literal or a template variable."
   in
   let expanded_flow = List.map expand_flow loc.unexpanded_flow in
   {
@@ -395,17 +402,61 @@ let expand_synt_arrays_automaton (synt_vars : synt_vars_data) (automaton : unexp
 let expand_synt_arrays_automata (synt_vars : synt_vars_data) : unexpanded_parsed_automaton list -> parsed_automaton list =
   List.map (expand_synt_arrays_automaton synt_vars)
 
-let expand_model unexpanded_parsed_model =
+let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
+
+let rec eval_parsed_boolean_expression =
+  function
+    | Parsed_discrete_bool_expr e -> eval_parsed_discrete_bool_expr e
+    | Parsed_conj_dis _ -> failwith eval_expr_err_msg
+
+and eval_parsed_discrete_bool_expr =
+  function
+    | Parsed_arithmetic_expr e -> eval_parsed_arithmetic_expr e
+    | _ -> failwith eval_expr_err_msg
+
+and eval_parsed_arithmetic_expr =
+  function
+    | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> (eval_parsed_arithmetic_expr arith_expr) + (eval_parsed_term term)
+    | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> (eval_parsed_arithmetic_expr arith_expr) - (eval_parsed_term term)
+    | Parsed_term t -> eval_parsed_term t
+
+and eval_parsed_term =
+  function
+    | Parsed_product_quotient (term, factor, Parsed_mul) -> eval_parsed_term term * eval_parsed_factor factor
+    | Parsed_product_quotient (term, factor, Parsed_div) -> eval_parsed_term term / eval_parsed_factor factor
+    | Parsed_factor factor -> eval_parsed_factor factor
+
+and eval_parsed_factor =
+  function
+    | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
+    | _ -> failwith eval_expr_err_msg
+
+let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_model =
   let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions unexpanded_parsed_model.template_calls in
   let all_automata = unexpanded_parsed_model.unexpanded_automata @ instantiated_automata in
-  (* NOTE: at this point `parsed_action` calls must have an integer as argument, not a name *)
+  let expand_literal_or_const_var = function
+    | Literal l -> NumConst.to_bounded_int l
+    | Const_var name ->
+        let decls = unexpanded_parsed_model.unexpanded_variable_declarations in
+        let inspect_decl (name', expr_opt) = if name = name' then expr_opt else None in
+        let inspect_decls_of_type (_, decls) =
+          List.find_map (fun decl -> (inspect_decl decl)) decls
+        in
+        let inspect_all_decls decls =
+          List.find_map Fun.id (List.map inspect_decls_of_type decls)
+        in
+        match inspect_all_decls decls with
+          | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
+          | Some expr -> eval_parsed_boolean_expression expr
+  in
   let synt_vars =
     List.concat_map
-      (fun ((len, _), names) -> List.map (fun name -> (name, len)) names)
+      (fun ((len, kind), names) -> List.map (fun name -> (name, kind, expand_literal_or_const_var len)) names)
       unexpanded_parsed_model.synt_declarations
   in
+  (* NOTE: at this point `parsed_action` calls must have an integer as argument, not a name *)
   let expanded_automata = expand_synt_arrays_automata synt_vars all_automata in
-  let expanded_decls = expand_synt_decls unexpanded_parsed_model.synt_declarations in
+  let expanded_decls = expand_synt_decls synt_vars in
   { controllable_actions = unexpanded_parsed_model.unexpanded_controllable_actions;
     variable_declarations = (unexpanded_parsed_model.unexpanded_variable_declarations @ expanded_decls);
     fun_definitions = unexpanded_parsed_model.unexpanded_fun_definitions;
