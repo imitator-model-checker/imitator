@@ -1,10 +1,8 @@
+open ImitatorUtilities;;
 open ParsingStructure;;
 open ParsingStructureUtilities;;
 
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
-
-(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
-let gen_access_id (arr_name : string) (index : int) : string = arr_name ^ "___" ^ (Int.to_string index)
 
 let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
   fun leaf -> match leaf with

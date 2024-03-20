@@ -27,7 +27,6 @@ let parse_error _ =
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
-
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
@@ -145,12 +144,12 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list synt_var_decls variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls  decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions = $1 in
-    let synt_declarations    = $3 in
-		let declarations         = $4 in
+		let declarations         = $3 in
+    let synt_declarations    = $4 in
 		let fun_definitions      = $5 in
 		let template_definitions = $6 in
 		let automata             = $7 in
@@ -947,6 +946,7 @@ linear_term:
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
+  | NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
 ;
 
 
