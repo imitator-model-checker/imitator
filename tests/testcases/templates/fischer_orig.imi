@@ -1,21 +1,24 @@
 (* EXAMPLE 2 *)
 var
-    x1, x2 : clock;
     id : int;
     k = 2 : constant;
     IDLE = -1 : int;
+    N = 2 : int;
 
-template p(i : int, x : clock)
+synt_var
+  x : clock array (N);
+
+template p(i : int)
 
 loc A: invariant True
-  when id = IDLE do { x := 0 } goto req;
+  when id = IDLE do { x[i] := 0 } goto req;
 
-loc req: invariant x <= k
-  when x <= k do { x := 0; id := i } goto waiting;
+loc req: invariant x[i] <= k
+  when x[i] <= k do { x[i] := 0; id := i } goto waiting;
 
 loc waiting: invariant True
-  when id = IDLE do { x := 0 } goto req;
-  when id = i & x > k goto cs;
+  when id = IDLE do { x[i] := 0 } goto req;
+  when id = i & x[i] > k goto cs;
 
 loc cs: invariant True
   when True do { id := IDLE } goto A;
@@ -23,8 +26,8 @@ loc cs: invariant True
 end
 
 (* Instantiation following UPPAAL's convention *)
-instantiate p1 := p(0, x1);
-instantiate p2 := p(1, x2);
+instantiate p1 := p(0);
+instantiate p2 := p(1);
 
 init := {
 
@@ -35,8 +38,9 @@ init := {
     ;
 
     continuous =
-        x1 = 0
-      & x2 = 0
+        x[0] = 0
+      & x[1] = 0
+      & True
     ;
 }
 
