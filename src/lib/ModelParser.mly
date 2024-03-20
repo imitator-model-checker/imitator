@@ -210,8 +210,8 @@ synt_var_lists:
 ;
 
 synt_var_list:
-  | NAME comma_opt { [$1] }
-  | NAME COMMA synt_var_list { $1 :: $3 }
+  | checked_name_decl comma_opt { [$1] }
+  | checked_name_decl COMMA synt_var_list { $1 :: $3 }
 ;
 
 synt_var_type:
@@ -256,11 +256,11 @@ decl_var_lists:
 /************************************************************/
 
 decl_var_list:
-	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
+	| checked_name_decl comma_opt { [($1, None)] }
+	| checked_name_decl OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
 
-	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| checked_name_decl COMMA decl_var_list { ($1, None) :: $3 }
+	| checked_name_decl OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /************************************************************/
@@ -371,7 +371,7 @@ semicolon_or_comma_opt:
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
+  | CT_VAR checked_name_decl COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */
@@ -1059,6 +1059,18 @@ pos_float:
 /************************************************************/
 /** MISC. */
 /************************************************************/
+
+checked_name_decl:
+  | NAME {
+    let bad = ref false in
+    for i = 0 to String.length $1 - 3 do
+      if String.get $1 i = '_' && String.get $1 (i + 1) = '_' && String.get $1 (i + 2) = '_' then
+        bad := true;
+    done;
+    if !bad then
+      print_warning "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays.";
+    $1
+  }
 
 semicolon_or_comma:
   | SEMICOLON {}
