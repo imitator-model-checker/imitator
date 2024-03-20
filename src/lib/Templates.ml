@@ -148,10 +148,30 @@ let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc ->
           | Parsed_local_decl _ ->
               raise (Exceptions.InternalError "[instantiate_instructions]: This point of code is unreachable") 
 
+let instantiate_action (param_map : var_map) : name_or_access -> name_or_access = fun action ->
+  match action with
+    | Var_name name -> begin
+        match Hashtbl.find_opt param_map name with
+          | Some (Arg_name name') -> Var_name name'
+          | None -> Var_name name
+          | _ -> failwith "[instantiate_action]: Argument of type action must be a name."
+    end
+    | Var_array_access (arr_name, Index_name i_name) -> instantiate_array_index param_map arr_name i_name
+    | Var_array_access (_, Index_literal _) -> action
+
+let instantiate_actions (param_map : var_map) : name_or_access list -> name_or_access list =
+  List.map (instantiate_action param_map)
+
+let instantiate_sync (param_map : var_map) : unexpanded_sync -> unexpanded_sync =
+  function
+    | UnexpandedSync action -> UnexpandedSync (instantiate_action param_map action)
+    | UnexpandedNoSync -> UnexpandedNoSync
+
 let instantiate_transition (param_map : var_map) ((guard, bloc, sync, loc_name) : unexpanded_transition) : unexpanded_transition =
   let guard' = instantiate_convex_predicate param_map guard in
   let bloc' = instantiate_instructions param_map bloc in
-  (guard', bloc', sync, loc_name)
+  let sync' = instantiate_sync param_map sync in
+  (guard', bloc', sync', loc_name)
 
 let instantiate_transitions (param_map : var_map) : unexpanded_transition list -> unexpanded_transition list =
   List.map (instantiate_transition param_map)
@@ -163,54 +183,8 @@ let instantiate_loc (param_map : var_map) (loc : unexpanded_parsed_location) : u
              unexpanded_transitions = instantiate_transitions param_map loc.unexpanded_transitions
   }
 
-let rename_action_decls (param_map : var_map) (automaton_name : variable_name) (action_decls : name_or_access list) : name_or_access list =
-  let rename_action_decl parsed_action =
-    match parsed_action with
-    (* If it is a syntatic array do we bypass the rule for isolating actions between instantiations? *)
-      | Var_name action_name -> begin
-          match Hashtbl.find_opt param_map action_name with
-            | None -> Var_name (action_name ^ "_" ^ automaton_name)
-            | Some (Arg_name action_name') -> Var_name action_name'
-            | Some _ -> failwith "[rename_action_decl]: unexpected argument for template (expecting name)"
-      end
-      (* NOTE: We do not allow instantiation of the array of actions *)
-      | Var_array_access (array_name, Index_name id_name) -> instantiate_array_index param_map array_name id_name
-      | _ -> parsed_action
-  in
-  List.map rename_action_decl action_decls
-
 let var_index_err_msg arr_name var_name =
   "Invalid usage of variable " ^ var_name ^ " to access array of actions " ^ arr_name ^ "."
-
-let rename_action_locs (param_map : var_map) (automaton_name : variable_name) (locs : unexpanded_parsed_location list) : unexpanded_parsed_location list =
-  let rename_action_sync sync =
-    match sync with
-    | UnexpandedNoSync -> UnexpandedNoSync
-    | UnexpandedSync (Var_name action_name) -> begin
-        match Hashtbl.find_opt param_map action_name with
-          | None -> UnexpandedSync (Var_name (action_name ^ "_" ^ automaton_name))
-          | Some (Arg_name action_name') -> UnexpandedSync (Var_name action_name')
-          | Some _ -> failwith "[rename_action_sync]: unexpected argument for template (expecting name)"
-    end
-    | UnexpandedSync (Var_array_access (arr_name, (Index_literal i))) ->
-        UnexpandedSync (Var_name (gen_access_id arr_name (NumConst.to_bounded_int i)))
-    | UnexpandedSync (Var_array_access (arr_name, (Index_name var_name))) ->
-        UnexpandedSync (instantiate_array_index param_map arr_name var_name)
-  in
-  let rename_action_transition (guard, bloc, sync, loc_name) =
-    let sync' = rename_action_sync sync in
-    (guard, bloc, sync', loc_name)
-  in
-  let rename_action_transitions loc =
-    { loc with unexpanded_transitions = List.map rename_action_transition loc.unexpanded_transitions }
-  in
-  List.map rename_action_transitions locs
-
-let rename_actions (param_map : var_map) (automaton_name : variable_name) (template : parsed_template_definition) : parsed_template_definition =
-  let action_decls, locs = template.template_body in
-  let action_decls'      = rename_action_decls param_map automaton_name action_decls in
-  let locs'              = rename_action_locs param_map automaton_name locs in
-  { template with template_body = (action_decls', locs') }
 
 (* This is just instantiation, we do type checking somewhere else *)
 let instantiate_automaton (templates : parsed_template_definition list) (parsed_template_call : parsed_template_call) : unexpanded_parsed_automaton =
@@ -220,12 +194,11 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
     failwith ("[instantiate_automaton]: The number of arguments provided for " ^ automaton_name ^ " is incorrect.");
   let param_names                    = List.map fst template.template_parameters in
   let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
-  (* Replace action names *)
-  let template'                      = rename_actions param_map automaton_name template in
-  let renamed_actions, renamed_locs  = template'.template_body in
+  let actions, locs                  = template.template_body in
+  let instantiated_actions           = instantiate_actions param_map actions in
   (* Instantiate other parameters *)
-  let instantiated_locs              = List.map (instantiate_loc param_map) renamed_locs in
-  (automaton_name, renamed_actions, instantiated_locs)
+  let instantiated_locs              = List.map (instantiate_loc param_map) locs in
+  (automaton_name, instantiated_actions, instantiated_locs)
 
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : unexpanded_parsed_automaton list =
   List.map (instantiate_automaton templates) insts
@@ -335,7 +308,7 @@ let expand_sync : unexpanded_sync -> sync = function
       failwith ("[expand_sync]: " ^ var_index_err_msg arr_name var_name)
   | UnexpandedNoSync -> NoSync
 
-let rec expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
+let expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
   fun e ->
     match e with
       | Parsed_indexed_update (Parsed_scalar_update (name, _), index) -> begin

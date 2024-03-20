@@ -26331,9 +26331,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 38
-Number of transitions                   : 47
-Number of computed states               : 48
 """
         }]
     }
@@ -26354,9 +26351,6 @@ Constraint soundness                    : possible under-approximation
 Termination                             : depth limit (12 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 47
-Number of transitions                   : 70
-Number of computed states               : 71
 """
         }]
     }
@@ -26380,9 +26374,6 @@ Constraint soundness                    : possible over-approximation
 Termination                             : depth limit (100 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 492
-Number of transitions                   : 1300
-Number of computed states               : 1301
 """
         }]
     }
@@ -26400,12 +26391,6 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
-Termination                             : depth limit (68 successors unexplored)
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 255
-Number of transitions                   : 432
-Number of computed states               : 433
 """
         }]
     }
@@ -26423,12 +26408,6 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
-Termination                             : depth limit (9 successors unexplored)
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 67
-Number of transitions                   : 116
-Number of computed states               : 117
 """
         }]
     }
@@ -26452,9 +26431,6 @@ Constraint soundness                    : possible over-approximation
 Termination                             : depth limit (422 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 914
-Number of transitions                   : 1476
-Number of computed states               : 1477
 """
         }]
     }
@@ -26475,9 +26451,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 25
-Number of transitions                   : 36
-Number of computed states               : 37
 """
         }]
     }
