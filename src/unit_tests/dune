@@ -1,0 +1,4 @@
+(tests
+ (names imitatorTest)
+ (libraries alcotest lib)
+ (action (run %{test} -e)))

@@ -1,0 +1,111 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying synchronization and updates
+ * Description      : Small example for exemplifying synchronization and updates
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/03/08
+ * Last modified    : 2023/03/08
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+	x : clock;
+	i : int;
+	r : rational;
+
+
+
+(************************************************************)
+  automaton A1
+(************************************************************)
+actions: a, b;
+
+loc l1: invariant x = 0
+	when x = 0 do {r := 3; x := r; i := 2} sync a goto l2;
+	when True do {i := i + 2} sync b goto l2;
+
+loc l2: invariant i >= 2
+	when True do {i := i * i} sync b goto l2;
+
+end (* A1 *)
+
+
+(************************************************************)
+  automaton A2
+(************************************************************)
+actions: b;
+
+loc l1: invariant True
+	when x <= 3r do {r := r*r; x := x+1; i := i - 2} sync b goto l2;
+
+loc l2: invariant True
+
+end (* A2 *)
+
+
+(************************************************************)
+  automaton A3
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when True do {x := 2x; i := pow(i, 3)} sync a goto l2;
+
+loc l2: invariant True
+
+end (* A3 *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A1] := l1,
+		loc[A2] := l1,
+		loc[A3] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+		r := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

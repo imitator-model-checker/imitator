@@ -1,0 +1,90 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test AF
+ * Description      : Toy model to test AF, featuring a loop for all valuations
+ * Correctness      : AF accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/01/19
+ * Last modified    : 2024/01/19
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 5
+	when p < 9 & x <= p goto l2; (*** NOTE: purely parametric constraint here ***)
+	when x = p & x = 5 goto l3;
+	when x = 1 do {x := 0} goto l1;
+
+accepting loc l2: invariant True
+
+loc l3: invariant True
+
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p & p <= 10
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

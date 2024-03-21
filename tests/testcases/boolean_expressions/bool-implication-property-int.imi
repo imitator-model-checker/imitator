@@ -1,0 +1,96 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test Boolean implication in properties; version mixing location and int predicates
+ * Description      : Test Boolean implication
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/23
+ * Last modified    : 2024/02/23
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Integer *)
+	i : int;
+
+(* Parameters *)
+	p_1, p_2 : parameter;
+
+
+(************************************************************)
+  automaton pta_1
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when p_1 = 2 sync a do {i := 2} goto l2;
+	when p_1 = 3 do {i := 3} goto l3;
+
+accepting loc l2: invariant True
+accepting loc l3: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta_2
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when p_2 = 2 sync a do {i := 2} goto l2;
+	when p_2 = 3 do {i := 3} goto l3;
+
+accepting loc l2: invariant True
+accepting loc l3: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta_1] := l1,
+		loc[pta_2] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p_1 >= 0
+		& p_2 >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

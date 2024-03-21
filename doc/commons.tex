@@ -75,7 +75,7 @@
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
 	\includegraphics[height=1em]{../logos/logo-3-300.png}
-	\includegraphics[height=1em]{../logos/logo-3-3-300.png}
+	\includegraphics[height=1em]{../logos/logo-3-4-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -189,6 +189,9 @@
 % \newcommand{\avar}{t} % array variable
 % \newcommand{\AVarCard}{N} % cardinality of array variables
 
+% Operations
+\newcommand{\valuate}[2]{\ensuremath{#2(#1)}}
+
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
 \newcommand{\flow}{\ensuremath{\mathit{flow}}}
@@ -287,8 +290,8 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{3.3}
-\newcommand{\imitatorversionname}{Cheese Caramel au beurre salé}
+\newcommand{\imitatorversion}{3.4-alpha}
+\newcommand{\imitatorversionname}{Cheese Durian}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -404,6 +407,8 @@
 
 \definecolor{filecontentcolor}{rgb}{.1, .4, .2}
 \newcommand{\styleFileContent}[1]{\textcolor{filecontentcolor}{\texttt{#1}}}
+
+\newcommand{\styleTCTL}[1]{\ensuremath{\mathsf{#1}}}
 
 \newcommand{\GitHubIMI}{\href{https://github.com/imitator-model-checker/imitator}{GitHub}}
 
@@ -523,7 +528,26 @@
 	language=caml,                 % the language of the code
 	deletekeywords={done},            % if you want to delete keywords from the given language; WARNING! must be set AFTER the `language=…`
 	morekeywords={
-		accepting, and, array, automaton, binary, bool, clock, constant, continuous, discrete, do, seq, end, False, fill_left, fill_right, flow, forward, from, goto, if, in, init, int, initially, invariant, loc, logand, lognot, logor, logxor, not, or, parameter, projectresult, rational, shift_left, shift_right, stop, sync, sync, synclabs, True, urgent, var, when, while
+		accepting, actions, and, array, array_append, array_length, array_mem, automaton,
+		begin, binary, bool,
+		clock, constant, continuous, controllable,
+		discrete, do, done, downto,
+		else, end,
+		False, fill_left, fill_right, flow, fn, from, function,
+		goto,
+		if, in, init, initially, int, int_div, inside, invariant, is,
+		list, list_cons, list_hd, list_is_empty, list_length, list_mem, list_rev, list_tl, loc, logand, lognot, logor, logxor,
+		mod,
+		not,
+		or,
+		parameter, pow,
+		queue, queue_clear, queue_is_empty, queue_length, queue_pop, queue_push, queue_top,
+		rat, rational, return,
+		shift_left, shift_right, stack, stack_clear, stack_is_empty, stack_length, stack_pop, stack_push, stack_top, stop, sync,
+		then, to, True,
+		urgent,
+		var, void,
+		when, while,
 	},
 	numbers=right,                    % where to put the line-numbers; possible values are (none, left, right)
 	numbersep=5pt,                   % how far the line-numbers are from the code
@@ -581,7 +605,22 @@
   keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
   keywordstyle=\bfseries\color{keywordscolor},       % keyword style
 %   language=caml,                 % the language of the code
-  morekeywords={accepting, AGnot, always, BCcover, BCrandom, BCshuffle, before, Cycle, CycleThrough, DeadlockFree, EF, EFpmin, EFpmax, EFtmin, everytime, eventually, happened, has, IM, loc, next, once, pattern, PRP, PRPC, property,sequence,synth,within,witness},            % if you want to add more keywords to the set
+  morekeywords={%
+	A, accepting, AF, AF_, AGnot, always,
+	BCcover, BCrandom, BCshuffle, before,
+	Cycle, CycleThrough,
+	DeadlockFree,
+	E, EF, EF_, EFpmin, EFpmax, EFtmin, everytime, eventually,
+	happened, has,
+	IM, infinity,
+	loc,
+	next,
+	once,
+	pattern, PRP, PRPC, property,
+	R, R_,
+	sequence, synth,
+	U, U_,
+	W, W_, within, witness},            % if you want to add more keywords to the set
   numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 %   numbersep=5pt,                   % how far the line-numbers are from the code
 %   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers

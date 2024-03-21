@@ -1,0 +1,85 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test EF[…]
+ * Description      : Toy model to test EF[…]; parameter in the property, flows in the model
+ * Correctness      :
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/28
+ * Last modified    : 2024/02/28
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, global_time,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True flow{x' = -2}
+	when x = 4 sync a goto l2;
+
+accepting urgent loc l2: invariant True
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 20
+		& global_time = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= -50
+		& p <=  50
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

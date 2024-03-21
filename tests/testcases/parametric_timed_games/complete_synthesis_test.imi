@@ -1,0 +1,35 @@
+(* Mikael, Aarhus, June 1, 2023 
+	A PTG where the paramter synthesis differs for complete/incomplete synthesis
+    Early termination (witness) expected constraint: 6 >= p & p >= 0
+    Complete synthesis expected constraint: p >= 0
+*)
+
+controllable actions: c_1;
+
+var
+ 	x : clock;
+	p : parameter;
+
+automaton ptg
+
+actions: c_1, u_1;
+
+loc l1: invariant True
+	when x >= p sync c_1 goto Goal;
+    when x > 6 sync u_1 goto l2;
+
+loc l2: invariant True
+    when True sync c_1 goto Goal;
+
+accepting loc Goal: invariant True
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+	& p >= 0
+;
+
+end

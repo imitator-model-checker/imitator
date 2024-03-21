@@ -1,0 +1,1 @@
+property := #synth E (i < 1) U (loc[pta] = l4);

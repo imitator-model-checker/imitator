@@ -1,0 +1,38 @@
+(* Automatically generated from TIGA tests *)
+
+controllable actions: c_0, c_1, c_2, c_3;
+
+var
+	x_Main : clock;
+
+automaton Main
+
+actions: c_0, u_0, u_1, c_1, u_2, c_2, c_3;
+
+loc id0: invariant x_Main<=2		(* L0 *)
+	when x_Main<=1 sync c_0 goto id1;
+	when x_Main<1 do {x_Main:=0} sync u_0 goto id2;
+	when x_Main>1 sync u_1 goto id4;
+
+loc id1: invariant True		(* L1 *)
+	when x_Main>=2 sync c_1 goto id5;
+	when x_Main<1 sync u_2 goto id2;
+
+loc id2: invariant True		(* L2 *)
+	when True sync c_2 goto id3;
+
+loc id3: invariant True		(* L3 *)
+	when x_Main<=1 sync c_3 goto id1;
+
+loc id4: invariant True		(* L4 *)
+
+accepting loc id5: invariant True		(* goal *)
+
+end
+
+init :=
+	& loc[Main] = id0
+	& x_Main = 0
+;
+
+end

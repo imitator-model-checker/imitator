@@ -5,9 +5,9 @@
  *
  * Author          : Étienne André
  * Created         : 2015/01/29
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 	ckNot
@@ -20,7 +20,7 @@ var 	ckNot
 (************************************************************)
   automaton NotGate
 (************************************************************)
-synclabs: iUp, iDown, oUp, oDown;
+actions: iUp, iDown, oUp, oDown;
 
 (* Unstable *)
 loc Not00: invariant ckNot <= dNot_u

@@ -1,0 +1,102 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that constants can be used in init
+ * Description      : Test that constants can be used in init
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/08/22
+ * Last modified    : 2023/08/22
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: int;
+	r,
+		: rational;
+
+(* Constants *)
+	c1,
+		: constant;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when x = 1 sync a do {x := p/2, i := i+1, r := r*r} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		r := 1/2,
+		i := 0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+		& p >= c1
+		& p <= c1
+		& p = c1
+		(* Check that constants can be at the left-side of the equation *)
+		& c1 = p
+		& c1 <= p
+		& c1 >= p
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

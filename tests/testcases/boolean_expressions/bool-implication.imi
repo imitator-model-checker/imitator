@@ -1,0 +1,88 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test Boolean implication
+ * Description      : Test Boolean implication
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/23
+ * Last modified    : 2024/02/23
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Discrete *)
+	i : int;
+	b : bool;
+
+(* Parameters *)
+	p : parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+loc l1: invariant True
+
+	(* Good: even values for p *)
+	when (True => True) & p = 0 goto l2;
+	when (False => True) & p = 2 goto l2;
+	when (False => False) & p = 4 goto l2;
+	when (i > 0 => i = 0) & p = 6 goto l2;
+	when (not(b) => False) & p = 8 goto l2;
+
+	(* Bad: odd values for p *)
+	when (True => False) & p = 1 goto l2;
+	when (i = 0 => i > 0) & p = 3 goto l2;
+	when (b => False) & p = 5 goto l2;
+
+accepting loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+		b := True,
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -41,7 +41,7 @@ var
 (************************************************************)
   automaton system
 (************************************************************)
-synclabs: approach, startDown, endDown, pass;
+actions: approach, startDown, endDown, pass;
 
 loc Far: invariant True
 	when True sync approach do {x := 0} goto Approaching;

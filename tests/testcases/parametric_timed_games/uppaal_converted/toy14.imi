@@ -1,0 +1,30 @@
+(* Automatically generated from TIGA tests *)
+
+controllable actions: c_0;
+
+var
+	x_Foo : clock;
+
+automaton Foo
+
+actions: c_0, u_0, u_1;
+
+accepting loc id0: invariant True		(* Good *)
+
+loc id1: invariant True		(* Bad *)
+
+loc id2: invariant True
+	when x_Foo<=1 sync c_0 goto id0;
+	when x_Foo>1 sync u_0 goto id1;
+
+loc id3: invariant x_Foo<=2
+	when True sync u_1 goto id2;
+
+end
+
+init :=
+	& loc[Foo] = id3
+	& x_Foo = 0
+;
+
+end

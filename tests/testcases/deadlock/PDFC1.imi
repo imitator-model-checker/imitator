@@ -1,0 +1,80 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Dummy example to test parametric deadlock-freeness checking
+ *
+ * Description     : Dummy example to test parametric deadlock-freeness checking
+ * Correctness     : The system is deadlock-free (should be if p1 <= p2)
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/02/10
+ * Last modified   : 2024/01/18
+ *
+ * IMITATOR version: 3.4
+ ************************************************************)
+
+var
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when p1 <= p2 sync a goto l2;
+
+loc l2: invariant True
+	when True sync a goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

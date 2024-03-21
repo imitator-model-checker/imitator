@@ -1,0 +1,88 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Check that a parameter unused anywhere in the model does not crash the parsing when used in the init constraint
+ * Description      : Check that a parameter unused anywhere in the model does not crash the parsing when used in the init constraint
+ * Correctness      : syntactically valid
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/02/09
+ * Last modified    : 2024/02/09
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+(* Integers *)
+ 	i,
+		: int;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 5
+	(* To the fake goal *)
+	when x = p1 goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p1 & p1 <= 10
+		& 0 <= p2 & p2 <= 10
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

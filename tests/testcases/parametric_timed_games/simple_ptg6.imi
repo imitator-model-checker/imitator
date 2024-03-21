@@ -1,0 +1,45 @@
+(* Mikael, Aarhus, March 24, 2023 
+	Simple PTG
+    Expected constraint: 0 <= p <= 5
+
+
+	  x<=5
+    +-------+
+	|       |
+--->|  l1   |
+    |       |
+    +-------+
+       |
+       | x=p
+       v
+    +------+
+    | goal |
+    +------+	
+*)
+
+controllable actions: c_1;
+
+var
+ 	x : clock;
+    p : parameter;
+
+automaton ptg
+
+actions: c_1;
+
+loc l1: x <= 5
+	when x = p sync c_1 goto Goal;
+
+accepting loc Goal: invariant True
+
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+	& p >= 0
+;
+
+end

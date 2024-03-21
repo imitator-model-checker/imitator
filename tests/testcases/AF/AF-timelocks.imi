@@ -1,0 +1,99 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test AF
+ * Description      : Toy model to test AF: example where all paths syntactically reach the accepting location, but some of them violate AF due to timelocks
+ * Correctness      : AF accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/01/19
+ * Last modified    : 2024/01/19
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 5
+	when x = p goto lF; (* AF holds if p = 5 *)
+	when x = p & x <= 4 goto l2; (* AF holds if 0 <= p <= 4 *)
+	when x = p & x = 1 goto l3; (* AF does not hold if p = 1 *)
+	when x = p & 2 <= x & x <= 3 goto l4; (* AF does not hold if p \in [2, 3] *)
+
+loc l2: invariant x <= 3
+	when True goto lF;
+
+(* AF does not hold for any p *)
+loc l3: invariant x <= 10
+	when x = 5 goto lF;
+
+(* AF does not hold for any p *)
+loc l4: invariant x <= p
+	when x < p goto lF;
+
+accepting loc lF: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p & p <= 10
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

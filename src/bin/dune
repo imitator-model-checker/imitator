@@ -1,0 +1,50 @@
+(executable
+ (name IMITATOR)
+ (libraries lib)
+ (link_flags
+  (:include link_flags.%{system})
+  (:standard
+   -cclib
+   -lppl
+   -cclib
+   -lppl_ocaml
+   -cclib
+   -lstdc++
+   -cclib
+   -lgmp
+   -cclib
+   -lgmpxx)))
+
+
+(install
+ (section bin)
+ (files imitator))
+
+(rule
+ (with-stdout-to
+  link_flags.linux
+  (echo "(-cclib -static -cclib -ltinfo)")))
+
+(rule
+ (with-stdout-to
+  link_flags.macosx
+  (echo "()")))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
+
+
+(rule
+ (target imitator)
+ (deps IMITATOR.exe)
+ (mode
+  (promote
+   (into ../../bin)))
+ (action
+  (progn
+   (echo "\nCopying main binary file to bin/imitator \226\128\166")
+   (run chmod u+w %{deps})
+   (run strip %{deps})
+   (copy %{deps} %{target}))))

@@ -1,0 +1,101 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test AU
+ * Description      : Toy model to test AU (inspired by AF-simple2)
+ * Correctness      : A i = 0 U accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/01/19
+ * Last modified    : 2024/01/26
+ * Model version    : 0.2
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+(* Integers *)
+ 	i,
+		: int;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 5
+	(* To the goal: GOOD *)
+	when x = p1 goto l2;
+
+	(* To a wrong location: WRONG *)
+	when x = p2 & x = 5 goto l3;
+
+	(* To a location where phi does not hold: WRONG *)
+	when x = p2 & x = 3 & i < 2 do {i := 0} goto l1;
+
+	(* Allowing to stay in phi forever: WRONG *)
+	when x = p2 & x = 2 do {x := 0} goto l1;
+
+accepting loc l2: invariant True
+
+loc l3: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= p1 & p1 <= 10
+		& 0 <= p2 & p2 <= 10
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

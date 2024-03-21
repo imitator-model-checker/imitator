@@ -1,0 +1,1 @@
+property := #synth E True U (loc[pta] = l2);

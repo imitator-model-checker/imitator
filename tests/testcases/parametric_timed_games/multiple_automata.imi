@@ -1,0 +1,52 @@
+(* Mikael, Aarhus, March 21, 2023 
+	Two automata PTG
+    Expected constraint: 
+     1 >= p
+    & p >= 0
+    & q = 2
+*)
+
+controllable actions: c_1, c_2;
+
+var
+ 	x : clock;
+	p : parameter;
+    q : parameter;
+
+automaton ptg1
+
+actions: c_1, c_2, u_1;
+
+loc l1: invariant True
+    when x > 1 sync u_1 goto trap;
+    when x >= p sync c_1 goto l2;
+
+loc l2: invariant True
+    when x = 2 sync c_2 goto acc;
+
+loc trap: invariant True
+
+accepting loc acc: invariant True
+
+end (* ptg1 *)
+
+automaton ptg2
+
+actions: c_2;
+
+loc l1: invariant True
+    when x = q sync c_2 goto acc;
+
+accepting loc acc: invariant True
+
+end (* ptg2 *)
+
+init :=
+	& loc[ptg1] = l1
+    & loc[ptg2] = l1
+	& x = 0
+	& p >= 0
+    & q >= 0
+;
+
+end

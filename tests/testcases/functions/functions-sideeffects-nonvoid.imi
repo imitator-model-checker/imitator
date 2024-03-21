@@ -1,0 +1,91 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Small example for exemplifying functions and side-effects
+ * Description      : Small example for exemplifying functions and side-effects; non-void function called as a void function
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/14
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+	my_global_i, my_global_j : int;
+
+(************************************************************)
+(*Functions *)
+(************************************************************)
+
+(* This function has side-effects *)
+function side_effect(i : int, j : int) : int
+begin
+	(* Modify some global variables *)
+	my_global_i := i * 2;
+	my_global_j := j * my_global_i;
+	return my_global_i + my_global_j
+end
+
+function side_effect_without_return_type(i : int, j : int) : void
+begin
+	(* NOTE: the value returned by side_effect is lost *)
+	side_effect(i, j);
+end
+
+
+(************************************************************)
+  automaton A
+(************************************************************)
+loc l1: invariant True
+	when True do {side_effect_without_return_type(1, 2)} goto l1;
+
+end (* A *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		my_global_i := 0,
+		my_global_j := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

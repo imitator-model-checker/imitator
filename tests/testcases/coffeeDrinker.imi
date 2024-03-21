@@ -13,9 +13,9 @@
  * Created         : 2011/01/21
  * Fork from       : coffeeDrinker.imi
  * Fork date       : 2015/10/14
- * Last modified   : 2020/01/08
+ * Last modified   : 2024/01/09
  *
- * IMITATOR version: 3.0
+ * IMITATOR version: 3.4-beta
  ************************************************************)
 
 var
@@ -40,17 +40,17 @@ var
 
 (* Discrete variables *)
 	nb_sugar
-		: discrete;
+		: int;
 
 (* Constants *)
 	MAX_SUGAR = 3
-		: constant;
+		: int;
 
 
 (************************************************************)
   automaton machine
 (************************************************************)
-synclabs: press, cup, coffee, sleep;
+actions: press, cup, coffee, sleep;
 
 loc idle: invariant True
 	when True sync press do {x := 0} goto add_sugar;
@@ -75,7 +75,7 @@ end (* machine *)
 (************************************************************)
   automaton researcher
 (************************************************************)
-synclabs: press, coffee;
+actions: press, coffee;
 
 loc researching: invariant y1 <= p_work_max
 	when y1 >= p_work_min sync press do {y1 := 0, y2 := 0, nb_sugar := 0} goto add_sugar;
@@ -99,28 +99,33 @@ end (* researcher *)
 (* Initial state *)
 (************************************************************)
 
-init :=
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
-	& loc[machine]		= idle
-	& loc[researcher]	= researching
+init := {
 
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
-	& x = 0
-	& y1 >= 0 & y1 <= p_work_max (* working since some time *)
-	& y2 >= 0 (* arbitrary *)
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[machine]	:= idle,
+		loc[researcher]	:= researching,
 
-	(*------------------------------------------------------------
-	   INITIAL DISCRETE
-	  ------------------------------------------------------------*)
-	& nb_sugar = 0
-	
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		nb_sugar := 0,
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+		& y1 >= 0 & y1 <= p_work_max (* working since some time *)
+		& y2 >= 0 (* arbitrary *)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
 	& p_button > 0
 	& p_add_sugar > 0
 	& p_coffee > 0
@@ -128,7 +133,8 @@ init :=
 	& p_work_min >= 0
 	& p_work_min <= p_work_max
 	& p_patience_max >= 0
-;
+	;
+}
 
 
 (************************************************************)

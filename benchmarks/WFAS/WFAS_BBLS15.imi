@@ -39,7 +39,7 @@ var
 (************************************************************)
   automaton sensor1
 (************************************************************)
-synclabs: result1, wakeup1;
+actions: result1, wakeup1;
 
 loc idle: invariant True
 	when True sync wakeup1 do {x1 := 0} goto awake;
@@ -54,7 +54,7 @@ end (* sensor1 *)
 (************************************************************)
   automaton sensor2
 (************************************************************)
-synclabs: result2, wakeup2;
+actions: result2, wakeup2;
 
 loc idle: invariant True
 	when True sync wakeup2 do {x2 := 0} goto awake;
@@ -69,7 +69,7 @@ end (* sensor2 *)
 (************************************************************)
   automaton controller
 (************************************************************)
-synclabs: result1, wakeup1, result2, wakeup2;
+actions: result1, wakeup1, result2, wakeup2;
 
 loc cont_1: invariant x < 2 & y <= 20
 	when True sync result1 goto fail;

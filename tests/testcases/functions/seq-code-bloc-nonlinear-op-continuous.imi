@@ -1,0 +1,81 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            :
+ * Description      :
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Code, Bloc, Constant, Update
+ * Source           :
+ * bibkey           :
+ * Author           : Benjamin L.
+ * Modeling         : Benjamin L.
+ * Input by         : Benjamin L.
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/01/27
+ * Last modified    : 2023/01/27
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+  i : rat;
+  x, y, z, w, x2 : clock;
+
+
+function f() : void
+begin 
+  x := i * i; (* ok *)
+  y := i * x * i; (* ok *)
+  (* z := x * i * x; (* nok *)*)
+  w := x + (2 * i * x) + 1/2*i; (* ok *)
+  x2 := i * (2 + x * (1 + 3 + i + x));
+end 
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+
+loc l1: invariant True
+
+	when x = 0 & y = 0 & z = 0 & w = 0 & x2 = 0 do {
+    f();
+  }
+  goto lend;
+
+
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    continuous = 
+      x = 0
+      & y = 0 
+      & z = 0
+    ;
+
+    discrete =
+        loc[pta] := l1
+    ;
+
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,39 @@
+(* Jaco, Aarhus, July 22, 2022 *)
+(* Information added by Étienne André (2023/01/20) *)
+var
+ 	x : clock;
+	y : clock;
+	p : parameter;
+	q : parameter;
+	c : rational;
+	d : rational;
+
+automaton pta
+
+actions: ;
+
+loc l1: invariant x<=p
+	when True do { 
+        c := 2;     (* c = 2 *)
+        d := c + 2; (* d = 4 *)
+        x := d;     (* x = 4 *)
+        y := x;     (* y = 4 *)
+    } goto l2;
+
+(* 4 <= p, 4 <= q *)
+loc l2: invariant x <= p & y <= q
+	when True do {x := 0, y := 0 } goto l2;
+
+end (* pta *)
+
+init :=
+	& loc[pta] = l1
+	& p >= 0
+	& q >= 0
+	& x = 0
+	& y = 0
+	& c = 0
+	& d = 0
+;
+
+end

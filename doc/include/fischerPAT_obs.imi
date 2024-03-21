@@ -10,9 +10,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2021/10/14
+ * Last modified   : 2022/11/28
  *
- * IMITATOR version: 3.2
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var 
@@ -34,7 +34,7 @@ var
 (************************************************************)
 automaton proc1
 (************************************************************)
-synclabs: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
+actions: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
 
 loc idle1: invariant True
 	when turn = IDLE sync try_1 do {x1 := 0} goto active1;
@@ -58,7 +58,7 @@ end (* proc1 *)
 (************************************************************)
 automaton proc2
 (************************************************************)
-synclabs: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
+actions: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
 
 loc idle2: invariant True
 	when turn = IDLE sync try_2 do {x2 := 0} goto active2;
@@ -82,7 +82,7 @@ end (* proc2 *)
 (************************************************************)
 automaton observer
 (************************************************************)
-synclabs : enter_1, enter_2, exit_1, exit_2;
+actions : enter_1, enter_2, exit_1, exit_2;
 
 loc obs_waiting: invariant True
 	when True sync enter_1 goto obs_1;

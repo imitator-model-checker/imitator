@@ -1,0 +1,160 @@
+(************************************************************
+ *                      IMITATOR MODEL
+ *
+ * Case study for side channel timing attack
+ *
+ * Description     : Encoding of a java program.
+ * Correctness     : No information leakage
+ * Source          : https://github.com/Apogee-Research/STAC/blob/master/Canonical_Examples/Source/Category2_not_vulnerable.java
+ * Author          : https://github.com/Apogee-Research/STAC
+ * Modeling        : Sun Jun, Étienne André, Li Jiaying
+ * Input by        : Li Jiaying, Étienne André
+ * License         : MIT License
+ *
+ * Created         : 2018/11/16
+ * Last modified   : 2024/01/22
+ *
+ * IMITATOR version: 3.4
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	cl_1,
+ 	cl_2,
+ 	abs_clock,
+		: clock;
+
+(* Discrete *)
+	flag_1,
+	flag_2,
+		: bool;
+
+(* Parameters *)
+	(* Global parameters necessary for the general encoding and our method *)
+	epsilon,
+ 	abs_ptime,
+
+ 	(* Local parameters to encode symbolic data *)
+ 	userInput_length_1,
+	xnonletters_1,
+	first_mismatch_1,
+
+ 	userInput_length_2,
+	xnonletters_2,
+	first_mismatch_2,
+		: parameter;
+
+(* Constants *)
+	passlen = 10,
+
+		: constant;
+
+
+template pta(flag : bool, cl : clock, xnonletters : parameter, userInput_length : parameter, first_mismatch : parameter)
+actions: setupserver, readx, verifycredentials;
+
+loc l1: invariant cl <= epsilon
+	when cl <= epsilon do {cl := 0} sync setupserver goto l2;
+
+loc l2: invariant cl <= epsilon
+	when cl <= epsilon do {cl := 0} sync readx goto l3;
+
+loc l3: invariant cl <= epsilon
+	when cl <= epsilon & userInput_length > 10 do {cl := 0} goto final1;
+	when cl <= epsilon & xnonletters > 0 do {cl := 0} goto final1;
+	when cl <= epsilon & userInput_length <= 10 & xnonletters = 0 do {cl := 0} goto l4;
+
+loc final1: invariant True
+
+loc l4: invariant cl <= epsilon
+	when cl <= epsilon do {cl := 0} sync verifycredentials goto l5;
+
+loc l5: invariant cl <= epsilon
+	when cl <= epsilon do {cl := 0} goto l6;
+
+(*  private static void checkChar(String candidate, int charNumber) { *)
+(*** NOTE: only spends time for the first correct chars ***)
+loc l6: invariant True
+	(* Duplicate to ensure first_mismatch is an integer *)
+	(* Case incorrect password *)
+	when cl = 5010000 first_mismatch & first_mismatch = 0 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 1 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 2 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 3 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 4 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 5 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 6 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 7 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 8 do {cl := 5000000 first_mismatch} goto l7;
+	when cl = 5010000 first_mismatch & first_mismatch = 9 do {cl := 5000000 first_mismatch} goto l7;
+	(* Case correct password *)
+	when cl = 5010000 first_mismatch & first_mismatch = 10 & not(flag) (*** NOTE: flag = false is just to avoid the automatic removing of the flag by IMITATOR… ***) do {cl := 5000000 first_mismatch, flag := True} goto l7;
+
+(*  private static void balance(int offset){ *)
+(*** The time spent here is (candidate.length() - subsequentCorrect) * 5000000 ***)
+loc l7: invariant cl <= 5000000 passlen
+	when cl = 5000000 passlen do {cl := 0} goto l8;
+
+(* end process *)
+loc l8: invariant cl <= epsilon
+	when cl <= epsilon & abs_clock = abs_ptime do {cl := 0} goto final2;
+
+loc final2: invariant True
+
+end (* template pta *)
+
+instantiate pta_1 := pta(flag_1, cl_1, xnonletters_1, userInput_length_1, first_mismatch_1);
+instantiate pta_2 := pta(flag_2, cl_2, xnonletters_2, userInput_length_2, first_mismatch_2);
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta_1] := l1,
+		loc[pta_2] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		flag_1 := False,
+		flag_2 := False,
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& cl_1 = 0
+		& cl_2 = 0
+		& abs_clock = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& abs_ptime >= 0
+		& epsilon >= 0
+		(* Value to compensate the noise between 5010000 and 5000000*)
+		& epsilon <= 10000
+
+		& userInput_length_1 >= 0
+		& xnonletters_1 >= 0
+		& 0 <= first_mismatch_1 & first_mismatch_1 <= userInput_length_1
+
+		& userInput_length_2 >= 0
+		& xnonletters_2 >= 0
+		& 0 <= first_mismatch_2 & first_mismatch_2 <= userInput_length_2
+
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

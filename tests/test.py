@@ -4,14 +4,13 @@
 #
 #                       IMITATOR
 #
-# Université Paris 13, LIPN, CNRS, France
+# Université Sorbonne Paris Nord, LIPN, CNRS, France
 # Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
 # Script description: TESTATOR (script for non-regression tests)
 #
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2020/03/20
 # ************************************************************
 
 # ************************************************************
@@ -186,8 +185,8 @@ def test(binary_name, tests, logfile, logfile_name):
         print_to_log(
             header_benchmark.format(benchmark_id=benchmark_id,
                                     purpose=test_case['purpose']))
-        print_to_screen(' Benchmark {}: {} {}..'.format(benchmark_id,
-                                                     test_case['purpose'], '- tags: [{}]'.format(test_case["tags"]) if "tags" in test_case else ""))
+        print_to_screen(' Benchmark {}: {}{}…'.format(benchmark_id,
+                                                     test_case['purpose'], ' - tags: [{}]'.format(test_case["tags"]) if "tags" in test_case else ""))
 
         # Add the path to all input files
         # TODO: test for existence of files (just in case)
@@ -289,7 +288,7 @@ def test(binary_name, tests, logfile, logfile_name):
     print_to_log(
         '\n\n############################################################')
 
-    print_to_screen_and_log('Total time: {}'.format(str(stopwatch_end - stopwatch_start)))
+    print_to_screen_and_log('Total time: {} s'.format(str(stopwatch_end - stopwatch_start)))
     # NOTE: ugly…
     total_benchmarks = benchmark_id - 1
     total_test_cases = test_case_id - 1
@@ -370,7 +369,7 @@ print_to_screen(
 print_to_log(' TESTATOR                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
-print_to_screen_and_log(' Université Paris 13, LIPN, CNRS, France')
+print_to_screen_and_log(' Université Sorbonne Paris Nord, LIPN, CNRS, France')
 print_to_screen_and_log(
     ' Université de Lorraine, CNRS, Inria, LORIA, Nancy, France')
 print_to_screen_and_log(

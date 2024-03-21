@@ -94,7 +94,7 @@ var
 (************************************************************)
 (* This PTA models the camera, task T1 and task T2 *)
 (* This PTA also models the buffer initialization, and sends a broadcast signal 'start' when done *)
-synclabs: start, T2done, init_buffer_empty, init_buffer_nonempty;
+actions: start, T2done, init_buffer_empty, init_buffer_nonempty;
 
 (* Nondeterministic choice to fill the buffer *)
 (*** NOTE: we have to first assign the buffer to something, and then (in a different transition) sync on start, because other tasks need to *read* the buffer value ***)
@@ -132,7 +132,7 @@ end (* cameraT1T2 *)
 (************************************************************)
   automaton T3
 (************************************************************)
-synclabs: start, T3_done, T3_start;
+actions: start, T3_done, T3_start;
 
 (* Wait for start signal *)
 loc T3preinit: invariant True
@@ -161,7 +161,7 @@ end (* T3 *)
 (************************************************************)
   automaton T4
 (************************************************************)
-synclabs: start, T4_start_empty, T4_start_nonempty, T4_done;
+actions: start, T4_start_empty, T4_start_nonempty, T4_done;
 
 (* Wait for start signal *)
 loc T4preinit: invariant True

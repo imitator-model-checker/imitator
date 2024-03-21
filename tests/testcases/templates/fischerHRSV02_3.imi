@@ -1,0 +1,112 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : fischerHRSV02_3
+ * Description      : Fischer's mutual exclusion protocol. Version with 3 processes.
+ * Correctness      : No two processes in the mutual exclusion
+ * Scalable         : in the number of processes
+ * Generated        : no
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
+ * bibkey           : HRSV02
+ * Author           : Hune, Romijn, Stoelinga, Vaandrager
+ * Modeling         : Hune, Romijn, Stoelinga, Vaandrager
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2013/12/10
+ * Last modified    : 2021/07/09
+ * Model version    : 
+ * 
+ * IMITATOR version : 3.1
+ ******************************************************************************)
+
+(* Etienne: scalable in the number of processes : very very similar to the former Uppaal Fischer protocol (one clock, one id per process) *)
+
+
+var 
+	
+	x_1, (*P1's clock*)
+	x_2, (*P2's clock*)
+	x_3, (*P3's clock*)
+		:clock;
+	
+
+	lock
+		: int;
+
+	min_rw, max_rw,
+	min_delay, max_delay,
+		: parameter;
+
+
+template process(id : int, x : clock)
+
+synclabs: ;
+
+loc start: invariant x <= max_rw
+  when lock <> 0 & x > min_rw do { x := 0 } goto start;
+  when lock = 0 & x > min_rw do { x := 0 } goto set;
+
+loc set: invariant x <= max_rw
+	(* Actually lock := i *)
+	when x > min_rw do {lock := id, x := 0} goto tryenter;
+
+loc tryenter: invariant x <= max_delay
+	when x > min_delay & lock = id goto cs;
+	when x > min_delay & lock <> id do { x := 0 } goto start;
+
+loc cs: invariant True
+	when True do {x := 0, lock := 0} goto start;
+
+end (* process *)
+
+instantiate process_1 := process(1, x_1);
+instantiate process_2 := process(2, x_2);
+instantiate process_3 := process(3, x_3);
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[process_1] := start,
+		loc[process_2] := start,
+		loc[process_3] := start,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		lock := 0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x_1 = 0
+		& x_2 = 0
+		& x_3 = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& 0 <= min_rw
+		& min_rw < max_rw
+		& 0 <= min_delay
+		& min_delay < max_delay
+	;
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

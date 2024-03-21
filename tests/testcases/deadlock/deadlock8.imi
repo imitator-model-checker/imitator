@@ -1,0 +1,29 @@
+var
+ 	x : clock;
+	y : clock;
+	p : parameter;
+	q : parameter;
+automaton pta
+
+synclabs: a;
+
+loc l1: invariant x<=p
+	when True do { 
+	x := y + 4,
+	y := x + 4 
+        } goto l2;
+
+loc l2: invariant x <= p & y <= q
+	when True do {x := 0, y := 0 } goto l2;
+
+end (* pta *)
+
+init :=
+	& loc[pta] = l1
+	& p >= 0
+	& q >= 0
+	& x = 0
+	& y = 0
+;
+
+end

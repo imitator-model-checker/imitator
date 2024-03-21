@@ -1,0 +1,32 @@
+(* Mikael, Aarhus, March 24, 2023 
+	Simple PTG - No parameters
+    Expected constraint: True
+*)
+
+controllable actions: c_1, c_2;
+
+var
+ 	x : clock;
+
+automaton ptg
+
+actions: u_1, u_2, c_1, c_2;
+
+loc l1: True
+	when x <= 1 sync c_1 goto Goal;
+    when x >= 21 sync c_2 goto Goal;
+    when 2 <= x & x <= 5 sync u_1 goto l2;
+    when 15 <= x & x <= 20 sync u_2 goto l2;
+
+loc l2: invariant True
+
+accepting loc Goal: invariant True
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+;
+
+end

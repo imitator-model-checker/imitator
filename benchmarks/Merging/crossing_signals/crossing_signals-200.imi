@@ -1,0 +1,139 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : crossing_signals-200
+ * Description      : Small example to demonstrate EFexemplify; interesting to demonstrate the use of merging. Property: "if s_1 and s_2 cross each other NB times, then after exactly p time units we have s_1 = 3 s_2"
+ * Correctness      : reachability property
+ * Scalable         : yes
+ * Generated        : no
+ * Categories       : Toy
+ * Source           : Own work; inspired by models from "Étienne André, Masaki Waga, Natsuki Urabe and Ichiro Hasuo. Exemplifying parametric timed specifications over signals with bounded behavior. In Klaus Havelund, Jyotirmoy V. Deshmukh and Ivan Perez (eds.), NFM’22, Springer LNCS 13260, pages 470-488, May 2022. DOI: 10.1007/978-3-031-06773-0_25"
+ * bibkey           : AWUH22
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2021/06/04
+ * Last modified    : 2023/05/12
+ * Model version    : 0.2
+ * 
+ * IMITATOR version : 3.4
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	s_1, s_2,
+		: clock;
+
+(* Discrete *)
+	nb
+		: int;
+
+(* Parameters *)
+	p
+		: parameter;
+
+(* Constants *)
+	NB = 200 : int;
+
+
+(************************************************************)
+  automaton spec
+(************************************************************)
+actions: satisfied, greater, smaller;
+
+loc l1: invariant True
+	when s_1 > s_2 do {} sync greater goto l2;
+
+loc l2: invariant True
+	when s_1 < s_2 & nb < NB do {nb := nb+1} sync smaller goto l1;
+	when s_1 < s_2 & nb = NB do {x := 0} sync smaller goto wait10;
+
+loc wait10: invariant x <= p
+	when x = p & s_1 = 3 s_2 sync satisfied goto lfinal;
+
+accepting loc lfinal: invariant True
+
+end (* spec *)
+
+
+
+
+(************************************************************)
+  automaton signal_1
+(************************************************************)
+actions: decrease_slow_1, stabilize_1, increase_slow_1;
+
+loc increasing_slow: invariant True flow {s_1' = 1}
+	when True sync stabilize_1 goto stabilized;
+
+loc stabilized: invariant True flow {s_1' = 0}
+	when True sync increase_slow_1 goto increasing_slow;
+	when s_1 > 0 sync decrease_slow_1 goto decreasing_slow;
+
+loc decreasing_slow: invariant s_1 >= 0 flow {s_1' = -1}
+	when True sync stabilize_1 goto stabilized;
+
+end (* signal_1 *)
+
+
+(************************************************************)
+  automaton signal_2
+(************************************************************)
+actions: decrease_slow_2, stabilize_2, increase_slow_2;
+
+loc increasing_slow: invariant True flow {s_2' = 1}
+	when True sync stabilize_2 goto stabilized;
+
+loc stabilized: invariant True flow {s_2' = 0}
+	when True sync increase_slow_2 goto increasing_slow;
+	when s_2 > 0 sync decrease_slow_2 goto decreasing_slow;
+
+loc decreasing_slow: invariant s_2 >= 0 flow {s_2' = -1}
+	when True sync stabilize_2 goto stabilized;
+
+end (* signal_2 *)
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[spec] := l1,
+		loc[signal_1] := stabilized,
+		loc[signal_2] := stabilized,
+		(*------------------------------------------------------------*)
+		(* Initial discrete *)
+		(*------------------------------------------------------------*)
+		nb := 0,
+
+    ;
+
+    continuous =
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

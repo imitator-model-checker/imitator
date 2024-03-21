@@ -1,0 +1,101 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Exemplifying blocks and lexical scope
+ * Description      : Exemplifying blocks and lexical scope
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Benjamin Loillier, Étienne André
+ * Modeling         : Benjamin Loillier, Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022?
+ * Last modified    : 2023/03/14
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+(* Declare a global variable `i` *)
+var i : int;
+
+function f() : int
+begin
+	(* In this block: *)
+	(* We have access to higher level lexical scope containing: `i` *)
+	(* We have access to current scope containing `j` *)
+	(* We do not have access to lower level scopes *)
+
+	var j : int = i;
+
+	if j = 0 then
+		(* In this block: *)
+		(* We have access to higher level lexical scope containing: `i`, `j` *)
+		(* We have access to current scope containing `k` *)
+
+		var k : int = 1;
+		j := i + 1;
+		if True then
+			(* In this block: *)
+			(* We have access to higher level lexical scope containing: `i`, `j`, `k` *)
+			j := j + i + k;
+		end
+	else
+		(* In this block: *)
+		(* We have access to higher level lexical scope containing: `i`, `j` *)
+		(* We do not have access to variable `k` because it was defined in another separated block *)
+		j := 2 * i;
+	end
+
+	return j;
+end
+
+(************************************************************)
+  automaton A
+(************************************************************)
+loc l1: invariant True
+	when i < 1 do {f()} goto l1;
+
+end (* A *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[A] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+    ;
+
+    continuous =
+		True
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

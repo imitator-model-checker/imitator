@@ -34,47 +34,51 @@ var
   r_global : rat;
   a_global : int array(2);
 
+  (* number_stack : int stack; *)
+
   (* Some result variables *)
   i_result, i_result_2 : int;
   r_result, lerp_result : rat;
   top_stack, top_queue : int;
+  (* my_flatten_array : int array(4); *)
+  (* stack_sum_result : int; *)
 
 (* Last index of an array *)
 fn last_idx_fun(a : int array(2)) : int
 begin
-  array_length(a) - 1
+  return array_length(a) - 1
 end
 
 (* Linear interpolation *)
 fn lerp(a : rat, b : rat, x : rat) : rat
 begin
-  a + (b - a) * x
+  return a + (b - a) * x
 end
 
 (* Add global variable i with x *)
 fn int_f(x : int) : int
 begin
-  x + i1
+  return x + i1
 end
 
 (* Add global variable i with x *)
 fn rat_f(r : rat) : rat
 begin
-  r + r1
+  return r + r1
 end
 
 (* my own not using not *)
 fn my_not(b : bool) : bool
 begin
-  not(b)
+  return not(b)
 end
 
 (* Replace n bit by zeros from left to right *)
 fn zero_left(bin : binary(4), n : int) : binary(4)
 begin
-  let l_bin : binary(4) = shift_left(bin, n) in
-  let r_bin : binary(4) = shift_right(l_bin, n) in
-  r_bin
+  var l_bin : binary(4) = shift_left(bin, n);
+  var r_bin : binary(4) = shift_right(l_bin, n);
+  return r_bin
 end
 
 (* Push 0,1,2 to a stack (side effect function) *)
@@ -83,7 +87,7 @@ begin
   stack_push(0, my_stack);
   stack_push(1, my_stack);
   stack_push(2, my_stack);
-  my_stack
+  return my_stack
 end
 
 (* Push 0,1,2 to a queue (side effect function) *)
@@ -92,7 +96,7 @@ begin
   queue_push(0, my_queue);
   queue_push(1, my_queue);
   queue_push(2, my_queue);
-  my_queue
+  return my_queue
 end
 
 (* Setting value to some global variables (side effect function) *)
@@ -102,37 +106,79 @@ begin
   a_global[last_idx_fun(a_global)] := 1;
   i_global := a * 2;
   (* Shadow parameter a *)
-  let a : int = 5 in
+  var a : int = 5;
   r_global := rational_of_int(i_global + a);
   (* Shadow local variable a *)
-  let a : int = 1 in
+  var a : int = 1;
   (* Shadow global variable i1 *)
-  let i1 : int = 2 in
-  a + i1 (* Should give 3 *)
+  var i1 : int = 2;
+  return a + i1 (* Should give 3 *)
 end
 
+fn flatten_nested_array(a : int array(2) array(2)) : int array(4)
+begin
+    var flatten_arr : int array(4) = [0, 0, 0, 0];
+    var length : int = array_length(a);
+
+    for i from 0 to length - 1 do
+        for j from 0 to array_length(a[i]) - 1 do
+            flatten_arr[j + (i * length)] := a[j][i];
+        done
+    done
+
+    return flatten_arr;
+end
+(*
+fn stack_sum(s : int stack) : int
+begin
+
+    var n : int = 0;
+    while not (is_stack_empty(s)) do
+        n := n + stack_pop(s);
+    done
+
+    return n;
+end
+
+fn sss(s: int stack) : int
+begin
+    var n : int = 0;
+
+    while n < 10 do
+        n := n + 1;
+    done
+    return n;
+end
+*)
 automaton P
 
   loc l0: invariant True
   when
     True
+    (*
     & my_not(False)
     & not(my_not(True))
     & zero_left(bin, 2) = 0b0011
+    *)
 
   do {
-    seq
       push_on_stack(s);
       push_on_queue(q);
-      top_stack = stack_top(s);
-      top_queue = queue_top(q);
+      top_stack := stack_top(s);
+      top_queue := queue_top(q);
       i_result_2 := set_globals(5);
       lerp_result := lerp(4.98, 10.85, 0.5);
-
-    then
-      i_result := int_f(2),
-      r_result := rat_f(3),
-      bin := zero_left(bin, 2)
+      (*
+      my_flatten_array := flatten_nested_array([[1, 2], [3, 4]]);
+      stack_push(5, number_stack);
+      stack_push(8, number_stack);
+      stack_push(9, number_stack);
+      stack_push(4, number_stack);
+      stack_sum_result := sss(number_stack);
+      *)
+      i_result := int_f(2);
+      r_result := rat_f(3);
+      bin := zero_left(bin, 2);
   }
   goto lend;
 
@@ -147,6 +193,7 @@ init := {
       r1 := 1,
       s := stack(),
       q := queue(),
-      bin := 0b1011
+      bin := 0b1011,
+      (* my_flatten_array := [0, 0, 0, 0] *)
     ;
 }

@@ -43,7 +43,7 @@ var
 (************************************************************)
 automaton process_1
 (************************************************************)
-synclabs: ;
+actions: ;
 
 loc start_1: invariant x_1 <= max_rw
 	when lock <> 0 & x_1 > min_rw do {x_1 := 0} goto start_1;
@@ -70,7 +70,7 @@ end (*process_1*)
 (************************************************************)
 automaton process_2
 (************************************************************)
-synclabs: ;
+actions: ;
 
 loc start_2: invariant x_2 <= max_rw
 	when lock <> 0 & x_2 > min_rw do {x_2 := 0} goto start_2;
@@ -97,7 +97,7 @@ end (*process_2*)
 (************************************************************)
 automaton process_3
 (************************************************************)
-synclabs: ;
+actions: ;
 
 loc start_3: invariant x_3 <= max_rw
 	when lock <> 0 & x_3 > min_rw do {x_3 := 0} goto start_3;

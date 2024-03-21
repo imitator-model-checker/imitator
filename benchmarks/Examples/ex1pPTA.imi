@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/12/01
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -59,7 +59,7 @@ end (* pta *)
 (************************************************************)
   automaton timechecker
 (************************************************************)
-synclabs: time_limit;
+actions: time_limit;
 
 loc running: invariant t <= T
 (*	when t = T do {t := 0} sync time_limit goto blocked;

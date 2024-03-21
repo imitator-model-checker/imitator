@@ -2,7 +2,6 @@
 .dockerignore
 .git
 _oasis
-bin
 comparator
 scripts
 .gitignore
@@ -14,4 +13,6 @@ interfaceCV.py
 LICENSE
 paquito.yml
 README.md
+INSTALL.md
 RELEASES.md
+.DS_Store

@@ -6,15 +6,14 @@
 #
 #             Data for non-regression tests
 #
-# Université Paris 13, LIPN, CNRS, France
+# Université Sorbonne Paris Nord, LIPN, CNRS, France
 # Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
 # File description  : non-regression tests data
 #
-# File contributors : Étienne André, Jaime Arias, Benjamin Loillier
+# File contributors : Étienne André, Jaime Arias, Mikael Bisgaard Dahlsen-Jensen, Benjamin Loillier
 #
 # Created           : 2015/10/23
-# Last modified     : 2022/02/09
 #************************************************************
 
 
@@ -31,10 +30,12 @@ tests = [
 	##------------------------------------------------------------
 	#{
 		## Test version             : 1
-		## Test since               : 2021/03/33
-		## Last modified            : 2021/03/33
-		## Test for IMITATOR version: 3.2
+		## Test author              : XXXXXXXXXX
+		## Test since               : 2024/03/33
+		## Last modified            : 2024/03/33
+		## Test for IMITATOR version: 3.4
 		#'purpose'    : 'Test something',
+		#'tags'       : 'syntax,semantic,translation',
 		#'input_files': ['somemodel.imi'],
 		#'options'    : '-mode checksyntax',
 		#'expectations' : [
@@ -336,33 +337,6 @@ L/U subclass                            : L-PTA
 	##------------------------------------------------------------
 
 	#,
-
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2021/10/19
-		# Last modified            : 2021/10/19
-		# Test for IMITATOR version: 3.2
-		'purpose'    : 'Test discrete swap',
-		'input_files': ['test-swap-discrete.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
-  pta: l1, i = 1, j = 2 ==> 
-		"""
-			} # end result file
-			,
-			{'file': 'test-swap-discrete-statespace.states' , 'content' : """
-  pta: l2, i = 2, j = 1 ==> 
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 	
 	#------------------------------------------------------------
 	{
@@ -380,7 +354,7 @@ L/U subclass                            : L-PTA
 			} # end result file
 			,
 			{'file': 'test-discrete-dependent-updates-statespace.states' , 'content' : """
-  pta: l2, i = 0, j = 2 ==> 
+  pta: l2, i = 0, j = 1 ==>
 		"""
 			} # end result file
 			,
@@ -538,6 +512,272 @@ Is strongly deterministic?              : false
 
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS FOR VALIDITY SYNTHESIS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (clock constraint)',
+		'input_files': ['unsatisfiableInitStateClocks.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (clock constraint + invariant)',
+		'input_files': ['unsatisfiableInitStateClocksInv.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (discrete+clock constraint)',
+		'input_files': ['unsatisfiableInitStateDiscrete.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: unsatisfiable initial conditions (unsatisfiable discrete invariant)',
+		'input_files': ['unsatisfiableInitStateDiscreteInv.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant (variant)',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2022/10/07
+		# Last modified            : 2022/10/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test validity synthesis: basic model with parametric invariant and negative variable',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-valid.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 + 3 >= 0
+& 0 >= 3 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test auto-removed parameter does not crash the initial constraint checking',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/parameter-autoremove.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'parameter-autoremove.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: strange way to check valid syntax
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/09
+		# Last modified            : 2023/03/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test auto-removed variable doesn’t crash a function return',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/removed-function.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'removed-function.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: strange way to check valid syntax
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions syntax is still checked',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-invalid-syntax.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'unused-function-invalid-syntax.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that variables names are checked in function calls',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/undeclared-var-in-function-call.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'undeclared-var-in-function-call.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON UNSATISFIABLE INITIAL STATE
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -547,12 +787,12 @@ Is strongly deterministic?              : false
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
+		'purpose'    : 'Test unsatisfiable initial conditions (clock constraint)',
 		'input_files': ['unsatisfiableInitStateClocks.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -568,12 +808,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/07/05
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test state space (unsatisfiable initial state) even when a (useless, and non-existing) property is passed',
+		'purpose'    : 'Test state space (unsatisfiable initial conditions) even when a (useless, and non-existing) property is passed',
 		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -589,12 +829,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (clock constraint + invariant)',
+		'purpose'    : 'Test unsatisfiable initial conditions (clock constraint + invariant)',
 		'input_files': ['unsatisfiableInitStateClocksInv.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -610,12 +850,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (discrete+clock constraint)',
+		'purpose'    : 'Test unsatisfiable initial conditions (discrete+clock constraint)',
 		'input_files': ['unsatisfiableInitStateDiscrete.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -631,12 +871,12 @@ Error                                   : unsatisfiable initial state
 		# Test since               : 2021/02/05
 		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test unsatisfiable initial state (incompatible discrete invariant)',
+		'purpose'    : 'Test unsatisfiable initial conditions (unsatisfiable discrete invariant)',
 		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
 		'options'    : '-mode statespace',
 		'expectations' : [
 			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
-Error                                   : unsatisfiable initial state
+Error                                   : unsatisfiable initial conditions
 		"""
 			} # end result file
 			,
@@ -662,6 +902,146 @@ Error                                   : unsatisfiable initial state
 		'expectations' : [
 			{'file': 'divisionby0.res' , 'content' : """
 Error                                   : division by 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (discrete int in init definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-int-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-int-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (discrete rational in init definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-rational-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-rational-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (constant int in definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-int-def.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-int-def.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected (constant rational in definition)',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-model-rational-def.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'division-by-zero-model-rational-def.res' , 'content' : """
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test static division by zero detected in property',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/division-by-zero-property.imi', 'syntax/division-by-zero-property.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'division-by-zero-property.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/15
+		# Last modified            : 2024/03/15
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that undeclared variables are detected in updates',
+		'tags'       : 'syntax',
+		'input_files': ['syntax/undeclared-variable-update.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'undeclared-variable-update.res' , 'content' : """
+Error                                   : invalid model
 		"""
 			} # end result file
 			,
@@ -729,9 +1109,163 @@ Error                                   : division by 0
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword',
+		'tags'       : 'syntax,controllable,ptg',
+		'input_files': ['parametric_timed_games/controllable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'controllable_actions-regenerated.imi' , 'content' : """
+controllable actions: b;
+
+
+var
+
+ 	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test uncontrollable keyword',
+		'tags'       : 'syntax,controllable,ptg',
+		'input_files': ['parametric_timed_games/uncontrollable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'uncontrollable_actions-regenerated.imi' , 'content' : """
+controllable actions: a, c;
+
+
+var
+
+ 	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword + include',
+		'tags'       : 'syntax,controllable,ptg,include',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'include_controllable_actions-regenerated.imi' , 'content' : """
+controllable actions: a, b;
+
+var
+	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test controllable keyword + include with inconsistent inclusion (WARNING, this test should perhaps rather fail?)',
+		'tags'       : 'syntax,controllable,ptg,include',
+		'input_files': ['parametric_timed_games/include_controllable_actions_inconsistent.imi'],
+		'options'    : '-imi2IMI',
+		# WARNING: this test so far only triggers a warning, but the model could be rejected
+		'expectations' : [
+			{'file': 'include_controllable_actions_inconsistent-regenerated.imi' , 'content' : """
+controllable actions: b;
+
+var
+	x
+		: clock;
+
+	p
+		: parameter;
+
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ actions: a, b, c;
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [1]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-1a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -750,10 +1284,10 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x := 0}  sync a goto l1;
+	when  x = 1 do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -761,10 +1295,10 @@ loc l1: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x := 0}  sync a goto l1;
+	when  x = 1 do {x := 0;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -813,6 +1347,7 @@ end
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [2]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-2a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -832,20 +1367,20 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x := 0}  sync a goto l1;
+	when  p + 1 = x do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y := p}  sync a goto l1;
+	when  y = 1 do {y := p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -897,6 +1432,7 @@ end
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [3]',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-3a.imi'],
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
@@ -914,10 +1450,10 @@ var
 (************************************************************)
  automaton pta1
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x := 0}  sync a goto l1;
+	when  p + 1 = x do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -925,10 +1461,10 @@ loc l1: invariant True
 (************************************************************)
  automaton pta2
 (************************************************************)
- synclabs: a;
+ actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y := p}  sync a goto l1;
+	when  y = 1 do {y := p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -983,6 +1519,7 @@ end
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-1.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1004,6 +1541,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing included file with funny characters',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-2.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1025,6 +1563,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: parsing error in included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-3a.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1047,6 +1586,7 @@ Error                                   : model parsing error
 		# Last modified            : 2021/07/19
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test include: non-existing file in included file',
+		'tags'       : 'syntax,include',
 		'input_files': ['tests_include_model/example-include-nonexisting-4a.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -1069,7 +1609,7 @@ Error                                   : model parsing error
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test include: functions',
 		'author': 'lbinria',
-		'tags':'include, function',
+		'tags':'syntax,include, function',
 		'input_files': ['tests_include_model/example-include-functions-1a.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -1078,16 +1618,16 @@ var
 	res, j, i
 		: int;
 
-fn f() : int begin
-let i1 : int = i + 1 in
-let i2 : int = (i + 1) * 2 in
-i1 + i2
+function f() : int begin
+  var i1 : int = i + 1;
+  var i2 : int = (i + 1) * 2;
+  return i1 + i2
 end
 
 (************************************************************)
  automaton P1
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc s0: invariant True
 	when True do {}  (* sync nosync_1*)  goto lend;
@@ -1100,10 +1640,10 @@ accepting loc lend: invariant True
 (************************************************************)
  automaton P2
 (************************************************************)
- synclabs: ;
+ actions: ;
 
 loc s0: invariant True
-	when f() + j = 4 do {res := f()}  (* sync nosync_2*)  goto lend;
+	when f() + j = 4 do {res := f();}  (* sync nosync_2*)  goto lend;
 
 accepting loc lend: invariant res = 3
  end (* P2 *)
@@ -1190,6 +1730,42 @@ end
 		"""
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/27
+		# Last modified            : 2024/02/27
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test something',
+		'tags'       : 'syntax,semantic,translation',
+		'input_files': ['autoremove/detection-bool-var.imi', 'autoremove/detection-bool-var-EF.imiprop'],
+		'options'    : '-states-description',
+		'expectations' : [
+			{'file': 'detection-bool-var.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+			{'file': 'detection-bool-var.res' , 'content' : """
+			Number of states                        : 2
+		"""
+			} # end result file
+			,
+			{'file': 'detection-bool-var-statespace.states' , 'content' : """
+  pta: l0, i = 0 ==>
+&True
+		"""
+			} # end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -1868,7 +2444,7 @@ Number of discrete variables            : 1
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the state space (no float conversion)',
 		'input_files': ['testFloat.imi'],
-		'options'    : '-mode statespace -states-description',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testFloat-statespace.states' , 'content' : """
 pta: l2, i = 5/4, j = 1/3
@@ -1889,7 +2465,7 @@ pta: l2, i = 5/4, j = 1/3
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the state space (with float conversion)',
 		'input_files': ['testFloat.imi'],
-		'options'    : '-mode statespace -states-description -output-float',
+		'options'    : '-mode statespace -states-description -output-float -no-var-autoremove',
 		'expectations' : [
 		# NOTE: cut the end of the float just in case the OS doesn't represent them the same way…
 			{'file': 'testFloat-statespace.states' , 'content' : """
@@ -1991,11 +2567,11 @@ DESCRIPTION OF THE TRANSITIONS
 	{
 		'purpose'    : 'Test updates (printing)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-imi2IMI',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
-  urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
+urgent loc idle: invariant True
+	when True do {i := (3 * i - 1) / (5 * i * i); x := x + 1/2 * p - 7 * i - 1; y := y + 1;} sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -2014,8 +2590,8 @@ DESCRIPTION OF THE TRANSITIONS
 			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
 	when  a > 0
 & b > 0
-& c > 0 do {a := 0, b := 0, c := 0}  sync a goto idle;
-	when True do {a := 2, b := 3 + 3, c := 0}  sync a goto idle;
+& c > 0 do {a := 0; b := 0; c := 0;}  sync a goto idle;
+	when True do {a := 2; b := 3 + 3; c := 0;}  sync a goto idle;
 		"""
 			 } # end result file
 			,
@@ -2034,7 +2610,7 @@ DESCRIPTION OF THE TRANSITIONS
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2059,7 +2635,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2085,7 +2661,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2110,7 +2686,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2135,7 +2711,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear D reachable)',
-		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-d-reachable.res' , 'content' : """
@@ -2160,7 +2736,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pd-reachable.res' , 'content' : """
@@ -2186,7 +2762,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear XD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-xd-reachable.res' , 'content' : """
@@ -2211,7 +2787,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (linear PXD reachable)',
-		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/linear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'linear-invariant-pxd-reachable.res' , 'content' : """
@@ -2263,7 +2839,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-d-reachable.res' , 'content' : """
@@ -2288,7 +2864,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-reachable.res' , 'content' : """
@@ -2314,7 +2890,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-reachable.res' , 'content' : """
@@ -2339,7 +2915,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-reachable.res' , 'content' : """
@@ -2364,7 +2940,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pd-semantic-error.res' , 'content' : """
@@ -2387,7 +2963,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-xd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-xd-semantic-error.res' , 'content' : """
@@ -2410,7 +2986,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in guards (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-guard-pxd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-guard-pxd-semantic-error.res' , 'content' : """
@@ -2433,7 +3009,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear D reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-d-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-d-reachable.res' , 'content' : """
@@ -2458,7 +3034,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-reachable.res' , 'content' : """
@@ -2484,7 +3060,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-reachable.res' , 'content' : """
@@ -2509,7 +3085,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD reachable)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-reachable.res' , 'content' : """
@@ -2534,7 +3110,7 @@ END CONSTRAINT
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pd-semantic-error.res' , 'content' : """
@@ -2557,7 +3133,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear XD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-xd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-xd-semantic-error.res' , 'content' : """
@@ -2580,7 +3156,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test expression consistency in invariants (non-linear PXD semantic error)',
-		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['nonlinear_expressions/nonlinear-invariant-pxd-semantic-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'nonlinear-invariant-pxd-semantic-error.res' , 'content' : """
@@ -2603,7 +3179,7 @@ Error                                   : invalid model
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test linear expression unary minus in guard (computing)',
-		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['linear_expressions/unary-minus-linear-expression.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-linear-expression.res' , 'content' : """
@@ -2634,6 +3210,38 @@ END CONSTRAINT
 			{'file': 'unary-minus-linear-expression-regenerated.imi' , 'content' : """
 when  y + 7 > 2*x
 & x + y = 5 + i
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2022/10/27
+		## Last modified            : 2022/10/27
+		## Test for IMITATOR version: 3.3
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'tags': 'parsing, arithmetic, linear, reduction',
+		'purpose'    : 'Test linear expression reduction is correct',
+		'input_files': ['linear_expressions/linear-expression-reduction.imi'],
+		'options'    : '-imi2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
+      x1 := 6 * x + 10 * y - 53;
+      x2 := 6 * x + 10 * y - 53;
+      x3 := y + 5 * x + 5;
+      x4 := x - 1;
+      x5 := -(6);
+      x6 := 2 * x + 11;
+      x7 := -(3 * x) + 23 * y + 35;
+      x8 := 24 + 12 * x;
+      x9 := -(12 * y) + 2 * x + 4 * z + 41;
 		"""
 			 } # end result file
 			,
@@ -2678,7 +3286,7 @@ Number of IPTAs                         : 1
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in guard (computing)',
-		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['arithmetic_expressions/unary-minus-guard.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'unary-minus-guard.res' , 'content' : """
@@ -2738,7 +3346,21 @@ when  -(i * 2) = -2 * i
 		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
-when  i = 0 do {i := -(i * 2), i := -2 * i, i := -(i * -2), i := -(i / 2), i := (-i) / 2, i := -(i / -2), i := -(i + i), i := -(i - i), i := -(2 * i - i), i := -(-(i)), i := -(-(-(i))), i := -1 + 1, i := -1 - 1}  sync a goto lend;
+when  i = 0 do {
+  i := -(i * 2);
+  i := -2 * i;
+  i := -(i * -2);
+  i := -(i / 2);
+  i := (-i) / 2;
+  i := -(i / -2);
+  i := -(i + i);
+  i := -(i - i);
+  i := -(2 * i - i);
+  i := -(-(i));
+  i := -(-(-(i)));
+  i := -1 + 1;
+  i := -1 - 1;
+}  sync a goto lend;
 		"""
 			 } # end result file
 			,
@@ -2820,7 +3442,7 @@ when  z * x / y > x do {}  sync a1 goto lend;
 	{
 		'purpose'    : 'Test Boolean True constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-reachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-reachable.res' , 'content' : """
@@ -2840,7 +3462,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test Boolean False constant (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-constant-unreachable.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-constant-unreachable.res' , 'content' : """
@@ -2861,7 +3483,7 @@ END CONSTRAINT
 		'purpose'    : 'Test Boolean negation (computing)',
 		'tags':'boolean, computing, semantic',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-negation.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-negation.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-negation.res' , 'content' : """
@@ -2882,7 +3504,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test that a Boolean variable is correctly updated (computing)',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-discrete-var-update.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-discrete-var-update.res' , 'content' : """
@@ -2909,6 +3531,10 @@ END CONSTRAINT
 /* Discrete variables declarations (WARNING: these variables can be rational-valued in IMITATOR, but they become integer-valued in Uppaal) */
 bool b = true;
 
+/* User defined function declarations (WARNING: some user defined functions may not be well translated) */
+
+
+
 /* Action declarations */
 
 
@@ -2921,20 +3547,20 @@ bool b = true;
 
 <template><name x="0" y="0">pta</name><declaration>// No local declaration for automaton 'pta'
 </declaration>
- 
+
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"></label></location>
- 
+
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"></label></location>
- 
+
 <location id="id_pta0_loc2" x="400" y="0">
 	<name x="400" y="-40">lend</name>
 	<label kind="invariant" x="400" y="40">b</label></location>
  <init ref="id_pta0_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc1"/>
@@ -2984,7 +3610,7 @@ Error                                   : invalid model
 	{
 		'purpose'    : 'Test that a Boolean variable is initialized with consistent type',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-init-type-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-init-type-error.res' , 'content' : """
@@ -3008,7 +3634,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that a Boolean variable is updated with a consistent typed expression',
 		'tags':'boolean, computing, semantic',
-		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['boolean_expressions/bool-variable-update-type-error.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'bool-variable-update-type-error.res' , 'content' : """
@@ -3110,8 +3736,8 @@ Error                                   : invalid model
   /************************************************************/
   STATE 1:
   pta: l2, b1 = False, b2 = True ==> 
-& x > 5 + p
 & p >= 0
+& x > 5 + p
 
   Projection onto the parameters:
    p >= 0
@@ -3121,6 +3747,159 @@ Error                                   : invalid model
   s_0 -> s_1 via "a1"
 		"""
 			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test Boolean operator priority',
+		'tags'       : 'boolean,semantic',
+		'input_files': ['boolean_expressions/bool-priorities.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-priorities.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 0
+OR
+  p = 2
+OR
+  p = 4
+OR
+  p = 6
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test Boolean and arithmetic operator priority',
+		'tags'       : 'boolean,semantic',
+		'input_files': ['boolean_expressions/bool-arithmetic-priorities.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-arithmetic-priorities.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 22
+ OR
+   p = 8
+ OR
+   p = 24
+ OR
+   p = 150
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test implication in Boolean expressions (model)',
+		'tags'       : 'syntax,boolean',
+		'input_files': ['boolean_expressions/bool-implication.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-implication.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 0
+OR
+  p = 2
+OR
+  p = 4
+OR
+  p = 6
+OR
+  p = 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test implication in Boolean expressions (property)',
+		'tags'       : 'syntax,boolean',
+		'input_files': ['boolean_expressions/bool-implication-property.imi', 'boolean_expressions/bool-implication-property.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-implication-property.res' , 'content' : """
+BEGIN CONSTRAINT
+  p_1 = 2
+ & p_2 = 2
+ OR
+   p_1 >= 0
+ & p_2 = 3
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/23
+		# Last modified            : 2024/02/23
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test implication in Boolean expressions (property, mixing locations + int)',
+		'tags'       : 'syntax,boolean',
+		'input_files': ['boolean_expressions/bool-implication-property-int.imi', 'boolean_expressions/bool-implication-property-int.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'bool-implication-property-int.res' , 'content' : """
+BEGIN CONSTRAINT
+  p_1 = 2
+ & p_2 = 2
+ OR
+   p_1 >= 0
+ & p_2 = 3
+END CONSTRAINT
+		"""
+			} # end result file
 			,
 		] # end expectations
 	} # end test case
@@ -3152,330 +3931,336 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"plma": "l1",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "False",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "p1up",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "SBA",
-						"guard": " not  (p1)",
-						"updates": {"p1": "True"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l1",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "True",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "p2up",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "SBA",
-						"guard": " not  (p2)",
-						"updates": {"p2": "True"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l1",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "True",
-					"p2": "True"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "p1down",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "SBA",
-						"guard": "p1",
-						"updates": {"p1": "False"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l1",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "False",
-					"p2": "True"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a1",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "plma",
-						"guard": "True",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l2",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "False",
-					"p2": "True"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/4",
-				"action": "p2down",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "SBA",
-						"guard": "p2",
-						"updates": {"p2": "False"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l2",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "False",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "1/4",
-					"global_time": "1/4"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/4",
-				"action": "p1up",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "SBA",
-						"guard": " not  (p1)",
-						"updates": {"p1": "True"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l2",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "True",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "1/2",
-					"global_time": "1/2"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "check",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "plma",
-						"guard": "p1 AND  x > 0",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l3",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "True",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "3",
-				"action": "a2",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "plma",
-						"guard": " not  (p2) AND  x = 3",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"plma": "l4",
-					"SBA": "l1"
-				},
-				"discrete_variables": {
-					"p1": "True",
-					"p2": "False"
-				},
-				"continuous_variables": {
-					"x": "3",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1",
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "plma": "l1",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "False",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "p1up",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "SBA",
+                "guard": " not  (p1)",
+                "updates": {
+                  "p1": "True"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l1",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "True",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "p2up",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "SBA",
+                "guard": " not  (p2)",
+                "updates": {
+                  "p2": "True"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l1",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "True",
+            "p2": "True"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "p1down",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "SBA",
+                "guard": "p1",
+                "updates": {
+                  "p1": "False"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l1",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "False",
+            "p2": "True"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a1",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "plma",
+                "guard": "True",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l2",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "False",
+            "p2": "True"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/4",
+          "action": "p2down",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "SBA",
+                "guard": "p2",
+                "updates": {
+                  "p2": "False"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l2",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "False",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "1/4",
+            "global_time": "1/4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/4",
+          "action": "p1up",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "SBA",
+                "guard": " not  (p1)",
+                "updates": {
+                  "p1": "True"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l2",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "True",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "1/2",
+            "global_time": "1/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "check",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "plma",
+                "guard": "p1 AND  x > 0",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l3",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "True",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "3",
+          "action": "a2",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "plma",
+                "guard": " not  (p2) AND  x = 3",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "plma": "l4",
+            "SBA": "l1"
+          },
+          "discrete_variables": {
+            "p1": "True",
+            "p2": "False"
+          },
+          "continuous_variables": {
+            "x": "3",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 		"""
 			 } # end result file
@@ -3499,7 +4284,7 @@ True
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
-		'input_files': ['array_expressions/array.imi', 'acceptingReachable.imiprop'],
+		'input_files': ['array_expressions/array.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
@@ -3614,7 +4399,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'stack-statespace.states' , 'content' : """
-  pta: lend, i = 3, r = 1, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
+  pta: lend, r = 1, i = 3, s3 = stack([3, 2]), s2 = stack(), s1 = stack([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3645,7 +4430,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'queue-statespace.states' , 'content' : """
-  pta: lend, i = 2, r = 1, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+  pta: lend, r = 1, i = 2, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -3782,7 +4567,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-1.res' , 'content' : """
 Error                                   : invalid model
@@ -3805,7 +4590,7 @@ Error                                   : invalid model
 		'author': 'lbinria',
 		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'expression-mixin-type-error-2.res' , 'content' : """
 Error                                   : invalid model
@@ -3882,7 +4667,7 @@ Error                                   : invalid model
 			{'file': 'complex-type-checking-statespace.states' , 'content' : """
   INITIAL
   STATE 0:
-  pta: l1, b1 = True, b2 = False, k = 0, j = 1, i = 0 ==> 
+  pta: l1, k = 0, j = 1, b1 = True, b2 = False, i = 0 ==>
 & x >= 0
 & p >= 0
 
@@ -3893,7 +4678,7 @@ Error                                   : invalid model
 			,
 			{'file': 'complex-type-checking-statespace.states' , 'content' : """
   STATE 23:
-  pta: l2, b1 = False, b2 = True, k = 10, j = 0, i = 1 ==> 
+  pta: l2, k = 10, j = 0, b1 = False, b2 = True, i = 1 ==>
 & x >= 0
 & p > 10
 
@@ -3962,13 +4747,452 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undeclared variables in continuous init',
+		'input_files': ['test-wrong-continuous-init-var.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-wrong-continuous-init-var.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undeclared variables in discrete init',
+		'input_files': ['test-wrong-discrete-init-var.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-wrong-discrete-init-var.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# BEGIN : Test new init state section
+	#------------------------------------------------------------
+
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/10
+# 		## Last modified            : 2021/03/10
+# 		## Test disabled            : 2021/06/01
+# 		## Test for IMITATOR version: > 3.0
+# 		## Author 					: lbinria
+# 		'author': 'lbinria',
+# 		'purpose'    : 'Test init state printing - old state zone (printing)',
+# 		'tags' : 'semantic, printing, init',
+# 		'input_files': ['init_state/old-init-state-printing.imi'],
+# 		'options'    : '-imi2IMI',
+# 		'expectations' : [
+# 			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
+# var
+# 	i, j
+# 		: discrete;
+#
+#
+# (************************************************************)
+#  automaton pta
+# (************************************************************)
+#  actions: ;
+#
+# loc l1: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_1*)  goto lend;
+#
+# accepting loc lend: invariant True
+#  end (* pta *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+#  automaton pta2
+# (************************************************************)
+#  actions: ;
+#
+# loc l2: invariant True
+# 	when  i = 0
+# & j = 0 do {}  (* sync nosync_2*)  goto lend2;
+#
+# accepting loc lend2: invariant True
+#  end (* pta2 *)
+# (************************************************************)
+#
+#
+# (************************************************************)
+# (* Initial state *)
+# (************************************************************)
+#
+# init := True
+# 	(*------------------------------------------------------------*)
+# 	(* Initial location *)
+# 	(*------------------------------------------------------------*)
+# 	& loc[pta] = l1
+# 	& loc[pta2] = l2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial discrete assignments *)
+# 	(*------------------------------------------------------------*)
+# 	& i = 1
+# 	& j = 2
+#
+# 	(*------------------------------------------------------------*)
+# 	(* Initial constraint *)
+# 	(*------------------------------------------------------------*)
+# 	 & True
+#
+# ;
+#
+#
+# (************************************************************)
+# (* The end *)
+# (************************************************************)
+# end
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/10
+		## Last modified            : 2021/06/01
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test imi2IMI for initial state v3.1',
+		'tags' : 'semantic, printing, init',
+		'input_files': ['init_state/new-init-state-printing.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
+var
+	i, j
+		: rational;
+
+	b
+		: bool;
+
+	k, l
+		: int;
+
+
+
+(************************************************************)
+ automaton pta
+(************************************************************)
+ actions: ;
+
+loc l1: invariant True
+	when b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {} (* sync nosync_1*)  goto lend;
+
+accepting loc lend: invariant True
+ end (* pta *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ actions: ;
+
+loc l2: invariant True
+	when b
+& i = 0
+& j = 0
+& k = 0
+& l = 0 do {} (* sync nosync_2*)  goto lend2;
+
+accepting loc lend2: invariant True
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+		loc[pta2] := l2,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 1,
+		j := 2,
+		b := False,
+		k := 0,
+		l := 0
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous =
+		& True
+	;
+
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: 3.0.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/04/16
+		## Last modified            : 2021/04/16
+		## Test for IMITATOR version: > 3.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
+		'options'    : '-imi2IMI',
+		'expectations' : [
+			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/09
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-variable-at-discrete-and-continuous.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+# 	#------------------------------------------------------------
+# 	{
+# 		## Test version             : 1
+# 		## Test since               : 2021/03/04
+# 		## Last modified            : 2021/05/31
+# 		## Test for IMITATOR version: 3.1.0
+# 		## Author 					: lbinria
+# 		'purpose'    : 'Test that init of an undeclared variable is forbidden - new init state (behavior)',
+# 		'tags' : 'semantic, behavior, init',
+# 		'input_files': ['init_state/init-discrete-section-not-declared-error.imi'],
+# 		'options'    : '',
+# 		'expectations' : [
+# 			{'file': 'init-discrete-section-not-declared-error.res' , 'content' : """
+# Error                                   : invalid model
+# 		"""
+# 			 } # end result file
+# 			,
+# 		] # end expectations
+# 	} # end test case
+# 	#------------------------------------------------------------
+#
+# 	,
+
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/03/04
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-constant.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
+  STATE 1:
+  pta: lend, b = True ==>
+&True
+
+  Projection onto the parameters:
+  True
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/05/27
+		## Last modified            : 2021/05/31
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-variable-with-variable.imi'],
+		'options'    : '-no-var-autoremove -mode statespace -states-description',
+		'expectations' : [
+			{'file': 'init-variable-with-variable.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/22
+		# Last modified            : 2023/08/22
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
+		'tags'       : 'syntax,init',
+		'input_files': ['init_state/constants-in-init.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'constants-in-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
+		## Test since               : 2021/06/21
+		## Last modified            : 2021/06/21
+		## Test for IMITATOR version: 3.1.0
+		## Author 					: lbinria
+		'author': 'lbinria',
+		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
+		'tags' : 'semantic, behavior, init',
+		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test new init state section
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
 		## Test version             : 1
 		## Test since               : 2021/05/28
 		## Last modified            : 2021/05/28
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot be ill-typed',
+		'purpose'    : 'Test that an init expression cannot be ill-typed',
 		'input_files': ['type_checking/inits/init-discrete-expression-bad-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -3992,7 +5216,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init expression cannot mix different types',
+		'purpose'    : 'Test that an init expression cannot mix different types',
 		'input_files': ['type_checking/inits/init-discrete-expression-mixin-type-error.imi'],
 		'tags': 'type checking, init',
 		'options'    : '',
@@ -4016,7 +5240,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on clock cannot use non rational valued variable(s) or constant(s)',
+		'purpose'    : 'Test that an init constraint on clock cannot use non rational valued variable(s) or constant(s)',
 		'tags': 'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-clock-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4040,7 +5264,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
+		'purpose'    : 'Test that an init constraint on parameter cannot use non rational valued variable(s) or constant(s)',
 		'tags':'type checking, init',
 		'input_files': ['type_checking/inits/init-continuous-parameter-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4071,7 +5295,7 @@ Error                                   : invalid model
 		'expectations' : [
 			{'file': 'init-expression-complex-statespace.states' , 'content' : """
   STATE 1:
-  pta: lend, b = True, r2 = 7/3 ==> 
+  pta: lend, r2 = 7/3, b = True ==>
 & 3*p > 7
 
   Projection onto the parameters:
@@ -4294,7 +5518,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot compute on a bad type',
+		'purpose'    : 'Test that an "in" expression cannot compute on a bad type',
 		'input_files': ['type_checking/guards/in-operator-bad-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -4318,7 +5542,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a "in" expression cannot mix different types',
+		'purpose'    : 'Test that an "in" expression cannot mix different types',
 		'input_files': ['type_checking/guards/in-operator-mixin-type-error.imi'],
 		'tags':'type checking',
 		'options'    : '',
@@ -4478,9 +5702,195 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 
+	# END : Type checking on guards tests
 	,
 
-	# END : Type checking on guards tests
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether undeclared var is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-undeclared-var.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether a clock (so far forbidden there) is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-clock.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/02
+		# Last modified            : 2023/08/02
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether a parameter (so far forbidden there) is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-parameter.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/07/31
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused clock is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-clock.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/02
+		# Last modified            : 2023/08/02
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused parameter is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-parameter.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 2
+		# Test author              : Étienne André
+		# Test since               : 2023/07/31
+		# Last modified            : 2023/08/02
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test whether an unused discrete is found in property',
+		'tags'       : 'property',
+		'input_files': ['properties/dummy.imi', 'properties/property-unused-discrete.imiprop'],
+		'options'    : '-depth-limit 2',
+		'expectations' : [
+			{'file': 'dummy.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test void var isn’t allowed',
+		'input_files': ['test-void.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-void.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test void array isn’t allowed',
+		'input_files': ['test-void-array.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'test-void-array.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	# END : Test type checking
@@ -4546,147 +5956,22 @@ END CONSTRAINT
 
 	,
 
-
-
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
-		# Test since               : 2021/08/17
-		# Last modified            : 2021/08/17
-		# Test for IMITATOR version: 3.1
-		'purpose'    : 'Test simple operations on binary words',
-		'input_files': ['binary/testbinary.imi'],
+		## Test version             : 1.1
+		## Test since               : 2022/07/19
+		## Last modified            : 2023/08/22
+		'author': 'lbinria',
+		'purpose'    : 'Test all builtin functions',
+		'input_files': ['functions/builtin-functions.imi'],
+		'tags': 'semantic, behavior, function',
+		'imitator-version': '3.4-beta',
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
-			{'file': 'testbinary-statespace.states' , 'content' : """
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1, bw1 = 0b1010, bw2 = 0b1011 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
+			{'file': 'builtin-functions-statespace.states' , 'content' : """
   STATE 1:
-  pta: l1, bw1 = 0b1000, bw2 = 0b1010 ==> 
+  P: lend, r = 5, r_pow = 25, q_copy = queue([11, 1]), queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), s_copy = stack([1, 10]), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, array_b = [1, 2, 3, 4], aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1 ==>
 &True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 2:
-  pta: l1, bw1 = 0b0000, bw2 = 0b1000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 3:
-  pta: l1, bw1 = 0b0000, bw2 = 0b0000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-	
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/30
-		## Last modified            : 2021/06/30
-		## Test for IMITATOR version: 3.1.0
-		'author': 'lbinria',
-		'purpose'    : 'Test that behaviors of all possible functions on binary word are correct ',
-		'input_files': ['functions/binary-word.imi'],
-		'tags': 'semantic, behavior, function',
-		'options'    : '-mode statespace -states-description -no-var-autoremove',
-		'expectations' : [
-			{'file': 'binary-word-statespace.states' , 'content' : """
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: loc_init, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00000 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 1:
-  pta: loc_land, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 2:
-  pta: loc_lor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10111 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 3:
-  pta: loc_lxor, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00011 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 4:
-  pta: loc_lnot, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b01010 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 5:
-  pta: loc_shift_left, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b10100 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 6:
-  pta: loc_shift_right, r = 0, i = 0, j = 0, bin_result2 = 0b00000000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 7:
-  pta: loc_fill_left, r = 0, i = 0, j = 0, bin_result2 = 0b10101000, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
-  STATE 8:
-  pta: loc_fill_right, r = 0, i = 0, j = 0, bin_result2 = 0b00010101, bin1 = 0b10101, bin2 = 0b10110, bin_result = 0b00101 ==> 
-&True
-
-  Projection onto the parameters:
-  True
-
-  /************************************************************/
 		"""
 			 } # end result file
 			,
@@ -4729,17 +6014,17 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/03/16
       ## Last modified            : 2022/03/16
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
       'purpose'    : 'Test some behaviors on user functions',
       'input_files': ['functions/user-function-1.imi'],
       'tags': 'behavior, function',
+      'imitator-version': '3.4',
       'options'    : '-mode statespace -states-description -no-var-autoremove',
       'expectations' : [
         {'file': 'user-function-1-statespace.states' , 'content' : """
   INITIAL
   STATE 0:
-  P: l0, top_stack = 0, top_queue = 0, r_result = 0, lerp_result = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], r_global = 0, i_global = 0, bin = 0b1011, q = queue(), s = stack(), r1 = 1, i1 = 1 ==>
+  P: l0, r_result = 0, lerp_result = 0, r_global = 0, r1 = 1, top_stack = 0, top_queue = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], i_global = 0, bin = 0b1011, q = queue(), s = stack(), i1 = 1 ==>
 &True
 
   Projection onto the parameters:
@@ -4747,7 +6032,7 @@ END CONSTRAINT
 
   /************************************************************/
   STATE 1:
-  P: lend, top_stack = 2, top_queue = 0, r_result = 4, lerp_result = 1583/200, i_result = 3, i_result_2 = 3, a_global = [0, 1], r_global = 15, i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), r1 = 1, i1 = 1 ==>
+  P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
 &True
       """
          } # end result file
@@ -4763,12 +6048,13 @@ END CONSTRAINT
       ## Test version             : 1
       ## Test since               : 2022/06/23
       ## Last modified            : 2022/06/23
-      ## Test for IMITATOR version: 3.4
       'author': 'lbinria',
-      'purpose'    : 'Test side effects detection on user defined functions',
+      'purpose'    : 'Test side-effects detection in user-defined functions',
       'input_files': ['functions/function-side-effects-detect.imi'],
-      'tags': 'behavior, function',
-      'options'    : '',
+      'tags': 'function, inference',
+      'imitator-version': '3.4',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-no-var-autoremove -verbose low',
       'expectations' : [
         {'file': 'function-side-effects-detect.res' , 'content' : """
   "function_metas": [
@@ -4801,15 +6087,376 @@ END CONSTRAINT
 
     ,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/08/23
+		# Last modified            : 2023/08/23
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test absence of false positive in side-effects detection in user-defined functions',
+		'tags'       : 'syntax,semantic,translation',
+		'input_files': ['functions/function-no-side-effects-detect.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'function-no-side-effects-detect-statespace.states' , 'content' : """
+STATE 1:
+  pta: l2, q = queue([4, 2, 99, 1]), i = 99
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/24
+      ## Last modified            : 2023/01/24
+      'author': 'lbinria',
+      'purpose'    : 'Check that returning clock is forbidden',
+      'input_files': ['functions/return-clock.imi'],
+      'tags': 'function, clock, return',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'return-clock.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#-------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/14
+		# Last modified            : 2023/03/14
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that a non-void function can be called as a void function',
+		'input_files': ['functions/functions-sideeffects-nonvoid.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'functions-sideeffects-nonvoid-statespace.states' , 'content' : """
+  STATE 1:
+  A: l1, my_global_i = 2, my_global_j = 4
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/24
+      ## Last modified            : 2023/01/24
+      'author': 'lbinria',
+      'purpose'    : 'Check that returning parameter is forbidden',
+      'input_files': ['functions/return-param.imi'],
+      'tags': 'function, parameter, return',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'return-param.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/25
+      ## Last modified            : 2023/01/25
+      'author': 'lbinria',
+      'purpose'    : 'Check that updating a constant is forbidden',
+      'input_files': ['functions/seq-code-bloc-update-constant.imi'],
+      'tags': 'code, bloc, constant, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-constant.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that updating a parameter is forbidden',
+      'input_files': ['functions/seq-code-bloc-update-parameter.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-parameter.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that updating a discrete to a parameter is forbidden',
+      'input_files': ['functions/seq-code-bloc-update-discrete-with-parameter.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-discrete-with-parameter.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that updating a discrete with a clock is forbidden',
+      'input_files': ['functions/seq-code-bloc-update-discrete-with-clock.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-update-discrete-with-clock.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2023/01/27
+      ## Last modified            : 2023/01/27
+      'author': 'lbinria',
+      'purpose'    : 'Check that nonlinear expressions over clocks of parameters are forbidden',
+      'input_files': ['functions/seq-code-bloc-nonlinear-op-continuous.imi'],
+      'tags': 'code, bloc, parameter, update',
+      'imitator-version': '3.4',
+      'options'    : '-no-var-autoremove',
+      'expectations' : [
+        {'file': 'seq-code-bloc-nonlinear-op-continuous.res' , 'content' : """
+Error                                   : invalid model
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/03/13
+		# Last modified            : 2023/03/13
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test functions: with/without side-effects, and clock updates allowed in functions',
+		'input_files': ['functions/side-effects.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'side-effects-statespace.states' , 'content' : """
+  STATE 2:
+  pta: l3, t = [10, 10, 3, 4], i = 0, j = 1 ==>
+& p >= 0
+& x >= 10*p
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/04/05
+		# Last modified            : 2023/04/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that local variables do not duplicate discrete states',
+		'input_files': ['functions/nonduplicated-states.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'nonduplicated-states-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  A: l1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  A: l2 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1
+  s_0 -> s_1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	# END : Test user defined function
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test dependency graph
+	#------------------------------------------------------------
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Simple cycle detection',
+      'input_files': ['dependency_graph/simple-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
+        'imitator-version': '3.4',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-verbose low',
+      'expectations' : [
+        {'file': 'simple-cycle-detection.res' , 'content' : """
+  "cycles": [
+    "P -> f -> f"
+  ]
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/06/29
+      ## Last modified            : 2022/06/29
+      'author': 'lbinria',
+      'purpose'    : 'Complex cycle detection',
+      'input_files': ['dependency_graph/complex-cycle-detection.imi'],
+      'tags': 'behavior, function, cycle, dependency',
+      'imitator-version': '3.4',
+      # verbose low for writing DETAILS in .res
+      'options'    : '-verbose low',
+      'expectations' : [
+        {'file': 'complex-cycle-detection.res' , 'content' : """
+"cycles": [
+    "P -> f1 -> x -> f2 -> x -> f1",
+    "P -> f3 -> z -> y -> x -> f1 -> x -> f2 -> x -> f1"
+  ]
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2022/07/21
+      ## Last modified            : 2022/07/21
+      'author': 'lbinria',
+      'purpose'    : 'Test auto-remove management on updates and user-defined functions',
+      'input_files': ['dependency_graph/variable-autoremove-on-seq-update.imi'],
+      'tags': 'variable, function, auto-remove, dependency',
+      'imitator-version': '3.4',
+      'options'    : '-mode statespace -states-description',
+      'expectations' : [
+        {'file': 'variable-autoremove-on-seq-update-statespace.states' , 'content' : """
+P: lend, s = stack([0]), i = 2, j = 0
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	#------------------------------------------------------------
+	# END : Test dependency graph
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-mode statespace -depth-limit 4 -states-description',
+		'options'    : '-mode statespace -depth-limit 4 -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testUpdates-statespace.states' , 'content' : """
 
@@ -4864,23 +6511,46 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-        ## Test version             : 1
-        ## Test since               : 2022/03/17
-        ## Last modified            : 2022/06/23
+        ## Test version             : 1.1
+        ## Test since               : 2023/01/10
+        ## Last modified            : 2023/01/10
         ## Test for IMITATOR version: 3.3
         'author': 'lbinria',
-        'purpose'    : 'Evaluation order of discrete sequential and constraint updates',
+        'purpose'    : 'Evaluation order of updates (only 1 PTA)',
+        'input_files': ['updates/clock-discrete-order.imi'],
+		'tags': 'behavior, update, order',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
+		'expectations' : [
+			{'file': 'clock-discrete-order-statespace.states' , 'content' : """
+  pta: lend, i = 1, j = 1 ==>
+& y >= 1
+& x + 1 = y
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1.1
+        ## Test since               : 2022/03/17
+        ## Last modified            : 2023/01/10
+        ## Test for IMITATOR version: 3.3
+        'author': 'lbinria',
+        'purpose'    : 'Evaluation order of updates (1+ PTA)',
         'input_files': ['updates/compound-updates-order.imi'],
-		'tags': 'behavior, update',
+		'tags': 'behavior, update, order',
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'compound-updates-order-statespace.states' , 'content' : """
-pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r1 = 1, r2 = 1, r3 = 1, s = stack([1, 0]) ==>
-& x >= 2
-& x = 2 + z
-& x + 4 = y
-& x = w
-& x = v
+pta1: lend, pta2: lend, pta3: lend, r1 = 0, r2 = 2, r3 = 3, top1 = 0, top2 = 1, top3 = 2, s = stack([2, 1, 0]) ==>
+& x >= 6
+& x = 1 + y
+& x = 1 + z
 		"""
 			} # end result file
 			,
@@ -4900,7 +6570,7 @@ pta1: lend, pta2: lend, pta3: lend, i = 3, j = 2, k = 6, l = 2, m = 2, w2 = 2, r
         'purpose'    : 'Test that constant update is forbidden',
         'input_files': ['updates/constant-update.imi'],
 		'tags': 'behavior, update',
-		'options'    : '',
+		'options'    : '-no-var-autoremove',
 		'expectations' : [
 			{'file': 'constant-update.res' , 'content' : """
 Error                                   : invalid model
@@ -4950,6 +6620,223 @@ Has complex updates?                    : false
 		'expectations' : [
 			{'file': 'has-complex-updates-2.res' , 'content' : """
 Has complex updates?                    : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1.0
+        ## Test since               : 2023/01/17
+        ## Last modified            : 2023/01/17
+        ## Test for IMITATOR version: 3.4
+        'author': 'lbinria',
+        'purpose'    : 'Check clock rewriting is correct',
+        'input_files': ['updates/clock-rewriting.imi'],
+		'tags': 'update, rewriting, clock',
+		'options'    : '-no-var-autoremove -mode statespace -states-description -verbose high',
+		'expectations' : [
+			{'file': 'clock-rewriting.res' , 'content' : """
+"clock_rewriting": [
+    {
+      "x1": {
+        "expr": "0",
+        "rewritten_expr": "0"
+      }
+    },
+    {
+      "x1": {
+        "expr": "x1 + rational_of_int(a[1] * 2)",
+        "rewritten_expr": "5 + p1 + 1 + 8"
+      }
+    },
+    {
+      "x1": {
+        "expr": "x1 + p1 + rational_of_int(inc(0))",
+        "rewritten_expr": "5 + p1 + 1"
+      }
+    },
+    {
+      "x1": {
+        "expr": "clock_value",
+        "rewritten_expr": "5"
+      }
+    },
+    {
+      "w": {
+        "expr": "2 * w + rational_of_int(loc_i)",
+        "rewritten_expr": "2 * (w + 5 + 6 + 7 + 8 + 9 + 10) + 100"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1 + 2 + 3"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1 + 2"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4 + 1"
+      }
+    },
+    {
+      "z": {
+        "expr": "z + rational_of_int(loc_j)",
+        "rewritten_expr": "w + 4"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8 + 9 + 10"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8 + 9"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7 + 8"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6 + 7"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5 + 6"
+      }
+    },
+    {
+      "w": {
+        "expr": "w + rational_of_int(i)",
+        "rewritten_expr": "w + 5"
+      }
+    },
+    {
+      "y": {
+        "expr": "x + z",
+        "rewritten_expr": "2 * (x + 1) + 2 + w + 4"
+      }
+    },
+    {
+      "z": {
+        "expr": "w + rational_of_int(i1 * i1)",
+        "rewritten_expr": "w + 4"
+      }
+    },
+    {
+      "x": {
+        "expr": "2 * x + rational_of_int(i1)",
+        "rewritten_expr": "2 * (x + 1) + 2"
+      }
+    },
+    {
+      "x": {
+        "expr": "x + 1",
+        "rewritten_expr": "x + 1"
+      }
+    }
+  ]
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+        ## Test version             : 1.0
+        ## Test since               : 2023/01/17
+        ## Last modified            : 2023/01/17
+        ## Test for IMITATOR version: 3.4
+        'author': 'lbinria',
+        'purpose'    : 'Check expression reduce on clock updates',
+        'input_files': ['updates/expr-reduce.imi'],
+		'tags': 'update, reducing, expression',
+		'options'    : '-no-var-autoremove -verbose high',
+		'expectations' : [
+			{'file': 'expr-reduce.res' , 'content' : """
+  "expr_reducing": [
+    {
+      "expr": "(2 * x - 3 * y) - (4 * x - 2 * y)",
+      "reduced_expr": "0 - 2 * x - 1 * y + 0",
+      "simplified_expr": "-((2 * x)) - y"
+    },
+    {
+      "expr": "(2 * x + 3 * y) - (4 * x + 2 * y)",
+      "reduced_expr": "0 - 2 * x + 1 * y + 0",
+      "simplified_expr": "-((2 * x)) + y"
+    },
+    {
+      "expr": "2 * (2 * (4 * x + 2 * y) - 3 * (4 * x + 2 * y)) + 1 * x + 1 * y",
+      "reduced_expr": "0 - 7 * x - 3 * y + 0",
+      "simplified_expr": "-((7 * x)) - 3 * y"
+    },
+    {
+      "expr": "2 * (a * b) + 2 * (a * b)",
+      "reduced_expr": "0 + 4 * (a * b) + 0",
+      "simplified_expr": "4 * (a * b)"
+    },
+    {
+      "expr": "(2 * a * b) * (2 * c * d)",
+      "reduced_expr": "0 + 0 + 0 * (c * d) + 0 * (a * b) + 4 * ((a * b) * (c * d))",
+      "simplified_expr": "4 * ((a * b) * (c * d))"
+    },
+    {
+      "expr": "2 * (-2 - r1)",
+      "reduced_expr": "0 - 4 - 2 * r1",
+      "simplified_expr": "-((4)) - 2 * r1"
+    },
+    {
+      "expr": "1 / (r1 * r2)",
+      "reduced_expr": "0 + 1 * (1 / (r1 * r2))",
+      "simplified_expr": "(1 / (r1 * r2))"
+    },
+    {
+      "expr": "rational_of_int(i1) / 2",
+      "reduced_expr": "0 + 1/2 * (rational_of_int(i1))",
+      "simplified_expr": "1/2 * rational_of_int(i1)"
+    },
+    {
+      "expr": "2 / rational_of_int(i1)",
+      "reduced_expr": "0 + 2 * (1 / (rational_of_int(i1)))",
+      "simplified_expr": "2 * (1 / rational_of_int(i1))"
+    },
+    {
+      "expr": "1 - 1 + 2 * x + 1 * x + 1 * y - 1 * y",
+      "reduced_expr": "0 + 3 * x + 0",
+      "simplified_expr": "3 * x"
+    },
+    {
+      "expr": "2 * (rational_of_int(i1 * i1) + 3) + 3 * (y + 4 + 2 * (1 + 3 + 2 * y))",
+      "reduced_expr": "0 + 15 * y + 2 * (rational_of_int(i1 * i1)) + 42",
+      "simplified_expr": "15 * y + 2 * rational_of_int(i1 * i1) + 42"
+    }
+  ]
 		"""
 			} # end result file
 			,
@@ -5505,6 +7392,287 @@ Constraint nature                       : good
 	
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+  0 >= 3 + p1
+ & p2 + 3 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result without projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-noprojection.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 0
+ & 5 > p2
+ & p2 > p1
+ OR
+   p1 > 8
+ & 9 > p2
+ & p2 > p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result with projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-projection.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  5 > p1
+ & p1 > 0
+ OR
+   9 > p1
+ & p1 > 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result without projection',
+		'tags'       : 'semantic',
+		'input_files': ['safety/safety-simple.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  p1 >= 0
+ & p2 >= 0
+ & 3 > p2
+ OR
+   p2 >= 3
+ & p1 >= p2
+ & 11 >= p2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result with projection',
+		'tags'       : 'semantic,projection',
+		'input_files': ['safety/safety-simple.imi', 'safety/safety-simple.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  11 >= p2
+ & p2 >= 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/22
+		# Last modified            : 2023/12/22
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AG on a very simple example',
+		'tags'       : 'algorithm',
+		'input_files': ['safety/safety-initial-state2.imi', 'safety/safety-initial-state2-AG1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',
@@ -5752,7 +7920,7 @@ END CONSTRAINT
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow',
 		'tags' : 'auto remove',
-		'input_files': ['test_param_unused.imi' , 'EFaccepting.imiprop'],
+		'input_files': ['test_param_unused.imi' , 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_param_unused.res' , 'content' : """
@@ -5837,13 +8005,60 @@ END CONSTRAINT
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF with observer + depth-limit',
+		'tags'       : 'semantic,projection',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within.imiprop'],
 		'options'    : '-depth-limit 10',
 		'expectations' : [
+				# WARNING (2024/01/09): this result was NOT manually checked!
 			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
- False
+  p_button > 0
+ & p_add_sugar > 0
+ & p_coffee > 0
+ & 20 >= p_add_sugar + p_coffee
+ OR
+   15 > 2*p_button
+ & p_add_sugar > 0
+ & 2*p_button > p_add_sugar
+ & p_add_sugar + p_coffee > 20
+ OR
+   p_add_sugar > 0
+ & 15 > p_button
+ & p_add_sugar + p_coffee > 20
+ & p_button > p_add_sugar
+ & 2*p_button >= 15
+ OR
+   p_add_sugar >= 2*p_button
+ & p_add_sugar + p_coffee > 20
+ & 3*p_button > p_add_sugar
+ & 5 > p_button
+
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within-project.imiprop'],
+		'options'    : '-depth-limit 10',
+		'expectations' : [
+				# WARNING (2024/01/09): this result was manually checked, but only by projection from the former result
+			{'file': 'coffeeDrinker.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_coffee > 0
 END CONSTRAINT
 """
 			} # end result file
@@ -5983,7 +8198,7 @@ Number of computed states               : 14
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge none)',
-		'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '-merge none -depth-limit 3',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -6010,7 +8225,7 @@ Constraint soundness                    : possible under-approximation
 		## Last modified            : 2021/09/01
 		## Test for IMITATOR version: 3.1
 		#'purpose'    : 'Test EF with depth-limit to check the quick reachability (-merge)',
-		#'input_files': ['quick-reach.imi', 'EFaccepting.imiprop'],
+		#'input_files': ['quick-reach.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		#'options'    : '-merge -depth-limit 3',
 		#'expectations' : [
 			#{'file': 'quick-reach.res' , 'content' : """
@@ -6084,6 +8299,865 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat on the initial state)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat due to unreachability)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (True due to initial state matched)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-3.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching location)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-5.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-7.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-9.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (corner-point case))',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2023/12/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (false))',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-11.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/02/29
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (different reachable times)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['timed_properties/test-timedEU.imi', 'timed_properties/test-untimedEU.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEU.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 1
+ OR
+   p = 3
+ OR
+   p = 4
+ OR
+   p = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# BEGIN : Test timed EF
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the model',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+ 4 >= p
+& p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, wrong interval',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-wronginterval.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, closed]',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, closed]',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openclosed.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, open)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, open)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openopen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, infinity)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, infinity)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openinfinite.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/02/28
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model with flows, one parameter in the property',
+		'tags'       : 'semantic, flows',
+		'input_files': ['timed_properties/test-timedEF-basic-prop-flows.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop-flows.res' , 'content' : """
+BEGIN CONSTRAINT
+  14 >= p
+ & p > 13
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/02/29
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: check no exploration beyond timed interval',
+		'tags'       : 'semantic,optimization',
+		'input_files': ['timed_properties/test-timedEF-cutbranch.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			# NOTE: check correctness first
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+			# NOTE: check optimization
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+Number of states                        : 4
+Number of transitions                   : 3
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test timed EF
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# BEGIN : Test timed AF/AU
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: untimed property',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [0, infinity)',
+		'tags'       : 'semantic,AF,optimization',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'basic-properties/synth-AF-accepting-0-infinity.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+			# NOTE: check that AF_[0, infinity) means AF
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+Property                                : unavoidability synthesis
+Algorithm                               : AF
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [0, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-0-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [2, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property (2, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-open-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [2, 10)',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-2-10-open.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: timed property [10, 10]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-10-10.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: parametric timed property [p, p]',
+		'tags'       : 'semantic,AF',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-p-p.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/03/07
+		# Last modified            : 2024/03/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed AF: parametric timed property [p, p+1]',
+		'tags'       : 'semantic,AF,negativeparameter',
+		'input_files': ['timed_properties/test-timedAF-basic.imi', 'timed_properties/AF-accepting-p-p-plus-11.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedAF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+ p + 1 >= 0
+& 2 >= p
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	# END : Test timed AF/AU
+	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
@@ -7073,7 +10147,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testEFexemplify-discrete.res' , 'content' : """
 BEGIN RESULT
@@ -7091,94 +10165,96 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-					"i": "0"
-				},
-				"continuous_variables": {
-					"global_time": "0"
-				},
-				"flows": {
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {"i": "3"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-					"i": "3"
-				},
-				"continuous_variables": {
-					"global_time": "1/2"
-				},
-				"flows": {
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {"i": "i + 1"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lTarget"
-				},
-				"discrete_variables": {
-					"i": "4"
-				},
-				"continuous_variables": {
-					"global_time": "1"
-				},
-				"flows": {
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+            "i": "0"
+          },
+          "continuous_variables": {
+            "global_time": "0"
+          },
+          "flows": {
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+                  "i": "3"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+            "i": "3"
+          },
+          "continuous_variables": {
+            "global_time": "1/2"
+          },
+          "flows": {
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+                  "i": "i + 1"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lTarget"
+          },
+          "discrete_variables": {
+            "i": "4"
+          },
+          "continuous_variables": {
+            "global_time": "1"
+          },
+          "flows": {
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -7354,134 +10430,138 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 2",
-						"updates": {
-							"x": "5"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "5",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "3", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 8",
-						"updates": {
-							"x": "2*x"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "16",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "-1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "10",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 6",
-						"updates": {
-							"x": "x + -3"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lTarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "3",
-					"global_time": "13"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 2",
+                "updates": {
+                  "x": "5"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "5",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "3",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 8",
+                "updates": {
+                  "x": "2 * x"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "16",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "-1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "10",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 6",
+                "updates": {
+                  "x": "x - 3"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lTarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "3",
+            "global_time": "13"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -7514,7 +10594,7 @@ BEGIN RESULT
  Run #1
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -7523,148 +10603,160 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 2",
-						"updates": {
-							"y": "5"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "2",
-					"y": "5",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "3", 
-					"y": "2", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 5",
-						"updates": {
-							"x": "y",
-							"y": "x"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "7",
-					"y": "5",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "-12", 
-					"y": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "(silent)",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {
-							"y": "-1*x + y"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lTarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "1",
-					"y": "9/2",
-					"global_time": "7/2"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "0",
+            "swap": "-1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "0",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 2",
+                "updates": {
+                  "y": "5"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "2",
+            "y": "5",
+            "swap": "1",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "3",
+            "y": "2",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 5",
+                "updates": {
+                  "swap": "x",
+                  "x": "y",
+                  "y": "swap"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "7",
+            "y": "5",
+            "swap": "5",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "-12",
+            "y": "1",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "(silent)",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "y": "y - x"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lTarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "1",
+            "y": "9/2",
+            "swap": "11/2",
+            "global_time": "7/2"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "swap": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
 END RESULT
-
 """
 			} # end result file
 			,
@@ -7917,7 +11009,7 @@ True
  Run #2
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -7926,87 +11018,91 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"specification": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a1",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "specification",
-						"guard": " 2 >= x",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "1",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "3",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "4",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "specification": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a1",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "specification",
+                "guard": " 2 >= x",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "1",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "3",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "4",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -8033,7 +11129,7 @@ True
  Run #2
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -8042,53 +11138,55 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"specification": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "4",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "4",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "specification": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "4",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "4",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -8115,7 +11213,7 @@ True
  Run #2
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -8124,61 +11222,63 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"specification": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "1",
-					"z": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/8", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "4",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "4",
-					"y": "1/2",
-					"z": "2",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "specification": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "1",
+            "z": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/8",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "4",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "4",
+            "y": "1/2",
+            "z": "2",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -8205,7 +11305,7 @@ True
  Run #2
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -8214,118 +11314,121 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"specification": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "1",
-					"z": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "4",
-				"action": "a1"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "4",
-					"y": "0",
-					"z": "2",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "5",
-					"y": "-1/4",
-					"z": "2",
-					"global_time": "5"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
+  "run": {
+    "nature": "negative",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "specification": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a1"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "6",
-					"y": "-1/2",
-					"z": "2",
-					"global_time": "6"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "1",
+            "z": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "4",
+          "action": "a1"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "4",
+            "y": "0",
+            "z": "2",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "5",
+            "y": "-1/4",
+            "z": "2",
+            "global_time": "5"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a1"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "6",
+            "y": "-1/2",
+            "z": "2",
+            "global_time": "6"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -8352,7 +11455,7 @@ True
  Run #1
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -8361,198 +11464,208 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"spec1": "l1", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "1",
-					"z": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a1",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec1",
-						"guard": " 4 >= x",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "1",
-					"y": "3/4",
-					"z": "3/2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "9",
-				"action": "a2",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": " x >= 10",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "10",
-					"y": "-3/2",
-					"z": "3/2",
-					"global_time": "10"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "9/2",
-				"action": "a3",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec1",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}, 
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "11/2",
-					"y": "3",
-					"z": "3/2",
-					"global_time": "29/2"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "9/2",
-				"action": "a2",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "1",
-					"y": "15/2",
-					"z": "6",
-					"global_time": "19"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "spec1": "l1",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "1",
+            "z": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a1",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec1",
+                "guard": " 4 >= x",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "1",
+            "y": "3/4",
+            "z": "3/2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "9",
+          "action": "a2",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": " x >= 10",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "10",
+            "y": "-3/2",
+            "z": "3/2",
+            "global_time": "10"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "9/2",
+          "action": "a3",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec1",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            },
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "11/2",
+            "y": "3",
+            "z": "3/2",
+            "global_time": "29/2"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "9/2",
+          "action": "a2",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "1",
+            "y": "15/2",
+            "z": "6",
+            "global_time": "19"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -8561,7 +11674,7 @@ True
  Run #2
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -8570,155 +11683,157 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"spec1": "l1", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "0",
-					"y": "1",
-					"z": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "6",
-				"action": "a1"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "6",
-					"y": "-1/2",
-					"z": "3/2",
-					"global_time": "6"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "7",
-					"y": "-3/4",
-					"z": "3/2",
-					"global_time": "7"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
+  "run": {
+    "nature": "negative",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "spec1": "l1",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a3"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "6",
-					"y": "1/4",
-					"z": "3/2",
-					"global_time": "8"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
+          },
+          "continuous_variables": {
+            "x": "0",
+            "y": "1",
+            "z": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "6",
+          "action": "a1"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"x": "5",
-					"y": "5/4",
-					"z": "5/2",
-					"global_time": "9"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "x": "6",
+            "y": "-1/2",
+            "z": "3/2",
+            "global_time": "6"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "7",
+            "y": "-3/4",
+            "z": "3/2",
+            "global_time": "7"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a3"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "6",
+            "y": "1/4",
+            "z": "3/2",
+            "global_time": "8"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "x": "5",
+            "y": "5/4",
+            "z": "5/2",
+            "global_time": "9"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-
 """
 			} # end result file
 			,
@@ -8752,92 +11867,96 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "4"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"specification": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a1",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "specification",
-						"guard": " 2 >= x",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "1",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"specification": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "2",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "4"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "specification": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a1",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "specification",
+                "guard": " 2 >= x",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "1",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "specification": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "2",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -8873,205 +11992,215 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "4"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"spec1": "l1", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "0",
-					"y": "1",
-					"z": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "4",
-				"action": "a1",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec1",
-						"guard": " p >= x AND x >= 4",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "4",
-					"y": "0",
-					"z": "3/2",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "6",
-				"action": "a2",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": " x >= 10",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "10",
-					"y": "-3/2",
-					"z": "3/2",
-					"global_time": "10"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "9/2",
-				"action": "a3",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec1",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}, 
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "11/2",
-					"y": "3",
-					"z": "3/2",
-					"global_time": "29/2"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "9/2",
-				"action": "a2",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "spec2",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "1",
-					"y": "15/2",
-					"z": "6",
-					"global_time": "19"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "4"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "spec1": "l1",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "0",
+            "y": "1",
+            "z": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "4",
+          "action": "a1",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec1",
+                "guard": " p >= x AND x >= 4",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "4",
+            "y": "0",
+            "z": "3/2",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "6",
+          "action": "a2",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": " x >= 10",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "10",
+            "y": "-3/2",
+            "z": "3/2",
+            "global_time": "10"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "9/2",
+          "action": "a3",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec1",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            },
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "11/2",
+            "y": "3",
+            "z": "3/2",
+            "global_time": "29/2"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "9/2",
+          "action": "a2",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "spec2",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "1",
+            "y": "15/2",
+            "z": "6",
+            "global_time": "19"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -9090,159 +12219,162 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "0"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"spec1": "l1", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "0",
-					"y": "1",
-					"z": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a1"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"y": "3/4",
-					"z": "3/2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "2",
-					"y": "1/2",
-					"z": "3/2",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "0"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "spec1": "l1",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a3"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"y": "3/2",
-					"z": "3/2",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "0",
+            "y": "1",
+            "z": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a1"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "0",
-					"y": "5/2",
-					"z": "5/2",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "y": "3/4",
+            "z": "3/2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "2",
+            "y": "1/2",
+            "z": "3/2",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a3"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "y": "3/2",
+            "z": "3/2",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "0",
+            "y": "5/2",
+            "z": "5/2",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -9260,159 +12392,162 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "4"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"spec1": "l1", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "0",
-					"y": "1",
-					"z": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "6",
-				"action": "a1"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "6",
-					"y": "-1/2",
-					"z": "3/2",
-					"global_time": "6"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "-1/4", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "l2", 
-					"spec2": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "7",
-					"y": "-3/4",
-					"z": "3/2",
-					"global_time": "7"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "0", 
-					"global_time": "1"
-				}
-			}
-			}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "4"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "spec1": "l1",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a3"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "6",
-					"y": "1/4",
-					"z": "3/2",
-					"global_time": "8"
-				},
-				"flows": {
-					"x": "-1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "0",
+            "y": "1",
+            "z": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "6",
+          "action": "a1"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a2"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"spec1": "lT", 
-					"spec2": "lT"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "4",
-					"x": "5",
-					"y": "5/4",
-					"z": "5/2",
-					"global_time": "9"
-				},
-				"flows": {
-					"x": "1", 
-					"y": "1", 
-					"z": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "6",
+            "y": "-1/2",
+            "z": "3/2",
+            "global_time": "6"
+          },
+          "flows": {
+            "x": "1",
+            "y": "-1/4",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "l2",
+            "spec2": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "7",
+            "y": "-3/4",
+            "z": "3/2",
+            "global_time": "7"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "0",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a3"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "6",
+            "y": "1/4",
+            "z": "3/2",
+            "global_time": "8"
+          },
+          "flows": {
+            "x": "-1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a2"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "spec1": "lT",
+            "spec2": "lT"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "4",
+            "x": "5",
+            "y": "5/4",
+            "z": "5/2",
+            "global_time": "9"
+          },
+          "flows": {
+            "x": "1",
+            "y": "1",
+            "z": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -9435,10 +12570,8 @@ True
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
-BEGIN RESULT
 (************************************************************)
  Run #1
-
 
  Valuation:
   p = 1/2
@@ -9450,68 +12583,70 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "1/2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "3",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " 2*p = 1 AND x = 3",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "1/2"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "3",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " 2*p = 1 AND x = 3",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "0",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -9532,60 +12667,61 @@ OR
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "0"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "0"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
 """
 			} # end result file
 			,
@@ -9934,7 +13070,6 @@ END RESULT
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
-BEGIN RESULT
 (************************************************************)
  Run #1
 
@@ -9948,137 +13083,144 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "1"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/4",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "5/4",
-					"global_time": "1/4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/4",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "3/2",
-					"global_time": "1/2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "1"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/4",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "5/4",
+            "global_time": "1/4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/4",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "3/2",
+            "global_time": "1/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -10096,112 +13238,113 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "0"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "3",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "0"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
 
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "4",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "3",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "4",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
-
 """
 			} # end result file
 			,
@@ -10222,7 +13365,6 @@ END RESULT
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
-BEGIN RESULT
 (************************************************************)
  Run #1
 
@@ -10236,137 +13378,144 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "1"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "3/2",
-					"global_time": "1/2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "1"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "3/2",
+            "global_time": "1/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -10384,121 +13533,124 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "0"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "3",
-					"global_time": "2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "0"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "3",
+            "global_time": "2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
-
 """
 			} # end result file
 			,
@@ -10519,7 +13671,6 @@ END RESULT
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
-BEGIN RESULT
 (************************************************************)
  Run #1
 
@@ -10533,137 +13684,144 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "1"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "1"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -10681,130 +13839,135 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "0"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "1",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "0",
-					"x": "2",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "0"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "1",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "0",
+            "x": "2",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
 """
 			} # end result file
 			,
@@ -10826,8 +13989,6 @@ END RESULT
 		'expectations' : [
 				# NOTE / TODO: the NEGATIVE run is disabled so far! due to a BUG …
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
-BEGIN RESULT
-
 (************************************************************)
  Run #1
 
@@ -10841,138 +14002,144 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "2"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 """
@@ -10995,9 +14162,6 @@ BEGIN RESULT
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
-
-BEGIN RESULT
-
 (************************************************************)
  Run #1
 
@@ -11011,142 +14175,146 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p": "2",
-					"x": "2",
-					"global_time": "1/2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "2"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p": "2",
+            "x": "2",
+            "global_time": "1/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-
-END RESULT
-
 """
 			} # end result file
 			,
@@ -11167,9 +14335,6 @@ END RESULT
 		'options'    : '-merge none -comparison equality -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
-
-BEGIN RESULT
-
 (************************************************************)
  Run #1
 
@@ -11186,142 +14351,149 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p1": "1",
-			"p2": "1/2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "1",
-					"p2": "1/2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p2 > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "1",
-					"p2": "1/2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "1",
-					"p2": "1/2",
-					"x": "2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p1 > p2 AND p2 + x > p1",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "1",
-					"p2": "1/2",
-					"x": "3",
-					"global_time": "1"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p1": "1",
+      "p2": "1/2"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "1",
+            "p2": "1/2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p2 > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "1",
+            "p2": "1/2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "1",
+            "p2": "1/2",
+            "x": "2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p1 > p2 AND p2 + x > p1",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "1",
+            "p2": "1/2",
+            "x": "3",
+            "global_time": "1"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
 
@@ -11342,136 +14514,140 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p1": "3",
-			"p2": "3"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "3",
-					"p2": "3",
-					"x": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "0",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " p2 > 0",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "3",
-					"p2": "3",
-					"x": "3/2",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1/2",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": "True",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "3",
-					"p2": "3",
-					"x": "2",
-					"global_time": "1/2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "ltarget"
-				},
-				"discrete_variables": {
-				},
-				"continuous_variables": {
-					"p1": "3",
-					"p2": "3",
-					"x": "3",
-					"global_time": "3/2"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p1": "3",
+      "p2": "3"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "3",
+            "p2": "3",
+            "x": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "0",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " p2 > 0",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "3",
+            "p2": "3",
+            "x": "3/2",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1/2",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": "True",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "3",
+            "p2": "3",
+            "x": "2",
+            "global_time": "1/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "ltarget"
+          },
+          "discrete_variables": {
+
+          },
+          "continuous_variables": {
+            "p1": "3",
+            "p2": "3",
+            "x": "3",
+            "global_time": "3/2"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
-
 """
 			} # end result file
 			,
@@ -11665,17 +14841,14 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
-
-BEGIN RESULT
-
 (************************************************************)
  Run #1
 
  Valuation:
-  
+
 
  Other valuations with equivalent (discrete) run:
 True
@@ -11684,181 +14857,182 @@ True
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": null,
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-					"d1": "1/2", 
-					"d2": "50"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "3",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 3",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-					"d1": "1/2", 
-					"d2": "50"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {
-							"x": "0""d1": "d1 + 2"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-					"d1": "5/2", 
-					"d2": "50"
-				},
-				"continuous_variables": {
-					"x": "0",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {"d2": "d2 / 2"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l4"
-				},
-				"discrete_variables": {
-					"d1": "5/2", 
-					"d2": "25"
-				},
-				"continuous_variables": {
-					"x": "1",
-					"global_time": "5"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "7",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 8",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lbad"
-				},
-				"discrete_variables": {
-					"d1": "5/2", 
-					"d2": "25"
-				},
-				"continuous_variables": {
-					"x": "8",
-					"global_time": "12"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": null,
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+            "d1": "1/2",
+            "d2": "50"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "3",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 3",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+            "d1": "1/2",
+            "d2": "50"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "x": "0",
+                  "d1": "d1 + 2"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+            "d1": "5/2",
+            "d2": "50"
+          },
+          "continuous_variables": {
+            "x": "0",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "d2": "d2 / 2"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l4"
+          },
+          "discrete_variables": {
+            "d1": "5/2",
+            "d2": "25"
+          },
+          "continuous_variables": {
+            "x": "1",
+            "global_time": "5"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "7",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 8",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lbad"
+          },
+          "discrete_variables": {
+            "d1": "5/2",
+            "d2": "25"
+          },
+          "continuous_variables": {
+            "x": "8",
+            "global_time": "12"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
-
 """
 			} # end result file
 			,
@@ -11876,11 +15050,9 @@ END RESULT
 		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
-		'options'    : '-merge none -comparison equality',
+		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
-
-BEGIN RESULT
 (************************************************************)
  Run #1
 
@@ -11895,181 +15067,185 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "concrete",
-		"valuation": {
-			"p": "1/2"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-					"d1": "1/2"
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "3",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 3",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-					"d1": "1/2"
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {
-							"x": "0""d1": "d1 + 2"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-					"d1": "5/2"
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "0",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " 1 > p AND x = 1",
-						"updates": {"d1": "d1 / 2"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l4"
-				},
-				"discrete_variables": {
-					"d1": "5/4"
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "1",
-					"global_time": "5"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "7",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 8",
-						"updates": {
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lbad"
-				},
-				"discrete_variables": {
-					"d1": "5/4"
-				},
-				"continuous_variables": {
-					"p": "1/2",
-					"x": "8",
-					"global_time": "12"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "concrete",
+    "valuation": {
+      "p": "1/2"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+            "d1": "1/2"
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "3",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 3",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+            "d1": "1/2"
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "0",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "x": "0",
+                  "d1": "d1 + 2"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+            "d1": "5/2"
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "0",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " 1 > p AND x = 1",
+                "updates": {
+                  "d1": "d1 / 2"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l4"
+          },
+          "discrete_variables": {
+            "d1": "5/4"
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "1",
+            "global_time": "5"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "7",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 8",
+                "updates": {
+
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lbad"
+          },
+          "discrete_variables": {
+            "d1": "5/4"
+          },
+          "continuous_variables": {
+            "p": "1/2",
+            "x": "8",
+            "global_time": "12"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
+
 
 (************************************************************)
  Run #2
@@ -12084,162 +15260,162 @@ BEGIN RESULT
 
  Run:
 {
-	"run": {
-		"nature": "negative",
-		"valuation": {
-			"p": "1"
-			},
-		"steps": [
-			{
-			"state": {
-				"location": {
-					"pta": "l1"
-				},
-				"discrete_variables": {
-					"d1": "1/2"
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "0",
-					"global_time": "0"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			},
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "3",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 3",
-						"updates": {
-							"x": "0"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l2"
-				},
-				"discrete_variables": {
-					"d1": "1/2"
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "0",
-					"global_time": "3"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}, 
-			{
-			"transition": {
-				"nature": "concrete",
-				"duration": "1",
-				"action": "a",
-				"transitions": [
-					{
-					"transition": {
-						"PTA": "pta",
-						"guard": " x = 1",
-						"updates": {
-							"x": "0""d1": "d1 + 2"
-						}
-					}
-					}
-				]
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l3"
-				},
-				"discrete_variables": {
-					"d1": "5/2"
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "0",
-					"global_time": "4"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "impossible",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "l4"
-				},
-				"discrete_variables": {
-					"d1": "5/4"
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "1",
-					"global_time": "5"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-			{
-			"transition": {
-				"nature": "arbitrary",
-				"duration": "1",
-				"action": "a"
-			}
-			},
-			{
-			"state": {
-				"location": {
-					"pta": "lbad"
-				},
-				"discrete_variables": {
-					"d1": "5/4"
-				},
-				"continuous_variables": {
-					"p": "1",
-					"x": "2",
-					"global_time": "6"
-				},
-				"flows": {
-					"x": "1", 
-					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+  "run": {
+    "nature": "negative",
+    "valuation": {
+      "p": "1"
+    },
+    "steps": [
+      {
+        "state": {
+          "location": {
+            "pta": "l1"
+          },
+          "discrete_variables": {
+            "d1": "1/2"
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "0",
+            "global_time": "0"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "3",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 3",
+                "updates": {
+                  "x": "0"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l2"
+          },
+          "discrete_variables": {
+            "d1": "1/2"
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "0",
+            "global_time": "3"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "concrete",
+          "duration": "1",
+          "action": "a",
+          "transitions": [
+            {
+              "transition": {
+                "PTA": "pta",
+                "guard": " x = 1",
+                "updates": {
+                  "x": "0",
+                  "d1": "d1 + 2"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l3"
+          },
+          "discrete_variables": {
+            "d1": "5/2"
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "0",
+            "global_time": "4"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "impossible",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "l4"
+          },
+          "discrete_variables": {
+            "d1": "5/4"
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "1",
+            "global_time": "5"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      },
+      {
+        "transition": {
+          "nature": "arbitrary",
+          "duration": "1",
+          "action": "a"
+        }
+      },
+      {
+        "state": {
+          "location": {
+            "pta": "lbad"
+          },
+          "discrete_variables": {
+            "d1": "5/4"
+          },
+          "continuous_variables": {
+            "p": "1",
+            "x": "2",
+            "global_time": "6"
+          },
+          "flows": {
+            "x": "1",
+            "global_time": "1"
+          }
+        }
+      }
+    ]
+  }
 }
 (************************************************************)
-END RESULT
 """
 			} # end result file
 			,
@@ -12277,7 +15453,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
@@ -12300,11 +15476,61 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
-		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test LoopSynth: no loop but state met twice (BFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test LoopSynth: no loop but state met twice (NDFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-loop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop (BFS)',
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
  10 >= p2
 & p2 >= 0
@@ -12328,10 +15554,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop (NDFS)',
-		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
  10 >= p2
 & p2 >= 0
@@ -12359,7 +15585,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (BFS)',
-		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12387,7 +15613,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a) (NDFS)',
-		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12415,7 +15641,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (BFS)',
-		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -12443,7 +15669,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b) (NDFS)',
-		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -12467,7 +15693,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (BFS)',
-		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -12493,7 +15719,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation (NDFS)',
-		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -12551,7 +15777,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (BFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'input_files': ['testEFInclMerge.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
@@ -12582,7 +15808,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis) (NDFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'input_files': ['testEFInclMerge.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
@@ -12877,7 +16103,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -12905,7 +16131,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -12920,6 +16146,56 @@ Constraint nature                       : good
 ------------------------------------------------------------
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AccLoopSynth: no loop but state met twice (BFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-cyclethrough-accepting.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AccLoopSynth: no loop but state met twice (NDFS)',
+		'tags'       : 'cycle',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'basic-properties/synth-cyclethrough-accepting.imiprop'],
+		'options'    : '-cycle-algo NDFS',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -13224,7 +16500,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth (BFS): simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -13254,7 +16530,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth (NDFS): simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'deadlock/PDFC5-accloop.imiprop'],
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -13425,7 +16701,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1a)',
-		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1a.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1a.res' , 'content' : """
@@ -13453,7 +16729,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/24
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1b)',
-		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['testNoCycle-1b.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testNoCycle-1b.res' , 'content' : """
@@ -13627,7 +16903,7 @@ Termination                             : regular termination
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (NDFS)',
-		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-depth-limit 3 -cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -13656,7 +16932,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/09/01
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test AccLoopSynth with depth-limit to check the quick reachability (BFS)',
-		'input_files': ['quick-reach.imi', 'acceptingLoop.imiprop'],
+		'input_files': ['quick-reach.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-depth-limit 4 -cycle-algo BFS',
 		'expectations' : [
 			{'file': 'quick-reach.res' , 'content' : """
@@ -13779,6 +17055,718 @@ Constraint nature                       : good
 
 	,
 	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# AF
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: unsatisfiable initial location',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial-unsatisfiable.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-unsatisfiable.res' , 'content' : """
+Error                                   : unsatisfiable initial conditions
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: unsatisfiable initial location (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial-unsatisfiable.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-unsatisfiable.res' , 'content' : """
+Error                                   : unsatisfiable initial conditions
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false (no accepting location)',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-false-noaccepting.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false (no accepting location) (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-false-noaccepting.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location restricted by an invariant',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-initial-invariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-invariant.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 > p
+& p >= 0
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: initial accepting location restricted by an invariant (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-initial-invariant.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-initial-invariant.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 > p
+& p >= 0
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: false due to no invariant',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-false-noinvariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-false-noinvariant.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 10 >= p
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: no invariant but guard bounded from below',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 10 >= p
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-noinvariant-noupperguard.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 10 >= p
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-simple.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-simple.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability (variant with 2 parameters)',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-simple2.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple2.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 > 5
+ & 10 >= p2
+ & p1 = 5
+ OR
+   p2 >= 0
+ & 5 > p2
+ & p1 = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple reachability (variant with 2 parameters)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-simple2.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-simple2.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 > 5
+ & 10 >= p2
+ & p1 = 5
+ OR
+   p2 >= 0
+ & 5 > p2
+ & p1 = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-loop.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 6
+ & 9 > p
+ OR
+   p > 5
+ & 6 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-loop.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 6
+ & 9 > p
+ OR
+   p > 5
+ & 6 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop for all valuations',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-loop-false.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop-false.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with a loop for all valuations',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-loop-false.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-loop-false.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/19
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with negative flows and deadlock',
+		'tags'       : 'AF',
+		'input_files': ['AF/AF-negflow.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+  15 >= p1
+ & p1 >= 0
+ & p2 > 5 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/19
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF: simple example with negative flows and deadlock (AU syntax)',
+		'tags'       : 'AF,AU',
+		'input_files': ['AF/AF-negflow.imi' , 'basic-properties/synth-A-true-U-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AF-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+  15 >= p1
+ & p1 >= 0
+ & p2 > 5 + p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/26
+		# Last modified            : 2024/01/26
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AU: simple example',
+		'tags'       : 'AU',
+		'input_files': ['AF/AU-simple1.imi' , 'AF/AU-simple1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AU-simple1.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 > 5
+ & 10 >= p2
+ & p1 = 5
+ OR
+   p2 > 3
+ & 5 > p2
+ & p1 = 5
+ OR
+   p2 > 2
+ & 3 > p2
+ & p1 = 5
+ OR
+   p2 >= 0
+ & 2 > p2
+ & p1 = 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André and Masaki Waga
+		# Test since               : 2024/03/14
+		# Last modified            : 2024/03/14
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AU: self-composition example',
+		'tags'       : 'AU',
+		'input_files': ['AF/selfcomp-AF.imi' , 'AF/selfcomp-AF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'selfcomp-AF.res' , 'content' : """
+BEGIN CONSTRAINT
+  p >= 0
+ & 3 > p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/05
+		# Last modified            : 2024/02/05
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AW: simple example',
+		'tags'       : 'AW',
+		'input_files': ['AF/AU-simple1.imi' , 'AF/AU-simple1-AW.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'AU-simple1.res' , 'content' : """
+BEGIN CONSTRAINT
+  p2 >= 0
+ & 5 > p2
+ & p1 = 5
+ OR
+   p2 > 5
+ & 10 >= p2
+ & p1 = 5
+
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/09
+		# Last modified            : 2024/02/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AW: no loop over phi',
+		'tags'       : 'AW',
+		'input_files': ['cycles/visited-twice-nocycle.imi' , 'cycles/visited-twice-nocycle-AW.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'visited-twice-nocycle.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# ??
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -13786,7 +17774,7 @@ Constraint nature                       : good
 		# Last modified            : 2021/10/07
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (without)',
-		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'input_files': ['testExemplify-loop-single.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS -depth-limit 10',
 		'expectations' : [
 			{'file': 'testExemplify-loop-single.res' , 'content' : """
@@ -13809,7 +17797,7 @@ END CONSTRAINT
 		# Last modified            : 2021/10/07
 		# Test for IMITATOR version: 3.2
 		'purpose'    : 'Test option: -no-global-time-clock-in-comparison (with)',
-		'input_files': ['testExemplify-loop-single.imi', 'loop.imiprop'],
+		'input_files': ['testExemplify-loop-single.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '-cycle-algo BFS -no-global-time-clock-in-comparison -depth-limit 10',
 		'expectations' : [
 			{'file': 'testExemplify-loop-single.res' , 'content' : """
@@ -13913,7 +17901,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/14
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: EF',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFaccepting.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14030,7 +18018,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: Loop',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14201,7 +18189,7 @@ Constraint nature                       : good
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: NDFS',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'basic-properties/synth-cyclethrough-accepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -14264,7 +18252,7 @@ Constraint nature                       : good/bad
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
@@ -14288,10 +18276,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14312,10 +18300,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method check',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14336,10 +18324,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
-		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '',
 		'expectations' : [
-			{'file': 'PDFC4.res' , 'content' : """
+			{'file': 'PDFC4-zeno.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT
@@ -14360,7 +18348,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
-		'input_files': ['CUBPTA1.imi', 'CUBPTA-NZCUB.imiprop'],
+		'input_files': ['CUBPTA1.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
@@ -14385,7 +18373,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
-		'input_files': ['CUBPTA2.imi', 'CUBPTA-NZCUB.imiprop'],
+		'input_files': ['CUBPTA2.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA2.res' , 'content' : """
@@ -14413,7 +18401,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test infinite run on one example (Zeno version)',
-		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-Zeno.imiprop'],
+		'input_files': ['testInfiniteRun.imi', 'basic-properties/synth-loop.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testInfiniteRun.res' , 'content' : """
@@ -14437,7 +18425,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test infinite run on one example (non-Zeno version)',
-		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-nonZeno.imiprop'],
+		'input_files': ['testInfiniteRun.imi', 'basic-properties/synth-NZcycle.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testInfiniteRun.res' , 'content' : """
@@ -14460,8 +18448,34 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test PDFC: very basic example with no deadlock but constrained initial state',
+		'input_files': ['deadlock/PDFC0-nodeadlock-init.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC0-nodeadlock-init.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
-		'input_files': ['PDFC1.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
@@ -14478,6 +18492,7 @@ Constraint nature             : good
 """
 			} #end result file
 			,
+
 			{'file': 'PDFC1-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
 
@@ -14514,10 +18529,36 @@ Constraint nature             : good
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/18
+		# Last modified            : 2024/01/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test PDFC: very basic example; variant with 1 clock',
+		'tags'       : 'deadlock',
+		'input_files': ['deadlock/PDFC1-1clock.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC1-1clock.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC3.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
@@ -14580,16 +18621,21 @@ Number of computed states     : 2
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test author              : Étienne André
+		## Test since               : 2022/10/03
+		## Last modified            : 2022/10/03
+		## Test for IMITATOR version: 3.3
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
-		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
- p1 + 5 >= p2
-& p1 >= 0
+ p1 >= 0
 & p2 >= 0
-& 10 >= p2
+& p1 + 5 >= p2
+& 5 >= p1
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -14597,49 +18643,42 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 2
-Number of transitions         : 2
-Number of computed states     : 3
 """
 			} #end result file
 			,
-			{'file': 'PDFC4-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 + 5 >= x
-& p1 >= 0
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 2
+		## Test author              : Étienne André
+		## Test since               : 2016
+		## Last modified            : 2022/10/03
+		## Test for IMITATOR version: 3.3
+		'purpose'    : 'Test PDFC: very basic example, Zeno version (normal result)',
+		'input_files': ['deadlock/PDFC4-zeno.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : ' -states-description',
+		'expectations' : [
+			{'file': 'PDFC4-zeno.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
 & p2 >= 0
-& x >= 0
-
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
 & p1 + 5 >= p2
-& p2 >= 0
-& x >= p2
-& 10 >= x
+& 5 >= p1
+END CONSTRAINT
 
-  Projection onto the parameters:
-   10 >= p2
-& p2 >= 0
-& p1 >= 0
-& p1 + 5 >= p2
-
-  /************************************************************/
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_1 -> s_1 via "a"
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
 """
 			} #end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -14649,7 +18688,7 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
@@ -14704,7 +18743,7 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
-		'input_files': ['PDFC7.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
@@ -14761,7 +18800,7 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14796,7 +18835,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-comparison equality',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14831,7 +18870,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
-		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-comparison inclusion',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
@@ -14866,7 +18905,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
-		'input_files': ['flipflop.imi', 'flipflop-deadlockfree.imiprop'],
+		'input_files': ['flipflop.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
@@ -14888,7 +18927,7 @@ Constraint nature             : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
-		'input_files': ['PDFC8.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
@@ -14922,7 +18961,7 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
-		'input_files': ['PDFC8b.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC8b.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
@@ -14946,11 +18985,13 @@ Number of computed states     : 8
 			} #end result file
 		] # end expectations
 	} # end test case
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
-		'input_files': ['PDFC9.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
@@ -14970,11 +19011,13 @@ Constraint nature             : good/bad
 			} #end result file
 		] # end expectations
 	} # end test case
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
-		'input_files': ['PDFC9b.imi', 'PDFC-deadlockfree.imiprop'],
+		'input_files': ['deadlock/PDFC9b.imi', 'basic-properties/synth-deadlock-free.imiprop'],
 		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
@@ -14995,6 +19038,234 @@ Constraint nature             : good/bad
 		] # end expectations
 	} # end test case
 			
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: example with negative flow',
+		'input_files': ['deadlock/PDFC10-negflow.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC10-negflow.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 > 5 + p1
+& 15 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+
+	,
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTING FIX TO DEADLOCK COMPUTATION
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 1',
+		'input_files': ['deadlock/deadlock1.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'deadlock1.res' , 'content' : """
+			BEGIN CONSTRAINT
+ 3 >= p
+& p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 2',
+		'input_files': ['deadlock/deadlock2.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock2.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= q
+& p >= 0
+& q >= 0
+& 3 >= p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 3',
+		'input_files': ['deadlock/deadlock3.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock3.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 4',
+		'input_files': ['deadlock/deadlock4.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= q
+& p >= 0
+& q >= 0
+& 2 >= p
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 5',
+		'input_files': ['deadlock/deadlock5.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 6',
+		'input_files': ['deadlock/deadlock6.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 4
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2023/01/23
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Updated Deadlock Test 7',
+		'input_files': ['deadlock/deadlock7.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock7.res' , 'content' : """
+BEGIN CONSTRAINT
+ q >= 4
+& p >= 4
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
+
+	,
+
+	##------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2022
+		# Last modified            : 2022
+		# Test for IMITATOR version: 3.2
+		'purpose'    : 'Updated Deadlock Test 8',
+		'input_files': ['deadlock/deadlock8.imi', 'basic-properties/synth-deadlock-free.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'deadlock8.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------
 	,
 	
 	#------------------------------------------------------------
@@ -19252,14 +23523,14 @@ var
 (************************************************************)
  automaton Task_t1
 (************************************************************)
- synclabs: t1_arr_event, t1_arr, t1_dis, t1_miss, t1_end;
+ actions: t1_arr_event, t1_arr, t1_dis, t1_miss, t1_end;
 
 
 loc t1_loc_idle: invariant True
-	when True do {t1_urgent := 0}  sync t1_arr_event goto t1_loc_act_event;
+	when True do {t1_urgent := 0;}  sync t1_arr_event goto t1_loc_act_event;
 
 loc t1_loc_act_event: invariant 0 >= t1_urgent
-	when  t1_urgent = 0 do {t1_c := 0, t1_d := 0} sync t1_arr goto t1_loc_act;
+	when  t1_urgent = 0 do {t1_c := 0; t1_d := 0;} sync t1_arr goto t1_loc_act;
 
 loc t1_loc_act: invariant 8 >= t1_d stop{t1_c}
 	when True do {} sync t1_dis goto t1_loc_exe;
@@ -19279,11 +23550,11 @@ loc t1_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t1_arr
 (************************************************************)
- synclabs: t1_arr_event;
+ actions: t1_arr_event;
 
 
 loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
-	when  t1_arr_x = 8 do {t1_arr_x := 0}  sync t1_arr_event goto t1_arr_loc_arr;
+	when  t1_arr_x = 8 do {t1_arr_x := 0;}  sync t1_arr_event goto t1_arr_loc_arr;
  end (* Periodic_t1_arr *)
 (************************************************************)
 
@@ -19291,14 +23562,14 @@ loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
 (************************************************************)
  automaton Task_t2
 (************************************************************)
- synclabs: t2_arr_event, t2_arr, t2_dis, t2_miss, t2_pre, t2_end;
+ actions: t2_arr_event, t2_arr, t2_dis, t2_miss, t2_pre, t2_end;
 
 
 loc t2_loc_idle: invariant True
-	when True do {t2_urgent := 0}  sync t2_arr_event goto t2_loc_act_event;
+	when True do {t2_urgent := 0;}  sync t2_arr_event goto t2_loc_act_event;
 
 loc t2_loc_act_event: invariant  0 >= t2_urgent
-	when  t2_urgent = 0 do {t2_c := 0, t2_d := 0}  sync t2_arr goto t2_loc_act;
+	when  t2_urgent = 0 do {t2_c := 0; t2_d := 0;}  sync t2_arr goto t2_loc_act;
 
 loc t2_loc_act: invariant  20 >= t2_d stop{t2_c}
 	when True do {}  sync t2_dis goto t2_loc_exe;
@@ -19319,11 +23590,11 @@ loc t2_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t2_arr
 (************************************************************)
- synclabs: t2_arr_event;
+ actions: t2_arr_event;
 
 
 loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
-	when  t2_arr_x = 20 do {t2_arr_x := 0}  sync t2_arr_event goto t2_arr_loc_arr;
+	when  t2_arr_x = 20 do {t2_arr_x := 0;}  sync t2_arr_event goto t2_arr_loc_arr;
  end (* Periodic_t2_arr *)
 (************************************************************)
 
@@ -19331,14 +23602,14 @@ loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
 (************************************************************)
  automaton Task_t3
 (************************************************************)
- synclabs: t3_arr_event, t3_arr, t3_dis, t3_miss, t3_pre, t3_end;
+ actions: t3_arr_event, t3_arr, t3_dis, t3_miss, t3_pre, t3_end;
 
 
 loc t3_loc_idle: invariant True
-	when True do {t3_urgent := 0}  sync t3_arr_event goto t3_loc_act_event;
+	when True do {t3_urgent := 0;}  sync t3_arr_event goto t3_loc_act_event;
 
 loc t3_loc_act_event: invariant  0 >= t3_urgent
-	when  t3_urgent = 0 do {t3_c := 0, t3_d := 0}  sync t3_arr goto t3_loc_act;
+	when  t3_urgent = 0 do {t3_c := 0; t3_d := 0;}  sync t3_arr goto t3_loc_act;
 
 loc t3_loc_act: invariant  50 >= t3_d stop{t3_c}
 	when True do {}  sync t3_dis goto t3_loc_exe;
@@ -19359,11 +23630,11 @@ loc t3_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t3_arr
 (************************************************************)
- synclabs: t3_arr_event;
+ actions: t3_arr_event;
 
 
 loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
-	when  t3_arr_x = 50 do {t3_arr_x := 0}  sync t3_arr_event goto t3_arr_loc_arr;
+	when  t3_arr_x = 50 do {t3_arr_x := 0;}  sync t3_arr_event goto t3_arr_loc_arr;
  end (* Periodic_t3_arr *)
 (************************************************************)
 
@@ -19371,14 +23642,14 @@ loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
 (************************************************************)
  automaton Task_t4
 (************************************************************)
- synclabs: t4_arr_event, t4_arr, t4_dis, t4_miss, t4_pre, t4_end;
+ actions: t4_arr_event, t4_arr, t4_dis, t4_miss, t4_pre, t4_end;
 
 
 loc t4_loc_idle: invariant True
-	when True do {t4_urgent := 0}  sync t4_arr_event goto t4_loc_act_event;
+	when True do {t4_urgent := 0;}  sync t4_arr_event goto t4_loc_act_event;
 
 loc t4_loc_act_event: invariant  0 >= t4_urgent
-	when  t4_urgent = 0 do {t4_c := 0, t4_d := 0}  sync t4_arr goto t4_loc_act;
+	when  t4_urgent = 0 do {t4_c := 0; t4_d := 0;}  sync t4_arr goto t4_loc_act;
 
 loc t4_loc_act: invariant  100 >= t4_d stop{t4_c}
 	when True do {}  sync t4_dis goto t4_loc_exe;
@@ -19399,11 +23670,11 @@ loc t4_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t4_arr
 (************************************************************)
- synclabs: t4_arr_event;
+ actions: t4_arr_event;
 
 
 loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
-	when  t4_arr_x = 100 do {t4_arr_x := 0}  sync t4_arr_event goto t4_arr_loc_arr;
+	when  t4_arr_x = 100 do {t4_arr_x := 0;}  sync t4_arr_event goto t4_arr_loc_arr;
  end (* Periodic_t4_arr *)
 (************************************************************)
 
@@ -19411,14 +23682,14 @@ loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
 (************************************************************)
  automaton Task_t5
 (************************************************************)
- synclabs: t5_arr_event, t5_arr, t5_dis, t5_miss, t5_pre, t5_end;
+ actions: t5_arr_event, t5_arr, t5_dis, t5_miss, t5_pre, t5_end;
 
 
 loc t5_loc_idle: invariant True
-	when True do {t5_urgent := 0}  sync t5_arr_event goto t5_loc_act_event;
+	when True do {t5_urgent := 0;}  sync t5_arr_event goto t5_loc_act_event;
 
 loc t5_loc_act_event: invariant  0 >= t5_urgent
-	when  t5_urgent = 0 do {t5_c := 0, t5_d := 0}  sync t5_arr goto t5_loc_act;
+	when  t5_urgent = 0 do {t5_c := 0; t5_d := 0;}  sync t5_arr goto t5_loc_act;
 
 loc t5_loc_act: invariant  200 >= t5_d stop{t5_c}
 	when True do {}  sync t5_dis goto t5_loc_exe;
@@ -19439,11 +23710,11 @@ loc t5_loc_miss: invariant True
 (************************************************************)
  automaton Periodic_t5_arr
 (************************************************************)
- synclabs: t5_arr_event;
+ actions: t5_arr_event;
 
 
 loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
-	when  t5_arr_x = 200 do {t5_arr_x := 0}  sync t5_arr_event goto t5_arr_loc_arr;
+	when  t5_arr_x = 200 do {t5_arr_x := 0;}  sync t5_arr_event goto t5_arr_loc_arr;
  end (* Periodic_t5_arr *)
 (************************************************************)
 
@@ -19451,15 +23722,15 @@ loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
 (************************************************************)
  automaton sched_CPU1
 (************************************************************)
- synclabs: t1_arr, t2_arr, t3_arr, t4_arr, t5_arr, t1_dis, t2_dis, t3_dis, t4_dis, t5_dis, t5_end, t5_pre, t4_end, t4_pre, t3_end, t3_pre, t2_end, t2_pre, t1_end;
+ actions: t1_arr, t2_arr, t3_arr, t4_arr, t5_arr, t1_dis, t2_dis, t3_dis, t4_dis, t5_dis, t5_end, t5_pre, t4_end, t4_pre, t3_end, t3_pre, t2_end, t2_pre, t1_end;
 
 
 loc CPU1_loc_: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_At3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_At4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_At5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_At5;
 
 loc CPU1_loc_At1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1;
@@ -19477,11 +23748,11 @@ loc CPU1_loc_At5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt5;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_At3Rt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_At4Rt5;
-	when True do {CPU1_urgent := 0}  sync t5_end goto CPU1_loc_Et5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4Rt5;
+	when True do {CPU1_urgent := 0;}  sync t5_end goto CPU1_loc_Et5;
 
 loc CPU1_loc_Et5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_1*)  goto CPU1_loc_stop;
@@ -19511,11 +23782,11 @@ loc CPU1_loc_At4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt4;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt4;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_At3Rt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_end goto CPU1_loc_Et4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4;
 
 loc CPU1_loc_Et4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_2*)  goto CPU1_loc_stop;
@@ -19539,10 +23810,10 @@ loc CPU1_loc_At3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_end goto CPU1_loc_Et4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4Wt5;
 
 loc CPU1_loc_Et4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -19566,11 +23837,11 @@ loc CPU1_loc_At3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt3: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt3;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_end goto CPU1_loc_Et3;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3;
 
 loc CPU1_loc_Et3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_3*)  goto CPU1_loc_stop;
@@ -19588,10 +23859,10 @@ loc CPU1_loc_At2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt3Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_end goto CPU1_loc_Et3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt5;
 
 loc CPU1_loc_Et3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -19609,10 +23880,10 @@ loc CPU1_loc_At2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt3Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_end goto CPU1_loc_Et3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4;
 
 loc CPU1_loc_Et3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -19630,9 +23901,9 @@ loc CPU1_loc_At2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
 
 loc CPU1_loc_Et3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -19650,11 +23921,11 @@ loc CPU1_loc_At2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt2: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt2Wt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt2Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt2Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2;
 
 loc CPU1_loc_Et2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_4*)  goto CPU1_loc_stop;
@@ -19666,10 +23937,10 @@ loc CPU1_loc_At1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2;
 
 loc CPU1_loc_Rt2Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt5;
 
 loc CPU1_loc_Et2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -19681,10 +23952,10 @@ loc CPU1_loc_At1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt5;
 
 loc CPU1_loc_Rt2Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4;
 
 loc CPU1_loc_Et2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -19696,9 +23967,9 @@ loc CPU1_loc_At1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4;
 
 loc CPU1_loc_Rt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
 
 loc CPU1_loc_Et2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -19710,10 +23981,10 @@ loc CPU1_loc_At1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4Wt5;
 
 loc CPU1_loc_Rt2Wt3: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3;
 
 loc CPU1_loc_Et2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
@@ -19725,9 +23996,9 @@ loc CPU1_loc_At1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
 
 loc CPU1_loc_Rt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
 
 loc CPU1_loc_Et2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
@@ -19739,9 +24010,9 @@ loc CPU1_loc_At1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt5;
 
 loc CPU1_loc_Rt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
 
 loc CPU1_loc_Et2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
@@ -19753,8 +24024,8 @@ loc CPU1_loc_At1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4;
 
 loc CPU1_loc_Rt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
@@ -19766,129 +24037,129 @@ loc CPU1_loc_At1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt1: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1;
 
 loc CPU1_loc_Et1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_5*)  goto CPU1_loc_stop;
 
 loc CPU1_loc_Rt1Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt5;
 
 loc CPU1_loc_Et1Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt1Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4;
 
 loc CPU1_loc_Et1Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
 
 loc CPU1_loc_Rt1Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
 
 loc CPU1_loc_Et1Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt1Wt3: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt3;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3;
 
 loc CPU1_loc_Et1Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
 
 loc CPU1_loc_Rt1Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
 
 loc CPU1_loc_Et1Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
 
 loc CPU1_loc_Rt1Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
 
 loc CPU1_loc_Et1Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt1Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2: invariant True
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2;
 
 loc CPU1_loc_Et1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2;
 
 loc CPU1_loc_Rt1Wt2Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
 
 loc CPU1_loc_Et1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
 
 loc CPU1_loc_Et1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3: invariant True
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
 
 loc CPU1_loc_Et1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
@@ -19901,15 +24172,15 @@ loc CPU1_loc_stop: invariant True
 (************************************************************)
  automaton OBS_dline
 (************************************************************)
- synclabs: t1_miss, t2_miss, t3_miss, t4_miss, t5_miss;
+ actions: t1_miss, t2_miss, t3_miss, t4_miss, t5_miss;
 
 
 loc dline_loc_nomiss: invariant True
-	when True do {t1_d := 0}  sync t1_miss goto dline_loc_miss;
-	when True do {t1_d := 0}  sync t2_miss goto dline_loc_miss;
-	when True do {t1_d := 0}  sync t3_miss goto dline_loc_miss;
-	when True do {t1_d := 0}  sync t4_miss goto dline_loc_miss;
-	when True do {t1_d := 0}  sync t5_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t1_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t2_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t3_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t4_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t5_miss goto dline_loc_miss;
 
 loc dline_loc_miss: invariant  t1_d = 0 stop{t1_d}
  end (* OBS_dline *)
@@ -19987,376 +24258,6 @@ end
 	#------------------------------------------------------------
 	,
 
-	#------------------------------------------------------------
-	# BEGIN : Test new init state section
-	#------------------------------------------------------------
-
-# 	#------------------------------------------------------------
-# 	{
-# 		## Test version             : 1
-# 		## Test since               : 2021/03/10
-# 		## Last modified            : 2021/03/10
-# 		## Test disabled            : 2021/06/01
-# 		## Test for IMITATOR version: > 3.0
-# 		## Author 					: lbinria
-# 		'author': 'lbinria',
-# 		'purpose'    : 'Test init state printing - old state zone (printing)',
-# 		'tags' : 'semantic, printing, init',
-# 		'input_files': ['init_state/old-init-state-printing.imi'],
-# 		'options'    : '-imi2IMI',
-# 		'expectations' : [
-# 			{'file': 'old-init-state-printing-regenerated.imi' , 'content' : """
-# var
-# 	i, j
-# 		: discrete;
-#
-#
-# (************************************************************)
-#  automaton pta
-# (************************************************************)
-#  synclabs: ;
-#
-# loc l1: invariant True
-# 	when  i = 0
-# & j = 0 do {}  (* sync nosync_1*)  goto lend;
-#
-# accepting loc lend: invariant True
-#  end (* pta *)
-# (************************************************************)
-#
-#
-# (************************************************************)
-#  automaton pta2
-# (************************************************************)
-#  synclabs: ;
-#
-# loc l2: invariant True
-# 	when  i = 0
-# & j = 0 do {}  (* sync nosync_2*)  goto lend2;
-#
-# accepting loc lend2: invariant True
-#  end (* pta2 *)
-# (************************************************************)
-#
-#
-# (************************************************************)
-# (* Initial state *)
-# (************************************************************)
-#
-# init := True
-# 	(*------------------------------------------------------------*)
-# 	(* Initial location *)
-# 	(*------------------------------------------------------------*)
-# 	& loc[pta] = l1
-# 	& loc[pta2] = l2
-#
-# 	(*------------------------------------------------------------*)
-# 	(* Initial discrete assignments *)
-# 	(*------------------------------------------------------------*)
-# 	& i = 1
-# 	& j = 2
-#
-# 	(*------------------------------------------------------------*)
-# 	(* Initial constraint *)
-# 	(*------------------------------------------------------------*)
-# 	 & True
-#
-# ;
-#
-#
-# (************************************************************)
-# (* The end *)
-# (************************************************************)
-# end
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/10
-		## Last modified            : 2021/06/01
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test imi2IMI for initial state v3.1',
-		'tags' : 'semantic, printing, init',
-		'input_files': ['init_state/new-init-state-printing.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'new-init-state-printing-regenerated.imi' , 'content' : """
-var 
-	b
-		: bool;
-
-	k, l
-		: int;
-
-	i, j
-		: rational;
-
-
-(************************************************************)
- automaton pta
-(************************************************************)
- synclabs: ;
- 
-loc l1: invariant True 
-	when  b
-& i = 0
-& j = 0
-& k = 0
-& l = 0 do {}  (* sync nosync_1*)  goto lend;
- 
-accepting loc lend: invariant True 
- end (* pta *)
-(************************************************************)
-
-
-(************************************************************)
- automaton pta2
-(************************************************************)
- synclabs: ;
- 
-loc l2: invariant True 
-	when  b
-& i = 0
-& j = 0
-& k = 0
-& l = 0 do {}  (* sync nosync_2*)  goto lend2;
- 
-accepting loc lend2: invariant True 
- end (* pta2 *)
-(************************************************************)
-
-
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-
-init := {
-
-	discrete = 
-		(*------------------------------------------------------------*)
-		(* Initial location *)
-		(*------------------------------------------------------------*)
-		loc[pta] := l1, 
-		loc[pta2] := l2,
-		(*------------------------------------------------------------*)
-		(* Initial discrete variables assignments *)
-		(*------------------------------------------------------------*)
-		b := False, 
-		k := 0, 
-		l := 0, 
-		i := 1, 
-		j := 2
-	;
-
-	(*------------------------------------------------------------*)
-	(* Initial continuous constraint *)
-	(*------------------------------------------------------------*)
-	continuous = 
-		& True
-	;
-
-}
-
-
-(************************************************************)
-(* The end *)
-(************************************************************)
-end
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/16
-		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: 3.0.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a clock in discrete state section is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-clock-in-discrete-state-section-error.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'init-clock-in-discrete-state-section-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/04/16
-		## Last modified            : 2021/04/16
-		## Test for IMITATOR version: > 3.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a parameter in discrete state section is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-parameter-in-discrete-state-section-error.imi'],
-		'options'    : '-imi2IMI',
-		'expectations' : [
-			{'file': 'init-parameter-in-discrete-state-section-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/09
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a discrete variable in discrete and continuous section at the same time is forbidden - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-at-discrete-and-continuous.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-variable-at-discrete-and-continuous.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-# 	#------------------------------------------------------------
-# 	{
-# 		## Test version             : 1
-# 		## Test since               : 2021/03/04
-# 		## Last modified            : 2021/05/31
-# 		## Test for IMITATOR version: 3.1.0
-# 		## Author 					: lbinria
-# 		'purpose'    : 'Test that init of an undeclared variable is forbidden - new init state (behavior)',
-# 		'tags' : 'semantic, behavior, init',
-# 		'input_files': ['init_state/init-discrete-section-not-declared-error.imi'],
-# 		'options'    : '',
-# 		'expectations' : [
-# 			{'file': 'init-discrete-section-not-declared-error.res' , 'content' : """
-# Error                                   : invalid model
-# 		"""
-# 			 } # end result file
-# 			,
-# 		] # end expectations
-# 	} # end test case
-# 	#------------------------------------------------------------
-#
-# 	,
-
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/03/04
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a constant is accepted - new init state (behavior)',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-with-constant.imi'],
-		'options'    : '-mode statespace -states-description',
-		'expectations' : [
-			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
-  STATE 1:
-  pta: lend, b = True ==> 
-&True
-
-  Projection onto the parameters:
-  True
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/05/27
-		## Last modified            : 2021/05/31
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init of a variable with a variable is forbidden - new init state',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-variable-with-variable.imi'],
-		'options'    : '-no-var-autoremove -mode statespace -states-description',
-		'expectations' : [
-			{'file': 'init-variable-with-variable.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		## Test version             : 1
-		## Test since               : 2021/06/21
-		## Last modified            : 2021/06/21
-		## Test for IMITATOR version: 3.1.0
-		## Author 					: lbinria
-		'author': 'lbinria',
-		'purpose'    : 'Test that init a variable with another variable in continuous init section is forbidden',
-		'tags' : 'semantic, behavior, init',
-		'input_files': ['init_state/init-using-variable-in-continuous-error.imi'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'init-using-variable-in-continuous-error.res' , 'content' : """
-Error                                   : invalid model
-		"""
-			 } # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	# END : Test new init state section
-	#------------------------------------------------------------
 
 
 	#------------------------------------------------------------
@@ -20378,9 +24279,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0 [color=blue, style=filled];
-  s_1 [color=yellow, style=filled];
+  s_1 [color=cyan, style=filled];
   s_2 [color=blue, style=filled];
-  s_3 [color=yellow, style=filled];
+  s_3 [color=cyan, style=filled];
 		"""
 			} # end result file
 			,
@@ -20407,9 +24308,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
+  s_1[fillcolor=cyan, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
   s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
+  s_3[fillcolor=cyan, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
 		"""
 			} # end result file
 			,
@@ -20436,9 +24337,9 @@ Error                                   : invalid model
 /* Colors */
 
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_1[fillcolor=cyan, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
   s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
+  s_3[fillcolor=cyan, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2018/06/05): I had to manually replace '\n' with '\\n' to make this test pass
@@ -20854,6 +24755,46 @@ var
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
+		'tags'       : 'syntax,translation,controllable',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2TikZ',
+		'expectations' : [
+			# WARNING: one has to manually replace \ with \\
+			{'file': 'include_controllable_actions.tex' , 'content' : """
+		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{a}$\\\\
+		 & $x:=1/2 * \\styleparam{p}$\\\\%
+		\\end{tabular}} (l1);
+
+		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{b}$\\\\
+		 & $x:=1$\\\\%
+		\\end{tabular}} (l1);
+
+		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
+		& $ \\styleclock{x} = 1$\\\\
+		 & $\\styleact{c}$\\\\
+		 & $x:=2$\\\\%
+		\\end{tabular}} (l1);
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2021/07/09
 		# Last modified            : 2021/07/09
 		# Test for IMITATOR version: 3.1
@@ -20863,6 +24804,51 @@ var
 		'expectations' : [
 			{'file': 'flipflop.dot' , 'content' : """
 """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/07/11
+		# Last modified            : 2023/07/11
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test export to dot with controllable actions',
+		'tags'       : 'syntax,translation',
+		'input_files': ['parametric_timed_games/include_controllable_actions.imi'],
+		'options'    : '-imi2PDF -graphics-source',
+		'expectations' : [
+			{'file': 'include_controllable_actions-pta.dot' , 'content' : """
+/**************************************************/
+/* automaton pta1 */
+/**************************************************/
+ init0[shape=none, label="pta1"];
+ init0 -> s_0_0;
+
+s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
+	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x := 2;"];
+/**************************************************/
+
+
+/**************************************************/
+/* automaton pta2 */
+/**************************************************/
+ init1[shape=none, label="pta2"];
+ init1 -> s_1_0;
+
+s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
+	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x := 0;"];
+		"""
 			} # end result file
 			,
 		] # end expectations
@@ -20944,6 +24930,10 @@ clock x;
 /* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */
 int nb__a = 3;
 
+/* User defined function declarations (WARNING: some user defined functions may not be well translated) */
+
+
+
 /* Action declarations */
 broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
 chan b;
@@ -20957,16 +24947,16 @@ broadcast chan c;
 
 <template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
 </declaration>
- 
+
 <location id="id_pta0_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
- 
+
 <location id="id_pta0_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta0_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta0_loc0"/>
 		<target ref="id_pta0_loc0"/>
@@ -20979,56 +24969,56 @@ broadcast chan c;
 		<target ref="id_pta0_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b!</label>
 		<label kind="guard" x="100" y="40"> x == 4</label>
-		
+
 	</transition>
  </template>
 
 
 <template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
 </declaration>
- 
+
 <location id="id_pta1_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
- 
+
 <location id="id_pta1_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
  <init ref="id_pta1_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc0"/>
 		<label kind="synchronisation" x="0" y="80">a?</label>
-		<label kind="guard" x="0" y="40">true</label>
+		<label kind="guard" x="0" y="40"></label>
 		<label kind="assignment" x="0" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
 	<transition>
 		<source ref="id_pta1_loc0"/>
 		<target ref="id_pta1_loc1"/>
 		<label kind="synchronisation" x="100" y="80">b?</label>
-		<label kind="guard" x="100" y="40">true</label>
-		
+		<label kind="guard" x="100" y="40"></label>
+
 	</transition>
  </template>
 
 
 <template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
 </declaration>
- 
+
 <location id="id_pta2_loc0" x="0" y="0">
 	<name x="0" y="-40">l1</name>
 	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
- 
+
 <location id="id_pta2_loc1" x="200" y="0">
 	<name x="200" y="-40">l2</name>
 	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
- 
+
 <location id="id_pta2_loc2" x="400" y="0">
 	<name x="400" y="-40">l3</name>
 	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
  <init ref="id_pta2_loc0"/>
- 
+
 	<transition>
 		<source ref="id_pta2_loc0"/>
 		<target ref="id_pta2_loc1"/>
@@ -21040,7 +25030,7 @@ broadcast chan c;
 		<source ref="id_pta2_loc1"/>
 		<target ref="id_pta2_loc2"/>
 		<label kind="synchronisation" x="300" y="80">a?</label>
-		<label kind="guard" x="300" y="40">true</label>
+		<label kind="guard" x="300" y="40"></label>
 		<label kind="assignment" x="300" y="-40">x = 0, nb__a = nb__a + 1</label>
 	</transition>
  </template>
@@ -21332,6 +25322,1035 @@ Constraint nature                       : good
 	,
 
 	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 1',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy01.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy01.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 2',
+        'tags':'ptg',        
+		'input_files': ['parametric_timed_games/uppaal_converted/toy02.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy02.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 3',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy03.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy03.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 4',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy04.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy04.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 5',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy05.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy05.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+	
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 6',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy06.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy06.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 7',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy07.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy07.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 8',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy08.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy08.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 9',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy09.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy09.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 10',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy10.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy10.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 11',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy11.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy11.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 12',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy12.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy12.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 13',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy13.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy13.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 14',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy14.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy14.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 15',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy15.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy15.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis on UPPAAl examples (no parameters) 16',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/uppaal_converted/toy16.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'toy16.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Check that we cannot force uncontrolled actions',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/actions_test.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'actions_test.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 1',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg1.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 2',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg2.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 3',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg3.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg3.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 4',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg4.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg4.res' , 'content' : """
+BEGIN CONSTRAINT
+2 > p
+ & p >= 0
+ & q >= 5 + p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 5',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg5.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg5.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p > 0
+ & q >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Simple parametric timed game 6',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/simple_ptg6.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'simple_ptg6.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 1',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated1.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated1.res' , 'content' : """
+BEGIN CONSTRAINT
+5 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 2',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated2.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated2.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 3',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated3.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated3.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 4',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated4.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated4.res' , 'content' : """
+BEGIN CONSTRAINT
+10 > p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 5',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated5.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated5.res' , 'content' : """
+BEGIN CONSTRAINT
+5 >= p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 6',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated6.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated6.res' , 'content' : """
+BEGIN CONSTRAINT
+10 >= p
+ & p >= 1
+ & q >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: PTG written by GPT4 7',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/gpt4_generated/generated7.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'generated7.res' , 'content' : """
+BEGIN CONSTRAINT
+4 > p
+ & p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Multiple Automata',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/multiple_automata.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'multiple_automata.res' , 'content' : """
+BEGIN CONSTRAINT
+ 1 >= p
+ & p >= 0
+ & q = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Complete synthesis test (witness)',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/complete_synthesis_test.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'complete_synthesis_test.res' , 'content' : """
+BEGIN CONSTRAINT
+6 >= p & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Complete synthesis test (synthesis)',
+        'tags':'ptg',
+		'input_files': ['parametric_timed_games/complete_synthesis_test.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'complete_synthesis_test.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (simple, witness)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_witness_simple.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute -PTG-propagate',
+		'expectations' : [
+			{'file': 'losing_state_prop_witness_simple.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+	
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (complex, witness)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_witness_complex.imi', 'basic-properties/witness-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute -PTG-propagate',
+		'expectations' : [
+			{'file': 'losing_state_prop_witness_complex.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Losing state propagation (simple, synthesis)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/losing_state_prop_synth.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute -PTG-propagate',
+		'expectations' : [
+			{'file': 'losing_state_prop_synth.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Cumulative Pruning',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/cumulative_pruning.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'cumulative_pruning.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Coverage Pruning (Lose)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/coverage_pruning_lose.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'coverage_pruning_lose.res' , 'content' : """
+BEGIN CONSTRAINT
+	5 >= p & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test parametric timed games synthesis: Test Coverage Pruning (Win)',
+        "tags": "ptg",
+		'input_files': ['parametric_timed_games/coverage_pruning_win.imi', 'basic-properties/synth-parametric-win-strat-accepting.imiprop'],
+		'options'    : '-verbose mute',
+		'expectations' : [
+			{'file': 'coverage_pruning_win.res' , 'content' : """
+BEGIN CONSTRAINT
+	1 > p & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+    
+	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
 		#'input_files': ['XXXX.imi', 'XXXX.pi0'],
@@ -21343,6 +26362,174 @@ Constraint nature                       : good
 		#] # end expectations
 	#} # end test case
 	##------------------------------------------------------------]
+    # TESTING TEMPLATES
+    {
+        'purpose'      : 'Test correct instantiation of templates (FischerPS08-2)',
+        'input_files'  : ['templates/FischerPS08-2.imi', 'templates/FischerPS08-AGnot.imiprop'],
+        'options'      : '-verbose mute',
+        'expectations' : [{
+            'file'   : 'FischerPS08-2.res',
+            'content': """
+BEGIN CONSTRAINT
+ delta >= 0
+& Delta >= delta
+END CONSTRAINT
 
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 38
+Number of transitions                   : 47
+Number of computed states               : 48
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (Pipeline_KP12_2_3)',
+        'input_files'  : ['templates/Pipeline_KP12_2_3.imi', 'templates/Pipeline_KP12_2_3-EF.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'Pipeline_KP12_2_3.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (12 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 47
+Number of transitions                   : 70
+Number of computed states               : 71
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (SLAF14_5)',
+        'input_files'  : ['templates/SLAF14_5.imi', 'templates/SLAF14_5-AGnot.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'SLAF14_5.res',
+            'content': """
+BEGIN CONSTRAINT
+ t5_C >= 10
+& t4_C >= 10
+& 50 >= t4_C
+& 50 >= t5_C
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : depth limit (100 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 492
+Number of transitions                   : 1300
+Number of computed states               : 1301
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (category12_vulnerable_conditional-selfcomp)',
+        'input_files'  : ['templates/category12_vulnerable_conditional-selfcomp.imi', 'templates/category12_vulnerable_conditional-selfcomp.imiprop'],
+        'options'      : '-verbose mute -depth-limit=10',
+        'expectations' : [{
+            'file'   : 'category12_vulnerable_conditional-selfcomp.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (68 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 255
+Number of transitions                   : 432
+Number of computed states               : 433
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (category14_not_vulnerable-selfcomp)',
+        'input_files'  : ['templates/category14_not_vulnerable-selfcomp.imi', 'templates/category14_not_vulnerable-selfcomp.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'category14_not_vulnerable-selfcomp.res',
+            'content': """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (9 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 67
+Number of transitions                   : 116
+Number of computed states               : 117
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (fischerHRSV02_3)',
+        'input_files'  : ['templates/fischerHRSV02_3.imi', 'templates/fischerHRSV02_3-AGnot.imiprop'],
+        'options'      : '-verbose mute -depth-limit=9',
+        'expectations' : [{
+            'file'   : 'fischerHRSV02_3.res',
+            'content': """
+BEGIN CONSTRAINT
+ max_delay > min_delay
+& min_delay >= 0
+& max_rw > min_rw
+& min_rw >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : depth limit (422 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 914
+Number of transitions                   : 1476
+Number of computed states               : 1477
+"""
+        }]
+    }
+    ,
+    {
+        'purpose'      : 'Test correct instantiation of templates (fischer_orig)',
+        'input_files'  : ['templates/fischer_orig.imi', 'templates/fischer_orig.imiprop'],
+        'options'      : '-verbose mute',
+        'expectations' : [{
+            'file'   : 'fischer_orig.res',
+            'content': """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 25
+Number of transitions                   : 36
+Number of computed states               : 37
+"""
+        }]
+    }
+    ,
 ### THE END
 ]

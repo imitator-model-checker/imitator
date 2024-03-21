@@ -3,7 +3,7 @@ version="20021123"
 description="bindings to PPL library (manual entry)"
 archive(byte)="ppl_ocaml.cma"
 archive(native)="ppl_ocaml.cmxa"
-requires=""
-directory="/usr/lib/ppl"
-linkopts = "-cclib -lppl -cclib -lppl_ocaml"
-#  -cclib -lgmp -cclib -lgmpxx
+exists_if = "ppl_ocaml.cma"
+# directory="/usr/lib/ppl"
+# linkopts = "-cclib -lppl -cclib -lppl_ocaml"
+# -cclib -lgmp -cclib -lgmpxx

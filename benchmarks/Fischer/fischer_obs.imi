@@ -14,9 +14,9 @@
  * Created         : < 2012/02/14
  * Fork from       :
  * Fork date       : 2015/02/18
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 
@@ -27,7 +27,7 @@ var
 		:clock;
 
 	k
-		: discrete;
+		: int;
 
 	a,
 	b
@@ -38,7 +38,7 @@ var
 (************************************************************)
 automaton proc1
 (************************************************************)
-synclabs : tau,start1,set1,enter1,abort1,release1;
+actions : tau,start1,set1,enter1,abort1,release1;
 
 
 loc idle: invariant True
@@ -63,7 +63,7 @@ end
 (************************************************************)
 automaton proc2
 (************************************************************)
-synclabs : tau,start2,set2,enter2,abort2,release2;
+actions : tau,start2,set2,enter2,abort2,release2;
 
 
 loc idle: invariant True
@@ -88,7 +88,7 @@ end
 (************************************************************)
 automaton arbitrer
 (************************************************************)
-synclabs : set1,release1,
+actions : set1,release1,
            set2,release2,
 	   tau;
 
@@ -105,7 +105,7 @@ end
 (************************************************************)
 automaton obs
 (************************************************************)
-synclabs : enter1, release1,
+actions : enter1, release1,
            enter2, release2;
 
 

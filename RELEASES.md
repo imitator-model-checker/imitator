@@ -1,6 +1,37 @@
 # Releases
 
 *******************************************************
+## release 3.4-alpha (2024-03-21) Cheese Durian
+
+### Major features
+* Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
+* New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
+* New AG ("global invariant") algorithm
+* New EU ("Exists … until") algorithm
+* New AF ("always eventually") algorithm, and variants:
+	- AR ("always … release")
+	- AU ("always … until")
+	- AW ("always … weak until")
+* New timed variants of EF, EU, AF, AR, AU, AW
+
+### Syntax improvement
+* The Boolean implication (`a => b`) is now allowed both in the model and in the property.
+
+### Syntax changes in the model
+* Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
+* Terminate backward-compatibility on updates syntax: updates are now only defined using the `var := expr` syntax
+* Terminate backward-compatibility on the permissive `initially: ` declarations in automata (already not taken into account in the semantics)
+* Both `;` and `,` instruction separators accepted
+
+### Internal
+* Source code entirely moved and restructured as a more standard tree
+
+### Known issues
+* Some divisions by zero (e.g., explicitly written `0 / 0` in the model) may not be detected; dynamic divisions by zero (`j := 2 / i`, with `i = 0`) are however in principle detected.
+
+
+
+*******************************************************
 ## release 3.3 (2022-07-21) Cheese Caramel au beurre salé
 
 ### Syntax improvement
@@ -8,7 +39,7 @@
 
 ### Major features
 * New: extrapolation for parametric zones [[AA22](https://www.doi.org/10.1007/978-3-031-06773-0_24)]
-* Refactoring of merging functions, with more efficient heuristics [AMPP22]
+* Refactoring of merging functions, with more efficient heuristics [[AMPP22](https://www.doi.org/10.1007/978-3-031-15839-1_12)]
 * Exemplification algorithm: given a parametric timed specification, exhibit concrete parameter valuations, and concrete positive and negative runs, with a graphical representation of the evolution over time of the clock and discrete variables [[AWUH22](https://www.doi.org/10.1007/978-3-031-06773-0_25)] (slightly experimental)
 
 
@@ -30,8 +61,8 @@
 ## release 3.1 (2021-07-20) Cheese Artichoke
 
 ### Syntax improvement
-* New types for discrete global variables: Boolean variables (`bool`), integer (`int`, over 32 bits) variables
-* `discrete` become `rational` (still encoded using exact arithmetics, as opposed to the new `int` type)
+* New types for discrete global variables: Boolean variables (`bool`), integer variables (`int`, over 32 bits)
+* `discrete` become `rational` (still encoded using exact arithmetic, as opposed to the new `int` type)
 * New power operator `pow(v, i)` over discrete variables, with `v` an integer or rational expression, and `i` an integer expression (possibly involving integer variables)
 
 ### Result
@@ -68,7 +99,6 @@ The property syntax is entirely new.
 
 ### Major features
 * New variants of the NDFS-based accepting cycle synthesis with several exploration strategies [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17)
-
 
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z' = -3/5}`

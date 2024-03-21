@@ -1,0 +1,211 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : KSA22_2
+ * Description      : model from "Protecting Smart Homes from Unintended Application Actions"
+ * Correctness      : TODO
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Security
+ * Source           : "Protecting Smart Homes from Unintended Application Actions" (ICCPS 2022) (10.1109/ICCPS54341.2022.00031)
+ * bibkey           : KSA22
+ * Author           : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Modeling         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal
+ * Input by         : Aqsa Kashaf, Vyas Sekar, Yuvraj Agarwal, Dylan Marinho
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : <2022/08
+ * Last modified    : 2023/05/11
+ * Model version    : 1.1
+ * 
+ * IMITATOR version : 3.4
+ ******************************************************************************)
+
+(* the output should be
+level_20 > 95
+ & threshold_21 >= 0
+ & 100 >= threshold_21
+ & 100 >= level_20
+ OR
+   level_20 >= 0
+ & threshold_21 >= 95
+ & 100 >= threshold_21
+ & 5 >= level_20 *
+ the level_20 contraint is because of step size of 5 in the carbondioxide sensor model. The analysis is very slow for step size of 1. *)
+
+var
+	(* Clocks *)
+	carbonDioxideMeasurement_carbonDioxide_1_sensor_clk,
+	carbonDioxideMeasurement_carbonDioxide_1_env_clk,
+	timer_switch_switch_1,
+		:clock;
+
+	(* Parameters *)
+	level_20,
+	threshold_21,
+		:parameter;
+
+	carbonDioxide_Env,
+	step,
+	power_Env,
+	carbonDioxideMeasurement_carbonDioxide_1,
+	state_active_20,
+	switch_switch_1,
+	powerMeter_power_1,
+	local_switch_switch_1,
+	delta,
+		:discrete;
+
+
+(* carbon dioxide sensor model which sync with co2 env model *)
+(************************************************************)
+	automaton carbonDioxideMeasurement_carbonDioxide_Dev_1
+(************************************************************)
+	actions: carbonDioxide_Env_Evt, carbonDioxideMeasurement_carbonDioxide_Evt_1;
+
+	loc mode0: invariant True
+		when True sync carbonDioxide_Env_Evt do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when carbonDioxideMeasurement_carbonDioxide_1 = carbonDioxide_Env do {} goto mode0;
+		when carbonDioxideMeasurement_carbonDioxide_1 < carbonDioxide_Env sync carbonDioxideMeasurement_carbonDioxide_Evt_1 do {carbonDioxideMeasurement_carbonDioxide_1:=carbonDioxide_Env, carbonDioxideMeasurement_carbonDioxide_1_sensor_clk:=0} goto mode0;
+		when carbonDioxideMeasurement_carbonDioxide_1 > carbonDioxide_Env sync carbonDioxideMeasurement_carbonDioxide_Evt_1 do {carbonDioxideMeasurement_carbonDioxide_1:=carbonDioxide_Env, carbonDioxideMeasurement_carbonDioxide_1_sensor_clk:=0} goto mode0;
+
+	end
+
+(* co2 env model *)
+(************************************************************)
+	automaton carbonDioxide_Env_Model
+(************************************************************)
+	actions: carbonDioxide_Env_Evt;
+
+	loc mode0: invariant True
+		when carbonDioxideMeasurement_carbonDioxide_1_env_clk > 0 & carbonDioxide_Env < 100-step sync carbonDioxide_Env_Evt do {carbonDioxide_Env:=carbonDioxide_Env+step,carbonDioxideMeasurement_carbonDioxide_1_env_clk:=0} goto mode0;
+		when carbonDioxideMeasurement_carbonDioxide_1_env_clk > 0 & carbonDioxide_Env > step sync carbonDioxide_Env_Evt do {carbonDioxide_Env:=carbonDioxide_Env-step,carbonDioxideMeasurement_carbonDioxide_1_env_clk:=0} goto mode0;
+
+	end
+
+(* dev model for power meter. *)
+(************************************************************)
+	automaton powerMeter_power_Dev_1
+(************************************************************)
+	actions: power_Env_Evt, powerMeter_power_Evt_1;
+
+	loc mode0: invariant True
+		when True sync power_Env_Evt do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when powerMeter_power_1 = power_Env do {} goto mode0;
+		when powerMeter_power_1 < power_Env sync powerMeter_power_Evt_1 do {powerMeter_power_1:=power_Env} goto mode0;
+		when powerMeter_power_1 > power_Env sync powerMeter_power_Evt_1 do {powerMeter_power_1:=power_Env} goto mode0;
+
+	end
+
+(* env model for power usage *)
+(************************************************************)
+	automaton power_Env_Model
+(************************************************************)
+	actions: power_Env_Evt;
+
+	loc mode0: invariant True
+		when power_Env < 100 - step sync power_Env_Evt do {power_Env:=power_Env+step} goto mode0;
+
+	end
+
+(* app that senses on co2 sensor *)
+(************************************************************)
+	automaton CO2Vent0
+(************************************************************)
+	actions: carbonDioxideMeasurement_carbonDioxide_Evt_1, switch_switch_1_CO2Vent0_0, switch_switch_1_CO2Vent0_1;
+
+	loc mode0: invariant True
+		when True sync carbonDioxideMeasurement_carbonDioxide_Evt_1 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when carbonDioxideMeasurement_carbonDioxide_1 >= level_20 & state_active_20 = 0 sync switch_switch_1_CO2Vent0_0 do {switch_switch_1:=97,state_active_20:=1} goto mode0;
+		when carbonDioxideMeasurement_carbonDioxide_1 < level_20 do {} goto mode3;
+		when state_active_20 > 0 do {} goto mode3;
+
+	urgent loc mode3: invariant True
+		when carbonDioxideMeasurement_carbonDioxide_1 < level_20 & state_active_20 > 0 sync switch_switch_1_CO2Vent0_1 do {state_active_20:=0,switch_switch_1:=96} goto mode0;
+		when carbonDioxideMeasurement_carbonDioxide_1 >= level_20 do {} goto mode0;
+		when state_active_20 <= 0 do {} goto mode0;
+
+	end
+
+(* app that turns devices off when power meter reading exceeds a threshold *)
+(************************************************************)
+	automaton EnergySaver0
+(************************************************************)
+	actions: powerMeter_power_Evt_1, switch_switch_1_EnergySaver0_0;
+
+	loc mode0: invariant True
+		when True sync powerMeter_power_Evt_1 do {} goto mode1;
+
+	urgent loc mode1: invariant True
+		when powerMeter_power_1 > threshold_21 sync switch_switch_1_EnergySaver0_0 do {switch_switch_1:=96} goto mode0;
+		when powerMeter_power_1 <= threshold_21 do {} goto mode0;
+
+	end
+
+(* model that checks if conflicting actions happen within delta time *)
+(************************************************************)
+	automaton switch_switch_1_attr
+(************************************************************)
+	actions: switch_switch_1_CO2Vent0_0, switch_switch_1_CO2Vent0_1, switch_switch_1_EnergySaver0_0;
+
+	loc mode0: invariant True
+		when True sync switch_switch_1_CO2Vent0_0 do {timer_switch_switch_1:=0} goto mode1;
+		when True sync switch_switch_1_CO2Vent0_1 do {timer_switch_switch_1:=0} goto mode1;
+		when True sync switch_switch_1_EnergySaver0_0 do {timer_switch_switch_1:=0} goto mode1;
+
+	loc mode1: invariant True
+		when True sync switch_switch_1_CO2Vent0_0 do {local_switch_switch_1:=switch_switch_1} goto mode2;
+		when True sync switch_switch_1_CO2Vent0_1 do {local_switch_switch_1:=switch_switch_1} goto mode2;
+		when True sync switch_switch_1_EnergySaver0_0 do {local_switch_switch_1:=switch_switch_1} goto mode2;
+
+	urgent loc mode2: invariant True
+		when local_switch_switch_1 > switch_switch_1 & timer_switch_switch_1 <= delta do {} goto conflict;
+		when local_switch_switch_1 < switch_switch_1 & timer_switch_switch_1 <= delta do {} goto conflict;
+		when timer_switch_switch_1 >= delta do {timer_switch_switch_1:=0} goto mode1;
+		when local_switch_switch_1 = switch_switch_1 do {timer_switch_switch_1:=0} goto mode1;
+
+	loc conflict: invariant True
+
+	end
+
+init := {
+	discrete =
+  	(* Initial state *)
+		loc[switch_switch_1_attr] := mode0,
+		loc[EnergySaver0] := mode0,
+		loc[CO2Vent0] := mode0,
+		loc[powerMeter_power_Dev_1] := mode0,
+		loc[carbonDioxide_Env_Model] := mode0,
+		loc[carbonDioxideMeasurement_carbonDioxide_Dev_1] := mode0,
+		loc[power_Env_Model] := mode0
+	;
+
+	continuous =
+		& carbonDioxide_Env = 0
+		& powerMeter_power_1 = 0
+		& step = 5
+		& power_Env = 0
+		& state_active_20 = 0
+		& switch_switch_1 = 0
+		& local_switch_switch_1 = 0
+		& delta = 60
+		& carbonDioxideMeasurement_carbonDioxide_1 = 0
+
+		& carbonDioxideMeasurement_carbonDioxide_1_sensor_clk = 0
+		& carbonDioxideMeasurement_carbonDioxide_1_env_clk = 0
+		& timer_switch_switch_1 = 0
+
+		& level_20 >= 0
+		& level_20 <= 100
+		& threshold_21 >= 0
+		& threshold_21 <= 100
+	;
+}
+
+end

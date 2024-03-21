@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/01/20
- * Last modified   : 2021/08/30
+ * Last modified   : 2024/02/22
  *
- * IMITATOR version: 3.1
+ * IMITATOR version: 3.4
  ************************************************************)
 
 var
@@ -43,7 +43,7 @@ heat , rest1*)
 (************************************************************)
 automaton controller
 (************************************************************)
-synclabs: (*coolc, restc*) cool_0, cool_1, rest_0, rest_1;
+actions: (*coolc, restc*) cool_0, cool_1, rest_0, rest_1;
 
 loc lc0: invariant xc <= 900
         when xc = 900 sync cool_0 do {xc := 0} goto lc1;
@@ -59,7 +59,7 @@ end
 (************************************************************)
 automaton Rod_0
 (************************************************************)
-synclabs: cool_0, rest_0;
+actions: cool_0, rest_0;
 
 loc l0_0: invariant True
         when x_0 >= ct sync cool_0 do {} goto l1_0;
@@ -74,7 +74,7 @@ end
 automaton Rod_1
 (************************************************************)
 
-synclabs: cool_1, rest_1;
+actions: cool_1, rest_1;
 
 loc l0_1: invariant True
         when x_1 >= ct sync cool_1 do {} goto l1_1;

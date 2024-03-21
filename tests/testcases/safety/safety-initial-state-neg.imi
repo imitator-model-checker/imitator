@@ -1,0 +1,80 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Basic safety property depending on the initial state constraint
+ * Description      : Basic safety property depending on the initial state constraint + negative variable / negative parameter valuation
+ * Correctness      : Safety
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/10/04
+ * Last modified    : 2022/10/04
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant p1 <= x & x <= p2 & x < 5
+	when True goto lF;
+
+accepting loc lF: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = -3
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		(* On purpose: no initial bound on p1/p2 *)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
