@@ -318,7 +318,7 @@ type synt_var_kind =
   | Clock_synt_array
   | Action_synt_array
 
-type synt_var_type = literal_or_const_var * synt_var_kind
+type synt_var_type = parsed_discrete_arithmetic_expression * synt_var_kind
 
 type parsed_synt_var_decl =
   synt_var_type * variable_name list

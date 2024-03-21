@@ -214,8 +214,8 @@ synt_var_list:
 ;
 
 synt_var_type:
-  | CT_CLOCK CT_ARRAY LPAREN name_or_num_lit RPAREN { $4, Clock_synt_array }
-  | CT_ACTION CT_ARRAY LPAREN name_or_num_lit RPAREN { $4, Action_synt_array }
+  | CT_CLOCK CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Clock_synt_array }
+  | CT_ACTION CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Action_synt_array }
 ;
 
 /************************************************************

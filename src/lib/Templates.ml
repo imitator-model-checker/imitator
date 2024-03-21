@@ -402,54 +402,51 @@ let expand_synt_arrays_automata (synt_vars : synt_vars_data) : unexpanded_parsed
 
 let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
 
-let rec eval_parsed_boolean_expression =
+let rec eval_parsed_boolean_expression model =
   function
-    | Parsed_discrete_bool_expr e -> eval_parsed_discrete_bool_expr e
+    | Parsed_discrete_bool_expr e -> eval_parsed_discrete_bool_expr model e
     | Parsed_conj_dis _ -> failwith eval_expr_err_msg
 
-and eval_parsed_discrete_bool_expr =
+and eval_parsed_discrete_bool_expr model =
   function
-    | Parsed_arithmetic_expr e -> eval_parsed_arithmetic_expr e
+    | Parsed_arithmetic_expr e -> eval_parsed_arithmetic_expr model e
     | _ -> failwith eval_expr_err_msg
 
-and eval_parsed_arithmetic_expr =
+and eval_parsed_arithmetic_expr model =
   function
-    | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> (eval_parsed_arithmetic_expr arith_expr) + (eval_parsed_term term)
-    | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> (eval_parsed_arithmetic_expr arith_expr) - (eval_parsed_term term)
-    | Parsed_term t -> eval_parsed_term t
+    | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> (eval_parsed_arithmetic_expr model arith_expr) + (eval_parsed_term model term)
+    | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> (eval_parsed_arithmetic_expr model arith_expr) - (eval_parsed_term model term)
+    | Parsed_term t -> eval_parsed_term model t
 
-and eval_parsed_term =
+and eval_parsed_term model =
   function
-    | Parsed_product_quotient (term, factor, Parsed_mul) -> eval_parsed_term term * eval_parsed_factor factor
-    | Parsed_product_quotient (term, factor, Parsed_div) -> eval_parsed_term term / eval_parsed_factor factor
-    | Parsed_factor factor -> eval_parsed_factor factor
+    | Parsed_product_quotient (term, factor, Parsed_mul) -> eval_parsed_term model term * eval_parsed_factor model factor
+    | Parsed_product_quotient (term, factor, Parsed_div) -> eval_parsed_term model term / eval_parsed_factor model factor
+    | Parsed_factor factor -> eval_parsed_factor model factor
 
-and eval_parsed_factor =
+and eval_parsed_factor model =
   function
     | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
+    | Parsed_variable (name, _) -> expand_literal_or_const_var model name
     | _ -> failwith eval_expr_err_msg
+
+and expand_literal_or_const_var model name =
+  let decls = model.unexpanded_variable_declarations in
+  let inspect_decl (name', expr_opt) = if name = name' then expr_opt else None in
+  let inspect_decls_of_type (_, decls) = List.find_map inspect_decl decls in
+  let inspect_all_decls decls =
+    List.find_map Fun.id (List.map inspect_decls_of_type decls)
+  in
+  match inspect_all_decls decls with
+    | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
+    | Some expr -> eval_parsed_boolean_expression model expr
 
 let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_model =
   let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions unexpanded_parsed_model.template_calls in
   let all_automata = unexpanded_parsed_model.unexpanded_automata @ instantiated_automata in
-  let expand_literal_or_const_var = function
-    | Literal l -> NumConst.to_bounded_int l
-    | Const_var name ->
-        let decls = unexpanded_parsed_model.unexpanded_variable_declarations in
-        let inspect_decl (name', expr_opt) = if name = name' then expr_opt else None in
-        let inspect_decls_of_type (_, decls) =
-          List.find_map (fun decl -> (inspect_decl decl)) decls
-        in
-        let inspect_all_decls decls =
-          List.find_map Fun.id (List.map inspect_decls_of_type decls)
-        in
-        match inspect_all_decls decls with
-          | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
-          | Some expr -> eval_parsed_boolean_expression expr
-  in
   let synt_vars =
     List.concat_map
-      (fun ((len, kind), names) -> List.map (fun name -> (name, kind, expand_literal_or_const_var len)) names)
+      (fun ((len, kind), names) -> List.map (fun name -> (name, kind, eval_parsed_arithmetic_expr unexpanded_parsed_model len)) names)
       unexpanded_parsed_model.synt_declarations
   in
   (* NOTE: at this point `parsed_action` calls must have an integer as argument, not a name *)

@@ -3,10 +3,10 @@ var
     id : int;
     k = 2 : constant;
     IDLE = -1 : int;
-    N = 2 : int;
+    N = 1 : int;
 
 synt_var
-  x : clock array (N);
+  x : clock array (2 * N + 1 + 1 * N);
 
 template p(i : int)
 
@@ -28,19 +28,24 @@ end
 (* Instantiation following UPPAAL's convention *)
 instantiate p1 := p(0);
 instantiate p2 := p(1);
+instantiate p3 := p(2);
+instantiate p4 := p(3);
 
 init := {
 
     discrete =
         loc[p1] := A,
         loc[p2] := A,
+        loc[p3] := A,
+        loc[p4] := A,
         id := IDLE,
     ;
 
     continuous =
         x[0] = 0
       & x[1] = 0
-      & True
+      & x[2] = 0
+      & x[3] = 0
     ;
 }
 
