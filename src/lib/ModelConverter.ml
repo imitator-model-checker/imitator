@@ -1127,17 +1127,12 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				if location.flow <> [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
-                                let numconst_of_flow_value = function
-                                        | Flow_rat_value r -> r
-                                        | Flow_var _ -> raise  (InternalError "[make_automata]: unreachable code")
-                                in
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
 					List.sort_uniq compare
 					(
 						List.map (fun (clock_name, flow_value) ->
-							(index_of_variable_name variable_infos clock_name),
-                                                        (numconst_of_flow_value flow_value)
+							(index_of_variable_name variable_infos clock_name), flow_value
 						) location.flow
 					);
 
@@ -2764,10 +2759,10 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model_with_templates) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-  (* Instantiate the template calls *)
-  let parsed_model = instantiate_model parsed_model in
+  (* Instantiate the template calls and expand syntatic variables *)
+  let parsed_model = expand_model parsed_model in
 
   print_message Verbose_high ("\n*** Link variables to declarations.");
   (* Recompute model to link variables to their declarations, and return all variables declarations *)

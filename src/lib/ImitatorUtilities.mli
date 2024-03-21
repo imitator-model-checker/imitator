@@ -163,3 +163,6 @@ val abort_program : unit -> unit
 
 (* Terminate program *)
 val terminate_program : unit -> unit
+
+(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
+val gen_access_id : string -> int -> string

@@ -490,3 +490,8 @@ let terminate_program () =
 	flush stderr;
 	flush stdout;
 	exit(0)
+
+(* Misc *)
+
+(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
+let gen_access_id (arr_name : string) (index : int) : string = arr_name ^ "___" ^ (Int.to_string index)
