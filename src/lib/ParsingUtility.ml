@@ -150,10 +150,10 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 
 		(* April 1st *)
 		| April1st ->
-			(* Abort properly *)
-			(*** TODO ***)
-			let failure_message = "April 1st!" in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_message Verbose_standard Constants.fish;
+			terminate_program();
+			(* Necessary to make the program compile (even though this line won't be executed) *)
+			exit(0)
 	in
 	parsing_structure
 
