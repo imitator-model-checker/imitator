@@ -147,6 +147,13 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			(* Abort properly *)
 			let failure_message = "File `" ^ included_file ^ "` (included by `" ^ file_name ^ "`) not found." in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+
+		(* April 1st *)
+		| April1st ->
+			(* Abort properly *)
+			(*** TODO ***)
+			let failure_message = "April 1st!" in
+			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 	in
 	parsing_structure
 

@@ -105,7 +105,7 @@ let unzip l = List.fold_left
 %token APOSTROPHE COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-  CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
+	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
@@ -236,12 +236,25 @@ decl_var_lists:
 /************************************************************/
 
 decl_var_list:
-	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
+	| variable_name comma_opt { [($1, None)] }
+	| variable_name OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
 
-	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| variable_name COMMA decl_var_list { ($1, None) :: $3 }
+	| variable_name OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
+
+/************************************************************/
+
+variable_name:
+	| NAME {
+		(* Stupid feature for April 1st 2024 *)
+		if $1 = "April1st" then (raise Exceptions.April1st);
+
+		(* Normal mode: return variable name *)
+		 $1
+		 }
+;
+
 
 /************************************************************/
 
