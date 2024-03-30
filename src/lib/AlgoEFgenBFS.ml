@@ -83,6 +83,46 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 			(* Useful shortcut *)
 			let state_px_constraint = symbolic_state.px_constraint in
 
+			(* Case 1: if EU mode, check whether phi is NOT satisfied *)
+			let stop_due_to_unsatisfied_phi =
+				match state_predicate_phi_option with
+				(* Stop if phi is satisfied *)
+				| Some state_predicate_phi ->
+					State.match_state_predicate model state_predicate_phi symbolic_state
+				(* No need to stop *)
+				| None -> false
+				in
+			if stop_due_to_unsatisfied_phi then
+				(* Do nothing, i.e., skip to next state *)
+				()
+			else (
+				(* Shortcut (but costly) *)
+				let state_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint in
+
+				(* Case 2: cumulative pruning *)
+				let stop_due_to_already_computed_valuations =
+					if options#cumulative_pruning then(
+						(* Check if the constraint is included into known valuations *)
+						(*** WARNING: costly operation here ***)
+						if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint state_p_constraint) synthesized_constraint then(
+							self#print_algo_message Verbose_medium "Eliminate a state because its constraint is less than the synthesized constraint (\"cumulative pruning\").";
+							true
+						) else false
+					) else false
+				in
+				if stop_due_to_already_computed_valuations then
+					(* Do nothing, i.e., skip to next state *)
+					()
+				else (
+					let compute_successors = ref true in
+
+					raise (NotImplemented "EUgen BFS")
+
+
+
+				) (* end case 2: cumulating pruning *)
+			) (* end case 1: EU and check psi *)
+(*
 			(* Case 1: target state found: add the associated constraint to the result *)
 			if State.match_state_predicate model state_predicate_psi symbolic_state then(
 
@@ -95,9 +135,10 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 				(* Add the constraint projected onto the parameters to the result *)
 				LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 			)else(
+
 				(*** TODO ***)
 
-			)
+			) (* end case 1: psi satisfied *)*)
 
 		done;
 
