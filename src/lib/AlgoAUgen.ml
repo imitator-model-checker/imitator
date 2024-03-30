@@ -828,7 +828,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 				| Keep_going
 				| Witness_found
-					-> raise (InternalError "Keep_going or Witness_found cannot be passed as exception in AlgoAU")
+					-> raise (InternalError ("Keep_going or Witness_found cannot be passed as exception in " ^ self#algorithm_name))
 			end;
 			ResultProcessor.print_warnings_of_termination_status termination_status;
 		end;
