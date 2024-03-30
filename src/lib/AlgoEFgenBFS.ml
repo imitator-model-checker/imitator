@@ -65,30 +65,30 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Main method to compute EU and variants in a BFS manner using a queue *)
-	method private ef_bfs (initial_state_index : State.state_index) : (*LinearConstraint.p_nnconvex_constraint*) unit =
+	method private ef_bfs (initial_state : State.state) : (*LinearConstraint.p_nnconvex_constraint*) unit =
 		(* Create queue *)
-		let queue : State.state_index Queue.t = Queue.create() in
+		let queue : State.state Queue.t = Queue.create() in
 
 		(* Add first state *)
-		Queue.push initial_state_index queue;
+		Queue.push initial_state queue;
 
 		(* While queue is not empty *)
 		while not (Queue.is_empty queue) do
 			(* Take first element *)
-			let current_state_index : State.state_index = Queue.pop queue in
+			let current_symbolic_state : State.state = Queue.pop queue in
 
-			(* Get state *)
-			let symbolic_state : State.state = state_space#get_state current_state_index in
+(*			(* Get state *)
+			let symbolic_state : State.state = state_space#get_state current_state_index in*)
 
 			(* Useful shortcut *)
-			let state_px_constraint = symbolic_state.px_constraint in
+			let state_px_constraint = current_symbolic_state.px_constraint in
 
 			(* Case 1: if EU mode, check whether phi is NOT satisfied *)
 			let stop_due_to_unsatisfied_phi =
 				match state_predicate_phi_option with
 				(* Stop if phi is satisfied *)
 				| Some state_predicate_phi ->
-					State.match_state_predicate model state_predicate_phi symbolic_state
+					State.match_state_predicate model state_predicate_phi current_symbolic_state
 				(* No need to stop *)
 				| None -> false
 				in
@@ -114,7 +114,78 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 					(* Do nothing, i.e., skip to next state *)
 					()
 				else (
+					(* Flag to check whether successors must be computed (by default true) *)
 					let compute_successors = ref true in
+(*					(* Flag to check whether the state was indeed added to the state space *)
+					let state_added = ref false in*)
+
+					(* Try to add the new state to the state space *)
+					let addition_result = state_space#add_state options#comparison_operator model.global_time_clock current_symbolic_state in
+
+					(*** TODO: first add transitions! important for EW ***)
+
+					let new_state_index_option : State.state_index option =
+					match addition_result with
+					(* If this is really a new state, or a state larger than a former state *)
+					| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
+						(* Return the new state index *)
+						Some new_state_index
+
+					(* If the state was present: nothing to do *)
+					| StateSpace.State_already_present _ ->
+
+						(*** TODO: handle loop for EW here ***)
+
+						None
+					in
+
+					(*** TODO: handle loop for EW here ***)
+
+					(* Check limits, which may raise exceptions *)
+					(*** TODO: encode depth somewhere, to avoid this `None` ***)
+					AlgoStateBased.check_limits options None (Some state_space#nb_states) (Some start_time);
+
+					match new_state_index_option with
+					(* No addition: skip *)
+					| None -> ()
+					(* Addition: *)
+					| Some state_index -> (
+						(* Check whether the state satisfies psi *)
+						if State.match_state_predicate model state_predicate_psi current_symbolic_state then(
+
+							(* Print some information *)
+							if verbose_mode_greater Verbose_low then(
+								self#print_algo_message Verbose_low ("Target state found");
+								self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model current_symbolic_state);
+							);
+
+							(* Add the constraint projected onto the parameters to the result *)
+							LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint);
+
+							(*** TODO: return if witness mode ***)
+
+							(* Do NOT compute successors *)
+							compute_successors := false
+						);
+
+						(* Compute all successors via all possible outgoing transitions *)
+						let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model current_symbolic_state in
+						(* Enqueue *)
+						List.iter (fun (_, state) ->
+							(* Increment the number of computed states *)
+							state_space#increment_nb_gen_states;
+							(* Actually enqueue *)
+							Queue.add state queue
+						) transitions_and_successors_list;
+
+						(* Check limits, which may raise exceptions *)
+						(*** TODO: encode depth somewhere, to avoid this `None` ***)
+						AlgoStateBased.check_limits options None (Some state_space#nb_states) (Some start_time);
+
+					) (* end case addition *)
+					;
+
+
 
 					raise (NotImplemented "EUgen BFS")
 
@@ -159,12 +230,15 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		(* Build initial state *)
 		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in
 
+		(* Increment the number of computed states *)
+		state_space#increment_nb_gen_states;
+
 		if verbose_mode_greater Verbose_high then(
 			self#print_algo_message Verbose_high "The initial state has been created";
 			self#print_algo_message Verbose_high (ModelPrinter.string_of_state model initial_state);
 		);
 
-		(* Add it to the state space *)
+(*		(* Add it to the state space *)
 		(*** BEGIN copied from AlgoStateBased ***)
 		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
 		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state with
@@ -172,13 +246,10 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 			| StateSpace.New_state state_index -> state_index
 			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
 		in
-		(*** END copied from AlgoStateBased ***)
-
-		(* Increment the number of computed states *)
-		state_space#increment_nb_gen_states;
+		(*** END copied from AlgoStateBased ***)*)
 
 		(* Main call to the EF dedicated function *)
-		(*synthesized_constraint <- *)self#ef_bfs init_state_index;
+		(*synthesized_constraint <- *)self#ef_bfs initial_state;
 
 		(* Return the result *)
 		self#compute_result;
