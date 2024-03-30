@@ -745,6 +745,11 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
+
+			(* EXPERIMENTAL NEW VERSION *)
+			| EF state_predicate when options#new_queue_based_EU ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEFBFS model property options state_predicate in myalgo
+
 			| EF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model property options state_predicate in myalgo
 

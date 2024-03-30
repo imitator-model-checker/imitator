@@ -212,6 +212,9 @@ class imitator_options =
         val mutable merge_update     : AbstractAlgorithm.merge_update option = None
         val mutable merge_restart    : bool option = None
 
+		(* New queue-based version of EF (EXPERIMENTAL) *)
+		val mutable new_queue_based_EU				= false
+
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
 
@@ -349,6 +352,8 @@ class imitator_options =
 		method no_time_elapsing						= no_time_elapsing
 		method no_random							= no_random
 		method no_variable_autoremove				= no_variable_autoremove
+
+		method new_queue_based_EU					= new_queue_based_EU
 
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method : AbstractAlgorithm.nz_method = value_of_option "nz_method" nz_method
@@ -975,6 +980,8 @@ class imitator_options =
         Use `checksyntax` for a simple syntax check and no analysis.
         Use `statespace`  for the generation of the entire parametric state space.
         ");
+
+				("-new-queue-EF", Unit (fun () -> new_queue_based_EU <- true), "New queue-based version of EF (EXPERIMENTAL).");
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");

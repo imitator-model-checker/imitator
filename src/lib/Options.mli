@@ -102,6 +102,9 @@ class imitator_options :
 		method no_time_elapsing				: bool
 		method no_variable_autoremove		: bool
 
+		(* New queue-based version of EF (EXPERIMENTAL) *)
+		method new_queue_based_EU			: bool
+
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method					: AbstractAlgorithm.nz_method
 		method is_set_nz_method				: bool

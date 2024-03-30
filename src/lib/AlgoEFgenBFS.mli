@@ -21,7 +21,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition: EU (virtual) *)
 (************************************************************)
-class virtual algoEUgenBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> bool -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
+class virtual algoEUgenBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> bool -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval option ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
