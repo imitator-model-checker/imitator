@@ -4,7 +4,10 @@
         & p >= 1
         & q >= p
 *)
-controllable actions: c_1, c_2;
+synt_var
+  c : action array (2);
+
+controllable actions: c[0], c[1];
 
 var
     x : clock;
@@ -14,14 +17,14 @@ var
 
 automaton ptg
 
-actions: c_1, c_2, u_1, u_2;
+actions: c[0], c[1], u_1, u_2;
 
 loc l1: x <= 10 & y <= 5
-    when p <= x && x <= q sync c_1 goto l2;
+    when p <= x && x <= q sync c[0] goto l2;
     when x >= 5 sync u_1 goto l3;
 
 loc l2: x <= 15 & y <= 10
-    when x >= 6 sync c_2 goto Goal;
+    when x >= 6 sync c[1] goto Goal;
     when y >= 7 sync u_2 goto l4;
 
 loc l3: invariant True
