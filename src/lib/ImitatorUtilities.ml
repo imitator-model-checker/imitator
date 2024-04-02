@@ -25,7 +25,6 @@ open Gc
 (************************************************************)
 open OCamlUtilities
 
-
 (************************************************************)
 (** Global time counter *)
 (************************************************************)
@@ -494,4 +493,27 @@ let terminate_program () =
 (* Misc *)
 
 (* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
-let gen_access_id (arr_name : string) (index : int) : string = arr_name ^ "___" ^ (Int.to_string index)
+let gen_access_id arr_name index = arr_name ^ "___" ^ (Int.to_string index)
+
+let var_index_err_msg arr_name var_name =
+  "Invalid usage of variable " ^ var_name ^ " to access array of actions " ^ arr_name ^ "."
+
+(* NOTE: For now this is necessary in the parser, so we moved this from `Templates.ml` to here *)
+let expand_name_or_access =
+  let open ParsingStructure in function
+  | Var_name act_name -> act_name
+  | Var_array_access (arr_name, Literal i) -> gen_access_id arr_name (NumConst.to_bounded_int i)
+  | Var_array_access (arr_name, Const_var var_name) ->
+      failwith "[expand_name_or_access]: " ^ (var_index_err_msg arr_name var_name)
+
+let pp_name_or_access =
+  let open ParsingStructure in function
+  | Var_name name -> name
+  | Var_array_access (name, Literal i) -> name ^ "[" ^ (NumConst.to_string i) ^ "]"
+  | Var_array_access (name, Const_var i_name) -> name ^ "[" ^ i_name ^ "]"
+
+let rec string_of_list_of_name_or_access_with_sep sep = function
+	| [] -> ""
+	| [elem] -> pp_name_or_access elem
+	| head :: tail -> pp_name_or_access head ^ sep ^ (string_of_list_of_name_or_access_with_sep sep tail)
+

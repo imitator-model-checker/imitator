@@ -6,9 +6,11 @@ var
     N = 1 : int;
 
 synt_var
-  x : clock array (2 * N + 1 + 1 * N);
+  x : clock array (N);
 
 template p(i : int)
+
+actions: ac1;
 
 loc A: invariant True
   when id = IDLE do { x[i] := 0 } goto req;
@@ -26,10 +28,10 @@ loc cs: invariant True
 end
 
 (* Instantiation following UPPAAL's convention *)
-instantiate p1 := p(0);
-instantiate p2 := p(1);
-instantiate p3 := p(2);
-instantiate p4 := p(3);
+instantiate p1 := p(1);
+instantiate p2 := p(2);
+instantiate p3 := p(3);
+instantiate p4 := p(4);
 
 init := {
 

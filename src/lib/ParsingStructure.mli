@@ -33,6 +33,15 @@ type variable_ref = variable_name * variable_id
 
 type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ | PARSED_OP_GEQ | PARSED_OP_G
 
+(* Auxiliary types *)
+
+type literal_or_const_var =
+  | Literal of NumConst.t
+  | Const_var of variable_name
+
+type name_or_access =
+  | Var_name of variable_name
+  | Var_array_access of variable_name * literal_or_const_var
 
 (****************************************************************)
 (** Controllable actions *)
@@ -41,6 +50,11 @@ type parsed_controllable_actions =
 	| Parsed_controllable_actions of action_name list
 	| Parsed_uncontrollable_actions of action_name list
 	| Parsed_no_controllable_actions
+
+type unexpanded_parsed_controllable_actions =
+	| Unexpanded_parsed_controllable_actions of name_or_access list
+	| Unexpanded_parsed_uncontrollable_actions of name_or_access list
+	| Unexpanded_parsed_no_controllable_actions
 
 (****************************************************************)
 (* Declarations *)
@@ -211,14 +225,6 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type literal_or_const_var =
-  | Literal of NumConst.t
-  | Const_var of variable_name
-
-type name_or_access =
-  | Var_name of variable_name
-  | Var_array_access of variable_name * literal_or_const_var
-
 type unexpanded_sync =
 	| UnexpandedSync of name_or_access
 	| UnexpandedNoSync
@@ -337,7 +343,7 @@ type parsed_model = {
 
 type unexpanded_parsed_model = {
   (* added prefix to avoid crashing type inference *)
-	unexpanded_controllable_actions  : parsed_controllable_actions;
+	unexpanded_controllable_actions  : unexpanded_parsed_controllable_actions;
 	unexpanded_variable_declarations : variable_declarations;
 	unexpanded_fun_definitions       : parsed_fun_definition_list;
 	unexpanded_automata              : unexpanded_parsed_automaton list;

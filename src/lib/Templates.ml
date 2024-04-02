@@ -181,9 +181,6 @@ let instantiate_loc (param_map : var_map) (loc : unexpanded_parsed_location) : u
              unexpanded_transitions = instantiate_transitions param_map loc.unexpanded_transitions
   }
 
-let var_index_err_msg arr_name var_name =
-  "Invalid usage of variable " ^ var_name ^ " to access array of actions " ^ arr_name ^ "."
-
 (* This is just instantiation, we do type checking somewhere else *)
 let instantiate_automaton (templates : parsed_template_definition list) (parsed_template_call : parsed_template_call) : unexpanded_parsed_automaton =
   let automaton_name, template_name, args = parsed_template_call in
@@ -214,16 +211,6 @@ let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
   in
   let packed_decls = List.filter_map aux synt_decls in
   List.map (fun packed_decl -> (DiscreteType.Var_type_clock, packed_decl)) packed_decls
-    (* let expand_name name = *)
-    (*   List.fold_left (fun acc i -> gen_access_id name i :: acc) [] ids in *)
-    (* let expanded_names = List.concat_map expand_name names in *)
-    (* let packed_expanded_names = List.map (fun name -> (name, None)) expanded_names in *)
-    (* match kind with *)
-    (*   | Clock_synt_array -> *)
-    (*       Some (DiscreteType.Var_type_clock, packed_expanded_names) *)
-    (*   | Action_synt_array -> None *)
-  (* in *)
-  (* List.filter_map aux synt_decls *)
 
 let rec get_const_disc_arith_expr = function
   | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
@@ -297,20 +284,10 @@ and expand_parsed_discrete_factor synt_arrays = fun factor ->
     end
     | _ -> factor
 
-let expand_name_or_access = function
-  | Var_name act_name -> act_name
-  | Var_array_access (arr_name, Literal i) -> gen_access_id arr_name (NumConst.to_bounded_int i)
-  | Var_array_access (arr_name, Const_var var_name) ->
-      failwith "[expand_synt_arrays_automaton]: " ^ (var_index_err_msg arr_name var_name)
-
 let expand_name_or_access_list = List.map expand_name_or_access
 
 let expand_sync : unexpanded_sync -> sync = function
-  | UnexpandedSync (Var_name act_name) -> Sync act_name
-  | UnexpandedSync (Var_array_access (arr_name, Literal id)) ->
-      Sync (gen_access_id arr_name (NumConst.to_bounded_int id))
-  | UnexpandedSync (Var_array_access (arr_name, Const_var var_name)) ->
-      failwith ("[expand_sync]: " ^ var_index_err_msg arr_name var_name)
+  | UnexpandedSync action -> Sync (expand_name_or_access action)
   | UnexpandedNoSync -> NoSync
 
 let expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
@@ -452,9 +429,15 @@ let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_mo
   (* NOTE: at this point `parsed_action` calls must have an integer as argument, not a name *)
   let expanded_automata = expand_synt_arrays_automata synt_vars all_automata in
   let expanded_decls = expand_synt_decls synt_vars in
-  { controllable_actions = unexpanded_parsed_model.unexpanded_controllable_actions;
+  let expanded_controllable_actions =
+    match unexpanded_parsed_model.unexpanded_controllable_actions with
+      | Unexpanded_parsed_controllable_actions actions -> Parsed_controllable_actions (List.map expand_name_or_access actions)
+      | Unexpanded_parsed_uncontrollable_actions actions -> Parsed_uncontrollable_actions (List.map expand_name_or_access actions)
+      | Unexpanded_parsed_no_controllable_actions -> Parsed_no_controllable_actions
+  in
+  { controllable_actions  = expanded_controllable_actions;
     variable_declarations = (unexpanded_parsed_model.unexpanded_variable_declarations @ expanded_decls);
-    fun_definitions = unexpanded_parsed_model.unexpanded_fun_definitions;
-    automata = expanded_automata;
-    init_definition = unexpanded_parsed_model.unexpanded_init_definition;
+    fun_definitions       = unexpanded_parsed_model.unexpanded_fun_definitions;
+    automata              = expanded_automata;
+    init_definition       = unexpanded_parsed_model.unexpanded_init_definition;
   }
