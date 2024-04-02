@@ -144,12 +144,12 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	synt_var_decls  controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
-    let synt_declarations    = $1 in
-		let controllable_actions = $2 in
-		let declarations         = $4 in
+		let controllable_actions = $1 in
+		let declarations         = $3 in
+    let synt_declarations    = $4 in
 		let fun_definitions      = $5 in
 		let template_definitions = $6 in
 		let automata             = $7 in
