@@ -342,7 +342,12 @@ val pxd_make_time_polyhedron_from_flows_and_constants : time_direction -> (varia
 (* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(* Get the list of dimensions of a constraint *)
+(** Get the number of dimensions of a constraint *)
+val p_nb_dimensions : p_linear_constraint -> int
+val px_nb_dimensions : px_linear_constraint -> int
+
+
+(** Get the list of dimensions of a constraint *)
 (*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
 val p_get_dimensions_list : p_linear_constraint -> variable list
 val px_get_dimensions_list : px_linear_constraint -> variable list
@@ -710,6 +715,14 @@ val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_
 
 (** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> p_nnconvex_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Access} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(** Get the number of dimensions of a p_nnconvex_constraint *)
+val p_nnconvex_constraint_get_nb_dimensions : p_nnconvex_constraint -> int
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

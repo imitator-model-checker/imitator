@@ -1,0 +1,6 @@
+property := #synth A (
+	COUNT_a_1 = 0 | COUNT_a_1 = 1
+	) U (
+	COUNT_a_1 = 2 | COUNT_a_2 = 2
+	)
+;

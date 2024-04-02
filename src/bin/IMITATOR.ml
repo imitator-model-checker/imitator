@@ -745,6 +745,11 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
+
+			(* EXPERIMENTAL NEW VERSION *)
+			| EF state_predicate when options#new_queue_based_EU ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEFBFS model property options state_predicate in myalgo
+
 			| EF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model property options state_predicate in myalgo
 
@@ -1388,6 +1393,10 @@ end;
 		| Random_generator_initialization_exception-> abort_with_bad_exception("A fatal error occurred during the random generator initialization.")
 
 		| SerializationError msg -> abort_with_bad_exception ("Serialization error: " ^ msg ^ "")
+
+		| Out_of_memory -> abort_with_bad_exception ("Oops! Out of memory")
+
+		| Stack_overflow -> abort_with_bad_exception ("Oops! Stack overflow")
 
 		| _ -> abort_with_bad_exception ("Fatal exception `" ^ (Printexc.to_string e) ^ "`.")
 	end;

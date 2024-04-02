@@ -80,3 +80,6 @@ exception TypeError of string
 
 (* Used when a function isn't found *)
 exception UndefinedFunction of string
+
+(** Used for April 1st keyword *)
+exception April1st

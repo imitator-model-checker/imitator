@@ -12,7 +12,7 @@ The input formalism can be seen as a subclass of parametric linear hybrid automa
 IMITATOR addresses several variants of the following problem:
 _given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?_
 Specifically, IMITATOR implements:
-* parametric safety and parametric reachability synthesis [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445),
+* parameter synthesis for a subset of TCTL, including safety, reachability, unavoidability…, and their timed counterpart, such as $E \phi U_[p; p+1) \psi$ [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445),
 * minimal-time and minimal-parameter reachability synthesis [[ABPP19]](https://www.doi.org/10.1007/978-3-030-17465-1_12),
 * parametric deadlock-freeness checking [[Andre16]](https://www.doi.org/10.1007/978-3-319-46750-4_27),
 * cycle-existence synthesis [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009) [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17),
@@ -23,21 +23,21 @@ Specifically, IMITATOR implements:
 
 Numerous analysis options are available.
 
-IMITATOR is able to run in a distributed fashion on a cluster (using the PRPC algorithm).
+IMITATOR is able to run in a distributed fashion on a cluster for a selected algorithm (PRPC).
 
 IMITATOR is mainly a command-line tool, but that can output results in graphical form.
 
 IMITATOR was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems with uncertain periods and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
-Numerous benchmarks are available at the [IMITATOR Web page](https://www.imitator.fr), or on github.
+Numerous benchmarks are available in the official [IMITATOR benchmarks library](https://www.imitator.fr/library.html), or on GitHub.
 
 For more info, please visit [imitator.fr](https://www.imitator.fr)
 
 
-### Keywords
-formal verification, model checking, software verification, parameter synthesis, parametric timed automata
+## Keywords
+formal verification, model checking, software verification, parameter synthesis, parametric timed automata, TCTL
 
 
-### References
+## References
 
 [AAPP21] Étienne André, Jaime Arias, Laure Petrucci and Jaco van de Pol. [**Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata**](https://www.doi.org/10.1007/978-3-030-72016-2_17). In Jan Friso Groote and Kim G. Larsen (eds.), TACAS’21, Springer LNCS, April 2021.
 

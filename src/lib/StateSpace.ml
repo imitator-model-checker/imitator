@@ -1307,8 +1307,8 @@ class stateSpace (guessed_nb_transitions : int) =
 		let nb_locations = Hashtbl.length nb_constraints_per_location_id in
 		let nb_different_constraints = DynArray.length nb_per_constraint in
 		let result_string = ref (
-			(string_of_int nb_states) ^ " state" ^ (s_of_int nb_states) ^ ", " ^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", " ^ (string_of_int nb_different_constraints) ^ " constraint" ^ (s_of_int nb_different_constraints) ^ ""
-			^ "\nNumber of constraints per locations:"
+			(string_of_int nb_states) ^ " state" ^ (s_of_int nb_states) ^ ", " ^ (string_of_int nb_locations) ^ " discrete state" ^ (s_of_int nb_locations) ^ ", " ^ (string_of_int nb_different_constraints) ^ " constraint" ^ (s_of_int nb_different_constraints) ^ ""
+			^ "\nNumber of constraints per discrete state:"
 		) in
 
 		(* Add number of constraints per location *)
