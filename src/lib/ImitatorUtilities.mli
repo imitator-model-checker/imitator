@@ -168,14 +168,4 @@ val terminate_program : unit -> unit
 (* Misc *)
 (************************************************************)
 
-(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
-val gen_access_id : string -> int -> string
-
-val var_index_err_msg : string -> string -> string
-
-(* NOTE: For now this is necessary in the parser, so we moved this from `Templates.ml` to here *)
-val expand_name_or_access : ParsingStructure.name_or_access -> string
-
-val string_of_list_of_name_or_access_with_sep : string -> ParsingStructure.name_or_access list -> string
-
 val contains : string -> string -> bool
