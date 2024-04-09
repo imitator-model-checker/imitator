@@ -81,6 +81,41 @@ let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_di
 let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
   List.map (instantiate_discrete_boolean_expression param_map) inv
 
+let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
+
+let rec eval_parsed_boolean_expression g_decls = function
+  | Parsed_discrete_bool_expr e -> eval_parsed_discrete_bool_expr g_decls e
+  | Parsed_conj_dis _ -> failwith eval_expr_err_msg
+
+and eval_parsed_discrete_bool_expr g_decls = function
+  | Parsed_arithmetic_expr e -> eval_parsed_arithmetic_expr g_decls e
+  | _ -> failwith eval_expr_err_msg
+
+and eval_parsed_arithmetic_expr g_decls = function
+  | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> (eval_parsed_arithmetic_expr g_decls arith_expr) + (eval_parsed_term g_decls term)
+  | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> (eval_parsed_arithmetic_expr g_decls arith_expr) - (eval_parsed_term g_decls term)
+  | Parsed_term t -> eval_parsed_term g_decls t
+
+and eval_parsed_term g_decls = function
+  | Parsed_product_quotient (term, factor, Parsed_mul) -> eval_parsed_term g_decls term * eval_parsed_factor g_decls factor
+  | Parsed_product_quotient (term, factor, Parsed_div) -> eval_parsed_term g_decls term / eval_parsed_factor g_decls factor
+  | Parsed_factor factor -> eval_parsed_factor g_decls factor
+
+and eval_parsed_factor g_decls = function
+  | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
+  | Parsed_variable (name, _) -> expand_const_var g_decls name
+  | _ -> failwith eval_expr_err_msg
+
+and expand_const_var g_decls name =
+  let inspect_decl (name', expr_opt) = if name = name' then expr_opt else None in
+  let inspect_g_decls_of_type (_, g_decls) = List.find_map inspect_decl g_decls in
+  let inspect_all_g_decls g_decls =
+    List.find_map Fun.id (List.map inspect_g_decls_of_type g_decls)
+  in
+  match inspect_all_g_decls g_decls with
+    | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
+    | Some expr -> eval_parsed_boolean_expression g_decls expr
+
 (*****************************************************************************)
 (* Instantiation of templates *)
 (*****************************************************************************)
@@ -96,6 +131,7 @@ let instantiate_stopped_clock (param_map : var_map) : name_or_access -> name_or_
       (* This last case would be catched by type checking *)
     end
     | Var_array_access (arr, index) -> Var_array_access (arr, instantiate_discrete_arithmetic_expression param_map index)
+
 let instantiate_stopped_clocks (param_map : var_map) : name_or_access list -> name_or_access list =
   List.map (instantiate_stopped_clock param_map)
 
@@ -244,14 +280,14 @@ let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
     if len < 0 then
       raise (Failure "Length of array should be a positive integer.")
     else
+      let ids = List.init len Fun.id in
+      let access_ids = List.map (fun i -> (gen_access_id name i, None)) ids in
       match kind with
-        | Clock_synt_array ->
-            let ids = List.init len Fun.id in
-            Some (List.map (fun i -> (gen_access_id name i, None)) ids)
+        | Clock_synt_array -> Some (DiscreteType.Var_type_clock, access_ids)
+        | Param_synt_array -> Some (DiscreteType.Var_type_parameter, access_ids)
         | Action_synt_array -> None
   in
-  let packed_decls = List.filter_map aux synt_decls in
-  List.map (fun packed_decl -> (DiscreteType.Var_type_clock, packed_decl)) packed_decls
+  List.filter_map aux synt_decls
 
 let expand_name_or_access g_decls = function
   | Var_name name -> name
