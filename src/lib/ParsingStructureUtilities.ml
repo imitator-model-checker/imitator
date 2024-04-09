@@ -1066,3 +1066,32 @@ let link_variables_in_parsed_model parsed_model =
         automata = link_variables_in_automata parsed_model.automata;
         fun_definitions = link_variables_in_fun_defs parsed_model.fun_definitions;
     } , local_variables_accumulator
+
+(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
+let gen_access_id arr_name index = arr_name ^ "___" ^ (Int.to_string index)
+
+let rec pp_arith_expr = function
+  | Parsed_sum_diff (e1, t2, Parsed_plus) -> "(" ^ (pp_arith_expr e1) ^ " + " ^ (pp_term t2) ^ ")"
+  | Parsed_sum_diff (e1, t2, Parsed_minus) -> "(" ^ (pp_arith_expr e1) ^ " - " ^ (pp_term t2) ^ ")"
+  | Parsed_term t -> pp_term t
+
+and pp_term = function
+  | Parsed_product_quotient (t1, f2, Parsed_mul) -> "(" ^ (pp_term t1) ^ " * " ^ (pp_factor f2) ^ ")"
+  | Parsed_product_quotient (t1, f2, Parsed_div) -> "(" ^ (pp_term t1) ^ " / " ^ (pp_factor f2) ^ ")"
+  | Parsed_factor f -> pp_factor f
+
+and pp_factor = function
+  | Parsed_access (arr, index) -> (pp_factor arr) ^ "[" ^ (pp_arith_expr index) ^ "]"
+  | Parsed_constant (Weak_number_value v) -> NumConst.to_string v
+  | Parsed_variable (name, _) -> name
+  | _ -> failwith "[pp_factor]: Should only be used with either access, constant or variable."
+
+let pp_name_or_access = function
+  | Var_name name -> name
+  | Var_array_access (arr, index) -> arr ^ "[" ^ pp_arith_expr index ^ "]"
+
+(* This is used in the ModelParser to print the uncontrollable actions, if they are inconsistent *)
+let string_of_list_of_name_or_access_with_sep sep name_or_accesses =
+  name_or_accesses           |>
+  List.map pp_name_or_access |>
+  String.concat sep
