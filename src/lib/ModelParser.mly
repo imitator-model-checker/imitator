@@ -16,6 +16,7 @@
 
 %{
 open ParsingStructure;;
+open ParsingStructureUtilities;;
 open Exceptions;;
 open ImitatorUtilities;;
 open DiscreteType;;
@@ -65,11 +66,9 @@ let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unex
         (*** WARNING (2023/07/10): should be an error ***)
         print_warning
           ("The submodels define contradictory controllable list of actions ("
-          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
-              c_action_names
+          ^ string_of_list_of_name_or_access_with_sep ", " c_action_names
           ^ ") AND uncontrollable list of actions ("
-          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
-              u_action_names
+          ^ string_of_list_of_name_or_access_with_sep ", " u_action_names
           ^ "); the model is ill-formed and its behavior is unspecified!");
         Unexpanded_parsed_controllable_actions c_action_names
 		in
@@ -679,15 +678,8 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| name_or_array_access APOSTROPHE OP_EQ name_or_num_lit { ($1, $4) }
+	| name_or_array_access APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 ;
-
-/************************************************************/
-
-name_or_num_lit:
-  /* TODO: In case of array access, should not accept rational values, only integer */
-        | rational_linear_expression { Literal $1 }
-        | NAME { Const_var $1 }
 
 /************************************************************/
 
@@ -739,7 +731,7 @@ sync_action:
 
 name_or_array_access:
   | NAME { Var_name $1 }
-  | NAME LSQBRA name_or_num_lit RSQBRA { Var_array_access ($1, $3) }
+  | NAME LSQBRA arithmetic_expression RSQBRA { Var_array_access ($1, $3) }
 ;
 
 /************************************************************/
