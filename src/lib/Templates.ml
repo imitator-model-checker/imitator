@@ -89,11 +89,11 @@ and eval_parsed_factor g_decls = function
 
 and expand_const_var g_decls name =
   let inspect_decl (name', expr_opt) = if name = name' then expr_opt else None in
-  let inspect_g_decls_of_type (_, g_decls) = List.find_map inspect_decl g_decls in
-  let inspect_all_g_decls g_decls =
-    List.find_map Fun.id (List.map inspect_g_decls_of_type g_decls)
+  let inspect_decls_of_type (_, decls_of_type) = List.find_map inspect_decl decls_of_type in
+  let inspect_all_decls decls =
+    List.find_map Fun.id (List.map inspect_decls_of_type decls)
   in
-  match inspect_all_g_decls g_decls with
+  match inspect_all_decls g_decls with
     | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
     | Some expr -> eval_parsed_boolean_expression g_decls expr
 
