@@ -320,6 +320,7 @@ type parsed_projection = (variable_name list) option
 type synt_var_kind =
   | Clock_synt_array
   | Action_synt_array
+  | Param_synt_array
 
 type synt_var_type = parsed_discrete_arithmetic_expression * synt_var_kind
 
