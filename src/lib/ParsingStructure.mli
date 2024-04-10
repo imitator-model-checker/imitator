@@ -287,6 +287,15 @@ type parsed_template_call =
  (* name             template used   parameters passed to template *)
     automaton_name * template_name * (parsed_template_arg list)
 
+type parsed_forall_template_call = {
+  forall_index    : variable_name;
+  forall_lb       : parsed_discrete_arithmetic_expression;
+  forall_ub       : parsed_discrete_arithmetic_expression;
+  forall_aut_name : automaton_name;
+  forall_template : template_name;
+  forall_args     : parsed_template_arg list; (* Noticed that these are shared between the calls *)
+}
+
 (****************************************************************)
 (* Init definition *)
 (****************************************************************)
@@ -348,6 +357,7 @@ type unexpanded_parsed_model = {
     unexpanded_init_definition : init_definition;
     template_definitions : parsed_template_definition list;
     template_calls : parsed_template_call list;
+    forall_template_calls : parsed_forall_template_call list;
     synt_declarations : parsed_synt_var_decl list;
 }
 

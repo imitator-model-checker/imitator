@@ -80,6 +80,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unex
                 unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
                 template_definitions             = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
                 template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                forall_template_calls            = List.append parsed_model.forall_template_calls parsed_model_list.forall_template_calls;
                 synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
@@ -95,6 +96,7 @@ let unzip l = List.fold_left
 		template_definitions             = [];
 		template_calls                   = [];
 		synt_declarations                = [];
+		forall_template_calls            = [];
 	}
 	(List.rev l)
 ;;
@@ -120,7 +122,7 @@ let unzip l = List.fold_left
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
-	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
+	CT_FALSE CT_FLOW CT_FOR CT_FORALL CT_FROM CT_FUN
 	CT_GOTO
 	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
@@ -159,28 +161,30 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls forall_template_calls init_definition_option
 	end_opt EOF
 	{
-		let controllable_actions = $1 in
-		let declarations         = $3 in
-    let synt_declarations    = $4 in
-		let fun_definitions      = $5 in
-		let template_definitions = $6 in
-		let automata             = $7 in
-		let template_calls       = $8 in
-		let init_definition      = $9 in
+		let controllable_actions  = $1 in
+		let declarations          = $3 in
+    let synt_declarations     = $4 in
+		let fun_definitions       = $5 in
+		let template_definitions  = $6 in
+		let automata              = $7 in
+		let template_calls        = $8 in
+    let forall_template_calls = $9 in
+		let init_definition       = $10 in
 
 		let main_model =
 {
                         unexpanded_controllable_actions  = controllable_actions;
                         unexpanded_variable_declarations = declarations;
+                        synt_declarations                = synt_declarations;
                         unexpanded_fun_definitions       = fun_definitions;
                         unexpanded_automata              = automata;
                         unexpanded_init_definition       = init_definition;
-                        template_definitions  = template_definitions;
-                        template_calls        = template_calls;
-                        synt_declarations     = synt_declarations;
+                        template_definitions             = template_definitions;
+                        template_calls                   = template_calls;
+                        forall_template_calls            = forall_template_calls;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -485,7 +489,6 @@ template_calls:
   | { [] }
 ;
 
-/************************************************************/
 
 template_call:
 	| CT_INSTANTIATE NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
@@ -493,6 +496,30 @@ template_call:
 		($2, $4, List.rev $6)
 	}
 ;
+
+/************************************************************/
+
+forall_template_calls:
+  | forall_template_call forall_template_calls { $1 :: $2 }
+  | { [] }
+
+/* forall i in [1, N]: instantiate a[i] := p(i); */
+forall_template_call:
+  | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON CT_INSTANTIATE NAME LSQBRA NAME RSQBRA OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+  { if $2 <> $13 then failwith
+     "[parser]: index of automaton in forall should be exactly the variable created by the forall."
+    else {
+      forall_index    = $2;
+      forall_lb       = $5;
+      forall_ub       = $7;
+      forall_aut_name = $14;
+      forall_template = $16;
+      forall_args     = $18;
+    }
+  }
+;
+
+/************************************************************/
 
 template_args_list:
   | { [] }

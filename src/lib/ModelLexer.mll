@@ -85,6 +85,7 @@ rule token = parse
 	| "flow"           { CT_FLOW }
 	| "fn"             { CT_FUN   }
 	| "for"            { CT_FOR }
+  | "forall"         { CT_FORALL }
 	| "from"           { CT_FROM }
 	| "function"       { CT_FUN   }
 	| "goto"           { CT_GOTO }

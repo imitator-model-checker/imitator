@@ -387,9 +387,32 @@ let expand_synt_arrays_automaton (g_decls : variable_declarations) (synt_vars : 
 let expand_synt_arrays_automata (g_decls : variable_declarations) (synt_vars : synt_vars_data) : unexpanded_parsed_automaton list -> parsed_automaton list =
   List.map (expand_synt_arrays_automaton g_decls synt_vars)
 
+let expand_forall_call g_decls { forall_index; forall_lb; forall_ub; forall_template; forall_aut_name; forall_args } =
+  let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
+  let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub in
+  let indices = List.init (forall_ub_val - forall_lb_val) (fun i -> i + forall_lb_val) in
+  let instantiate_arg idx = fun arg ->
+    match arg with
+      | Arg_name name ->
+          if name = forall_index then Arg_int (NumConst.numconst_of_int idx) else arg
+      | _ -> arg
+  in
+  let build_call idx =
+    let aut_name = gen_access_id forall_aut_name idx in
+    let args = List.map (instantiate_arg idx) forall_args in
+    (aut_name, forall_template, args)
+  in
+  List.map build_call indices
+
 let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_model =
   let g_decls = unexpanded_parsed_model.unexpanded_variable_declarations in
-  let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions unexpanded_parsed_model.template_calls in
+
+  (* Expand foralls *)
+  let forall_calls = unexpanded_parsed_model.forall_template_calls in
+  let forall_calls' = List.concat_map (expand_forall_call g_decls) forall_calls in
+
+  let all_calls = unexpanded_parsed_model.template_calls @ forall_calls' in
+  let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions all_calls in
   let all_automata = unexpanded_parsed_model.unexpanded_automata @ instantiated_automata in
   let synt_vars =
     List.concat_map
