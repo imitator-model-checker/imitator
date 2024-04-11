@@ -1,0 +1,45 @@
+var
+    id : int;
+    k = 2 : constant;
+    IDLE = -1 : int;
+    N = 2 : int;
+
+synt_var
+    x : clock array (N);
+    acts : action array (N * 2 + 1);
+    params : parameter array (1 + N + N);
+
+template p(i : int)
+
+actions: acts[2 * i];
+
+loc A: invariant x[i] <= params[2 * i]
+  when id = IDLE do { x[i] := 0 } sync acts[2 * i] goto req;
+
+loc req: invariant x[i] <= k
+  when x[i] <= k do { x[i + 5 * 0] := 0; id := i } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[i] := 0 } goto req;
+  when id = i & x[i] > k goto cs;
+
+loc cs: invariant True
+  when True do { id := IDLE } goto A;
+
+end
+
+forall i in [0, 2]: instantiate p[i] := p(i);
+
+init := {
+
+    discrete =
+        id := IDLE,
+    ;
+
+    continuous =
+        x[0] = 0
+      & x[1] = 0
+    ;
+}
+
+end

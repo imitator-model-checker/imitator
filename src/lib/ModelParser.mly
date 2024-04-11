@@ -512,7 +512,7 @@ forall_template_call:
       forall_index    = $2;
       forall_lb       = $5;
       forall_ub       = $7;
-      forall_aut_name = $14;
+      forall_aut_name = $11;
       forall_template = $16;
       forall_args     = $18;
     }
