@@ -1,8 +1,8 @@
 (************************************************************
  *                                IMITATOR MODEL
  *
- * Title            : template
- * Description      : Empty template of a case study
+ * Title            : example
+ * Description      : Almost-empty example of a case study
  * Correctness      : TODO
  * Scalable         : no
  * Generated        : no
@@ -18,7 +18,7 @@
  * Last modified    : 2024/01/01
  * Model version    : 0.1
  *
- * IMITATOR version : 3.4-beta
+ * IMITATOR version : 3.4-alpha
  ************************************************************)
 
 var
