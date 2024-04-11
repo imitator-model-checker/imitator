@@ -1958,13 +1958,10 @@ end
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Blocks and lexical scope}\label{section:variable_scope}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Blocks and lexical scope}\label{section:variable_scope}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% \subsection{Blocks and lexical scope}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Structures such as \styleIMI{function}, \styleIMI{for}, \styleIMI{while}, \styleIMI{if} work as blocks.
 Each block defines a lexical scope containing all the variables defined within it.
@@ -2025,6 +2022,19 @@ If a variable declared at lower level have the same name as a variable declared 
 See an example of variable shadowing in \cref{example:shadowing}.
 
 %%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model templates}\label{section:templates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since \imitator{}~3.4, it is possible to define automata instantiated from model \emph{templates}.
+This means the ability to create a number of (almost-)identical TAs in parallel.
+
+% TODO: syntax
+% TODO: example
+
+Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
+In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -6143,12 +6153,13 @@ This is not supported by \imitator{}. %, and we do not see a way to simulate it 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameterized models}
+\section{Parameterized verification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
-\imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
-For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on the \imitator{} project on \GitHubIMI{}).
+Parameterized verification~\cite{AD16} is understood as the verification of models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$~processes, for an arbitrary~$n$).
+While \imitator{} supports since version~3.4 \emph{templates} allowing to duplicate an automaton for a (constant, fixed) number of automata (see \cref{section:templates}), these templates are only purely syntactic sugar for a (constant, fixed) number of automata in parallel; there is currently no algorithm in \imitator{} to reason \emph{symbolically} over an arbitrary number of processes.
+
+% For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on the \imitator{} project on \GitHubIMI{}).
 
 
 
