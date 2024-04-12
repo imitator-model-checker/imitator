@@ -780,6 +780,16 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Global invariant *)
 			(************************************************************)
+
+			(* EXPERIMENTAL NEW VERSION *)
+			| AG state_predicate when options#new_queue_based_EU ->
+				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
+				if property.synthesis_type = Witness then(
+					print_warning "Exhibition of a subset of parameter valuations is not sound for this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
+				);
+
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoAGBFS model property options state_predicate in myalgo
+
 			| AG state_predicate ->
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
 				if property.synthesis_type = Witness then(

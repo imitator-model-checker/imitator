@@ -8039,6 +8039,31 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 2
+		# Test author              : Étienne André
+		# Test since               : 2023/12/22
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AG on a very simple example (queue-based BFS)',
+		'tags'       : 'algorithm',
+		'input_files': ['safety/safety-initial-state2.imi', 'safety/safety-initial-state2-AG1.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 5
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
@@ -8443,7 +8468,7 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test since               : 2020/09/04
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between emptiness and synthesis, here emptiness)',
+		'purpose'    : 'Test EF (difference between witness and synthesis, here witness)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -8471,7 +8496,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/04
 		# Last modified            : 2020/09/04
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between emptiness and synthesis, here synthesis)',
+		'purpose'    : 'Test EF (difference between witness and synthesis, here synthesis)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
 		'options'    : '',
 		'expectations' : [

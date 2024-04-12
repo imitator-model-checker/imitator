@@ -528,3 +528,29 @@ class algoAGnotBFS (model : AbstractModel.abstract_model) (property : AbstractPr
 end;;
 (************************************************************)
 (************************************************************)
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AG *)
+(************************************************************)
+(************************************************************)
+(*** NOTE: AG is implemented as AGnot called on the **negation** of the state predicate ***)
+class algoAGBFS (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoAGnotBFS model property options (State_predicate_term (State_predicate_factor (State_predicate_factor_NOT (State_predicate state_predicate)))) (*as super*)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method! algorithm_name = "AG (NEW EXPERIMENTAL BFS VERSION)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+

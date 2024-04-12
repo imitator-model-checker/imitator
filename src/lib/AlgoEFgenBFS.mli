@@ -91,3 +91,20 @@ class algoAGnotBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_p
 		method algorithm_name : string
 
 end
+
+
+(************************************************************)
+(* Class definition: AGnot *)
+(************************************************************)
+class algoAGBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+end
