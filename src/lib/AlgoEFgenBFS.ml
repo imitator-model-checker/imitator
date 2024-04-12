@@ -356,7 +356,7 @@ class algoEFBFS (model : AbstractModel.abstract_model) (property : AbstractPrope
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EF (NEW EXPERIMENTAL VERSION)"
+	method algorithm_name = "EF (NEW EXPERIMENTAL BFS VERSION)"
 
 
 (************************************************************)
@@ -364,3 +364,55 @@ class algoEFBFS (model : AbstractModel.abstract_model) (property : AbstractPrope
 end;;
 (************************************************************)
 (************************************************************)
+
+(*(************************************************************)
+(************************************************************)
+(* Class definition: EF (timed) *)
+(************************************************************)
+(************************************************************)
+class algoEFBFStimed (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoEUgenBFS model property options false None state_predicate None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EF (timed) (NEW EXPERIMENTAL BFS VERSION)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)*)
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: EU *)
+(************************************************************)
+(************************************************************)
+class algoEUBFS (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoEUgenBFS model property options false (Some state_predicate_phi) state_predicate_psi None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EU (NEW EXPERIMENTAL BFS VERSION)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+

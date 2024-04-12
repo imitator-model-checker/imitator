@@ -788,6 +788,10 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists until *)
 			(************************************************************)
+			(* EXPERIMENTAL NEW VERSION *)
+			| EU (state_predicate_phi, state_predicate_psi) when options#new_queue_based_EU ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEUBFS model property options state_predicate_phi state_predicate_psi in myalgo
+
 			| EU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo
 

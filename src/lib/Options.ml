@@ -981,7 +981,7 @@ class imitator_options =
         Use `statespace`  for the generation of the entire parametric state space.
         ");
 
-				("-new-queue-EF", Unit (fun () -> new_queue_based_EU <- true), "New queue-based version of EF (EXPERIMENTAL).");
+				("-new-queue-EF", Unit (fun () -> new_queue_based_EU <- true), "New queue-based BFS version of EF and EU (EXPERIMENTAL).");
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
