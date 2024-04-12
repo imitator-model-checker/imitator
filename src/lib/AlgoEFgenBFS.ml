@@ -200,8 +200,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 							(* Add the constraint projected onto the parameters to the result *)
 							LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint);
 
-							(*** TODO: return if witness mode ***)
-
+							(* Case witness: terminate *)
 							if property.synthesis_type = Witness then(
 								self#print_algo_message Verbose_standard "Witness found! Terminating…";
 								raise Witness_found
@@ -278,7 +277,8 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		begin
 		try(
 			self#ef_bfs initial_state;
-		) with AlgoStateBased.LimitDetectedException reason ->
+		) with
+			| AlgoStateBased.LimitDetectedException reason ->
 			begin
 			match reason with
 
@@ -293,13 +293,15 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 				(* Termination due to a number of explored states reached *)
 				| States_limit_reached -> termination_status <- Result.States_limit Result.Unknown_number
 
-				(* Termination due to a witness found *)
-				| Witness_found -> termination_status <- Result.Witness_found
-
-				| Keep_going
-					-> raise (InternalError ("Keep_going cannot be passed as exception in " ^ self#algorithm_name))
+				| Keep_going | Witness_found
+					-> raise (InternalError ("Keep_going or Witness_found cannot be passed as exception in " ^ self#algorithm_name))
 			end;
 			ResultProcessor.print_warnings_of_termination_status termination_status;
+			(* Termination due to a witness found *)
+			| Witness_found -> (
+				termination_status <- Result.Witness_found;
+				ResultProcessor.print_warnings_of_termination_status termination_status;
+			);
 		end;
 
 		(* Return the result *)
@@ -428,3 +430,93 @@ end;;
 (************************************************************)
 (************************************************************)
 
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: AGnot *)
+(************************************************************)
+(************************************************************)
+class algoAGnotBFS (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEUgenBFS model property options false None state_predicate None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "AGnot (NEW EXPERIMENTAL BFS VERSION)"
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** NOTE: overriden method ***)
+	method! private compute_result =
+		(* Print some information *)
+		self#print_algo_message_newline Verbose_standard (
+			"Algorithm completed " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Print some information *)
+		self#print_algo_message_newline Verbose_low (
+			"Performing initial constraint \ final resulting constraint…"
+		);
+
+
+		(* Perform result = initial_state|P \ synthesized_constraint *)
+
+		(* Retrieve the initial parameter constraint *)
+		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint in
+
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
+			self#print_algo_message Verbose_medium "As a reminder, the result constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
+
+		(* Perform the difference *)
+		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
+
+		(* Projecting onto some parameters if required by the property *)
+		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property result in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message_newline Verbose_medium (
+				"Negation of final constraint completed:"
+			);
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
+		);
+
+		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
+
+		(* Return the result *)
+		Single_synthesis_result
+		{
+			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
+			result				= Good_constraint (result, soundness);
+
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing AGnot";
+
+			(* Explored state space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= termination_status;
+		}
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)

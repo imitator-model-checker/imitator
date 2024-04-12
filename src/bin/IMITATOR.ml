@@ -757,6 +757,17 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Safety *)
 			(************************************************************)
+
+			(* EXPERIMENTAL NEW VERSION *)
+			| AGnot state_predicate when options#new_queue_based_EU ->
+
+				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
+				if property.synthesis_type = Witness then(
+					print_warning "Exhibition of a subset of parameter valuations is not sound for this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
+				);
+
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoAGnotBFS model property options state_predicate in myalgo
+
 			| AGnot state_predicate ->
 
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
@@ -788,6 +799,7 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists until *)
 			(************************************************************)
+
 			(* EXPERIMENTAL NEW VERSION *)
 			| EU (state_predicate_phi, state_predicate_psi) when options#new_queue_based_EU ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEUBFS model property options state_predicate_phi state_predicate_psi in myalgo
