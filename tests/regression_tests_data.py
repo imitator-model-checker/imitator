@@ -8064,11 +8064,37 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+delta >= Delta
+    & Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queue-based BFS)',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8261,11 +8287,56 @@ Constraint nature                       : good
 	#} # end test case
 	##------------------------------------------------------------
 	#,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with complex safety property',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'coffeeDrinker.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_add_sugar > 0
+& 2*p_button > p_add_sugar
+& p_add_sugar + p_coffee > 2*p_button
+& 15 > 2*p_button
+OR
+  p_add_sugar >= 2*p_button
+& p_add_sugar + p_coffee > 3*p_button
+& 3*p_button > p_add_sugar
+& 5 > p_button
+OR
+  p_add_sugar > 0
+& 2*p_button >= 15
+& p_add_sugar + p_coffee > 15
+& 15 > p_button
+& p_button > p_add_sugar
+OR
+  2*p_button >= p_add_sugar + p_coffee
+& p_add_sugar > 0
+& p_add_sugar + p_coffee > p_button
+& p_button > p_add_sugar
+& 15 >= p_add_sugar + p_coffee
+OR
+  15 > p_add_sugar + p_coffee
+& p_coffee > 0
+& p_button > 0
+& 5 > p_button
+& p_add_sugar >= 3*p_button
+END CONSTRAINT
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with complex safety property (queue-based BFS)',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8335,6 +8406,34 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 2
+		# Test since               : 2021/07/02
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow (queue-based BFS)',
+		'tags' : 'auto remove',
+		'input_files': ['test_param_unused.imi' , 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_param_unused.res' , 'content' : """
+BEGIN CONSTRAINT
+ 14 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EF with complex safety property on coffee drinker with int',
 		'input_files': ['coffeeDrinker-int.imi', 'coffeeDrinker.imiprop'],
 		'options'    : '',
@@ -8377,6 +8476,50 @@ END CONSTRAINT
 
 	,
 	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with complex safety property on coffee drinker with int (queue-based BFS)',
+		'input_files': ['coffeeDrinker-int.imi', 'coffeeDrinker.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'coffeeDrinker-int.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_add_sugar > 0
+& 2*p_button > p_add_sugar
+& p_add_sugar + p_coffee > 2*p_button
+& 15 > 2*p_button
+OR
+  p_add_sugar >= 2*p_button
+& p_add_sugar + p_coffee > 3*p_button
+& 3*p_button > p_add_sugar
+& 5 > p_button
+OR
+  p_add_sugar > 0
+& 2*p_button >= 15
+& p_add_sugar + p_coffee > 15
+& 15 > p_button
+& p_button > p_add_sugar
+OR
+  2*p_button >= p_add_sugar + p_coffee
+& p_add_sugar > 0
+& p_add_sugar + p_coffee > p_button
+& p_button > p_add_sugar
+& 15 >= p_add_sugar + p_coffee
+OR
+  15 > p_add_sugar + p_coffee
+& p_coffee > 0
+& p_button > 0
+& 5 > p_button
+& p_add_sugar >= 3*p_button
+END CONSTRAINT
+"""
+			 } #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
@@ -8462,7 +8605,6 @@ END CONSTRAINT
 
 	,
 
-
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -8471,6 +8613,33 @@ END CONSTRAINT
 		'purpose'    : 'Test EF (difference between witness and synthesis, here witness)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between witness and synthesis, here witness) (queue-based BFS)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testEFemptiness.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8520,6 +8689,35 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Last modified            : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between witness and synthesis, here synthesis) (queue-based BFS)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
