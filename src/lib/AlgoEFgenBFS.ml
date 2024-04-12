@@ -24,7 +24,12 @@ open AbstractProperty
 open AlgoGeneric
 open Result
 
-
+(************************************************************)
+(************************************************************)
+(* Exceptions *)
+(************************************************************)
+(************************************************************)
+exception Witness_found
 
 (************************************************************)
 (************************************************************)
@@ -197,6 +202,11 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 
 							(*** TODO: return if witness mode ***)
 
+							if property.synthesis_type = Witness then(
+								self#print_algo_message Verbose_standard "Witness found! Terminating…";
+								raise Witness_found
+							);
+
 							(* Do NOT compute successors *)
 							compute_successors := false
 						);
@@ -283,9 +293,11 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 				(* Termination due to a number of explored states reached *)
 				| States_limit_reached -> termination_status <- Result.States_limit Result.Unknown_number
 
+				(* Termination due to a witness found *)
+				| Witness_found -> termination_status <- Result.Witness_found
+
 				| Keep_going
-				| Witness_found
-					-> raise (InternalError ("Keep_going or Witness_found cannot be passed as exception in " ^ self#algorithm_name))
+					-> raise (InternalError ("Keep_going cannot be passed as exception in " ^ self#algorithm_name))
 			end;
 			ResultProcessor.print_warnings_of_termination_status termination_status;
 		end;
