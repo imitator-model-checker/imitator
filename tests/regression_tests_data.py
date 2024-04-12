@@ -7043,6 +7043,33 @@ Number of computed states               : 0
 
 	,
 
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state (queue-based BFS)',
+		'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testEFdegenerate1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
@@ -7076,6 +7103,33 @@ Number of computed states               : 0
 		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
 		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFdegenerate2.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state and some constrained valuations (queue-based BFS)',
+		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testEFdegenerate2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7203,6 +7257,37 @@ Constraint nature                       : good
 
 	,
 	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (queue-based BFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
