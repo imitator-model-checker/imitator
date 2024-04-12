@@ -7230,6 +7230,34 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF on toy example: witness (queue-based BFS)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-witness.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test EF on toy example: synthesis',
@@ -7261,8 +7289,8 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
-		# Test for IMITATOR version: 3
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EF on toy example: synthesis (queue-based BFS)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
 		'options'    : '-new-queue-EF',
@@ -7498,6 +7526,31 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
@@ -7525,9 +7578,59 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+  0 >= 3 + p1
+ & p2 + 3 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-initial-state-neg.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7581,6 +7684,37 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 2
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result without projection (queue-based BFS)',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-noprojection.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 0
+ & 5 > p2
+ & p2 > p1
+ OR
+   p1 > 8
+ & 9 > p2
+ & p2 > p1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/09
@@ -7590,6 +7724,35 @@ END CONSTRAINT
 		'tags'       : 'semantic,projection',
 		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-projection.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'basic-reachability-projection.res' , 'content' : """
+BEGIN CONSTRAINT
+  5 > p1
+ & p1 > 0
+ OR
+   9 > p1
+ & p1 > 8
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF: basic reachability property with disjunctive result with projection (queue-based BFS)',
+		'tags'       : 'semantic,projection',
+		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-projection.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'basic-reachability-projection.res' , 'content' : """
 BEGIN CONSTRAINT
