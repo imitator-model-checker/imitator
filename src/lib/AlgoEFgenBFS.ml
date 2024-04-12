@@ -81,6 +81,11 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 	(*** TODO ***)
 	val mutable termination_status : Result.state_based_algorithm_termination = Regular_termination
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** px_linear_constraint of the initial state (useful shortcut) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	val mutable initial_px_constraint : LinearConstraint.px_linear_constraint = LinearConstraint.px_false_constraint()
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -254,6 +259,8 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 
 		(* Build initial state *)
 		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in
+		(* Backup *)
+		initial_px_constraint <- initial_state.px_constraint;
 
 		(* Increment the number of computed states *)
 		state_space#increment_nb_gen_states;
@@ -334,7 +341,8 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 			result				= Good_constraint (result, soundness);
 
 			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing EF";
+			(*** NOTE: cannot use "EF" or "reachability" because of "AGnot" which is rather safety ***)
+			constraint_description = "constraint guaranteeing correctness";
 
 			(* Explored state space *)
 			state_space			= state_space;
@@ -471,7 +479,7 @@ class algoAGnotBFS (model : AbstractModel.abstract_model) (property : AbstractPr
 		(* Perform result = initial_state|P \ synthesized_constraint *)
 
 		(* Retrieve the initial parameter constraint *)
-		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint in
+		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse initial_px_constraint) in
 
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
