@@ -7059,9 +7059,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
 """
 			} #end result file
 		] # end expectations
@@ -7141,9 +7138,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
 """
 			} #end result file
 		] # end expectations
@@ -7794,6 +7788,31 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'safety-initial-state.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
@@ -7820,9 +7839,57 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'safety-initial-state2.res' , 'content' : """
+BEGIN CONSTRAINT
+p > 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-initial-state-neg.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant (queue-based BFS)',
+		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-initial-state-neg.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7873,6 +7940,35 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 2
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result without projection (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['safety/safety-simple.imi', 'basic-properties/synth-safety.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  p1 >= 0
+ & p2 >= 0
+ & 3 > p2
+ OR
+   p2 >= 3
+ & p1 >= p2
+ & 11 >= p2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/09
@@ -7882,6 +7978,30 @@ Constraint nature                       : good
 		'tags'       : 'semantic,projection',
 		'input_files': ['safety/safety-simple.imi', 'safety/safety-simple.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'safety-simple.res' , 'content' : """
+  11 >= p2
+ & p2 >= 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/01/09
+		# Last modified            : 2024/04/12
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result with projection (queue-based BFS)',
+		'tags'       : 'semantic,projection',
+		'input_files': ['safety/safety-simple.imi', 'safety/safety-simple.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-simple.res' , 'content' : """
   11 >= p2
