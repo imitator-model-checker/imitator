@@ -287,13 +287,17 @@ type parsed_template_call =
  (* name             template used   parameters passed to template *)
     automaton_name * template_name * (parsed_template_arg list)
 
+type forall_index_data = {
+  forall_index_name : variable_name;
+  forall_lb         : parsed_discrete_arithmetic_expression;
+  forall_ub         : parsed_discrete_arithmetic_expression;
+}
+
 type parsed_forall_template_call = {
-  forall_index    : variable_name;
-  forall_lb       : parsed_discrete_arithmetic_expression;
-  forall_ub       : parsed_discrete_arithmetic_expression;
-  forall_aut_name : automaton_name;
-  forall_template : template_name;
-  forall_args     : parsed_template_arg list; (* Noticed that these are shared between the calls *)
+  forall_index_data : forall_index_data;
+  forall_aut_name   : automaton_name;
+  forall_template   : template_name;
+  forall_args       : parsed_template_arg list; (* Notice that these are shared between the calls *)
 }
 
 (****************************************************************)
@@ -301,6 +305,16 @@ type parsed_forall_template_call = {
 (****************************************************************)
 
 (** State predicates *)
+
+type unexpanded_parsed_init_state_predicate =
+	| Unexpanded_parsed_loc_assignment of automaton_name * location_name
+  | Unexpanded_parsed_forall_loc_assignment of
+  (*  index info          array name      array index                             location *)
+      forall_index_data * variable_name * parsed_discrete_arithmetic_expression * location_name
+	| Unexpanded_parsed_linear_predicate of linear_constraint
+	| Unexpanded_parsed_discrete_predicate of variable_name * parsed_boolean_expression
+
+type unexpanded_init_definition = unexpanded_parsed_init_state_predicate list
 
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
