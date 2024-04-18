@@ -31,6 +31,7 @@ and eval_parsed_term g_decls = function
 and eval_parsed_factor g_decls = function
   | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
   | Parsed_variable (name, _) -> expand_const_var g_decls name
+  | Parsed_nested_expr expr -> eval_parsed_arithmetic_expr g_decls expr
   | _ -> failwith eval_expr_err_msg
 
 and expand_const_var g_decls name =
@@ -40,7 +41,7 @@ and expand_const_var g_decls name =
     List.find_map Fun.id (List.map inspect_decls_of_type decls)
   in
   match inspect_all_decls g_decls with
-    | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
+    | None -> failwith eval_expr_err_msg
     | Some expr -> eval_parsed_boolean_expression g_decls expr
 
 let find_arr_len_opt arr_name =
@@ -80,6 +81,12 @@ let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_di
 
 let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
   List.map (instantiate_discrete_boolean_expression param_map) inv
+
+let indices_from_forall_index_data g_decls forall_index_data =
+  let { forall_index_name = _; forall_lb; forall_ub } = forall_index_data in
+  let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
+  let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub in
+  List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
 
 (*****************************************************************************)
 (* Instantiation of templates *)
@@ -387,14 +394,14 @@ let expand_synt_arrays_automaton (g_decls : variable_declarations) (synt_vars : 
 let expand_synt_arrays_automata (g_decls : variable_declarations) (synt_vars : synt_vars_data) : unexpanded_parsed_automaton list -> parsed_automaton list =
   List.map (expand_synt_arrays_automaton g_decls synt_vars)
 
-let expand_forall_call g_decls { forall_index; forall_lb; forall_ub; forall_template; forall_aut_name; forall_args } =
-  let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
-  let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub in
-  let indices = List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val) in
+let expand_forall_call g_decls { forall_index_data; forall_template; forall_aut_name; forall_args } =
+  let indices = indices_from_forall_index_data g_decls forall_index_data in
   let instantiate_arg idx = fun arg ->
     match arg with
       | Arg_name name ->
-          if name = forall_index then Arg_int (NumConst.numconst_of_int idx) else arg
+          if name = forall_index_data.forall_index_name then
+            Arg_int (NumConst.numconst_of_int idx)
+          else arg
       | _ -> arg
   in
   let build_call idx =
@@ -404,16 +411,38 @@ let expand_forall_call g_decls { forall_index; forall_lb; forall_ub; forall_temp
   in
   List.map build_call indices
 
+let expand_init_state_predicate g_decls = function
+    | Unexpanded_parsed_forall_loc_assignment (index_data, arr_name, arr_idx, loc_name) ->
+        let indices = indices_from_forall_index_data g_decls index_data in
+        let instantiate_arr_idx i =
+          let aux_var_tbl =
+            Hashtbl.of_seq (List.to_seq [(index_data.forall_index_name, Arg_int (NumConst.numconst_of_int i))])
+          in
+          (* instantiate index expression with respect to the forall variable *)
+          instantiate_discrete_arithmetic_expression aux_var_tbl arr_idx |>
+          (* ... then evaluate it, to obtain a concrete number *)
+          eval_parsed_arithmetic_expr g_decls
+        in
+        List.map (fun i -> Parsed_loc_assignment (gen_access_id arr_name (instantiate_arr_idx i), loc_name)) indices
+    | Unexpanded_parsed_loc_assignment (aut, loc) -> [Parsed_loc_assignment (aut, loc)]
+    | Unexpanded_parsed_linear_predicate constr -> [Parsed_linear_predicate constr]
+    | Unexpanded_parsed_discrete_predicate (name, bool_expr) ->
+        [Parsed_discrete_predicate (name, bool_expr)]
+
+let expand_init_definition g_decls = List.concat_map (expand_init_state_predicate g_decls)
+
 let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_model =
   let g_decls = unexpanded_parsed_model.unexpanded_variable_declarations in
 
   (* Expand foralls *)
-  let forall_calls = unexpanded_parsed_model.forall_template_calls in
-  let forall_calls' = List.concat_map (expand_forall_call g_decls) forall_calls in
-
-  let all_calls = unexpanded_parsed_model.template_calls @ forall_calls' in
+  let forall_calls =
+    unexpanded_parsed_model.forall_template_calls |>
+    List.concat_map (expand_forall_call g_decls)
+  in
+  let all_calls = unexpanded_parsed_model.template_calls @ forall_calls in
   let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions all_calls in
   let all_automata = unexpanded_parsed_model.unexpanded_automata @ instantiated_automata in
+
   let synt_vars =
     List.concat_map
       (fun ((len, kind), names) -> List.map (fun name -> (name, kind, eval_parsed_arithmetic_expr g_decls len)) names)
@@ -430,9 +459,14 @@ let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_mo
           Parsed_uncontrollable_actions (expand_name_or_access_list g_decls actions)
       | Unexpanded_parsed_no_controllable_actions -> Parsed_no_controllable_actions
   in
+
+  let expanded_init_definition =
+    expand_init_definition g_decls unexpanded_parsed_model.unexpanded_init_definition
+  in
+
   { controllable_actions  = expanded_controllable_actions;
-    variable_declarations = (unexpanded_parsed_model.unexpanded_variable_declarations @ expanded_decls);
+    variable_declarations = unexpanded_parsed_model.unexpanded_variable_declarations @ expanded_decls;
     fun_definitions       = unexpanded_parsed_model.unexpanded_fun_definitions;
     automata              = expanded_automata;
-    init_definition       = unexpanded_parsed_model.unexpanded_init_definition;
+    init_definition       = expanded_init_definition;
   }
