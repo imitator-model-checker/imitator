@@ -390,7 +390,7 @@ let expand_synt_arrays_automata (g_decls : variable_declarations) (synt_vars : s
 let expand_forall_call g_decls { forall_index; forall_lb; forall_ub; forall_template; forall_aut_name; forall_args } =
   let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
   let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub in
-  let indices = List.init (forall_ub_val - forall_lb_val) (fun i -> i + forall_lb_val) in
+  let indices = List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val) in
   let instantiate_arg idx = fun arg ->
     match arg with
       | Arg_name name ->
