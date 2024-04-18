@@ -505,16 +505,15 @@ forall_template_calls:
 
 /* forall i in [1, N]: instantiate a[i] := p(i); */
 forall_template_call:
-  | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON CT_INSTANTIATE NAME LSQBRA NAME RSQBRA OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
-  { if $2 <> $13 then failwith
+  | forall_common_prefix CT_INSTANTIATE NAME LSQBRA NAME RSQBRA OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+  {
+    if $1.forall_index_name <> $5 then failwith
      "[parser]: index of automaton in forall should be exactly the variable created by the forall."
     else {
-      forall_index    = $2;
-      forall_lb       = $5;
-      forall_ub       = $7;
-      forall_aut_name = $11;
-      forall_template = $16;
-      forall_args     = $18;
+      forall_index_data = $1;
+      forall_aut_name   = $3;
+      forall_template   = $8;
+      forall_args       = $10;
     }
   }
 ;
@@ -800,8 +799,8 @@ old_init_expression_fol:
 
 /* Used in the init definition */
 old_init_state_predicate:
-	| old_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+	| old_init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
 ;
 
 old_init_loc_predicate:
@@ -849,9 +848,13 @@ init_discrete_expression_nonempty_list :
 ;
 
 init_discrete_state_predicate:
-	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+  | forall_init_loc_predicate {
+      let forall_data, aut_name, aut_index, loc_name = $1 in
+      Unexpanded_parsed_forall_loc_assignment (forall_data, aut_name, aut_index, loc_name)
+  }
 	| LPAREN init_discrete_state_predicate  RPAREN { $2 }
-	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
+	| NAME OP_ASSIGN boolean_expression { Unexpanded_parsed_discrete_predicate ($1, $3) }
 ;
 
 init_continuous_expression:
@@ -866,17 +869,22 @@ init_continuous_expression_nonempty_list :
 
 init_continuous_state_predicate:
     | LPAREN init_continuous_state_predicate RPAREN { $2 }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
 ;
 
 init_loc_predicate:
-	/* loc[my_pta] = my_loc */
+	/* loc[my_pta] := my_loc */
 	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
-
+forall_init_loc_predicate:
+  /* forall i in [1, N]: loc[p[i]] = L */
+  | forall_common_prefix CT_LOC LSQBRA NAME LSQBRA arithmetic_expression RSQBRA RSQBRA OP_ASSIGN NAME
+  {
+    ($1, $4, $6, $10)
+  }
 
 /************************************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -1094,6 +1102,12 @@ pos_float:
 /************************************************************/
 /** MISC. */
 /************************************************************/
+
+forall_common_prefix:
+  | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON
+  {
+    { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
+  }
 
 checked_name_decl:
   | NAME {
