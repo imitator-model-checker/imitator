@@ -8,60 +8,6 @@ type synt_vars_data = (variable_name * synt_var_kind * int) list
 
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
 
-let rec get_const_disc_arith_expr = function
-  | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
-  | Parsed_sum_diff (lhs, rhs, Parsed_minus) -> NumConst.sub (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
-  | Parsed_term term -> get_const_disc_term term
-
-and get_const_disc_term = function
-  | Parsed_product_quotient (lhs, rhs, Parsed_mul) -> NumConst.mul (get_const_disc_term lhs) (get_const_disc_factor rhs) 
-  | Parsed_product_quotient (lhs, rhs, Parsed_div) -> NumConst.div (get_const_disc_term lhs) (get_const_disc_factor rhs) 
-  | Parsed_factor factor -> get_const_disc_factor factor
-
-and get_const_disc_factor = function
-  | Parsed_constant (ParsedValue.Weak_number_value value) -> value
-  | Parsed_unary_min factor -> NumConst.neg (get_const_disc_factor factor)
-  | Parsed_nested_expr expr -> get_const_disc_arith_expr expr
-  | _ -> failwith "[get_const_disc_factor]: argument is not an integer constant"
-
-let find_arr_len_opt arr_name =
-  List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None)
-
-let gen_var_from_access def gen_var_from_name arr_name index synt_arrays =
-  let arr_len_opt = find_arr_len_opt arr_name synt_arrays in
-  match arr_len_opt with
-    | None -> def
-    | Some len ->
-        let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
-        if index_c < len then
-          let var_name = gen_access_id arr_name index_c in
-          gen_var_from_name var_name
-        else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
-
-let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
-  fun leaf -> match leaf with
-    | Leaf_variable (name, id) -> begin
-        match Hashtbl.find_opt param_map name with
-           | None                  -> leaf
-           | Some (Arg_name name') -> Leaf_variable (name', id)
-           | Some (Arg_int i)      -> Leaf_constant (ParsedValue.Weak_number_value i)
-           | Some (Arg_float f)    -> Leaf_constant (ParsedValue.Rat_value f)
-           | Some (Arg_bool b)     -> Leaf_constant (Bool_value b)
-    end
-    | _ -> leaf
-
-let instantiate_discrete_boolean_expression (param_map : var_map) : parsed_discrete_boolean_expression -> parsed_discrete_boolean_expression =
-  map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
-
-let instantiate_boolean_expression (param_map : var_map) : parsed_boolean_expression -> parsed_boolean_expression =
-  map_parsed_boolean_expression (instantiate_leaf param_map)
-
-let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_discrete_arithmetic_expression -> parsed_discrete_arithmetic_expression =
-  map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
-
-let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
-  List.map (instantiate_discrete_boolean_expression param_map) inv
-
 let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
 
 let rec eval_parsed_boolean_expression g_decls = function
@@ -96,6 +42,44 @@ and expand_const_var g_decls name =
   match inspect_all_decls g_decls with
     | None -> failwith "[expand_model]: Size of syntatic array is a non-constant variable."
     | Some expr -> eval_parsed_boolean_expression g_decls expr
+
+let find_arr_len_opt arr_name =
+  List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None)
+
+let gen_var_from_access g_decls def gen_var_from_name arr_name index synt_arrays =
+  let arr_len_opt = find_arr_len_opt arr_name synt_arrays in
+  match arr_len_opt with
+    | None -> def
+    | Some len ->
+        let index_c = eval_parsed_arithmetic_expr g_decls index in
+        if index_c < len then
+          let var_name = gen_access_id arr_name index_c in
+          gen_var_from_name var_name
+        else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
+
+let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
+  fun leaf -> match leaf with
+    | Leaf_variable (name, id) -> begin
+        match Hashtbl.find_opt param_map name with
+           | None                  -> leaf
+           | Some (Arg_name name') -> Leaf_variable (name', id)
+           | Some (Arg_int i)      -> Leaf_constant (ParsedValue.Weak_number_value i)
+           | Some (Arg_float f)    -> Leaf_constant (ParsedValue.Rat_value f)
+           | Some (Arg_bool b)     -> Leaf_constant (Bool_value b)
+    end
+    | _ -> leaf
+
+let instantiate_discrete_boolean_expression (param_map : var_map) : parsed_discrete_boolean_expression -> parsed_discrete_boolean_expression =
+  map_parsed_discrete_boolean_expression (instantiate_leaf param_map)
+
+let instantiate_boolean_expression (param_map : var_map) : parsed_boolean_expression -> parsed_boolean_expression =
+  map_parsed_boolean_expression (instantiate_leaf param_map)
+
+let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_discrete_arithmetic_expression -> parsed_discrete_arithmetic_expression =
+  map_parsed_discrete_arithmetic_expression (instantiate_leaf param_map)
+
+let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
+  List.map (instantiate_discrete_boolean_expression param_map) inv
 
 (*****************************************************************************)
 (* Instantiation of templates *)
@@ -321,19 +305,19 @@ and expand_parsed_discrete_factor g_decls synt_arrays = fun factor ->
     | Parsed_access (factor', index) ->
         let arr_name = get_name_of_factor factor' in
         let gen_var_from_name name = Parsed_variable (name, 0) in
-        gen_var_from_access factor gen_var_from_name arr_name index synt_arrays
+        gen_var_from_access g_decls factor gen_var_from_name arr_name index synt_arrays
     | _ -> factor
 
 let expand_sync (g_decls : variable_declarations) : unexpanded_sync -> sync = function
   | UnexpandedSync action -> Sync (expand_name_or_access g_decls action)
   | UnexpandedNoSync -> NoSync
 
-let expand_indexed_update (synt_arrays : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
+let expand_indexed_update (g_decls : variable_declarations) (synt_arrays : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
   fun e ->
     match e with
       | Parsed_indexed_update (Parsed_scalar_update (name, _), index) -> begin
           let gen_var_from_name name = Parsed_scalar_update (name, 0) in
-          gen_var_from_access e gen_var_from_name name index synt_arrays
+          gen_var_from_access g_decls e gen_var_from_name name index synt_arrays
       end
       | _ -> e
 
