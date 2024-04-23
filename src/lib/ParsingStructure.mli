@@ -342,15 +342,15 @@ type parsed_model = {
 }
 
 type unexpanded_parsed_model = {
-  (* added prefix to avoid crashing type inference *)
-	unexpanded_controllable_actions  : unexpanded_parsed_controllable_actions;
-	unexpanded_variable_declarations : variable_declarations;
-	unexpanded_fun_definitions       : parsed_fun_definition_list;
-	unexpanded_automata              : unexpanded_parsed_automaton list;
-	unexpanded_init_definition       : init_definition;
-  template_definitions             : parsed_template_definition list;
-  template_calls                   : parsed_template_call list;
-  synt_declarations                : parsed_synt_var_decl list
+    (* added prefix to avoid crashing type inference *)
+    unexpanded_controllable_actions : unexpanded_parsed_controllable_actions;
+    unexpanded_variable_declarations : variable_declarations;
+    unexpanded_fun_definitions : parsed_fun_definition_list;
+    unexpanded_automata : unexpanded_parsed_automaton list;
+    unexpanded_init_definition : init_definition;
+    template_definitions : parsed_template_definition list;
+    template_calls : parsed_template_call list;
+    synt_declarations : parsed_synt_var_decl list;
 }
 
 (****************************************************************)
