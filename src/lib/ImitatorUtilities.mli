@@ -177,3 +177,5 @@ val var_index_err_msg : string -> string -> string
 val expand_name_or_access : ParsingStructure.name_or_access -> string
 
 val string_of_list_of_name_or_access_with_sep : string -> ParsingStructure.name_or_access list -> string
+
+val contains : string -> string -> bool

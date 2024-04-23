@@ -517,3 +517,9 @@ let rec string_of_list_of_name_or_access_with_sep sep = function
 	| [elem] -> pp_name_or_access elem
 	| head :: tail -> pp_name_or_access head ^ sep ^ (string_of_list_of_name_or_access_with_sep sep tail)
 
+let contains s1 s2 =
+  let re = Str.regexp_string s2 in
+  try
+     ignore (Str.search_forward re s1 0);
+     true
+  with Not_found -> false

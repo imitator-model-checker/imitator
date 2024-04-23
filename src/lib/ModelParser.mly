@@ -1061,14 +1061,10 @@ pos_float:
 
 checked_name_decl:
   | NAME {
-    let bad = ref false in
-    for i = 0 to String.length $1 - 3 do
-      if String.get $1 i = '_' && String.get $1 (i + 1) = '_' && String.get $1 (i + 2) = '_' then
-        bad := true;
-    done;
-    if !bad then
-      print_warning "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays.";
-    $1
+    if contains $1 "___" then
+      failwith
+        "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
+    else $1
   }
 
 semicolon_or_comma:
