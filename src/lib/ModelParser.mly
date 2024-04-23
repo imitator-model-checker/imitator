@@ -31,32 +31,48 @@ let parse_error _ =
 let include_list = ref [];;
 
 let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unexpanded_parsed_model) =
-	let merged_controllable_actions : ParsingStructure.unexpanded_parsed_controllable_actions = match parsed_model.unexpanded_controllable_actions, parsed_model_list.unexpanded_controllable_actions with
-			| Unexpanded_parsed_no_controllable_actions, Unexpanded_parsed_no_controllable_actions
-				-> Unexpanded_parsed_no_controllable_actions
-
-			| Unexpanded_parsed_no_controllable_actions, Unexpanded_parsed_controllable_actions action_names
-			| Unexpanded_parsed_controllable_actions action_names, Unexpanded_parsed_no_controllable_actions
-				-> Unexpanded_parsed_controllable_actions action_names
-
-			| Unexpanded_parsed_controllable_actions action_names_1, Unexpanded_parsed_controllable_actions action_names_2
-				-> Unexpanded_parsed_controllable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Unexpanded_parsed_uncontrollable_actions action_names_1, Unexpanded_parsed_uncontrollable_actions action_names_2
-				-> Unexpanded_parsed_uncontrollable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Unexpanded_parsed_no_controllable_actions, Unexpanded_parsed_uncontrollable_actions action_names
-			| Unexpanded_parsed_uncontrollable_actions action_names, Unexpanded_parsed_no_controllable_actions
-				-> Unexpanded_parsed_uncontrollable_actions action_names
-
-			| Unexpanded_parsed_uncontrollable_actions u_action_names, Unexpanded_parsed_controllable_actions c_action_names
-			| Unexpanded_parsed_controllable_actions c_action_names, Unexpanded_parsed_uncontrollable_actions u_action_names
-				->
-				(*** WARNING (2023/07/10): should be an error ***)
-				print_warning ("The submodels define contradictory controllable list of actions (" ^ (ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", " c_action_names) ^ ") AND uncontrollable list of actions (" ^ (ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", " u_action_names) ^ "); the model is ill-formed and its behavior is unspecified!");
-				Unexpanded_parsed_controllable_actions c_action_names
+  let merged_controllable_actions :
+      ParsingStructure.unexpanded_parsed_controllable_actions =
+    match
+      ( parsed_model.unexpanded_controllable_actions,
+        parsed_model_list.unexpanded_controllable_actions )
+    with
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_no_controllable_actions
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_controllable_actions action_names )
+    | ( Unexpanded_parsed_controllable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_controllable_actions action_names
+    | ( Unexpanded_parsed_controllable_actions action_names_1,
+        Unexpanded_parsed_controllable_actions action_names_2 ) ->
+        Unexpanded_parsed_controllable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_uncontrollable_actions action_names_1,
+        Unexpanded_parsed_uncontrollable_actions action_names_2 ) ->
+        Unexpanded_parsed_uncontrollable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_uncontrollable_actions action_names )
+    | ( Unexpanded_parsed_uncontrollable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_uncontrollable_actions action_names
+    | ( Unexpanded_parsed_uncontrollable_actions u_action_names,
+        Unexpanded_parsed_controllable_actions c_action_names )
+    | ( Unexpanded_parsed_controllable_actions c_action_names,
+        Unexpanded_parsed_uncontrollable_actions u_action_names ) ->
+        (*** WARNING (2023/07/10): should be an error ***)
+        print_warning
+          ("The submodels define contradictory controllable list of actions ("
+          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
+              c_action_names
+          ^ ") AND uncontrollable list of actions ("
+          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
+              u_action_names
+          ^ "); the model is ill-formed and its behavior is unspecified!");
+        Unexpanded_parsed_controllable_actions c_action_names
 		in
-
 	{
                 unexpanded_controllable_actions  = merged_controllable_actions;
                 unexpanded_variable_declarations = List.append parsed_model.unexpanded_variable_declarations parsed_model_list.unexpanded_variable_declarations;
