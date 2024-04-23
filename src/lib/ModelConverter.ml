@@ -3553,7 +3553,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
+	let (actions : action_index list), array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
 	
 	let nb_actions = List.length actions in
 	
@@ -3888,11 +3888,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print metrics if verbose low or in any case in mode translation *)
 	if verbose_mode_greater Verbose_low || (match options#imitator_mode with AbstractAlgorithm.Translation _ -> true | _ -> false) then(
 		print_message Verbose_standard (
+				let nb_declared_actions = List.length (List.filter (fun a -> action_types a = Action_type_sync) actions) in
 			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
 			^ ", "
 			^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
-			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
+			^ (string_of_int nb_declared_actions) ^ " declared synchronization action" ^ (s_of_int nb_declared_actions) ^ ", "
+			^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ " (synchronized or not), "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 			^ (string_of_int nb_rationals) ^ " rational variable" ^ (s_of_int nb_rationals) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
