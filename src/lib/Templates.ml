@@ -42,7 +42,7 @@ let instantiate_stopped_clock (param_map : var_map) : name_or_access -> name_or_
         | None                 -> Var_name clock_name
         | Some (Arg_name name) -> Var_name name
         | Some _               ->
-            failwith "[instantiate_stopped]: unexpected argument for template (expecting name)"
+            failwith "[instantiate_stopped_clock]: unexpected argument for template (expecting name)"
       (* This last case would be catched by type checking *)
     end
     | Var_array_access (arr_name, Literal id) -> Var_array_access (arr_name, Literal id)
@@ -178,7 +178,7 @@ let instantiate_transitions (param_map : var_map) : unexpanded_transition list -
 
 let instantiate_loc (param_map : var_map) (loc : unexpanded_parsed_location) : unexpanded_parsed_location =
   { loc with unexpanded_invariant   = instantiate_convex_predicate param_map loc.unexpanded_invariant;
-             unexpanded_stopped     = instantiate_stopped param_map loc.unexpanded_stopped;
+             unexpanded_stopped     = instantiate_stopped_clocks param_map loc.unexpanded_stopped;
              unexpanded_flow        = instantiate_flows param_map loc.unexpanded_flow;
              unexpanded_transitions = instantiate_transitions param_map loc.unexpanded_transitions
   }
