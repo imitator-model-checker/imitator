@@ -109,7 +109,7 @@ rule token = parse
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
-  | "synt_var"       { CT_SYNT_VAR }
+	| "synt_var"       { CT_SYNT_VAR }
 	| "template"       { CT_TEMPLATE }
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }

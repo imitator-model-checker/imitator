@@ -88,14 +88,14 @@ let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unex
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-                unexpanded_controllable_actions  = Unexpanded_parsed_no_controllable_actions;
-                unexpanded_variable_declarations = [];
-                unexpanded_fun_definitions       = [];
-                unexpanded_automata              = [];
-                unexpanded_init_definition       = [];
-                template_definitions             = [];
-                template_calls                   = [];
-                synt_declarations                = [];
+		unexpanded_controllable_actions  = Unexpanded_parsed_no_controllable_actions;
+		unexpanded_variable_declarations = [];
+		unexpanded_fun_definitions       = [];
+		unexpanded_automata              = [];
+		unexpanded_init_definition       = [];
+		template_definitions             = [];
+		template_calls                   = [];
+		synt_declarations                = [];
 	}
 	(List.rev l)
 ;;
@@ -961,7 +961,7 @@ linear_term:
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
-  | NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
+	| NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
 ;
 
 
