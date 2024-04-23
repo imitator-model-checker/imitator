@@ -2,7 +2,42 @@ open ImitatorUtilities;;
 open ParsingStructure;;
 open ParsingStructureUtilities;;
 
+(* Utilities *)
+
+(* The names and the corresponding array lengths of all syntatic variables in the problem *)
+type synt_vars_data = (variable_name * synt_var_kind * int) list
+
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
+
+let rec get_const_disc_arith_expr = function
+  | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
+  | Parsed_sum_diff (lhs, rhs, Parsed_minus) -> NumConst.sub (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
+  | Parsed_term term -> get_const_disc_term term
+
+and get_const_disc_term = function
+  | Parsed_product_quotient (lhs, rhs, Parsed_mul) -> NumConst.mul (get_const_disc_term lhs) (get_const_disc_factor rhs) 
+  | Parsed_product_quotient (lhs, rhs, Parsed_div) -> NumConst.div (get_const_disc_term lhs) (get_const_disc_factor rhs) 
+  | Parsed_factor factor -> get_const_disc_factor factor
+
+and get_const_disc_factor = function
+  | Parsed_constant (ParsedValue.Weak_number_value value) -> value
+  | Parsed_unary_min factor -> NumConst.neg (get_const_disc_factor factor)
+  | Parsed_nested_expr expr -> get_const_disc_arith_expr expr
+  | _ -> failwith "[get_const_disc_factor]: argument is not an integer constant"
+
+let find_arr_len_opt arr_name =
+  List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None)
+
+let gen_var_from_access def gen_var_from_name arr_name index synt_arrays =
+  let arr_len_opt = find_arr_len_opt arr_name synt_arrays in
+  match arr_len_opt with
+    | None -> def
+    | Some len ->
+        let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
+        if index_c < len then
+          let var_name = gen_access_id arr_name index_c in
+          gen_var_from_name var_name
+        else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
 
 let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
   fun leaf -> match leaf with
@@ -50,7 +85,6 @@ let instantiate_stopped_clock (param_map : var_map) : name_or_access -> name_or_
 
 let instantiate_stopped_clocks (param_map : var_map) : name_or_access list -> name_or_access list =
   List.map (instantiate_stopped_clock param_map)
-
 
 let instantiate_flows (param_map : var_map) (flows : unexpanded_parsed_flow) : unexpanded_parsed_flow =
   let instantiate_flow (clock, rate) =
@@ -200,9 +234,6 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : unexpanded_parsed_automaton list =
   List.map (instantiate_automaton templates) insts
 
-(* The names and the corresponding array lengths of all syntatic variables in the problem *)
-type synt_vars_data = (variable_name * synt_var_kind * int) list
-
 let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
   let aux (name, kind, len) =
     match kind with
@@ -213,22 +244,6 @@ let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
   in
   let packed_decls = List.filter_map aux synt_decls in
   List.map (fun packed_decl -> (DiscreteType.Var_type_clock, packed_decl)) packed_decls
-
-let rec get_const_disc_arith_expr = function
-  | Parsed_sum_diff (lhs, rhs, Parsed_plus) -> NumConst.add (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
-  | Parsed_sum_diff (lhs, rhs, Parsed_minus) -> NumConst.sub (get_const_disc_arith_expr lhs) (get_const_disc_term rhs) 
-  | Parsed_term term -> get_const_disc_term term
-
-and get_const_disc_term = function
-  | Parsed_product_quotient (lhs, rhs, Parsed_mul) -> NumConst.mul (get_const_disc_term lhs) (get_const_disc_factor rhs) 
-  | Parsed_product_quotient (lhs, rhs, Parsed_div) -> NumConst.div (get_const_disc_term lhs) (get_const_disc_factor rhs) 
-  | Parsed_factor factor -> get_const_disc_factor factor
-
-and get_const_disc_factor = function
-  | Parsed_constant (ParsedValue.Weak_number_value value) -> value
-  | Parsed_unary_min factor -> NumConst.neg (get_const_disc_factor factor)
-  | Parsed_nested_expr expr -> get_const_disc_arith_expr expr
-  | _ -> failwith "[get_const_disc_factor]: argument is not an integer constant"
 
 (* Expand syntatic arrays - unfortunatelly this can't be implemented just with a map_parsed_boolean_expression *)
 let rec expand_parsed_boolean_expression synt_arrays = function
@@ -267,26 +282,16 @@ and expand_parsed_discrete_term synt_arrays = function
       Parsed_product_quotient (t', f', product_quotient)
   | Parsed_factor f -> Parsed_factor (expand_parsed_discrete_factor synt_arrays f)
 
-and expand_parsed_discrete_factor synt_arrays = fun factor ->
+and expand_parsed_discrete_factor (synt_arrays : synt_vars_data) = fun factor ->
   let get_name_of_factor = function
     | Parsed_variable (name, _) -> name
     | _ -> failwith "[expand_parsed_discrete_factor]: Name of syntatic array was not a variable name."
   in
   match factor with
-    | Parsed_access (factor', index) -> begin
+    | Parsed_access (factor', index) ->
         let arr_name = get_name_of_factor factor' in
-        let arr_len_opt =
-          List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None) synt_arrays
-        in
-        match arr_len_opt with
-          | None -> factor
-          | Some len ->
-              let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
-              if index_c < len then
-                let var_name = gen_access_id arr_name index_c in
-                Parsed_variable (var_name, 0)
-              else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
-    end
+        let gen_var_from_name name = Parsed_variable (name, 0) in
+        gen_var_from_access factor gen_var_from_name arr_name index synt_arrays
     | _ -> factor
 
 let expand_name_or_access_list = List.map expand_name_or_access
@@ -295,19 +300,12 @@ let expand_sync : unexpanded_sync -> sync = function
   | UnexpandedSync action -> Sync (expand_name_or_access action)
   | UnexpandedNoSync -> NoSync
 
-let expand_indexed_update (synt_vars : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
+let expand_indexed_update (synt_arrays : synt_vars_data) : parsed_scalar_or_index_update_type -> parsed_scalar_or_index_update_type =
   fun e ->
     match e with
       | Parsed_indexed_update (Parsed_scalar_update (name, _), index) -> begin
-          match List.find_map (fun (name', _, len) -> if name = name' then Some len else None) synt_vars with
-            | None -> e
-            | Some len ->
-                let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
-                if index_c < len then
-                  let new_name = gen_access_id name index_c in
-                  Parsed_scalar_update (new_name, 0)
-                else
-                  failwith "[expand_indexed_update]: Index is greater or equal to length of syntatic array"
+          let gen_var_from_name name = Parsed_scalar_update (name, 0) in
+          gen_var_from_access e gen_var_from_name name index synt_arrays
       end
       | _ -> e
 
