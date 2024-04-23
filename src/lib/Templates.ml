@@ -275,7 +275,10 @@ and expand_parsed_discrete_factor synt_arrays = fun factor ->
   match factor with
     | Parsed_access (factor', index) -> begin
         let arr_name = get_name_of_factor factor' in
-        match List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None) synt_arrays with
+        let arr_len_opt =
+          List.find_map (fun (name, _, len) -> if arr_name = name then Some len else None) synt_arrays
+        in
+        match arr_len_opt with
           | None -> factor
           | Some len ->
               let index_c = NumConst.to_bounded_int (get_const_disc_arith_expr index) in
