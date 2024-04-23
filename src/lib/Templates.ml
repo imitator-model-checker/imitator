@@ -35,8 +35,8 @@ let instantiate_array_index (param_map : var_map) (arr : variable_name) (id : va
     | Some (Arg_float _)       -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a float"
     | Some (Arg_bool _)        -> failwith "[instantiate_array_index]: Not allowed to access a syntatic array with a boolean."
 
-let instantiate_stopped (param_map : var_map) (clocks : name_or_access list) : name_or_access list =
-  List.map (function
+let instantiate_stopped_clock (param_map : var_map) : name_or_access -> name_or_access =
+  function
     | Var_name clock_name -> begin
       match Hashtbl.find_opt param_map clock_name with
         | None                 -> Var_name clock_name
@@ -47,7 +47,9 @@ let instantiate_stopped (param_map : var_map) (clocks : name_or_access list) : n
     end
     | Var_array_access (arr_name, Literal id) -> Var_array_access (arr_name, Literal id)
     | Var_array_access (arr_name, Const_var id) -> instantiate_array_index param_map arr_name id
-  ) clocks
+
+let instantiate_stopped_clocks (param_map : var_map) : name_or_access list -> name_or_access list =
+  List.map (instantiate_stopped_clock param_map)
 
 
 let instantiate_flows (param_map : var_map) (flows : unexpanded_parsed_flow) : unexpanded_parsed_flow =
