@@ -368,7 +368,7 @@ type unexpanded_parsed_model = {
     unexpanded_variable_declarations : variable_declarations;
     unexpanded_fun_definitions : parsed_fun_definition_list;
     unexpanded_automata : unexpanded_parsed_automaton list;
-    unexpanded_init_definition : init_definition;
+    unexpanded_init_definition : unexpanded_init_definition;
     template_definitions : parsed_template_definition list;
     template_calls : parsed_template_call list;
     forall_template_calls : parsed_forall_template_call list;
