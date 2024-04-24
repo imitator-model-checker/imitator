@@ -131,17 +131,29 @@ type linear_term =
 	| Constant of  NumConst.t
 	| Variable of  NumConst.t * variable_name
 
-
 type linear_expression =
 	| Linear_term of linear_term
 	| Linear_plus_expression of linear_expression * linear_term
 	| Linear_minus_expression of linear_expression * linear_term
 
-
 type linear_constraint =
 	| Parsed_true_constraint (** True *)
 	| Parsed_false_constraint (** False *)
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
+
+type unexpanded_linear_term =
+	| Unexpanded_constant of  NumConst.t
+	| Unexpanded_variable of  NumConst.t * name_or_access
+
+type unexpanded_linear_expression =
+	| Unexpanded_linear_term of unexpanded_linear_term
+	| Unexpanded_linear_plus_expression of unexpanded_linear_expression * unexpanded_linear_term
+	| Unexpanded_linear_minus_expression of unexpanded_linear_expression * unexpanded_linear_term
+
+type unexpanded_linear_constraint =
+	| Unexpanded_parsed_true_constraint
+	| Unexpanded_parsed_false_constraint
+	| Unexpanded_parsed_linear_constraint of unexpanded_linear_expression * parsed_relop * unexpanded_linear_expression
 
 (** Non-linear expressions *)
 type nonlinear_constraint = parsed_discrete_boolean_expression
@@ -260,7 +272,7 @@ type unexpanded_parsed_location = {
 	unexpanded_name        : location_name;
 	unexpanded_urgency     : parsed_urgency;
 	unexpanded_acceptance  : parsed_acceptance;
-	unexpanded_cost        : linear_expression option;
+	unexpanded_cost        : unexpanded_linear_expression option;
 	unexpanded_invariant   : invariant;
 	unexpanded_stopped     : name_or_access list;
 	unexpanded_flow        : unexpanded_parsed_flow;
@@ -311,7 +323,9 @@ type unexpanded_parsed_init_state_predicate =
   | Unexpanded_parsed_forall_loc_assignment of
   (*  index info          array name      array index                             location *)
       forall_index_data * variable_name * parsed_discrete_arithmetic_expression * location_name
-	| Unexpanded_parsed_linear_predicate of linear_constraint
+	| Unexpanded_parsed_linear_predicate of unexpanded_linear_constraint
+	| Unexpanded_parsed_forall_linear_predicate of
+		forall_index_data * unexpanded_linear_constraint
 	| Unexpanded_parsed_discrete_predicate of variable_name * parsed_boolean_expression
 
 type unexpanded_init_definition = unexpanded_parsed_init_state_predicate list

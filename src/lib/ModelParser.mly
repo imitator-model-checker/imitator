@@ -865,11 +865,18 @@ init_continuous_expression:
 init_continuous_expression_nonempty_list :
 	| init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list  { $1 :: $3 }
 	| init_continuous_state_predicate ampersand_opt { [ $1 ] }
+	| forall_init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list { $1 :: $3 }
+	| forall_init_continuous_state_predicate ampersand_opt { [ $1 ] }
 ;
 
 init_continuous_state_predicate:
     | LPAREN init_continuous_state_predicate RPAREN { $2 }
     | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
+;
+
+forall_init_continuous_state_predicate:
+  | LPAREN forall_common_prefix init_linear_constraint RPAREN  { Unexpanded_parsed_forall_linear_predicate ($2, $3) }
+  | forall_common_prefix init_linear_constraint  { Unexpanded_parsed_forall_linear_predicate ($1, $2) }
 ;
 
 init_loc_predicate:
@@ -969,27 +976,26 @@ binary_word:
 /************************************************************/
 
 init_linear_constraint:
-	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
-	| CT_TRUE { Parsed_true_constraint }
-	| CT_FALSE { Parsed_false_constraint }
+	| linear_expression relop linear_expression { Unexpanded_parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Unexpanded_parsed_true_constraint }
+	| CT_FALSE { Unexpanded_parsed_false_constraint }
 ;
 
 /* Linear expression over variables and rationals */
 linear_expression:
-	| linear_term { Linear_term $1 }
-	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
+	| linear_term { Unexpanded_linear_term $1 }
+	| linear_expression OP_PLUS linear_term { Unexpanded_linear_plus_expression ($1, $3) }
+	| linear_expression OP_MINUS linear_term { Unexpanded_linear_minus_expression ($1, $3) }
 ;
 
 /* Linear term over variables and rationals (no recursion, no division) */
 linear_term:
-	| rational { Constant $1 }
-	| rational NAME { Variable ($1, $2) }
-	| rational OP_MUL NAME { Variable ($1, $3) }
-	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
-	| NAME { Variable (NumConst.one, $1) }
+	| rational { Unexpanded_constant $1 }
+	| rational name_or_array_access { Unexpanded_variable ($1, $2) }
+	| rational OP_MUL name_or_array_access { Unexpanded_variable ($1, $3) }
+	| OP_MINUS name_or_array_access { Unexpanded_variable (NumConst.minus_one, $2) }
+	| name_or_array_access { Unexpanded_variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
-	| NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
 ;
 
 

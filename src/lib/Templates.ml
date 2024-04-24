@@ -82,6 +82,35 @@ let instantiate_discrete_arithmetic_expression (param_map : var_map) : parsed_di
 let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) : convex_predicate =
   List.map (instantiate_discrete_boolean_expression param_map) inv
 
+let rec instantiate_linear_term (param_map : var_map) (term : unexpanded_linear_term) : unexpanded_linear_term =
+  match term with
+    | Unexpanded_constant _ | Unexpanded_variable (_, Var_name _) -> term
+    | Unexpanded_variable (c, Var_array_access (arr_name, index)) ->
+        let index' = instantiate_discrete_arithmetic_expression param_map index in
+        Unexpanded_variable (c, Var_array_access (arr_name, index'))
+
+and instantiate_linear_expression (param_map : var_map) (expr : unexpanded_linear_expression) : unexpanded_linear_expression =
+  match expr with
+    | Unexpanded_linear_term t -> Unexpanded_linear_term (instantiate_linear_term param_map t)
+    | Unexpanded_linear_plus_expression (e, t) ->
+        let e' = instantiate_linear_expression param_map e in
+        let t' = instantiate_linear_term param_map t in
+        Unexpanded_linear_plus_expression (e', t')
+    | Unexpanded_linear_minus_expression (e, t) ->
+        let e' = instantiate_linear_expression param_map e in
+        let t' = instantiate_linear_term param_map t in
+        Unexpanded_linear_minus_expression (e', t')
+
+and instantiate_linear_constraint (param_map : var_map) (constr : unexpanded_linear_constraint) : unexpanded_linear_constraint =
+  match constr with
+    | Unexpanded_parsed_true_constraint -> Unexpanded_parsed_true_constraint
+    | Unexpanded_parsed_false_constraint -> Unexpanded_parsed_false_constraint
+    | Unexpanded_parsed_linear_constraint (e1, relop, e2) ->
+        let e1' = instantiate_linear_expression param_map e1 in
+        let e2' = instantiate_linear_expression param_map e2 in
+        Unexpanded_parsed_linear_constraint (e1', relop, e2')
+
+(* Returns a list with all indices inside the forall range *)
 let indices_from_forall_index_data g_decls forall_index_data =
   let { forall_index_name = _; forall_lb; forall_ub } = forall_index_data in
   let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
@@ -267,6 +296,30 @@ let expand_name_or_access g_decls = function
 
 let expand_name_or_access_list g_decls = List.map (expand_name_or_access g_decls)
 
+let rec expand_linear_term g_decls = function
+  | Unexpanded_constant c -> Constant c
+  | Unexpanded_variable (c, name_or_access) ->
+      Variable (c, expand_name_or_access g_decls name_or_access)
+
+and expand_linear_expression g_decls = function
+  | Unexpanded_linear_term t -> Linear_term (expand_linear_term g_decls t)
+  | Unexpanded_linear_plus_expression (e, t) ->
+      let e' = expand_linear_expression g_decls e in
+      let t' = expand_linear_term g_decls t in
+      Linear_plus_expression (e', t')
+  | Unexpanded_linear_minus_expression (e, t) ->
+      let e' = expand_linear_expression g_decls e in
+      let t' = expand_linear_term g_decls t in
+      Linear_minus_expression (e', t')
+
+and expand_linear_constraint g_decls = function
+  | Unexpanded_parsed_true_constraint -> Parsed_true_constraint
+  | Unexpanded_parsed_false_constraint -> Parsed_false_constraint
+  | Unexpanded_parsed_linear_constraint (e1, relop, e2) ->
+      let e1' = expand_linear_expression g_decls e1 in
+      let e2' = expand_linear_expression g_decls e2 in
+      Parsed_linear_constraint (e1', relop, e2')
+
 (* Expand syntatic arrays - unfortunatelly this can't be implemented just with a map_parsed_boolean_expression *)
 let rec expand_parsed_boolean_expression g_decls synt_arrays = function
   | Parsed_conj_dis (e1, e2, c) ->
@@ -377,7 +430,7 @@ let expand_loc (g_decls : variable_declarations) (synt_vars : synt_vars_data) (l
   {
     name        = loc.unexpanded_name;
     urgency     = loc.unexpanded_urgency;
-    cost        = loc.unexpanded_cost;
+    cost        = Option.map (expand_linear_expression g_decls) loc.unexpanded_cost;
     acceptance  = loc.unexpanded_acceptance;
     invariant   = expanded_invariant;
     stopped     = expanded_stopped;
@@ -411,21 +464,31 @@ let expand_forall_call g_decls { forall_index_data; forall_template; forall_aut_
   in
   List.map build_call indices
 
-let expand_init_state_predicate g_decls = function
+let expand_init_state_predicate g_decls pred =
+  let gen_aux_var_tbl i index_data =
+    Hashtbl.of_seq (List.to_seq [(index_data.forall_index_name, Arg_int (NumConst.numconst_of_int i))])
+  in
+  match pred with
     | Unexpanded_parsed_forall_loc_assignment (index_data, arr_name, arr_idx, loc_name) ->
-        let indices = indices_from_forall_index_data g_decls index_data in
-        let instantiate_arr_idx i =
-          let aux_var_tbl =
-            Hashtbl.of_seq (List.to_seq [(index_data.forall_index_name, Arg_int (NumConst.numconst_of_int i))])
-          in
+        let instantiate_arr_idx i arr_idx =
+          let aux_var_tbl = gen_aux_var_tbl i index_data in
           (* instantiate index expression with respect to the forall variable *)
           instantiate_discrete_arithmetic_expression aux_var_tbl arr_idx |>
           (* ... then evaluate it, to obtain a concrete number *)
           eval_parsed_arithmetic_expr g_decls
         in
-        List.map (fun i -> Parsed_loc_assignment (gen_access_id arr_name (instantiate_arr_idx i), loc_name)) indices
+        indices_from_forall_index_data g_decls index_data |>
+        List.map (fun i -> Parsed_loc_assignment (gen_access_id arr_name (instantiate_arr_idx i arr_idx), loc_name))
     | Unexpanded_parsed_loc_assignment (aut, loc) -> [Parsed_loc_assignment (aut, loc)]
-    | Unexpanded_parsed_linear_predicate constr -> [Parsed_linear_predicate constr]
+    | Unexpanded_parsed_linear_predicate constr -> [Parsed_linear_predicate (expand_linear_constraint g_decls constr)]
+    | Unexpanded_parsed_forall_linear_predicate (index_data, constr) ->
+        let instantiate_constr i constr =
+          let aux_var_tbl = gen_aux_var_tbl i index_data in
+          instantiate_linear_constraint aux_var_tbl constr |>
+          expand_linear_constraint g_decls
+        in
+        indices_from_forall_index_data g_decls index_data |>
+        List.map (fun i -> Parsed_linear_predicate (instantiate_constr i constr))
     | Unexpanded_parsed_discrete_predicate (name, bool_expr) ->
         [Parsed_discrete_predicate (name, bool_expr)]
 
