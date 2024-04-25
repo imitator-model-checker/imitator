@@ -13,7 +13,7 @@ template p(i : int)
 
 actions: acts[2 * i];
 
-loc A: invariant x[i] <= params[2 * i]
+loc A: invariant x[i] <= params[i]
   when id = IDLE do { x[i] := 0 } sync acts[2 * i] goto req;
 
 loc req: invariant x[i] <= k
@@ -28,17 +28,18 @@ loc cs: invariant True
 
 end
 
-forall i in [0, 2]: instantiate p[i] := p(i);
+forall i in [0, 1]: instantiate p[i] := p(i);
 
 init := {
 
     discrete =
+        forall i in [0, 1]: loc[p[i]] := A,
         id := IDLE,
     ;
 
     continuous =
-        x[0] = 0
-      & x[1] = 0
+        forall i in [0, 1]: x[i] = i &
+        forall i in [0, 1]: params[i] >= 0
     ;
 }
 

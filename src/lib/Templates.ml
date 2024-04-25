@@ -84,7 +84,15 @@ let instantiate_convex_predicate (param_map : var_map) (inv : convex_predicate) 
 
 let rec instantiate_linear_term (param_map : var_map) (term : unexpanded_linear_term) : unexpanded_linear_term =
   match term with
-    | Unexpanded_constant _ | Unexpanded_variable (_, Var_name _) -> term
+    | Unexpanded_constant _ -> term
+    | Unexpanded_variable (c, Var_name name) -> begin
+        match Hashtbl.find_opt param_map name with
+          | None ->  Unexpanded_variable (c, Var_name name)
+          | Some (Arg_name name') -> Unexpanded_variable (c, Var_name name')
+          | Some (Arg_int i_val) -> Unexpanded_constant i_val
+          | Some (Arg_float f_val) -> Unexpanded_constant f_val
+          | Some (Arg_bool _) -> failwith "[instantiate_linear_term]: boolean variable in linear constraint."
+    end
     | Unexpanded_variable (c, Var_array_access (arr_name, index)) ->
         let index' = instantiate_discrete_arithmetic_expression param_map index in
         Unexpanded_variable (c, Var_array_access (arr_name, index'))
