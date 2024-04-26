@@ -27,64 +27,75 @@ let parse_error _ =
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
-
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
-	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.model.controllable_actions, parsed_model_list.model.controllable_actions with
-			| Parsed_no_controllable_actions, Parsed_no_controllable_actions
-				-> Parsed_no_controllable_actions
-
-			| Parsed_no_controllable_actions, Parsed_controllable_actions action_names
-			| Parsed_controllable_actions action_names, Parsed_no_controllable_actions
-				-> Parsed_controllable_actions action_names
-
-			| Parsed_controllable_actions action_names_1, Parsed_controllable_actions action_names_2
-				-> Parsed_controllable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Parsed_uncontrollable_actions action_names_1, Parsed_uncontrollable_actions action_names_2
-				-> Parsed_uncontrollable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Parsed_no_controllable_actions, Parsed_uncontrollable_actions action_names
-			| Parsed_uncontrollable_actions action_names, Parsed_no_controllable_actions
-				-> Parsed_uncontrollable_actions action_names
-
-			| Parsed_uncontrollable_actions u_action_names, Parsed_controllable_actions c_action_names
-			| Parsed_controllable_actions c_action_names, Parsed_uncontrollable_actions u_action_names
-				->
-				(*** WARNING (2023/07/10): should be an error ***)
-				print_warning ("The submodels define contradictory controllable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " c_action_names) ^ ") AND uncontrollable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " u_action_names) ^ "); the model is ill-formed and its behavior is unspecified!");
-				Parsed_controllable_actions c_action_names
+let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unexpanded_parsed_model) =
+  let merged_controllable_actions :
+      ParsingStructure.unexpanded_parsed_controllable_actions =
+    match
+      ( parsed_model.unexpanded_controllable_actions,
+        parsed_model_list.unexpanded_controllable_actions )
+    with
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_no_controllable_actions
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_controllable_actions action_names )
+    | ( Unexpanded_parsed_controllable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_controllable_actions action_names
+    | ( Unexpanded_parsed_controllable_actions action_names_1,
+        Unexpanded_parsed_controllable_actions action_names_2 ) ->
+        Unexpanded_parsed_controllable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_uncontrollable_actions action_names_1,
+        Unexpanded_parsed_uncontrollable_actions action_names_2 ) ->
+        Unexpanded_parsed_uncontrollable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_uncontrollable_actions action_names )
+    | ( Unexpanded_parsed_uncontrollable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_uncontrollable_actions action_names
+    | ( Unexpanded_parsed_uncontrollable_actions u_action_names,
+        Unexpanded_parsed_controllable_actions c_action_names )
+    | ( Unexpanded_parsed_controllable_actions c_action_names,
+        Unexpanded_parsed_uncontrollable_actions u_action_names ) ->
+        (*** WARNING (2023/07/10): should be an error ***)
+        print_warning
+          ("The submodels define contradictory controllable list of actions ("
+          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
+              c_action_names
+          ^ ") AND uncontrollable list of actions ("
+          ^ ImitatorUtilities.string_of_list_of_name_or_access_with_sep ", "
+              u_action_names
+          ^ "); the model is ill-formed and its behavior is unspecified!");
+        Unexpanded_parsed_controllable_actions c_action_names
 		in
-
 	{
-                model =
-                {
-                        controllable_actions  = merged_controllable_actions;
-                        variable_declarations = List.append parsed_model.model.variable_declarations parsed_model_list.model.variable_declarations;
-                        fun_definitions       = List.append parsed_model.model.fun_definitions parsed_model_list.model.fun_definitions;
-                        automata              = List.append parsed_model.model.automata parsed_model_list.model.automata;
-                        init_definition       = List.append parsed_model.model.init_definition parsed_model_list.model.init_definition;
-                };
-                template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
-                template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                unexpanded_controllable_actions  = merged_controllable_actions;
+                unexpanded_variable_declarations = List.append parsed_model.unexpanded_variable_declarations parsed_model_list.unexpanded_variable_declarations;
+                unexpanded_fun_definitions       = List.append parsed_model.unexpanded_fun_definitions parsed_model_list.unexpanded_fun_definitions;
+                unexpanded_automata              = List.append parsed_model.unexpanded_automata parsed_model_list.unexpanded_automata;
+                unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
+                template_definitions             = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
+                template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-                model =
-                {
-                        controllable_actions  = Parsed_no_controllable_actions;
-                        variable_declarations = [];
-                        fun_definitions       = [];
-                        automata              = [];
-                        init_definition       = [];
-                };
-                template_definitions  = [];
-                template_calls        = [];
+		unexpanded_controllable_actions  = Unexpanded_parsed_no_controllable_actions;
+		unexpanded_variable_declarations = [];
+		unexpanded_fun_definitions       = [];
+		unexpanded_automata              = [];
+		unexpanded_init_definition       = [];
+		template_definitions             = [];
+		template_calls                   = [];
+		synt_declarations                = [];
 	}
 	(List.rev l)
 ;;
@@ -96,7 +107,7 @@ let unzip l = List.fold_left
 %token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
-%token <ParsingStructure.parsed_model_with_templates> INCLUDE
+%token <ParsingStructure.unexpanded_parsed_model> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -117,7 +128,7 @@ let unzip l = List.fold_left
 	CT_NOT
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
-	CT_STOP CT_SYNC CT_SYNCLABS
+	CT_STOP CT_SYNC CT_SYNCLABS CT_SYNT_VAR
 	CT_TEMPLATE CT_THEN CT_TO CT_TRUE
 	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
@@ -144,34 +155,33 @@ let unzip l = List.fold_left
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_model_with_templates> main
+%type <ParsingStructure.unexpanded_parsed_model> main
 %%
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions = $1 in
 		let declarations         = $3 in
-		let fun_definitions      = $4 in
-		let template_definitions = $5 in
-		let automata             = $6 in
-		let template_calls       = $7 in
-		let init_definition      = $8 in
+    let synt_declarations    = $4 in
+		let fun_definitions      = $5 in
+		let template_definitions = $6 in
+		let automata             = $7 in
+		let template_calls       = $8 in
+		let init_definition      = $9 in
 
 		let main_model =
-		{
-                        model =
-                        {
-                                controllable_actions  = controllable_actions;
-                                variable_declarations = declarations;
-                                fun_definitions       = fun_definitions;
-                                automata              = automata;
-                                init_definition       = init_definition;
-                        };
+{
+                        unexpanded_controllable_actions  = controllable_actions;
+                        unexpanded_variable_declarations = declarations;
+                        unexpanded_fun_definitions       = fun_definitions;
+                        unexpanded_automata              = automata;
+                        unexpanded_init_definition       = init_definition;
                         template_definitions  = template_definitions;
                         template_calls        = template_calls;
+                        synt_declarations     = synt_declarations;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -193,11 +203,36 @@ end_opt:
   CONTROLLABLE ACTIONS
 ************************************************************/
 controllable_actions_option:
-	| CT_CONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Parsed_controllable_actions $4 }
-	| CT_UNCONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Parsed_uncontrollable_actions $4 }
-	| { Parsed_no_controllable_actions }
+	| CT_CONTROLLABLE CT_ACTIONS COLON name_or_array_access_list SEMICOLON { Unexpanded_parsed_controllable_actions $4 }
+	| CT_UNCONTROLLABLE CT_ACTIONS COLON name_or_array_access_list SEMICOLON { Unexpanded_parsed_uncontrollable_actions $4 }
+	| { Unexpanded_parsed_no_controllable_actions }
 ;
 
+/************************************************************
+  VARIABLE DECLARATIONS
+************************************************************/
+
+/************************************************************/
+
+synt_var_decls:
+  | CT_SYNT_VAR synt_var_lists { $2 }
+  | { [] }
+;
+
+synt_var_lists:
+  | synt_var_list COLON synt_var_type SEMICOLON synt_var_lists { ($3, $1) :: $5 }
+  | { [] }
+;
+
+synt_var_list:
+  | checked_name_decl comma_opt { [$1] }
+  | checked_name_decl COMMA synt_var_list { $1 :: $3 }
+;
+
+synt_var_type:
+  | CT_CLOCK CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Clock_synt_array }
+  | CT_ACTION CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Action_synt_array }
+;
 
 /************************************************************
   VARIABLE DECLARATIONS
@@ -207,7 +242,7 @@ controllable_actions_option:
 
 variables_declarations:
 	| CT_VAR decl_var_lists { $2 }
-	| { []}
+	| { [] }
 ;
 
 
@@ -236,11 +271,11 @@ decl_var_lists:
 /************************************************************/
 
 decl_var_list:
-	| variable_name comma_opt { [($1, None)] }
-	| variable_name OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
+	| checked_name_decl comma_opt { [($1, None)] }
+	| checked_name_decl OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
 
-	| variable_name COMMA decl_var_list { ($1, None) :: $3 }
-	| variable_name OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| checked_name_decl COMMA decl_var_list { ($1, None) :: $3 }
+	| checked_name_decl OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /************************************************************/
@@ -364,7 +399,7 @@ semicolon_or_comma_opt:
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
+  | CT_VAR checked_name_decl COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */
@@ -513,25 +548,25 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON name_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON name_or_array_access_list SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON name_list SEMICOLON {
+	| CT_SYNCLABS COLON name_or_array_access_list SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
 ;
 
 /************************************************************/
 
-name_list:
-	| name_nonempty_list { $1 }
+name_or_array_access_list:
+	| name_or_array_access_nonempty_list { $1 }
 	| { [] }
 ;
 
 /************************************************************/
 
-name_nonempty_list:
-	NAME COMMA name_nonempty_list { $1 :: $3}
-	| NAME comma_opt { [$1] }
+name_or_array_access_nonempty_list:
+	| name_or_array_access COMMA name_or_array_access_nonempty_list { $1 :: $3 }
+	| name_or_array_access comma_opt { [$1] }
 ;
 
 /************************************************************/
@@ -551,21 +586,21 @@ location:
 		let stopwatches, flow = $6 in
 		{
 			(* Name *)
-			name		= name;
+			unexpanded_name		= name;
 			(* Urgent or not? *)
-			urgency		= urgency;
+			unexpanded_urgency		= urgency;
 			(* Accepting or not? *)
-			acceptance	= accepting;
+			unexpanded_acceptance	= accepting;
 			(* Cost *)
-			cost		= cost;
+			unexpanded_cost		= cost;
 			(* Invariant *)
-			invariant	= $5;
+			unexpanded_invariant	= $5;
 			(* List of stopped clocks *)
-			stopped		= stopwatches;
+			unexpanded_stopped		= stopwatches;
 			(* Flow of clocks *)
-			flow		= flow;
+			unexpanded_flow		= flow;
 			(* Transitions starting from this location *)
-			transitions = $8;
+			unexpanded_transitions = $8;
 		}
 	}
 ;
@@ -644,19 +679,20 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| NAME APOSTROPHE OP_EQ flow_value { ($1, $4) }
+	| name_or_array_access APOSTROPHE OP_EQ name_or_num_lit { ($1, $4) }
 ;
 
 /************************************************************/
 
-flow_value:
-        | rational_linear_expression { Flow_rat_value $1 }
-        | NAME { Flow_var $1 }
+name_or_num_lit:
+  /* TODO: In case of array access, should not accept rational values, only integer */
+        | rational_linear_expression { Literal $1 }
+        | NAME { Const_var $1 }
 
 /************************************************************/
 
 stopwatches:
-	| CT_STOP LBRACE name_list RBRACE { $3 }
+	| CT_STOP LBRACE name_or_array_access_list RBRACE { $3 }
 ;
 
 /************************************************************/
@@ -680,11 +716,11 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { [], NoSync }
-	| updates { $1, NoSync }
-	| sync_action { [], (Sync $1) }
-	| updates sync_action { $1, (Sync $2) }
-	| sync_action updates { $2, (Sync $1) }
+	| { [], UnexpandedNoSync }
+	| updates { $1, UnexpandedNoSync }
+	| sync_action { [], (UnexpandedSync $1) }
+	| updates sync_action { $1, (UnexpandedSync $2) }
+	| sync_action updates { $2, (UnexpandedSync $1) }
 ;
 
 /************************************************************/
@@ -696,10 +732,15 @@ updates:
 /************************************************************/
 
 sync_action:
-	CT_SYNC NAME { $2 }
+	CT_SYNC name_or_array_access { $2 }
 ;
 
+/************************************************************/
 
+name_or_array_access:
+  | NAME { Var_name $1 }
+  | NAME LSQBRA name_or_num_lit RSQBRA { Var_array_access ($1, $3) }
+;
 
 /************************************************************/
 /** INIT DEFINITION */
@@ -920,6 +961,7 @@ linear_term:
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
+	| NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
 ;
 
 
@@ -1032,6 +1074,14 @@ pos_float:
 /************************************************************/
 /** MISC. */
 /************************************************************/
+
+checked_name_decl:
+  | NAME {
+    if contains $1 "___" then
+      failwith
+        "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
+    else $1
+  }
 
 semicolon_or_comma:
   | SEMICOLON {}

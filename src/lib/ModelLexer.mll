@@ -46,7 +46,7 @@ rule token = parse
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
-			let p : ParsingStructure.parsed_model_with_templates = ModelParser.main token lb in
+			let p : ParsingStructure.unexpanded_parsed_model = ModelParser.main token lb in
 			INCLUDE p
     }
 
@@ -109,6 +109,7 @@ rule token = parse
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
+	| "synt_var"       { CT_SYNT_VAR }
 	| "template"       { CT_TEMPLATE }
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }
