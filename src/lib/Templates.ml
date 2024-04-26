@@ -114,6 +114,20 @@ let instantiate_flows (param_map : var_map) (flows : unexpanded_parsed_flow) : u
   in
   List.map instantiate_flow flows
 
+let rec instantiate_indexed_update param_map =
+  function
+    | Parsed_scalar_update (name, id) -> begin
+        match Hashtbl.find_opt param_map name with
+          | None -> Parsed_scalar_update (name, id)
+          | Some (Arg_name name') -> Parsed_scalar_update (name', id)
+          | Some _ ->
+              failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
+    end
+    | Parsed_indexed_update (arr, index) ->
+        let index' = instantiate_discrete_arithmetic_expression param_map index in
+        let arr' = instantiate_indexed_update param_map arr in
+        Parsed_indexed_update (arr', index')
+
 let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc -> parsed_seq_code_bloc =
   function
     | [] -> []
@@ -132,23 +146,9 @@ let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc ->
     end
     | inst :: tl ->
         let tl' = instantiate_instructions param_map tl in
-        let rec instantiate_indexed_update =
-          function
-            | Parsed_scalar_update (name, id) -> begin
-                match Hashtbl.find_opt param_map name with
-                  | None -> Parsed_scalar_update (name, id)
-                  | Some (Arg_name name') -> Parsed_scalar_update (name', id)
-                  | Some _ ->
-                      failwith "[instantiate_instructions]: unexpected argument for template (expecting name)"
-            end
-            | Parsed_indexed_update (arr, index) ->
-                let index' = instantiate_discrete_arithmetic_expression param_map index in
-                let arr' = instantiate_indexed_update arr in
-                Parsed_indexed_update (arr', index')
-        in
         match inst with
           | Parsed_assignment (indexed_update, rhs) ->
-              let indexed_update' = instantiate_indexed_update indexed_update in
+              let indexed_update' = instantiate_indexed_update param_map indexed_update in
               let rhs' = instantiate_boolean_expression param_map rhs in
               Parsed_assignment (indexed_update', rhs') :: tl'
           | Parsed_instruction expr ->
