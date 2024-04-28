@@ -145,3 +145,4 @@ val local_variables_of_parsed_fun_def : parsed_fun_definition -> (variable_name 
 
 (** Check if function has side effect recursively (through other function calls found in function body) *)
 val is_function_has_side_effects : functions_meta_table -> parsed_functions_table -> parsed_fun_definition -> bool
+

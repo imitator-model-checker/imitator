@@ -33,29 +33,6 @@ type variable_ref = variable_name * variable_id
 
 type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ | PARSED_OP_GEQ | PARSED_OP_G
 
-(* Auxiliary types *)
-
-type literal_or_const_var =
-  | Literal of NumConst.t
-  | Const_var of variable_name
-
-type name_or_access =
-  | Var_name of variable_name
-  | Var_array_access of variable_name * literal_or_const_var
-
-(****************************************************************)
-(** Controllable actions *)
-(****************************************************************)
-type parsed_controllable_actions =
-	| Parsed_controllable_actions of action_name list
-	| Parsed_uncontrollable_actions of action_name list
-	| Parsed_no_controllable_actions
-
-type unexpanded_parsed_controllable_actions =
-	| Unexpanded_parsed_controllable_actions of name_or_access list
-	| Unexpanded_parsed_uncontrollable_actions of name_or_access list
-	| Unexpanded_parsed_no_controllable_actions
-
 (****************************************************************)
 (* Declarations *)
 (****************************************************************)
@@ -119,6 +96,26 @@ and parsed_discrete_factor =
 	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
 
 
+(****************************************************************)
+(* Name or access used in syntatic arrays *)
+(****************************************************************)
+
+type name_or_access =
+  | Var_name of variable_name
+  | Var_array_access of variable_name * parsed_discrete_arithmetic_expression;;
+
+(****************************************************************)
+(** Controllable actions *)
+(****************************************************************)
+type parsed_controllable_actions =
+	| Parsed_controllable_actions of action_name list
+	| Parsed_uncontrollable_actions of action_name list
+	| Parsed_no_controllable_actions
+
+type unexpanded_parsed_controllable_actions =
+	| Unexpanded_parsed_controllable_actions of name_or_access list
+	| Unexpanded_parsed_uncontrollable_actions of name_or_access list
+	| Unexpanded_parsed_no_controllable_actions
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = DiscreteType.var_type * (variable_name * parsed_boolean_expression option) list
@@ -232,7 +229,7 @@ type unexpanded_sync =
 (** A list of pairs (clock, rational) *)
 type parsed_flow = (variable_name * NumConst.t) list
 
-type unexpanded_parsed_flow = (name_or_access * literal_or_const_var) list
+type unexpanded_parsed_flow = (name_or_access * parsed_discrete_arithmetic_expression) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
