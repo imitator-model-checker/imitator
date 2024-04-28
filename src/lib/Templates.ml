@@ -96,6 +96,7 @@ let instantiate_stopped_clock (param_map : var_map) : name_or_access -> name_or_
       (* This last case would be catched by type checking *)
     end
     | Var_array_access (arr, index) -> Var_array_access (arr, instantiate_discrete_arithmetic_expression param_map index)
+
 let instantiate_stopped_clocks (param_map : var_map) : name_or_access list -> name_or_access list =
   List.map (instantiate_stopped_clock param_map)
 
@@ -244,14 +245,14 @@ let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
     if len < 0 then
       raise (Failure "Length of array should be a positive integer.")
     else
+      let ids = List.init len Fun.id in
+      let access_ids = List.map (fun i -> (gen_access_id name i, None)) ids in
       match kind with
-        | Clock_synt_array ->
-            let ids = List.init len Fun.id in
-            Some (List.map (fun i -> (gen_access_id name i, None)) ids)
+        | Clock_synt_array -> Some (DiscreteType.Var_type_clock, access_ids)
+        | Param_synt_array -> Some (DiscreteType.Var_type_parameter, access_ids)
         | Action_synt_array -> None
   in
-  let packed_decls = List.filter_map aux synt_decls in
-  List.map (fun packed_decl -> (DiscreteType.Var_type_clock, packed_decl)) packed_decls
+  List.filter_map aux synt_decls
 
 let expand_name_or_access g_decls = function
   | Var_name name -> name
