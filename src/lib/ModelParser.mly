@@ -80,6 +80,7 @@ let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unex
                 unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
                 template_definitions             = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
                 template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                forall_template_calls            = List.append parsed_model.forall_template_calls parsed_model_list.forall_template_calls;
                 synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
@@ -95,6 +96,7 @@ let unzip l = List.fold_left
 		template_definitions             = [];
 		template_calls                   = [];
 		synt_declarations                = [];
+		forall_template_calls            = [];
 	}
 	(List.rev l)
 ;;
@@ -120,7 +122,7 @@ let unzip l = List.fold_left
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
-	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
+	CT_FALSE CT_FLOW CT_FOR CT_FORALL CT_FROM CT_FUN
 	CT_GOTO
 	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
@@ -159,28 +161,30 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls forall_template_calls init_definition_option
 	end_opt EOF
 	{
-		let controllable_actions = $1 in
-		let declarations         = $3 in
-    let synt_declarations    = $4 in
-		let fun_definitions      = $5 in
-		let template_definitions = $6 in
-		let automata             = $7 in
-		let template_calls       = $8 in
-		let init_definition      = $9 in
+		let controllable_actions  = $1 in
+		let declarations          = $3 in
+    let synt_declarations     = $4 in
+		let fun_definitions       = $5 in
+		let template_definitions  = $6 in
+		let automata              = $7 in
+		let template_calls        = $8 in
+    let forall_template_calls = $9 in
+		let init_definition       = $10 in
 
 		let main_model =
 {
                         unexpanded_controllable_actions  = controllable_actions;
                         unexpanded_variable_declarations = declarations;
+                        synt_declarations                = synt_declarations;
                         unexpanded_fun_definitions       = fun_definitions;
                         unexpanded_automata              = automata;
                         unexpanded_init_definition       = init_definition;
-                        template_definitions  = template_definitions;
-                        template_calls        = template_calls;
-                        synt_declarations     = synt_declarations;
+                        template_definitions             = template_definitions;
+                        template_calls                   = template_calls;
+                        forall_template_calls            = forall_template_calls;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -485,7 +489,6 @@ template_calls:
   | { [] }
 ;
 
-/************************************************************/
 
 template_call:
 	| CT_INSTANTIATE NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
@@ -493,6 +496,29 @@ template_call:
 		($2, $4, List.rev $6)
 	}
 ;
+
+/************************************************************/
+
+forall_template_calls:
+  | forall_template_call forall_template_calls { $1 :: $2 }
+  | { [] }
+
+/* forall i in [1, N]: instantiate a[i] := p(i); */
+forall_template_call:
+  | forall_common_prefix CT_INSTANTIATE NAME LSQBRA NAME RSQBRA OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+  {
+    if $1.forall_index_name <> $5 then failwith
+     "[parser]: index of automaton in forall should be exactly the variable created by the forall."
+    else {
+      forall_index_data = $1;
+      forall_aut_name   = $3;
+      forall_template   = $8;
+      forall_args       = $10;
+    }
+  }
+;
+
+/************************************************************/
 
 template_args_list:
   | { [] }
@@ -773,8 +799,8 @@ old_init_expression_fol:
 
 /* Used in the init definition */
 old_init_state_predicate:
-	| old_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+	| old_init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
 ;
 
 old_init_loc_predicate:
@@ -822,9 +848,13 @@ init_discrete_expression_nonempty_list :
 ;
 
 init_discrete_state_predicate:
-	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+  | forall_init_loc_predicate {
+      let forall_data, aut_name, aut_index, loc_name = $1 in
+      Unexpanded_parsed_forall_loc_assignment (forall_data, aut_name, aut_index, loc_name)
+  }
 	| LPAREN init_discrete_state_predicate  RPAREN { $2 }
-	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
+	| NAME OP_ASSIGN boolean_expression { Unexpanded_parsed_discrete_predicate ($1, $3) }
 ;
 
 init_continuous_expression:
@@ -835,21 +865,33 @@ init_continuous_expression:
 init_continuous_expression_nonempty_list :
 	| init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list  { $1 :: $3 }
 	| init_continuous_state_predicate ampersand_opt { [ $1 ] }
+	| forall_init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list { $1 :: $3 }
+	| forall_init_continuous_state_predicate ampersand_opt { [ $1 ] }
 ;
 
 init_continuous_state_predicate:
     | LPAREN init_continuous_state_predicate RPAREN { $2 }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
+;
+
+forall_init_continuous_state_predicate:
+  | LPAREN forall_common_prefix init_linear_constraint RPAREN  { Unexpanded_parsed_forall_linear_predicate ($2, $3) }
+  | forall_common_prefix init_linear_constraint  { Unexpanded_parsed_forall_linear_predicate ($1, $2) }
 ;
 
 init_loc_predicate:
-	/* loc[my_pta] = my_loc */
+	/* loc[my_pta] := my_loc */
 	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
-
+forall_init_loc_predicate:
+  /* forall i in [1, N]: loc[p[i]] = L */
+  | forall_common_prefix CT_LOC LSQBRA NAME LSQBRA arithmetic_expression RSQBRA RSQBRA OP_ASSIGN NAME
+  {
+    ($1, $4, $6, $10)
+  }
 
 /************************************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -934,27 +976,26 @@ binary_word:
 /************************************************************/
 
 init_linear_constraint:
-	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
-	| CT_TRUE { Parsed_true_constraint }
-	| CT_FALSE { Parsed_false_constraint }
+	| linear_expression relop linear_expression { Unexpanded_parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Unexpanded_parsed_true_constraint }
+	| CT_FALSE { Unexpanded_parsed_false_constraint }
 ;
 
 /* Linear expression over variables and rationals */
 linear_expression:
-	| linear_term { Linear_term $1 }
-	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
+	| linear_term { Unexpanded_linear_term $1 }
+	| linear_expression OP_PLUS linear_term { Unexpanded_linear_plus_expression ($1, $3) }
+	| linear_expression OP_MINUS linear_term { Unexpanded_linear_minus_expression ($1, $3) }
 ;
 
 /* Linear term over variables and rationals (no recursion, no division) */
 linear_term:
-	| rational { Constant $1 }
-	| rational NAME { Variable ($1, $2) }
-	| rational OP_MUL NAME { Variable ($1, $3) }
-	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
-	| NAME { Variable (NumConst.one, $1) }
+	| rational { Unexpanded_constant $1 }
+	| rational name_or_array_access { Unexpanded_variable ($1, $2) }
+	| rational OP_MUL name_or_array_access { Unexpanded_variable ($1, $3) }
+	| OP_MINUS name_or_array_access { Unexpanded_variable (NumConst.minus_one, $2) }
+	| name_or_array_access { Unexpanded_variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
-	| NAME LSQBRA pos_integer RSQBRA { Variable (NumConst.one, gen_access_id $1 (NumConst.to_bounded_int $3)) }
 ;
 
 
@@ -1067,6 +1108,12 @@ pos_float:
 /************************************************************/
 /** MISC. */
 /************************************************************/
+
+forall_common_prefix:
+  | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON
+  {
+    { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
+  }
 
 checked_name_decl:
   | NAME {
