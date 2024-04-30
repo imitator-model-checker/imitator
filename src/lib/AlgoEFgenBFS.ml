@@ -119,7 +119,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 					not (State.match_state_predicate model state_predicate_phi current_symbolic_state)
 					&&
 					(*** WARNING: redundant computation! we do the same later *)
-					not (State.match_state_predicate model state_predicate_psi current_symbolic_state)
+					not (State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option current_symbolic_state)
 				(* No need to stop *)
 				| None -> false
 				in
@@ -198,7 +198,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 					(* Addition: *)
 					| Some state_index -> (
 						(* Check whether the state satisfies psi *)
-						if State.match_state_predicate model state_predicate_psi current_symbolic_state then(
+						if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option current_symbolic_state then(
 
 							(* Print some information *)
 							self#print_algo_message Verbose_standard ("Found a new target state (" ^ (string_of_int state_space#nb_states) ^ " state" ^ (s_of_int state_space#nb_states) ^ " explored, " ^ (string_of_int (Queue.length queue)) ^ " state" ^ (s_of_int ((Queue.length queue))) ^ " in the queue).");
