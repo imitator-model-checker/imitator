@@ -92,6 +92,9 @@ type property =
 	(* Global invariant *)
 	| AG of state_predicate
 
+	(* Exists globally *)
+	| EG of state_predicate
+
 	(* Exists until *)
 	| EU of state_predicate * state_predicate
 

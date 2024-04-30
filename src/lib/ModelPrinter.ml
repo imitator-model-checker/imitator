@@ -1026,6 +1026,9 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 		(* Global invariant *)
 		| AG state_predicate -> "AG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
+		(* Exists globally *)
+		| EG state_predicate -> "EG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
 		(* Exists release *)
 		| ER (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
 

@@ -504,6 +504,9 @@ type parsed_property_type =
 	(* Global invariant *)
 	| Parsed_AG of parsed_state_predicate
 
+	(* Exists globally *)
+	| Parsed_EG of parsed_state_predicate
+
 	(* Exists release *)
 	| Parsed_ER of parsed_state_predicate * parsed_state_predicate
 

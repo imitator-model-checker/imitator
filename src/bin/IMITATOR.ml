@@ -800,6 +800,13 @@ match options#imitator_mode with
 
 
 			(************************************************************)
+			(* Exists globally *)
+			(************************************************************)
+			| EG _ (* state_predicate *) ->
+				raise (NotImplemented("EG"))
+(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
+
+			(************************************************************)
 			(* Exists release *)
 			(************************************************************)
 			| ER _ (*(state_predicate_phi, state_predicate_psi)*) ->

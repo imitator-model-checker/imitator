@@ -54,6 +54,9 @@ let default_state_comparison (property : AbstractProperty.abstract_property) : A
 
 		-> Inclusion_check
 
+	(* Exists globally *)
+	| EG _
+
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
 	| ER _
@@ -237,6 +240,9 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	| EU _
 		(* All comparison operators preserve correctness *)
 		-> true
+
+	(* Exists globally *)
+	| EG _
 
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
@@ -436,6 +442,9 @@ let merge_needed (property : AbstractProperty.abstract_property) : bool =
 	| EU _
 		-> true
 
+	(* Exists globally *)
+	| EG _
+
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
 	| ER _
@@ -600,6 +609,7 @@ let needs_global_clock (property : AbstractProperty.abstract_property) : bool =
 	| EF _
 	| AGnot _
 	| AG _
+	| EG _
 	| EU _
 	| ER _
 	| EW _
@@ -782,6 +792,9 @@ let supports_witness (property : AbstractProperty.abstract_property) : bool =
 
 		-> true
 	
+	(* Exists release *)
+	| EG _
+
 	(*** TODO (2024/02): should probably be easy! ***)
 	(* Exists release *)
 	| ER _
@@ -947,6 +960,8 @@ let supports_cumulative_pruning (property : AbstractProperty.abstract_property) 
 	| AG _
 	| EU _
 		-> true
+
+	| EG _
 
 	(*** TODO (2024/02): should probably be easy! ***)
 	| ER _
@@ -1144,6 +1159,9 @@ let text_of_property (property : AbstractProperty.abstract_property) : string =
 	(* Global invariant *)
 	| AG _ -> "global invariant " ^ synthesis_or_witness
 
+	(* Exists globally *)
+	| EG _ -> "exists globally " ^ synthesis_or_witness
+
 	(* Exists release *)
 	| ER _ -> "exists release " ^ synthesis_or_witness
 
@@ -1295,6 +1313,7 @@ let v0_option_of_property (property : AbstractProperty.abstract_property) : Abst
 	| EF _
 	| AGnot _
 	| AG _
+	| EG _
 	| ER _
 	| EU _
 	| EW _
@@ -1406,6 +1425,7 @@ let accepting_state_predicates_of_property (property : AbstractProperty.abstract
 	| AGnot state_predicate
 	| AG state_predicate
 	| AF state_predicate
+	| EG state_predicate
 	| EFpmin (state_predicate , _)
 	| EFpmax (state_predicate , _)
 	| EFtmin state_predicate

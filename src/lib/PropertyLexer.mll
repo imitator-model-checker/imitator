@@ -69,6 +69,7 @@ rule token = parse
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
+	| "EG"             { CT_EG }
  	| "IM"             { CT_TRACEPRESERVATION }
  	| "IMconvex"       { CT_IMCONVEX }
  	| "IMK"            { CT_IMK }
