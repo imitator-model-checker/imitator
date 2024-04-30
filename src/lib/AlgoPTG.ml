@@ -57,7 +57,7 @@ end
 
 module DefaultHashtbl (D : Default) = struct 
 	let model = D.model
-	let to_seq () = Hashtbl.to_seq D.tbl
+(* 	let to_seq () = Hashtbl.to_seq D.tbl *)
 	let tbl = D.tbl
 	let find key = 
 		try Hashtbl.find tbl key with
