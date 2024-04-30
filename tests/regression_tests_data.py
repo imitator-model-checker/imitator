@@ -8866,12 +8866,68 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test since               : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EFunsafe (queue-based BFS)',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe with counterexample',
 		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test since               : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EFunsafe with counterexample (queue-based BFS)',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8921,6 +8977,34 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat on the initial state) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-1.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -8930,6 +9014,34 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (unsat due to unreachability) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8980,12 +9092,68 @@ Termination                             : regular termination
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (True due to initial state matched) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-3.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
 		# Last modified            : 2023/12/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EU (matching location)',
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching location) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9036,12 +9204,68 @@ Termination                             : regular termination
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-5.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
 		# Last modified            : 2023/12/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
 		'tags'       : 'algorithm,property,syntax',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9089,6 +9313,34 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-7.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -9098,6 +9350,34 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property,syntax',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
+		'tags'       : 'algorithm,property,syntax',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9145,6 +9425,34 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-9.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -9154,6 +9462,34 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-10.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+p >= 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (corner-point case)) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-10.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9201,6 +9537,34 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2023/12/18
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (using both variables and locations (false)) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-11.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test_EU.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/29
@@ -9210,6 +9574,40 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property',
 		'input_files': ['timed_properties/test-timedEU.imi', 'timed_properties/test-untimedEU.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEU.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 1
+ OR
+   p = 3
+ OR
+   p = 4
+ OR
+   p = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU (different reachable times) (queue-based BFS)',
+		'tags'       : 'algorithm,property',
+		'input_files': ['timed_properties/test-timedEU.imi', 'timed_properties/test-untimedEU.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEU.res' , 'content' : """
 BEGIN CONSTRAINT
