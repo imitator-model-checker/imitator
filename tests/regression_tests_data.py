@@ -10414,6 +10414,9 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
+	# BEGIN : Observer patterns
+	#------------------------------------------------------------
+	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
 		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
@@ -10441,12 +10444,67 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" (queue-based BFS)',
+		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= p1
+& p1 >= 0
+& p2 >= 0
+& p2 + 1 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns (queue-based BFS)',
+		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10502,12 +10560,76 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened before" on a model for 3 patterns (queue-based BFS)',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytime.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 3
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 5
+OR
+  p > 3
+& 5 > p
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns (queue-based BFS)',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10565,6 +10687,33 @@ Constraint nature                       : good
 
 	,
 
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d" (queue-based BFS)',
+		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3 >= p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
 	#------------------------------------------------------------
@@ -10592,12 +10741,62 @@ Constraint nature                       : good
 
 	,
 
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d" (queue-based BFS)',
+		'input_files': ['testPattern4.imi', 'testPattern4.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern4.res' , 'content' : """
+BEGIN CONSTRAINT
+ p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "a within d" with a parametric d',
 		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d" with a parametric d (queue-based BFS)',
+		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10656,12 +10855,96 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened within d before" (queue-based BFS)',
+		'input_files': ['testPattern6.imi', 'testPattern6-if.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  5 > p1
+& p1 > 2
+& p2 >= 0
+OR
+  p2 >= 2015
+& p1 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before"',
 		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p2 >= 2015
+& p1 = 5
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before" (queue-based BFS)',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10751,6 +11034,50 @@ Constraint nature                       : good
 
 	,
 
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once within d before" (queue-based BFS)',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytimeonce.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
@@ -10784,9 +11111,74 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test observer pattern "if a1 then eventually a2 within d" (queue-based BFS)',
+		'input_files': ['testPattern7.imi', 'testPattern7-if.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & 1 > p1
+ & p2 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d"',
 		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & 2 > p1
+ & p2 >= p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d" (queue-based BFS)',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10859,9 +11251,75 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d once before next" (queue-based BFS)',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytimeonce.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 4
+ & p2 >= p1
+ OR
+   p1 > 1
+ & p2 >= p1
+ & 2 > p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ & 4 > p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test observer pattern "sequence a1, …, an"',
 		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  4 > p
+ & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "sequence a1, …, an" (queue-based BFS)',
+		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10910,6 +11368,38 @@ Constraint nature                       : good
 	} # end test case
 	#------------------------------------------------------------
 
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "always sequence a1, …, an" (queue-based BFS)',
+		'input_files': ['testPattern8.imi', 'testPattern8-alwayssequence.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 3
+ & 4 > p
+ OR
+   p >= 0
+ & 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# END : Observer patterns
+	#------------------------------------------------------------
 	,
 
 	#------------------------------------------------------------
