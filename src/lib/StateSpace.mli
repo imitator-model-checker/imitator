@@ -284,7 +284,7 @@ class stateSpace : int ->
 
 
 		(*------------------------------------------------------------*)
-		(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+		(* When a state is encountered for a second time, then a loop may exist (or more generally an SCC): 'reconstruct_scc state_space state_index' tries to reconstruct the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 		(*------------------------------------------------------------*)
 		method reconstruct_scc : state_index -> scc option
 

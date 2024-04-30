@@ -884,7 +884,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* SCC detection *)
 	(*------------------------------------------------------------*)
 
-	(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): `reconstruct_scc state_space source_state_index` reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+	(* When a state is encountered for a second time, then a loop may exist (or more generally an SCC): `reconstruct_scc state_space source_state_index` tries to reconstruct the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 	(*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
 	method reconstruct_scc source_state_index : scc option =
 		(* Print some information *)
@@ -894,13 +894,13 @@ class stateSpace (guessed_nb_transitions : int) =
 		let current_index = ref 0 in
 
 		(* Hashtable state_index -> tarjan_node *)
-		let tarjan_nodes = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		let tarjan_nodes :  (state_index, tarjan_node) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 
 		(* tarjan_node stack *)
-		let stack = Stack.create () in
+		let stack : tarjan_node Stack.t = Stack.create () in
 
 		(* Get the tarjan_node associated with a state_index; create it if not found in the Hashtable *)
-		let tarjan_node_of_state_index state_index =
+		let tarjan_node_of_state_index state_index : tarjan_node =
 			(* If present in the hashtable already *)
 			if Hashtbl.mem tarjan_nodes state_index then(
 				Hashtbl.find tarjan_nodes state_index
@@ -920,7 +920,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(* Get the index field from a tarjan_node; raise InternalError if index = None *)
-		let get_index tarjan_node =
+		let get_index tarjan_node : state_index =
 			match tarjan_node.index with
 				| Some ll -> ll
 				| _ -> raise (InternalError "v.index should not be undefined at that point")
