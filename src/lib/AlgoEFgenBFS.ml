@@ -111,19 +111,23 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 			(* Useful shortcut *)
 			let state_px_constraint = current_symbolic_state.px_constraint in
 
-			(* Case 1: if EU mode, check whether phi is NOT satisfied *)
+			(* Case 1: if EU mode, check whether neither phi nor psi is NOT satisfied *)
 			let stop_due_to_unsatisfied_phi =
 				match state_predicate_phi_option with
 				(* Stop if phi is satisfied *)
 				| Some state_predicate_phi ->
-					State.match_state_predicate model state_predicate_phi current_symbolic_state
+					not (State.match_state_predicate model state_predicate_phi current_symbolic_state)
+					&&
+					(*** WARNING: redundant computation! we do the same later *)
+					not (State.match_state_predicate model state_predicate_psi current_symbolic_state)
 				(* No need to stop *)
 				| None -> false
 				in
-			if stop_due_to_unsatisfied_phi then
+			if stop_due_to_unsatisfied_phi then(
 				(* Do nothing, i.e., skip to next state *)
+				self#print_algo_message Verbose_medium "Eliminate a state because it doesn't satisfy phi.";
 				()
-			else (
+			)else (
 				(* Shortcut (but costly) *)
 				let state_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint in
 
