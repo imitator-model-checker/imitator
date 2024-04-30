@@ -32,6 +32,7 @@ and eval_parsed_factor g_decls = function
   | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
   | Parsed_variable (name, _) -> expand_const_var g_decls name
   | Parsed_nested_expr expr -> eval_parsed_arithmetic_expr g_decls expr
+  | Parsed_unary_min f -> - (eval_parsed_factor g_decls f)
   | _ -> failwith eval_expr_err_msg
 
 and expand_const_var g_decls name =
