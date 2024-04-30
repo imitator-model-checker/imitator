@@ -179,14 +179,35 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 						Some new_state_index
 
 					(* If the state was present: nothing to do *)
-					| StateSpace.State_already_present _ ->
+					| StateSpace.State_already_present old_state_index ->
+						(* Case EW: try to find a loop over phi *)
+						(*** NOTE: the new state might not satisfy phi (as it may satisfy psi) BUT the old state must satisfy phi, otherwise, its successors would not be computed *)
+						if weak then(
+							let scc_option : StateSpace.scc option = state_space#reconstruct_scc old_state_index in
+							match scc_option with
+							| None ->
+								(* Do nothing *)
+								None
+							| Some _ ->
+								(* Found a loop! *)
 
-						(*** TODO: handle loop for EW here and update compute_successors if needed ***)
+								(* Print some information *)
+								self#print_algo_message Verbose_standard ("Found a new loop for EW (" ^ (string_of_int state_space#nb_states) ^ " state" ^ (s_of_int state_space#nb_states) ^ " explored, " ^ (string_of_int (Queue.length queue)) ^ " state" ^ (s_of_int ((Queue.length queue))) ^ " in the queue).");
+								if verbose_mode_greater Verbose_low then(
+									self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model current_symbolic_state);
+								);
 
-						None
+								(* Add the constraint projected onto the parameters to the result *)
+								LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint);
+
+								(* Do NOT compute successors as the state was known *)
+								compute_successors := false;
+
+								(* Still return no state index, as it was there already *)
+								None
+
+						)else None
 					in
-
-					(*** TODO: handle loop for EW here ***)
 
 					(* Check limits, which may raise exceptions *)
 					(*** TODO: encode depth somewhere, to avoid this `None` ***)
@@ -434,6 +455,33 @@ class algoEUBFS (model : AbstractModel.abstract_model) (property : AbstractPrope
 	(** Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "EU (NEW EXPERIMENTAL BFS VERSION)"
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition: EW *)
+(************************************************************)
+(************************************************************)
+class algoEWBFS (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate_phi : AbstractProperty.state_predicate) (state_predicate_psi : AbstractProperty.state_predicate) =
+	object (*(self)*) inherit algoEUgenBFS model property options true (Some state_predicate_phi) state_predicate_psi None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EW (NEW EXPERIMENTAL BFS VERSION)"
 
 
 (************************************************************)

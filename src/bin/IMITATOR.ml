@@ -821,9 +821,9 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists weak until *)
 			(************************************************************)
-			| EW _ (*(state_predicate_phi, state_predicate_psi)*) ->
-				raise (NotImplemented("EW"))
-(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
+			| EW (state_predicate_phi, state_predicate_psi) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEWBFS model property options state_predicate_phi state_predicate_psi in myalgo
+
 
 			(************************************************************)
 			(* Unavoidability *)
@@ -851,6 +851,7 @@ match options#imitator_mode with
 			(************************************************************)
 			| AU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
+
 
 			(************************************************************)
 			(* Always weak until *)

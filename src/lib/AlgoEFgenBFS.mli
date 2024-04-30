@@ -77,6 +77,24 @@ end
 
 
 (************************************************************)
+(* Class definition: EW *)
+(************************************************************)
+class algoEWBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+end
+
+
+
+(************************************************************)
 (* Class definition: AGnot *)
 (************************************************************)
 class algoAGnotBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
