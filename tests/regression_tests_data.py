@@ -9663,6 +9663,32 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the model (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test-timedEF-basic.res' , 'content' : """
+BEGIN CONSTRAINT
+ 4 >= p
+& p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -9688,6 +9714,31 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, wrong interval (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-wronginterval.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -9697,6 +9748,32 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, closed] (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9740,6 +9817,32 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, closed] (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openclosed.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -9749,6 +9852,32 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, open) (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9792,6 +9921,32 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, open) (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openopen.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p > 9
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -9801,6 +9956,32 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 >= p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, infinity) (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9844,6 +10025,32 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, infinity) (queue-based BFS)',
+		'tags'       : 'semantic',
+		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openinfinite.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
+BEGIN CONSTRAINT
+  10 > p
+ & p >= 0
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -9853,6 +10060,32 @@ END CONSTRAINT
 		'tags'       : 'semantic, flows',
 		'input_files': ['timed_properties/test-timedEF-basic-prop-flows.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
 		'options'    : '',
+		'expectations' : [
+			{'file': 'test-timedEF-basic-prop-flows.res' , 'content' : """
+BEGIN CONSTRAINT
+  14 >= p
+ & p > 13
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/28
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: toy model with flows, one parameter in the property (queue-based BFS)',
+		'tags'       : 'semantic, flows',
+		'input_files': ['timed_properties/test-timedEF-basic-prop-flows.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
+		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop-flows.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9901,6 +10134,38 @@ Number of transitions                   : 3
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1.1
+		# Test author              : Étienne André
+		# Test since               : 2024/02/29
+		# Last modified            : 2024/04/30
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test timed EF: check no exploration beyond timed interval (queue-based BFS)',
+		'tags'       : 'semantic,optimization',
+		'input_files': ['timed_properties/test-timedEF-cutbranch.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			# NOTE: check correctness first
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 1
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+			# NOTE: check optimization
+			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
+Number of states                        : 4
+Number of transitions                   : 3
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	# END : Test timed EF
 	#------------------------------------------------------------
