@@ -28248,5 +28248,101 @@ Constraint nature                       : good
         }]
     }
     ,
+    {
+        'purpose'      : 'Test each syntatic expansion implemented (templates, syntatic arrays, etc.)',
+        'input_files'  : ['templates/syntatic_test.imi'],
+        'options'      : '-verbose mute -imi2IMI',
+        'expectations' : [{
+            'file'   : 'syntatic_test-regenerated.imi',
+            'content': """
+var 
+	x___0, x___1
+		: clock;
+
+	id
+		: int;
+
+	params___0, params___1
+		: parameter;
+
+
+
+(************************************************************)
+ automaton p___0
+(************************************************************)
+ actions: acts___0;
+ 
+loc A: invariant  params___0 >= x___0
+	when id = -1 do {x___0 := 0;} sync acts___0 goto req;
+ 
+loc req: invariant  2 >= x___0
+	when  2 >= x___0 do {x___0 := 0; id := 0;} (* sync nosync_1*)  goto waiting;
+ 
+loc waiting: invariant True
+	when id = -1 do {x___0 := 0;} (* sync nosync_2*)  goto req;
+	when id = 0
+&  x___0 > 2 do {} (* sync nosync_3*)  goto cs;
+ 
+loc cs: invariant True
+	when True do {id := -1;} (* sync nosync_4*)  goto A;
+ end (* p___0 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton p___1
+(************************************************************)
+ actions: acts___2;
+ 
+loc A: invariant  params___1 >= x___1
+	when id = -1 do {x___1 := 0;} sync acts___2 goto req;
+ 
+loc req: invariant  2 >= x___1
+	when  2 >= x___1 do {x___1 := 0; id := 1;} (* sync nosync_5*)  goto waiting;
+ 
+loc waiting: invariant True
+	when id = -1 do {x___1 := 0;} (* sync nosync_6*)  goto req;
+	when id = 1
+&  x___1 > 2 do {} (* sync nosync_7*)  goto cs;
+ 
+loc cs: invariant True
+	when True do {id := -1;} (* sync nosync_8*)  goto A;
+ end (* p___1 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+
+	discrete = 
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[p___0] := A, 
+		loc[p___1] := A,
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		id := -1
+	;
+
+	(*------------------------------------------------------------*)
+	(* Initial continuous constraint *)
+	(*------------------------------------------------------------*)
+	continuous = 
+		&  params___0 >= 0
+& params___1 >= 0
+& x___0 = 0
+& x___1 = 1
+	;
+
+}
+            """
+        }]
+    }
+    ,
 ### THE END
 ]
