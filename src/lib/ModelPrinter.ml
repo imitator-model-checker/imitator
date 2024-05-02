@@ -525,10 +525,10 @@ let string_of_actions_declaration model automaton_index =
 	^ ";"
 
 
-(* Convert the invariant of a location into a string *)
-let string_of_invariant model automaton_index location_index =
+(** Convert the invariant and stopwatches and flows of a location into a string *)
+let string_of_invariant_and_flows model automaton_index location_index =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_invariant(" ^ (model.automata_names automaton_index) ^ ", " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_invariant_and_flows(" ^ (model.automata_names automaton_index) ^ ", " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
 	
 	(* Invariant *)
 	"invariant "
@@ -536,23 +536,28 @@ let string_of_invariant model automaton_index location_index =
 
 	(* Handle stopwatches *)
 	^
-	let stopped = model.stopwatches automaton_index location_index in
+	(let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
 	if stopped = [] then ""
 	(* Case 2: some clocks stopped *)
-	else
+	else(
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}"
+	)
+	)
 
 	(* Handle flow *)
 	^
+	(
 	let flow = model.flow automaton_index location_index in
 	(* Case 1: no explicit flow *)
 	if flow = [] then ""
 	(* Case 2: some flow *)
-	else
-	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
+	else(
+	let flow_str = string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
 	" flow{" ^ flow_str ^ "}"
+	)
+	)
 
 
 (* Convert an action into a string *)
@@ -753,7 +758,7 @@ let string_of_transitions model automaton_index location_index =
 	)
 
 
-(* Convert a location of an automaton into a string *)
+(** Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_location(" ^ (model.automata_names automaton_index) ^ ": " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
@@ -768,7 +773,7 @@ let string_of_location model automaton_index location_index =
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
 	)
 	^ ": "
-	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
+	^ (string_of_invariant_and_flows model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 
 
