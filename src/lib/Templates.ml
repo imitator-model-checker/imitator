@@ -19,20 +19,20 @@ and eval_parsed_discrete_bool_expr g_decls = function
   | _ -> failwith eval_expr_err_msg
 
 and eval_parsed_arithmetic_expr g_decls = function
-  | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> (eval_parsed_arithmetic_expr g_decls arith_expr) + (eval_parsed_term g_decls term)
-  | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> (eval_parsed_arithmetic_expr g_decls arith_expr) - (eval_parsed_term g_decls term)
+  | Parsed_sum_diff (arith_expr, term, Parsed_plus) -> NumConst.add (eval_parsed_arithmetic_expr g_decls arith_expr) (eval_parsed_term g_decls term)
+  | Parsed_sum_diff (arith_expr, term, Parsed_minus) -> NumConst.sub (eval_parsed_arithmetic_expr g_decls arith_expr) (eval_parsed_term g_decls term)
   | Parsed_term t -> eval_parsed_term g_decls t
 
 and eval_parsed_term g_decls = function
-  | Parsed_product_quotient (term, factor, Parsed_mul) -> eval_parsed_term g_decls term * eval_parsed_factor g_decls factor
-  | Parsed_product_quotient (term, factor, Parsed_div) -> eval_parsed_term g_decls term / eval_parsed_factor g_decls factor
+  | Parsed_product_quotient (term, factor, Parsed_mul) -> NumConst.mul (eval_parsed_term g_decls term) (eval_parsed_factor g_decls factor)
+  | Parsed_product_quotient (term, factor, Parsed_div) -> NumConst.div (eval_parsed_term g_decls term) (eval_parsed_factor g_decls factor)
   | Parsed_factor factor -> eval_parsed_factor g_decls factor
 
 and eval_parsed_factor g_decls = function
-  | Parsed_constant v -> NumConst.to_bounded_int (ParsedValue.to_numconst_value v)
+  | Parsed_constant v -> ParsedValue.to_numconst_value v
   | Parsed_variable (name, _) -> expand_const_var g_decls name
   | Parsed_nested_expr expr -> eval_parsed_arithmetic_expr g_decls expr
-  | Parsed_unary_min f -> - (eval_parsed_factor g_decls f)
+  | Parsed_unary_min f -> NumConst.neg (eval_parsed_factor g_decls f)
   | _ -> failwith eval_expr_err_msg
 
 and expand_const_var g_decls name =
@@ -53,7 +53,7 @@ let gen_var_from_access g_decls def gen_var_from_name arr_name index synt_arrays
   match arr_len_opt with
     | None -> def
     | Some len ->
-        let index_c = eval_parsed_arithmetic_expr g_decls index in
+        let index_c = eval_parsed_arithmetic_expr g_decls index |> NumConst.to_bounded_int in
         if index_c < len then
           let var_name = gen_access_id arr_name index_c in
           gen_var_from_name var_name
@@ -122,8 +122,8 @@ and instantiate_linear_constraint (param_map : var_map) (constr : unexpanded_lin
 (* Returns a list with all indices inside the forall range *)
 let indices_from_forall_index_data g_decls forall_index_data =
   let { forall_index_name = _; forall_lb; forall_ub } = forall_index_data in
-  let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb in
-  let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub in
+  let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb |> NumConst.to_bounded_int in
+  let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub |> NumConst.to_bounded_int in
   List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
 
 (*****************************************************************************)
@@ -301,7 +301,7 @@ let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
 
 let expand_name_or_access g_decls = function
   | Var_name name -> name
-  | Var_array_access (arr, index) -> gen_access_id arr (eval_parsed_arithmetic_expr g_decls index)
+  | Var_array_access (arr, index) -> gen_access_id arr (NumConst.to_bounded_int (eval_parsed_arithmetic_expr g_decls index))
 
 let expand_name_or_access_list g_decls = List.map (expand_name_or_access g_decls)
 
@@ -430,10 +430,10 @@ let expand_loc (g_decls : variable_declarations) (synt_vars : synt_vars_data) (l
   let expanded_stopped = expand_name_or_access_list g_decls loc.unexpanded_stopped in
   let expand_flow (clock, rate) =
     (* Rate must be a constant expression at this point, since we already instantiated template vars *)
-    let expanded_rate = eval_parsed_arithmetic_expr g_decls rate |> NumConst.numconst_of_int in
+    let expanded_rate = eval_parsed_arithmetic_expr g_decls rate in
     match clock with
       | Var_name name -> (name, expanded_rate)
-      | Var_array_access (arr, index) -> (gen_access_id arr (eval_parsed_arithmetic_expr g_decls index), expanded_rate)
+      | Var_array_access (arr, index) -> (gen_access_id arr (NumConst.to_bounded_int (eval_parsed_arithmetic_expr g_decls index)), expanded_rate)
   in
   let expanded_flow = List.map expand_flow loc.unexpanded_flow in
   {
@@ -484,7 +484,8 @@ let expand_init_state_predicate g_decls pred =
           (* instantiate index expression with respect to the forall variable *)
           instantiate_discrete_arithmetic_expression aux_var_tbl arr_idx |>
           (* ... then evaluate it, to obtain a concrete number *)
-          eval_parsed_arithmetic_expr g_decls
+          eval_parsed_arithmetic_expr g_decls |>
+          NumConst.to_bounded_int
         in
         indices_from_forall_index_data g_decls index_data |>
         List.map (fun i -> Parsed_loc_assignment (gen_access_id arr_name (instantiate_arr_idx i arr_idx), loc_name))
@@ -517,7 +518,7 @@ let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_mo
 
   let synt_vars =
     List.concat_map
-      (fun ((len, kind), names) -> List.map (fun name -> (name, kind, eval_parsed_arithmetic_expr g_decls len)) names)
+      (fun ((len, kind), names) -> List.map (fun name -> (name, kind, NumConst.to_bounded_int (eval_parsed_arithmetic_expr g_decls len))) names)
       unexpanded_parsed_model.synt_declarations
   in
   (* NOTE: at this point `parsed_action` calls must have an integer as argument, not an arbitrary expression *)
