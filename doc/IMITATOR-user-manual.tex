@@ -2033,6 +2033,78 @@ This means the ability to create a number of (almost-)identical TAs in parallel.
 % TODO: syntax
 % TODO: example
 
+% NOTE (Tomaz): Please feel free to modify the text below. These are just the main points that I
+% believe are important cover in the documentation.
+In order to define a new template, the user should use the keyword \styleIMI{template}, followed by
+the name and all its arguments and the corresponding types separated by commas. The arguments can be
+\styleIMI{int}, \styleIMI{rational}, \styleIMI{bool}, \styleIMI{clock}, \styleIMI{action} and
+\styleIMI{parameter}.
+%
+After that, the user should enter the body of the template, which is exactly the same as the body
+of a regular automaton, except that it can use the variables declared as arguments for the template.
+%
+Finally, the user can instantiate the template with the keyword \styleIMI{instantiate}, followed
+by the name of the automaton that will be created, the assign operator (\styleIMI{:=}) and an
+invocation of the desired template, with the corresponding arguments.
+%
+Note that, currently, no type checking is done. But if an user tries to use a value with an
+incompatible type, the next phases of compilation will catch that and reject the model. The user
+can pass either variables or literal values as arguments to the template. If a variable is passed,
+then this is done by reference.
+
+In addition to templates, we also introduced arrays of actions, clocks and parameters. These are
+not ``real'' arrays, in the sense that they are just syntatic sugar for multiple declarations of
+variables. In order to distinguish them from ``real'' arrays, we introduced the keyword
+\styleIMI{synt\_var} to declare them. We also introduced the \styleIMI{forall} keyword, which
+allows one to do many instantiation or declare many constraints in the init definition with
+a single statement. All these constructions are exemplified in the following snippet:
+
+\begin{example}
+\begin{IMITATORmodel}
+var
+    id : int;
+    k = 2 : constant;
+    IDLE = -1 : int;
+    N = 10 : int;
+
+synt_var
+    x : clock array (N);
+
+template p(i : int)
+
+loc A: invariant True
+  when id = IDLE do { x[i] := 0 } goto req;
+
+loc req: invariant x[i] <= k
+  when x[i] <= k do { x[i] := 0; id := i } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[i] := 0 } goto req;
+  when id = i & x[i] > k goto cs;
+
+loc cs: invariant True
+  when True do { id := IDLE } goto A;
+
+end
+
+forall i in [0, N - 1]: instantiate p[i] := p(i);
+
+init := {
+
+    discrete =
+        forall i in [0, N - 1]: loc[p[i]] := A,
+        id := IDLE,
+    ;
+
+    continuous =
+        forall i in [0, N - 1]: x[i] = 0
+    ;
+}
+
+end
+\end{IMITATORmodel}
+\end{example}
+
 Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
 In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
