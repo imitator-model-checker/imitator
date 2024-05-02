@@ -2105,6 +2105,10 @@ end
 \end{IMITATORmodel}
 \end{example}
 
+Currently, it is necessary to first declare all templates, then declare all old-style
+automatons, and, lastly, apply all desired instantiations. Similarly, declarations
+of syntatic variables must come after declarations of regular variables.
+
 Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
 In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
