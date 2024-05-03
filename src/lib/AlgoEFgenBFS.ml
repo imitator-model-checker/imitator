@@ -78,7 +78,6 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Status of the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO ***)
 	val mutable termination_status : Result.state_based_algorithm_termination = Regular_termination
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -300,16 +299,6 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 			self#print_algo_message Verbose_high "The initial state has been created";
 			self#print_algo_message Verbose_high (ModelPrinter.string_of_state model initial_state);
 		);
-
-(*		(* Add it to the state space *)
-		(*** BEGIN copied from AlgoStateBased ***)
-		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state with
-			(* The state is necessarily new as the state space was empty *)
-			| StateSpace.New_state state_index -> state_index
-			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
-		in
-		(*** END copied from AlgoStateBased ***)*)
 
 		(* Main call to the EF dedicated function *)
 		begin
