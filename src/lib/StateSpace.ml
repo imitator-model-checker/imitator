@@ -1693,7 +1693,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 
 	(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
-	method private merge_states_ulrich merger_state_index merged : unit =
+	method private merge_states_ulrich (merger_state_index : state_index) (merged : state_index list) : unit =
 		(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *)
 		print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 
@@ -1748,7 +1748,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
 	(*** NOTE/TODO (ÉA, 2022/10/19): is that significantly different from the get_siblings method in Dylan's code (3.2)? Shall we merge both? ***)
-	method private get_siblings_212 si =
+	method private get_siblings_212 (si : state_index) : ((state_index * LinearConstraint.px_linear_constraint) list) =
 
 		let s = self#get_state si in
 		let l = s.global_location in
@@ -1767,7 +1767,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
-	method private get_siblings_32 (si : state_index) queue (look_in_queue : bool) =
+	method private get_siblings_32 (si : state_index) (queue : state_index list) (look_in_queue : bool) : ((state_index * LinearConstraint.px_linear_constraint) list) =
 		print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
 		let s = self#get_state si in
 		let location = s.global_location in
@@ -1792,10 +1792,10 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
-	method merge212 new_states : state_index list =
+	method merge212 (new_states : state_index list) : state_index list =
 
 		(* function for merging one state with its siblings *)
-		let merge_state si =
+		let merge_state (si : state_index) =
 			print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 			let state = self#get_state si in
 			let c = state.px_constraint in
@@ -1828,7 +1828,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(* Iterate list of new states and try to merge them, return eaten states *)
-		let rec main_merger states =
+		let rec main_merger (states : state_index list) : state_index list =
 			match states with
 				| [] -> []
 				| s :: ss -> begin
@@ -1865,7 +1865,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(** BEGIN MERGE 3.2 - DYLAN *)
 	(************************************************************)
 
-	method private update_statespace merger_index merged_index_list =
+	method private update_statespace (merger_index : state_index) (merged_index_list : state_index list) : unit =
 		tcounter_merge_statespace#start;
 
 		let options = Input.get_options () in
@@ -1926,7 +1926,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
 		(* Merge refactor copy_and_reduce **)
-		let copy_and_reduce merger_state eaten =
+		let copy_and_reduce (merger_state : state_index) (eaten : state_index list) : unit =
 			(* make a copy of the reachable part of the state space with the eaten states replaced by the merger_state *)
 			let new_states = Hashtbl.create 1024 in
 			let new_trans = Hashtbl.create 1024 in
@@ -1980,7 +1980,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		tcounter_merge_statespace#stop;
 		()
 
-	method merge queue =
+	method merge (queue : state_index list) : state_index list =
 
 	(*
 			(*TEMP: print transitions*)
@@ -2028,7 +2028,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		(* function for merging one state with its siblings *)
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
-		let merge_state (si : state_index) (look_in_queue : bool) =
+		let merge_state (si : state_index) (look_in_queue : bool) : unit =
 			print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
 
 			let merging_states (s_merger : state_index) (s_merged : state_index) =
@@ -2105,7 +2105,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(* Iterate list of states and try to merge them in the state space *)
-		let rec main_merger states =
+		let rec main_merger (states : state_index list) : unit =
 			match states with
 				| [] -> ()
 				| s :: tail ->
