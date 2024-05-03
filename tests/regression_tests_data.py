@@ -9486,6 +9486,10 @@ Constraint nature                       : good
 	,
 
 	#------------------------------------------------------------
+	# BEGIN : Test EU
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
@@ -10163,6 +10167,105 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 """
 			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	# END : Test EU
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	# BEGIN : Test EW
+	#------------------------------------------------------------
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU on a simple example',
+		'tags'       : 'syntax,semantic',
+		'input_files': ['EW/EW.imi', 'EW/EU.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EW.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EU on a simple example (queue-based BFS)',
+		'tags'       : 'syntax,semantic',
+		'input_files': ['EW/EW.imi', 'EW/EU.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EW.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EW on a simple example',
+		'tags'       : 'syntax,semantic',
+		'input_files': ['EW/EW.imi', 'EW/EW.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EW.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 3
+OR
+  p = 1
+OR
+  p = 2
+OR
+  p = 6
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
