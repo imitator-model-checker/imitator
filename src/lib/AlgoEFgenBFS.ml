@@ -568,8 +568,16 @@ class algoAGnotBFS (model : AbstractModel.abstract_model) (property : AbstractPr
 			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
 		);
 
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
+		(* Regular termination: all states were explored, so result is exact *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else(
+			(* Check if the set of valuations is empty *)
+
+			(* If the constraint is false: then exact *)
+			if LinearConstraint.p_nnconvex_constraint_is_false result then Constraint_exact
+
+			(* Otherwise: over-approximation *)
+			else Constraint_maybe_over
+		) in
 
 		(* Return the result *)
 		Single_synthesis_result

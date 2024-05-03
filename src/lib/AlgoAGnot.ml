@@ -135,8 +135,15 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 		in
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
+		let soundness = if termination_status = Regular_termination then Constraint_exact else(
+				(* Check if the set of valuations is empty *)
+
+				(* If the constraint is false: then exact *)
+				if LinearConstraint.p_nnconvex_constraint_is_false result then Constraint_exact
+
+				(* Otherwise: over-approximation *)
+				else Constraint_maybe_over
+		) in
 
 		(* Return the result *)
 		Single_synthesis_result
