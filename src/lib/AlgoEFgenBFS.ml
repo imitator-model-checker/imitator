@@ -86,6 +86,11 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val mutable initial_px_constraint : LinearConstraint.px_linear_constraint = LinearConstraint.px_false_constraint()
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** p_nnconvex_constraint of the initial state (useful shortcut) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	val mutable initial_p_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -286,6 +291,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in
 		(* Backup *)
 		initial_px_constraint <- initial_state.px_constraint;
+		initial_p_constraint  <- LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints [LinearConstraint.px_hide_nonparameters_and_collapse initial_state.px_constraint];
 
 		(* Increment the number of computed states *)
 		state_space#increment_nb_gen_states;
@@ -356,8 +362,16 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		(*** TODO: double check ***)
-		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else(
+			(* Check if the set of valuations is the entire set of possible valuations *)
+
+			(* Retrieve the initial parameter constraint *)
+			let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property initial_p_constraint in
+
+			(* Check equality *)
+			if LinearConstraint.p_nnconvex_constraint_is_equal initial_p_nnconvex_constraint result then Constraint_exact
+			else Constraint_maybe_under
+		) in
 
 		(* Return the result *)
 		Single_synthesis_result
