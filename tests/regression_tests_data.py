@@ -7195,6 +7195,238 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (underapproximated result)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 = 3
+ & p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (underapproximated result) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 = 3
+ & p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (underapproximated result with projection)',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5-project.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (underapproximated result with projection) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5-project.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (maximal result)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 2
+& 5 >= p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (maximal result) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 2
+& 5 >= p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (maximal result with projection)',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2-project.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test EF + witness (maximal result with projection) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2-project.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
