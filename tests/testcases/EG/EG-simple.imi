@@ -1,0 +1,108 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Simple example to test EG
+ * Description      : Simple example to test EG
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/05/03
+ * Last modified    : 2024/05/03
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: int;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant x <= 4
+	when p = 1 goto l1;
+	when p = 2 goto l2;
+	when p = 3 goto l3;
+	when p = 4 goto l4;
+	(* To avoid a parameter deadlock in l1 *)
+	when True do {i := 1} goto lF;
+
+(* Timelock *)
+loc l2: invariant x <= 4
+	when x = 2 do {i := 1} goto lF;
+
+(* No timelock *)
+loc l3: invariant x <= 4
+	when x = 4 do {i := 1} goto lF;
+
+(* Livelock *)
+loc l4: invariant True
+	when x = 4 do {i := 1} goto lF;
+
+(* Bad location, with i=1 *)
+loc lF: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

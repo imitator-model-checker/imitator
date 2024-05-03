@@ -6,12 +6,14 @@
 ### Major features
 * Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
-* New AG ("global invariant") algorithm
+* New AG ("global invariant") algorithm, implemented as the negation of EF
 * New EU ("Exists … until") algorithm
+* New EW ("exists … weak until") algorithm
 * New AF ("always eventually") algorithm, and variants:
 	- AR ("always … release")
 	- AU ("always … until")
 	- AW ("always … weak until")
+	- EG ("exists globally"), implemented as the negation of AF
 * New timed variants of EF, EU, AF, AR, AU, AW
 
 ### Syntax improvement

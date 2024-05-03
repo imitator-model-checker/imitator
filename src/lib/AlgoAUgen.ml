@@ -779,7 +779,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		start_time <- Unix.gettimeofday();
 
 (* !!! NOTE : de-BUG !!! *)
-		print_warning "There is an unstability in AF, AU, AW and AR algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem.";
+		print_warning "There is an instability in AF, AU, AW, AR and EG algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem.";
 (* !!! NOTE : de-BUG !!! *)
 
 		(* Build initial state *)
@@ -905,6 +905,85 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 end;;
 (************************************************************)
 (************************************************************)
+
+(************************************************************)
+(************************************************************)
+(* Class definition: EG *)
+(************************************************************)
+(************************************************************)
+(*** NOTE: EG is implemented as the negation of the result of AF called on the **negation** of the state predicate ***)
+class algoEG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoAUgen model property options false None (State_predicate_term (State_predicate_factor (State_predicate_factor_NOT (State_predicate state_predicate)))) None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EG"
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method! private compute_result =
+		(* Print some information *)
+		self#print_algo_message_newline Verbose_standard (
+			"Algorithm completed " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Perform result = initial_state|P \ synthesized_constraint *)
+
+		(* Retrieve and copy the initial parameter constraint *)
+		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint parameters_consistent_with_init in
+
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
+			self#print_algo_message Verbose_medium "As a reminder, the result constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
+
+		(* Perform the difference *)
+		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
+
+		(* Projecting onto some parameters if required by the property *)
+		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property result in
+
+		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+		(*** TODO: double check ***)
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
+
+		(* Return the result *)
+		Single_synthesis_result
+		{
+			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
+			result				= Good_constraint (result, soundness);
+
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing " ^ self#algorithm_name;
+
+			(* Explored state space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= termination_status;
+		}
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
 
 
 (************************************************************)

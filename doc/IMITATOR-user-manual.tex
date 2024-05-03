@@ -2294,6 +2294,19 @@ property := #synth A (state_predicate) W (state_predicate);
 These algorithms work recursively using a depth-first search (DFS), as formalized in~\cite{JLR15}.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exists-globally synthesis: \styleTCTL{EG}}\label{section:algorithm:EG}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth EG (state_predicate);
+\end{IMITATORproperty}
+
+\styleTCTL{EG} is implemented exactly as the negation of the result of \styleTCTL{AF} called on the negation of the state predicate.
+See \cref{section:algorithm:AF}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Timed CTL}\label{section:algorithm:timedCTL}
@@ -2968,6 +2981,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Unavoidability                 & \styleIMI{A(sp\_1)R(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)U(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)W(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Exists-globally                & \styleIMI{EG(state\_predicate)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
 			% Cycles
 
@@ -3076,6 +3090,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			Unavoidability           & \styleIMI{A(sp\_1)R(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)U(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)W(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
+			Exists globally          & \styleIMI{EG(state\_predicate)}                  & \cellNo{} & \styleOption{equality} \\
 
 			% Cycles
 
@@ -3886,7 +3901,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}) and for unavoidability (\cref{section:algorithm:AF}, \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}) and for unavoidability (\cref{section:algorithm:AF,section:algorithm:EG}, \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
@@ -5573,6 +5588,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{AG} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{E} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{E} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{W} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 
 	% Optimized reachability
 
@@ -5583,8 +5599,12 @@ We define each of those two components below.
 	% AF
 
 	$|$ & \styleIMI{AF} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{R} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{W} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{EG} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+
+	% TODO: add supported timed CTL operators
 
 	% Cycles
 
