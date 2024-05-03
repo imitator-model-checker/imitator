@@ -48,6 +48,9 @@ loc l4: invariant True
 
 loc l5: invariant True
 
+(*** NOTE: unreachable ***)
+loc l6: invariant True
+
 end (* pta *)
 
 

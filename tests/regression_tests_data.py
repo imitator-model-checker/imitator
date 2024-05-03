@@ -8251,6 +8251,312 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot + witness (overapproximated result)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 3
+& 5 >= p1
+& p2 = 4
+OR
+  p1 >= 2
+& 3 > p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot + witness (overapproximated result) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 3
+& 5 >= p1
+& p2 = 4
+OR
+  p1 >= 2
+& 3 > p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot + witness (overapproximated result + projection)',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5-project.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 > 3
+OR
+  p1 >= 2
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot + witness (overapproximated result + projection) (queue-based BFS)',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5-project.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 > 3
+OR
+  p1 >= 2
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with false result',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with false result (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc2.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with maximal result',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 2
+& 5 >= p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with maximal result (queue-based BFS)',
+		'tags'       : 'algorithm,semantic',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 2
+& 5 >= p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with maximal result + projection',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6-project.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/05/03
+		# Last modified            : 2024/05/03
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AGnot with maximal result + projection (queue-based BFS)',
+		'tags'       : 'algorithm,semantic,projection',
+		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6-project.imiprop'],
+		'options'    : '-new-queue-EF',
+		'expectations' : [
+			{'file': 'EF-witness.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p1
+& p1 >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
 		# Test since               : 2023/12/22
 		# Last modified            : 2023/12/22
 		# Test for IMITATOR version: 3.4
