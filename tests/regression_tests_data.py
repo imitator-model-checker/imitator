@@ -714,7 +714,7 @@ Number of IPTAs                         : 1
 		# Test since               : 2023/03/09
 		# Last modified            : 2023/03/09
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test auto-removed variable doesn’t crash a function return',
+		'purpose'    : 'Test auto-removed variable does not crash a function return',
 		'tags'       : 'syntax,functions',
 		'input_files': ['functions/removed-function.imi'],
 		'options'    : '-mode checksyntax',
@@ -4538,7 +4538,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a clock isn’t updated with a bad type',
+		'purpose'    : 'Test that a clock is not updated with a bad type',
 		'tags': 'type checking, update',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4565,7 +4565,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
+		'purpose'    : 'Test that an update expression does not mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4588,7 +4588,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
+		'purpose'    : 'Test that an update expression does not mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4611,7 +4611,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn’t mix different types in comparison',
+		'purpose'    : 'Test that an update expression does not mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4634,7 +4634,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression doesn’t mix different types in "in" expression',
+		'purpose'    : 'Test that an update expression does not mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -5855,7 +5855,7 @@ END CONSTRAINT
 		# Test since               : 2023/04/05
 		# Last modified            : 2023/04/05
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test void var isn’t allowed',
+		'purpose'    : 'Test void var is not allowed',
 		'input_files': ['test-void.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -5877,7 +5877,7 @@ Error                                   : invalid model
 		# Test since               : 2023/04/05
 		# Last modified            : 2023/04/05
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test void array isn’t allowed',
+		'purpose'    : 'Test void array is not allowed',
 		'input_files': ['test-void-array.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
