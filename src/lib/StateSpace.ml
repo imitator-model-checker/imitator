@@ -1692,7 +1692,9 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* THE FOLLOWING WAS ADDED FROM V2.12 *)
 	(************************************************************)
 
+	(*------------------------------------------------------------*)
 	(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
+	(*------------------------------------------------------------*)
 	method private merge_states_ulrich (merger_state_index : state_index) (merged : state_index list) : unit =
 		(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *)
 		print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
@@ -1746,8 +1748,10 @@ class stateSpace (guessed_nb_transitions : int) =
 	(*		done*)
 		) merged
 
-	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
+	(*------------------------------------------------------------*)
+	(** Get states sharing the same location and discrete values from hash_table, excluding s *)
 	(*** NOTE/TODO (ÉA, 2022/10/19): is that significantly different from the get_siblings method in Dylan's code (3.2)? Shall we merge both? ***)
+	(*------------------------------------------------------------*)
 	method private get_siblings_212 (si : state_index) : ((state_index * LinearConstraint.px_linear_constraint) list) =
 
 		let s = self#get_state si in
@@ -1766,7 +1770,9 @@ class stateSpace (guessed_nb_transitions : int) =
 		) [] sibs
 
 
-	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
+	(*------------------------------------------------------------*)
+	(** Get states sharing the same location and discrete values from hash_table, excluding s *)
+	(*------------------------------------------------------------*)
 	method private get_siblings_32 (si : state_index) (queue : state_index list) (look_in_queue : bool) : ((state_index * LinearConstraint.px_linear_constraint) list) =
 		print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
 		let s = self#get_state si in
@@ -1791,7 +1797,9 @@ class stateSpace (guessed_nb_transitions : int) =
 		result
 
 
-	(* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
+	(*------------------------------------------------------------*)
+	(** Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
+	(*------------------------------------------------------------*)
 	method merge212 (new_states : state_index list) : state_index list =
 
 		(* function for merging one state with its siblings *)
@@ -1865,6 +1873,8 @@ class stateSpace (guessed_nb_transitions : int) =
 	(** BEGIN MERGE 3.2 - DYLAN *)
 	(************************************************************)
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	method private update_statespace (merger_index : state_index) (merged_index_list : state_index list) : unit =
 		tcounter_merge_statespace#start;
 
@@ -1980,6 +1990,90 @@ class stateSpace (guessed_nb_transitions : int) =
 		tcounter_merge_statespace#stop;
 		()
 
+
+	(*------------------------------------------------------------*)
+	(** Method to merge one state with its siblings *)
+	(*------------------------------------------------------------*)
+	method private merge_one_state queue (si : state_index) (look_in_queue : bool) : unit =
+		let options = Input.get_options () in
+
+		print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
+
+		let merging_states (s_merger : state_index) (s_merged : state_index) =
+		(* Merge si and sj. Note that C(si) = siUsj from the test *)
+			self#update_statespace s_merger [s_merged];
+		in
+
+		let state = self#get_state si in
+		let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
+
+		let did_something = ref true in
+		let main_merging si look_in_queue =
+			did_something := false;
+			(* get merge candidates as pairs (index, state) *)
+			let candidates = self#get_siblings_32 si queue look_in_queue in
+
+			(* try to merge with siblings, restart if merge found, return merged states *)
+			let rec merging merged_states candidates = begin
+				begin
+				match candidates with
+					| [] -> () (* here, we are really done *)
+					| m :: tail -> begin
+						let sj,c' = m in
+
+
+				print_message Verbose_high ("[Merge] Check if states " ^ (string_of_int si) ^ " and " ^ (string_of_int sj) ^ "are mergeable");
+
+						if are_mergeable_32 c c'
+						then begin
+							(*Statistics*)
+							nb_merged#increment;
+							did_something := true;
+
+							(*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
+							print_message Verbose_experiments ("[Merge] State " ^ (string_of_int si) ^ " is mergeable with " ^ (string_of_int sj));
+
+							begin
+							match options#merge_update with
+							| Merge_update_merge -> merging_states si sj; ();
+							| Merge_update_candidates -> ();
+							(*| Merge_update_level -> ();*)
+							end;
+
+							(* Print some information *)
+							print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+
+							let merged' = sj :: merged_states in
+							(merging merged' tail)
+						end
+						else
+						begin
+							(* try to eat the rest of them *)
+							merging merged_states tail
+						end
+					end;
+				end;
+				begin
+				match options#merge_update with
+				| Merge_update_merge -> ();
+				| Merge_update_candidates -> self#update_statespace si merged_states;
+				(*| Merge_update_level -> ();*)
+				end;
+			end;
+			(* *)
+			in
+			merging [] candidates;
+		in
+
+		main_merging si look_in_queue;
+		while options#merge_restart && !did_something do (* Restart only if option restart is set *)
+			print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
+			main_merging si look_in_queue
+		done;
+		()
+
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	method merge (queue : state_index list) : state_index list =
 
 	(*
@@ -2026,7 +2120,8 @@ class stateSpace (guessed_nb_transitions : int) =
 		let options = Input.get_options () in
 
 
-		(* function for merging one state with its siblings *)
+		(*** WARNING (2024/05/03): commenting this (unused!!) code out make one non-regression test fail! 'Test EF with complex safety property on coffee drinker with int' ***)
+		(*(* function for merging one state with its siblings *)
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
 		let merge_state (si : state_index) (look_in_queue : bool) : unit =
 			print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
@@ -2102,7 +2197,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
 				main_merging si look_in_queue
 			done;
-		in
+		in*)
 
 		(* Iterate list of states and try to merge them in the state space *)
 		let rec main_merger (states : state_index list) : unit =
@@ -2112,15 +2207,14 @@ class stateSpace (guessed_nb_transitions : int) =
 					begin
 						main_merger tail;
 						if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
-
 							match options#merge_candidates with
-							| Merge_candidates_visited -> merge_state s false
-							| Merge_candidates_queue -> merge_state s true
-							| Merge_candidates_ordered -> begin (merge_state s true) ; (merge_state s false) end
+							| Merge_candidates_visited -> self#merge_one_state queue s false
+							| Merge_candidates_queue -> self#merge_one_state queue s true
+							| Merge_candidates_ordered -> begin (self#merge_one_state queue s true) ; (self#merge_one_state queue s false) end
 					end
 		in
 
-		(*Main*)
+		(* Main *)
 		main_merger queue;
 
 		let new_queue = List.filter (self#test_state_index) queue in
@@ -2130,6 +2224,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		(*state_space.states_for_comparison <- Hashtbl.create 1024;*)
 
 		print_message Verbose_high "\n---\n";
+
 		(* return *)
 		new_queue
 
