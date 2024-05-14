@@ -252,7 +252,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
 		
 		(* Parsing the property *)
-		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
+		let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
 
 		(* Statistics *)
 		parsing_counter#stop;
