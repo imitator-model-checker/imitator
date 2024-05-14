@@ -90,7 +90,7 @@ let resolve_property l =
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_property> main
+%type <ParsingStructure.unexpanded_parsed_property> main
 %%
 
 /************************************************************/
@@ -111,10 +111,10 @@ quantified_property:
 /************************************************************/
 	synth_or_exhibit property semicolon_opt projection_definition {
 		{
-			synthesis_type	= $1;
-			property		= $2;
+			unexpanded_synthesis_type	= $1;
+			unexpanded_property		= $2;
 			(* Projection *)
-			projection		= $4;
+			unexpanded_projection		= $4;
 		}
 
 	}
@@ -133,44 +133,44 @@ property:
 	/* Basic properties */
 	/*------------------------------------------------------------*/
 	/* Reachability */
-	| CT_VALID { Parsed_Valid }
+	| CT_VALID { Unexpanded_Parsed_Valid }
 
 	/*------------------------------------------------------------*/
 	/* Non-nested CTL */
 	/*------------------------------------------------------------*/
 
 	/* Reachability */
-	| CT_EF state_predicate { Parsed_EF $2 }
+	| CT_EF state_predicate { Unexpanded_Parsed_EF $2 }
 
 	/* Safety */
-	| CT_AGnot state_predicate { Parsed_AGnot $2 }
+	| CT_AGnot state_predicate { Unexpanded_Parsed_AGnot $2 }
 
 	/* Global invariant */
-	| CT_AG state_predicate { Parsed_AG $2 }
+	| CT_AG state_predicate { Unexpanded_Parsed_AG $2 }
 
 	/* Exists globally */
-	| CT_EG state_predicate { Parsed_EG $2 }
+	| CT_EG state_predicate { Unexpanded_Parsed_EG $2 }
 
 	/* Exists release */
-	| CT_E state_predicate CT_R state_predicate { Parsed_ER ($2, $4) }
+	| CT_E state_predicate CT_R state_predicate { Unexpanded_Parsed_ER ($2, $4) }
 
 	/* Exists until */
-	| CT_E state_predicate CT_U state_predicate { Parsed_EU ($2, $4) }
+	| CT_E state_predicate CT_U state_predicate { Unexpanded_Parsed_EU ($2, $4) }
 
 	/* Exists weak until */
-	| CT_E state_predicate CT_W state_predicate { Parsed_EW ($2, $4) }
+	| CT_E state_predicate CT_W state_predicate { Unexpanded_Parsed_EW ($2, $4) }
 
 	/* Unavoidability */
-	| CT_AF state_predicate { Parsed_AF $2 }
+	| CT_AF state_predicate { Unexpanded_Parsed_AF $2 }
 
 	/* Always release */
-	| CT_A state_predicate CT_R state_predicate { Parsed_AR ($2, $4) }
+	| CT_A state_predicate CT_R state_predicate { Unexpanded_Parsed_AR ($2, $4) }
 
 	/* Always until */
-	| CT_A state_predicate CT_U state_predicate { Parsed_AU ($2, $4) }
+	| CT_A state_predicate CT_U state_predicate { Unexpanded_Parsed_AU ($2, $4) }
 
 	/* Always weak until */
-	| CT_A state_predicate CT_W state_predicate { Parsed_AW ($2, $4) }
+	| CT_A state_predicate CT_W state_predicate { Unexpanded_Parsed_AW ($2, $4) }
 
 
 	/*------------------------------------------------------------*/
@@ -181,8 +181,8 @@ property:
 		(* Optimization: `EF_timed [0, infinity) sp` is actually `EF sp` *)
 		match $2 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_EF $3
-		| _ -> Parsed_EF_timed ($2, $3)
+			Unexpanded_Parsed_EF $3
+		| _ -> Unexpanded_Parsed_EF_timed ($2, $3)
 	}
 
 	/* ER (timed version) */
@@ -190,8 +190,8 @@ property:
 		(* Optimization: `ER_timed [0, infinity) sp sp` is actually `ER sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_ER ($2, $5)
-		| _ -> Parsed_ER_timed ($4, $2, $5)
+			Unexpanded_Parsed_ER ($2, $5)
+		| _ -> Unexpanded_Parsed_ER_timed ($4, $2, $5)
 	}
 
 	/* EU (timed version) */
@@ -199,8 +199,8 @@ property:
 		(* Optimization: `EU_timed [0, infinity) sp sp` is actually `EU sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_EU ($2, $5)
-		| _ -> Parsed_EU_timed ($4, $2, $5)
+			Unexpanded_Parsed_EU ($2, $5)
+		| _ -> Unexpanded_Parsed_EU_timed ($4, $2, $5)
 	}
 
 	/* EW (timed version) */
@@ -208,8 +208,8 @@ property:
 		(* Optimization: `EW_timed [0, infinity) sp sp` is actually `EW sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_EW ($2, $5)
-		| _ -> Parsed_EW_timed ($4, $2, $5)
+			Unexpanded_Parsed_EW ($2, $5)
+		| _ -> Unexpanded_Parsed_EW_timed ($4, $2, $5)
 	}
 
 	/* AF (timed version) */
@@ -217,8 +217,8 @@ property:
 		(* Optimization: `AF_timed [0, infinity) sp` is actually `AF sp` *)
 		match $2 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_AF $3
-		| _ -> Parsed_AF_timed ($2, $3)
+			Unexpanded_Parsed_AF $3
+		| _ -> Unexpanded_Parsed_AF_timed ($2, $3)
 	}
 
 	/* AR (timed version) */
@@ -226,8 +226,8 @@ property:
 		(* Optimization: `AR_timed [0, infinity) sp sp` is actually `AR sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_AR ($2, $5)
-		| _ -> Parsed_AR_timed ($4, $2, $5)
+			Unexpanded_Parsed_AR ($2, $5)
+		| _ -> Unexpanded_Parsed_AR_timed ($4, $2, $5)
 	}
 
 	/* AU (timed version) */
@@ -235,8 +235,8 @@ property:
 		(* Optimization: `AU_timed [0, infinity) sp sp` is actually `AU sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_AU ($2, $5)
-		| _ -> Parsed_AU_timed ($4, $2, $5)
+			Unexpanded_Parsed_AU ($2, $5)
+		| _ -> Unexpanded_Parsed_AU_timed ($4, $2, $5)
 	}
 
 	/* AW (timed version) */
@@ -244,8 +244,8 @@ property:
 		(* Optimization: `AW_timed [0, infinity) sp sp` is actually `AW sp sp` *)
 		match $4 with
 		| Parsed_closed_infinity_interval parsed_interval when parsed_interval = Linear_term (Constant NumConst.zero) ->
-			Parsed_AW ($2, $5)
-		| _ -> Parsed_AW_timed ($4, $2, $5)
+			Unexpanded_Parsed_AW ($2, $5)
+		| _ -> Unexpanded_Parsed_AW_timed ($4, $2, $5)
 	}
 
 
@@ -255,15 +255,15 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Reachability with minimization of a parameter valuation */
-	| CT_EFpmin state_predicate COMMA NAME { Parsed_EFpmin ($2, $4) }
-	| CT_EFpmin LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmin ($3, $5) }
+	| CT_EFpmin state_predicate COMMA NAME { Unexpanded_Parsed_EFpmin ($2, $4) }
+	| CT_EFpmin LPAREN state_predicate COMMA NAME RPAREN { Unexpanded_Parsed_EFpmin ($3, $5) }
 
 	/* Reachability with maximization of a parameter valuation */
-	| CT_EFpmax state_predicate COMMA NAME { Parsed_EFpmax ($2, $4) }
-	| CT_EFpmax LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmax ($3, $5) }
+	| CT_EFpmax state_predicate COMMA NAME { Unexpanded_Parsed_EFpmax ($2, $4) }
+	| CT_EFpmax LPAREN state_predicate COMMA NAME RPAREN { Unexpanded_Parsed_EFpmax ($3, $5) }
 
 	/* Reachability with minimal-time */
-	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
+	| CT_EFtmin state_predicate { Unexpanded_Parsed_EFtmin ($2) }
 
 
 	/*------------------------------------------------------------*/
@@ -271,22 +271,22 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Infinite-run (cycle) */
-	| CT_INFCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_true))) }
+	| CT_INFCYCLE { Unexpanded_Parsed_Cycle_Through (Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor(Unexpanded_Parsed_simple_predicate Unexpanded_Parsed_state_predicate_true))) }
 
 	/* Accepting infinite-run (cycle) through a state predicate */
 	| CT_INFCYCLETHROUGH LPAREN state_predicate_list RPAREN {
 		(* Check whether the list is of size <= 1 *)
 		match $3 with
-		| []				-> Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))) (* NOTE: equivalent to False; this case probably cannot happen anyway *)
-		| [state_predicate]	-> Parsed_Cycle_Through state_predicate
-		| _					-> Parsed_Cycle_Through_generalized $3
+		| []				-> Unexpanded_Parsed_Cycle_Through (Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor(Unexpanded_Parsed_simple_predicate Unexpanded_Parsed_state_predicate_false))) (* NOTE: equivalent to False; this case probably cannot happen anyway *)
+		| [state_predicate]	-> Unexpanded_Parsed_Cycle_Through state_predicate
+		| _					-> Unexpanded_Parsed_Cycle_Through_generalized $3
 		}
 
 	/* Accepting infinite-run (cycle) through accepting locations */
-	| CT_ACCEPTINGCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_accepting))) }
+	| CT_ACCEPTINGCYCLE { Unexpanded_Parsed_Cycle_Through (Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor(Unexpanded_Parsed_simple_predicate Unexpanded_Parsed_state_predicate_accepting))) }
 
 	/* Infinite-run (cycle) with non-Zeno assumption */
-	| CT_NZCYCLE { Parsed_NZ_Cycle }
+	| CT_NZCYCLE { Unexpanded_Parsed_NZ_Cycle }
 
 
 	/*------------------------------------------------------------*/
@@ -294,22 +294,22 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Deadlock-free synthesis */
-	| CT_DEADLOCKFREE { Parsed_Deadlock_Freeness }
+	| CT_DEADLOCKFREE { Unexpanded_Parsed_Deadlock_Freeness }
 
 
 	/*------------------------------------------------------------*/
 	/* Inverse method, trace preservation, robustness */
 	/*------------------------------------------------------------*/
 
-	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Parsed_IM $3 }
+	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Unexpanded_Parsed_IM $3 }
 
-	| CT_IMCONVEX LPAREN reference_valuation RPAREN { Parsed_ConvexIM $3 }
+	| CT_IMCONVEX LPAREN reference_valuation RPAREN { Unexpanded_Parsed_ConvexIM $3 }
 
-	| CT_PRP LPAREN state_predicate COMMA reference_valuation RPAREN { Parsed_PRP ($3 , $5) }
+	| CT_PRP LPAREN state_predicate COMMA reference_valuation RPAREN { Unexpanded_Parsed_PRP ($3 , $5) }
 
-	| CT_IMK LPAREN reference_valuation RPAREN { Parsed_IMK $3 }
+	| CT_IMK LPAREN reference_valuation RPAREN { Unexpanded_Parsed_IMK $3 }
 
-	| CT_IMUNION LPAREN reference_valuation RPAREN { Parsed_IMunion $3 }
+	| CT_IMUNION LPAREN reference_valuation RPAREN { Unexpanded_Parsed_IMunion $3 }
 
 
 	/*------------------------------------------------------------*/
@@ -317,37 +317,37 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Cartography */
-	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography ($3 , Constants.default_cartography_step) }
-	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Cover_cartography ($3 , $7) }
+	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Unexpanded_Parsed_Cover_cartography ($3 , Constants.default_cartography_step) }
+	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_Cover_cartography ($3 , $7) }
 
-	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_Learning_cartography ($3, $5, Constants.default_cartography_step) }
-	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Learning_cartography ($3, $5, $9) }
+	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Unexpanded_Parsed_Learning_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_Learning_cartography ($3, $5, $9) }
 
-	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography ($3, Constants.default_cartography_step) }
-	| CT_BCSHUFFLE LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Shuffle_cartography ($3, $7) }
+	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Unexpanded_Parsed_Shuffle_cartography ($3, Constants.default_cartography_step) }
+	| CT_BCSHUFFLE LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_Shuffle_cartography ($3, $7) }
 
-	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Parsed_Border_cartography ($3, Constants.default_cartography_step) }
-	| CT_BCBORDER LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Border_cartography ($3, $7) }
+	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Unexpanded_Parsed_Border_cartography ($3, Constants.default_cartography_step) }
+	| CT_BCBORDER LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_Border_cartography ($3, $7) }
 
-	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_Random_cartography ($3, $5, Constants.default_cartography_step) }
-	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Random_cartography ($3, $5, $9) }
+	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Unexpanded_Parsed_Random_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_Random_cartography ($3, $5, $9) }
 
-	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5, Constants.default_cartography_step) }
-	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_RandomSeq_cartography ($3, $5, $9) }
+	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Unexpanded_Parsed_RandomSeq_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_RandomSeq_cartography ($3, $5, $9) }
 
-	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5, Constants.default_cartography_step) }
-	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_PRPC ($3,$5, $9) }
+	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Unexpanded_Parsed_PRPC ($3,$5, Constants.default_cartography_step) }
+	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Unexpanded_Parsed_PRPC ($3,$5, $9) }
 
-
-	/*------------------------------------------------------------*/
-	/* Observer patterns */
-	/*------------------------------------------------------------*/
-	| CT_PATTERN LPAREN pattern RPAREN { Parsed_pattern ($3) }
 
 	/*------------------------------------------------------------*/
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
-	| CT_WIN state_predicate { Parsed_Win ($2) }
+	| CT_PATTERN LPAREN pattern RPAREN { Unexpanded_Parsed_pattern ($3) }
+
+	/*------------------------------------------------------------*/
+	/* Observer patterns */
+	/*------------------------------------------------------------*/
+	| CT_WIN state_predicate { Unexpanded_Parsed_Win ($2) }
 
 ;
 
@@ -422,7 +422,7 @@ state_predicate_list:
 /************************************************************/
 	| non_empty_state_predicate_list { $1 }
 	/* Also allow empty state predicate, equivalent to False */
-	| { [Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false))] }
+	| { [Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor(Unexpanded_Parsed_simple_predicate Unexpanded_Parsed_state_predicate_false))] }
 ;
 
 /************************************************************/
@@ -437,51 +437,57 @@ state_predicate:
 /************************************************************/
 	| non_empty_state_predicate { $1 }
 	/* Also allow empty state predicate, equivalent to False */
-	| { Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false)) }
+	| { Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor(Unexpanded_Parsed_simple_predicate Unexpanded_Parsed_state_predicate_false)) }
 ;
 
 /************************************************************/
 non_empty_state_predicate:
 /************************************************************/
-	| non_empty_state_predicate OP_DISJUNCTION state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
+	| non_empty_state_predicate OP_DISJUNCTION state_predicate_term { Unexpanded_Parsed_state_predicate_OR ($1, Unexpanded_Parsed_state_predicate_term $3) }
 
 	/* Translate 'a => b' to 'NOT a OR b' */
-	| non_empty_state_predicate OP_IMPLIES state_predicate_term { Parsed_state_predicate_OR (Parsed_state_predicate_term (Parsed_state_predicate_factor (Parsed_state_predicate_factor_NOT (Parsed_state_predicate ($1)))), Parsed_state_predicate_term $3) }
+	| non_empty_state_predicate OP_IMPLIES state_predicate_term { Unexpanded_Parsed_state_predicate_OR (Unexpanded_Parsed_state_predicate_term (Unexpanded_Parsed_state_predicate_factor (Unexpanded_Parsed_state_predicate_factor_NOT (Unexpanded_Parsed_state_predicate ($1)))), Unexpanded_Parsed_state_predicate_term $3) }
 
-	| state_predicate_term { Parsed_state_predicate_term $1 }
+	| state_predicate_term { Unexpanded_Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term OP_CONJUNCTION state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
-	| state_predicate_factor { Parsed_state_predicate_factor $1 }
+	| state_predicate_term OP_CONJUNCTION state_predicate_factor { Unexpanded_Parsed_state_predicate_term_AND ($1, Unexpanded_Parsed_state_predicate_factor $3) }
+	| state_predicate_factor { Unexpanded_Parsed_state_predicate_factor $1 }
 ;
 
 state_predicate_factor:
-	| simple_predicate { Parsed_simple_predicate $1 }
-	| CT_NOT state_predicate_factor { Parsed_state_predicate_factor_NOT $2 }
-	| LPAREN non_empty_state_predicate RPAREN { Parsed_state_predicate $2 }
+	| simple_predicate { Unexpanded_Parsed_simple_predicate $1 }
+	| CT_NOT state_predicate_factor { Unexpanded_Parsed_state_predicate_factor_NOT $2 }
+	| LPAREN non_empty_state_predicate RPAREN { Unexpanded_Parsed_state_predicate $2 }
 ;
 
 /* A single definition of one bad location or one bad discrete definition */
 simple_predicate:
-	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
-	| loc_predicate { Parsed_loc_predicate ($1) }
-	| CT_ACCEPTING { Parsed_state_predicate_accepting }
+	| discrete_boolean_predicate { Unexpanded_Parsed_discrete_boolean_expression($1) }
+	| loc_predicate { Unexpanded_Parsed_loc_predicate ($1) }
+	| CT_ACCEPTING { Unexpanded_Parsed_state_predicate_accepting }
 ;
 
+/************************************************************/
+name_or_array_access:
+  | NAME { Var_name $1 }
+  | NAME LSQBRA arithmetic_expression RSQBRA { Var_array_access ($1, $3) }
+;
+/************************************************************/
 
 /************************************************************/
 loc_predicate:
 /************************************************************/
 	/* loc[my_pta] = my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { Parsed_loc_predicate_EQ ($3, $6) }
+	| CT_LOC LSQBRA name_or_array_access RSQBRA OP_EQ NAME { Unexpanded_Parsed_loc_predicate_EQ ($3, $6) }
 	/* my_pta IS IN my_loc */
-	| NAME CT_IS CT_IN NAME { Parsed_loc_predicate_EQ ($1, $4) }
+	| name_or_array_access CT_IS CT_IN NAME { Unexpanded_Parsed_loc_predicate_EQ ($1, $4) }
 
 	/* loc[my_pta] <> my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA OP_NEQ NAME { Parsed_loc_predicate_NEQ ($3, $6) }
+	| CT_LOC LSQBRA name_or_array_access RSQBRA OP_NEQ NAME { Unexpanded_Parsed_loc_predicate_NEQ ($3, $6) }
 	/* my_pta IS NOT IN my_loc */
-	| NAME CT_IS CT_NOT CT_IN NAME { Parsed_loc_predicate_EQ ($1, $5) }
+	| name_or_array_access CT_IS CT_NOT CT_IN NAME { Unexpanded_Parsed_loc_predicate_NEQ ($1, $5) }
 ;
 
 

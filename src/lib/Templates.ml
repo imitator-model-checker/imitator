@@ -504,28 +504,28 @@ let expand_init_state_predicate g_decls pred =
 
 let expand_init_definition g_decls = List.concat_map (expand_init_state_predicate g_decls)
 
-let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_model =
-  let g_decls = unexpanded_parsed_model.unexpanded_variable_declarations in
+let expand_model (model : unexpanded_parsed_model) : parsed_model =
+  let g_decls = model.unexpanded_variable_declarations in
 
   (* Expand foralls *)
   let forall_calls =
-    unexpanded_parsed_model.forall_template_calls |>
+    model.forall_template_calls |>
     List.concat_map (expand_forall_call g_decls)
   in
-  let all_calls = unexpanded_parsed_model.template_calls @ forall_calls in
-  let instantiated_automata = instantiate_automata unexpanded_parsed_model.template_definitions all_calls in
-  let all_automata = unexpanded_parsed_model.unexpanded_automata @ instantiated_automata in
+  let all_calls = model.template_calls @ forall_calls in
+  let instantiated_automata = instantiate_automata model.template_definitions all_calls in
+  let all_automata = model.unexpanded_automata @ instantiated_automata in
 
   let synt_vars =
     List.concat_map
       (fun ((len, kind), names) -> List.map (fun name -> (name, kind, NumConst.to_bounded_int (eval_parsed_arithmetic_expr g_decls len))) names)
-      unexpanded_parsed_model.synt_declarations
+      model.synt_declarations
   in
   (* NOTE: at this point `parsed_action` calls must have an integer as argument, not an arbitrary expression *)
   let expanded_automata = expand_synt_arrays_automata g_decls synt_vars all_automata in
   let expanded_decls = expand_synt_decls synt_vars in
   let expanded_controllable_actions =
-    match unexpanded_parsed_model.unexpanded_controllable_actions with
+    match model.unexpanded_controllable_actions with
       | Unexpanded_parsed_controllable_actions actions ->
           Parsed_controllable_actions (expand_name_or_access_list g_decls actions)
       | Unexpanded_parsed_uncontrollable_actions actions ->
@@ -534,12 +534,87 @@ let expand_model (unexpanded_parsed_model : unexpanded_parsed_model) : parsed_mo
   in
 
   let expanded_init_definition =
-    expand_init_definition g_decls unexpanded_parsed_model.unexpanded_init_definition
+    expand_init_definition g_decls model.unexpanded_init_definition
   in
 
   { controllable_actions  = expanded_controllable_actions;
-    variable_declarations = unexpanded_parsed_model.unexpanded_variable_declarations @ expanded_decls;
-    fun_definitions       = unexpanded_parsed_model.unexpanded_fun_definitions;
+    variable_declarations = model.unexpanded_variable_declarations @ expanded_decls;
+    fun_definitions       = model.unexpanded_fun_definitions;
     automata              = expanded_automata;
     init_definition       = expanded_init_definition;
+  }
+
+let expand_loc_pred g_decls = function
+	| Unexpanded_Parsed_loc_predicate_EQ (aut_name, loc) -> Parsed_loc_predicate_EQ (expand_name_or_access g_decls aut_name, loc)
+	| Unexpanded_Parsed_loc_predicate_NEQ (aut_name, loc) -> Parsed_loc_predicate_NEQ (expand_name_or_access g_decls aut_name, loc)
+
+let expand_simple_predicate g_decls = function
+	| Unexpanded_Parsed_discrete_boolean_expression expr -> Parsed_discrete_boolean_expression expr
+	| Unexpanded_Parsed_loc_predicate loc_pred -> Parsed_loc_predicate (expand_loc_pred g_decls loc_pred)
+	| Unexpanded_Parsed_state_predicate_true -> Parsed_state_predicate_true
+	| Unexpanded_Parsed_state_predicate_false -> Parsed_state_predicate_false
+	| Unexpanded_Parsed_state_predicate_accepting -> Parsed_state_predicate_accepting
+
+let rec expand_state_predicate (g_decls: variable_declarations) : unexpanded_parsed_state_predicate -> parsed_state_predicate = function
+  | Unexpanded_Parsed_state_predicate_OR (pred1, pred2) ->
+      Parsed_state_predicate_OR (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+  | Unexpanded_Parsed_state_predicate_term t -> Parsed_state_predicate_term (expand_state_term g_decls t)
+
+and expand_state_term g_decls = function
+  | Unexpanded_Parsed_state_predicate_term_AND (t1, t2) ->
+      Parsed_state_predicate_term_AND (expand_state_term g_decls t1, expand_state_term g_decls t2)
+  | Unexpanded_Parsed_state_predicate_factor f -> Parsed_state_predicate_factor (expand_state_factor g_decls f)
+
+and expand_state_factor g_decls = function
+	| Unexpanded_Parsed_state_predicate_factor_NOT f -> Parsed_state_predicate_factor_NOT (expand_state_factor g_decls f)
+	| Unexpanded_Parsed_simple_predicate spred -> Parsed_simple_predicate (expand_simple_predicate g_decls spred)
+	| Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
+
+let expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_property_type -> parsed_property_type = function
+	| Unexpanded_Parsed_Valid -> Parsed_Valid
+	| Unexpanded_Parsed_EF pred1 -> Parsed_EF (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_AGnot pred1 -> Parsed_AGnot (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_AG pred1 -> Parsed_AG (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_EG pred1 -> Parsed_EG (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_ER (pred1, pred2) -> Parsed_ER (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EU (pred1, pred2) -> Parsed_EU (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EW (pred1, pred2) -> Parsed_EW (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AF pred1 -> Parsed_AF (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_AR (pred1, pred2) -> Parsed_AR (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AU (pred1, pred2) -> Parsed_AU (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AW (pred1, pred2) -> Parsed_AW (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EF_timed (inter, pred1) -> Parsed_EF_timed (inter, expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_ER_timed (inter, pred1, pred2) -> Parsed_ER_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EU_timed (inter, pred1, pred2) -> Parsed_EU_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EW_timed (inter, pred1, pred2) -> Parsed_EW_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AF_timed (inter, pred1) -> Parsed_AF_timed (inter, expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_AR_timed (inter, pred1, pred2) -> Parsed_AR_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AU_timed (inter, pred1, pred2) -> Parsed_AU_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_AW_timed (inter, pred1, pred2) -> Parsed_AW_timed (inter, expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+	| Unexpanded_Parsed_EFpmin (pred1, name) -> Parsed_EFpmin (expand_state_predicate g_decls pred1, name)
+	| Unexpanded_Parsed_EFpmax (pred1, name) -> Parsed_EFpmax (expand_state_predicate g_decls pred1, name)
+	| Unexpanded_Parsed_EFtmin pred1 -> Parsed_EFtmin (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_Cycle_Through pred1 -> Parsed_Cycle_Through (expand_state_predicate g_decls pred1)
+	| Unexpanded_Parsed_Cycle_Through_generalized pred_list -> Parsed_Cycle_Through_generalized (List.map (expand_state_predicate g_decls) pred_list)
+	| Unexpanded_Parsed_NZ_Cycle -> Parsed_NZ_Cycle
+	| Unexpanded_Parsed_Deadlock_Freeness -> Parsed_Deadlock_Freeness
+	| Unexpanded_Parsed_IM pval -> Parsed_IM pval
+	| Unexpanded_Parsed_ConvexIM pval -> Parsed_ConvexIM pval
+	| Unexpanded_Parsed_PRP (pred1, pval) -> Parsed_PRP (expand_state_predicate g_decls pred1, pval)
+	| Unexpanded_Parsed_IMK pval -> Parsed_IMK pval
+	| Unexpanded_Parsed_IMunion pval -> Parsed_IMunion pval
+	| Unexpanded_Parsed_Cover_cartography (pdomain, n) -> Parsed_Cover_cartography (pdomain, n)
+	| Unexpanded_Parsed_Learning_cartography (pred1, pdomain, n) -> Parsed_Learning_cartography (expand_state_predicate g_decls pred1, pdomain, n)
+	| Unexpanded_Parsed_Shuffle_cartography (pdomain, n) -> Parsed_Shuffle_cartography (pdomain, n)
+	| Unexpanded_Parsed_Border_cartography (pdomain, n) -> Parsed_Border_cartography (pdomain, n)
+	| Unexpanded_Parsed_Random_cartography (pdomain, i, n) -> Parsed_Random_cartography (pdomain, i, n)
+	| Unexpanded_Parsed_RandomSeq_cartography (pdomain, i, n) -> Parsed_RandomSeq_cartography (pdomain, i, n)
+	| Unexpanded_Parsed_PRPC (pred1, pdomain, n) -> Parsed_PRPC (expand_state_predicate g_decls pred1, pdomain, n)
+	| Unexpanded_Parsed_pattern pattern -> Parsed_pattern pattern
+	| Unexpanded_Parsed_Win pred1 -> Parsed_Win (expand_state_predicate g_decls pred1)
+
+let expand_property (g_decls: variable_declarations) (property: unexpanded_parsed_property): parsed_property =
+  { synthesis_type = property.unexpanded_synthesis_type
+  ; property = expand_property_type g_decls property.unexpanded_property
+  ; projection = property.unexpanded_projection
   }
