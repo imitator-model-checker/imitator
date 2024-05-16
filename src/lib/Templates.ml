@@ -633,6 +633,7 @@ and expand_state_term (g_decls: variable_declarations): unexpanded_parsed_state_
 
 and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_parsed_state_predicate_factor): parsed_state_predicate_factor =
   match factor with
+  (* TODO: Refactor the next two branches *)
   | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       (* Here we reverse the list to preserve the order of the index after the fold *)
