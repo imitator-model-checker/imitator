@@ -2,7 +2,7 @@ var
     id : int;
     k = 2 : constant;
     IDLE = -1 : int;
-    N = 3 : int;
+    N = 2 : int;
 
 synt_var
     x : clock array (N);
