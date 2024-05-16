@@ -59,7 +59,7 @@ let resolve_property l =
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
-	CT_E CT_EF CT_EF_timed CT_EFpmax CT_EFpmin CT_EFtmin CT_EG CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT
+	CT_E CT_EF CT_EF_timed CT_EFpmax CT_EFpmin CT_EFtmin CT_EG CT_EVENTUALLY CT_EVERYTIME CT_EXEMPLIFY CT_EXHIBIT CT_EXISTS
 	CT_FALSE CT_FORALL
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_INFINITY CT_IS
@@ -462,6 +462,8 @@ state_predicate_factor:
 	| LPAREN non_empty_state_predicate RPAREN { Unexpanded_Parsed_state_predicate $2 }
 	| forall_common_prefix simple_predicate { Unexpanded_Parsed_forall_simple_predicate ($1, $2) }
 	| forall_common_prefix LPAREN non_empty_state_predicate RPAREN { Unexpanded_Parsed_forall_state_predicate ($1, $3) }
+	| exists_common_prefix simple_predicate { Unexpanded_Parsed_exists_simple_predicate ($1, $2) }
+	| exists_common_prefix LPAREN non_empty_state_predicate RPAREN { Unexpanded_Parsed_exists_state_predicate ($1, $3) }
 
 ;
 
@@ -806,6 +808,12 @@ semicolon_opt:
 
 forall_common_prefix:
   | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON
+  {
+    { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
+  }
+
+exists_common_prefix:
+  | CT_EXISTS NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON
   {
     { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
   }
