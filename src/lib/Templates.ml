@@ -459,7 +459,8 @@ let expand_synt_arrays_automaton (g_decls : variable_declarations) (synt_vars : 
 let expand_synt_arrays_automata (g_decls : variable_declarations) (synt_vars : synt_vars_data) : unexpanded_parsed_automaton list -> parsed_automaton list =
   List.map (expand_synt_arrays_automaton g_decls synt_vars)
 
-let expand_forall_call g_decls { forall_index_data; forall_template; forall_aut_name; forall_args } =
+let expand_forall_call (g_decls: variable_declarations) (call_data: parsed_forall_template_call) =
+  let { forall_index_data; forall_template; forall_aut_name; forall_args } = call_data in
   let indices = indices_from_forall_index_data g_decls forall_index_data in
   let instantiate_arg idx = fun arg ->
     match arg with
@@ -476,7 +477,7 @@ let expand_forall_call g_decls { forall_index_data; forall_template; forall_aut_
   in
   List.map build_call indices
 
-let expand_init_state_predicate g_decls pred =
+let expand_init_state_predicate (g_decls: variable_declarations) (pred: unexpanded_parsed_init_state_predicate): parsed_init_state_predicate list =
   match pred with
     | Unexpanded_parsed_forall_loc_assignment (index_data, arr_name, arr_idx, loc_name) ->
         let instantiate_arr_idx i arr_idx =
@@ -502,7 +503,8 @@ let expand_init_state_predicate g_decls pred =
     | Unexpanded_parsed_discrete_predicate (name, bool_expr) ->
         [Parsed_discrete_predicate (name, bool_expr)]
 
-let expand_init_definition g_decls = List.concat_map (expand_init_state_predicate g_decls)
+let expand_init_definition (g_decls: variable_declarations): unexpanded_parsed_init_state_predicate list -> parsed_init_state_predicate list =
+  List.concat_map (expand_init_state_predicate g_decls)
 
 let expand_model (model : unexpanded_parsed_model) : parsed_model =
   let g_decls = model.unexpanded_variable_declarations in
@@ -544,14 +546,14 @@ let expand_model (model : unexpanded_parsed_model) : parsed_model =
     init_definition       = expanded_init_definition;
   }
 
-let instantiate_name_or_access param_map aut =
+let instantiate_name_or_access (param_map: var_map) (aut: name_or_access): name_or_access =
   match aut with
     | Var_name _ -> aut
     | Var_array_access (arr, idx) ->
         let instantiated_idx = instantiate_discrete_arithmetic_expression param_map idx in
         Var_array_access (arr, instantiated_idx)
 
-let instantiate_simple_predicate param_map spred =
+let instantiate_simple_predicate (param_map: var_map) (spred: unexpanded_parsed_simple_predicate): unexpanded_parsed_simple_predicate =
   match spred with
     | Unexpanded_Parsed_discrete_boolean_expression expr ->
         Unexpanded_Parsed_discrete_boolean_expression (instantiate_discrete_boolean_expression param_map expr)
@@ -571,7 +573,7 @@ let rec instantiate_state_predicate (param_map: var_map): unexpanded_parsed_stat
   | Unexpanded_Parsed_state_predicate_term t ->
       Unexpanded_Parsed_state_predicate_term (instantiate_state_term param_map t)
 
-and instantiate_state_term param_map = function
+and instantiate_state_term (param_map: var_map): unexpanded_parsed_state_predicate_term -> unexpanded_parsed_state_predicate_term = function
   | Unexpanded_Parsed_state_predicate_term_AND (t1, t2) ->
       let instantiated_t1 = instantiate_state_term param_map t1 in
       let instantiated_t2 = instantiate_state_term param_map t2 in
@@ -579,7 +581,7 @@ and instantiate_state_term param_map = function
   | Unexpanded_Parsed_state_predicate_factor f ->
       Unexpanded_Parsed_state_predicate_factor (instantiate_state_factor param_map f)
 
-and instantiate_state_factor param_map = function
+and instantiate_state_factor (param_map: var_map): unexpanded_parsed_state_predicate_factor -> unexpanded_parsed_state_predicate_factor = function
   | Unexpanded_Parsed_state_predicate_factor_NOT f -> Unexpanded_Parsed_state_predicate_factor_NOT (instantiate_state_factor param_map f)
   | Unexpanded_Parsed_simple_predicate spred -> Unexpanded_Parsed_simple_predicate (instantiate_simple_predicate param_map spred)
   | Unexpanded_Parsed_state_predicate pred -> Unexpanded_Parsed_state_predicate (instantiate_state_predicate param_map pred)
@@ -608,11 +610,11 @@ and instantiate_state_factor param_map = function
         | None -> r
       end
 
-let expand_loc_pred g_decls = function
+let expand_loc_pred (g_decls: variable_declarations): unexpanded_parsed_loc_predicate -> parsed_loc_predicate = function
   | Unexpanded_Parsed_loc_predicate_EQ (aut_name, loc) -> Parsed_loc_predicate_EQ (expand_name_or_access g_decls aut_name, loc)
   | Unexpanded_Parsed_loc_predicate_NEQ (aut_name, loc) -> Parsed_loc_predicate_NEQ (expand_name_or_access g_decls aut_name, loc)
 
-let expand_simple_predicate g_decls = function
+let expand_simple_predicate (g_decls: variable_declarations): unexpanded_parsed_simple_predicate -> parsed_simple_predicate = function
   | Unexpanded_Parsed_discrete_boolean_expression expr -> Parsed_discrete_boolean_expression expr
   | Unexpanded_Parsed_loc_predicate loc_pred -> Parsed_loc_predicate (expand_loc_pred g_decls loc_pred)
   | Unexpanded_Parsed_state_predicate_true -> Parsed_state_predicate_true
@@ -624,15 +626,13 @@ let rec expand_state_predicate (g_decls: variable_declarations): unexpanded_pars
       Parsed_state_predicate_OR (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
   | Unexpanded_Parsed_state_predicate_term t -> Parsed_state_predicate_term (expand_state_term g_decls t)
 
-and expand_state_term g_decls = function
+and expand_state_term (g_decls: variable_declarations): unexpanded_parsed_state_predicate_term -> parsed_state_predicate_term = function
   | Unexpanded_Parsed_state_predicate_term_AND (t1, t2) ->
       Parsed_state_predicate_term_AND (expand_state_term g_decls t1, expand_state_term g_decls t2)
   | Unexpanded_Parsed_state_predicate_factor f -> Parsed_state_predicate_factor (expand_state_factor g_decls f)
 
-and expand_state_factor g_decls = function
-  | Unexpanded_Parsed_state_predicate_factor_NOT f -> Parsed_state_predicate_factor_NOT (expand_state_factor g_decls f)
-  | Unexpanded_Parsed_simple_predicate spred -> Parsed_simple_predicate (expand_simple_predicate g_decls spred)
-  | Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
+and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_parsed_state_predicate_factor): parsed_state_predicate_factor =
+  match factor with
   | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       (* Here we reverse the list to preserve the order of the index after the fold *)
@@ -660,7 +660,7 @@ and expand_state_factor g_decls = function
                 in
             List.fold_left fold_fun (Parsed_simple_predicate spred_i) is
   end
-  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) ->
+  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       match List.rev indices with
         | [] -> failwith "error or vacuity?"
@@ -678,12 +678,17 @@ and expand_state_factor g_decls = function
               match acc with
                 | Parsed_state_predicate (Parsed_state_predicate_term t) ->
                     Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (pred_idx_term, t)))
-                | Parsed_state_predicate p -> (* Only first iteration of fold, after that I know for sure is a term *)
+                | Parsed_state_predicate p -> (* Only first iteration of fold, after that I know for sure is an and *)
                     let p_term = term_of_state_pred p in
                     Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (pred_idx_term, p_term)))
                 | _ -> failwith "[expand_state_factor]: unreachable"
             in
             List.fold_left fold_fun (Parsed_state_predicate pred_i) is
+  end
+  | Unexpanded_Parsed_state_predicate_factor_NOT f -> Parsed_state_predicate_factor_NOT (expand_state_factor g_decls f)
+  | Unexpanded_Parsed_simple_predicate spred -> Parsed_simple_predicate (expand_simple_predicate g_decls spred)
+  | Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
+
 
 let expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_property_type -> parsed_property_type = function
   | Unexpanded_Parsed_Valid -> Parsed_Valid
