@@ -99,6 +99,7 @@ rule token = parse
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
+	| "forall"         { CT_FORALL }
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }

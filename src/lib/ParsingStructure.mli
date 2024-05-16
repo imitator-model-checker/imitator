@@ -442,6 +442,9 @@ type unexpanded_parsed_state_predicate_factor =
 	| Unexpanded_Parsed_state_predicate_factor_NOT of unexpanded_parsed_state_predicate_factor
 	| Unexpanded_Parsed_simple_predicate of unexpanded_parsed_simple_predicate
 	| Unexpanded_Parsed_state_predicate of unexpanded_parsed_state_predicate
+	(* The forall is in this level so we can use it on both sides of `AND` and `OR` *)
+	| Unexpanded_Parsed_forall_simple_predicate of forall_index_data * unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_forall_state_predicate of forall_index_data * unexpanded_parsed_state_predicate
 
 and unexpanded_parsed_state_predicate_term =
 	| Unexpanded_Parsed_state_predicate_term_AND of unexpanded_parsed_state_predicate_term * unexpanded_parsed_state_predicate_term
