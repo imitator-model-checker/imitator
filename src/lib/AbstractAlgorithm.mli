@@ -18,15 +18,16 @@
 (************************************************************)
 
 type translation =
+	| DOT
 	| HyTech
 	| IMI
-	| DOT
+	| ImiProp
+	| JaniSpec
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
-  | JaniSpec
 
 
 (************************************************************)

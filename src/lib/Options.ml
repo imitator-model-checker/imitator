@@ -922,6 +922,10 @@ class imitator_options =
 					imitator_mode <- Translation IMI
 				), "   Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
+				("-imi2imiprop", Unit (fun _ ->
+					imitator_mode <- Translation ImiProp
+				), "   Regenerate the property into an IMITATOR property, and exit without performing any analysis. Default: disabled");
+
 				("-imi2Jani", Unit (fun _ ->
 					imitator_mode <- Translation JaniSpec
 				), "  Translate the model into a JaniSpec model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled");
@@ -1160,15 +1164,29 @@ class imitator_options =
 				match imitator_mode with
 				| Syntax_check
 				| State_space_computation
-				| Translation _
 				->
 					(* Warn *)
 					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
 					(* Delete property file *)
 					property_file_name <- None;
+
+				| Translation target_translation when target_translation <> ImiProp ->
+					(* Warn *)
+					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
+					(* Delete property file *)
+					property_file_name <- None;
+
 				| _ -> ()
 			);
 
+			(*------------------------------------------------------------*)
+			(* Check that a property is defined in mode Translation ImiProp *)
+			(*------------------------------------------------------------*)
+			if property_file_name = None && imitator_mode = Translation ImiProp then(
+				print_error "A property must be defined in order to regenerate the property";
+				abort_program ();
+				exit(1);
+			);
 
 
 

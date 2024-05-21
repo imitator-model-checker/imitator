@@ -22,15 +22,16 @@
 (************************************************************)
 
 type translation =
+	| DOT
 	| HyTech
 	| IMI
-	| DOT
+	| ImiProp
+	| JaniSpec
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
-  | JaniSpec
 
 
 (************************************************************)
@@ -273,15 +274,16 @@ let cartography_drawing_possible = function
 (************************************************************)
 
 let string_of_translation = function
-	| HyTech -> "HyTech"
-	| IMI    -> "IMITATOR"
-	| DOT    -> "DOT"
-	| JPG    -> "JPG"
-	| PDF    -> "PDF"
-	| PNG    -> "PNG"
-	| TikZ   -> "TikZ"
-	| Uppaal -> "Uppaal"
-  | JaniSpec -> "JaniSpec"
+	| DOT      -> "DOT"
+	| HyTech   -> "HyTech"
+	| IMI      -> "IMITATOR"
+	| ImiProp  -> "IMITATOR property"
+	| JaniSpec -> "JaniSpec"
+	| JPG      -> "JPG"
+	| PDF      -> "PDF"
+	| PNG      -> "PNG"
+	| TikZ     -> "TikZ"
+	| Uppaal   -> "Uppaal"
 
 
 let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mode with

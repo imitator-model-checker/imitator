@@ -593,28 +593,30 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case translation *)
 	(************************************************************)
-	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
+	(*------------------------------------------------------------*)
+	(* Translation to text language (IMITATOR, other model checkers, TikZ…) *)
+	(*------------------------------------------------------------*)
 	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation JaniSpec | Translation DOT ->
 
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
-			| Translation IMI		-> ModelPrinter.string_of_model
+			| Translation DOT       -> PTA2dot.string_of_model options
 			| Translation HyTech	-> PTA2HyTech.string_of_model options
+			| Translation IMI		-> ModelPrinter.string_of_model
+			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
 			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model options
 			| Translation Uppaal	-> PTA2Uppaal.string_of_model options
-			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
-			| Translation DOT       -> PTA2dot.string_of_model options
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
 		(*** NOTE: not super nice… ***)
 		let suffix = match options#imitator_mode with
-			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
+			| Translation DOT       -> ".dot"
 			| Translation HyTech	-> ".hy"
+			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
+			| Translation JaniSpec	-> ".jani"
 			| Translation TikZ		-> ".tex"
 			| Translation Uppaal	-> "-uppaal.xml"
-      | Translation JaniSpec	-> ".jani"
-			| Translation DOT       -> ".dot"
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -635,7 +637,42 @@ match options#imitator_mode with
 
 		terminate_program()
 
-	(* Translation to a graphics *)
+	(*------------------------------------------------------------*)
+	(* Translation of property *)
+	(*------------------------------------------------------------*)
+	| Translation ImiProp ->
+
+		(*** TODO! check ***)
+		(*** NOTE: at this stage, we are sure to have defined a property ***)
+		let property = match property_option with
+			| Some property -> property
+			| None -> raise (InternalError "A property should have been set when regenerating the property")
+		in
+
+		print_message Verbose_standard ("Regenerating the property to a new file.");
+
+		let suffix = "-imiprop.imiprop" in
+		let target_language_file = options#files_prefix ^ suffix in
+		let regenerated_property = ModelPrinter.string_of_abstract_property model property in
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("\n" ^ regenerated_property ^ "\n");
+		);
+
+		(* Write *)
+		write_to_file target_language_file regenerated_property;
+		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
+
+		(* Create a file with some statistics on the original model if requested *)
+		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
+			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+			)) ) None;
+
+		terminate_program()
+
+
+	(*------------------------------------------------------------*)
+	(* Translation of the model to a graphics *)
+	(*------------------------------------------------------------*)
 	| Translation JPG | Translation PDF | Translation PNG ->
 		print_message Verbose_medium ("Translating model to a graphics…");
 		let translated_model = PTA2dot.string_of_model options model in

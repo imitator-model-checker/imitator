@@ -1,6 +1,13 @@
 # Releases
 
 *******************************************************
+## future release (202x-xx-xx) Cheese Durian
+
+### New options
+* Add a new option `-imi2imiprop` to regenerate the property to a file
+
+
+*******************************************************
 ## release 3.4-alpha (2024-03-21) Cheese Durian
 
 ### Major features
