@@ -1000,6 +1000,10 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 	)
 	
 	^
+
+	" "
+
+	^
 	
 	(
 	(* Handle the actual property *)
@@ -1195,6 +1199,9 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 	
 	(* Add the projection, if any *)
 	(string_of_projection model property)
+
+	(* Final new line *)
+	^ "\n"
 
 
 (************************************************************)
