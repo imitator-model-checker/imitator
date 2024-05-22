@@ -279,14 +279,24 @@ type unexpanded_parsed_location = {
 	unexpanded_transitions : unexpanded_transition list;
 }
 
+type forall_index_data = {
+  forall_index_name : variable_name;
+  forall_lb         : parsed_discrete_arithmetic_expression;
+  forall_ub         : parsed_discrete_arithmetic_expression;
+}
+
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
-type unexpanded_parsed_automaton = automaton_name * name_or_access list * unexpanded_parsed_location list
+type action_declaration =
+  | Single_action of name_or_access
+  | Multiple_actions of forall_index_data * variable_name * parsed_discrete_arithmetic_expression
+
+type unexpanded_parsed_automaton = automaton_name * action_declaration list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
     template_parameters : (variable_name * DiscreteType.template_var_type) list;
-    template_body       : name_or_access list * unexpanded_parsed_location list
+    template_body       : action_declaration list * unexpanded_parsed_location list
 }
 
 type parsed_template_arg =
@@ -298,12 +308,6 @@ type parsed_template_arg =
 type parsed_template_call =
  (* name             template used   parameters passed to template *)
     automaton_name * template_name * (parsed_template_arg list)
-
-type forall_index_data = {
-  forall_index_name : variable_name;
-  forall_lb         : parsed_discrete_arithmetic_expression;
-  forall_ub         : parsed_discrete_arithmetic_expression;
-}
 
 type parsed_forall_template_call = {
   forall_index_data : forall_index_data;
