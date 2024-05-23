@@ -12,7 +12,15 @@ type strategy_entry = {
 
 type state_strategy = strategy_entry list
 
-type strategy = state_index -> state_strategy
+
+class stateStrategyMap : object 
+	val mutable internal_tbl : (state_index, state_strategy ref) Hashtbl.t
+	method replace : state_index -> state_strategy ref -> unit
+	method find : state_index -> state_strategy ref    
+    method iter : (state_index -> state_strategy ref -> unit) -> unit
+    method fold : 'c. (state_index -> state_strategy ref -> 'c -> 'c) -> 'c -> 'c
+	method is_empty : bool
+end
 
 class winningMovesPerAction : object 
 	val mutable internal_tbl : (action_index, LinearConstraint.px_nnconvex_constraint) Hashtbl.t
@@ -21,7 +29,6 @@ class winningMovesPerAction : object
     method iter : (action_index -> LinearConstraint.px_nnconvex_constraint -> unit) -> unit
     method fold : 'c. (action_index -> LinearConstraint.px_nnconvex_constraint -> 'c -> 'c) -> 'c -> 'c
 	method is_empty : bool
-    method bot : LinearConstraint.px_nnconvex_constraint
 end
 
 class winningMovesPerState : object 
@@ -31,8 +38,7 @@ class winningMovesPerState : object
     method iter : (state_index -> winningMovesPerAction -> unit) -> unit
     method fold : 'c. (state_index -> winningMovesPerAction -> 'c -> 'c) -> 'c -> 'c
 	method is_empty : bool
-    method bot : winningMovesPerAction
 end
 
-val print_strategy : abstract_model -> strategy:strategy -> state_indices:state_index list -> state_space:StateSpace.stateSpace -> unit
+val print_strategy : abstract_model -> strategy:stateStrategyMap -> state_space:StateSpace.stateSpace -> unit
 val generate_controller : abstract_model -> (state_index -> winningMovesPerState) -> stateSpace -> Options.imitator_options -> unit

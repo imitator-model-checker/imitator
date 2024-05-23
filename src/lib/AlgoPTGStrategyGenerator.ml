@@ -4,19 +4,7 @@ open StateSpace
 open State
 open ImitatorUtilities
 open AlgoPTGStrategyGeneratorUtilities
-
-class virtual ['a, 'b] hashTable = object (self)
-  val mutable internal_tbl : ('a, 'b) Hashtbl.t = Hashtbl.create 100
-	method replace key value = Hashtbl.replace internal_tbl key value
-	method find key =  try Hashtbl.find internal_tbl key with
-                      Not_found -> 
-                        let x = self#bot in Hashtbl.replace internal_tbl key x; x 
-	method iter f = Hashtbl.iter f internal_tbl
-  method fold : 'c. ('a -> 'b -> 'c -> 'c) -> 'c -> 'c = 
-    fun f init -> Hashtbl.fold f internal_tbl init
-  method is_empty = Hashtbl.length internal_tbl = 0
-  method virtual bot : 'b
-end 
+open DefaultHashTable
 
 class ['a] array (ls : 'a list) = object
   val internal_array : 'a Array.t = Array.of_list ls
@@ -32,7 +20,9 @@ type strategy_entry = {
 
 type state_strategy = strategy_entry list
 
-type strategy = state_index -> state_strategy
+class stateStrategyMap = 
+[state_index, state_strategy ref] defaultHashTable
+(fun _ -> ref [])
 
 let format_zone_string (string : string) = 
   let b = Buffer.create 10 in
@@ -54,45 +44,28 @@ let string_of_state_strategy (model : abstract_model) (state_strategy : state_st
   
 
 
-let print_strategy (model : abstract_model) ~strategy ~state_indices ~state_space = 
-  let relevant_states = List.filter (fun state_index -> List.length @@ strategy state_index != 0) state_indices in
-  let state_strategy_strings = List.map (fun state_index -> state_index, string_of_state_strategy model (strategy state_index)) relevant_states in 
-  
+let print_strategy (model : abstract_model) ~strategy ~state_space = 
   let get_location_index state_index = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in 
   let get_location_name state_index = model.location_names 0 (get_location_index state_index) in
 
   print_message Verbose_standard "Printing strategy that ensures controller win:";
-  List.iter (fun (state_index, str) ->  
+  strategy#iter (fun state_index state_strategy -> 
+    let str = string_of_state_strategy model !state_strategy in 
     print_message Verbose_standard @@ Printf.sprintf "%s -> \n%s\n" (get_location_name state_index) str
-  ) state_strategy_strings
+  )
 
-class winningMovesPerAction = object 
-  inherit([action_index, LinearConstraint.px_nnconvex_constraint] hashTable) 
-  method bot = LinearConstraint.false_px_nnconvex_constraint ()
-end
 
-class winningMovesPerState = object
-  inherit ([state_index, winningMovesPerAction] hashTable)
-  method bot = new winningMovesPerAction
-end
+class winningMovesPerAction = [action_index, LinearConstraint.px_nnconvex_constraint] defaultHashTable LinearConstraint.false_px_nnconvex_constraint 
 
-class transitionsPerAction = object
-  inherit ([action_index, transition_index list] hashTable)
-  method bot = []
-end
-class transitionsPerLocation = object 
-  inherit ([location_index, transitionsPerAction] hashTable)
-  method bot = new transitionsPerAction
-end
-class actionsPerLocation = object
-  inherit ([location_index, stateIndexSet] hashTable)
-  method bot = new stateIndexSet
-end
+class winningMovesPerState = [state_index, winningMovesPerAction] defaultHashTable (fun _ -> new winningMovesPerAction)
 
-class locationPerStateIndex = object 
-  inherit ([state_index, location_index option] hashTable)
-  method bot = None
-end
+class transitionsPerAction = [action_index, transition_index list] defaultHashTable (fun _ -> [])
+
+class transitionsPerLocation = [location_index, transitionsPerAction] defaultHashTable (fun _ -> new transitionsPerAction)
+
+class actionsPerLocation = [location_index, stateIndexSet] defaultHashTable (fun _ -> new stateIndexSet)
+
+class locationPerStateIndex = [state_index, location_index option] defaultHashTable (fun _ -> None)
 
 type location_info = {
   invariant : invariant;
