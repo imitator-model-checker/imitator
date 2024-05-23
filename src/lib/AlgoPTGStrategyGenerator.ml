@@ -23,6 +23,49 @@ class ['a] array (ls : 'a list) = object
   method get = Array.get internal_array 
 end
 
+type strategy_entry = {
+  action : action_index;
+  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
+  winning_move : LinearConstraint.px_nnconvex_constraint;
+}
+
+
+type state_strategy = strategy_entry list
+
+type strategy = state_index -> state_strategy
+
+let format_zone_string (string : string) = 
+  let b = Buffer.create 10 in
+  String.iter (fun c -> if c == '\n' then Buffer.add_char b ' ' else Buffer.add_char b c) string;
+  Buffer.contents b
+
+let string_of_strategy_entry (model : abstract_model) (strategy_entry : strategy_entry) = 
+  let {action;prioritized_winning_zone;winning_move} = strategy_entry in 
+  Printf.sprintf "\t(Action: %s, Winning Zone: %s, Winning Move: %s)" 
+  (model.action_names action) 
+  (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names prioritized_winning_zone))
+  (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names winning_move))
+
+
+let string_of_state_strategy (model : abstract_model) (state_strategy : state_strategy) = 
+  let strategy_entry_strings = List.rev @@ List.map (string_of_strategy_entry model) state_strategy in
+  let state_strategy_string = List.fold_left (fun acc str -> Printf.sprintf "%s%s,\n" acc str) ("") strategy_entry_strings in
+  String.sub state_strategy_string 0 (String.length state_strategy_string-2)
+  
+
+
+let print_strategy (model : abstract_model) ~strategy ~state_indices ~state_space = 
+  let relevant_states = List.filter (fun state_index -> List.length @@ strategy state_index != 0) state_indices in
+  let state_strategy_strings = List.map (fun state_index -> state_index, string_of_state_strategy model (strategy state_index)) relevant_states in 
+  
+  let get_location_index state_index = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in 
+  let get_location_name state_index = model.location_names 0 (get_location_index state_index) in
+
+  print_message Verbose_standard "Printing strategy that ensures controller win:";
+  List.iter (fun (state_index, str) ->  
+    print_message Verbose_standard @@ Printf.sprintf "%s -> \n%s\n" (get_location_name state_index) str
+  ) state_strategy_strings
+
 class winningMovesPerAction = object 
   inherit([action_index, LinearConstraint.px_nnconvex_constraint] hashTable) 
   method bot = LinearConstraint.false_px_nnconvex_constraint ()
@@ -182,9 +225,9 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
     ) relevant_uncontrollable_successors;
 
 
-    let winning_moves = get_winning_moves state_index in
+    let winning_moves = get_winning_moves state_index in ()(* in
     winning_moves#iter (
-      fun state_index' winning_moves_per_action ->
+      fun state_index' winning_moves_per_action -> 
         let location_index' = location_manager#get_location state_index' in   
         winning_moves_per_action#iter (
         fun action_index nnconv_constr -> 
@@ -204,7 +247,7 @@ let generate_controller (system_model : AbstractModel.abstract_model) (get_winni
               ) constituent_constrs
           end);
         continue_exploring state_index' location_index'
-    )
+    ) *)
   in
   explore initial_state_index (location_manager#get_location initial_state_index);
 

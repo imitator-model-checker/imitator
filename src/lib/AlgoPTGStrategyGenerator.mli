@@ -4,6 +4,16 @@ open State
 open StateSpace
 
 
+type strategy_entry = {
+  action : action_index;
+  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
+  winning_move : LinearConstraint.px_nnconvex_constraint;
+}
+
+type state_strategy = strategy_entry list
+
+type strategy = state_index -> state_strategy
+
 class winningMovesPerAction : object 
 	val mutable internal_tbl : (action_index, LinearConstraint.px_nnconvex_constraint) Hashtbl.t
 	method replace : action_index -> LinearConstraint.px_nnconvex_constraint -> unit
@@ -24,4 +34,5 @@ class winningMovesPerState : object
     method bot : winningMovesPerAction
 end
 
+val print_strategy : abstract_model -> strategy:strategy -> state_indices:state_index list -> state_space:StateSpace.stateSpace -> unit
 val generate_controller : abstract_model -> (state_index -> winningMovesPerState) -> stateSpace -> Options.imitator_options -> unit
