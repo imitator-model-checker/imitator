@@ -1,5 +1,6 @@
 open ParsingStructure;;
 open ParsingStructureUtilities;;
+open ImitatorUtilities;;
 
 (* Utilities *)
 
@@ -124,7 +125,10 @@ let indices_from_forall_index_data g_decls forall_index_data =
   let { forall_index_name = _; forall_lb; forall_ub } = forall_index_data in
   let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb |> NumConst.to_bounded_int in
   let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub |> NumConst.to_bounded_int in
-  List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
+  if forall_ub_val < forall_lb_val then
+    []
+  else
+    List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
 
 let gen_aux_var_tbl i index_data =
   Hashtbl.of_seq (List.to_seq [(index_data.forall_index_name, Arg_int (NumConst.numconst_of_int i))])
@@ -659,12 +663,12 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
     expand_state_predicate g_decls
   in
   match factor with
-  (* TODO: merge next 4 branches *)
   | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       (* Here we reverse the list to preserve the order of the index after the fold *)
       match List.rev indices with
-      | [] -> failwith "error or vacuity?"
+      | [] -> print_warning "Trying to expand a forall with an empty range.";
+              Parsed_simple_predicate Parsed_state_predicate_true
       | i :: is ->
             (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
             let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
@@ -685,7 +689,8 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
   | Unexpanded_Parsed_forall_state_predicate (index_data, pred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       match List.rev indices with
-        | [] -> failwith "error or vacuity?"
+        | [] -> print_warning "Trying to expand a forall with an empty range.";
+                Parsed_simple_predicate Parsed_state_predicate_true
         | i :: is ->
             let pred_i = instantiate_pred_with index_data pred i in
             let term_of_state_pred p = Parsed_state_predicate_factor (Parsed_state_predicate p) in
@@ -705,7 +710,8 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
   | Unexpanded_Parsed_exists_simple_predicate (index_data, spred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       match List.rev indices with
-      | [] -> failwith "error or vacuity?"
+      | [] -> print_warning "Trying to expand an exists with an empty range.";
+              Parsed_simple_predicate Parsed_state_predicate_false
       | i :: is ->
             (* Compute the disjunction of spred instantiated with each idx in (i::is) *)
             let spred_i = instantiate_spred_with index_data spred i in
@@ -728,7 +734,8 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
   | Unexpanded_Parsed_exists_state_predicate (index_data, pred) -> begin
       let indices = indices_from_forall_index_data g_decls index_data in
       match List.rev indices with
-        | [] -> failwith "error or vacuity?"
+        | [] -> print_warning "Trying to expand an exists with an empty range.";
+                Parsed_simple_predicate Parsed_state_predicate_false
         | i :: is ->
             let pred_i = instantiate_pred_with index_data pred i in
             let fold_fun acc idx =
