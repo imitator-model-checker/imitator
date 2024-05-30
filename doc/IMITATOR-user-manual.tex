@@ -2057,9 +2057,10 @@ not ``real'' arrays, in the sense that they are just syntatic sugar for multiple
 variables. In order to distinguish them from ``real'' arrays, we introduced the keyword
 \styleIMI{synt\_var} to declare them. We also introduced the \styleIMI{forall} keyword, which
 allows one to do many instantiation or declare many constraints in the init definition with
-a single statement. All these constructions are exemplified in the following snippet:
+a single statement.
 
 \begin{example}
+All these constructions are exemplified in the following snippet:
 \begin{IMITATORmodel}
 var
     id : int;
@@ -2108,6 +2109,28 @@ end
 Currently, it is necessary to first declare all templates, then declare all old-style
 automatons, and, lastly, apply all desired instantiations. Similarly, declarations
 of syntatic variables must come after declarations of regular variables.
+
+The \styleIMI{forall} syntax is also supported in the properties file (restricted to \styleIMI{state\_predicate},
+see \cref{section:grammar-property} for details). We also added the analogous \styleIMI{exists} construct,
+which creates a disjunction instead of a conjunction. The user can nest \styleIMI{forall} and \styleIMI{exists}
+in any way he wants. The syntax is exactly the same as for the models. but it has
+lower precedence in comparison to all the other logical operators. This means that, unless the user enclose
+the predicate inside the forall with parenthesis, only the first statement will be considered as part of
+the \styleIMI{forall}/\styleIMI{exists}.
+
+\begin{example}
+The following examples clarify the precedence and what can be done with nesting:
+\begin{IMITATORproperty}
+(* True || False is outside of the forall *)
+property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False)
+
+(* True || False is inside of the forall *)
+property := #synth AGnot(forall i in [0, N - 1]: (loc[p[i]] <> cs && True || False))
+
+(* Nesting *)
+property := #synth AGnot(exists i in [0, N - 1]: (forall i in [0, N - 1]: loc[p[i]] <> cs) && True || False)
+\end{IMITATORproperty}
+\end{example}
 
 Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
 In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
