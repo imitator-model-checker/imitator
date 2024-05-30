@@ -1,0 +1,8 @@
+(* Does not work (needs parenthesis enclosing inner forall) *)
+(* property := #synth AGnot(forall i in [0, N - 1]: forall j in [0, N - 1]: loc[p[i]] <> cs) *)
+
+(* Works *)
+(* property := #synth AGnot(forall i in [0, N - 1]: (forall j in [0, N - 1]: loc[p[i]] <> cs)) *)
+
+(* Works -> True || False is outside of forall *)
+property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False)
