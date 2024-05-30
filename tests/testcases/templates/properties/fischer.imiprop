@@ -12,3 +12,6 @@
 
 (* Works *)
 property := #synth AGnot(True && exists i in [0, N - 1]: (loc[p[i]] = cs && loc[p[i]] <> cs) || False)
+
+(* Empty range raises a warning *)
+(* property := #synth AGnot(True && exists i in [100, N - 1]: (loc[p[i]] = cs && loc[p[i]] <> cs) || False) *)
