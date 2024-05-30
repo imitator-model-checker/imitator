@@ -662,36 +662,40 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
     instantiate_state_predicate param_map_idx pred |>
     expand_state_predicate g_decls
   in
-  match factor with
-  | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      (* Here we reverse the list to preserve the order of the index after the fold *)
-      match List.rev indices with
+  let apply_fn_in_forall_range index_data fn =
+    let indices = indices_from_forall_index_data g_decls index_data in
+    match List.rev indices with
       | [] -> print_warning "Trying to expand a forall with an empty range.";
               Parsed_simple_predicate Parsed_state_predicate_true
-      | i :: is ->
-            (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
-            let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
-            let spred_i = instantiate_spred_with index_data spred i in
-            let fold_fun acc idx =
-                let spred_idx = instantiate_spred_with index_data spred idx in
-                let spred_idx_term = term_of_simple_pred spred_idx in
-                match acc with
-                  | Parsed_state_predicate (Parsed_state_predicate_term t) ->
-                      Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, t)))
-                  | Parsed_simple_predicate p -> (* Only first iteration of fold, after that I know for sure is a term *)
-                      let p_term = term_of_simple_pred p in
-                      Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, p_term)))
-                  | _ -> failwith "[expand_state_factor]: unreachable"
-                in
-            List.fold_left fold_fun (Parsed_simple_predicate spred_i) is
-  end
-  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      match List.rev indices with
-        | [] -> print_warning "Trying to expand a forall with an empty range.";
-                Parsed_simple_predicate Parsed_state_predicate_true
-        | i :: is ->
+      | i :: is -> fn i is
+  in
+  let apply_fn_in_exists_range index_data fn =
+    let indices = indices_from_forall_index_data g_decls index_data in
+    match List.rev indices with
+      | [] -> print_warning "Trying to expand an exists with an empty range.";
+              Parsed_simple_predicate Parsed_state_predicate_false
+      | i :: is -> fn i is
+  in
+  match factor with
+  | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) ->
+      apply_fn_in_forall_range index_data (fun i is ->
+        (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
+        let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
+        let spred_i = instantiate_spred_with index_data spred i in
+        let fold_fun acc idx =
+            let spred_idx = instantiate_spred_with index_data spred idx in
+            let spred_idx_term = term_of_simple_pred spred_idx in
+            match acc with
+              | Parsed_state_predicate (Parsed_state_predicate_term t) ->
+                  Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, t)))
+              | Parsed_simple_predicate p -> (* Only first iteration of fold, after that I know for sure is a term *)
+                  let p_term = term_of_simple_pred p in
+                  Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, p_term)))
+              | _ -> failwith "[expand_state_factor]: unreachable"
+            in
+        List.fold_left fold_fun (Parsed_simple_predicate spred_i) is)
+  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) ->
+      apply_fn_in_forall_range index_data (fun i is ->
             let pred_i = instantiate_pred_with index_data pred i in
             let term_of_state_pred p = Parsed_state_predicate_factor (Parsed_state_predicate p) in
             let fold_fun acc idx =
@@ -705,14 +709,9 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
                     Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (pred_idx_term, p_term)))
                 | _ -> failwith "[expand_state_factor]: unreachable"
             in
-            List.fold_left fold_fun (Parsed_state_predicate pred_i) is
-  end
-  | Unexpanded_Parsed_exists_simple_predicate (index_data, spred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      match List.rev indices with
-      | [] -> print_warning "Trying to expand an exists with an empty range.";
-              Parsed_simple_predicate Parsed_state_predicate_false
-      | i :: is ->
+            List.fold_left fold_fun (Parsed_state_predicate pred_i) is)
+  | Unexpanded_Parsed_exists_simple_predicate (index_data, spred) ->
+      apply_fn_in_exists_range index_data (fun i is ->
             (* Compute the disjunction of spred instantiated with each idx in (i::is) *)
             let spred_i = instantiate_spred_with index_data spred i in
             let state_pred_of_simple_pred p =
@@ -729,14 +728,9 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
                       Parsed_state_predicate (Parsed_state_predicate_OR (spred_idx_state, p_state))
                   | _ -> failwith "[expand_state_factor]: unreachable"
                 in
-            List.fold_left fold_fun (Parsed_simple_predicate spred_i) is
-  end
-  | Unexpanded_Parsed_exists_state_predicate (index_data, pred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      match List.rev indices with
-        | [] -> print_warning "Trying to expand an exists with an empty range.";
-                Parsed_simple_predicate Parsed_state_predicate_false
-        | i :: is ->
+            List.fold_left fold_fun (Parsed_simple_predicate spred_i) is)
+  | Unexpanded_Parsed_exists_state_predicate (index_data, pred) ->
+      apply_fn_in_exists_range index_data (fun i is ->
             let pred_i = instantiate_pred_with index_data pred i in
             let fold_fun acc idx =
               let pred_idx = instantiate_pred_with index_data pred idx in
@@ -744,8 +738,7 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
                 | Parsed_state_predicate p -> Parsed_state_predicate (Parsed_state_predicate_OR (pred_idx, p))
                 | _ -> failwith "[expand_state_factor]: unreachable"
             in
-            List.fold_left fold_fun (Parsed_state_predicate pred_i) is
-  end
+            List.fold_left fold_fun (Parsed_state_predicate pred_i) is)
   | Unexpanded_Parsed_state_predicate_factor_NOT f -> Parsed_state_predicate_factor_NOT (expand_state_factor g_decls f)
   | Unexpanded_Parsed_simple_predicate spred -> Parsed_simple_predicate (expand_simple_predicate g_decls spred)
   | Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
