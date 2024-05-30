@@ -279,14 +279,24 @@ type unexpanded_parsed_location = {
 	unexpanded_transitions : unexpanded_transition list;
 }
 
+type forall_index_data = {
+  forall_index_name : variable_name;
+  forall_lb         : parsed_discrete_arithmetic_expression;
+  forall_ub         : parsed_discrete_arithmetic_expression;
+}
+
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
-type unexpanded_parsed_automaton = automaton_name * name_or_access list * unexpanded_parsed_location list
+type action_declaration =
+  | Single_action of name_or_access
+  | Multiple_actions of forall_index_data * variable_name * parsed_discrete_arithmetic_expression
+
+type unexpanded_parsed_automaton = automaton_name * action_declaration list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
     template_parameters : (variable_name * DiscreteType.template_var_type) list;
-    template_body       : name_or_access list * unexpanded_parsed_location list
+    template_body       : action_declaration list * unexpanded_parsed_location list
 }
 
 type parsed_template_arg =
@@ -298,12 +308,6 @@ type parsed_template_arg =
 type parsed_template_call =
  (* name             template used   parameters passed to template *)
     automaton_name * template_name * (parsed_template_arg list)
-
-type forall_index_data = {
-  forall_index_name : variable_name;
-  forall_lb         : parsed_discrete_arithmetic_expression;
-  forall_ub         : parsed_discrete_arithmetic_expression;
-}
 
 type parsed_forall_template_call = {
   forall_index_data : forall_index_data;
@@ -406,6 +410,10 @@ type parsed_loc_predicate =
 	| Parsed_loc_predicate_EQ of automaton_name * location_name
 	| Parsed_loc_predicate_NEQ of automaton_name * location_name
 
+type unexpanded_parsed_loc_predicate =
+	| Unexpanded_Parsed_loc_predicate_EQ of name_or_access * location_name
+	| Unexpanded_Parsed_loc_predicate_NEQ of name_or_access * location_name
+
 
 type parsed_simple_predicate =
 	| Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
@@ -413,6 +421,13 @@ type parsed_simple_predicate =
 	| Parsed_state_predicate_true
 	| Parsed_state_predicate_false
 	| Parsed_state_predicate_accepting
+
+type unexpanded_parsed_simple_predicate =
+	| Unexpanded_Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
+	| Unexpanded_Parsed_loc_predicate of unexpanded_parsed_loc_predicate
+	| Unexpanded_Parsed_state_predicate_true
+	| Unexpanded_Parsed_state_predicate_false
+	| Unexpanded_Parsed_state_predicate_accepting
 
 type parsed_state_predicate_factor =
 	| Parsed_state_predicate_factor_NOT of parsed_state_predicate_factor
@@ -426,6 +441,24 @@ and parsed_state_predicate_term =
 and parsed_state_predicate =
 	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
 	| Parsed_state_predicate_term of parsed_state_predicate_term
+
+type unexpanded_parsed_state_predicate_factor =
+	| Unexpanded_Parsed_state_predicate_factor_NOT of unexpanded_parsed_state_predicate_factor
+	| Unexpanded_Parsed_simple_predicate of unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_state_predicate of unexpanded_parsed_state_predicate
+	(* The forall is in this level so we can use it on both sides of `AND` and `OR` *)
+	| Unexpanded_Parsed_forall_simple_predicate of forall_index_data * unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_forall_state_predicate of forall_index_data * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_exists_simple_predicate of forall_index_data * unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_exists_state_predicate of forall_index_data * unexpanded_parsed_state_predicate
+
+and unexpanded_parsed_state_predicate_term =
+	| Unexpanded_Parsed_state_predicate_term_AND of unexpanded_parsed_state_predicate_term * unexpanded_parsed_state_predicate_term
+	| Unexpanded_Parsed_state_predicate_factor of unexpanded_parsed_state_predicate_factor
+
+and unexpanded_parsed_state_predicate =
+	| Unexpanded_Parsed_state_predicate_OR of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_state_predicate_term of unexpanded_parsed_state_predicate_term
 
 	
 (****************************************************************)
@@ -659,6 +692,48 @@ type parsed_property_type =
 	| Parsed_Win of parsed_state_predicate
 
 
+type unexpanded_parsed_property_type =
+	| Unexpanded_Parsed_Valid
+	| Unexpanded_Parsed_EF of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AGnot of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AG of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EG of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_ER of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EU of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EW of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AF of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AR of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AU of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AW of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EF_timed of parsed_interval * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_ER_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EU_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EW_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AF_timed of parsed_interval * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AR_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AU_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AW_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EFpmin of unexpanded_parsed_state_predicate * variable_name
+	| Unexpanded_Parsed_EFpmax of unexpanded_parsed_state_predicate * variable_name
+	| Unexpanded_Parsed_EFtmin of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_Cycle_Through of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_Cycle_Through_generalized of unexpanded_parsed_state_predicate list
+	| Unexpanded_Parsed_NZ_Cycle
+	| Unexpanded_Parsed_Deadlock_Freeness
+	| Unexpanded_Parsed_IM of parsed_pval
+	| Unexpanded_Parsed_ConvexIM of parsed_pval
+	| Unexpanded_Parsed_PRP of unexpanded_parsed_state_predicate * parsed_pval
+	| Unexpanded_Parsed_IMK of parsed_pval
+	| Unexpanded_Parsed_IMunion of parsed_pval
+	| Unexpanded_Parsed_Cover_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Learning_cartography of unexpanded_parsed_state_predicate * parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Shuffle_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Border_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Random_cartography of parsed_pdomain * int * NumConst.t
+	| Unexpanded_Parsed_RandomSeq_cartography of parsed_pdomain * int * NumConst.t
+	| Unexpanded_Parsed_PRPC of unexpanded_parsed_state_predicate * parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_pattern of parsed_pattern
+	| Unexpanded_Parsed_Win of unexpanded_parsed_state_predicate
 
 type parsed_property = {
 	(* Emptiness or synthesis *)
@@ -667,6 +742,12 @@ type parsed_property = {
 	property		: parsed_property_type;
 	(* Projection *)
 	projection		: parsed_projection;
+}
+
+type unexpanded_parsed_property = {
+	unexpanded_synthesis_type	: parsed_synthesis_type;
+	unexpanded_property		: unexpanded_parsed_property_type;
+	unexpanded_projection		: parsed_projection;
 }
 
 type declarations_info = {

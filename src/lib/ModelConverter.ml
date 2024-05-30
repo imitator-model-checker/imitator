@@ -2769,9 +2769,10 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
   (* Instantiate the template calls and expand syntatic variables *)
+  let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
   let parsed_model = expand_model parsed_model in
 
   print_message Verbose_high ("\n*** Link variables to declarations.");
