@@ -648,6 +648,16 @@ and expand_state_term (g_decls: variable_declarations): unexpanded_parsed_state_
   | Unexpanded_Parsed_state_predicate_factor f -> Parsed_state_predicate_factor (expand_state_factor g_decls f)
 
 and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_parsed_state_predicate_factor): parsed_state_predicate_factor =
+  let instantiate_spred_with index_data spred idx =
+    let param_map_idx = gen_aux_var_tbl idx index_data in
+    instantiate_simple_predicate param_map_idx spred |>
+    expand_simple_predicate g_decls
+  in
+  let instantiate_pred_with index_data pred idx =
+    let param_map_idx = gen_aux_var_tbl idx index_data in
+    instantiate_state_predicate param_map_idx pred |>
+    expand_state_predicate g_decls
+  in
   match factor with
   (* TODO: merge next 4 branches *)
   | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
@@ -657,15 +667,10 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
       | [] -> failwith "error or vacuity?"
       | i :: is ->
             (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
-            let instantiate_spred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_simple_predicate param_map_idx spred |>
-              expand_simple_predicate g_decls
-            in
             let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
-            let spred_i = instantiate_spred_with i in
+            let spred_i = instantiate_spred_with index_data spred i in
             let fold_fun acc idx =
-                let spred_idx = instantiate_spred_with idx in
+                let spred_idx = instantiate_spred_with index_data spred idx in
                 let spred_idx_term = term_of_simple_pred spred_idx in
                 match acc with
                   | Parsed_state_predicate (Parsed_state_predicate_term t) ->
@@ -682,15 +687,10 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
       match List.rev indices with
         | [] -> failwith "error or vacuity?"
         | i :: is ->
-            let instantiate_pred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_state_predicate param_map_idx pred |>
-              expand_state_predicate g_decls
-            in
-            let pred_i = instantiate_pred_with i in
+            let pred_i = instantiate_pred_with index_data pred i in
             let term_of_state_pred p = Parsed_state_predicate_factor (Parsed_state_predicate p) in
             let fold_fun acc idx =
-              let pred_idx = instantiate_pred_with idx in
+              let pred_idx = instantiate_pred_with index_data pred idx in
               let pred_idx_term = term_of_state_pred pred_idx in
               match acc with
                 | Parsed_state_predicate (Parsed_state_predicate_term t) ->
@@ -708,17 +708,12 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
       | [] -> failwith "error or vacuity?"
       | i :: is ->
             (* Compute the disjunction of spred instantiated with each idx in (i::is) *)
-            let instantiate_spred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_simple_predicate param_map_idx spred |>
-              expand_simple_predicate g_decls
-            in
-            let spred_i = instantiate_spred_with i in
+            let spred_i = instantiate_spred_with index_data spred i in
             let state_pred_of_simple_pred p =
               Parsed_state_predicate_term (Parsed_state_predicate_factor (Parsed_simple_predicate p))
             in
             let fold_fun acc idx =
-                let spred_idx = instantiate_spred_with idx in
+                let spred_idx = instantiate_spred_with index_data spred idx in
                 let spred_idx_state = state_pred_of_simple_pred spred_idx in
                 match acc with
                   | Parsed_state_predicate p ->
@@ -735,14 +730,9 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
       match List.rev indices with
         | [] -> failwith "error or vacuity?"
         | i :: is ->
-            let instantiate_pred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_state_predicate param_map_idx pred |>
-              expand_state_predicate g_decls
-            in
-            let pred_i = instantiate_pred_with i in
+            let pred_i = instantiate_pred_with index_data pred i in
             let fold_fun acc idx =
-              let pred_idx = instantiate_pred_with idx in
+              let pred_idx = instantiate_pred_with index_data pred idx in
               match acc with
                 | Parsed_state_predicate p -> Parsed_state_predicate (Parsed_state_predicate_OR (pred_idx, p))
                 | _ -> failwith "[expand_state_factor]: unreachable"
