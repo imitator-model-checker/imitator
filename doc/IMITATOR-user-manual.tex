@@ -2053,7 +2053,7 @@ can pass either variables or literal values as arguments to the template. If a v
 then this is done by reference.
 
 In addition to templates, we also introduced arrays of actions, clocks and parameters. These are
-not ``real'' arrays, in the sense that they are just syntatic sugar for multiple declarations of
+not ``real'' arrays, in the sense that they are just syntactic sugar for multiple declarations of
 variables. In order to distinguish them from ``real'' arrays, we introduced the keyword
 \styleIMI{synt\_var} to declare them. We also introduced the \styleIMI{forall} keyword, which
 allows one to do many instantiation or declare many constraints in the init definition with
@@ -2107,11 +2107,25 @@ end
 
 Currently, it is necessary to first declare all templates, then declare all old-style
 automatons, and, lastly, apply all desired instantiations. Similarly, declarations
-of syntatic variables must come after declarations of regular variables.
+of syntactic variables must come after declarations of regular variables.
 
 Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
 In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Submodel inclusion}\label{section:include}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+It is possible to include some submodels from different files.
+The syntax is as follows:
+
+\begin{IMITATORmodel}
+#include "some-file.imi";
+\end{IMITATORmodel}
+
+\noindent{} where \stylePath{some-file.imi} is a partial \imitator{} file.
+
+% TODO: make precise what can be included, and in what part of the model the inclusion can take place
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
