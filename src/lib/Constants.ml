@@ -245,7 +245,7 @@ let global_default_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = default_string;
     array_string = default_array_string;
-    assign_op = " := ";
+    assign_op = " <- ";
     binary_word_representation = Binary_word_representation_standard;
 }
 

@@ -146,6 +146,8 @@ let string_of_true		= "True"
 let string_of_false		= "False"
 let string_of_accepting	= "accepting"
 
+(* let update_symbol		= ":=" *)
+let update_symbol		= "<-"
 
 
 (************************************************************)
@@ -395,7 +397,7 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
             let clock_name = model.variable_names clock_index in
             tabs
             ^ clock_name
-            ^ " := "
+            ^ " " ^ update_symbol ^ " "
             ^ DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr
             ^ ";"
     in
@@ -832,7 +834,7 @@ let string_of_new_initial_locations ?indent_level:(i=1) model =
 		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] := " ^ (model.location_names automaton_index initial_location)
+		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] " ^ update_symbol ^ " " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
 	in string_of_list_of_string_with_sep ", \n" initial_automata
 
@@ -844,7 +846,7 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 		let initial_value = DiscreteState.get_discrete_value model.initial_location discrete_index in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
+		tabulations ^ (model.variable_names discrete_index) ^ " " ^ update_symbol ^ " " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
@@ -858,7 +860,7 @@ let string_of_initial_state model =
 	^ "\n" ^ "(* Initial state *)"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ ""
-	^ "\n" ^ "init := {"
+	^ "\n" ^ "init = {"
     ^ "\n"
 	(* Discrete zone *)
     ^ "\n" ^ "\tdiscrete = "

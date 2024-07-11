@@ -37,6 +37,8 @@ open Constants
 
 (* let tikz_string = { global_default_string with boolean_string = tikz_boolean_string } *)
 
+let update_symbol = "\\leftarrow{}"
+
 (************************************************************
  Functions
 ************************************************************)
@@ -117,13 +119,13 @@ let string_of_seq_code_bloc (model : AbstractModel.abstract_model) (* seq_code_b
 
         | Assignment (scalar_or_index_update_type, expr) ->
 			ModelPrinter.string_of_scalar_or_index_update_type (variable_names_with_style model) scalar_or_index_update_type
-			^ ":="
+			^ update_symbol
 			(* Convert the arithmetic_expression *)
 			^ escape_latex (ModelPrinter.string_of_global_expression (variable_names_with_style model) expr)
 
         | Clock_assignment (clock_index, expr) ->
 			model.variable_names clock_index
-			^ ":="
+			^ update_symbol
 			(* Convert the arithmetic_expression *)
 			^ escape_latex (DiscreteExpressions.string_of_rational_arithmetic_expression (variable_names_with_style model) expr)
 
@@ -179,7 +181,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	let _, update_seq_code_bloc = transition.updates in
 
 	let source_location_name = model.location_names automaton_index source_location in
-	let destination_location_name = model.location_names automaton_index transition.target in
+	let target_location_name = model.location_names automaton_index transition.target in
 
 	let uncontrollable_description =
 		(* A transition is considered uncontrollable if it is not controllable AND there are some controllable actions *)
@@ -207,7 +209,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	^ string_of_seq_code_bloc model update_seq_code_bloc
 
 	(* The end *)
-	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"
+	^ "\n\t\t\\end{tabular}} (" ^ target_location_name ^ ");"
 
 
 (* Convert the transitions of a location into a string *)

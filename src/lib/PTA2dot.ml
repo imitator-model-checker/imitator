@@ -63,7 +63,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	"\n\t"
 	(* Source *)
 	^ (id_of_location automaton_index source_location)
-	(* Destination *)
+	(* Target *)
 	^ " -> "
 	^ (id_of_location automaton_index transition.target)
 

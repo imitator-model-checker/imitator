@@ -1287,7 +1287,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x := 0;}  sync a goto l1;
+	when  x = 1 do {x <- 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1298,7 +1298,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x := 0;}  sync a goto l1;
+	when  x = 1 do {x <- 0;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1307,18 +1307,18 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] := l1, 
-		loc[pta2] := l1,
+		loc[pta1] <- l1,
+		loc[pta2] <- l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i := 0
+		i <- 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1370,7 +1370,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x := 0;}  sync a goto l1;
+	when  p + 1 = x do {x <- 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1380,7 +1380,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y := p;}  sync a goto l1;
+	when  y = 1 do {y <- p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1389,19 +1389,19 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] := l1, 
-		loc[pta2] := l1,
+		loc[pta1] <- l1,
+		loc[pta2] <- l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		j := 0, 
-		i := 0
+		j <- 0,
+		i <- 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1453,7 +1453,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x := 0;}  sync a goto l1;
+	when  p + 1 = x do {x <- 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1464,7 +1464,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y := p;}  sync a goto l1;
+	when  y = 1 do {y <- p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1474,19 +1474,19 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] := l1, 
-		loc[pta2] := l1,
+		loc[pta1] <- l1,
+		loc[pta2] <- l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		j := 0, 
-		i := 0
+		j <- 0,
+		i <- 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1605,8 +1605,8 @@ Error                                   : model parsing error
 	{
 		# Test version             : 1
 		# Test since               : 2022/06/09
-		# Last modified            : 2022/06/09
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2024/07/11
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test include: functions',
 		'author': 'lbinria',
 		'tags':'syntax,include, function',
@@ -1643,7 +1643,7 @@ accepting loc lend: invariant True
  actions: ;
 
 loc s0: invariant True
-	when f() + j = 4 do {res := f();}  (* sync nosync_2*)  goto lend;
+	when f() + j = 4 do {res <- f();}  (* sync nosync_2*)  goto lend;
 
 accepting loc lend: invariant res = 3
  end (* P2 *)
@@ -1654,20 +1654,20 @@ accepting loc lend: invariant res = 3
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[P1] := s0,
-		loc[P2] := s0,
+		loc[P1] <- s0,
+		loc[P2] <- s0,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		res := 0,
-		j := 1,
-		i := 0
+		res <- 0,
+		j <- 1,
+		i <- 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -2571,7 +2571,7 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
 urgent loc idle: invariant True
-	when True do {i := (3 * i - 1) / (5 * i * i); x := x + 1/2 * p - 7 * i - 1; y := y + 1;} sync a goto idle;
+	when True do {i <- (3 * i - 1) / (5 * i * i); x <- x + 1/2 * p - 7 * i - 1; y <- y + 1;} sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -2590,8 +2590,8 @@ urgent loc idle: invariant True
 			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
 	when  a > 0
 & b > 0
-& c > 0 do {a := 0; b := 0; c := 0;}  sync a goto idle;
-	when True do {a := 2; b := 3 + 3; c := 0;}  sync a goto idle;
+& c > 0 do {a <- 0; b <- 0; c <- 0;}  sync a goto idle;
+	when True do {a <- 2; b <- 3 + 3; c <- 0;}  sync a goto idle;
 		"""
 			 } # end result file
 			,
@@ -3223,8 +3223,8 @@ when  y + 7 > 2*x
 	{
 		## Test version             : 1
 		## Test since               : 2022/10/27
-		## Last modified            : 2022/10/27
-		## Test for IMITATOR version: 3.3
+		## Last modified            : 2024/07/11
+		## Test for IMITATOR version: 3.4
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'tags': 'parsing, arithmetic, linear, reduction',
@@ -3233,15 +3233,15 @@ when  y + 7 > 2*x
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
-      x1 := 6 * x + 10 * y - 53;
-      x2 := 6 * x + 10 * y - 53;
-      x3 := y + 5 * x + 5;
-      x4 := x - 1;
-      x5 := -(6);
-      x6 := 2 * x + 11;
-      x7 := -(3 * x) + 23 * y + 35;
-      x8 := 24 + 12 * x;
-      x9 := -(12 * y) + 2 * x + 4 * z + 41;
+      x1 <- 6 * x + 10 * y - 53;
+      x2 <- 6 * x + 10 * y - 53;
+      x3 <- y + 5 * x + 5;
+      x4 <- x - 1;
+      x5 <- -(6);
+      x6 <- 2 * x + 11;
+      x7 <- -(3 * x) + 23 * y + 35;
+      x8 <- 24 + 12 * x;
+      x9 <- -(12 * y) + 2 * x + 4 * z + 41;
 		"""
 			 } # end result file
 			,
@@ -3337,8 +3337,8 @@ when  -(i * 2) = -2 * i
 	{
 		## Test version             : 1
 		## Test since               : 2021/02/10
-		## Last modified            : 2021/02/10
-		## Test for IMITATOR version: > 3.0
+		## Last modified            : 2024/07/11
+		## Test for IMITATOR version: 3.4
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
@@ -3347,19 +3347,19 @@ when  -(i * 2) = -2 * i
 		'expectations' : [
 			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
 when  i = 0 do {
-  i := -(i * 2);
-  i := -2 * i;
-  i := -(i * -2);
-  i := -(i / 2);
-  i := (-i) / 2;
-  i := -(i / -2);
-  i := -(i + i);
-  i := -(i - i);
-  i := -(2 * i - i);
-  i := -(-(i));
-  i := -(-(-(i)));
-  i := -1 + 1;
-  i := -1 - 1;
+  i <- -(i * 2);
+  i <- -2 * i;
+  i <- -(i * -2);
+  i <- -(i / 2);
+  i <- (-i) / 2;
+  i <- -(i / -2);
+  i <- -(i + i);
+  i <- -(i - i);
+  i <- -(2 * i - i);
+  i <- -(-(i));
+  i <- -(-(-(i)));
+  i <- -1 + 1;
+  i <- -1 - 1;
 }  sync a goto lend;
 		"""
 			 } # end result file
@@ -4845,7 +4845,7 @@ Error                                   : invalid model
 # (* Initial state *)
 # (************************************************************)
 #
-# init := True
+# init = True
 # 	(*------------------------------------------------------------*)
 # 	(* Initial location *)
 # 	(*------------------------------------------------------------*)
@@ -4883,8 +4883,8 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/10
-		## Last modified            : 2021/06/01
-		## Test for IMITATOR version: > 3.0
+		## Last modified            : 2024/07/11
+		## Test for IMITATOR version: 3.4
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test imi2IMI for initial state v3.1',
@@ -4943,22 +4943,22 @@ accepting loc lend2: invariant True
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] := l1,
-		loc[pta2] := l2,
+		loc[pta] <- l1,
+		loc[pta2] <- l2,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i := 1,
-		j := 2,
-		b := False,
-		k := 0,
-		l := 0
+		i <- 1,
+		j <- 2,
+		b <- False,
+		k <- 0,
+		l <- 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -25934,7 +25934,7 @@ Constraint nature                       : good/bad
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test the model printer',
+		'purpose'    : 'Test the model printer (Sched5)',
 		'input_files': ['Sched5.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -25955,10 +25955,10 @@ var
 
 
 loc t1_loc_idle: invariant True
-	when True do {t1_urgent := 0;}  sync t1_arr_event goto t1_loc_act_event;
+	when True do {t1_urgent <- 0;}  sync t1_arr_event goto t1_loc_act_event;
 
 loc t1_loc_act_event: invariant 0 >= t1_urgent
-	when  t1_urgent = 0 do {t1_c := 0; t1_d := 0;} sync t1_arr goto t1_loc_act;
+	when  t1_urgent = 0 do {t1_c <- 0; t1_d <- 0;} sync t1_arr goto t1_loc_act;
 
 loc t1_loc_act: invariant 8 >= t1_d stop{t1_c}
 	when True do {} sync t1_dis goto t1_loc_exe;
@@ -25982,7 +25982,7 @@ loc t1_loc_miss: invariant True
 
 
 loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
-	when  t1_arr_x = 8 do {t1_arr_x := 0;}  sync t1_arr_event goto t1_arr_loc_arr;
+	when  t1_arr_x = 8 do {t1_arr_x <- 0;}  sync t1_arr_event goto t1_arr_loc_arr;
  end (* Periodic_t1_arr *)
 (************************************************************)
 
@@ -25994,10 +25994,10 @@ loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
 
 
 loc t2_loc_idle: invariant True
-	when True do {t2_urgent := 0;}  sync t2_arr_event goto t2_loc_act_event;
+	when True do {t2_urgent <- 0;}  sync t2_arr_event goto t2_loc_act_event;
 
 loc t2_loc_act_event: invariant  0 >= t2_urgent
-	when  t2_urgent = 0 do {t2_c := 0; t2_d := 0;}  sync t2_arr goto t2_loc_act;
+	when  t2_urgent = 0 do {t2_c <- 0; t2_d <- 0;}  sync t2_arr goto t2_loc_act;
 
 loc t2_loc_act: invariant  20 >= t2_d stop{t2_c}
 	when True do {}  sync t2_dis goto t2_loc_exe;
@@ -26022,7 +26022,7 @@ loc t2_loc_miss: invariant True
 
 
 loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
-	when  t2_arr_x = 20 do {t2_arr_x := 0;}  sync t2_arr_event goto t2_arr_loc_arr;
+	when  t2_arr_x = 20 do {t2_arr_x <- 0;}  sync t2_arr_event goto t2_arr_loc_arr;
  end (* Periodic_t2_arr *)
 (************************************************************)
 
@@ -26034,10 +26034,10 @@ loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
 
 
 loc t3_loc_idle: invariant True
-	when True do {t3_urgent := 0;}  sync t3_arr_event goto t3_loc_act_event;
+	when True do {t3_urgent <- 0;}  sync t3_arr_event goto t3_loc_act_event;
 
 loc t3_loc_act_event: invariant  0 >= t3_urgent
-	when  t3_urgent = 0 do {t3_c := 0; t3_d := 0;}  sync t3_arr goto t3_loc_act;
+	when  t3_urgent = 0 do {t3_c <- 0; t3_d <- 0;}  sync t3_arr goto t3_loc_act;
 
 loc t3_loc_act: invariant  50 >= t3_d stop{t3_c}
 	when True do {}  sync t3_dis goto t3_loc_exe;
@@ -26062,7 +26062,7 @@ loc t3_loc_miss: invariant True
 
 
 loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
-	when  t3_arr_x = 50 do {t3_arr_x := 0;}  sync t3_arr_event goto t3_arr_loc_arr;
+	when  t3_arr_x = 50 do {t3_arr_x <- 0;}  sync t3_arr_event goto t3_arr_loc_arr;
  end (* Periodic_t3_arr *)
 (************************************************************)
 
@@ -26074,10 +26074,10 @@ loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
 
 
 loc t4_loc_idle: invariant True
-	when True do {t4_urgent := 0;}  sync t4_arr_event goto t4_loc_act_event;
+	when True do {t4_urgent <- 0;}  sync t4_arr_event goto t4_loc_act_event;
 
 loc t4_loc_act_event: invariant  0 >= t4_urgent
-	when  t4_urgent = 0 do {t4_c := 0; t4_d := 0;}  sync t4_arr goto t4_loc_act;
+	when  t4_urgent = 0 do {t4_c <- 0; t4_d <- 0;}  sync t4_arr goto t4_loc_act;
 
 loc t4_loc_act: invariant  100 >= t4_d stop{t4_c}
 	when True do {}  sync t4_dis goto t4_loc_exe;
@@ -26102,7 +26102,7 @@ loc t4_loc_miss: invariant True
 
 
 loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
-	when  t4_arr_x = 100 do {t4_arr_x := 0;}  sync t4_arr_event goto t4_arr_loc_arr;
+	when  t4_arr_x = 100 do {t4_arr_x <- 0;}  sync t4_arr_event goto t4_arr_loc_arr;
  end (* Periodic_t4_arr *)
 (************************************************************)
 
@@ -26114,10 +26114,10 @@ loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
 
 
 loc t5_loc_idle: invariant True
-	when True do {t5_urgent := 0;}  sync t5_arr_event goto t5_loc_act_event;
+	when True do {t5_urgent <- 0;}  sync t5_arr_event goto t5_loc_act_event;
 
 loc t5_loc_act_event: invariant  0 >= t5_urgent
-	when  t5_urgent = 0 do {t5_c := 0; t5_d := 0;}  sync t5_arr goto t5_loc_act;
+	when  t5_urgent = 0 do {t5_c <- 0; t5_d <- 0;}  sync t5_arr goto t5_loc_act;
 
 loc t5_loc_act: invariant  200 >= t5_d stop{t5_c}
 	when True do {}  sync t5_dis goto t5_loc_exe;
@@ -26142,7 +26142,7 @@ loc t5_loc_miss: invariant True
 
 
 loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
-	when  t5_arr_x = 200 do {t5_arr_x := 0;}  sync t5_arr_event goto t5_arr_loc_arr;
+	when  t5_arr_x = 200 do {t5_arr_x <- 0;}  sync t5_arr_event goto t5_arr_loc_arr;
  end (* Periodic_t5_arr *)
 (************************************************************)
 
@@ -26154,11 +26154,11 @@ loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
 
 
 loc CPU1_loc_: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_At5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_At4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_At5;
 
 loc CPU1_loc_At1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1;
@@ -26176,11 +26176,11 @@ loc CPU1_loc_At5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt5;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4Rt5;
-	when True do {CPU1_urgent := 0;}  sync t5_end goto CPU1_loc_Et5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_At4Rt5;
+	when True do {CPU1_urgent <- 0;}  sync t5_end goto CPU1_loc_Et5;
 
 loc CPU1_loc_Et5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_1*)  goto CPU1_loc_stop;
@@ -26210,11 +26210,11 @@ loc CPU1_loc_At4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt4;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt4;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_end goto CPU1_loc_Et4;
 
 loc CPU1_loc_Et4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_2*)  goto CPU1_loc_stop;
@@ -26238,10 +26238,10 @@ loc CPU1_loc_At3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_end goto CPU1_loc_Et4Wt5;
 
 loc CPU1_loc_Et4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26265,11 +26265,11 @@ loc CPU1_loc_At3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt3: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3;
 
 loc CPU1_loc_Et3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_3*)  goto CPU1_loc_stop;
@@ -26287,10 +26287,10 @@ loc CPU1_loc_At2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt3Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt5;
 
 loc CPU1_loc_Et3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26308,10 +26308,10 @@ loc CPU1_loc_At2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt3Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt4;
 
 loc CPU1_loc_Et3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -26329,9 +26329,9 @@ loc CPU1_loc_At2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
 
 loc CPU1_loc_Et3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -26349,11 +26349,11 @@ loc CPU1_loc_At2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt2: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2;
 
 loc CPU1_loc_Et2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_4*)  goto CPU1_loc_stop;
@@ -26365,10 +26365,10 @@ loc CPU1_loc_At1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2;
 
 loc CPU1_loc_Rt2Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt5;
 
 loc CPU1_loc_Et2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26380,10 +26380,10 @@ loc CPU1_loc_At1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt5;
 
 loc CPU1_loc_Rt2Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt4;
 
 loc CPU1_loc_Et2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -26395,9 +26395,9 @@ loc CPU1_loc_At1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4;
 
 loc CPU1_loc_Rt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
 
 loc CPU1_loc_Et2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -26409,10 +26409,10 @@ loc CPU1_loc_At1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4Wt5;
 
 loc CPU1_loc_Rt2Wt3: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3;
 
 loc CPU1_loc_Et2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
@@ -26424,9 +26424,9 @@ loc CPU1_loc_At1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
 
 loc CPU1_loc_Rt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
 
 loc CPU1_loc_Et2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
@@ -26438,9 +26438,9 @@ loc CPU1_loc_At1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt5;
 
 loc CPU1_loc_Rt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
 
 loc CPU1_loc_Et2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
@@ -26452,8 +26452,8 @@ loc CPU1_loc_At1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4;
 
 loc CPU1_loc_Rt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
@@ -26465,129 +26465,129 @@ loc CPU1_loc_At1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt1: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1;
 
 loc CPU1_loc_Et1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_5*)  goto CPU1_loc_stop;
 
 loc CPU1_loc_Rt1Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt5;
 
 loc CPU1_loc_Et1Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt1Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt4;
 
 loc CPU1_loc_Et1Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
 
 loc CPU1_loc_Rt1Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
 
 loc CPU1_loc_Et1Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt1Wt3: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3;
 
 loc CPU1_loc_Et1Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
 
 loc CPU1_loc_Rt1Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
 
 loc CPU1_loc_Et1Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
 
 loc CPU1_loc_Rt1Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
 
 loc CPU1_loc_Et1Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt1Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2: invariant True
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2;
 
 loc CPU1_loc_Et1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2;
 
 loc CPU1_loc_Rt1Wt2Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
 
 loc CPU1_loc_Et1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
 
 loc CPU1_loc_Et1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3: invariant True
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
 
 loc CPU1_loc_Et1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
+	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
@@ -26604,11 +26604,11 @@ loc CPU1_loc_stop: invariant True
 
 
 loc dline_loc_nomiss: invariant True
-	when True do {t1_d := 0;}  sync t1_miss goto dline_loc_miss;
-	when True do {t1_d := 0;}  sync t2_miss goto dline_loc_miss;
-	when True do {t1_d := 0;}  sync t3_miss goto dline_loc_miss;
-	when True do {t1_d := 0;}  sync t4_miss goto dline_loc_miss;
-	when True do {t1_d := 0;}  sync t5_miss goto dline_loc_miss;
+	when True do {t1_d <- 0;}  sync t1_miss goto dline_loc_miss;
+	when True do {t1_d <- 0;}  sync t2_miss goto dline_loc_miss;
+	when True do {t1_d <- 0;}  sync t3_miss goto dline_loc_miss;
+	when True do {t1_d <- 0;}  sync t4_miss goto dline_loc_miss;
+	when True do {t1_d <- 0;}  sync t5_miss goto dline_loc_miss;
 
 loc dline_loc_miss: invariant  t1_d = 0 stop{t1_d}
  end (* OBS_dline *)
@@ -26618,24 +26618,24 @@ loc dline_loc_miss: invariant  t1_d = 0 stop{t1_d}
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[Task_t1] := t1_loc_idle, 
-		loc[Periodic_t1_arr] := t1_arr_loc_arr, 
-		loc[Task_t2] := t2_loc_idle, 
-		loc[Periodic_t2_arr] := t2_arr_loc_arr, 
-		loc[Task_t3] := t3_loc_idle, 
-		loc[Periodic_t3_arr] := t3_arr_loc_arr, 
-		loc[Task_t4] := t4_loc_idle, 
-		loc[Periodic_t4_arr] := t4_arr_loc_arr, 
-		loc[Task_t5] := t5_loc_idle, 
-		loc[Periodic_t5_arr] := t5_arr_loc_arr, 
-		loc[sched_CPU1] := CPU1_loc_, 
-		loc[OBS_dline] := dline_loc_nomiss,
+		loc[Task_t1] <- t1_loc_idle,
+		loc[Periodic_t1_arr] <- t1_arr_loc_arr,
+		loc[Task_t2] <- t2_loc_idle,
+		loc[Periodic_t2_arr] <- t2_arr_loc_arr,
+		loc[Task_t3] <- t3_loc_idle,
+		loc[Periodic_t3_arr] <- t3_arr_loc_arr,
+		loc[Task_t4] <- t4_loc_idle,
+		loc[Periodic_t4_arr] <- t4_arr_loc_arr,
+		loc[Task_t5] <- t5_loc_idle,
+		loc[Periodic_t5_arr] <- t5_arr_loc_arr,
+		loc[sched_CPU1] <- CPU1_loc_,
+		loc[OBS_dline] <- dline_loc_nomiss,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
@@ -27185,7 +27185,7 @@ var
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/07/11
-		# Last modified            : 2023/07/11
+		# Last modified            : 2024/07/11
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
 		'tags'       : 'syntax,translation,controllable',
@@ -27197,19 +27197,19 @@ var
 		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{a}$\\\\
-		 & $x:=1/2 * \\styleparam{p}$\\\\%
+		 & $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
 		\\end{tabular}} (l1);
 
 		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{b}$\\\\
-		 & $x:=1$\\\\%
+		 & $x\\leftarrow{}1$\\\\%
 		\\end{tabular}} (l1);
 
 		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{c}$\\\\
-		 & $x:=2$\\\\%
+		 & $x\\leftarrow{}2$\\\\%
 		\\end{tabular}} (l1);
 		"""
 			} # end result file
@@ -27260,9 +27260,9 @@ var
  init0 -> s_0_0;
 
 s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
-	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
-	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
-	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x := 2;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x <- 1/2 * p;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x <- 1;"];
+	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x <- 2;"];
 /**************************************************/
 
 
@@ -27273,9 +27273,9 @@ s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
  init1 -> s_1_0;
 
 s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
-	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
-	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
-	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x := 0;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x <- 1/2 * p;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x <- 1;"];
+	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x <- 0;"];
 		"""
 			} # end result file
 			,
@@ -28957,18 +28957,18 @@ var
  actions: acts___0;
  
 loc A: invariant  params___0 >= x___0
-	when id = -1 do {x___0 := 0;} sync acts___0 goto req;
+	when id = -1 do {x___0 <- 0;} sync acts___0 goto req;
  
 loc req: invariant  2 >= x___0
-	when  2 >= x___0 do {x___0 := 0; id := 0;} (* sync nosync_1*)  goto waiting;
+	when  2 >= x___0 do {x___0 <- 0; id <- 0;} (* sync nosync_1*)  goto waiting;
  
 loc waiting: invariant True
-	when id = -1 do {x___0 := 0;} (* sync nosync_2*)  goto req;
+	when id = -1 do {x___0 <- 0;} (* sync nosync_2*)  goto req;
 	when id = 0
 &  x___0 > 2 do {} (* sync nosync_3*)  goto cs;
  
 loc cs: invariant True
-	when True do {id := -1;} (* sync nosync_4*)  goto A;
+	when True do {id <- -1;} (* sync nosync_4*)  goto A;
  end (* p___0 *)
 (************************************************************)
 
@@ -28979,18 +28979,18 @@ loc cs: invariant True
  actions: acts___2;
  
 loc A: invariant  params___1 >= x___1
-	when id = -1 do {x___1 := 0;} sync acts___2 goto req;
+	when id = -1 do {x___1 <- 0;} sync acts___2 goto req;
  
 loc req: invariant  2 >= x___1
-	when  2 >= x___1 do {x___1 := 0; id := 1;} (* sync nosync_5*)  goto waiting;
+	when  2 >= x___1 do {x___1 <- 0; id <- 1;} (* sync nosync_5*)  goto waiting;
  
 loc waiting: invariant True
-	when id = -1 do {x___1 := 0;} (* sync nosync_6*)  goto req;
+	when id = -1 do {x___1 <- 0;} (* sync nosync_6*)  goto req;
 	when id = 1
 &  x___1 > 2 do {} (* sync nosync_7*)  goto cs;
  
 loc cs: invariant True
-	when True do {id := -1;} (* sync nosync_8*)  goto A;
+	when True do {id <- -1;} (* sync nosync_8*)  goto A;
  end (* p___1 *)
 (************************************************************)
 
@@ -28999,18 +28999,18 @@ loc cs: invariant True
 (* Initial state *)
 (************************************************************)
 
-init := {
+init = {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[p___0] := A, 
-		loc[p___1] := A,
+		loc[p___0] <- A,
+		loc[p___1] <- A,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		id := -1
+		id <- -1
 	;
 
 	(*------------------------------------------------------------*)
