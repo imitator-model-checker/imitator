@@ -140,6 +140,7 @@ rule token = parse
 
 	(* Assignment *)
 	| ":="             { OP_ASSIGN }
+	| "<-"             { OP_ASSIGN }
 
 	(* Boolean operators *)
 	| '&'              { OP_CONJUNCTION }
