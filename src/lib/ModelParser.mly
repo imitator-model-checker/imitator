@@ -818,7 +818,10 @@ old_init_loc_predicate:
 /************************************************************/
 
 init_definition:
+	/* FROM 3.1 to 3.4 */
 	| CT_INIT OP_ASSIGN LBRACE init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
+	/* FROM 3.4: equality as in discrete/concrete init sections */
+	| CT_INIT OP_EQ LBRACE init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
 ;
 
 init_discrete_continuous_definition:

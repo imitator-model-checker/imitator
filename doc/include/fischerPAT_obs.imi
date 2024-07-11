@@ -10,7 +10,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2022/11/28
+ * Last modified   : 2024/07/11
  *
  * IMITATOR version: 3.4
  ************************************************************)
@@ -37,20 +37,20 @@ automaton proc1
 actions: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
 
 loc idle1: invariant True
-	when turn = IDLE sync try_1 do {x1 := 0} goto active1;
+	when turn = IDLE sync try_1 do {x1 <- 0} goto active1;
 
 loc active1: invariant x1 <= delta
-	when True sync update_1 do {turn := 1, x1 := 0} goto check1;
+	when True sync update_1 do {turn <- 1; x1 <- 0} goto check1;
 
 loc check1: invariant True
-	when x1 >= gamma & turn = 1 sync access_1 do {x1 := 0} goto access1;
-	when x1 >= gamma & turn <> 1 sync no_access_1 do {x1 := 0}  goto idle1;
+	when x1 >= gamma & turn = 1 sync access_1 do {x1 <- 0} goto access1;
+	when x1 >= gamma & turn <> 1 sync no_access_1 do {x1 <- 0}  goto idle1;
 
 loc access1: invariant True
-	when True sync enter_1 do {counter := counter + 1} goto CS1;
+	when True sync enter_1 do {counter <- counter + 1} goto CS1;
 
 loc CS1: invariant True
-	when True sync exit_1 do {counter := counter - 1, turn := IDLE, x1 := 0} goto idle1;
+	when True sync exit_1 do {counter <- counter - 1; turn <- IDLE; x1 <- 0} goto idle1;
 
 end (* proc1 *)
 
@@ -61,20 +61,20 @@ automaton proc2
 actions: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
 
 loc idle2: invariant True
-	when turn = IDLE sync try_2 do {x2 := 0} goto active2;
+	when turn = IDLE sync try_2 do {x2 <- 0} goto active2;
 
 loc active2: invariant x2 <= delta
-	when True sync update_2 do {turn := 2, x2 := 0} goto check2;
+	when True sync update_2 do {turn <- 2; x2 <- 0} goto check2;
 
 loc check2: invariant True
-	when x2 >= gamma & turn = 2 sync access_2 do {x2 := 0} goto access2;
-	when x2 >= gamma & turn <> 2 sync no_access_2 do {x2 := 0} goto idle2;
+	when x2 >= gamma & turn = 2 sync access_2 do {x2 <- 0} goto access2;
+	when x2 >= gamma & turn <> 2 sync no_access_2 do {x2 <- 0} goto idle2;
 
 loc access2: invariant True
-	when True sync enter_2 do {counter := counter + 1} goto CS2;
+	when True sync enter_2 do {counter <- counter + 1} goto CS2;
 
 loc CS2: invariant True
-	when True sync exit_2 do {counter := counter - 1, turn := IDLE, x2 := 0} goto idle2;
+	when True sync exit_2 do {counter <- counter - 1; turn <- IDLE; x2 <- 0} goto idle2;
 
 end (* proc2 *)
 
@@ -106,21 +106,20 @@ end (* observer *)
 (* Initial state *)
 (************************************************************)
 
-init := {
-
+init = {
     
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-        loc[proc1]    := idle1,
-        loc[proc2]    := idle2,
-        loc[observer] := obs_waiting,
+        loc[proc1]    <- idle1,
+        loc[proc2]    <- idle2,
+        loc[observer] <- obs_waiting,
 		(*------------------------------------------------------------*)
 		(* Initial discrete assignments *)
 		(*------------------------------------------------------------*)
-        turn          := IDLE,
-        counter       := 0
+        turn          <- IDLE,
+        counter       <- 0
     ;
 
     continuous =        

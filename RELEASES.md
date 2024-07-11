@@ -6,6 +6,8 @@
 ### New options
 * Add a new option `-imi2imiprop` to regenerate the property to a file
 
+### Syntax improvement
+* Assignment can now be written using either `:=` (as before) or `<-` (new).
 
 *******************************************************
 ## release 3.4-alpha (2024-03-21) Cheese Durian

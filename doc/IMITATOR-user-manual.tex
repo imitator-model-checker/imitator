@@ -204,7 +204,7 @@ A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{
 
 \paragraph{Initial state definition}
 
-The initial state is defined by the part of the file following ``\styleIMI{init :=}''.
+The initial state is defined by the part of the file following ``\styleIMI{init =}''.
 
 % Since \imitator{} 3.1,
 The initial state section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
@@ -214,13 +214,13 @@ The initial state section is split between the \emph{discrete} initialization an
 % Note the difference between constraints initializations and discrete variables initializations.
 % Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part.
 The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
-Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
+Note that the assignment operator is \styleIMI{<-} (with backward-compatibility accepting \styleIMI{:=}), in contrast with unification operator \styleIMI{=} used for constraints.
 % As all discrete variables are independent, the initializations are separated with a comma.
 %
 % As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} part. Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
 %
 % Init \styleIMI{discrete} part must contain the initial location of each \IPTA{}.
-For example, \styleIMI{loc[proc1] := idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
+For example, \styleIMI{loc[proc1] <- idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
 The initial definition should assign a constant value to each discrete variable:
 here \styleIMI{turn} is initially assigned to \styleIMI{IDLE}, and \styleIMI{counter} is initially assigned to~0.
 
@@ -651,7 +651,7 @@ x1 + x2 <= 2 p1 + 0.5 p2 - i
 
 However, all discrete variables must be initialized to a \emph{constant} compatible with their type.
 See \cref{ss:initial} for details.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i <- ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
 
 
 
@@ -889,7 +889,7 @@ The opposite function (int of rational) is \emph{not} allowed, as an overflow ca
 Binary word variables are sequences of bits of fixed length---the maximum size of a binary word is $2^{16}$.
 Bitwise operations can be defined on these variables (on same length).
 
-For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
+For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 <- 0b1010} and \styleIMI{bw2 <- 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
 Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 2~positions, and set \styleIMI{bw2} to the result of the bitwise ``and'' operation on~\styleIMI{bw1} and~\styleIMI{bw2}.
 %
 A transition featuring such a guard and such updates would be written as follows in \imitator{} syntax:
@@ -897,7 +897,7 @@ A transition featuring such a guard and such updates would be written as follows
 %------------------------------------------------------------
 \begin{IMITATORmodel}
 (* before: bw1 = 0b1010 and bw2 = 0b1011 *)
-when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+when logor(bw1, bw2) <> bw1 sync a do {bw1 <- shift_left(bw1, 2); bw2 <- logand(bw1, bw2)} goto l1;
 (* after: bw1 = 0b1000 and bw2 = 0b1010 *)
 \end{IMITATORmodel}
 %------------------------------------------------------------
@@ -987,7 +987,7 @@ Following a convention used, \eg{} in OCaml, we denote by \styleIMI{'a array} an
 The same notation applies to subsequent types (lists, etc.).
 
 Array functions are never subject to side effects, \ie{} they do not modify the array passed as arguments.
-However, an array can be indirectly modified through one of its elements, using the (usual) syntax, \eg{} \styleIMI{myArray[1] := 32;}.
+However, an array can be indirectly modified through one of its elements, using the (usual) syntax, \eg{} \styleIMI{myArray[1] <- 32;}.
 
 \begin{itemize}
 	\item \styleIMI{a[i:int]:'a} -- Returns the element of array \styleIMI{a} at index \styleIMI{i}
@@ -1161,8 +1161,8 @@ loc l0: invariant True
 	when True do {
 		stack_push(1, s);
 		stack_push(2, s);
-		i := stack_top(s);
-		j := stack_pop(s);
+		i <- stack_top(s);
+		j <- stack_pop(s);
 	}
 	goto l1;
 
@@ -1245,8 +1245,8 @@ loc l0: invariant True
 	when True do {
 		queue_push(1, q);
 		queue_push(2, q);
-		i := queue_top(q);
-		j := queue_pop(q);
+		i <- queue_top(q);
+		j <- queue_pop(q);
 	} goto l1;
 
 loc l1: invariant
@@ -1461,11 +1461,11 @@ var
 actions: a, b;
 
 loc l1: invariant x = 0
-	when x = 0 do {r := 3; x := r; i := 2} sync a goto l2;
-	when True do {i := i + 2} sync b goto l2;
+	when x = 0 do {r <- 3; x <- r; i <- 2} sync a goto l2;
+	when True do {i <- i + 2} sync b goto l2;
 
 loc l2: invariant i >= 2
-	when True do {i := i * i} sync b goto l2;
+	when True do {i <- i * i} sync b goto l2;
 end (* A1 *)
 
 (************************************************************)
@@ -1474,7 +1474,7 @@ end (* A1 *)
 actions: b;
 
 loc l1: invariant True
-	when x <= 3r do {r := r*r; x := x+1; i := i - 2} sync b goto l2;
+	when x <= 3r do {r <- r*r; x <- x+1; i <- i - 2} sync b goto l2;
 
 loc l2: invariant True
 end (* A2 *)
@@ -1486,7 +1486,7 @@ end (* A2 *)
 actions: a;
 
 loc l1: invariant True
-	when True do {x := 2x; i := pow(i, 3)} sync a goto l2;
+	when True do {x <- 2x; i <- pow(i, 3)} sync a goto l2;
 
 loc l2: invariant True
 end (* A3 *)
@@ -1545,11 +1545,11 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	do {
 % 		seq
 % 			stack_push(0, s);
-% 			i := 1;
+% 			i <- 1;
 % 		then
 % 			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
-% 			r1 := stack_top(s),
-% 			x := i
+% 			r1 <- stack_top(s),
+% 			x <- i
 % 		end
 % 	}
 % 	sync a goto lend;
@@ -1567,11 +1567,11 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	& True
 % 	do {
 % 		seq
-% 			i := 2;
+% 			i <- 2;
 % 			stack_push(1, s);
 % 		then
 % 			(* r2 = 1, because all seq updates in all IPTA are made before *)
-% 			r2 := stack_top(s)
+% 			r2 <- stack_top(s)
 % 		end
 % 	}
 % 	sync a goto lend;
@@ -1589,7 +1589,7 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	& True
 % 	do {
 % 		(* r3 = 1, because all seq updates in all IPTA are made before *)
-% 		r3 := stack_top(s)
+% 		r3 <- stack_top(s)
 % 	}
 % 	sync a goto lend;
 %
@@ -1604,7 +1604,7 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 %------------------------------------------------------------
 
 Runtime errors can be encountered during updates.
-For a example, during an update, a division by zero can be encountered: \eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0.
+For a example, during an update, a division by zero can be encountered: \eg{} in an update \styleIMI{i <- 2 / i}, when the current value of~\styleIMI{i} is~0.
 
 When a runtime error is encountered, an exception is raised and \imitator{} terminates with an error.
 
@@ -1759,7 +1759,7 @@ loc l1: invariant True
 	when add(1, two()) = 3                                         goto l2;
 	when lerp(0, 5, 1 / 2) = 2.5                                   goto l2;
 	(* The update below yields i=6 *)
-	when True do {i := add(add_one(last(list([1,2,3]))), two()); } goto l2;
+	when True do {i <- add(add_one(last(list([1,2,3]))), two()); } goto l2;
 
 loc l2: invariant True
 end
@@ -1811,10 +1811,10 @@ end
 % 	var i : int = 1;
 %
 % 	for i from 0 to 10 do
-% 		j := j + i; (* `i` here is the `i` from for *)
+% 		j <- j + i; (* `i` here is the `i` from for *)
 % 	done
 %
-% 	j := j + i; (* `i` here is the local declared variable *)
+% 	j <- j + i; (* `i` here is the local declared variable *)
 %
 % 	return j;
 % end
@@ -1843,12 +1843,12 @@ Put it differently, it is not allowed to \emph{replace} an argument with another
 function f(i : int, t : int array(4), s : int stack) : void
 begin
 	(* Forbidden *)
- 	i := 4;
+ 	i <- 4;
 	(* Forbidden *)
- 	t := [1,2,3,4];
+ 	t <- [1,2,3,4];
 
 	(* Allowed *)
-	t[0] := 9;
+	t[0] <- 9;
 	(* Allowed *)
 	stack_clear(s);
 	stack_push(i, s);
@@ -1885,8 +1885,8 @@ var
 function side_effect(i : int, j : int) : int
 begin
 	(* Modify some global variables *)
-	my_global_i := i * 2;
-	my_global_j := j * my_global_i;
+	my_global_i <- i * 2;
+	my_global_j <- j * my_global_i;
 	return my_global_i + my_global_j
 end
 
@@ -1915,14 +1915,14 @@ We give below some more examples of definitions of user-defined functions with s
 (* This function modifies a global variable: it is side-effect *)
 function modif_global() : int
 begin
-	my_global_i := 0;
+	my_global_i <- 0;
 	return 0
 end
 
 (* This function modifies the content of an array passed as an argument: it is side-effect  *)
 function modif_array(a : int array(2)) : int
 begin
-	a[1] := 0;
+	a[1] <- 0;
 	return a[0]
 end
 \end{IMITATORmodel}
@@ -1944,11 +1944,11 @@ end
 % 	function modify_clock_param_arg() : int
 % 	begin
 % 		(* Modification of a clock is forbidden, an error will be raised *)
-% 		x := 0;
+% 		x <- 0;
 % 		(* Modification of a parameter is forbidden, an error will be raised *)
-% 		p1 := 0;
+% 		p1 <- 0;
 % 		(* Modification of a function argument is forbidden, an error will be raised *)
-% 		i := 0;
+% 		i <- 0;
 % 		return 0
 % 	end
 %
@@ -1994,17 +1994,17 @@ begin
 		(* We have access to current scope containing `k` *)
 
 		var k : int = 1;
-		j := i + 1;
+		j <- i + 1;
 		if True then
 			(* In this block: *)
 			(* We have access to higher level lexical scope containing: `i`, `j`, `k` *)
-			j := j + i + k;
+			j <- j + i + k;
 		end
 	else
 		(* In this block: *)
 		(* We have access to higher level lexical scope containing: `i`, `j` *)
 		(* We do not have access to variable `k` because it was defined in another separated block *)
-		j := 2 * i;
+		j <- 2 * i;
 	end
 
 	return j;
@@ -2044,7 +2044,7 @@ After that, the user should enter the body of the template, which is exactly the
 of a regular automaton, except that it can use the variables declared as arguments for the template.
 %
 Finally, the user can instantiate the template with the keyword \styleIMI{instantiate}, followed
-by the name of the automaton that will be created, the assign operator (\styleIMI{:=}) and an
+by the name of the automaton that will be created, the assign operator (\styleIMI{<-}) and an
 invocation of the desired template, with the corresponding arguments.
 %
 Note that, currently, no type checking is done. But if an user tries to use a value with an
@@ -2073,27 +2073,27 @@ synt_var
 template p(i : int)
 
 loc A: invariant True
-  when id = IDLE do { x[i] := 0 } goto req;
+  when id = IDLE do { x[i] <- 0 } goto req;
 
 loc req: invariant x[i] <= k
-  when x[i] <= k do { x[i] := 0; id := i } goto waiting;
+  when x[i] <= k do { x[i] <- 0; id <- i } goto waiting;
 
 loc waiting: invariant True
-  when id = IDLE do { x[i] := 0 } goto req;
+  when id = IDLE do { x[i] <- 0 } goto req;
   when id = i & x[i] > k goto cs;
 
 loc cs: invariant True
-  when True do { id := IDLE } goto A;
+  when True do { id <- IDLE } goto A;
 
 end
 
-forall i in [0, N - 1]: instantiate p[i] := p(i);
+forall i in [0, N - 1]: instantiate p[i] <- p(i);
 
-init := {
+init = {
 
     discrete =
-        forall i in [0, N - 1]: loc[p[i]] := A,
-        id := IDLE,
+        forall i in [0, N - 1]: loc[p[i]] <- A,
+        id <- IDLE,
     ;
 
     continuous =
@@ -2435,7 +2435,7 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 
 % TODO: add example illustrating the issue with livelocks e.g. by Adrien Jaillet (2022/07/01):
 % loc l0: invariant True
-% 	when True sync a do {x := 0} goto l1;
+% 	when True sync a do {x <- 0} goto l1;
 %
 % loc l1: invariant x < 1 + v
 % 	when True goto l10;
@@ -3564,8 +3564,8 @@ Our translation tries to preserve \imitator{} semantics, using the following sch
 	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
 	      \begin{itemize}
 		      \item all invariants contain \styleFileContent{nb\_\_a = n}
-		      \item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
-		      \item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
+		      \item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a <- 1};
+		      \item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a <- nb\_\_a + 1}.
 	      \end{itemize}
 	      From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
 	      (This construction was suggested by Jiří~Srba.)
@@ -3629,15 +3629,15 @@ We review some points in the following.
 In order to provide a similar behavior, the translation is performed as follow.
 
 \begin{IMITATORmodel}
-if (x=1) then (x:=2, y:=3) else (x:=4)
+if (x=1) then (x<-2; y<-3) else (x<-4)
 \end{IMITATORmodel}
 
 \noindent{}is transformed (and, subsequently, written in \jani{} format) into
 
 \begin{IMITATORmodel}
-x := (if (x=1) then 2 else x);
-y := (if (x=1) then 3 else y);
-x := (if (x=1) then x else 4);
+x <- (if (x=1) then 2 else x);
+y <- (if (x=1) then 3 else y);
+x <- (if (x=1) then x else 4);
 \end{IMITATORmodel}
 
 
@@ -3856,7 +3856,7 @@ If an expression mixes different types, a type error is risen before the start o
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
 Once an expression type is resolved, all literal numbers within this expression are automatically typed as the numerical type held by the expression.
 
-For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as an~\styleIMI{int}.
+For example, in the following update expression \styleIMI{b <- True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as an~\styleIMI{int}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Type conversion}
@@ -3865,7 +3865,7 @@ For example, in the following update expression \styleIMI{b := True \& i < 3 + 1
 \imitator{} does not support implicit conversion.
 All expressions hold exactly one type and cannot mix different types.
 In other words, \styleIMI{r + i + 3}, where \styleIMI{r} is a rational and \styleIMI{i} is an \styleIMI{int}, is not allowed.
-Neither is allowed \styleIMI{r := i}.
+Neither is allowed \styleIMI{r <- i}.
 
 However, it is possible to convert an expression to another type using built-in conversion functions;
 so far, the only such function is \styleIMI{rational\_of\_int}, converting an integer to a rational:
@@ -5084,15 +5084,9 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
+	$|$ & \styleIMI{<name>} \nt{update\_sign} \nt{global\_expression} \\
 \end{longtable}
 
-% \smallskip
-%
-% NOTE: hidden for sake of simplicity
-% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
-%
-% \smallskip
 
 %------------------------------------------------------------
 \regleGrammaire{normal\_update\_list}
@@ -5508,7 +5502,7 @@ We define each of those two components below.
 % %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
+	$|$ & \styleIMI{init} \styleIMI{\nt{update\_sign} \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
 % 	$|$ & \emptystring                                                       \\
 \end{longtable}
 
@@ -5555,7 +5549,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{<name> :=} \nt{global\_expression} \\
+	$|$ & \styleIMI{<name>} \nt{update\_sign} \nt{global\_expression} \\
 	$|$ & \nt{init\_discrete\_loc\_predicate} \\
 	$|$ & \styleIMI{(}                                                      \nt{init\_discrete\_state\_predicate} \styleIMI{)}                                                      \\
 \end{longtable}
@@ -5565,7 +5559,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{loc[ <name> ] := <name>} \\
+	$|$ & \styleIMI{loc[ <name> ] \nt{update\_sign} <name>} \\
 	$|$ & \styleIMI{<name> is in <name>} \\
 \end{longtable}
 
@@ -6074,6 +6068,22 @@ We define each of those two components below.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%------------------------------------------------------------
+\regleGrammaire{update\_sign}
+%------------------------------------------------------------
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{:=}  \\
+	$|$ & \styleIMI{<-}  \\
+\end{longtable}
+
+% \smallskip
+%
+% NOTE: hidden for sake of simplicity
+% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
+%
+% \smallskip
 
 
 %------------------------------------------------------------

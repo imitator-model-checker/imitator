@@ -85,7 +85,7 @@ rule token = parse
 	| "flow"           { CT_FLOW }
 	| "fn"             { CT_FUN   }
 	| "for"            { CT_FOR }
-  | "forall"         { CT_FORALL }
+	| "forall"         { CT_FORALL }
 	| "from"           { CT_FROM }
 	| "function"       { CT_FUN   }
 	| "goto"           { CT_GOTO }
@@ -144,6 +144,7 @@ rule token = parse
 
 	(* Assignment *)
 	| ":="             { OP_ASSIGN }
+	| "<-"             { OP_ASSIGN }
 
 	(* Boolean operators *)
 	| '&'              { OP_CONJUNCTION }
