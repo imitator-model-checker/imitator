@@ -651,7 +651,7 @@ x1 + x2 <= 2 p1 + 0.5 p2 - i
 
 However, all discrete variables must be initialized to a \emph{constant} compatible with their type.
 See \cref{ss:initial} for details.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i <- ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an assignment of the form \styleIMI{i <- ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
 
 
 
@@ -704,7 +704,7 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 
 %------------------------------------------------------------
 \begin{hint}
-	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
+	Note that a parameter can be turned to a constant as follows in the definition of the parameters:
 
 \begin{IMITATORmodel}
 p = 2: parameter;
@@ -725,7 +725,7 @@ p = 2: parameter;
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Types}
+\subsection{Primitive types}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Discrete, global variables are syntactic sugar for a potentially unbounded number of locations.
@@ -951,9 +951,12 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \end{example}
 %------------------------------------------------------------
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Composite types}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
-\subsubsection{Arrays}
+\subsubsection{Arrays}\label{sss:arrays}
 %------------------------------------------------------------
 
 Arrays are fixed-length collections of indexed elements.
@@ -2028,44 +2031,49 @@ See an example of variable shadowing in \cref{example:shadowing}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Since \imitator{}~3.4, it is possible to define automata instantiated from model \emph{templates}.
-This means the ability to create a number of (almost-)identical TAs in parallel.
+This means the ability to create a number of almost identical \IPTA{}s in parallel.
 
-% TODO: syntax
-% TODO: example
+Note that templates are a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
+In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
-% NOTE (Tomaz): Please feel free to modify the text below. These are just the main points that I
-% believe are important cover in the documentation.
-In order to define a new template, the user should use the keyword \styleIMI{template}, followed by
-the name and all its arguments and the corresponding types separated by commas. The arguments can be
-\styleIMI{int}, \styleIMI{rational}, \styleIMI{bool}, \styleIMI{clock}, \styleIMI{action} and
-\styleIMI{parameter}.
-%
-After that, the user should enter the body of the template, which is exactly the same as the body
-of a regular automaton, except that it can use the variables declared as arguments for the template.
-%
-Finally, the user can instantiate the template with the keyword \styleIMI{instantiate}, followed
-by the name of the automaton that will be created, the assign operator (\styleIMI{<-}) and an
-invocation of the desired template, with the corresponding arguments.
-%
-Note that, currently, no type checking is done. But if an user tries to use a value with an
-incompatible type, the next phases of compilation will catch that and reject the model. The user
-can pass either variables or literal values as arguments to the template. If a variable is passed,
-then this is done by reference.
 
-In addition to templates, we also introduced arrays of actions, clocks and parameters. These are
-not ``real'' arrays, in the sense that they are just syntactic sugar for multiple declarations of
-variables. In order to distinguish them from ``real'' arrays, we introduced the keyword
-\styleIMI{synt\_var} to declare them. We also introduced the \styleIMI{forall} keyword, which
-allows one to do many instantiation or declare many constraints in the init definition with
-a single statement. All these constructions are exemplified in the following snippet:
+\paragraph{Defining templates}
+In order to define a new template, the user should use the keyword \styleIMI{template}, followed by the name and all its arguments and the corresponding types separated by commas.
+The arguments can be \styleIMI{int}, \styleIMI{rational}, \styleIMI{bool}, \styleIMI{clock}, \styleIMI{action} and \styleIMI{parameter}.
+%
+After that, the user should enter the body of the template, which is exactly the same as the body of a regular \IPTA{}, except that it can use the variables declared as arguments for the template.
+
+In addition, arrays of actions, clocks and parameters can be defined.
+These are not ``real'' arrays (as in \cref{sss:arrays}), in the sense that they are just syntactic sugar for multiple declarations of
+variables.
+In order to distinguish them from ``real'' arrays, the specific keyword \styleIMI{synt\_var} is used to declare them.
+
+\paragraph{Template instantiation}
+Finally, the user can instantiate the template with the keyword \styleIMI{instantiate}, followed by the name of the automaton that will be created, the assignment operator (\styleIMI{<-}) and an invocation of the desired template, with the corresponding arguments.
+
+We also introduced the \styleIMI{forall} keyword, which allows one to do many instantiations or declare many constraints in the init definition with a single statement.
+
+Currently, it is necessary to first declare all templates, then declare all regular (non-template) \IPTA{}s and, lastly, apply all desired instantiations.
+Similarly, declarations of syntactic variables must come after declarations of regular variables.
+
+
+\paragraph{Type checking}
+Note that, currently, no type checking is done during this preprocessing phase.
+But if a user tries to use a value with an incompatible type, the next phases of compilation will catch that and reject the model.
+The user can pass either variables or literal values as arguments to the template.
+If a variable is passed, then this is done by reference.
+
+
+\paragraph{Example model}
+All these constructions are exemplified in the following snippet:
 
 \begin{example}
 \begin{IMITATORmodel}
 var
-    id : int;
-    k = 2 : constant;
+    id        : int;
+    k = 2     : constant;
     IDLE = -1 : int;
-    N = 10 : int;
+    N = 10    : int;
 
 synt_var
     x : clock array (N);
@@ -2105,12 +2113,16 @@ end
 \end{IMITATORmodel}
 \end{example}
 
-Currently, it is necessary to first declare all templates, then declare all old-style
-automatons, and, lastly, apply all desired instantiations. Similarly, declarations
-of syntactic variables must come after declarations of regular variables.
+\paragraph{Templates in properties}
+The \styleIMI{forall} construction can also be used in properties.
+Below is an example of property using such a syntax (unrelated to the former model example).
+Note that \styleIMI{NB} is a constant defined in the model, leading to an easy specification of properties.
 
-Note that this is a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
-In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
+\begin{IMITATORproperty}
+property := #synth EF(forall i in [0, NB - 1]: loc[train[i]] = train_End);
+\end{IMITATORproperty}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Submodel inclusion}\label{section:include}
@@ -3343,9 +3355,9 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the property file:
 
-\begin{IMITATORmodel}
+\begin{IMITATORproperty}
 projectresult(param1, ..., paramn);
-\end{IMITATORmodel}
+\end{IMITATORproperty}
 
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
@@ -6186,6 +6198,8 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{fill\_right} \\
 	\styleIMI{flow} \\
 	\styleIMI{fn} \\
+	\styleIMI{for} \\
+	\styleIMI{forall} \\
 	\styleIMI{function} \\
 	\styleIMI{goto} \\
 	\styleIMI{happened} \\
@@ -6195,6 +6209,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{inf} \\
 	\styleIMI{infinity} \\
 	\styleIMI{init} \\
+	\styleIMI{instantiate} \\
 	\styleIMI{int\_div} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
@@ -6242,6 +6257,8 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{stop} \\
 	\styleIMI{sync} \\
 	\styleIMI{synclabs} \\
+	\styleIMI{synt\_var} \\
+	\styleIMI{template} \\
 	\styleIMI{then} \\
 	\styleIMI{True} \\
 	\styleIMI{urgent} \\

@@ -533,9 +533,9 @@
 		clock, constant, continuous, controllable,
 		discrete, do, done, downto,
 		else, end,
-		False, fill_left, fill_right, flow, fn, from, function,
+		False, fill_left, fill_right, flow, fn, forall, from, function,
 		goto,
-		if, in, init, initially, int, int_div, inside, invariant, is,
+		if, in, init, initially, instantiate, int, int_div, inside, invariant, is,
 		list, list_cons, list_hd, list_is_empty, list_length, list_mem, list_rev, list_tl, loc, logand, lognot, logor, logxor,
 		mod,
 		not,
@@ -543,8 +543,8 @@
 		parameter, pow,
 		queue, queue_clear, queue_is_empty, queue_length, queue_pop, queue_push, queue_top,
 		rat, rational, return,
-		shift_left, shift_right, stack, stack_clear, stack_is_empty, stack_length, stack_pop, stack_push, stack_top, stop, sync,
-		then, to, True,
+		shift_left, shift_right, stack, stack_clear, stack_is_empty, stack_length, stack_pop, stack_push, stack_top, stop, sync, synt_var,
+		template, then, to, True,
 		urgent,
 		var, void,
 		when, while,
@@ -606,21 +606,23 @@
   keywordstyle=\bfseries\color{keywordscolor},       % keyword style
 %   language=caml,                 % the language of the code
   morekeywords={%
-	A, accepting, AF, AF_, AGnot, always,
+	A, accepting, AF, AF_, AG, AGnot, always,
 	BCcover, BCrandom, BCshuffle, before,
 	Cycle, CycleThrough,
 	DeadlockFree,
-	E, EF, EF_, EFpmin, EFpmax, EFtmin, everytime, eventually,
+	E, EF, EF_, EFpmin, EFpmax, EFtmin, EG, everytime, eventually,
+	forall,
 	happened, has,
 	IM, infinity,
 	loc,
 	next,
 	once,
-	pattern, PRP, PRPC, property,
+	pattern, projectresult, PRP, PRPC, property,
 	R, R_,
 	sequence, synth,
 	U, U_,
-	W, W_, within, witness},            % if you want to add more keywords to the set
+	Valid,
+	W, W_, Win, within, witness},            % if you want to add more keywords to the set
   numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
 %   numbersep=5pt,                   % how far the line-numbers are from the code
 %   numberstyle=\tiny\color{bggcolor}, % the style that is used for the line-numbers
