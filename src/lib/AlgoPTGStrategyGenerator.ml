@@ -5,6 +5,7 @@ open State
 open ImitatorUtilities
 open AlgoPTGStrategyGeneratorUtilities
 open DefaultHashTable
+open AbstractValue
 
 class ['a] array (ls : 'a list) = object
   val internal_array : 'a Array.t = Array.of_list ls
@@ -18,11 +19,18 @@ type strategy_entry = {
 }
 
 
-type state_strategy = strategy_entry list
+type location_strategy = strategy_entry list
+type discrete_mapping = variable_index * abstract_value
+type location_strategy_key = location_index list * discrete_mapping list
+class locationStrategyMap = 
 
-class stateStrategyMap = 
-[state_index, state_strategy ref] defaultHashTable
+[location_index list * discrete_mapping list, location_strategy ref] defaultHashTable
 (fun _ -> ref [])
+
+class locationUnionZoneMap = 
+[location_index list,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
+LinearConstraint.false_px_nnconvex_constraint
+
 
 let format_zone_string (string : string) = 
   let b = Buffer.create 10 in
@@ -37,21 +45,30 @@ let string_of_strategy_entry (model : abstract_model) (strategy_entry : strategy
   (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names winning_move))
 
 
-let string_of_state_strategy (model : abstract_model) (state_strategy : state_strategy) = 
+let string_of_state_strategy (model : abstract_model) (state_strategy : location_strategy) = 
   let strategy_entry_strings = List.rev @@ List.map (string_of_strategy_entry model) state_strategy in
   let state_strategy_string = List.fold_left (fun acc str -> Printf.sprintf "%s%s,\n" acc str) ("") strategy_entry_strings in
   String.sub state_strategy_string 0 (String.length state_strategy_string-2)
   
 
+let string_of_location_list (model : abstract_model) location_list = 
+  let location_names = List.mapi model.location_names location_list in 
+  let location_list_string = "[" ^ (List.fold_left (fun acc str -> Printf.sprintf "%s%s, " acc str) ("") location_names) in
+  String.sub location_list_string 0 (String.length location_list_string-2)  ^ "]"
+ 
+let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
+  if List.length discrete_mapping_list = 0 then 
+    "[]"
+  else
+    let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s ↦ %s" (model.variable_names index) (string_of_value value)) discrete_mapping_list in  
+    let discrete_valuations_string = "[" ^ (List.fold_left (fun acc str -> Printf.sprintf "%s%s, " acc str) ("") discrete_valuation_strings) in 
+    String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-2)  ^ "]"  
 
 let print_strategy (model : abstract_model) ~strategy ~state_space = 
-  let get_location_index state_index = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in 
-  let get_location_name state_index = model.location_names 0 (get_location_index state_index) in
-
   print_message Verbose_standard "Printing strategy that ensures controller win:";
-  strategy#iter (fun state_index state_strategy -> 
-    let str = string_of_state_strategy model !state_strategy in 
-    print_message Verbose_standard @@ Printf.sprintf "%s -> \n%s\n" (get_location_name state_index) str
+  strategy#iter (fun (location_list, discrete_mapping_list) location_strategy -> 
+    let str = string_of_state_strategy model !location_strategy in 
+    print_message Verbose_standard @@ Printf.sprintf "(%s, %s) -> \n%s\n" (string_of_location_list model location_list) (string_of_discrete_mapping_list model discrete_mapping_list) str
   )
 
 

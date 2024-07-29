@@ -2,6 +2,7 @@ open AbstractModel
 open Automaton
 open State
 open StateSpace
+open AbstractValue
 
 
 type strategy_entry = {
@@ -10,17 +11,29 @@ type strategy_entry = {
   winning_move : LinearConstraint.px_nnconvex_constraint;
 }
 
-type state_strategy = strategy_entry list
+type location_strategy = strategy_entry list
+type discrete_mapping = variable_index * abstract_value
+type location_strategy_key = location_index list * discrete_mapping list
 
 
-class stateStrategyMap : object 
-	val mutable internal_tbl : (state_index, state_strategy ref) Hashtbl.t
-	method replace : state_index -> state_strategy ref -> unit
-	method find : state_index -> state_strategy ref    
-    method iter : (state_index -> state_strategy ref -> unit) -> unit
-    method fold : 'c. (state_index -> state_strategy ref -> 'c -> 'c) -> 'c -> 'c
+class locationStrategyMap : object 
+	val mutable internal_tbl : (location_strategy_key, location_strategy ref) Hashtbl.t
+	method replace : location_strategy_key -> location_strategy ref -> unit
+	method find : location_strategy_key -> location_strategy ref    
+    method iter : (location_strategy_key -> location_strategy ref -> unit) -> unit
+    method fold : 'c. (location_strategy_key -> location_strategy ref -> 'c -> 'c) -> 'c -> 'c
 	method is_empty : bool
 end
+
+class locationUnionZoneMap : object 
+	val mutable internal_tbl : (location_index list, LinearConstraint.px_nnconvex_constraint) Hashtbl.t
+	method replace : location_index list -> LinearConstraint.px_nnconvex_constraint -> unit
+	method find : location_index list -> LinearConstraint.px_nnconvex_constraint    
+    method iter : (location_index list -> LinearConstraint.px_nnconvex_constraint -> unit) -> unit
+    method fold : 'c. (location_index list -> LinearConstraint.px_nnconvex_constraint -> 'c -> 'c) -> 'c -> 'c
+	method is_empty : bool
+end
+
 
 class winningMovesPerAction : object 
 	val mutable internal_tbl : (action_index, LinearConstraint.px_nnconvex_constraint) Hashtbl.t
@@ -40,5 +53,5 @@ class winningMovesPerState : object
 	method is_empty : bool
 end
 
-val print_strategy : abstract_model -> strategy:stateStrategyMap -> state_space:StateSpace.stateSpace -> unit
+val print_strategy : abstract_model -> strategy:locationStrategyMap -> state_space:StateSpace.stateSpace -> unit
 val generate_controller : abstract_model -> (state_index -> winningMovesPerState) -> stateSpace -> Options.imitator_options -> unit

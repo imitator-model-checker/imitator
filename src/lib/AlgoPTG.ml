@@ -268,7 +268,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val winningZone = new unionZoneMap
 	val losingZone = new unionZoneMap
 	val depends = new dependsMap
-	val stateStrategy = new AlgoPTGStrategyGenerator.stateStrategyMap
+
+	val locationWinningZone = new AlgoPTGStrategyGenerator.locationUnionZoneMap
+	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
@@ -324,39 +326,52 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
 	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
 		
+
+	method private backward (state_index : state_index) (px_linear : LinearConstraint.px_linear_constraint) = 
+		let global_location = self#get_global_location state_index in
+		let constr_d = LinearConstraint.pxd_of_px_constraint px_linear in 
+		AlgoStateBased.apply_time_past model global_location constr_d;
+		LinearConstraint.pxd_hide_discrete_and_collapse constr_d
+	
+	
+	(* Computes the safe timed predecessors of (convex) zone g avoiding (convex) zone b coming from a state *)
+	method private safe_timed_pred_conv_g_b (state_index : state_index) (g : LinearConstraint.px_linear_constraint) (b:  LinearConstraint.px_linear_constraint) = 
+		let result = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint @@ self#backward state_index g in 
+		let b_past = self#backward state_index b in 
+		let b_past_nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint b_past in 
+		let g_copy = LinearConstraint.px_copy g in
+		LinearConstraint.px_nnconvex_difference_assign result b_past_nn;
+
+		LinearConstraint.px_intersection_assign g_copy [b_past];
+		let g_copy_nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint g_copy in 
+
+		LinearConstraint.px_nnconvex_difference_assign g_copy_nn (LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint b);
+
+		let g_intersect_b_past_minus_b_past_zones = List.map (self#backward state_index) (LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g_copy_nn) in 
+
+		List.iter (fun px_linear -> LinearConstraint.px_nnconvex_px_union_assign result px_linear) g_intersect_b_past_minus_b_past_zones;
+
+		result
+	
+	(* Computes the safe timed predecessors of (convex) zone g avoiding (nn_convex) zone b coming from a state *)
+	method private safe_timed_pred_conv_g (state_index : state_index) (g : LinearConstraint.px_linear_constraint) (b : LinearConstraint.px_nnconvex_constraint) = 
+		let result = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint @@ self#backward state_index g in 
+
+		List.iter (fun b_j -> 
+			LinearConstraint.px_nnconvex_intersection_assign result (self#safe_timed_pred_conv_g_b state_index g b_j))
+			(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint b);
+		result
+
+
 	(* Computes the safe timed predecessors of (nn_convex) zone g avoiding (nn_convex) zone b coming from a state *)
-	method private safe_timed_pred (g : LinearConstraint.px_nnconvex_constraint) (b:  LinearConstraint.px_nnconvex_constraint) (state : state_index)  = 
-		let nn_of_linear = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint in  
-		let (||) = fun a b -> LinearConstraint.px_nnconvex_px_union_assign a b; a in  
-		let (--) = fun a b -> LinearConstraint.px_nnconvex_difference_assign a b; a in 
-		let (&&) = fun a b -> LinearConstraint.px_intersection_assign a [b]; a in
-		let global_location = self#get_global_location state in
+	method private safe_timed_pred (state_index : state_index) (g : LinearConstraint.px_nnconvex_constraint) (b : LinearConstraint.px_nnconvex_constraint) = 
+		let result = bot () in 
 
-		let backward (x : LinearConstraint.px_linear_constraint) =
-			let constr_d = LinearConstraint.pxd_of_px_constraint x in 
-			AlgoStateBased.apply_time_past model global_location constr_d;
-			LinearConstraint.pxd_hide_discrete_and_collapse constr_d
-		in
+		List.iter (fun g_i -> LinearConstraint.px_nnconvex_union_assign result (self#safe_timed_pred_conv_g state_index g_i b)) 
+			(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g);
+		result 
 
-		let safe_time_pred_conv g b = 
-			let g_past = backward g in 
-			let b_past = backward b in 
-			let g_constr = LinearConstraint.px_copy g in
-			let b_constr = LinearConstraint.px_copy b in 
-			let g_past_minus_b_past = nn_of_linear g_past -- nn_of_linear b_past in 
-			let g_intersect_b_past_minus_b = nn_of_linear (g_constr && b_past) -- nn_of_linear b_constr in 
-			List.fold_left (||) g_past_minus_b_past  
-							(List.map (backward) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g_intersect_b_past_minus_b)
-		in
-		List.fold_left (fun acc i -> acc ||| i) (bot ())
-			(List.map (fun g_i -> 
-				let t = List.fold_left (&&&) (nn @@ backward g_i)
-					(List.map (fun b_j -> safe_time_pred_conv g_i b_j) @@
-					LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint b) in 
-				t
-			) @@
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g)
-
+	
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 
 		if options#cumulative_pruning then 
@@ -405,42 +420,58 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private edge_set_to_queue_with_status edge_set status = 
 		new normalQueue @@ List.map (fun e -> (e, status)) (edge_set#to_list)
 
-	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
-		 return true if winning zone was changed otherwise false	 
-	*)
-	method private backtrack_single_controllable_edge edge bad_zone zone_map =
-		let {state; state'; action;_} = edge in 
-		let winning_move = self#predecessor_nnconvex edge (zone_map state') in
 
-		let safe_timed_pred = self#safe_timed_pred winning_move bad_zone state in
-		let current_winning_zone = winningZone#find state in
+	method private backtrack_convex_winning_move edge bad_zone (winning_move_conv : LinearConstraint.px_linear_constraint) =
+		let {state; action;_} = edge in 
+		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move_conv bad_zone in
 
+		let locations = Array.to_list (DiscreteState.get_locations (state_space#get_state state).global_location) in 
+		let discrete_mapping = List.map 
+			(fun index -> (index, DiscreteState.get_discrete_value (state_space#get_state state).global_location index))
+			model.discrete in
+		let current_winning_zone_state = winningZone#find state in
+		let current_winning_zone_loc = locationWinningZone#find locations in 
+
+		let winning_move_nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint winning_move_conv in 
 		
 		(* Intersect winning move with safe timed predecessors to remove unsafe parts *)
-		LinearConstraint.px_nnconvex_intersection_assign winning_move safe_timed_pred;
+		LinearConstraint.px_nnconvex_intersection_assign winning_move_nn safe_timed_pred;
 		
-		(* Make safe_timed_pred a partition *)
-		LinearConstraint.px_nnconvex_difference_assign safe_timed_pred current_winning_zone;		
+		(* Extend winning zone of STATE with newly found safe timed pred *)
+		LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
+
+		(* Make safe_timed_pred a partition of winning zone of LOCATION *)
+		LinearConstraint.px_nnconvex_difference_assign safe_timed_pred current_winning_zone_loc;		
 
 		if not @@ LinearConstraint.px_nnconvex_constraint_is_false safe_timed_pred then
 			begin
-				(* Extend the winning zone with new partition *)
-				LinearConstraint.px_nnconvex_union_assign current_winning_zone safe_timed_pred;
+				(* Extend the winning zone of LOCATION with new partition *)
+				LinearConstraint.px_nnconvex_union_assign current_winning_zone_loc safe_timed_pred;
 
 				(* Extend strategy with new partition *)
 				let new_strategy_entry : AlgoPTGStrategyGenerator.strategy_entry = {
 						action = action;
-						winning_move;
+						winning_move = winning_move_nn;
 						prioritized_winning_zone = safe_timed_pred
 					}
 				in 
-				let strategy = stateStrategy#find state in 
+				let strategy = locationStrategy#find (locations, discrete_mapping) in 
 				strategy := new_strategy_entry :: !strategy;
 				true
 			end
 		else 
 			false
-			
+
+	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
+		 return true if winning zone was changed otherwise false	 
+	*)
+	method private backtrack_single_controllable_edge edge bad_zone zone_map =
+		let winning_move = self#predecessor_nnconvex edge (zone_map edge.state') in
+
+		(* Remove bad zone from winning move *)
+		LinearConstraint.px_nnconvex_difference_assign winning_move bad_zone;
+		List.fold_left (||) false 
+		(List.map (fun g_i -> self#backtrack_convex_winning_move edge bad_zone g_i) (LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
 
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack e waiting backtrack_type = 
@@ -474,7 +505,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ losingZone#find state) good_edges losingZone#find in
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (losingZone#find x) x) in
 				LinearConstraint.px_nnconvex_difference_assign bad good;
-				let new_zone = self#safe_timed_pred good bad state in
+				let new_zone = self#safe_timed_pred state good bad in
 				if (losingZone#find state) #!= new_zone then
 					begin
 						losingZone#replace state new_zone;
@@ -590,7 +621,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		AlgoPTGStrategyGenerator.print_strategy 
 		model 
-		~strategy:stateStrategy
+		~strategy:locationStrategy
 		~state_space:state_space;
 
 		(* Compute the strategy *)
