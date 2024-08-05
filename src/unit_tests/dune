@@ -1,4 +1,22 @@
 (tests
- (names imitatorTest)
+ (names imitatorUnitTests)
  (libraries alcotest lib)
- (action (run %{test} -e)))
+ (action (run %{test} -e))
+  (link_flags
+  (:standard
+   -cclib
+   -lppl
+   -cclib
+   -lppl_ocaml
+   -cclib
+   -lstdc++
+   -cclib
+   -lgmp
+   -cclib
+   -lgmpxx))
+ 
+ )
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
