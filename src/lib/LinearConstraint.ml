@@ -2764,6 +2764,26 @@ let render_non_strict_p_linear_constraint k =
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
 
+(* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
+let close_clocks_px_linear_constraint k = 
+	let rec is_term_clock term = 
+		match term with
+		| Variable x -> List.mem x (clocks())
+		| Unary_Plus x | Unary_Minus x | Times (_, x) -> is_term_clock x 
+		| Plus (x,y) | Minus (x,y) -> is_term_clock x || is_term_clock y
+		| _ -> false
+	in 
+	let strict_to_not_strict_clock inequality =
+		match inequality with
+		| Less_Than (x,y) -> if (is_term_clock x || is_term_clock y) then Less_Or_Equal (x,y) else Less_Than(x,y)
+		| Greater_Than (x,y) -> if (is_term_clock x || is_term_clock y) then Greater_Or_Equal (x,y) else Greater_Than(x,y)
+		|_ -> inequality
+	in
+	(* Get the list of inequalities *)
+	let inequality_list = ippl_get_inequalities k in 
+	(* Replace inequelities and convert back to a linear_constraint *)
+	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

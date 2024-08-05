@@ -583,6 +583,8 @@ val px_grow_to_zero_assign : variable list -> variable list -> px_linear_constra
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
 val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_constraint
 
+(* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
+val close_clocks_px_linear_constraint : px_linear_constraint -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
