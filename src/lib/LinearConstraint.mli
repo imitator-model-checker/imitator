@@ -718,6 +718,9 @@ val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_
 (** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> p_nnconvex_constraint
 
+(** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
+val px_nnconvex_constraint_of_px_linear_constraints : px_linear_constraint list -> px_nnconvex_constraint
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Access} *)
@@ -762,6 +765,15 @@ val px_nnconvex_constraint_is_equal : px_nnconvex_constraint -> px_nnconvex_cons
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(* Computes the 'face' of a px_linear constraint - either the upper or lower *)
+val precise_temporal_upper_bound_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint
+val precise_temporal_lower_bound_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint
+(* Computes the 'face' of a px_linear_constraint with some epsilon parameter - either upper or lower *)
+val epsilon_temporal_upper_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint
+val epsilon_temporal_lower_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint
+
+
 
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)

@@ -2763,27 +2763,6 @@ let render_non_strict_p_linear_constraint k =
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
-
-(* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
-let close_clocks_px_linear_constraint k = 
-	let rec is_term_clock term = 
-		match term with
-		| Variable x -> List.mem x (clocks())
-		| Unary_Plus x | Unary_Minus x | Times (_, x) -> is_term_clock x 
-		| Plus (x,y) | Minus (x,y) -> is_term_clock x || is_term_clock y
-		| _ -> false
-	in 
-	let strict_to_not_strict_clock inequality =
-		match inequality with
-		| Less_Than (x,y) -> if (is_term_clock x || is_term_clock y) then Less_Or_Equal (x,y) else Less_Than(x,y)
-		| Greater_Than (x,y) -> if (is_term_clock x || is_term_clock y) then Greater_Or_Equal (x,y) else Greater_Than(x,y)
-		|_ -> inequality
-	in
-	(* Get the list of inequalities *)
-	let inequality_list = ippl_get_inequalities k in 
-	(* Replace inequelities and convert back to a linear_constraint *)
-	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
-
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4583,6 +4562,114 @@ let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnc
 (* {3 Operations without modification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+type bound_type = Upper | Lower
+type sign = P | M
+let negate = function P -> M | M -> P
+
+(* From a term, extract a clock and its sign if there is exactly one clock *)
+let get_clock_sign_from_term term =
+	let clock_signs = ref [] in 
+	let rec aux term sign = 
+		match term with 
+		| Variable x -> if List.mem x (clocks()) then  clock_signs := sign::!clock_signs
+		| Coefficient _ -> ()
+		| Unary_Plus t -> aux t sign 
+		| Unary_Minus t -> aux t (negate sign)
+		| Plus (t1, t2) -> (aux t1 sign); (aux t2 sign)
+		| Minus (t1, t2) -> (aux t1 sign); (aux t2 (negate sign))
+		| Times (z, t) -> if (z < Gmp.Z.from_int 0) then aux t (negate sign) else aux t sign
+	in
+	aux term P;
+	if List.length (!clock_signs) = 1 then 
+		Some (List.hd !clock_signs)
+	else 
+		None
+
+(* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
+let close_clocks_px_linear_constraint k = 
+	let strict_to_not_strict_clock inequality =
+		match inequality with
+		| Less_Than (x,y) | Greater_Than (y,x) -> 
+			begin
+				let x_sign = get_clock_sign_from_term x in 
+				let y_sign = get_clock_sign_from_term y in 
+				match x_sign, y_sign with 
+				| Some _, None
+				| None, Some _ -> Less_Or_Equal (x,y)
+				| _ -> inequality
+			end 
+		|_ -> inequality
+	in
+	(* Get the list of inequalities *)
+	let inequality_list = ippl_get_inequalities k in 
+	(* Replace inequelities and convert back to a linear_constraint *)
+	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
+
+
+
+let extract_parametric_bound bound_type bound_shape inequality = 
+	match inequality with 
+	| Less_Or_Equal (t1,t2) 
+	| Greater_Or_Equal (t2,t1) -> 
+		begin
+			let t1_sign = get_clock_sign_from_term t1 in 
+			let t2_sign = get_clock_sign_from_term t2 in 
+			match bound_type, t1_sign, t2_sign with 
+			| Upper, Some P, None -> Some (bound_shape P t1 t2)
+			| Lower, Some M, None -> Some (bound_shape M t1 t2)
+			| Upper, None, Some M -> Some (bound_shape M t2 t1) 
+			| Lower, None, Some P -> Some (bound_shape P t2 t1)
+			| _ -> None
+		end
+	| _ -> None
+
+
+
+let extract_const_bound bound_type bound_shape linear_constraint variable = 
+	let bounding_function = match bound_type with 
+	 | Upper -> ippl_maximize
+	 | Lower -> ippl_minimize
+	in
+	let is_bounded, numerator, denominator, _ = bounding_function linear_constraint (Variable variable) in
+	if is_bounded then 
+		let bound = ppl_linear_expression_of_linear_term @@ IR_Coef (NumConst.numconst_of_zfrac numerator denominator) in
+		Some (bound_shape (Variable variable) bound)
+	else None
+
+		
+let generic_temporal_bound_px_linear_constraint bound_type bound_shape k =
+	let closed_clocks = close_clocks_px_linear_constraint k in 
+	let inequality_list = ippl_get_inequalities closed_clocks in 
+	let bound_equalities = List.filter_map (fun inequality -> extract_parametric_bound bound_type bound_shape inequality) inequality_list in 
+	let bounds = List.map (
+		fun equality -> make_px_constraint (equality::inequality_list)
+	) bound_equalities in 
+	
+	px_nnconvex_constraint_of_px_linear_constraints bounds
+
+(* Computes the 'face' of a px_linear constraint - either the upper or lower *)
+let precise_temporal_upper_bound_px_linear_constraint = 
+	generic_temporal_bound_px_linear_constraint Upper (fun _ x y -> Equal(x,y))
+
+let precise_temporal_lower_bound_px_linear_constraint = 
+	generic_temporal_bound_px_linear_constraint Lower (fun _ x y -> Equal(x,y))
+
+(* Computes the 'face' of a px_linear_constraint with some epsilon parameter - either upper or lower *)
+let epsilon_temporal_upper_bound_px_linear_constraint (epsilon_parameter : variable) =
+	let epsilon = Variable(epsilon_parameter) in 
+	let bound_shape sign clock_term plt_term = match sign with 
+	 | P -> Greater_Or_Equal (clock_term, Minus(plt_term, epsilon))
+	 | M -> Less_Or_Equal (clock_term, Plus(plt_term, epsilon))
+	in 
+	generic_temporal_bound_px_linear_constraint Upper bound_shape
+
+let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : variable) =
+	let epsilon = Variable(epsilon_parameter) in 
+	let bound_shape sign clocK_term plt_term = match sign with 
+	| P -> Less_Or_Equal (clocK_term, Plus(plt_term, epsilon))
+	| M -> Greater_Or_Equal (clocK_term, Minus(plt_term, epsilon))
+ in
+	generic_temporal_bound_px_linear_constraint Lower bound_shape
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)
