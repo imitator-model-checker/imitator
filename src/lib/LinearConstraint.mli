@@ -53,9 +53,9 @@ type variable_name = string
 type coef = NumConst.t
 
 type internal_linear_term =
-	| IR_Var of variable
-	| IR_Coef of coef
-	| IR_Plus of internal_linear_term * internal_linear_term
+	| IR_Var   of variable
+	| IR_Coef  of coef
+	| IR_Plus  of internal_linear_term * internal_linear_term
 	| IR_Minus of internal_linear_term * internal_linear_term
 	| IR_Times of coef * internal_linear_term
 
@@ -63,11 +63,11 @@ type internal_linear_term =
 (* {2 Valuations} *)
 (************************************************************)
 
-type p_valuation = (variable -> coef)
-type x_valuation = (variable -> coef)
-type px_valuation = (variable -> coef)
+type p_valuation   = (variable -> coef)
+type x_valuation   = (variable -> coef)
+type px_valuation  = (variable -> coef)
 type pxd_valuation = (variable -> coef)
-type d_valuation = (variable -> coef)
+type d_valuation   = (variable -> coef)
 
 
 (************************************************************)
@@ -92,8 +92,8 @@ type pxd_linear_term = internal_linear_term
 
 (** Create a linear term using a list of coef and variables, and a constant *)
 (* val make_linear_term : (coef * variable) list -> coef -> linear_term *)
-val make_p_linear_term : (coef * variable) list -> coef -> p_linear_term
-val make_px_linear_term : (coef * variable) list -> coef -> px_linear_term
+val make_p_linear_term   : (coef * variable) list -> coef -> p_linear_term
+val make_px_linear_term  : (coef * variable) list -> coef -> px_linear_term
 val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
@@ -186,8 +186,8 @@ type pxd_linear_inequality
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using linear term and an operator *)
-val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
-val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
+val make_p_linear_inequality   : p_linear_term   -> op -> p_linear_inequality
+val make_px_linear_inequality  : px_linear_term  -> op -> px_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
@@ -277,7 +277,7 @@ type time_direction = Time_forward | Time_backward
 (* {3 Initialization} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Set the number of dimensions *)
+(** Set the number of dimensions: number of parameters, of clocks, of discrete rational variables *)
 val set_dimensions : int -> int -> int -> unit
 
 
@@ -382,8 +382,8 @@ val p_compute_bounds : p_linear_constraint -> variable -> (((NumConst.t * bool) 
 
 (** Exhibit a point in a linear_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: we try to exhibit in each dimension the minimum, except if no minimum (infimum) in which case we get either the middle between the infimum and the supremum (if any supremum), or the infimum if no supremum; and dually if no infimum. ***)
-val p_exhibit_point : p_linear_constraint -> p_valuation
-val px_exhibit_point : px_linear_constraint -> px_valuation
+val p_exhibit_point   : p_linear_constraint   -> p_valuation
+val px_exhibit_point  : px_linear_constraint  -> px_valuation
 val pxd_exhibit_point : pxd_linear_constraint -> pxd_valuation
 
 (** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
