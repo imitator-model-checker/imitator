@@ -90,7 +90,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) ((*property*)_ : 
 	method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
 
 	(** The closed operator (>= for minimization, and <= for maximization) *)
-	method virtual closed_op : LinearConstraint.op
+	method virtual closed_op : LinearConstraint.comparison_op
 
 	(* Various strings *)
 	method virtual str_optimum : string

@@ -175,7 +175,7 @@ let rec power base exponent =
 
 
 (* Hide all bounded parameters in a list of guards by replacing them by their bounds *)
-let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
+let hide_bounded (guards : (int * comparison_op * numconst_or_infinity array) list) (bounds : (numconst_or_infinity * numconst_or_infinity) array) =
 	let new_guards = guards in
 	let f (clock, operator, coefs) = 
 		let k = (Array.length coefs) - 1 in
@@ -202,7 +202,7 @@ let hide_bounded (guards : (int * op * numconst_or_infinity array) list) (bounds
 	
 	
 (* Determine PTA type*)
-let get_pta_type (guards : (int * op * numconst_or_infinity array) list) =
+let get_pta_type (guards : (int * comparison_op * numconst_or_infinity array) list) =
 	let is_lpta = ref(true) in
 	let is_upta = ref(true) in
 	List.iter (
@@ -333,7 +333,7 @@ let get_max_bounds bounds guards h =
 	(max_const_L,max_const_U)
 
 (* Return for each clock x the value to use for the LU-extrapolation of x (cf. "vec{LU}" paper) *)
-let compute_maximal_constants (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
+let compute_maximal_constants (bounds : (numconst_or_infinity * numconst_or_infinity) array) (guards : (int * comparison_op * numconst_or_infinity array) list) (h : int) : (numconst_or_infinity array * numconst_or_infinity array) =
 	(* Hide bounded parameters *)
 	let transformed_guards = (hide_bounded guards bounds) in
 	(* Determine type of the transformed PTA*)

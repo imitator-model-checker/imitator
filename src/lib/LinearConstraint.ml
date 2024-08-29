@@ -254,15 +254,12 @@ type pxd_linear_term = internal_linear_term
 
 
 (*** Internal construction by Ulrich Kuehne (around 2010) (encapsulation of PPL concepts) ***)
-type op =
+type comparison_op =
 	| Op_g
 	| Op_ge
 	| Op_eq
 	| Op_le
 	| Op_l
-(* Shortcut *)
-(*** TODO: rename one of both?! ***)
-type internal_op = op
 
 (** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
 let reverse_op = function 
@@ -273,7 +270,7 @@ let reverse_op = function
 	| Op_l		-> Op_g
 
 
-(** Convert an internal_op to string *)
+(** Convert an comparison_op to string *)
 let string_of_op = function
 	| Op_g  -> ">"
 	| Op_ge -> ">="
@@ -717,7 +714,7 @@ let rec variable_in_linear_term (v : variable) = function
 
 (* Intermediate, recursive function. nb_times_ref is an int ref. coeff_option is a `coef ref option`. minus_flag is a flag to check whether we are in some negative coefficient. *)
 
-let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option minus_flag v = function
+let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option (minus_flag : bool) (v : variable) = function
 	| Variable variable -> if v = variable then(
 			nb_times_ref := !nb_times_ref + 1;
 			coeff_option := Some (if minus_flag then NumConst.minus_one else NumConst.one);
@@ -768,7 +765,7 @@ let get_variable_coef_in_linear_term (v : variable) (linear_term : ppl_linear_te
 exception Found_coef of coef
 
 (* First a recursive function *)
-let rec get_coefficient_in_linear_term_rec minus_flag = function
+let rec get_coefficient_in_linear_term_rec (minus_flag : bool) = function
 	| Variable _ -> ()
 	| Coefficient c ->
 		let numconst_coef = NumConst.numconst_of_mpz c in
@@ -836,7 +833,7 @@ let rename_pxd_linear_term = rename_linear_term
 (*------------------------------------------------------------*)
 (** Evaluate an internal_linear_term with a function assigning a value to each variable. *)
 (*------------------------------------------------------------*)
-let evaluate_linear_term_gen (keep_coeff : bool) valuation_function (linear_term : internal_linear_term) =
+let evaluate_linear_term_gen (keep_coeff : bool) (valuation_function : valuation) (linear_term : internal_linear_term) =
 	let rec evaluate_linear_term_gen_rec (linear_term : internal_linear_term) =
 	match linear_term with
 		(* Only keep constant coefficient if asked *)
@@ -1224,7 +1221,7 @@ let ppl_linear_expression_of_linear_term (linear_term : internal_linear_term) : 
 
 
 (** Create a linear inequality using a linear term and an operator *)
-let make_linear_inequality (linear_term : internal_linear_term) (op : internal_op) : linear_inequality =
+let make_linear_inequality (linear_term : internal_linear_term) (op : comparison_op) : linear_inequality =
 	(* Convert to Ppl.linear_expression *)
 	let linear_expression = ppl_linear_expression_of_linear_term linear_term in
 	(* Build zero term for comparison with the operator *)
@@ -1285,7 +1282,7 @@ let op_of_ppl_op = function
 
 
 (* Get the `op` operator of a linear inequality *)
-let op_of_linear_inequality	(linear_inequality : linear_inequality) : internal_op =
+let op_of_linear_inequality	(linear_inequality : linear_inequality) : comparison_op =
 	op_of_ppl_op (ppl_op_of_linear_inequality linear_inequality)
 
 let op_of_pxd_linear_inequality = op_of_linear_inequality
@@ -1380,12 +1377,12 @@ let negate_inequality = function
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** build a linear inequality from two terms and an operator *)
-let build_linear_inequality lterm rterm op = 
+let build_linear_inequality lterm (rterm : ppl_linear_term) (op : ppl_op) =
 	match op with
-		| Less_Than_RS -> Less_Than (lterm, rterm)
-		| Less_Or_Equal_RS -> Less_Or_Equal (lterm, rterm)
-		| Equal_RS -> Equal (lterm, rterm)
-		| Greater_Than_RS -> Greater_Than (lterm, rterm)
+		| Less_Than_RS        -> Less_Than (lterm, rterm)
+		| Less_Or_Equal_RS    -> Less_Or_Equal (lterm, rterm)
+		| Equal_RS            -> Equal (lterm, rterm)
+		| Greater_Than_RS     -> Greater_Than (lterm, rterm)
 		| Greater_Or_Equal_RS -> Greater_Or_Equal (lterm, rterm)
 
 
@@ -1395,9 +1392,8 @@ let is_zero_coef = function
 	| _ -> false
 
 
-(** build a sum of two expressions; respects the case where one of the 
-	  operands is zero *)
-let compact_sum lexpr rexpr =
+(** build a sum of two expressions; respects the case where one of the operands is zero *)
+let compact_sum (lexpr : ppl_linear_term) (rexpr : ppl_linear_term) =
 	if is_zero_coef lexpr then (
 		rexpr
   ) else (
@@ -1495,7 +1491,7 @@ let string_of_linear_inequality (customized_string : Constants.customized_boolea
 	lstr ^ opstr ^ rstr
 
 let string_of_pxd_linear_inequality = string_of_linear_inequality default_string
-let string_of_p_linear_inequality = string_of_linear_inequality default_string
+let string_of_p_linear_inequality   = string_of_linear_inequality default_string
 
 (*let customized_string_of_pxd_linear_inequality = string_of_linear_inequality
 let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
@@ -1504,7 +1500,7 @@ let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
 (*------------------------------------------------------------*)
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm. If the clock has a coefficient `c`, then `plterm / c` is returned as the parametric linear term *)
 (*------------------------------------------------------------*)
-let clock_guard_of_linear_inequality linear_inequality =
+let clock_guard_of_linear_inequality (linear_inequality : linear_inequality) =
 
 	(*** NOTE: strongly relies on the fact that parameters indexes are from 0 to M-1, and clock indexes from M to M+H-1 ***)
 	
@@ -1685,7 +1681,7 @@ let pxd_copy = ippl_copy_linear_constraint
 
 
 
-let debug_string_of_linear_constraint linear_constraint =
+let debug_string_of_linear_constraint (linear_constraint : linear_constraint) =
 	" " ^
 	(string_of_list_of_string_with_sep
 		" & "
@@ -1724,7 +1720,7 @@ let assert_dimensions (nb_dimensions : int) (linear_constraint : linear_constrai
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions: number of parameters, of clocks, of discrete rational variables *)
-let set_dimensions nb_p nb_c nb_d =
+let set_dimensions (nb_p : int) (nb_c : int) (nb_d : int) : unit =
 	nb_parameters	:= nb_p;
 	nb_clocks 		:= nb_c;
 	nb_rationals		:= nb_d;
@@ -1762,7 +1758,7 @@ let pxd_true_constraint () : pxd_linear_constraint = ippl_true_constraint !pxd_d
 
 
 (** Create a linear constraint from a list of linear inequalities *)
-let make nb_dimensions (inequalities : linear_inequality list) =
+let make nb_dimensions (inequalities : linear_inequality list) : linear_constraint =
 	let poly = true_constraint nb_dimensions in
 	ippl_add_constraints poly inequalities;
 	assert_dimensions nb_dimensions poly;
@@ -1777,7 +1773,7 @@ let make_pxd_constraint inequalities : pxd_linear_constraint = make !pxd_dim ine
 
 (** Create a linear constraint from a single point *)
 (*** WARNING: non-robust (no check for variable existence) ***)
-let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
+let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) : linear_constraint =
 	let inequalities =
 	List.map (fun (variable , value) ->
 		(* Create linear inequality "variable = value" *)
@@ -1792,15 +1788,15 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 
 
 (*** NOTE: must provide the argument to be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
-let x_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
-let px_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
-let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
+let p_constraint_of_point v_c_list    = constraint_of_point !p_dim v_c_list
+let x_constraint_of_point v_c_list    = constraint_of_point !px_dim v_c_list
+let px_constraint_of_point v_c_list   = constraint_of_point !px_dim v_c_list
+let pxd_constraint_of_point v_c_list  = constraint_of_point !pxd_dim v_c_list
 let pxd_constraint_of_discrete_values = pxd_constraint_of_point
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
-let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op : internal_op) (d : internal_linear_term) (direction : bool) =
+let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op : comparison_op) (d : internal_linear_term) (direction : bool) : linear_constraint =
 	(* Create a linear term made of x *)
 	let lt_x = make_linear_term [NumConst.one, x] NumConst.zero in
 	(* Handle order *)
@@ -1818,7 +1814,7 @@ let pxd_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock
 
 
 (** Create a constraint bounding all variables in the list to non-negative *)
-let constraint_of_nonnegative_variables (nb_dimensions : int) variables =
+let constraint_of_nonnegative_variables (nb_dimensions : int) (variables : variable list) : linear_constraint =
 	(* First check that the variables are compatible with the dimensions *)
 	List.iter (fun variable -> if variable >= nb_dimensions then raise (InternalError ("In function LinearConstraint.constraint_of_nonnegative_variables, trying to create a variable of dimension " ^ (string_of_int variable) ^ " for a polyhedron in " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ ".") )) variables;
 	
@@ -2287,7 +2283,7 @@ let px_intersection_assign_p px_linear_constraint = function
 
 
 (** Performs the intersection of a list of linear constraints *)
-let intersection nb_dimensions linear_constraints =
+let intersection (nb_dimensions : int) (linear_constraints : linear_constraint list) =
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
@@ -5245,7 +5241,7 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 (*Begin - Needed functions for part 1*)
 
 (*get string of operators*)
-let operator2string (op : internal_op) = match op with
+let operator2string (op : comparison_op) = match op with
 	| Op_g  -> ">"
 	| Op_ge -> ">="
 	| Op_eq -> "="
@@ -5542,7 +5538,7 @@ ih polyhedron2;
 let nIP = non_integer_points polyhedron2 in
 	List.iter debug_print_point nIP;
 
-raise (NotImplemented ("plop !"))
+(* raise (NotImplemented ("plop !")) *)
 ;
 ()
 

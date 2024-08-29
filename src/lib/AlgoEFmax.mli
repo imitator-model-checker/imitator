@@ -37,7 +37,7 @@ class algoEFmax : AbstractModel.abstract_model -> AbstractProperty.abstract_prop
 		method remove_bounds : Automaton.parameter_index list -> Automaton.parameter_index list -> LinearConstraint.p_linear_constraint -> unit
 		
 		(* The closed operator (>= for minimization, and <= for maximization) *)
-		method closed_op : LinearConstraint.op
+		method closed_op : LinearConstraint.comparison_op
 
 		(* Function to negate an inequality *)
 		method negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint

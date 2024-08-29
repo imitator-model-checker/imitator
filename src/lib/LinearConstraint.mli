@@ -162,7 +162,7 @@ val string_of_pxd_linear_term_for_jani : (variable -> string) -> pxd_linear_term
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-type op =
+type comparison_op =
 	| Op_g
 	| Op_ge
 	| Op_eq
@@ -170,10 +170,10 @@ type op =
 	| Op_l
 
 (** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
-val reverse_op : op -> op
+val reverse_op : comparison_op -> comparison_op
 
-(* Convert an op to string *)
-val string_of_op : op -> string
+(* Convert a comparison_op to string *)
+val string_of_op : comparison_op -> string
 
 (* type linear_inequality *)
 type p_linear_inequality
@@ -186,9 +186,9 @@ type pxd_linear_inequality
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using linear term and an operator *)
-val make_p_linear_inequality   : p_linear_term   -> op -> p_linear_inequality
-val make_px_linear_inequality  : px_linear_term  -> op -> px_linear_inequality
-val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
+val make_p_linear_inequality   : p_linear_term   -> comparison_op -> p_linear_inequality
+val make_px_linear_inequality  : px_linear_term  -> comparison_op -> px_linear_inequality
+val make_pxd_linear_inequality : pxd_linear_term -> comparison_op -> pxd_linear_inequality
 
 
 (* Create a set of inequalities of the form `var=0` for a set of variables *)
@@ -199,8 +199,8 @@ val px_make_linear_inequalities_eq_0  : variable list -> px_linear_inequality  l
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Access} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** Get the op of a linear_inequality *)
-val op_of_pxd_linear_inequality				: pxd_linear_inequality -> op
+(** Get the comparison_op of a linear_inequality *)
+val op_of_pxd_linear_inequality				: pxd_linear_inequality -> comparison_op
 
 
 
@@ -230,7 +230,7 @@ val negate_wrt_pi0 : p_valuation -> p_linear_inequality -> p_linear_inequality
 (*------------------------------------------------------------*)
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
 (*------------------------------------------------------------*)
-val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
+val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * comparison_op * p_linear_term)
 
 
 (** Convert to string the left-hand term of a linear_inequality *)
@@ -314,13 +314,13 @@ val px_true_constraint : unit -> px_linear_constraint
 val pxd_true_constraint : unit -> pxd_linear_constraint
 
 (** "pxd_linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with x a clock, d a p_linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (viz., "x < p1 true" generates "x < p1" whereas "x <= p1+p2 false" generates "x >= p1+p2" *)
-val px_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> px_linear_constraint
-val pxd_linear_constraint_of_clock_and_parameters : variable -> op -> p_linear_term -> bool -> pxd_linear_constraint
+val px_linear_constraint_of_clock_and_parameters  : variable -> comparison_op -> p_linear_term -> bool -> px_linear_constraint
+val pxd_linear_constraint_of_clock_and_parameters : variable -> comparison_op -> p_linear_term -> bool -> pxd_linear_constraint
 
 
 (** Create a constraint bounding all variables in the list to non-negative *)
-val p_constraint_of_nonnegative_variables : variable list -> p_linear_constraint
-val px_constraint_of_nonnegative_variables : variable list -> px_linear_constraint
+val p_constraint_of_nonnegative_variables : variable list   -> p_linear_constraint
+val px_constraint_of_nonnegative_variables : variable list  -> px_linear_constraint
 val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constraint
 
 
@@ -457,7 +457,7 @@ val px_contains_integer_point : px_linear_constraint -> bool
 (*------------------------------------------------------------*)
 (** Convert a one-dimensional single parameter linear constraint into a single parameter constraint (i.e. a triple parameter_index, operator, constant); raises Not_a_1d_parameter_constraint if the constraint is not a proper constraint *)
 (*------------------------------------------------------------*)
-val parameter_constraint_of_p_linear_constraint : Automaton.parameter_index -> p_linear_constraint -> (Automaton.parameter_index * op * coef)
+val parameter_constraint_of_p_linear_constraint : Automaton.parameter_index -> p_linear_constraint -> (Automaton.parameter_index * comparison_op * coef)
 
 
 
@@ -875,7 +875,7 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 (** Gia's function for CUB **)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (*for linear term*)
-val operator2string : op -> string
+val operator2string : comparison_op -> string
 
 
 type smaller_term =
