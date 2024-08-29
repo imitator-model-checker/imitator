@@ -677,7 +677,7 @@ let add_pxd_linear_terms = add_linear_terms
 
 
 (** Substract two linear terms *)
-let sub_linear_terms lt1 lt2 =
+let sub_linear_terms (lt1 : internal_linear_term) (lt2 : internal_linear_term) =
 	IR_Minus (lt1, lt2)
 
 
@@ -693,7 +693,7 @@ let sub_pxd_linear_terms = sub_linear_terms
 (*------------------------------------------------------------*)
 (** Check whether a variable appears in a ppl_linear_term (with coeff <> 0) *)
 (*------------------------------------------------------------*)
-let rec variable_in_linear_term v = function
+let rec variable_in_linear_term (v : variable) = function
 	| Variable variable -> v = variable
 	| Coefficient _ -> false
 	| Unary_Plus linear_expression -> variable_in_linear_term v linear_expression
