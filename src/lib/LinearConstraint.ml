@@ -5504,7 +5504,7 @@ let isSmaller term1 term2 	=
 
 
 
-
+(*
 (*** TEMP code: testing IH ***)
 ;;
 
@@ -5541,4 +5541,4 @@ let nIP = non_integer_points polyhedron2 in
 (* raise (NotImplemented ("plop !")) *)
 ;
 ()
-
+*)
