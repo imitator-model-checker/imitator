@@ -66,6 +66,8 @@ class imitator_options :
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 
+		method ih							: bool
+
 		method layer						: bool
 		method is_set_layer					: bool
 		method set_layer					: bool -> unit

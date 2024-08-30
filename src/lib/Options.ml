@@ -197,6 +197,9 @@ class imitator_options =
 		(* Remove global time clock when comparing states (expensive!) *)
 		val mutable no_global_time_in_comparison	= false
 
+		(* Use integer hull for termination of selected algorithms [JLR15] (EXPERIMENTAL) *)
+		val mutable ih : bool						= false
+
 		(* Layered NDFS *)
 		val mutable layer : bool option				= None
 
@@ -315,6 +318,8 @@ class imitator_options =
 
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
+
+		method ih									= ih
 
 		method layer								= value_of_option "layer" layer
 		method is_set_layer							= layer <> None
@@ -908,6 +913,9 @@ class imitator_options =
 
 
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
+				");
+
+				("-ih", Unit (fun () -> ih <- true), " Uses the integer hull [JLR15] for termination of selected algorithms. Default: disabled.
 				");
 
 				("-imi2DOT", Unit (fun _ ->
