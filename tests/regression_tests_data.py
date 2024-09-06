@@ -8856,11 +8856,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  15 > p_add_sugar + p_coffee
-& p_coffee > 0
-& p_button > 0
-& 5 > p_button
-& p_add_sugar >= 3*p_button
+   p_coffee > 0
+ & p_button > 0
+ & 15 > p_add_sugar + p_coffee
+ & p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			} #end result file
@@ -8900,11 +8899,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  15 > p_add_sugar + p_coffee
-& p_coffee > 0
-& p_button > 0
-& 5 > p_button
-& p_add_sugar >= 3*p_button
+   p_coffee > 0
+ & p_button > 0
+ & 15 > p_add_sugar + p_coffee
+ & p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			} #end result file
@@ -9000,10 +8998,9 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  15 > p_add_sugar + p_coffee
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
-& 5 > p_button
+& 15 > p_add_sugar + p_coffee
 & p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
@@ -9044,10 +9041,9 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  15 > p_add_sugar + p_coffee
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
-& 5 > p_button
+& 15 > p_add_sugar + p_coffee
 & p_add_sugar >= 3*p_button
 END CONSTRAINT
 """

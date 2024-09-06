@@ -92,12 +92,12 @@ let cHECK_ASSERT_DIMENSIONS = true
 	
 	let ppl_tcounter_strictly_contains = create_hybrid_counter_and_register "strictly_contains" PPL_counter Verbose_low
 
-
 	let ppl_tcounter_contains_integer_point = create_hybrid_counter_and_register "contains_integer_point" PPL_counter Verbose_low
 
-
-	let ppl_tcounter_get_inequalities = create_hybrid_counter_and_register "get_inequalities" PPL_counter Verbose_low
+	let ppl_tcounter_get_inequalities = create_hybrid_counter_and_register "get_constraints" PPL_counter Verbose_low
 	
+	let ppl_tcounter_get_minimized_inequalities = create_hybrid_counter_and_register "get_minimized_constraints" PPL_counter Verbose_low
+
 	let ppl_tcounter_get_generators = create_hybrid_counter_and_register "get_generators" PPL_counter Verbose_low
 	
 	let ppl_tcounter_get_minimized_generators = create_hybrid_counter_and_register "get_minimized_generators" PPL_counter Verbose_low
@@ -414,6 +414,9 @@ let ippl_add_constraints x =
 (* Return the list of inequalities that build the polyhedron (interface to PPL) *)
 let ippl_get_inequalities x : linear_inequality list =
 	ippl_generic (fun () -> ppl_Polyhedron_get_constraints x) ppl_tcounter_get_inequalities
+
+let ippl_get_minimized_inequalities x : linear_inequality list =
+	ippl_generic (fun () -> ppl_Polyhedron_get_minimized_constraints x) ppl_tcounter_get_minimized_inequalities
 
 let ippl_get_generators poly =
 	ippl_generic (fun () -> ppl_Polyhedron_get_generators poly) ppl_tcounter_get_generators
@@ -1685,7 +1688,7 @@ let debug_string_of_linear_constraint (linear_constraint : linear_constraint) =
 	" " ^
 	(string_of_list_of_string_with_sep
 		" & "
-		(List.map (string_of_linear_inequality Constants.default_string debug_variable_names) (ippl_get_inequalities linear_constraint))
+		(List.map (string_of_linear_inequality Constants.default_string debug_variable_names) (ippl_get_minimized_inequalities linear_constraint))
 	)
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1985,6 +1988,11 @@ let p_get_inequalities   = ippl_get_inequalities
 let px_get_inequalities  = ippl_get_inequalities
 let pxd_get_inequalities = ippl_get_inequalities
 
+(** Get the minimized inequalities of a constraint *)
+let p_get_minimized_inequalities   = ippl_get_minimized_inequalities
+let px_get_minimized_inequalities  = ippl_get_minimized_inequalities
+let pxd_get_minimized_inequalities = ippl_get_minimized_inequalities
+
 
 (** Get the number of inequalities of a constraint *)
 let p_nb_inequalities (p_linear_constraint : p_linear_constraint) : int =
@@ -1993,7 +2001,7 @@ let p_nb_inequalities (p_linear_constraint : p_linear_constraint) : int =
 	if p_is_true p_linear_constraint || p_is_false p_linear_constraint then 0
 	else
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities : p_linear_inequality list = p_get_inequalities p_linear_constraint in
+	let list_of_inequalities : p_linear_inequality list = p_get_minimized_inequalities p_linear_constraint in
 	List.length list_of_inequalities
 
 
@@ -2097,7 +2105,7 @@ let partition_lu variables linear_constraints =
 	List.iter (fun linear_constraint ->
 	
 		(* Get the inequalities *)
-		let inequalities = ippl_get_inequalities linear_constraint in
+		let inequalities = ippl_get_minimized_inequalities linear_constraint in
 		
 		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
 		List.iter (function
@@ -2153,7 +2161,7 @@ let partition_lu variables linear_constraints =
 (*------------------------------------------------------------*)
 exception Found_upper_bound of p_linear_term
 let clock_upper_bound_in clock_index px_linear_constraint =
-	let inequalities = px_get_inequalities px_linear_constraint in
+	let inequalities = px_get_minimized_inequalities px_linear_constraint in
 	let p_linear_term_option =
 	try(
 		(* Iterate on all inequalities until x < plt is found *)
@@ -2206,7 +2214,7 @@ let string_of_linear_constraint (customized_string : Constants.customized_boolea
 	else
 	
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ippl_get_inequalities linear_constraint in
+	let list_of_inequalities = ippl_get_minimized_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
 		customized_string.and_operator
@@ -2337,7 +2345,7 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 (** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises Not_an_inequality if more than one inequality, or if an equality is found. *)
 let negate_single_inequality_p_constraint p_linear_constraint =
 	(* Retrieve the inequalities *)
-	let inequalities = p_get_inequalities p_linear_constraint in
+	let inequalities = p_get_minimized_inequalities p_linear_constraint in
 	(* Check *)
 	if List.length inequalities <> 1 then(
 		print_error "Exactly one inequality should be contained in negate_single_inequality_p_constraint";
@@ -2356,7 +2364,7 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 (*** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
 let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
 	(* Retrieve the inequalities *)
-	let inequalities = p_get_inequalities p_linear_constraint in
+	let inequalities = p_get_minimized_inequalities p_linear_constraint in
 	
 	(* Count *)
 	let nb_inequalities = List.length inequalities in
@@ -2744,7 +2752,7 @@ let px_grow_to_zero_assign variables_elapse variables_constant linear_constraint
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
 let render_non_strict_p_linear_constraint k =
 	(* Get the list of inequalities *)
-	let inequality_list = ippl_get_inequalities k in 
+	let inequality_list = ippl_get_minimized_inequalities k in
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
@@ -3056,7 +3064,7 @@ let is_pi0_compatible (pi0 : p_valuation) (p_linear_constraint : p_linear_constr
 	tcounter_pi0_compatibility#start;
 
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ippl_get_inequalities p_linear_constraint in
+	let list_of_inequalities = p_get_minimized_inequalities p_linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	let result =
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
@@ -3077,7 +3085,7 @@ let d_is_pi0_compatible = is_pi0_compatible
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 let partition_pi0_compatible (pi0 : p_valuation) (linear_constraint : linear_constraint) =
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ippl_get_inequalities linear_constraint in
+	let list_of_inequalities = p_get_minimized_inequalities linear_constraint in
 	(* Partition *)
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
@@ -3217,7 +3225,7 @@ let grml_of_pxd_linear_constraint = grml_of_linear_constraint*)
 (*------------------------------------------------------------*)
 let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constraint =
 	(* First get inequalities *)
-	let inequalities = p_get_inequalities p_linear_constraint in
+	let inequalities = p_get_minimized_inequalities p_linear_constraint in
 	
 	(* If < 1 or > 2 inequality: problem *)
 	if List.length inequalities < 1 || List.length inequalities > 2 then(
@@ -4058,13 +4066,13 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		print_message Verbose_standard (debug_string_of_px_valuation px_valuation);
 
 		(* Get inequalities *)
-		let px_get_inequalities : px_linear_inequality list = px_get_inequalities px_linear_constraint in
+		let px_inequalities : px_linear_inequality list = px_get_minimized_inequalities px_linear_constraint in
 
 		(* Filter only those inequalities which are tight for this point *)
 
 		(*** TODO: missing C++: if(j.is_inequality()) ***)
 
-		let tight_inequalities : px_linear_inequality list = List.filter (is_px_linear_inequality_tight px_valuation) px_get_inequalities in
+		let tight_inequalities : px_linear_inequality list = List.filter (is_px_linear_inequality_tight px_valuation) px_inequalities in
 
 		(*** Debug print ***)
 		print_message Verbose_standard "  Tight inequalities:";
@@ -4439,7 +4447,7 @@ let nnconvex_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nn
 	);
 
 	(* First retrieve inequalities *)
-	let constraint_system =  ippl_get_inequalities linear_constraint in
+	let constraint_system =  ippl_get_minimized_inequalities linear_constraint in
 
 	ippl_nncc_add_constraints nnconvex_constraint constraint_system;
 
@@ -4795,7 +4803,7 @@ let close_clocks_px_linear_constraint k =
 		|_ -> inequality
 	in
 	(* Get the list of inequalities *)
-	let inequality_list = ippl_get_inequalities k in 
+	let inequality_list = ippl_get_minimized_inequalities k in
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
 
@@ -4834,7 +4842,7 @@ let extract_const_bound bound_type bound_shape linear_constraint variable =
 		
 let generic_temporal_bound_px_linear_constraint bound_type bound_shape k =
 	let closed_clocks = close_clocks_px_linear_constraint k in 
-	let inequality_list = ippl_get_inequalities closed_clocks in 
+	let inequality_list = ippl_get_minimized_inequalities closed_clocks in
 	let bound_equalities = List.filter_map (fun inequality -> extract_parametric_bound bound_type bound_shape inequality) inequality_list in 
 	let bounds = List.map (
 		fun equality -> make_px_constraint (equality::inequality_list)
@@ -5225,7 +5233,7 @@ let unserialize_linear_inequality linear_inequality_string =
 (** Serialize a linear constraint *)
 let serialize_p_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
-	let list_of_inequalities = List.map serialize_linear_inequality (ippl_get_inequalities linear_constraint) in
+	let list_of_inequalities = List.map serialize_linear_inequality (ippl_get_minimized_inequalities linear_constraint) in
 	(* Add separators *)
 	String.concat serialize_SEP_AND list_of_inequalities
 
