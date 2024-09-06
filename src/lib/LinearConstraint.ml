@@ -230,9 +230,9 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 (* TYPES *)
 (************************************************************)
 
-type variable = int
+type variable      = int
 type variable_name = string
-type coef = NumConst.t
+type coef          = NumConst.t
 
 (*type linear_term = Linexpr0.t*)
 
@@ -743,7 +743,7 @@ let rec get_variable_coef_in_linear_term_rec nb_times_ref coeff_option (minus_fl
 			| _ -> raise (InternalError ("In function `get_variable_coef_in_linear_term_rec`, pattern `Times` was expected to be only used for coeff * variable."))
 		)
 
-let get_variable_coef_in_linear_term (v : variable) (linear_term : ppl_linear_term) : NumConst.t option =
+let get_variable_coef_option_in_linear_term (v : variable) (linear_term : ppl_linear_term) : NumConst.t option =
 	let nb_times_ref = ref 0 in
 	let coeff_option = ref None in
 	(* Call the recursive function (the flag is initially false) *)
@@ -752,13 +752,19 @@ let get_variable_coef_in_linear_term (v : variable) (linear_term : ppl_linear_te
 	if !nb_times_ref = 0 then None else(
 		(* If more than one occurrence: InternalError *)
 		if !nb_times_ref > 1 then(
-			raise (InternalError ("Variable found several times in a linear_term in `get_variable_coef_in_linear_term`; that was assumed not to happen."));
+			raise (InternalError ("Variable found several times in a linear_term in `get_variable_coef_option_in_linear_term`; that was assumed not to happen."));
 		);
 		(* Else: return the coefficient (and do a safety check that everything happened as expected...) *)
 		match !coeff_option with
-			| None -> raise (InternalError ("Impossible situation in `get_variable_coef_in_linear_term`: a coefficient was found > 0 times, but the coefficient was not saved."));
+			| None -> raise (InternalError ("Impossible situation in `get_variable_coef_option_in_linear_term`: a coefficient was found > 0 times, but the coefficient was not saved."));
 			| Some c -> Some c
 	)
+
+let get_variable_coef_in_linear_term (v : variable) (linear_term : ppl_linear_term) : NumConst.t =
+	match get_variable_coef_option_in_linear_term v linear_term with
+	| Some c -> c
+	| None -> NumConst.zero
+
 
 (*------------------------------------------------------------*)
 (** Get the constant coefficient in a linear term *)
@@ -1291,14 +1297,23 @@ let op_of_linear_inequality	(linear_inequality : linear_inequality) : comparison
 let op_of_pxd_linear_inequality = op_of_linear_inequality
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* {3 Functions} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
 (** Convert a linear_inequality into ONE linear_term and the operator *)
 let linear_term_and_op_of_linear_inequality (linear_inequality) : (ppl_linear_term * ppl_op) =
 	let lterm, rterm, op = split_linear_inequality linear_inequality in
 	Minus (lterm, rterm), op
+
+(* Return the coefficient of a variable in a px_linear_inequality. NOTE/WARNING: the operator is *not* considered, so the coefficient might be correct up to its sign. *)
+let get_variable_coefficient_in_linear_inequality (variable : variable) (px_linear_inequality : px_linear_inequality) : coef =
+	(* Recreate a linear term from the px_linear_inequality *)
+	let (ppl_linear_term : ppl_linear_term), (_ : ppl_op) = linear_term_and_op_of_linear_inequality px_linear_inequality in
+	(* Return coefficient *)
+	get_variable_coef_in_linear_term variable ppl_linear_term
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* {3 Functions} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
 
@@ -1332,7 +1347,6 @@ let strict_to_not_strict_inequality inequality =
 		| Less_Than (x,y) -> Less_Or_Equal (x,y)
 		| Greater_Than (x,y) -> Greater_Or_Equal (x,y)
 		|_ -> inequality
-
 
 
 
@@ -1535,7 +1549,7 @@ let clock_guard_of_linear_inequality (linear_inequality : linear_inequality) =
 	
 	for clock_index = !nb_parameters to !nb_parameters + !nb_clocks - 1 do
 		(* Find the coefficient of the clock in the linear term *)
-		let coeff_option = get_variable_coef_in_linear_term clock_index linear_term in
+		let coeff_option = get_variable_coef_option_in_linear_term clock_index linear_term in
 		match coeff_option with
 		(* Clock found *)
 		| Some coeff when NumConst.neq coeff NumConst.zero ->
@@ -1566,7 +1580,7 @@ let clock_guard_of_linear_inequality (linear_inequality : linear_inequality) =
 	
 	for discrete_index = !nb_parameters + !nb_clocks to !nb_parameters + !nb_clocks + !nb_rationals - 1 do
 		(* Find the coefficient of the discrete in the linear term *)
-		let discrete_coeff_option = get_variable_coef_in_linear_term discrete_index linear_term in
+		let discrete_coeff_option = get_variable_coef_option_in_linear_term discrete_index linear_term in
 		match discrete_coeff_option with
 		(* Variable not found *)
 		| None -> ()
@@ -1579,7 +1593,7 @@ let clock_guard_of_linear_inequality (linear_inequality : linear_inequality) =
 
 	for parameter_index = 0 to !nb_parameters - 1 do
 		(* Find the coefficient of the parameter in the linear term *)
-		let parameter_coeff_option = get_variable_coef_in_linear_term parameter_index linear_term in
+		let parameter_coeff_option = get_variable_coef_option_in_linear_term parameter_index linear_term in
 		match parameter_coeff_option with
 		(* Variable not found *)
 		| None -> ()
@@ -3274,7 +3288,7 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 	let linear_term = Minus (lterm, rterm) in
 	
 	(* Get the parameter coefficient *)
-	let coeff_option = get_variable_coef_in_linear_term parameter_index linear_term in
+	let coeff_option = get_variable_coef_option_in_linear_term parameter_index linear_term in
 	
 	let parameter_coeff, positive_parameter = match coeff_option with
 		| None ->
@@ -3990,11 +4004,7 @@ let px_valuation_of_Ppl_Point (linear_generator : ppl_linear_generator) : px_val
 	(fun variable ->
 		(*** WARNING: no verification that the variable belongs to [px] variables ***)
 		(* Get the coefficient in the generator *)
-		let numerator =
-		match get_variable_coef_in_linear_term variable linear_expression with
-		| Some value -> value
-		| None -> NumConst.zero
-		in
+		let numerator = get_variable_coef_in_linear_term variable linear_expression in
 		NumConst.div numerator (NumConst. numconst_of_mpz coefficient)
 	)
 
@@ -4078,40 +4088,40 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		print_message Verbose_standard "  Tight inequalities:";
 		List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) tight_inequalities;
 
-		(* `s` is an extra dimension for each inequality *)
+		(* `extra_var` is an extra dimension for each inequality *)
 		(*** NOTE: `-1` as it's first incremented in the List.map ***)
-		let s = ref (nb_dimensions - 1) in
+		let extra_var = ref (nb_dimensions - 1) in
 
 		(* For each inequality *)
-		let transformed_inequalities : px_linear_inequality list = List.map (fun px_linear_inequality ->
+		let q_transformed_inequalities : px_linear_inequality list = List.map (fun px_linear_inequality : px_linear_inequality ->
 			(* Increment the extra dimension *)
-			s := !s + 1;
+			incr extra_var;
 
-			(* From an inequality lt1 >= 0, we create lt1 - s = 0, where s is a fresh variable for each such inequality *)
+			(* From an inequality lt1 >= 0, we create lt1 - extra_var = 0, where extra_var is a fresh variable for each such inequality *)
 
 			(* Get two linear terms from the px_linear_inequality *)
 			let (ppl_linear_term : ppl_linear_term), (op : ppl_op) = linear_term_and_op_of_linear_inequality px_linear_inequality in
 			let zero_term = Coefficient Gmp.Z.zero in
 			match op with
-			(* lt1 >= 0 ---> lt1 - s = 0 *)
+			(* lt1 >= 0 ---> lt1 - extra_var = 0 *)
 			| Greater_Than_RS
 			| Greater_Or_Equal_RS
 			| Equal_RS
 				->
-				let lt_minus_s : ppl_linear_term = Minus (ppl_linear_term , Variable (!s)) in
+				let lt_minus_s : ppl_linear_term = Minus (ppl_linear_term , Variable (!extra_var)) in
 				Equal (lt_minus_s , zero_term)
-			(* lt1 <= 0 ---> lt1 + s = 0 *)
+			(* lt1 <= 0 ---> lt1 + extra_var = 0 *)
 			| Less_Or_Equal_RS
 			| Less_Than_RS
 				->
-				let lt_plus_s : ppl_linear_term = Plus (ppl_linear_term , Variable (!s)) in
+				let lt_plus_s : ppl_linear_term = Plus (ppl_linear_term , Variable (!extra_var)) in
 				Equal (lt_plus_s , zero_term)
 
 		) tight_inequalities in
 
 		(*** Debug print ***)
 		print_message Verbose_standard "  Transformed inequalities:";
-		List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) transformed_inequalities;
+		List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) q_transformed_inequalities;
 
 		(* Find a variable such that its value at the vertex is not integral *)
 		let var = ref 0 in
@@ -4135,16 +4145,16 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
-			print_message Verbose_standard ("  List of variables to remove: " ^ (string_of_list_of_string_with_sep " - " (List.map string_of_int to_remove)));
+			print_message Verbose_standard ("  List of variables to remove: [" ^ (string_of_list_of_string_with_sep " - " (List.map string_of_int to_remove) ^ "]"));
 		);
 
 		(*** WARNING: huge HACK: we locally change the dimensions ***)
 		let old_nb_px_dimensions = !px_dim in
-		set_dimensions !nb_clocks (!px_dim + !s) !nb_parameters;
-		print_message Verbose_standard ("  Extend dimensions to cope for " ^ (string_of_int !s) ^ " extra variable" ^ (s_of_int !s));
+		set_dimensions !nb_clocks (!px_dim + !extra_var) !nb_parameters;
+		print_message Verbose_standard ("  Extend dimensions to cope for " ^ (string_of_int !extra_var) ^ " extra variable" ^ (s_of_int !extra_var));
 
 		(* C++: PPL_Convex_Polyhedron R(Q); *)
-		let r_px_linear_constraint : px_linear_constraint = make_px_constraint transformed_inequalities in
+		let r_px_linear_constraint : px_linear_constraint = make_px_constraint q_transformed_inequalities in
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
@@ -4154,13 +4164,23 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		(* C++: R.unconstrain(toRemove); *)
 		px_hide_assign to_remove r_px_linear_constraint;
 
+		(* Retrieve the inequalities from the aforementioned constraint *)
+		(* C++: PPL_Constraint_System D = R.minimized_constraints(); *)
+		let d_inequalities : linear_inequality list = ippl_get_minimized_inequalities r_px_linear_constraint in
+
+		List.iter (fun (px_linear_inequality : px_linear_inequality) ->
+			(* C++: if (abs(j.coefficient(v)) != 0) *)
+
+			()
+		) d_inequalities;
+
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
 			print_message Verbose_standard ("  Constraint after removal: " ^ (string_of_px_linear_constraint debug_variable_names r_px_linear_constraint));
 		);
 
 		(*** WARNING: huge HACK: we locally change the dimensions ***)
-		print_message Verbose_standard ("  Remove " ^ (string_of_int !s) ^ " extra dimension" ^ (s_of_int !s));
+		print_message Verbose_standard ("  Remove " ^ (string_of_int !extra_var) ^ " extra dimension" ^ (s_of_int !extra_var));
 		set_dimensions !nb_clocks old_nb_px_dimensions !nb_parameters;
 
 		(* Add each transformed inequality to the constraint system *)
