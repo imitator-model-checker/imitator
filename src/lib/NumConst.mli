@@ -12,12 +12,74 @@
  *
  ************************************************************)
  
+(**************************************************)
+(**************************************************)
+(* GMP multi-precision integers *)
+(**************************************************)
+(**************************************************)
+
+(**************************************************)
+(* Type definition *)
+(**************************************************)
+type gmpz = Gmp.Z.t
+
+(**************************************************)
+(** {2 Constants} *)
+(**************************************************)
+
+(* 0, 1, -1 *)
+val gmpz_zero      : gmpz
+val gmpz_one       : gmpz
+val gmpz_minus_one : gmpz
+
+(**************************************************)
+(** {2 Conversion functions} *)
+(**************************************************)
+
+(* Convert an integer to a Gmp.Z *)
+val gmpz_of_int : int -> gmpz
+
+(* Convert a Gmp.Z to a string *)
+val string_of_gmpz : gmpz -> string
+
+(**************************************************)
+(** {2 Arithmetic functions} *)
+(**************************************************)
+
+(* Negation *)
+val gmpz_neg : gmpz -> gmpz
+
+(* Compute ceiling division *)
+val gmpz_cdiv : gmpz -> gmpz -> gmpz
+
+(* Compute floor division *)
+val gmpz_fdiv : gmpz -> gmpz -> gmpz
+
+(* Absolute *)
+val gmpz_abs : gmpz -> gmpz
+
+
+(**************************************************)
+(** {2 Comparison functions} *)
+(**************************************************)
+
+(* Equal *)
+val gmpz_equal : gmpz -> gmpz -> bool
+
+(* Not equal *)
+val gmpz_neq : gmpz -> gmpz -> bool
+
+(**************************************************)
+(**************************************************)
+(* GMP multi-precision rationals *)
+(**************************************************)
+(**************************************************)
 
 (**************************************************)
 (* Type definition *)
 (**************************************************)
 
-type t
+type t = Gmp.Q.t
 
 
 (**************************************************)
@@ -42,17 +104,17 @@ val numconst_of_int : int -> t
 val numconst_of_float : float -> t
 val numconst_of_frac : int -> int -> t
 (* From num and den *)
-val numconst_of_zfrac : Gmp.Z.t -> Gmp.Z.t -> t
+val numconst_of_zfrac : gmpz -> gmpz -> t
 val numconst_of_mpq : Gmp.Q.t -> t
-val numconst_of_mpz : Gmp.Z.t -> t
+val numconst_of_mpz : gmpz -> t
 
 val mpq_of_numconst : t -> Gmp.Q.t
 val to_string : t -> string
 val string_of_numconst : t -> string
 val jani_string_of_numconst : t -> string
 
-val get_num : t -> Gmp.Z.t
-val get_den : t -> Gmp.Z.t
+val get_num : t -> gmpz
+val get_den : t -> gmpz
 
 (**************************************************)
 (* {2 Arithmetic Functions} *)
