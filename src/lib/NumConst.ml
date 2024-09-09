@@ -263,6 +263,8 @@ let numconst_of_mpq m = m
 
 let numconst_of_mpz z = Gmp.Q.from_z z
 
+(* let numconst_of_frac (numerator : gmpz) (denominator : gmpz) = Gmp.Q.of_mpz2 numerator denominator *)
+
 let mpq_of_numconst = get_mpq
 
 let string_of_numconst a =
