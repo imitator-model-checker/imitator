@@ -288,8 +288,8 @@ val set_dimensions : int -> int -> int -> unit
 
 (** Create a linear constraint from a list of linear inequalities *)
 (* val make : linear_inequality list -> linear_constraint *)
-val make_p_constraint : p_linear_inequality list -> p_linear_constraint
-val make_px_constraint : px_linear_inequality list -> px_linear_constraint
+val make_p_constraint   : p_linear_inequality list   -> p_linear_constraint
+val make_px_constraint  : px_linear_inequality list  -> px_linear_constraint
 val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
 (** Create a linear constraint from a single point *)
@@ -349,8 +349,8 @@ val px_nb_dimensions : px_linear_constraint -> int
 
 (** Get the list of dimensions of a constraint *)
 (*** WARNING: to enhance the speed, we do NOT use the PPL function but directly the ad-hoc dimensions encoding! ***)
-val p_get_dimensions_list : p_linear_constraint -> variable list
-val px_get_dimensions_list : px_linear_constraint -> variable list
+val p_get_dimensions_list   : p_linear_constraint   -> variable list
+val px_get_dimensions_list  : px_linear_constraint  -> variable list
 val pxd_get_dimensions_list : pxd_linear_constraint -> variable list
 
 
@@ -358,8 +358,8 @@ val pxd_get_dimensions_list : pxd_linear_constraint -> variable list
 val p_nb_inequalities : p_linear_constraint -> int
 
 (** Get the linear inequalities of a constraint *)
+val p_get_inequalities   : p_linear_constraint   -> p_linear_inequality list
 val pxd_get_inequalities : pxd_linear_constraint -> pxd_linear_inequality list
-val p_get_inequalities : p_linear_constraint -> p_linear_inequality list
 
 (** Return true if the variable is constrained in a linear_constraint *)
 val pxd_is_constrained : pxd_linear_constraint -> variable -> bool

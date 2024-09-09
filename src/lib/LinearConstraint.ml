@@ -117,55 +117,18 @@ let cHECK_ASSERT_DIMENSIONS = true
 
 	let ppl_tcounter_bounds_from_above = create_hybrid_counter_and_register "bounds_from_above" PPL_counter Verbose_low
 	
-
-
-(*let ppl_nb_hull = ref 0
-	let ppl_t_hull = ref 0.0
-	let ppl_tcounter_hull_assign = create_hybrid_counter_and_register "hull_assign" PPL_counter Verbose_low*)
-
-(*let ppl_nb_hull_assign_if_exact = ref 0
-	let ppl_t_hull_assign_if_exact = ref 0.0*)
 	let ppl_tcounter_hull_assign_if_exact = create_hybrid_counter_and_register "hull_assign_if_exact" PPL_counter Verbose_low
 
-(*let ppl_nb_hull_assign_if_exact_true = ref 0
-	let ppl_t_hull_assign_if_exact_true = ref 0.0
-let ppl_nb_hull_assign_if_exact_false = ref 0
-	let ppl_t_hull_assign_if_exact_false = ref 0.0*)
-
-(*let ppl_nb_difference = ref 0
-	let ppl_t_difference = ref 0.0
-	let ppl_tcounter_difference_assign = create_hybrid_counter_and_register "difference_assign" PPL_counter Verbose_low*)
-
-	
-(*let ppl_nb_intersection_assign = ref 0
-	let ppl_t_intersection_assign = ref 0.0*)
 	let ppl_tcounter_intersection_assign = create_hybrid_counter_and_register "intersection_assign" PPL_counter Verbose_low
 
-(*let ppl_nb_unconstrain = ref 0
-	let ppl_t_unconstrain = ref 0.0*)
 	let ppl_tcounter_unconstrain = create_hybrid_counter_and_register "unconstrain" PPL_counter Verbose_low
-	
 
-
-(*let ppl_nb_map = ref 0
-	let ppl_t_map = ref 0.0*)
 	let ppl_tcounter_map_space_dimensions = create_hybrid_counter_and_register "map_space_dimensions" PPL_counter Verbose_low
 
-(*let ppl_nb_preimage = ref 0
-	let ppl_t_preimage = ref 0*)
-
-(*let ppl_nb_remove_dim = ref 0
-	let ppl_t_remove_dim = ref 0.0*)
 	let ppl_tcounter_remove_space_dimensions = create_hybrid_counter_and_register "remove_space_dimensions" PPL_counter Verbose_low
 
-	
-(*let ppl_nb_elapse = ref 0
-	let ppl_t_elapse = ref 0.0*)
 	let ppl_time_elapse_assign = create_hybrid_counter_and_register "time_elapse_assign" PPL_counter Verbose_low
 
-
-(*let ppl_nb_copy_polyhedron = ref 0
-	let ppl_t_copy_polyhedron = ref 0.0*)
 	let ppl_tcounter_copy = create_hybrid_counter_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
 
 	let ppl_nncc_tcounter_space_dimension = create_hybrid_counter_and_register "nncc_tcounter_space_dimension" PPL_counter Verbose_low
@@ -336,7 +299,7 @@ type d_valuation	= (variable -> coef)
 (* Dimensions by type *)
 let nb_parameters	= ref 0
 let nb_clocks		= ref 0
-let nb_rationals = ref 0
+let nb_rationals 	= ref 0
 (* Total numbers of dimensions *)
 let p_dim			= ref 0
 let px_dim			= ref 0
@@ -365,9 +328,6 @@ let debug_variable_names = fun v -> "v_" ^ (string_of_int v)
 let debug_string_of_valuation_gen nb_dimensions valuation : string = List.fold_left (fun current_string current_variable -> current_string ^ (NumConst.string_of_numconst (valuation current_variable)) ^ " & " ) "" (list_of_interval 0 (nb_dimensions - 1))
 let debug_string_of_p_valuation valuation   = debug_string_of_valuation_gen !nb_parameters valuation
 let debug_string_of_px_valuation valuation  = debug_string_of_valuation_gen (!nb_parameters + !nb_clocks) valuation
-
-let is_one (gmp_z : Gmp.Z.t) : bool =
-	Gmp.Z.equal gmp_z Gmp.Z.one
 
 
 (************************************************************)
@@ -959,8 +919,8 @@ let rec string_of_linear_term (names : (variable -> variable_name)) (linear_term
 					| IR_Var  _ -> fstr ^ "*" ^ tstr
 					| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
-let string_of_p_linear_term = string_of_linear_term 
-let string_of_pxd_linear_term = string_of_linear_term 
+let string_of_p_linear_term   = string_of_linear_term
+let string_of_pxd_linear_term = string_of_linear_term
 
 (** Convert a linear term (PPL) into a string *)
 let rec string_of_ppl_linear_term (names : (variable -> variable_name)) (linear_term : ppl_linear_term) =
@@ -1534,8 +1494,9 @@ let string_of_linear_inequality (customized_string : Constants.customized_boolea
 	in
 	lstr ^ opstr ^ rstr
 
-let string_of_pxd_linear_inequality = string_of_linear_inequality default_string
 let string_of_p_linear_inequality   = string_of_linear_inequality default_string
+let string_of_px_linear_inequality  = string_of_linear_inequality default_string
+let string_of_pxd_linear_inequality = string_of_linear_inequality default_string
 
 (*let customized_string_of_pxd_linear_inequality = string_of_linear_inequality
 let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
@@ -1718,9 +1679,9 @@ let substitute_variables sub linear_inequality =
 (* Copy *)
 (*------------------------------------------------------------*)
 
-let copy = ippl_copy_linear_constraint
-let p_copy = ippl_copy_linear_constraint
-let px_copy = ippl_copy_linear_constraint
+let copy     = ippl_copy_linear_constraint
+let p_copy   = ippl_copy_linear_constraint
+let px_copy  = ippl_copy_linear_constraint
 let pxd_copy = ippl_copy_linear_constraint
 
 
@@ -1767,18 +1728,18 @@ let assert_dimensions (nb_dimensions : int) (linear_constraint : linear_constrai
 let set_dimensions (nb_p : int) (nb_c : int) (nb_d : int) : unit =
 	nb_parameters	:= nb_p;
 	nb_clocks 		:= nb_c;
-	nb_rationals		:= nb_d;
+	nb_rationals	:= nb_d;
 	p_dim			:= nb_p;
 	px_dim			:= nb_p + nb_c;
 	pxd_dim			:= nb_p + nb_c + nb_d;
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\nDimensions set");
 		print_message Verbose_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
-		print_message Verbose_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
-		print_message Verbose_high ("  nb_rationals := " ^ (string_of_int !nb_rationals));
-		print_message Verbose_high ("  p_dim := " ^ (string_of_int !p_dim));
-		print_message Verbose_high ("  px_dim := " ^ (string_of_int !px_dim));
-		print_message Verbose_high ("  pxd_dim := " ^ (string_of_int !pxd_dim));
+		print_message Verbose_high ("  nb_clocks     := " ^ (string_of_int !nb_clocks));
+		print_message Verbose_high ("  nb_rationals  := " ^ (string_of_int !nb_rationals));
+		print_message Verbose_high ("  p_dim         := " ^ (string_of_int !p_dim));
+		print_message Verbose_high ("  px_dim        := " ^ (string_of_int !px_dim));
+		print_message Verbose_high ("  pxd_dim       := " ^ (string_of_int !pxd_dim));
 	);
 	()
 
@@ -2026,13 +1987,14 @@ let pxd_get_dimensions_list _ = OCamlUtilities.list_of_interval 0 (!pxd_dim - 1)
 
 (** Get the inequalities of a constraint *)
 let p_get_inequalities   = ippl_get_inequalities
-let px_get_inequalities  = ippl_get_inequalities
+(* let px_get_inequalities  = ippl_get_inequalities *)
 let pxd_get_inequalities = ippl_get_inequalities
 
 (** Get the minimized inequalities of a constraint *)
+let get_minimized_inequalities     = ippl_get_minimized_inequalities
 let p_get_minimized_inequalities   = ippl_get_minimized_inequalities
 let px_get_minimized_inequalities  = ippl_get_minimized_inequalities
-let pxd_get_minimized_inequalities = ippl_get_minimized_inequalities
+(* let pxd_get_minimized_inequalities = ippl_get_minimized_inequalities *)
 
 
 (** Get the number of inequalities of a constraint *)
@@ -2146,7 +2108,7 @@ let partition_lu variables linear_constraints =
 	List.iter (fun linear_constraint ->
 	
 		(* Get the inequalities *)
-		let inequalities = ippl_get_minimized_inequalities linear_constraint in
+		let inequalities = get_minimized_inequalities linear_constraint in
 		
 		(* FOR ALL INEQUALITIES IN THAT CONSTRAINT *)
 		List.iter (function
@@ -2255,7 +2217,7 @@ let string_of_linear_constraint (customized_string : Constants.customized_boolea
 	else
 	
 	(* Get a list of linear inequalities *)
-	let list_of_inequalities = ippl_get_minimized_inequalities linear_constraint in
+	let list_of_inequalities = get_minimized_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
 		customized_string.and_operator
@@ -2287,7 +2249,7 @@ let customized_string_of_pxd_linear_constraint = string_of_linear_constraint
 (*------------------------------------------------------------*)
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
-let intersection_assign nb_dimensions linear_constraint constrs =
+let intersection_assign nb_dimensions (linear_constraint : linear_constraint) (constrs : linear_constraint list) =
 (* 	try( *)
 		List.iter (fun poly ->
 			(* Perform the actual intersection *)
@@ -2300,9 +2262,9 @@ let intersection_assign nb_dimensions linear_constraint constrs =
 	(* If false: stop *)
 (* 	) with Unsat_exception -> () *)
 
-let p_intersection_assign l c = intersection_assign !p_dim l c
-let px_intersection_assign l c = intersection_assign !px_dim l c
-let pxd_intersection_assign l c = intersection_assign !pxd_dim l c
+let p_intersection_assign    l c = intersection_assign !p_dim l c
+let px_intersection_assign   l c = intersection_assign !px_dim l c
+let pxd_intersection_assign  l c = intersection_assign !pxd_dim l c
 let px_intersection_assign_x l c = intersection_assign !px_dim l c
 
 let px_intersection_assign_p px_linear_constraint = function
@@ -2354,8 +2316,8 @@ let intersection (nb_dimensions : int) (linear_constraints : linear_constraint l
 	) with Unsat_exception -> false_constraint ()*)
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_intersection l = intersection !p_dim l
-let px_intersection l = intersection !px_dim l
+let p_intersection   l = intersection !p_dim l
+let px_intersection  l = intersection !px_dim l
 let pxd_intersection l = intersection !pxd_dim l
 
 let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersection !pxd_dim [pxd_linear_constraint; d_linear_constraint]
@@ -2464,8 +2426,8 @@ let hide_assign nb_dimensions variables linear_constraint =
 
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_hide_assign v l = hide_assign !p_dim v l
-let px_hide_assign v l = hide_assign !px_dim v l
+let p_hide_assign   v l = hide_assign !p_dim v l
+let px_hide_assign  v l = hide_assign !px_dim v l
 let pxd_hide_assign v l = hide_assign !pxd_dim v l
 
 
@@ -2478,8 +2440,8 @@ let hide nb_dimensions variables linear_constraint =
 	poly
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_hide v l = hide !p_dim v l
-let px_hide v l = hide !px_dim v l
+let p_hide   v l = hide !p_dim v l
+let px_hide  v l = hide !px_dim v l
 let pxd_hide v l = hide !pxd_dim v l
 
 
@@ -2602,6 +2564,18 @@ let remove_dimensions nb_dimensions linear_constraint =
 
 
 let pxd_remove_dimensions = remove_dimensions
+
+
+(** Keep the lowest nb_dimensions in a linear_constraint *)
+let keep_lowest_dimensions nb_dimensions linear_constraint =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then (
+		print_message Verbose_total ("Function `keep_lowest_dimensions`: keep " ^ (string_of_int nb_dimensions) ^ ".");
+	);
+
+	(* Projects the polyhedron referenced to by handle onto the first space_dimension dimensions *)
+	ippl_remove_higher_dimensions linear_constraint nb_dimensions
+
 
 
 (*------------------------------------------------------------*)
@@ -2793,7 +2767,7 @@ let px_grow_to_zero_assign variables_elapse variables_constant linear_constraint
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
 let render_non_strict_p_linear_constraint k =
 	(* Get the list of inequalities *)
-	let inequality_list = ippl_get_minimized_inequalities k in
+	let inequality_list = p_get_minimized_inequalities k in
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
 
@@ -2991,8 +2965,8 @@ let exhibit_point nb_dimensions linear_constraint =
 	(fun variable -> valuations.(variable))
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_exhibit_point l = exhibit_point !p_dim l
-let px_exhibit_point l = exhibit_point !px_dim l
+let p_exhibit_point   l = exhibit_point !p_dim l
+let px_exhibit_point  l = exhibit_point !px_dim l
 let pxd_exhibit_point l = exhibit_point !pxd_dim l
 
 
@@ -3338,9 +3312,9 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 	
 	(* Retrieve the operator *)
 	let operator = match linear_inequality with
-		| Less_Than _ -> if positive_parameter then Op_l else Op_g
-		| Less_Or_Equal _ -> if positive_parameter then Op_le else Op_ge
-		| Greater_Than _ -> if positive_parameter then Op_g else Op_l
+		| Less_Than _        -> if positive_parameter then Op_l else Op_g
+		| Less_Or_Equal _    -> if positive_parameter then Op_le else Op_ge
+		| Greater_Than _     -> if positive_parameter then Op_g else Op_l
 		| Greater_Or_Equal _ -> if positive_parameter then Op_ge else Op_le
 		| Equal _ -> Op_eq
 	in
@@ -3442,8 +3416,8 @@ let intersection_straight_line d1 d2 =
 (* test if a point belong to a square line *)
 let point_on_line p min_abs min_ord max_abs max_ord =
 	match p with 
-		|Dot (a,b) when ((min_abs <= a) && (a <= max_abs) && (min_ord <= b) && (b <= max_ord)) -> true
-		|_ -> false
+		| Dot (a,b) when ((min_abs <= a) && (a <= max_abs) && (min_ord <= b) && (b <= max_ord)) -> true
+		| _ -> false
 
 
 (* convert a linear constraint into two lists, one containing the points and the other containing the ray *)
@@ -4022,14 +3996,14 @@ let non_integer_points (px_linear_constraint : px_linear_constraint) : ppl_linea
 	List.filter ( fun linear_generator ->
 		match linear_generator with
 		| Ppl.Point (_, coefficient) ->
-			not (is_one coefficient)
+			not (NumConst.gmpz_is_one coefficient)
 		| _ -> false
 	) generator_system
 
 (* Transform a Point into a valuation *)
 let px_valuation_of_Ppl_Point (linear_generator : ppl_linear_generator) : px_valuation =
 	(* Get the Ppl.Point *)
-	let (linear_expression : ppl_linear_term) , (coefficient : Gmp.Z.t) = match linear_generator with
+	let (linear_expression : ppl_linear_term) , (denominator : NumConst.gmpz) = match linear_generator with
 		| Ppl.Point (linear_expression, coefficient) -> linear_expression, coefficient
 		| _ -> raise (InternalError ("Ppl.Point expected in px_valuation_of_Ppl_Point"))
 	in
@@ -4038,10 +4012,13 @@ let px_valuation_of_Ppl_Point (linear_generator : ppl_linear_generator) : px_val
 		(*** WARNING: no verification that the variable belongs to [px] variables ***)
 		(* Get the coefficient in the generator *)
 		let numerator = get_variable_coef_in_linear_term variable linear_expression in
-		NumConst.div (NumConst.numconst_of_mpz numerator) (NumConst.numconst_of_mpz coefficient)
+		(*** TODO: strange to convert to NumConst first? ***)
+		NumConst.div (NumConst.numconst_of_mpz numerator) (NumConst.numconst_of_mpz denominator)
 	)
 
+(* Debug printing for a Ppl.Point *)
 let debug_print_point (linear_generator : ppl_linear_generator) : unit =
+	print_message Verbose_standard ("**   debug_print_point:");
 	match linear_generator with
 	| Ppl.Point (linear_expression,  coefficient) ->
 		print_message Verbose_standard ("**** Linear expression  " ^ (string_of_ppl_linear_term debug_variable_names linear_expression));
@@ -4052,19 +4029,12 @@ let debug_print_point (linear_generator : ppl_linear_generator) : unit =
 
 	| _ -> ()
 
-(*(* Retrieve the value for a variable in a Ppl.Point; if the ppl_linear_generator is not a point, then this is a problem *)
-let get_variable_coefficient_in_point (linear_generator : ppl_linear_generator) (variable : variable) : NumConst.t =
-	| Ppl.Point (linear_expression,  coefficient) ->
-		TODO
-	| _ -> InternalError "get_variable_coefficient_in_point called on a ppl_linear_generator which is not a Ppl.Point"
-
-	raise (NotImplemented "plop")*)
-
+(* Check whether a px_linear_inequality is tight wrt a point, i.e., whether the valuation of the inequality with this point is 0 *)
 let is_px_linear_inequality_tight (px_valuation : px_valuation) (px_linear_inequality : px_linear_inequality) : bool =
 	(* Debug: print inequality *)
 	print_message Verbose_standard ("Considering inequality: " ^ (string_of_linear_inequality Constants.default_string debug_variable_names px_linear_inequality));
 
-	(* Recreate a linear term from the px_linear_inequality *)
+	(* Recreate a (single) linear term from the px_linear_inequality *)
 	let (ppl_linear_term : ppl_linear_term), (_ : ppl_op) = linear_term_and_op_of_linear_inequality px_linear_inequality in
 	(* Evaluate the linear term *)
 	let evaluation : NumConst.t = evaluate_linear_term_ppl px_valuation ppl_linear_term in
@@ -4081,32 +4051,61 @@ let is_px_linear_inequality_tight (px_valuation : px_valuation) (px_linear_inequ
 (* C++: PPL_Constraint romeo::Polyhedron::divide_and_floor(const PPL_Constraint& c, POLY_COEFFICIENT_TYPE p) *)
 let divide_and_floor (c : px_linear_inequality) (p : coef_ppl) : px_linear_inequality =
 
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard "°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°";
+		print_message Verbose_standard ("Entering divide_and_floor(" ^ (string_of_px_linear_inequality debug_variable_names c) ^ " , " ^ (NumConst.string_of_gmpz p) ^ ")");
+	);
+
 	(* First, build the constant *)
 
 	(* C++: r = -c.inhomogeneous_term(); *)
+	(*** WARNING: which side of the inequality? ***)
 	let r : NumConst.gmpz = NumConst.gmpz_neg (get_coefficient_in_linear_inequality c) in
 
     (*C++: mpz_cdiv_q(q.get_mpz_t(),r.get_mpz_t(),p.get_mpz_t());*)
-    (*** WARNING: r and p must be integers here! ***)
+    (*** NOTE: r and p are integers (from Z) here ***)
     let q : NumConst.gmpz = NumConst.gmpz_cdiv r p in
 
-    (* C++: L-= q; *)
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("     For the coefficient, we have q = cdiv(" ^ (NumConst.string_of_gmpz r) ^ "/" ^ (NumConst.string_of_gmpz p) ^ ") = " ^ (NumConst.string_of_gmpz q) ^ "");
+	);
+
+    (* C++: L -= q; *)
     let l : ppl_linear_term ref = ref (Unary_Minus (Coefficient q)) in
+
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  l = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
+	);
 
 	(* Second, iterate over variables *)
 
     (* C++: for (unsigned i=0; i< c.space_dimension(); i++) *)
 	for i = 0 to !px_dim - 1 do
 		(* C++: r = -c.coefficient(PPL_Variable(i)); *)
+		(*** WARNING: which side of the inequality? ***)
 		let r : NumConst.gmpz = NumConst.gmpz_neg (get_variable_coefficient_in_linear_inequality i c) in
 
 		(* C++: mpz_fdiv_q(q.get_mpz_t(),r.get_mpz_t(),p.get_mpz_t()); *)
 		let q : NumConst.gmpz = NumConst.gmpz_fdiv r p in
 
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("     For " ^ (debug_variable_names i) ^ ", we have q = fdiv(" ^ (NumConst.string_of_gmpz r) ^ "/" ^ (NumConst.string_of_gmpz p) ^ ") = " ^ (NumConst.string_of_gmpz q) ^ "");
+		);
+
 		(* C++: L -= q*PPL_Variable(i); *)
 		l := Minus (!l, Times(q , Variable i));
+
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  l = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
+		);
 	done;
 
+	let result =
 	(* C++:; if (c.is_strict_inequality() && !close) *)
 	if is_strict_inequality c then(
 		(* return (L > 0); *)
@@ -4115,30 +4114,50 @@ let divide_and_floor (c : px_linear_inequality) (p : coef_ppl) : px_linear_inequ
 		(* return (L >= 0); *)
 		Greater_Or_Equal (!l , zero_term)
 	)
+	in
+
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard "°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°";
+	);
+
+	result
 
 
 (*------------------------------------------------------------*)
 (* Compute the integer hull of a px_linear_constraint [JLR15]; code partially inspired by Romeo's construction for IH *)
 (*------------------------------------------------------------*)
 let ih (px_linear_constraint : px_linear_constraint) =
-	print_message Verbose_standard "************************************************************";
-	print_message Verbose_standard "Entering IH";
-	print_message Verbose_standard (string_of_px_linear_constraint debug_variable_names px_linear_constraint);
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard "************************************************************";
+		print_message Verbose_standard "Entering IH";
+		print_message Verbose_standard (string_of_px_linear_constraint debug_variable_names px_linear_constraint);
+	);
 
 	(* Get the generator *)
 	let generator_system = ippl_get_minimized_generators px_linear_constraint in
 
 	(* Debug print *)
-	List.iter ( fun linear_generator ->
-		match linear_generator with
-		| Ppl.Point _ ->
-			debug_print_point linear_generator;
-(* 			if is_one coefficient then (); *)
-		| _ -> ()
-	) generator_system;
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  List of points:");
+		List.iter ( fun linear_generator ->
+			match linear_generator with
+			| Ppl.Point _ -> debug_print_point linear_generator
+			| _ -> ()
+		) generator_system;
+	);
 
 	(* Retrieve the number of dimensions *)
-	let nb_dimensions = !nb_parameters + !nb_clocks in
+	let current_nb_px_dimensions = !nb_parameters + !nb_clocks in
+
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  Dimensions = (" ^ (string_of_int !nb_parameters) ^ "/" ^ (string_of_int (!nb_clocks)) ^ "/" ^ (string_of_int !nb_rationals) ^ "), i.e., " ^ (string_of_int current_nb_px_dimensions) ^ " px-dimensions.");
+	);
+
+	(* Copy the constraint, into what will become the result *)
+	let p : px_linear_constraint = px_copy px_linear_constraint in
 
 	(* Retrieve the non-integer points *)
 	let non_integer_points : ppl_linear_generator list = non_integer_points px_linear_constraint in
@@ -4148,12 +4167,14 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		(* Convert to valuation *)
 		let px_valuation = px_valuation_of_Ppl_Point linear_generator in
 
-		print_message Verbose_standard "------------------------------------------------------------";
-		print_message Verbose_standard "  Considering the following valuation: ";
-		print_message Verbose_standard (debug_string_of_px_valuation px_valuation);
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard "------------------------------------------------------------";
+			print_message Verbose_standard "  Considering the following valuation: ";
+			print_message Verbose_standard (debug_string_of_px_valuation px_valuation);
+		);
 
 		(* Get inequalities *)
-		let px_inequalities : px_linear_inequality list = px_get_minimized_inequalities px_linear_constraint in
+		let px_inequalities : px_linear_inequality list = px_get_minimized_inequalities p in
 
 		(* Filter only those inequalities which are tight for this point *)
 
@@ -4164,10 +4185,16 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) tight_inequalities;
 
 		(* `extra_var` is an extra dimension for each inequality *)
-		let extra_var = ref nb_dimensions in
+		let extra_var = ref current_nb_px_dimensions in
 
 		(* For each inequality *)
-		let q_transformed_inequalities : px_linear_inequality list = List.map (fun px_linear_inequality : px_linear_inequality ->
+		let q : px_linear_inequality list ref = ref (List.map (fun px_linear_inequality : px_linear_inequality ->
+
+			if verbose_mode_greater Verbose_standard then(
+				print_message Verbose_standard "  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- ";
+				print_message Verbose_standard "    Considering the following inequality: ";
+				print_message Verbose_standard (string_of_px_linear_inequality debug_variable_names px_linear_inequality);
+			);
 
 			(* Get two linear terms from the px_linear_inequality *)
 			let (ppl_linear_term : ppl_linear_term), (op : ppl_op) = linear_term_and_op_of_linear_inequality px_linear_inequality in
@@ -4196,17 +4223,26 @@ let ih (px_linear_constraint : px_linear_constraint) =
 				incr extra_var;
 				Equal (lt_plus_s , zero_term)
 
-		) tight_inequalities in
+		) tight_inequalities) in
+
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard "  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n";
+		);
+
+		let additional_dimensions = !extra_var - current_nb_px_dimensions in
 
 		(*** Debug print ***)
-		print_message Verbose_standard "  Transformed inequalities:";
-		List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) q_transformed_inequalities;
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Transformed inequalities (including " ^ (string_of_int additional_dimensions) ^ " new extra variables) Q:");
+			List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) !q;
+		);
 
 		(* Find a variable such that its value at the vertex is not integral *)
+		(*** NOTE: exists necessarily as the current point is not an integer point ***)
 		let var = ref 0 in
 		let noninteger_found = ref false in
 (* 		C++: for (var = 0; var < nv && i.coefficient(PPL_Variable(var)) % i.divisor() == 0; var++); *)
-		while not !noninteger_found && !var < nb_dimensions do
+		while not !noninteger_found && !var < current_nb_px_dimensions do
 			if not (NumConst.is_integer ((px_valuation_of_Ppl_Point linear_generator) !var)) then(
 				noninteger_found := true
 			)else(
@@ -4215,10 +4251,12 @@ let ih (px_linear_constraint : px_linear_constraint) =
 		done;
 
 		(*** Debug print ***)
-		print_message Verbose_standard ("  Found variable with non-integer coefficient: " ^ (string_of_int !var));
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Found variable " ^ (string_of_int !var) ^ " with non-integer coefficient " ^ (NumConst.string_of_numconst ((px_valuation_of_Ppl_Point linear_generator) !var)) ^ "");
+		);
 
 		(* Prepare to remove all variable dimensions except var (and the extra variables) *)
-		let to_remove = OCamlUtilities.list_remove_first_occurence !var (OCamlUtilities.list_of_interval 0 (nb_dimensions - 1)) in
+		let to_remove = OCamlUtilities.list_remove_first_occurence !var (OCamlUtilities.list_of_interval 0 (current_nb_px_dimensions - 1)) in
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
@@ -4227,70 +4265,161 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 		(*** WARNING: huge HACK: we locally change the dimensions ***)
 		let old_nb_px_dimensions = !px_dim in
-		set_dimensions !nb_clocks (!px_dim + !extra_var) !nb_parameters;
-		print_message Verbose_standard ("  Extend dimensions to cope for " ^ (string_of_int !extra_var) ^ " extra variable" ^ (s_of_int !extra_var));
-
-		(* C++: PPL_Convex_Polyhedron R(Q); *)
-		let r_px_linear_constraint : px_linear_constraint = make_px_constraint q_transformed_inequalities in
+		let old_nb_clocks = !nb_clocks in
+		let old_nb_parameters = !nb_parameters in
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
-			print_message Verbose_standard ("  Constraint before removal: " ^ (string_of_px_linear_constraint debug_variable_names r_px_linear_constraint));
+			print_message Verbose_standard ("  IMPORTANT: Extending dimensions from (" ^ (string_of_int !nb_parameters) ^ "/" ^ (string_of_int (!nb_clocks)) ^ "/" ^ (string_of_int !nb_rationals) ^ ") to (" ^ (string_of_int !nb_parameters) ^ "/" ^ (string_of_int (!nb_clocks + additional_dimensions)) ^ "/" ^ (string_of_int !nb_rationals) ^ "), in order to cope for " ^ (string_of_int additional_dimensions) ^ " extra variable" ^ (s_of_int additional_dimensions));
+		);
+
+		set_dimensions !nb_parameters (!nb_clocks + additional_dimensions) !nb_rationals; (*** NOTE: we do not use rationals here ***)
+
+		(* C++: PPL_Convex_Polyhedron R(Q); *)
+		let r_px_linear_constraint : px_linear_constraint = make_px_constraint !q in
+
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Constraint R before removal: " ^ (string_of_px_linear_constraint debug_variable_names r_px_linear_constraint));
 		);
 
 		(* C++: R.unconstrain(toRemove); *)
 		px_hide_assign to_remove r_px_linear_constraint;
 
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Constraint R after removal: " ^ (string_of_px_linear_constraint debug_variable_names r_px_linear_constraint));
+		);
+
 		(* Retrieve the inequalities from the aforementioned constraint *)
 		(* C++: PPL_Constraint_System D = R.minimized_constraints(); *)
-		let d_inequalities : linear_inequality list = ippl_get_minimized_inequalities r_px_linear_constraint in
+		let d_inequalities : linear_inequality list = get_minimized_inequalities r_px_linear_constraint in
 
 		List.iter (fun (j_px_linear_inequality : px_linear_inequality) ->
+			(*** Debug print ***)
+			if verbose_mode_greater Verbose_standard then(
+				print_message Verbose_standard "    -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ";
+				print_message Verbose_standard "    Considering the following linear inequality:";
+				print_message Verbose_standard (string_of_px_linear_inequality debug_variable_names j_px_linear_inequality);
+			);
+
 			(* C++: if (abs(j.coefficient(v)) != 0) *)
 			let (j_lt : ppl_linear_term) , _ = linear_term_and_op_of_linear_inequality j_px_linear_inequality in
+
+			(*** Debug print ***)
+			if verbose_mode_greater Verbose_standard then(
+				print_message Verbose_standard "    Linear term:";
+				print_message Verbose_standard (string_of_ppl_linear_term debug_variable_names j_lt);
+			);
+
 			let coef_v : coef_ppl = get_variable_coef_in_linear_term !var j_lt in
 			let abs_coef_v : coef_ppl = NumConst.gmpz_abs coef_v in
+
+			(*** Debug print ***)
+			if verbose_mode_greater Verbose_standard then(
+				print_message Verbose_standard ("    Absolute coefficient of variable " ^ (string_of_int !var) ^ ": " ^ (NumConst.string_of_gmpz abs_coef_v));
+			);
+
 			if NumConst.gmpz_neq abs_coef_v NumConst.gmpz_zero then(
 				(* C++: PPL_Linear_Expression e = ppl_linear_expression(j); *)
 				let e : ppl_linear_term = j_lt in
 
 				(* C++: Q.insert(divide_and_floor((e <= 0), abs(j.coefficient(v)))); *)
-				let e_leq_0 = Less_Or_Equal (e , zero_term) in
-				(*** TODO ***)
-				let _ = divide_and_floor e_leq_0 abs_coef_v in
+				let e_leq_0 : px_linear_inequality = Less_Or_Equal (e , zero_term) in
+
+				(*** Debug print ***)
+				if verbose_mode_greater Verbose_standard then(
+					print_message Verbose_standard "    Pass the following linear inequality to divide_and_floor:";
+					print_message Verbose_standard (string_of_px_linear_inequality debug_variable_names e_leq_0);
+				);
+
+				let new_linear_inequality : px_linear_inequality = divide_and_floor e_leq_0 abs_coef_v in
+
+				(*** Debug print ***)
+				if verbose_mode_greater Verbose_standard then(
+					print_message Verbose_standard "    Add the following linear inequality to Q:";
+					print_message Verbose_standard (string_of_px_linear_inequality debug_variable_names new_linear_inequality);
+				);
+
+				q := new_linear_inequality :: !q;
 
 				()
 
 			);
-
-			let ppl_Variable v = Variable !var in
-
-			()
 		) d_inequalities;
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard "    -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - \n";
+		);
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
-			print_message Verbose_standard ("  Constraint after removal: " ^ (string_of_px_linear_constraint debug_variable_names r_px_linear_constraint));
+			print_message Verbose_standard ("  Q = ");
+			List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) !q;
+		);
+
+		(* Remove all slack variables *)
+		(* C++: PPL_Convex_Polyhedron T(Q); *)
+		let t = make_px_constraint !q in
+
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Constraint T: " ^ (string_of_px_linear_constraint debug_variable_names t));
+		);
+
+		(* C++: T.remove_higher_space_dimensions(T.space_dimension() - extra_vars); *)
+		let nb_dimensions_to_remove = (!extra_var - old_nb_px_dimensions) in
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  About to remove " ^ (string_of_int nb_dimensions_to_remove) ^ " dimension" ^ (s_of_int nb_dimensions_to_remove) ^ " (" ^ (string_of_int !extra_var) ^ " dimension" ^ (s_of_int !extra_var) ^ " including extra variables, minus " ^ (string_of_int old_nb_px_dimensions) ^ " original dimension" ^ (s_of_int old_nb_px_dimensions) ^ ") in constraint T");
+		);
+		remove_dimensions nb_dimensions_to_remove t;
+
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Constraint T after dimensions removal: " ^ (string_of_px_linear_constraint debug_variable_names t));
 		);
 
 		(*** WARNING: huge HACK: we locally change the dimensions ***)
-		print_message Verbose_standard ("  Remove " ^ (string_of_int !extra_var) ^ " extra dimension" ^ (s_of_int !extra_var));
-		set_dimensions !nb_clocks old_nb_px_dimensions !nb_parameters;
+		print_message Verbose_standard ("  IMPORTANT: Removing " ^ (string_of_int !extra_var) ^ " extra dimension" ^ (s_of_int !extra_var));
+		set_dimensions old_nb_parameters old_nb_clocks !nb_rationals; (*** NOTE: nb_rationals unchanged ***)
 
-		(* Add each transformed inequality to the constraint system *)
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Dimensions = (" ^ (string_of_int !nb_parameters) ^ "/" ^ (string_of_int (!nb_clocks)) ^ "/" ^ (string_of_int !nb_rationals) ^ "), i.e., " ^ (string_of_int !px_dim) ^ " px-dimensions.");
+		);
+
+		(* C++: T.add_space_dimensions_and_embed(P.space_dimension() - T.space_dimension()); *)
+		(* Not necessary here *)
+
+		(* add the new constraints to P *)
+		(* C++: P.intersection_assign(T); *)
+		px_intersection_assign p [t];
+
+		(*** Debug print ***)
+		if verbose_mode_greater Verbose_standard then(
+			print_message Verbose_standard ("  Constraint P after intersection with T: " ^ (string_of_px_linear_constraint debug_variable_names p));
+		);
 
 		()
 
 	) non_integer_points;
 
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  Almost final constraint P: " ^ (string_of_px_linear_constraint debug_variable_names p));
+	);
 
-(* 	get_variable_coef_in_linear_term (v : variable) (linear_term : ppl_linear_term) : NumConst.t option *)
+	(* If strict constraints: intersect with the original polyhedron *)
+	(*** NOTE: out of simplicity, let's do it anyway ***)
+	px_intersection_assign p [px_linear_constraint];
 
-	print_message Verbose_standard "";
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  Final constraint P after intersection with the original polyhedron: " ^ (string_of_px_linear_constraint debug_variable_names p));
+	);
 
-	(*** TODO: if strict constraints: intersect with the original polyhedron ***)
-
-	()
+	(* Return p *)
+	p
 
 
 (************************************************************)
@@ -4542,7 +4671,7 @@ let string_of_x_nnconvex_constraint = string_of_p_nnconvex_constraint
 (* {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
+(** Performs the intersection of an nnconvex_constraint with a linear_constraint; the nnconvex_constraint is modified, the linear_constraint is not *)
 let nnconvex_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nnconvex_constraint) (linear_constraint : linear_constraint) =
 
 
@@ -4563,7 +4692,7 @@ let nnconvex_intersection_assign (nb_dimensions : int) (nnconvex_constraint : nn
 	);
 
 	(* First retrieve inequalities *)
-	let constraint_system =  ippl_get_minimized_inequalities linear_constraint in
+	let constraint_system =  get_minimized_inequalities linear_constraint in
 
 	ippl_nncc_add_constraints nnconvex_constraint constraint_system;
 
@@ -4904,7 +5033,7 @@ let get_clock_sign_from_term term =
 		None
 
 (* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
-let close_clocks_px_linear_constraint k = 
+let close_clocks_px_linear_constraint (k : px_linear_constraint) =
 	let strict_to_not_strict_clock inequality =
 		match inequality with
 		| Less_Than (x,y) | Greater_Than (y,x) -> 
@@ -4919,7 +5048,7 @@ let close_clocks_px_linear_constraint k =
 		|_ -> inequality
 	in
 	(* Get the list of inequalities *)
-	let inequality_list = ippl_get_minimized_inequalities k in
+	let inequality_list = px_get_minimized_inequalities k in
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
 
@@ -4956,9 +5085,9 @@ let extract_const_bound bound_type bound_shape linear_constraint variable =
 	else None*)
 
 		
-let generic_temporal_bound_px_linear_constraint bound_type bound_shape k =
+let generic_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_linear_constraint) =
 	let closed_clocks = close_clocks_px_linear_constraint k in 
-	let inequality_list = ippl_get_minimized_inequalities closed_clocks in
+	let inequality_list = px_get_minimized_inequalities closed_clocks in
 	let bound_equalities = List.filter_map (fun inequality -> extract_parametric_bound bound_type bound_shape inequality) inequality_list in 
 	let bounds = List.map (
 		fun equality -> make_px_constraint (equality::inequality_list)
@@ -5349,7 +5478,7 @@ let unserialize_linear_inequality linear_inequality_string =
 (** Serialize a linear constraint *)
 let serialize_p_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
-	let list_of_inequalities = List.map serialize_linear_inequality (ippl_get_minimized_inequalities linear_constraint) in
+	let list_of_inequalities = List.map serialize_linear_inequality (get_minimized_inequalities linear_constraint) in
 	(* Add separators *)
 	String.concat serialize_SEP_AND list_of_inequalities
 
@@ -5729,8 +5858,8 @@ let c = NumConst.gmpz_fdiv a b in
 print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
 
 
-ih polyhedron1;
-ih polyhedron2;
+let _ = ih polyhedron1 in
+let _ = ih polyhedron2 in
 
 let nIP = non_integer_points polyhedron2 in
 	List.iter debug_print_point nIP;
