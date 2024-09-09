@@ -80,6 +80,9 @@ let gmpz_equal (a : gmpz) (b : gmpz) : bool =
 let gmpz_neq (a : gmpz) (b : gmpz) : bool =
 	(Gmp.Z.cmp a b) <> 0
 
+let is_one (gmp_z : gmpz) : bool =
+	gmpz_equal gmp_z gmpz_one
+
 
 (**************************************************)
 (**************************************************)
