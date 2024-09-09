@@ -134,6 +134,10 @@ class imitator_options :
 
 		(* In game algorithms: propagate losing states *)
 		method ptg_propagate_losing_states	: bool
+		
+		(* In game algorithms: use classic semantic where the environment cannot be forced to take an action 
+			 even if not doing so violates an invarant *)
+		method ptg_no_forced_uncontrollables: bool
 
 		method pi_compatible				: bool
 		method precomputepi0				: bool

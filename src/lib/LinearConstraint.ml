@@ -5011,6 +5011,7 @@ let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnc
 
 type bound_type = Upper | Lower
 type sign = P | M
+type strictness = Strict | Not_Strict
 let negate = function P -> M | M -> P
 
 (* From a term, extract a clock and its sign if there is exactly one clock *)
@@ -5055,45 +5056,42 @@ let close_clocks_px_linear_constraint (k : px_linear_constraint) =
 
 
 let extract_parametric_bound bound_type bound_shape inequality = 
+	let strictness = match inequality with
+	| Greater_Than _ | Less_Than _ -> Strict 
+	| _ -> Not_Strict
+	in
 	match inequality with 
-	| Less_Or_Equal (t1,t2) 
-	| Greater_Or_Equal (t2,t1) -> 
+	| Less_Or_Equal (t1,t2) | Less_Than (t1,t2)
+	| Greater_Or_Equal (t2,t1) | Greater_Than (t2,t1)-> 
 		begin
 			let t1_sign = get_clock_sign_from_term t1 in 
 			let t2_sign = get_clock_sign_from_term t2 in 
 			match bound_type, t1_sign, t2_sign with 
-			| Upper, Some P, None -> Some (bound_shape P t1 t2)
-			| Lower, Some M, None -> Some (bound_shape M t1 t2)
-			| Upper, None, Some M -> Some (bound_shape M t2 t1) 
-			| Lower, None, Some P -> Some (bound_shape P t2 t1)
+			| Upper, Some P, None -> Some (bound_shape P t1 t2, strictness)
+			| Lower, Some M, None -> Some (bound_shape M t1 t2, strictness)
+			| Upper, None, Some M -> Some (bound_shape M t2 t1, strictness) 
+			| Lower, None, Some P -> Some (bound_shape P t2 t1, strictness)
 			| _ -> None
 		end
 	| _ -> None
-
-
-(*
-(*** NOTE: commented out by Étienne 2024/08/29: unused ***)
-let extract_const_bound bound_type bound_shape linear_constraint variable = 
-	let bounding_function = match bound_type with 
-	 | Upper -> ippl_maximize
-	 | Lower -> ippl_minimize
-	in
-	let is_bounded, numerator, denominator, _ = bounding_function linear_constraint (Variable variable) in
-	if is_bounded then 
-		let bound = ppl_linear_expression_of_linear_term @@ IR_Coef (NumConst.numconst_of_zfrac numerator denominator) in
-		Some (bound_shape (Variable variable) bound)
-	else None*)
-
 		
 let generic_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_linear_constraint) =
 	let closed_clocks = close_clocks_px_linear_constraint k in 
-	let inequality_list = px_get_minimized_inequalities closed_clocks in
+	let inequality_list = px_get_minimized_inequalities k in 
+	let inequality_list_closed = px_get_minimized_inequalities closed_clocks in
 	let bound_equalities = List.filter_map (fun inequality -> extract_parametric_bound bound_type bound_shape inequality) inequality_list in 
-	let bounds = List.map (
+	let bound_equalities_from_strict = List.map fst (List.filter (fun (_, strictness) -> strictness = Strict) bound_equalities) in 
+	let bound_equalities_from_not_strict = List.map fst (List.filter (fun (_, strictness) -> strictness = Not_Strict) bound_equalities) in 
+	let bounds_out = List.map (
+		fun equality -> make_px_constraint (equality::inequality_list_closed)
+	) bound_equalities_from_strict in 
+
+	let bounds_in = List.map (
 		fun equality -> make_px_constraint (equality::inequality_list)
-	) bound_equalities in 
-	
-	px_nnconvex_constraint_of_px_linear_constraints bounds
+	) bound_equalities_from_not_strict in 
+
+	px_nnconvex_constraint_of_px_linear_constraints bounds_in, (* IN - bounds inside of input *)
+	px_nnconvex_constraint_of_px_linear_constraints bounds_out (* OUT - bounds outside of input *)
 
 (* Computes the 'face' of a px_linear constraint - either the upper or lower *)
 let precise_temporal_upper_bound_px_linear_constraint = 

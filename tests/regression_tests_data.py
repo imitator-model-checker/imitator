@@ -27962,7 +27962,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy09.res' , 'content' : """
 BEGIN CONSTRAINT
-False
+True
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -27988,7 +27988,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy10.res' , 'content' : """
 BEGIN CONSTRAINT
-False
+True
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -28066,7 +28066,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy13.res' , 'content' : """
 BEGIN CONSTRAINT
-False
+True
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -28144,7 +28144,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy16.res' , 'content' : """
 BEGIN CONSTRAINT
-False
+True
 END CONSTRAINT
 
 ------------------------------------------------------------

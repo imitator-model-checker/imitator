@@ -5,10 +5,14 @@ open StateSpace
 open AbstractValue
 
 
+type strategy_action = 
+  | Wait
+  | Action of action_index
+
 type strategy_entry = {
-  action : action_index;
-  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
   winning_move : LinearConstraint.px_nnconvex_constraint;
+  action : strategy_action;
+  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
 }
 
 type location_strategy = strategy_entry list
