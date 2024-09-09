@@ -69,7 +69,7 @@ val gmpz_equal : gmpz -> gmpz -> bool
 (* Not equal *)
 val gmpz_neq : gmpz -> gmpz -> bool
 
-val is_one : gmpz -> bool
+val gmpz_is_one : gmpz -> bool
 
 
 
