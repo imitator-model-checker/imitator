@@ -12,10 +12,14 @@ class ['a] array (ls : 'a list) = object
   method get = Array.get internal_array 
 end
 
+type strategy_action = 
+  | Wait
+  | Action of action_index
+
 type strategy_entry = {
-  action : action_index;
-  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
   winning_move : LinearConstraint.px_nnconvex_constraint;
+  action : strategy_action;
+  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
 }
 
 
@@ -31,7 +35,6 @@ class locationUnionZoneMap =
 [location_index list,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
 LinearConstraint.false_px_nnconvex_constraint
 
-
 let format_zone_string (string : string) = 
   let b = Buffer.create 10 in
   String.iter (fun c -> if c == '\n' then Buffer.add_char b ' ' else Buffer.add_char b c) string;
@@ -39,10 +42,13 @@ let format_zone_string (string : string) =
 
 let string_of_strategy_entry (model : abstract_model) (strategy_entry : strategy_entry) = 
   let {action;prioritized_winning_zone;winning_move} = strategy_entry in 
-  Printf.sprintf "\t(Action: %s, Winning Zone: %s, Winning Move: %s)" 
-  (model.action_names action) 
-  (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names prioritized_winning_zone))
-  (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names winning_move))
+  match action with 
+  | Wait -> Printf.sprintf "\t(When: %s, then wait until: environment takes an action)" 
+    (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names prioritized_winning_zone))
+  | Action action -> Printf.sprintf "\t(When: %s, then wait until: (%s) and then do action: %s)"
+    (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names prioritized_winning_zone))
+    (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names winning_move))
+    (model.action_names action) 
 
 
 let string_of_state_strategy (model : abstract_model) (state_strategy : location_strategy) = 

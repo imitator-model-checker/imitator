@@ -266,6 +266,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val mutable termination_status = Regular_termination
 
 	val winningZone = new unionZoneMap
+	val forcedMoves = new unionZoneMap
 	val losingZone = new unionZoneMap
 	val depends = new dependsMap
 
@@ -372,6 +373,30 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		result 
 
 	
+	(* Compute the forced moves of a state *)
+	method private save_forced_moves state_index = 
+		let uncontrollable_edges = self#get_uncontrollable_edges state_index in
+		let uncontrollable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun {transition;_} -> 
+				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
+				uncontrollable_edges
+		in 
+		let uncontrollable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+			List.map LinearConstraint.close_clocks_px_linear_constraint @@ 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_guards 
+		in
+
+		let invariant = self#constr_of_state_index state_index in 
+		let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
+		
+		LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_guards;
+		LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_guards_closed;
+
+		LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
+		forcedMoves#replace state_index inv_bound_in;
+		print_PTG (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names inv_bound_in))
+		
+
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 
 		if options#cumulative_pruning then 
@@ -396,6 +421,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				coverage_pruning := true
 			end;
 
+		(* TODO: Rewrite deadlock detection after new forced uncontrollable semantics *)
 		if self#is_dead_lock state' then 
 			begin
 				if options#ptg_propagate_losing_states then 
@@ -415,14 +441,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					waiting #<-- (self#get_edge_queue state');
 					print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
 		end;
+		if not options#ptg_no_forced_uncontrollables then 
+			print_message Verbose_standard "Test";
+			self#save_forced_moves state';
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
 	method private edge_set_to_queue_with_status edge_set status = 
 		new normalQueue @@ List.map (fun e -> (e, status)) (edge_set#to_list)
 
 
-	method private backtrack_convex_winning_move edge bad_zone (winning_move_conv : LinearConstraint.px_linear_constraint) =
-		let {state; action;_} = edge in 
+	method private process_convex_winning_move state action bad_zone (winning_move_conv : LinearConstraint.px_linear_constraint) =
 		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move_conv bad_zone in
 
 		let locations = Array.to_list (DiscreteState.get_locations (state_space#get_state state).global_location) in 
@@ -451,7 +479,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				(* Extend strategy with new partition *)
 				let new_strategy_entry : AlgoPTGStrategyGenerator.strategy_entry = {
 						action = action;
-						winning_move = winning_move_nn;
+						winning_move = if action = AlgoPTGStrategyGenerator.Wait then LinearConstraint.false_px_nnconvex_constraint() else winning_move_nn;
 						prioritized_winning_zone = safe_timed_pred
 					}
 				in 
@@ -462,16 +490,29 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		else 
 			false
 
+
+	method private process_nnconvex_winning_move state action bad_zone winning_move = 
+		List.fold_left (||) false 
+		(List.map (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
+		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
+
+
 	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
 		 return true if winning zone was changed otherwise false	 
 	*)
 	method private backtrack_single_controllable_edge edge bad_zone zone_map =
 		let winning_move = self#predecessor_nnconvex edge (zone_map edge.state') in
-
+		let {state;action;_} = edge in 
 		(* Remove bad zone from winning move *)
 		LinearConstraint.px_nnconvex_difference_assign winning_move bad_zone;
-		List.fold_left (||) false 
-		(List.map (fun g_i -> self#backtrack_convex_winning_move edge bad_zone g_i) (LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
+
+		self#process_nnconvex_winning_move state (Action action) bad_zone winning_move
+
+	(* Process a forced move of the environment 
+		return true if the winning zone was changed otherwise false *)
+	method private process_forced_move state bad_zone forced_move = 
+		self#process_nnconvex_winning_move state Wait bad_zone forced_move
+
 
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack e waiting backtrack_type = 
@@ -492,8 +533,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			| Winning -> 
 				print_PTG "\tWINNING ZONE PROPAGATION:";
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (winningZone#find x) x) in
+				let forced_moves_changed_winning_zone = self#process_forced_move state bad (forcedMoves#find state) in 
 				let winning_zone_changed = 
-					List.fold_left (||) false
+					List.fold_left (||) forced_moves_changed_winning_zone
 						(List.map(fun edge -> self#backtrack_single_controllable_edge edge bad winningZone#find) good_edges) in 
 				if winning_zone_changed then 
 					begin
@@ -567,6 +609,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		(* === ALGORITHM INITIALIZATION === *)
 		let init = state_space#get_initial_state_index in 
+
+		if not options#ptg_no_forced_uncontrollables then
+			self#save_forced_moves init;
 		
 		let passed = new State.stateIndexSet in 
 		passed#add init;
