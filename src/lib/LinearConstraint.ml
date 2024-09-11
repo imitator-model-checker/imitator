@@ -4027,7 +4027,8 @@ let debug_print_point (linear_generator : ppl_linear_generator) : unit =
 		let px_valuation = px_valuation_of_Ppl_Point linear_generator in
 		print_message Verbose_standard ("**** " ^ (debug_string_of_px_valuation px_valuation) ^ "\n");
 
-	| _ -> ()
+	| _ -> print_message Verbose_standard ("**   (not a point)")
+
 
 (* Check whether a px_linear_inequality is tight wrt a point, i.e., whether the valuation of the inequality with this point is 0 *)
 let is_px_linear_inequality_tight (px_valuation : px_valuation) (px_linear_inequality : px_linear_inequality) : bool =
@@ -4077,7 +4078,7 @@ let divide_and_floor (c : px_linear_inequality) (p : coef_ppl) : px_linear_inequ
 
 	(*** Debug print ***)
 	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard ("  l = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
+		print_message Verbose_standard ("  L = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
 	);
 
 	(* Second, iterate over variables *)
@@ -4097,11 +4098,14 @@ let divide_and_floor (c : px_linear_inequality) (p : coef_ppl) : px_linear_inequ
 		);
 
 		(* C++: L -= q*PPL_Variable(i); *)
-		l := Minus (!l, Times(q , Variable i));
+		(*** NOTE: only add if coef <> 0 ***)
+		if NumConst.gmpz_neq q NumConst.gmpz_zero then(
+			l := Minus (!l, Times(q , Variable i));
+		);
 
 		(*** Debug print ***)
 		if verbose_mode_greater Verbose_standard then(
-			print_message Verbose_standard ("  l = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
+			print_message Verbose_standard ("  L = " ^ (string_of_ppl_linear_term debug_variable_names !l) ^ "");
 		);
 	done;
 
@@ -4138,9 +4142,9 @@ let ih (px_linear_constraint : px_linear_constraint) =
 	(* Get the generator *)
 	let generator_system = ippl_get_minimized_generators px_linear_constraint in
 
-	(* Debug print *)
+	(*** Debug print ***)
 	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard ("  List of points:");
+		print_message Verbose_standard ("  List of all " ^ (string_of_int (List.length generator_system)) ^ " points:");
 		List.iter ( fun linear_generator ->
 			match linear_generator with
 			| Ppl.Point _ -> debug_print_point linear_generator
@@ -4161,6 +4165,16 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 	(* Retrieve the non-integer points *)
 	let non_integer_points : ppl_linear_generator list = non_integer_points px_linear_constraint in
+
+	(*** Debug print ***)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard ("  List of all " ^ (string_of_int (List.length non_integer_points)) ^ " non-integer points:");
+		List.iter ( fun linear_generator ->
+			match linear_generator with
+			| Ppl.Point _ -> debug_print_point linear_generator
+			| _ -> ()
+		) non_integer_points;
+	);
 
 	(* For each non-integer point *)
 	List.iter (fun (linear_generator : ppl_linear_generator) ->
@@ -4237,9 +4251,10 @@ let ih (px_linear_constraint : px_linear_constraint) =
 			List.iter (fun ineq -> print_message Verbose_standard (string_of_linear_inequality Constants.default_string debug_variable_names ineq)) !q;
 		);
 
+		(*** TODO: reintroduce this construction (the other one going down is rather for testing) ***)
 		(* Find a variable such that its value at the vertex is not integral *)
 		(*** NOTE: exists necessarily as the current point is not an integer point ***)
-		let var = ref 0 in
+(*		let var = ref 0 in
 		let noninteger_found = ref false in
 (* 		C++: for (var = 0; var < nv && i.coefficient(PPL_Variable(var)) % i.divisor() == 0; var++); *)
 		while not !noninteger_found && !var < current_nb_px_dimensions do
@@ -4247,6 +4262,17 @@ let ih (px_linear_constraint : px_linear_constraint) =
 				noninteger_found := true
 			)else(
 				incr var;
+			);
+		done;*)
+
+		let var = ref (current_nb_px_dimensions - 1) in
+		let noninteger_found = ref false in
+(* 		C++: for (var = 0; var < nv && i.coefficient(PPL_Variable(var)) % i.divisor() == 0; var++); *)
+		while not !noninteger_found && !var >= 0 do
+			if not (NumConst.is_integer ((px_valuation_of_Ppl_Point linear_generator) !var)) then(
+				noninteger_found := true
+			)else(
+				decr var;
 			);
 		done;
 
@@ -5846,6 +5872,15 @@ x - y >= 0*)
 	]
 in
 
+let polyhedron3 : px_linear_constraint = make_px_constraint
+	[
+(* y − 4x  <= -3, i.e., 4x - y - 3 >= 0 *)
+		make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Times (NumConst.numconst_of_int 4 , IR_Var 0) , IR_Var 1) , IR_Coef (NumConst.numconst_of_int 3)) ) Op_ge;
+(* 3x + 4y <= 19, i.e., 19 - 3x - 4y >= 0 *)
+		make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Coef (NumConst.numconst_of_int 19) , IR_Times (NumConst.numconst_of_int 3 , IR_Var 0)) , IR_Times (NumConst.numconst_of_int 4 , IR_Var 1)) ) Op_ge;
+	]
+in
+
 (* Testing c/fdiv *)
 let a = NumConst.gmpz_of_int 11 in
 let b = NumConst.gmpz_of_int 5 in
@@ -5860,6 +5895,7 @@ print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
 
 let _ = ih polyhedron1 in
 let _ = ih polyhedron2 in
+let _ = ih polyhedron3 in
 
 let nIP = non_integer_points polyhedron2 in
 	List.iter debug_print_point nIP;
@@ -5869,5 +5905,5 @@ let nIP = non_integer_points polyhedron2 in
 
 raise (NotImplemented ("Testing IH !"))
 ;
-()*)
-
+()
+*)
