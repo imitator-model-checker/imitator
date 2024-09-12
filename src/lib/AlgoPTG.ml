@@ -376,14 +376,24 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
 		let uncontrollable_edges = self#get_uncontrollable_edges state_index in
+		let controllable_edges = self#get_controllable_edges state_index in
 		let uncontrollable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
 			fun {transition;_} -> 
 				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
 				uncontrollable_edges
 		in 
+		let controllable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun {transition;_} -> 
+				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
+				controllable_edges
+		in 
 		let uncontrollable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
 			List.map LinearConstraint.close_clocks_px_linear_constraint @@ 
 			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_guards 
+		in
+		let controllable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+			List.map LinearConstraint.close_clocks_px_linear_constraint @@ 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_guards 
 		in
 
 		let invariant = self#constr_of_state_index state_index in 
@@ -391,6 +401,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		
 		LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_guards;
 		LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_guards_closed;
+
+		LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_guards;
+		LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_guards_closed; 
 
 		LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
 		forcedMoves#replace state_index inv_bound_in;
