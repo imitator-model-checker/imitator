@@ -460,6 +460,21 @@ val px_contains_integer_point : px_linear_constraint -> bool
 val parameter_constraint_of_p_linear_constraint : Automaton.parameter_index -> p_linear_constraint -> (Automaton.parameter_index * comparison_op * coef)
 
 
+(*------------------------------------------------------------*)
+(* {4 Pi0-compatibility} *)
+(*------------------------------------------------------------*)
+
+(** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
+val is_pi0_compatible : p_valuation -> p_linear_constraint -> bool
+
+(** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
+val d_is_pi0_compatible : d_valuation -> d_linear_constraint -> bool
+
+
+(** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
+val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Functions} *)
@@ -586,20 +601,14 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 (* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
 val close_clocks_px_linear_constraint : px_linear_constraint -> px_linear_constraint
 
+(*------------------------------------------------------------*)
+(* Integer hull *)
+(*------------------------------------------------------------*)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* {3 Pi0-compatibility} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
-val is_pi0_compatible : p_valuation -> p_linear_constraint -> bool
-
-(** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
-val d_is_pi0_compatible : d_valuation -> d_linear_constraint -> bool
-
-
-(** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
-val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
+(*------------------------------------------------------------*)
+(* Compute the integer hull of a px_linear_constraint [JLR15] *)
+(*------------------------------------------------------------*)
+val ih : px_linear_constraint -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -820,11 +829,18 @@ val px_nnconvex_hide : variable list -> px_nnconvex_constraint -> px_nnconvex_co
 val px_nnconvex_hide_nonparameters_and_collapse : px_nnconvex_constraint -> p_nnconvex_constraint
 
 
+(*------------------------------------------------------------*)
+(* Compute the integer hull of a px_nnconvex_constraint [JLR15] *)
+(*------------------------------------------------------------*)
+val px_nnconvex_ih : px_nnconvex_constraint -> px_nnconvex_constraint
+val p_nnconvex_ih  : p_nnconvex_constraint  -> p_nnconvex_constraint
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Conversion to a list of p_linear_constraint} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Converts a p_nnconvex_constraint into a list of p_linear_constraint such that the union of this list is equal to the p_nnconvex_constraint *)
-val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint -> p_linear_constraint list
+val p_linear_constraint_list_of_p_nnconvex_constraint   : p_nnconvex_constraint  -> p_linear_constraint list
 val px_linear_constraint_list_of_px_nnconvex_constraint : px_nnconvex_constraint -> px_linear_constraint list
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -832,8 +848,8 @@ val px_linear_constraint_list_of_px_nnconvex_constraint : px_nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Convert a p_nnconvex_constraint into a string *)
-val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string
-val string_of_x_nnconvex_constraint : (variable -> string) -> x_nnconvex_constraint -> string
+val string_of_p_nnconvex_constraint  : (variable -> string) -> p_nnconvex_constraint  -> string
+val string_of_x_nnconvex_constraint  : (variable -> string) -> x_nnconvex_constraint  -> string
 val string_of_px_nnconvex_constraint : (variable -> string) -> px_nnconvex_constraint -> string
 
 

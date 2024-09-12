@@ -4484,6 +4484,8 @@ let ih (px_linear_constraint : px_linear_constraint) =
 	(* Return p *)
 	p
 
+let px_ih = ih
+
 
 (************************************************************)
 (* {2 Non-necessarily convex linear Constraints} *)
@@ -5065,6 +5067,31 @@ let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnc
 	(* Return result *)
 	result
 	
+
+(*------------------------------------------------------------*)
+(* Compute the integer hull of a px_nnconvex_constraint [JLR15] *)
+(*------------------------------------------------------------*)
+let px_nnconvex_ih (px_nnconvex_constraint : px_nnconvex_constraint) =
+	(* 1) Get disjuncts *)
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let disjuncts = get_disjuncts (px_nnconvex_copy px_nnconvex_constraint) in
+
+	(* 2) Hide in each disjuncts *)
+	let modified_disjuncts = List.map ih disjuncts in
+
+	(* 3) Recreate the nnconvex_constraint *)
+	px_nnconvex_constraint_of_px_linear_constraints modified_disjuncts
+
+let p_nnconvex_ih (p_nnconvex_constraint : p_nnconvex_constraint) =
+	(* 1) Get disjuncts *)
+	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
+	let disjuncts = get_disjuncts (p_nnconvex_copy p_nnconvex_constraint) in
+
+	(* 2) Hide in each disjuncts *)
+	let modified_disjuncts = List.map ih disjuncts in
+
+	(* 3) Recreate the nnconvex_constraint *)
+	p_nnconvex_constraint_of_p_linear_constraints modified_disjuncts
 
 
 
