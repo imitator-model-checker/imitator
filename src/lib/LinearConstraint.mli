@@ -606,9 +606,10 @@ val close_clocks_px_linear_constraint : px_linear_constraint -> px_linear_constr
 (*------------------------------------------------------------*)
 
 (*------------------------------------------------------------*)
-(* Compute the integer hull of a px_linear_constraint [JLR15] *)
+(* Compute the integer hull of a linear_constraint [JLR15] *)
 (*------------------------------------------------------------*)
-val ih : px_linear_constraint -> px_linear_constraint
+(* val p_ih  : p_linear_constraint  -> p_linear_constraint *)
+val px_ih : px_linear_constraint -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -117,7 +117,14 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (property : Abstract
 		) (* end if pi-incompatible *)
 		else(
 			(* Update K := K ^ s *)
-			LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
+			if options#ih then(
+				(*** TODO: we could just apply to the projected constraint p_constraint (done so to save programming time) ***)
+				let px_ih = LinearConstraint.px_ih constr in
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_ih in
+				LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
+			)else(
+				LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
+			);
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
