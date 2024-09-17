@@ -2477,7 +2477,7 @@ let pxd_hide v l = hide !pxd_dim v l
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) in a px_linear constraint *)
-let px_hide_nonparameters_and_collapse px_linear_constraint = 
+let px_hide_nonparameters_and_collapse (px_linear_constraint : px_linear_constraint) : p_linear_constraint =
 	let non_parameter_variables = clocks () in
 	
 	(* Print some information *)
@@ -2496,7 +2496,7 @@ let px_hide_nonparameters_and_collapse px_linear_constraint =
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) and some parameters in a px_linear constraint *)
-let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide px_linear_constraint = 
+let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide (px_linear_constraint : px_linear_constraint) : p_linear_constraint =
 	let variables_to_hide = List.rev_append (clocks ()) parameters_to_hide in
 	
 	(* Print some information *)
@@ -5110,21 +5110,43 @@ let px_nnconvex_ih (px_nnconvex_constraint : px_nnconvex_constraint) =
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
 	let disjuncts = get_disjuncts (px_nnconvex_copy px_nnconvex_constraint) in
 
-	(* 2) Hide in each disjuncts *)
+	(* 2) Apply IH to each disjuncts *)
 	let modified_disjuncts = List.map ih disjuncts in
 
 	(* 3) Recreate the nnconvex_constraint *)
 	px_nnconvex_constraint_of_px_linear_constraints modified_disjuncts
 
+
 let p_nnconvex_ih (p_nnconvex_constraint : p_nnconvex_constraint) =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Entering p_nnconvex_ih…");
+
 	(* 1) Get disjuncts *)
 	(*** NOTE/DEBUG/TODO: copy probably not necessary ***)
-	let disjuncts = get_disjuncts (p_nnconvex_copy p_nnconvex_constraint) in
+	let disjuncts : p_linear_constraint list = get_disjuncts (p_nnconvex_copy p_nnconvex_constraint) in
 
-	(* 2) Hide in each disjuncts *)
-	let modified_disjuncts = List.map ih disjuncts in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Apply IH to all disjuncts…");
 
-	(* 3) Recreate the nnconvex_constraint *)
+	(*** HACK! ih is defined over px, so we just extend to px *)
+	(* 2) Apply IH to each disjuncts *)
+	let modified_disjuncts : px_linear_constraint list = List.map ih (List.map px_of_p_constraint disjuncts) in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Cast disjuncts back into p_linear_constraint…");
+
+	(*** HACK! ih is defined over px, so we just collapse to p *)
+	(* 3) Remove parameters in each disjuncts *)
+	let modified_disjuncts = List.map px_hide_nonparameters_and_collapse modified_disjuncts in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Recreate the p_nnconvex_constraint…");
+
+	(* 4) Recreate the nnconvex_constraint *)
 	p_nnconvex_constraint_of_p_linear_constraints modified_disjuncts
 
 
