@@ -102,8 +102,21 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (property : Abstract
 				false
 			)else(
 			
-				(* Update K := K ^ not s *)
-				LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
+				if options#ih then(
+					(* Update K := K ^ IH( not s) *)
+					(*** NOTE: most probably easy to simplify! (certainly over-complicated) ***)
+					let not_s = LinearConstraint.true_p_nnconvex_constraint () in
+					LinearConstraint.p_nnconvex_difference_assign not_s (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
+
+					(* Apply IH to the negation *)
+					let ih_not_s = LinearConstraint.p_nnconvex_ih not_s in
+
+					(* Intersect *)
+					LinearConstraint.p_nnconvex_intersection_assign k_result ih_not_s;
+				)else(
+					(* Update K := K ^ not s *)
+					LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
+				);
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(

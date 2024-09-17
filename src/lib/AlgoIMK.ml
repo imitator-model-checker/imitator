@@ -240,9 +240,23 @@ class algoIMK (model : AbstractModel.abstract_model) ((*property*)_ : AbstractPr
 						LinearConstraint.p_intersection_assign !k_result [inequality];
 					);
 			end;*)
+
+		(* Case IH: apply the integer hull to what is in the state space *)
+		let state_to_add = if options#ih then (
+			let global_location: DiscreteState.global_location = new_state.global_location in
+			let px_constraint : LinearConstraint.px_linear_constraint = new_state.px_constraint in
+			(* Apply IH and rebuild state *)
+			{
+				global_location = global_location;
+				px_constraint = LinearConstraint.px_ih px_constraint;
+			}
+		)else (
+			(* Otherwise: normal addition to the state space *)
+			new_state
+		) in
 			
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock state_to_add in
 		
 		begin
 		match addition_result with
