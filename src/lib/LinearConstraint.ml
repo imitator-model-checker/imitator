@@ -325,7 +325,7 @@ let parameters () = list_of_interval 0 (!nb_parameters - 1)
 let debug_variable_names = fun v -> "v_" ^ (string_of_int v)
 
 (* For verbose print *)
-let debug_string_of_valuation_gen nb_dimensions valuation : string = List.fold_left (fun current_string current_variable -> current_string ^ (NumConst.string_of_numconst (valuation current_variable)) ^ " & " ) "" (list_of_interval 0 (nb_dimensions - 1))
+let debug_string_of_valuation_gen nb_dimensions valuation : string = "<" ^ (string_of_list_of_string_with_sep " , " (List.map (fun variable -> NumConst.string_of_numconst (valuation variable)) (list_of_interval 0 (nb_dimensions - 1)))) ^ ">"
 let debug_string_of_p_valuation valuation   = debug_string_of_valuation_gen !nb_parameters valuation
 let debug_string_of_px_valuation valuation  = debug_string_of_valuation_gen (!nb_parameters + !nb_clocks) valuation
 
@@ -4181,7 +4181,7 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("  List of all " ^ (string_of_int (List.length generator_system)) ^ " points:");
+		print_message Verbose_high ("  List of " ^ (string_of_int (List.length generator_system)) ^ " point" ^ (s_of_int (List.length generator_system)) ^ ":");
 		List.iter ( fun linear_generator ->
 			match linear_generator with
 			| Ppl.Point _ -> debug_print_point Verbose_high linear_generator
@@ -5910,75 +5910,95 @@ let isSmaller term1 term2 	=
 
 
 (*** TEMP code: testing IH ***)
-(*;;
+let test_IH() =
+	ImitatorUtilities.set_verbose_mode Verbose_total;
 
-set_dimensions 2 0 0 ;
+	set_dimensions 2 0 0 ;
 
-let polyhedron1 : px_linear_constraint = make_px_constraint
-	[
-	(* x + 2 >= 0 *)
-		make_px_linear_inequality (IR_Plus (IR_Var 0 , IR_Coef (NumConst.numconst_of_int 2) ) ) Op_ge;
-	(* 2*y < 0 *)
-		make_px_linear_inequality (IR_Times ((NumConst.numconst_of_int 2) , (IR_Var 1 )) ) Op_l;
-	]
-in
+	let polyhedron1 : px_linear_constraint = make_px_constraint
+		[
+		(* x + 2 >= 0 *)
+			make_px_linear_inequality (IR_Plus (IR_Var 0 , IR_Coef (NumConst.numconst_of_int 2) ) ) Op_ge;
+		(* 2*y < 0 *)
+			make_px_linear_inequality (IR_Times ((NumConst.numconst_of_int 2) , (IR_Var 1 )) ) Op_l;
+		]
+	in
 
-let polyhedron2 : px_linear_constraint = make_px_constraint
-	[
-(* y >= 0 *)
-		make_px_linear_inequality (IR_Var 1 ) Op_ge;
-(*x >= y
-x - y >= 0*)
-		make_px_linear_inequality (IR_Minus ((IR_Var 0 ) , (IR_Var 1 )) ) Op_ge;
-(* x + y - 1 <= 0 *)
-		make_px_linear_inequality (IR_Plus ( (IR_Var 0 ) , (IR_Minus ((IR_Var 1 ) , IR_Coef (NumConst.one)) ) )) Op_le;
-	]
-in
+	let polyhedron2 : px_linear_constraint = make_px_constraint
+		[
+	(* y >= 0 *)
+			make_px_linear_inequality (IR_Var 1 ) Op_ge;
+	(*x >= y
+	x - y >= 0*)
+			make_px_linear_inequality (IR_Minus ((IR_Var 0 ) , (IR_Var 1 )) ) Op_ge;
+	(* x + y - 1 <= 0 *)
+			make_px_linear_inequality (IR_Plus ( (IR_Var 0 ) , (IR_Minus ((IR_Var 1 ) , IR_Coef (NumConst.one)) ) )) Op_le;
+		]
+	in
 
-let polyhedron3 : px_linear_constraint = make_px_constraint
-	[
-(* y >= 1, i.e., y - 1 >= 0 *)
-		make_px_linear_inequality ( IR_Minus ((IR_Var 1) , IR_Coef (NumConst.numconst_of_int 1))) Op_ge;
-(* y − 4x  <= -3, i.e., 4x - y - 3 >= 0 *)
-		make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Times (NumConst.numconst_of_int 4 , IR_Var 0) , IR_Var 1) , IR_Coef (NumConst.numconst_of_int 3)) ) Op_ge;
-(* 3x + 4y <= 19, i.e., 19 - 3x - 4y >= 0 *)
-		make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Coef (NumConst.numconst_of_int 19) , IR_Times (NumConst.numconst_of_int 3 , IR_Var 0)) , IR_Times (NumConst.numconst_of_int 4 , IR_Var 1)) ) Op_ge;
-	]
-in
+	let polyhedron3 : px_linear_constraint = make_px_constraint
+		[
+	(* y >= 1, i.e., y - 1 >= 0 *)
+			make_px_linear_inequality ( IR_Minus ((IR_Var 1) , IR_Coef (NumConst.numconst_of_int 1))) Op_ge;
+	(* y − 4x  <= -3, i.e., 4x - y - 3 >= 0 *)
+			make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Times (NumConst.numconst_of_int 4 , IR_Var 0) , IR_Var 1) , IR_Coef (NumConst.numconst_of_int 3)) ) Op_ge;
+	(* 3x + 4y <= 19, i.e., 19 - 3x - 4y >= 0 *)
+			make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Coef (NumConst.numconst_of_int 19) , IR_Times (NumConst.numconst_of_int 3 , IR_Var 0)) , IR_Times (NumConst.numconst_of_int 4 , IR_Var 1)) ) Op_ge;
+		]
+	in
 
-(* Testing c/fdiv *)
-let a = NumConst.gmpz_of_int 11 in
-let b = NumConst.gmpz_of_int 5 in
-let c = NumConst.gmpz_cdiv a b in
-print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
+	let polyhedron4 : px_linear_constraint = make_px_constraint
+		[
+	(* y >= 1, i.e., y - 1 >= 0 *)
+			make_px_linear_inequality ( IR_Minus ((IR_Var 0) , IR_Coef (NumConst.numconst_of_int 1))) Op_ge;
+	(* y − 4x  <= -3, i.e., 4x - y - 3 >= 0 *)
+			make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Times (NumConst.numconst_of_int 4 , IR_Var 1) , IR_Var 0) , IR_Coef (NumConst.numconst_of_int 3)) ) Op_ge;
+	(* 3x + 4y <= 19, i.e., 19 - 3x - 4y >= 0 *)
+			make_px_linear_inequality ( IR_Minus (IR_Minus (IR_Coef (NumConst.numconst_of_int 19) , IR_Times (NumConst.numconst_of_int 3 , IR_Var 1)) , IR_Times (NumConst.numconst_of_int 4 , IR_Var 0)) ) Op_ge;
+		]
+	in
 
-let a = NumConst.gmpz_of_int 14 in
-let b = NumConst.gmpz_of_int 5 in
-let c = NumConst.gmpz_fdiv a b in
-print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
+	(* Testing c/fdiv *)
+	let a = NumConst.gmpz_of_int 11 in
+	let b = NumConst.gmpz_of_int 5 in
+	let c = NumConst.gmpz_cdiv a b in
+	print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
 
-
-let polyhedron1_ih = ih polyhedron1 in
-let polyhedron2_ih = ih polyhedron2 in
-let polyhedron3_ih = ih polyhedron3 in
-
-print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron1) ^ ":");
-print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron1_ih) ^ ":");
-
-print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron2) ^ ":");
-print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron2_ih) ^ ":");
-
-print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron3) ^ ":");
-print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron3_ih) ^ ":");
+	let a = NumConst.gmpz_of_int 14 in
+	let b = NumConst.gmpz_of_int 5 in
+	let c = NumConst.gmpz_fdiv a b in
+	print_message Verbose_standard ("Result: " ^ (NumConst.string_of_gmpz c));
 
 
-let nIP = non_integer_points polyhedron2 in
-	List.iter (debug_print_point Verbose_standard) nIP;
+	let polyhedron1_ih = ih polyhedron1 in
+	let polyhedron2_ih = ih polyhedron2 in
+	let polyhedron3_ih = ih polyhedron3 in
+	let polyhedron4_ih = ih polyhedron4 in
+
+	print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron1) ^ ":");
+	print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron1_ih) ^ ":");
+
+	print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron2) ^ ":");
+	print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron2_ih) ^ ":");
+
+	print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron3) ^ ":");
+	print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron3_ih) ^ ":");
+
+	print_message Verbose_standard ("\nApplying IH to " ^ (string_of_px_linear_constraint debug_variable_names polyhedron4) ^ ":");
+	print_message Verbose_standard ("Result = " ^ (string_of_px_linear_constraint debug_variable_names polyhedron4_ih) ^ ":");
+
+
+
+	let nIP = non_integer_points polyhedron2 in
+		List.iter (debug_print_point Verbose_standard) nIP;
 
 
 
 
-raise (NotImplemented ("Testing IH !"))
-;
-()*)
+	raise (NotImplemented ("Testing IH !"))
+	;
+	()
+
+;;
+(* test_IH() *)
 
