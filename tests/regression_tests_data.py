@@ -21884,7 +21884,8 @@ BEGIN CONSTRAINT
 p1 >= 0
 & p2 >= 0
 & p3 > p1
-END CONSTRAINT		  """
+END CONSTRAINT
+"""
 			} # end result file
 			,
 		] # end expectations
@@ -21908,7 +21909,66 @@ BEGIN CONSTRAINT
       p3 > p1
     & p2 >= 0
     & p1 >= p2
-END CONSTRAINT		  """
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/09/18
+		# Last modified            : 2024/09/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test RIEF (full result)',
+		'input_files': ['IH/IMIH-1.imi', 'IH/IMIH-1-EF.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'IMIH-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3 >= 2*p
+ & 2*p >= 1
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/09/18
+		# Last modified            : 2024/09/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test RIEF (partial result but with termination)',
+		'input_files': ['IH/EFIH-1.imi', 'IH/EFIH-1.imiprop'],
+		'options'    : '-ih -depth-limit 100',# NOTE: we add -depth-limit just in case… but we also check that only 3 states are explored!
+		'expectations' : [
+			{'file': 'EFIH-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 5
+Number of transitions                   : 5
+Number of computed states               : 6
+"""
 			} # end result file
 			,
 		] # end expectations
@@ -21931,7 +21991,8 @@ END CONSTRAINT		  """
 			{'file': 'IMIH-1.res' , 'content' : """
 BEGIN CONSTRAINT
   p = 1
-END CONSTRAINT		  """
+END CONSTRAINT
+"""
 			} # end result file
 			,
 		] # end expectations
@@ -21957,7 +22018,8 @@ BEGIN CONSTRAINT
  & p >= 1
  OR
    p >= 4
-END CONSTRAINT		  """
+END CONSTRAINT
+"""
 			} # end result file
 			,
 		] # end expectations
