@@ -5963,7 +5963,7 @@ let isSmaller term1 term2 	=
 
 
 
-
+(*
 (*** TEMP code: testing IH ***)
 let test_IH() =
 	ImitatorUtilities.set_verbose_mode Verbose_total;
@@ -6085,5 +6085,5 @@ let test_IH() =
 	()
 
 ;;
-(* test_IH() *)
+ test_IH() *)
 

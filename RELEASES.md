@@ -3,6 +3,9 @@
 *******************************************************
 ## future release (202x-xx-xx) Cheese Durian
 
+### Major features
+* implement the integer hull [JLR15] to ensure termination of IM over bounded parameter domains (work in progress)
+
 ### New options
 * Add a new option `-imi2imiprop` to regenerate the property to a file
 
