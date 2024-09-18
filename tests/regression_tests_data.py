@@ -21890,7 +21890,9 @@ END CONSTRAINT		  """
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IMcomplete on an incomplete example',
@@ -21907,6 +21909,86 @@ BEGIN CONSTRAINT
     & p2 >= 0
     & p1 >= p2
 END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/09/18
+		# Last modified            : 2024/09/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test IM+IH',
+		'input_files': ['IH/IMIH-1.imi', 'IH/IMIH-1.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'IMIH-1.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 1
+END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/09/18
+		# Last modified            : 2024/09/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test IM+IH (bis)',
+		'input_files': ['IH/IMIH-2.imi', 'IH/IMIH-2.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'IMIH-2.res' , 'content' : """
+BEGIN CONSTRAINT
+  2 >= p
+ & p >= 1
+ OR
+   p >= 4
+END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/09/18
+		# Last modified            : 2024/09/18
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test IM+IH (ensuring termination)',
+		'input_files': ['IH/IMIH-3.imi', 'IH/IMIH-3.imiprop'],
+		'options'    : '-ih -depth-limit 100',
+		'expectations' : [ # NOTE: we add -depth-limit just in case… but we also check that only 3 states are explored!
+			{'file': 'IMIH-3.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 3
+"""
 			} # end result file
 			,
 		] # end expectations
