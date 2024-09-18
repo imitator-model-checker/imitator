@@ -243,19 +243,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Reset the mini-cache (for the p-constraint) *)
 		self#reset_minicache;
 
-		(* Case IH: apply IH to the state before its (potential) addition *)
-		let state_to_add = if options#ih then (
-			let global_location: DiscreteState.global_location = new_state.global_location in
-			let px_constraint : LinearConstraint.px_linear_constraint = new_state.px_constraint in
-			(* Apply IH and rebuild state *)
-			{
-				global_location = global_location;
-				px_constraint = LinearConstraint.px_ih px_constraint;
-			}
-		)else new_state in
-
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock state_to_add in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in

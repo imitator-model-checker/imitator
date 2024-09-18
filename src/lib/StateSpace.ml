@@ -1469,12 +1469,35 @@ class stateSpace (guessed_nb_transitions : int) =
 			)
 			in
 
+			(*** WARNING: inefficient computation: at EVERY search, we RECOMPUTE all IHs! Should be optimized by storing them somewhere ***)
+			(* Case IH: apply IH to the state before its (potential) addition *)
+			let state_to_look_for = if options#ih then (
+				let global_location: DiscreteState.global_location = state_to_look_for.global_location in
+				let px_constraint : LinearConstraint.px_linear_constraint = state_to_look_for.px_constraint in
+				(* Apply IH and rebuild state *)
+				{
+					global_location = global_location;
+					px_constraint = LinearConstraint.px_ih px_constraint;
+				}
+			)else state_to_look_for in
+
 			(* Iterate on each state *)
 			List.iter (fun (state_index : State.state_index) ->
 				let state = self#get_state state_index in
 
 				print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
 
+				(*** WARNING: horrible computation: at EVERY search, we RECOMPUTE all IHs! Should be optimized by storing them somewhere ***)
+				(* Case IH: apply IH to the state before its (potential) addition *)
+				let state = if options#ih then (
+					let global_location: DiscreteState.global_location = state.global_location in
+					let px_constraint : LinearConstraint.px_linear_constraint = state.px_constraint in
+					(* Apply IH and rebuild state *)
+					{
+						global_location = global_location;
+						px_constraint = LinearConstraint.px_ih px_constraint;
+					}
+				)else state in
 
 				(* Branch depending on the check function used for state comparison *)
 				match state_comparison with
