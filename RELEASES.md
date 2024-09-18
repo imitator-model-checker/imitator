@@ -3,6 +3,9 @@
 *******************************************************
 ## future release (202x-xx-xx) Cheese Durian
 
+*******************************************************
+## release 3.4-alpha2 (2024-09-18) Cheese Durian
+
 ### Major features
 * implement the integer hull [JLR15] to ensure termination of IM over bounded parameter domains (work in progress)
 
