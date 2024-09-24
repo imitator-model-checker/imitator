@@ -580,7 +580,7 @@ and instantiate_state_term (param_map: var_map): unexpanded_parsed_state_predica
       Unexpanded_Parsed_state_predicate_term_AND (instantiated_t1, instantiated_t2)
   | Unexpanded_Parsed_state_predicate_factor f ->
       Unexpanded_Parsed_state_predicate_factor (instantiate_state_factor param_map f)
-
+  (* TODO: Refactor the next two branches *)
 and instantiate_state_factor (param_map: var_map): unexpanded_parsed_state_predicate_factor -> unexpanded_parsed_state_predicate_factor = function
   | Unexpanded_Parsed_state_predicate_factor_NOT f -> Unexpanded_Parsed_state_predicate_factor_NOT (instantiate_state_factor param_map f)
   | Unexpanded_Parsed_simple_predicate spred -> Unexpanded_Parsed_simple_predicate (instantiate_simple_predicate param_map spred)
