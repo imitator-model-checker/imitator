@@ -574,12 +574,21 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON name_or_array_access_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON action_declarations_list SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON name_or_array_access_list SEMICOLON {
+	| CT_SYNCLABS COLON action_declarations_list SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
 ;
+
+/************************************************************/
+
+action_declarations_list:
+  | name_or_array_access COMMA action_declarations_list { (Single_action $1) :: $3 }
+  | name_or_array_access comma_opt { [Single_action $1] }
+  | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA COMMA action_declarations_list { Multiple_actions ($1, $2, $4) :: $7 }
+  | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA comma_opt { [Multiple_actions ($1, $2, $4)] }
+
 
 /************************************************************/
 

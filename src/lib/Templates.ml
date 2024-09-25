@@ -237,22 +237,34 @@ let rec instantiate_instructions (param_map : var_map) : parsed_seq_code_bloc ->
           | Parsed_local_decl _ ->
               raise (Exceptions.InternalError "[instantiate_instructions]: This point of code is unreachable") 
 
-let instantiate_action (param_map : var_map) : name_or_access -> name_or_access = fun action ->
+let instantiate_name_or_access (param_map : var_map) : name_or_access -> name_or_access = fun action ->
   match action with
     | Var_name name -> begin
         match Hashtbl.find_opt param_map name with
           | Some (Arg_name name') -> Var_name name'
           | None -> Var_name name
-          | _ -> failwith "[instantiate_action]: Argument of type action must be a name."
+          | _ -> failwith "[instantiate_name_or_access]: Argument of type action must be a name."
     end
     | Var_array_access (arr, index) -> Var_array_access (arr, instantiate_discrete_arithmetic_expression param_map index)
 
-let instantiate_actions (param_map : var_map) : name_or_access list -> name_or_access list =
-  List.map (instantiate_action param_map)
+let instantiate_action_declaration (param_map : var_map) : action_declaration -> action_declaration = function
+  | Single_action act -> Single_action (instantiate_name_or_access param_map act)
+  | Multiple_actions (forall_index, arr_name, idx) ->
+      let prev_binded_value_opt = Hashtbl.find_opt param_map forall_index.forall_index_name in
+      Hashtbl.remove param_map forall_index.forall_index_name;
+      let idx' = instantiate_discrete_arithmetic_expression param_map idx in
+      match prev_binded_value_opt with
+        | None -> Multiple_actions (forall_index, arr_name, idx')
+        | Some v ->
+            Hashtbl.add param_map forall_index.forall_index_name v;
+            Multiple_actions (forall_index, arr_name, idx')
+
+let instantiate_action_declarations (param_map : var_map) : action_declaration list -> action_declaration list =
+  List.map (instantiate_action_declaration param_map)
 
 let instantiate_sync (param_map : var_map) : unexpanded_sync -> unexpanded_sync =
   function
-    | UnexpandedSync action -> UnexpandedSync (instantiate_action param_map action)
+    | UnexpandedSync action -> UnexpandedSync (instantiate_name_or_access param_map action)
     | UnexpandedNoSync -> UnexpandedNoSync
 
 let instantiate_transition (param_map : var_map) ((guard, bloc, sync, loc_name) : unexpanded_transition) : unexpanded_transition =
@@ -280,7 +292,7 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
   let param_names                    = List.map fst template.template_parameters in
   let param_map                      = Hashtbl.of_seq (List.to_seq (List.combine param_names args)) in
   let actions, locs                  = template.template_body in
-  let instantiated_actions           = instantiate_actions param_map actions in
+  let instantiated_actions           = instantiate_action_declarations param_map actions in
   (* Instantiate other parameters *)
   let instantiated_locs              = List.map (instantiate_loc param_map) locs in
   (automaton_name, instantiated_actions, instantiated_locs)
@@ -454,9 +466,22 @@ let expand_loc (g_decls : variable_declarations) (synt_vars : synt_vars_data) (l
     transitions = expanded_transitions;
   }
 
+let expand_action_declaration (g_decls: variable_declarations) (decl: action_declaration) : variable_name list =
+  match decl with
+    | Single_action act -> [expand_name_or_access g_decls act]
+    | Multiple_actions (forall_index, arr_name, idx) ->
+        let forall_idx_values = indices_from_forall_index_data g_decls forall_index in
+        let map_fun idx_value =
+          let aux_tbl = gen_aux_var_tbl idx_value forall_index in
+          let idx_instantiated = instantiate_discrete_arithmetic_expression aux_tbl idx in
+          let idx_concrete = eval_parsed_arithmetic_expr g_decls idx_instantiated in
+          gen_access_id arr_name (NumConst.to_bounded_int idx_concrete)
+        in
+        List.map map_fun forall_idx_values
+
 let expand_synt_arrays_automaton (g_decls : variable_declarations) (synt_vars : synt_vars_data) (automaton : unexpanded_parsed_automaton) : parsed_automaton =
   let name, unexpanded_actions, unexpanded_locs = automaton in
-  let expanded_actions = expand_name_or_access_list g_decls unexpanded_actions in
+  let expanded_actions = List.concat_map (expand_action_declaration g_decls) unexpanded_actions in
   let expanded_locs = List.map (expand_loc g_decls synt_vars) unexpanded_locs in
   name, expanded_actions, expanded_locs
 
@@ -550,7 +575,7 @@ let expand_model (model : unexpanded_parsed_model) : parsed_model =
     init_definition       = expanded_init_definition;
   }
 
-let instantiate_name_or_access (param_map: var_map) (aut: name_or_access): name_or_access =
+let instantiate_name_or_access_properties (param_map: var_map) (aut: name_or_access): name_or_access =
   match aut with
     | Var_name _ -> aut
     | Var_array_access (arr, idx) ->
@@ -562,10 +587,10 @@ let instantiate_simple_predicate (param_map: var_map) (spred: unexpanded_parsed_
     | Unexpanded_Parsed_discrete_boolean_expression expr ->
         Unexpanded_Parsed_discrete_boolean_expression (instantiate_discrete_boolean_expression param_map expr)
     | Unexpanded_Parsed_loc_predicate (Unexpanded_Parsed_loc_predicate_EQ (aut, loc)) ->
-        let instantiated_aut = instantiate_name_or_access param_map aut in
+        let instantiated_aut = instantiate_name_or_access_properties param_map aut in
         Unexpanded_Parsed_loc_predicate (Unexpanded_Parsed_loc_predicate_EQ (instantiated_aut, loc))
     | Unexpanded_Parsed_loc_predicate (Unexpanded_Parsed_loc_predicate_NEQ (aut, loc)) ->
-        let instantiated_aut = instantiate_name_or_access param_map aut in
+        let instantiated_aut = instantiate_name_or_access_properties param_map aut in
         Unexpanded_Parsed_loc_predicate (Unexpanded_Parsed_loc_predicate_NEQ (instantiated_aut, loc))
     | _ -> spred
 
