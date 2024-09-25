@@ -2114,13 +2114,30 @@ end
 \end{example}
 
 \paragraph{Templates in properties}
-The \styleIMI{forall} construction can also be used in properties.
-Below is an example of property using such a syntax (unrelated to the former model example).
-Note that \styleIMI{NB} is a constant defined in the model, leading to an easy specification of properties.
 
-\begin{IMITATORproperty}
-property := #synth EF(forall i in [0, NB - 1]: loc[train[i]] = train_End);
-\end{IMITATORproperty}
+The \styleIMI{forall} construction can also be used in properties. We also added the analogous \styleIMI{exists} construct,
+which creates a disjunction instead of a conjunction. The user can nest \styleIMI{forall} and \styleIMI{exists}
+in any way he wants. The syntax is exactly the same as for the models. but it has
+lower precedence in comparison to all the other logical operators. This means that, unless the user enclose
+the predicate inside the forall with parenthesis, only the first statement will be considered as part of
+the \styleIMI{forall}/\styleIMI{exists}.
+
+
+\begin{example}
+	Below is an example of property using such a syntax (unrelated to the former model example). It clarifies the precedence and what can be done with nesting.
+	Note that \styleIMI{NB} is a constant defined in the model, leading to an easy specification of properties.
+
+	\begin{IMITATORproperty}
+	(* True || False is outside of the forall *)
+	property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False)
+
+	(* True || False is inside of the forall *)
+	property := #synth AGnot(forall i in [0, N - 1]: (loc[p[i]] <> cs && True || False))
+
+	(* Nesting *)
+	property := #synth AGnot(exists i in [0, N - 1]: (forall i in [0, N - 1]: loc[p[i]] <> cs) && True || False)
+	\end{IMITATORproperty}
+\end{example}
 
 
 
@@ -5757,7 +5774,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}    \\
 
 	% PTG
-	$|$ & \styleIMI{Win(} \nt{state\_predicate} \styleIMI{)}    																\\ 
+	$|$ & \styleIMI{Win(} \nt{state\_predicate} \styleIMI{)}    																\\
 
 	% Observer pattern
 	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                 \\

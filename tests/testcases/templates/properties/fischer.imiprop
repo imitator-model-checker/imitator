@@ -5,4 +5,13 @@
 (* property := #synth AGnot(forall i in [0, N - 1]: (forall j in [0, N - 1]: loc[p[i]] <> cs)) *)
 
 (* Works -> True || False is outside of forall *)
-property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False)
+(* property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False) *)
+
+(* Works *)
+(* property := #synth AGnot(exists i in [0, N - 1]: (forall i in [0, N - 1]: loc[p[i]] <> cs) && True || False) *)
+
+(* Works *)
+property := #synth AGnot(True && exists i in [0, N - 1]: (loc[p[i]] = cs && loc[p[i]] <> cs) || False)
+
+(* Empty range raises a warning *)
+(* property := #synth AGnot(True && exists i in [100, N - 1]: (loc[p[i]] = cs && loc[p[i]] <> cs) || False) *)

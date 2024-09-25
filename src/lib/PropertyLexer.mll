@@ -98,6 +98,7 @@ rule token = parse
 	| "before"         { CT_BEFORE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
+	| "exists"         { CT_EXISTS }
 	| "False"          { CT_FALSE }
 	| "forall"         { CT_FORALL }
  	| "happened"       { CT_HAPPENED }

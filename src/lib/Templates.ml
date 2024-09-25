@@ -1,5 +1,6 @@
 open ParsingStructure;;
 open ParsingStructureUtilities;;
+open ImitatorUtilities;;
 
 (* Utilities *)
 
@@ -124,7 +125,10 @@ let indices_from_forall_index_data g_decls forall_index_data =
   let { forall_index_name = _; forall_lb; forall_ub } = forall_index_data in
   let forall_lb_val = eval_parsed_arithmetic_expr g_decls forall_lb |> NumConst.to_bounded_int in
   let forall_ub_val = eval_parsed_arithmetic_expr g_decls forall_ub |> NumConst.to_bounded_int in
-  List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
+  if forall_ub_val < forall_lb_val then
+    []
+  else
+    List.init (forall_ub_val - forall_lb_val + 1) (fun i -> i + forall_lb_val)
 
 let gen_aux_var_tbl i index_data =
   Hashtbl.of_seq (List.to_seq [(index_data.forall_index_name, Arg_int (NumConst.numconst_of_int i))])
@@ -585,6 +589,7 @@ and instantiate_state_factor (param_map: var_map): unexpanded_parsed_state_predi
   | Unexpanded_Parsed_state_predicate_factor_NOT f -> Unexpanded_Parsed_state_predicate_factor_NOT (instantiate_state_factor param_map f)
   | Unexpanded_Parsed_simple_predicate spred -> Unexpanded_Parsed_simple_predicate (instantiate_simple_predicate param_map spred)
   | Unexpanded_Parsed_state_predicate pred -> Unexpanded_Parsed_state_predicate (instantiate_state_predicate param_map pred)
+  (* TODO: merge next 4 branches *)
   | Unexpanded_Parsed_forall_state_predicate (index_data, pred) ->
       let binded_name = index_data.forall_index_name in
       let prev_binded_value_opt = Hashtbl.find_opt param_map binded_name in
@@ -600,11 +605,26 @@ and instantiate_state_factor (param_map: var_map): unexpanded_parsed_state_predi
   | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) ->
       let binded_name = index_data.forall_index_name in
       let prev_binded_value_opt = Hashtbl.find_opt param_map binded_name in
-      (* Here we remove the binde to allow the inner forall to rebind it. *)
-      (* This means that if the user had something like `forall i in [0, 1]: (forall i in [0, 1]: (p(i)) && q(i))`, the inner one will be
-         substituted first, and the outer one will substitute only `q(i)` *)
       Hashtbl.remove param_map binded_name;
       let r = Unexpanded_Parsed_forall_simple_predicate (index_data, instantiate_simple_predicate param_map spred) in
+      begin match prev_binded_value_opt with
+        | Some v -> Hashtbl.add param_map binded_name v; r
+        | None -> r
+      end
+  | Unexpanded_Parsed_exists_state_predicate (index_data, pred) ->
+      let binded_name = index_data.forall_index_name in
+      let prev_binded_value_opt = Hashtbl.find_opt param_map binded_name in
+      Hashtbl.remove param_map binded_name;
+      let r = Unexpanded_Parsed_exists_state_predicate (index_data, instantiate_state_predicate param_map pred) in
+      begin match prev_binded_value_opt with
+        | Some v -> Hashtbl.add param_map binded_name v; r
+        | None -> r
+      end
+  | Unexpanded_Parsed_exists_simple_predicate (index_data, spred) ->
+      let binded_name = index_data.forall_index_name in
+      let prev_binded_value_opt = Hashtbl.find_opt param_map binded_name in
+      Hashtbl.remove param_map binded_name;
+      let r = Unexpanded_Parsed_exists_simple_predicate (index_data, instantiate_simple_predicate param_map spred) in
       begin match prev_binded_value_opt with
         | Some v -> Hashtbl.add param_map binded_name v; r
         | None -> r
@@ -632,49 +652,54 @@ and expand_state_term (g_decls: variable_declarations): unexpanded_parsed_state_
   | Unexpanded_Parsed_state_predicate_factor f -> Parsed_state_predicate_factor (expand_state_factor g_decls f)
 
 and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_parsed_state_predicate_factor): parsed_state_predicate_factor =
+  let instantiate_spred_with index_data spred idx =
+    let param_map_idx = gen_aux_var_tbl idx index_data in
+    instantiate_simple_predicate param_map_idx spred |>
+    expand_simple_predicate g_decls
+  in
+  let instantiate_pred_with index_data pred idx =
+    let param_map_idx = gen_aux_var_tbl idx index_data in
+    instantiate_state_predicate param_map_idx pred |>
+    expand_state_predicate g_decls
+  in
+  let apply_fn_in_forall_range index_data fn =
+    let indices = indices_from_forall_index_data g_decls index_data in
+    match List.rev indices with
+      | [] -> print_warning "Trying to expand a forall with an empty range.";
+              Parsed_simple_predicate Parsed_state_predicate_true
+      | i :: is -> fn i is
+  in
+  let apply_fn_in_exists_range index_data fn =
+    let indices = indices_from_forall_index_data g_decls index_data in
+    match List.rev indices with
+      | [] -> print_warning "Trying to expand an exists with an empty range.";
+              Parsed_simple_predicate Parsed_state_predicate_false
+      | i :: is -> fn i is
+  in
   match factor with
-  (* TODO: Refactor the next two branches *)
-  | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      (* Here we reverse the list to preserve the order of the index after the fold *)
-      match List.rev indices with
-      | [] -> failwith "error or vacuity?"
-      | i :: is ->
-            (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
-            let instantiate_spred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_simple_predicate param_map_idx spred |>
-              expand_simple_predicate g_decls
+  | Unexpanded_Parsed_forall_simple_predicate (index_data, spred) ->
+      apply_fn_in_forall_range index_data (fun i is ->
+        (* Compute the conjunction of spred instantiated with each idx in (i::is) *)
+        let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
+        let spred_i = instantiate_spred_with index_data spred i in
+        let fold_fun acc idx =
+            let spred_idx = instantiate_spred_with index_data spred idx in
+            let spred_idx_term = term_of_simple_pred spred_idx in
+            match acc with
+              | Parsed_state_predicate (Parsed_state_predicate_term t) ->
+                  Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, t)))
+              | Parsed_simple_predicate p -> (* Only first iteration of fold, after that I know for sure is a term *)
+                  let p_term = term_of_simple_pred p in
+                  Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, p_term)))
+              | _ -> failwith "[expand_state_factor]: unreachable"
             in
-            let term_of_simple_pred p = Parsed_state_predicate_factor (Parsed_simple_predicate p) in
-            let spred_i = instantiate_spred_with i in
-            let fold_fun acc idx =
-                let spred_idx = instantiate_spred_with idx in
-                let spred_idx_term = term_of_simple_pred spred_idx in
-                match acc with
-                  | Parsed_state_predicate (Parsed_state_predicate_term t) ->
-                      Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, t)))
-                  | Parsed_simple_predicate p -> (* Only first iteration of fold, after that I know for sure is a term *)
-                      let p_term = term_of_simple_pred p in
-                      Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (spred_idx_term, p_term)))
-                  | _ -> failwith "[expand_state_factor]: unreachable"
-                in
-            List.fold_left fold_fun (Parsed_simple_predicate spred_i) is
-  end
-  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) -> begin
-      let indices = indices_from_forall_index_data g_decls index_data in
-      match List.rev indices with
-        | [] -> failwith "error or vacuity?"
-        | i :: is ->
-            let instantiate_pred_with idx =
-              let param_map_idx = gen_aux_var_tbl idx index_data in
-              instantiate_state_predicate param_map_idx pred |>
-              expand_state_predicate g_decls
-            in
-            let pred_i = instantiate_pred_with i in
+        List.fold_left fold_fun (Parsed_simple_predicate spred_i) is)
+  | Unexpanded_Parsed_forall_state_predicate (index_data, pred) ->
+      apply_fn_in_forall_range index_data (fun i is ->
+            let pred_i = instantiate_pred_with index_data pred i in
             let term_of_state_pred p = Parsed_state_predicate_factor (Parsed_state_predicate p) in
             let fold_fun acc idx =
-              let pred_idx = instantiate_pred_with idx in
+              let pred_idx = instantiate_pred_with index_data pred idx in
               let pred_idx_term = term_of_state_pred pred_idx in
               match acc with
                 | Parsed_state_predicate (Parsed_state_predicate_term t) ->
@@ -684,8 +709,36 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
                     Parsed_state_predicate (Parsed_state_predicate_term (Parsed_state_predicate_term_AND (pred_idx_term, p_term)))
                 | _ -> failwith "[expand_state_factor]: unreachable"
             in
-            List.fold_left fold_fun (Parsed_state_predicate pred_i) is
-  end
+            List.fold_left fold_fun (Parsed_state_predicate pred_i) is)
+  | Unexpanded_Parsed_exists_simple_predicate (index_data, spred) ->
+      apply_fn_in_exists_range index_data (fun i is ->
+            (* Compute the disjunction of spred instantiated with each idx in (i::is) *)
+            let spred_i = instantiate_spred_with index_data spred i in
+            let state_pred_of_simple_pred p =
+              Parsed_state_predicate_term (Parsed_state_predicate_factor (Parsed_simple_predicate p))
+            in
+            let fold_fun acc idx =
+                let spred_idx = instantiate_spred_with index_data spred idx in
+                let spred_idx_state = state_pred_of_simple_pred spred_idx in
+                match acc with
+                  | Parsed_state_predicate p ->
+                      Parsed_state_predicate (Parsed_state_predicate_OR (spred_idx_state, p))
+                  | Parsed_simple_predicate p ->
+                      let p_state= state_pred_of_simple_pred p in
+                      Parsed_state_predicate (Parsed_state_predicate_OR (spred_idx_state, p_state))
+                  | _ -> failwith "[expand_state_factor]: unreachable"
+                in
+            List.fold_left fold_fun (Parsed_simple_predicate spred_i) is)
+  | Unexpanded_Parsed_exists_state_predicate (index_data, pred) ->
+      apply_fn_in_exists_range index_data (fun i is ->
+            let pred_i = instantiate_pred_with index_data pred i in
+            let fold_fun acc idx =
+              let pred_idx = instantiate_pred_with index_data pred idx in
+              match acc with
+                | Parsed_state_predicate p -> Parsed_state_predicate (Parsed_state_predicate_OR (pred_idx, p))
+                | _ -> failwith "[expand_state_factor]: unreachable"
+            in
+            List.fold_left fold_fun (Parsed_state_predicate pred_i) is)
   | Unexpanded_Parsed_state_predicate_factor_NOT f -> Parsed_state_predicate_factor_NOT (expand_state_factor g_decls f)
   | Unexpanded_Parsed_simple_predicate spred -> Parsed_simple_predicate (expand_simple_predicate g_decls spred)
   | Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
