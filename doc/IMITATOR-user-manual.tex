@@ -2033,7 +2033,7 @@ See an example of variable shadowing in \cref{example:shadowing}.
 Since \imitator{}~3.4, it is possible to define automata instantiated from model \emph{templates}.
 This means the ability to create a number of almost identical \IPTA{}s in parallel.
 
-Note that templates are a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata.
+Note that templates are a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata (unlike techniques such as~\cite{ADRST16}).
 In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
 
 
@@ -2064,8 +2064,6 @@ The user can pass either variables or literal values as arguments to the templat
 If a variable is passed, then this is done by reference.
 
 
-\paragraph{Example model}
-All these constructions are exemplified in the following snippet:
 
 \begin{example}
 All these constructions are exemplified in the following snippet:
@@ -2118,10 +2116,10 @@ end
 
 The \styleIMI{forall} construction can also be used in properties. We also added the analogous \styleIMI{exists} construct,
 which creates a disjunction instead of a conjunction. The user can nest \styleIMI{forall} and \styleIMI{exists}
-in any way he wants. The syntax is exactly the same as for the models. but it has
-lower precedence in comparison to all the other logical operators. This means that, unless the user enclose
-the predicate inside the forall with parenthesis, only the first statement will be considered as part of
-the \styleIMI{forall}/\styleIMI{exists}.
+in any way they want.
+The syntax is exactly the same as for the models. but it has
+lower precedence in comparison to all the other logical operators.
+This means that, unless the user encloses the predicate inside the \styleIMI{forall} with parenthesis, only the first statement will be considered as part of the \styleIMI{forall}/\styleIMI{exists}.
 
 
 \begin{example}
