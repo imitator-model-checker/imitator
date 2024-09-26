@@ -912,6 +912,7 @@ forall_init_loc_predicate:
   {
     ($1, $4, $6, $10)
   }
+;
 
 /************************************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -1134,6 +1135,7 @@ forall_common_prefix:
   {
     { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
   }
+;
 
 checked_name_decl:
   | NAME {
@@ -1142,6 +1144,7 @@ checked_name_decl:
         "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
     else $1
   }
+;
 
 semicolon_or_comma:
   | SEMICOLON {}
