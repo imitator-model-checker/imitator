@@ -574,11 +574,19 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON action_declarations_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON action_declarations_list_opt SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON action_declarations_list SEMICOLON {
+	| CT_SYNCLABS COLON action_declarations_list_opt SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
+;
+
+/************************************************************/
+
+
+action_declarations_list_opt:
+	| action_declarations_list { $1 }
+	| { [] }
 ;
 
 /************************************************************/
