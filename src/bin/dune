@@ -1,6 +1,8 @@
 (executable
  (name IMITATOR)
+ (modes byte exe)
  (libraries lib)
+ (ocamlc_flags (-g) (-I %{env:OPAM_SWITCH_PREFIX=}/lib/gmp/) (-I %{env:OPAM_SWITCH_PREFIX=}/lib/ppl))
  (link_flags
   (:include link_flags.%{system})
   (:standard
