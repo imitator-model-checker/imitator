@@ -1,5 +1,6 @@
 (executable
  (name IMITATOR)
+ (modes byte exe)
  (libraries lib)
  (link_flags
   (:include link_flags.%{system})
@@ -33,7 +34,10 @@
 (env
  (dev
   (flags
-   (:standard -warn-error -A))))
+   (:standard -warn-error -A -g)
+   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/gmp/)
+   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/ppl)
+  )))
 
 
 (rule
