@@ -4583,6 +4583,8 @@ let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 		ippl_nncc_increment_iterator iterator;
 	done;
 
+	let _ = ippl_nncc_begin_iterator p_nnconvex_constraint in
+
 	(* Return disjuncts *)
 	let result = List.rev (!disjuncts) in
 
