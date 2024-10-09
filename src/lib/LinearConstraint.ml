@@ -5085,6 +5085,7 @@ let p_nnconvex_ih (p_nnconvex_constraint : p_nnconvex_constraint) =
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total ("Entering p_nnconvex_ih…");
 
+	(* 1) Get disjuncts *)
 	let disjuncts : p_linear_constraint list = get_disjuncts p_nnconvex_constraint in
 
 	(* Print some information *)
