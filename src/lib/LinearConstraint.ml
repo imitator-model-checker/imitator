@@ -4569,7 +4569,8 @@ let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 		let disjunct = ippl_nncc_get_disjunct iterator in
 
 		(* Add it to the list of disjuncts *)
-		disjuncts := disjunct :: !disjuncts;
+		(*** NOTE: seems necessary to copy the disjunct first! (otherwise we get some strange segmentation fault) ***)
+		disjuncts := (p_copy disjunct) :: !disjuncts;
 
 		(* Increment the iterator *)
 		ippl_nncc_increment_iterator iterator;
@@ -5070,8 +5071,16 @@ let px_nnconvex_hide_nonparameters_and_collapse (px_nnconvex_constraint : px_nnc
 (* Compute the integer hull of a px_nnconvex_constraint [JLR15] *)
 (*------------------------------------------------------------*)
 let px_nnconvex_ih (px_nnconvex_constraint : px_nnconvex_constraint) =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Entering px_nnconvex_ih…");
+
 	(* 1) Get disjuncts *)
 	let disjuncts = get_disjuncts px_nnconvex_constraint in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Apply IH to all disjuncts…");
 
 	(* 2) Apply IH to each disjuncts *)
 	let modified_disjuncts = List.map ih disjuncts in
