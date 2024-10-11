@@ -21836,7 +21836,9 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM on an incomplete example',
@@ -21873,6 +21875,182 @@ BEGIN CONSTRAINT
       p3 > p1
     & p2 >= 0
     & p1 >= p2
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=1)',
+		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'CSMACD-bc1.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=1) + IH',
+		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'CSMACD-bc1.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=2)',
+		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'CSMACD-bc2.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=2) + IH',
+		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'CSMACD-bc2.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=3)',
+		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'CSMACD-bc3.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=3) + IH',
+		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'CSMACD-bc3.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=4)',
+		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'CSMACD-bc4.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM: CSMA/CD (BC=4) + IH',
+		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
+		'options'    : '-ih',
+		'expectations' : [
+			{'file': 'CSMACD-bc4.res' , 'content' : """
+BEGIN CONSTRAINT
+  lambda > 15*timeslot
+ & sigma > 0
+ & timeslot > sigma
+ & 16*timeslot > lambda
 END CONSTRAINT
 """
 			} # end result file
