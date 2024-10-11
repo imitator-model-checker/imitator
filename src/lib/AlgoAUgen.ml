@@ -779,7 +779,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		start_time <- Unix.gettimeofday();
 
 (* !!! NOTE : de-BUG !!! *)
-		print_warning "There is an instability in AF, AU, AW, AR and EG algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem.";
+(* 		print_warning "There is an instability in AF, AU, AW, AR and EG algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem."; *)
 (* !!! NOTE : de-BUG !!! *)
 
 		(* Build initial state *)
