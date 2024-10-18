@@ -455,7 +455,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
 		end;
 		if not options#ptg_no_forced_uncontrollables then 
-			print_message Verbose_standard "Test";
 			self#save_forced_moves state';
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
@@ -463,20 +462,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		new normalQueue @@ List.map (fun e -> (e, status)) (edge_set#to_list)
 
 
-	method private process_convex_winning_move state action bad_zone (winning_move_conv : LinearConstraint.px_linear_constraint) =
-		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move_conv bad_zone in
+	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
+		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move bad_zone in
 
-		let locations = Array.to_list (DiscreteState.get_locations (state_space#get_state state).global_location) in 
-		let discrete_mapping = List.map 
-			(fun index -> (index, DiscreteState.get_discrete_value (state_space#get_state state).global_location index))
-			model.discrete in
+		let global_location_src = (state_space#get_state state).global_location in 
+		let locations_src = Array.to_list (DiscreteState.get_locations global_location_src) in 
+
 		let current_winning_zone_state = winningZone#find state in
-		let current_winning_zone_loc = locationWinningZone#find locations in 
-
-		let winning_move_nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint winning_move_conv in 
-		
-		(* Intersect winning move with safe timed predecessors to remove unsafe parts *)
-		LinearConstraint.px_nnconvex_intersection_assign winning_move_nn safe_timed_pred;
+		let current_winning_zone_loc = locationWinningZone#find locations_src in 
 		
 		(* Extend winning zone of STATE with newly found safe timed pred *)
 		LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
@@ -486,27 +479,36 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		if not @@ LinearConstraint.px_nnconvex_constraint_is_false safe_timed_pred then
 			begin
+				let open AlgoPTGStrategyGenerator in 
 				(* Extend the winning zone of LOCATION with new partition *)
 				LinearConstraint.px_nnconvex_union_assign current_winning_zone_loc safe_timed_pred;
 
-				(* Extend strategy with new partition *)
-				let new_strategy_entry : AlgoPTGStrategyGenerator.strategy_entry = {
-						action = action;
-						winning_move = if action = AlgoPTGStrategyGenerator.Wait then LinearConstraint.false_px_nnconvex_constraint() else winning_move_nn;
-						prioritized_winning_zone = safe_timed_pred
-					}
-				in 
-				let strategy = locationStrategy#find (locations, discrete_mapping) in 
-				strategy := new_strategy_entry :: !strategy;
+				let strategy_entry = match action with 
+				| Action (a, transition) -> 
+					let global_location_dst = (state_space#get_state state').global_location in 
+						(* Extend strategy with new partition *)
+						ActionEntry {
+								action = a;
+								winning_move;
+								transition;
+								prioritized_winning_zone = safe_timed_pred;
+								destination = global_location_dst
+						}
+				| Wait ->
+					(* Extend strategy with a wait entry *)
+					WaitEntry {prioritized_winning_zone = safe_timed_pred}
+				in
+				let strategy = locationStrategy#find global_location_src in 
+				strategy := strategy_entry :: !strategy;
 				true
 			end
 		else 
 			false
 
 
-	method private process_nnconvex_winning_move state action bad_zone winning_move = 
+	method private process_nnconvex_winning_move state action state' bad_zone winning_move = 
 		List.fold_left (||) false 
-		(List.map (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
+		(List.map (fun g_i -> self#process_convex_winning_move state action state' bad_zone g_i) 
 		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
 
 
@@ -515,16 +517,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	*)
 	method private backtrack_single_controllable_edge edge bad_zone zone_map =
 		let winning_move = self#predecessor_nnconvex edge (zone_map edge.state') in
-		let {state;action;_} = edge in 
+		let {state;action;transition;state';} = edge in 
 		(* Remove bad zone from winning move *)
 		LinearConstraint.px_nnconvex_difference_assign winning_move bad_zone;
 
-		self#process_nnconvex_winning_move state (Action action) bad_zone winning_move
+		self#process_nnconvex_winning_move state (Action (action, transition)) state' bad_zone winning_move
 
 	(* Process a forced move of the environment 
 		return true if the winning zone was changed otherwise false *)
 	method private process_forced_move state bad_zone forced_move = 
-		self#process_nnconvex_winning_move state Wait bad_zone forced_move
+		self#process_nnconvex_winning_move state Wait (-1) bad_zone forced_move
 
 
 	(* General method for backpropagation of winning/losing zones *)
@@ -679,8 +681,12 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		AlgoPTGStrategyGenerator.print_strategy 
 		model 
-		~strategy:locationStrategy
-		~state_space:state_space;
+		~strategy:locationStrategy;
+		AlgoPTGStrategyGenerator.controller_synthesis
+		model
+		options
+		state_space
+		locationStrategy;
 
 		(* Compute the strategy *)
 	(*	if options#ptg_controller_mode != AbstractAlgorithm.No_Generation then 

@@ -107,6 +107,16 @@ val apply_time_past : AbstractModel.abstract_model -> DiscreteState.global_locat
 
 
 (*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (Answer might not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+val apply_time_elapsing_no_stopwatch : LinearConstraint.pxd_linear_constraint -> unit
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (Answer might not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+val apply_time_past_no_stopwatch : LinearConstraint.pxd_linear_constraint -> unit
+
+(*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 val apply_time_elapsing_to_concrete_valuation : AbstractModel.abstract_model -> DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation

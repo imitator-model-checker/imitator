@@ -784,6 +784,8 @@ val epsilon_temporal_upper_bound_px_linear_constraint : variable -> px_linear_co
 val epsilon_temporal_lower_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint * px_nnconvex_constraint
 
 
+(* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
+val is_px_linear_upper_bounded : px_linear_constraint -> bool
 
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)

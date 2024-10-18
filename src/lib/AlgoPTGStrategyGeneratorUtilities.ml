@@ -179,9 +179,10 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
   }
 
 let generate_simple_model (system_model : abstract_model) 
-  ~nb_locations ~nb_transitions
-  ~location_names ~is_accepting ~is_urgent ~invariants
-  ~actions_per_location ~transitions ~transitions_description
+	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
+	~location_names ~is_accepting ~is_urgent ~invariants
+	~actions_per_location ~transitions ~transitions_description
+  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete
 	: simple_abstract_model = 
   {
     nb_automata = system_model.nb_automata;
@@ -189,8 +190,8 @@ let generate_simple_model (system_model : abstract_model)
     nb_clocks  = system_model.nb_clocks; 
     nb_discrete = system_model.nb_discrete; 
     nb_rationals  = system_model.nb_rationals;
-    nb_parameters = system_model.nb_parameters;
-    nb_variables  = system_model.nb_variables;
+    nb_parameters;
+    nb_variables;
     nb_ppl_variables = system_model.nb_ppl_variables;
     nb_locations;
     nb_transitions;
@@ -203,11 +204,11 @@ let generate_simple_model (system_model : abstract_model)
     discrete = system_model.discrete;
     discrete_rationals = system_model.discrete_rationals;
     is_discrete = system_model.is_discrete;
-    parameters = system_model.parameters;
+    parameters;
     clocks_and_discrete = system_model.clocks_and_discrete;
-    parameters_and_discrete = system_model.parameters_and_discrete;
-    parameters_and_clocks = system_model.parameters_and_clocks;
-    variable_names = system_model.variable_names;
+    parameters_and_discrete;
+    parameters_and_clocks;
+    variable_names;
     discrete_names_by_type_group = system_model.discrete_names_by_type_group;
     type_of_variables = system_model.type_of_variables;
     automata = [0];
@@ -234,12 +235,14 @@ let generate_simple_model (system_model : abstract_model)
   }
 
 let generate_abstract_controller_model (system_model : abstract_model)
-	~nb_locations ~nb_transitions
+	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
 	~location_names ~is_accepting ~is_urgent ~invariants
-	~actions_per_location ~transitions ~transitions_description =
-	let simple_model = generate_simple_model system_model 
-		~nb_locations ~nb_transitions ~location_names
-		~is_accepting ~is_urgent ~invariants
-		~actions_per_location ~transitions ~transitions_description 
+	~actions_per_location ~transitions ~transitions_description
+  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete =
+  let simple_model = generate_simple_model system_model
+    ~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
+    ~location_names ~is_accepting ~is_urgent ~invariants
+    ~actions_per_location ~transitions ~transitions_description
+    ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete
 	in
 	generate_abstract_model simple_model

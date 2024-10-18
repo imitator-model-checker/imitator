@@ -111,8 +111,10 @@ type transitions = automaton_index -> location_index -> action_index -> (transit
 type transitions_description = transition_index -> transition
 
 val generate_abstract_controller_model : 
-	abstract_model -> nb_locations:state_index -> nb_transitions:state_index -> 
+	abstract_model -> nb_locations:int -> nb_transitions:int -> nb_parameters:int -> nb_variables:int -> 
 	location_names:location_names -> is_accepting:is_accepting -> is_urgent:is_urgent -> 
 	invariants:invariants -> actions_per_location:actions_per_location -> 
 	transitions:transitions -> transitions_description:transitions_description -> 
+	variable_names:(variable_index -> variable_name) -> parameters:variable_index list -> 
+	parameters_and_clocks:variable_index list -> parameters_and_discrete:variable_index list ->
 	abstract_model

@@ -5234,6 +5234,20 @@ let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : varia
  in
 	generic_temporal_bound_px_linear_constraint Lower bound_shape
 
+(* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
+let is_px_linear_upper_bounded (k : px_linear_constraint) = 
+	get_minimized_inequalities k |>
+	List.exists (fun ineq -> match ineq with 
+		| Less_Or_Equal (t1,t2) | Less_Than (t1,t2)
+		| Greater_Or_Equal (t2,t1) | Greater_Than (t2,t1) | Equal (t1 ,t2) ->
+			begin
+				let t1_sign = get_clock_sign_from_term t1 in 
+				let t2_sign = get_clock_sign_from_term t2 in 
+				t1_sign = Some P && t2_sign = None ||
+				t2_sign = Some M && t1_sign = None
+			end
+	)
+
 (*------------------------------------------------------------*)
 (* Point exhibition *)
 (*------------------------------------------------------------*)

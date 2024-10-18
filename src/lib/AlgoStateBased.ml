@@ -693,8 +693,19 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 	time_polyhedron
 
 
-
-
+let apply_time_shift_no_stopwatch (direction : LinearConstraint.time_direction) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
+		let time_polyhedron =
+			(* Choose the right variable depending on time direction *)
+			let appropriate_variable = match direction with
+				| LinearConstraint.Time_forward	-> !time_elapsing_polyhedron
+				| LinearConstraint.Time_backward	-> !time_past_polyhedron
+			in
+			match appropriate_variable with
+			| Some polyedron -> polyedron
+			| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift_no_stopwatch`.")
+		in
+		(* Apply time elapsing *)
+		LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint
 
 let apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 	(* If urgent: no time elapsing *)
@@ -751,6 +762,18 @@ let apply_time_elapsing = apply_time_shift LinearConstraint.Time_forward
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 let apply_time_past = apply_time_shift LinearConstraint.Time_backward
+
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_forward
+
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+let apply_time_past_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_backward
 
 
 

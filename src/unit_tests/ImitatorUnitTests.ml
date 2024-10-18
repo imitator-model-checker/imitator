@@ -350,31 +350,56 @@ let precise_lower_bound_simple_constr_1 () =
     let result = LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint (var_of_string "epsilon") input in 
     Alcotest.(check px_nnconvex_pair) "epsilon lower bound of complex constraint should be correct" expected result
 
-    let precise_upper_bound_split_test () = 
-      let input = intersection_px_constraint [
-        diagonal_px_constraint "x" ">" "p" 0;
+  let precise_upper_bound_split_test () = 
+    let input = intersection_px_constraint [
+      diagonal_px_constraint "x" ">" "p" 0;
+      simple_px_constraint "z" "<=" 2;
+      simple_px_constraint "z" "<" 4;
+      diagonal_px_constraint "y" "<" "q" 2;
+    ] in 
+    let expected = nn_convex_px (
+      intersection_px_constraint [
+      diagonal_px_constraint "x" ">" "p" 0;
+      diagonal_px_constraint "y" "<" "q" 2;
+      simple_px_constraint "z" "=" 2;
+      ];
+    ),
+    nn_convex_px (
+      intersection_px_constraint [
+        diagonal_px_constraint "x" ">=" "p" 0;
+        diagonal_px_constraint "y" "=" "q" 2;
         simple_px_constraint "z" "<=" 2;
-        simple_px_constraint "z" "<" 4;
-        diagonal_px_constraint "y" "<" "q" 2;
-      ] in 
-      let expected = nn_convex_px (
-        intersection_px_constraint [
-        diagonal_px_constraint "x" ">" "p" 0;
-        diagonal_px_constraint "y" "<" "q" 2;
-        simple_px_constraint "z" "=" 2;
-        ];
-      ),
-      nn_convex_px (
-        intersection_px_constraint [
-          diagonal_px_constraint "x" ">=" "p" 0;
-          diagonal_px_constraint "y" "=" "q" 2;
-          simple_px_constraint "z" "<=" 2;
-        ];
-      ) in
-      let result = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint input in 
-      Alcotest.(check px_nnconvex_pair) "upper bound of parameter constraint should split in/out correctly" expected result
-  
-  
+      ];
+    ) in
+    let result = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint input in 
+    Alcotest.(check px_nnconvex_pair) "upper bound of parameter constraint should split in/out correctly" expected result
+
+  let is_px_linear_upper_bounded_test_1 () = 
+    let input = intersection_px_constraint [
+      diagonal_px_constraint "x" ">" "p" 0;
+      simple_px_constraint "x" ">=" 2
+    ] in
+    let expected = false in 
+    let result = LinearConstraint.is_px_linear_upper_bounded input in 
+    Alcotest.(check bool) "is_px_linear_upper_bounded should return false when there is no upper bound" expected result
+  let is_px_linear_upper_bounded_test_2 () = 
+    let input = intersection_px_constraint [
+      diagonal_px_constraint "x" "<" "p" 0;
+      simple_px_constraint "x" ">=" 2
+    ] in
+    let expected = true in 
+    let result = LinearConstraint.is_px_linear_upper_bounded input in 
+    Alcotest.(check bool) "is_px_linear_upper_bounded should return true when there is an upper bound" expected result
+
+
+  let is_px_linear_upper_bounded_test_3 () = 
+    let input = intersection_px_constraint [
+      diagonal_px_constraint "x" ">" "p" 0;
+      simple_px_constraint "x" "=" 2
+    ] in
+    let expected = true in 
+    let result = LinearConstraint.is_px_linear_upper_bounded input in 
+    Alcotest.(check bool) "is_px_linear_upper_bounded should return true when there is an upper bound" expected result
 
 end
 
@@ -412,6 +437,10 @@ run "Unit tests" [
         test_case "Lower ε-bound on simple constr" `Quick LinearConstraintTests.epsilon_lower_bound_simple_constr_1;
         test_case "Lower ε-bound on complex constr" `Quick LinearConstraintTests.epsilon_lower_bound_complex_constr_1;
 
-        test_case "Upper bound splitting works" `Quick LinearConstraintTests.precise_upper_bound_split_test
+        test_case "Upper bound splitting works" `Quick LinearConstraintTests.precise_upper_bound_split_test;
+
+        test_case "Is Upper bounded simple false" `Quick LinearConstraintTests.is_px_linear_upper_bounded_test_1;
+        test_case "Is Upper bounded simple true" `Quick LinearConstraintTests.is_px_linear_upper_bounded_test_2;
+        test_case "Is Upper bounded simple true" `Quick LinearConstraintTests.is_px_linear_upper_bounded_test_3;
         ];
   ]

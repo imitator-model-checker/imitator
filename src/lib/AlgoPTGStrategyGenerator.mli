@@ -7,25 +7,35 @@ open AbstractValue
 
 type strategy_action = 
   | Wait
-  | Action of action_index
+  | Action of action_index * combined_transition
 
-type strategy_entry = {
-  winning_move : LinearConstraint.px_nnconvex_constraint;
-  action : strategy_action;
+
+
+type strategy_action_entry = {
+  winning_move : LinearConstraint.px_linear_constraint;
+  action : action_index;
+  transition : combined_transition;
+  prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
+  destination : DiscreteState.global_location
+}
+
+type strategy_wait_entry = {
   prioritized_winning_zone : LinearConstraint.px_nnconvex_constraint;
 }
 
-type location_strategy = strategy_entry list
-type discrete_mapping = variable_index * abstract_value
-type location_strategy_key = location_index list * discrete_mapping list
+type strategy_entry = 
+  ActionEntry of strategy_action_entry |
+  WaitEntry of strategy_wait_entry
 
+type location_strategy = strategy_entry list
+  
 
 class locationStrategyMap : object 
-	val mutable internal_tbl : (location_strategy_key, location_strategy ref) Hashtbl.t
-	method replace : location_strategy_key -> location_strategy ref -> unit
-	method find : location_strategy_key -> location_strategy ref    
-    method iter : (location_strategy_key -> location_strategy ref -> unit) -> unit
-    method fold : 'c. (location_strategy_key -> location_strategy ref -> 'c -> 'c) -> 'c -> 'c
+	val mutable internal_tbl : (DiscreteState.global_location, location_strategy ref) Hashtbl.t
+	method replace : DiscreteState.global_location -> location_strategy ref -> unit
+	method find : DiscreteState.global_location -> location_strategy ref    
+    method iter : (DiscreteState.global_location -> location_strategy ref -> unit) -> unit
+    method fold : 'c. (DiscreteState.global_location -> location_strategy ref -> 'c -> 'c) -> 'c -> 'c
 	method is_empty : bool
 end
 
@@ -57,5 +67,6 @@ class winningMovesPerState : object
 	method is_empty : bool
 end
 
-val print_strategy : abstract_model -> strategy:locationStrategyMap -> state_space:StateSpace.stateSpace -> unit
-val generate_controller : abstract_model -> (state_index -> winningMovesPerState) -> stateSpace -> Options.imitator_options -> unit
+val print_strategy : abstract_model -> strategy:locationStrategyMap -> unit
+
+val controller_synthesis : abstract_model -> Options.imitator_options -> stateSpace -> locationStrategyMap -> unit
