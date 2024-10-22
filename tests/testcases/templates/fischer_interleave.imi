@@ -1,0 +1,84 @@
+(* EXAMPLE 2 *)
+var
+    id : int;
+    k = 2 : constant;
+    IDLE = -1 : int;
+    N = 4 : int;
+
+synt_var
+  x : clock array (N);
+
+automaton p2
+
+loc A: invariant True flow {x[1]' = 2}
+  when id = IDLE do { x[1] := 0 } goto req;
+
+loc req: invariant x[3] <= k
+  when x[1] <= k do { x[1] := 0; id := 1 } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[1] := 0 } goto req;
+  when id = 1 & x[1] > k goto cs;
+
+loc cs: invariant True
+  when True do { id := IDLE } goto A;
+
+end
+
+template p(i : int)
+
+loc A: invariant True flow {x[i]' = 2}
+  when id = IDLE do { x[i] := 0 } goto req;
+
+loc req: invariant x[i] <= k
+  when x[i] <= k do { x[i] := 0; id := i } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[i] := 0 } goto req;
+  when id = i & x[i] > k goto cs;
+
+loc cs: invariant True
+  when True do { id := IDLE } goto A;
+
+end
+
+automaton p3
+
+loc A: invariant True flow {x[2]' = 2}
+  when id = IDLE do { x[2] := 0 } goto req;
+
+loc req: invariant x[3] <= k
+  when x[2] <= k do { x[2] := 0; id := 3 } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[2] := 0 } goto req;
+  when id = 2 & x[2] > k goto cs;
+
+loc cs: invariant True
+  when True do { id := IDLE } goto A;
+
+end
+
+(* Instantiation following UPPAAL's convention *)
+instantiate p1 := p(0);
+instantiate p4 := p(3);
+
+init := {
+
+    discrete =
+        loc[p1] := A,
+        loc[p2] := A,
+        loc[p3] := A,
+        loc[p4] := A,
+        id := IDLE,
+    ;
+
+    continuous =
+        x[0] = 0
+      & x[1] = 0
+      & x[2] = 0
+      & x[3] = 0
+    ;
+}
+
+end

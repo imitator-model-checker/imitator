@@ -29195,6 +29195,26 @@ Constraint nature                       : good
     }
     ,
     {
+        'purpose'      : 'Test correct instantiation of templates (fischer_interleave)',
+        'input_files'  : ['templates/fischer_interleave.imi', 'templates/fischer_interleave.imiprop'],
+        'options'      : '-verbose mute',
+        'expectations' : [{
+            'file'   : 'fischer_interleave.res',
+            'content': """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+        }]
+    }
+    ,
+    {
         'purpose'      : 'Test correct instantiation of templates (fischer_orig)',
         'input_files'  : ['templates/fischer_orig.imi', 'templates/fischer_orig.imiprop'],
         'options'      : '-verbose mute',
