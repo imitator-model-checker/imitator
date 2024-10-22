@@ -544,8 +544,10 @@ let expand_model (model : unexpanded_parsed_model) : parsed_model =
     List.concat_map (expand_forall_call g_decls)
   in
   let all_calls = model.template_calls @ forall_calls in
-  let instantiated_automata = instantiate_automata model.template_definitions all_calls in
-  let all_automata = model.unexpanded_automata @ instantiated_automata in
+  let (templates, automata) = List.partition_map
+    (fun v -> match v with | Template t -> (Left t) | PTA p -> Right p) model.templates_and_ptas in
+  let instantiated_automata = instantiate_automata templates all_calls in
+  let all_automata = automata @ instantiated_automata in
 
   let synt_vars =
     List.concat_map
