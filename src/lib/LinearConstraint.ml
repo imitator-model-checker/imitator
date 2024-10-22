@@ -4570,13 +4570,13 @@ let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 
 		(* Add it to the list of disjuncts *)
 		(*** NOTE: seems necessary to copy the disjunct first! (otherwise we get some strange segmentation fault) ***)
-		disjuncts := (p_copy disjunct) :: !disjuncts;
+		disjuncts := disjunct :: !disjuncts;
 
 		(* Increment the iterator *)
 		ippl_nncc_increment_iterator iterator;
 	done;
 
-	let _ = ippl_nncc_begin_iterator p_nnconvex_constraint in
+	(* let _ = ippl_nncc_begin_iterator p_nnconvex_constraint in *)
 
 	(* Return disjuncts *)
 	let result = List.rev (!disjuncts) in
