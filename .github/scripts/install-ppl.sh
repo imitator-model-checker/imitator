@@ -9,7 +9,7 @@ unzip -qq ppl-${PPL_VERSION}.zip
 
 cd ppl-${PPL_VERSION}
 
-patch <"${PATCH_FOLDER}/ppl_gc.patch"
+patch -p0 <"${PATCH_FOLDER}/ppl_gc.patch"
 
 # Patch clang for OSX
 if [[ "$RUNNER_OS" = "macOS" ]]; then

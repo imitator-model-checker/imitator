@@ -1,4 +1,4 @@
---- interfaces/OCaml/ppl_interface_generator_ocaml_cc_code.m4
+--- interfaces/OCaml/ppl_interface_generator_ocaml_cc_code.m4.orig
 +++ interfaces/OCaml/ppl_interface_generator_ocaml_cc_code.m4
 1108c1108,1110
 <   delete p_@CLASS@_iterator_val(v);
@@ -7,7 +7,7 @@
 > dnl so commenting these lines will not create memory leaks.
 > //  delete p_@CLASS@_iterator_val(v);
 
---- interfaces/OCaml/ppl_interface_generator_ocaml_hh_code.m4
+--- interfaces/OCaml/ppl_interface_generator_ocaml_hh_code.m4.orig
 +++ interfaces/OCaml/ppl_interface_generator_ocaml_hh_code.m4
 47,48c47,50
 <    if (!marked(actual_p_@CLASS@_val(v)))
@@ -18,7 +18,7 @@
 > //   if (!marked(actual_p_@CLASS@_val(v)))
 > //      delete actual_p_@CLASS@_val(v);
 
---- interfaces/OCaml/ppl_ocaml_common.cc
+--- interfaces/OCaml/ppl_ocaml_common.cc.orig
 +++ interfaces/OCaml/ppl_ocaml_common.cc
 735c735,737
 <   delete p_MIP_Problem_val(v);
