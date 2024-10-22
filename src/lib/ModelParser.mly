@@ -76,9 +76,8 @@ let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unex
                 unexpanded_controllable_actions  = merged_controllable_actions;
                 unexpanded_variable_declarations = List.append parsed_model.unexpanded_variable_declarations parsed_model_list.unexpanded_variable_declarations;
                 unexpanded_fun_definitions       = List.append parsed_model.unexpanded_fun_definitions parsed_model_list.unexpanded_fun_definitions;
-                unexpanded_automata              = List.append parsed_model.unexpanded_automata parsed_model_list.unexpanded_automata;
+                templates_and_ptas               = List.append parsed_model.templates_and_ptas parsed_model_list.templates_and_ptas;
                 unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
-                template_definitions             = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
                 template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
                 forall_template_calls            = List.append parsed_model.forall_template_calls parsed_model_list.forall_template_calls;
                 synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
@@ -91,9 +90,8 @@ let unzip l = List.fold_left
 		unexpanded_controllable_actions  = Unexpanded_parsed_no_controllable_actions;
 		unexpanded_variable_declarations = [];
 		unexpanded_fun_definitions       = [];
-		unexpanded_automata              = [];
+    templates_and_ptas               = [];
 		unexpanded_init_definition       = [];
-		template_definitions             = [];
 		template_calls                   = [];
 		synt_declarations                = [];
 		forall_template_calls            = [];
@@ -161,18 +159,17 @@ let unzip l = List.fold_left
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists template_defs automata template_calls forall_template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists templates_and_automata template_calls forall_template_calls init_definition_option
 	end_opt EOF
 	{
 		let controllable_actions  = $1 in
 		let declarations          = $3 in
     let synt_declarations     = $4 in
 		let fun_definitions       = $5 in
-		let template_definitions  = $6 in
-		let automata              = $7 in
-		let template_calls        = $8 in
-    let forall_template_calls = $9 in
-		let init_definition       = $10 in
+    let templates_and_ptas    = $6 in
+		let template_calls        = $7 in
+    let forall_template_calls = $8 in
+		let init_definition       = $9 in
 
 		let main_model =
 {
@@ -180,9 +177,8 @@ main:
                         unexpanded_variable_declarations = declarations;
                         synt_declarations                = synt_declarations;
                         unexpanded_fun_definitions       = fun_definitions;
-                        unexpanded_automata              = automata;
+                        templates_and_ptas               = templates_and_ptas;
                         unexpanded_init_definition       = init_definition;
-                        template_definitions             = template_definitions;
                         template_calls                   = template_calls;
                         forall_template_calls            = forall_template_calls;
 		}
@@ -450,10 +446,13 @@ loop_dir:
 
 /************************************************************/
 
-template_defs:
-  | template_def template_defs { $1 :: $2 }
-  | { [] }
-;
+templates_and_automata:
+  | template_def templates_and_automata { (Template $1) :: $2 }
+  | automaton templates_and_automata { (PTA $1) :: $2 }
+  | include_file templates_and_automata { include_list := $1 :: !include_list; $2 }
+  | /* EMPTY */ { [] }
+
+/************************************************************/
 
 /************************************************************/
 
@@ -545,12 +544,6 @@ template_args_elem:
 ************************************************************/
 
 /************************************************************/
-
-automata:
-	| automaton automata { $1 :: $2 }
-	| include_file automata { include_list := $1 :: !include_list; $2 }
-	| { [] }
-;
 
 /************************************************************/
 
