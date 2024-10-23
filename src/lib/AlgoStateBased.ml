@@ -4989,7 +4989,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		print_message Verbose_standard (
 			let nb_states = state_space#nb_states in
 			let nb_transitions = state_space#nb_transitions in
-			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Verification completed" in
 			"\n" ^ fixpoint_str ^ (*" at a depth of "
 			^ (string_of_int bfs_current_depth) ^ ""
 			^ *)": "
