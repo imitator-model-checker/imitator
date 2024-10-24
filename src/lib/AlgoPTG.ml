@@ -682,15 +682,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		AlgoPTGStrategyGenerator.print_strategy 
 		model 
 		~strategy:locationStrategy;
-		AlgoPTGStrategyGenerator.controller_synthesis
-		model
-		options
-		state_space
-		locationStrategy;
-
-		(* Compute the strategy *)
-	(*	if options#ptg_controller_mode != AbstractAlgorithm.No_Generation then 
-			AlgoPTGStrategyGenerator.generate_controller model (fun x -> winningZone#find x |> snd) state_space options; *)
 
 		(* Return the result *)
 		self#compute_result;
