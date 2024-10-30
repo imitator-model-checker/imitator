@@ -108,7 +108,10 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
-	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
+	method private au_rec (state_index : State.state_index) (passed : State.state_index list) (depth_AU : int) : LinearConstraint.p_nnconvex_constraint =
+
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Entering au_ref with depth " ^ (string_of_int depth_AU));
 
 		if print_debug_messages then(
 (* !!! NOTE : de-BUG !!! *)
@@ -485,7 +488,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 (* !!! NOTE : de-BUG !!! *)
 );
 						(* Recursive call to AF on the successor *)
-						let k_good : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy(self#au_rec successor_state_index (state_index :: passed)) in
+						let k_good : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy(self#au_rec successor_state_index (state_index :: passed) (depth_AU + 1)) in
 
 		if print_debug_messages then(
 (* !!! NOTE : de-BUG !!! *)
@@ -810,7 +813,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Main call to the AF dedicated function *)
 		begin
 		try(
-			synthesized_constraint <- self#au_rec init_state_index [];
+			synthesized_constraint <- self#au_rec init_state_index [] 0;
 		) with AlgoStateBased.LimitDetectedException reason ->
 			begin
 			match reason with
