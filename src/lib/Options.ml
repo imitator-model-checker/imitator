@@ -1136,7 +1136,9 @@ class imitator_options =
 			(* Case no file *)
 			if nb_args < 1 then(
 				print_error ("Please give a file name for the model.");
-				Arg.usage speclist usage_msg;
+				print_message Verbose_standard usage_msg;
+				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");
+(* 				Arg.usage speclist usage_msg; *)
 				abort_program ();
 				exit(1)
 			);
@@ -1144,7 +1146,9 @@ class imitator_options =
 			(* Case no property file, although it is needed *)
 			if nb_args = 1 && (property_needed imitator_mode = Second_file_required) then(
 				print_error ("Please give a file name for the property.");
-				Arg.usage speclist usage_msg;
+				print_message Verbose_standard usage_msg;
+				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");
+(* 				Arg.usage speclist usage_msg; *)
 				abort_program ();
 				exit(1)
 			);
