@@ -476,8 +476,8 @@ simple_predicate:
 
 /************************************************************/
 name_or_array_access:
-  | NAME { Var_name $1 }
   | NAME LSQBRA arithmetic_expression RSQBRA { Var_array_access ($1, $3) }
+  | NAME { Var_name $1 }
 ;
 /************************************************************/
 
