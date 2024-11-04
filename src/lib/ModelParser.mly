@@ -22,11 +22,12 @@ open ImitatorUtilities;;
 open DiscreteType;;
 
 
-let parse_error _ =
-	let symbol_start = symbol_start () in
-	let symbol_end = symbol_end () in
-	raise (ParsingError (symbol_start, symbol_end))
-;;
+(*** TODO (Jaime): What is symbol_start ? ***)
+(* let parse_error _ = *)
+(* 	let symbol_start = symbol_start () in *)
+(* 	let symbol_end = symbol_end () in *)
+(* 	raise (ParsingError (symbol_start, symbol_end)) *)
+(* ;; *)
 
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;

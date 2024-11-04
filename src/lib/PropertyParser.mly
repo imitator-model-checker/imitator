@@ -20,11 +20,12 @@ open ImitatorUtilities
 open ParsingStructure
 
 
-let parse_error _ =
-	let symbol_start = symbol_start () in
-	let symbol_end = symbol_end () in
-	raise (ParsingError (symbol_start, symbol_end))
-;;
+(*** TODO (Jaime): What is symbol_start ? ***)
+(* let parse_error _ = *)
+(* 	let symbol_start = symbol_start () in *)
+(* 	let symbol_end = symbol_end () in *)
+(* 	raise (ParsingError (symbol_start, symbol_end)) *)
+(* ;; *)
 
 
 

@@ -1,4 +1,5 @@
 (lang dune 3.6)
+(using menhir 2.1)
 
 (name IMITATOR)
 
@@ -25,9 +26,13 @@
    (>= 4.08))
   dune
   oasis
+  menhir
   mlgmp
   ppl
   extlib
   fileutils)
+
  (tags
   ("model-checking" "parametric timed automata")))
+
+
