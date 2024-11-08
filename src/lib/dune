@@ -9,8 +9,8 @@
   result))
 
 (menhir
- (modules ModelParser PropertyParser)
- (flags --explain))
+ (explain true)
+ (modules ModelParser PropertyParser))
 
 (ocamllex
  (modules ModelLexer PropertyLexer))
