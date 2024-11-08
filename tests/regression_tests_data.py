@@ -27762,8 +27762,8 @@ system pta1, pta2, pta3;
 	{
 		# Test version             : 1
 		# Test since               : 2022/02/04
-		# Last modified            : 2022/02/04
-		# Test for IMITATOR version: 3.1
+		# Last modified            : 2024/11/08
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test translation to Jani',
 		'author': 'lbinria',
 		'tags' : 'translation, jani',
@@ -27894,13 +27894,7 @@ system pta1, pta2, pta3;
 									"value":
 									{
 										"op":"+",
-										"left":
-										{
-											"op":"*",
-											"left":5,
-											"right":3
-										}
-										,
+										"left":15,
 										"right":
 										{
 											"op":"pow",
