@@ -47,12 +47,12 @@ let resolve_property l =
 %token <string> FLOAT
 %token <string> NAME
 %token <string> BINARYWORD
-%token <string> STRING
+/* %token <string> STRING */
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
-%token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
+%token LPAREN RPAREN LSQBRA RSQBRA /* LBRACE RBRACE  */
 %token COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token

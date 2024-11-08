@@ -113,7 +113,7 @@ let unzip l = List.fold_left
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token APOSTROPHE COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
+%token APOSTROPHE COLON COMMA /*DOUBLEDOT */OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
 	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
@@ -123,7 +123,7 @@ let unzip l = List.fold_left
 	CT_ELSE CT_END
 	CT_FALSE CT_FLOW CT_FOR CT_FORALL CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
+	CT_IF CT_IN  CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_PARAMETER
@@ -134,8 +134,8 @@ let unzip l = List.fold_left
 	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
 	/*** NOTE: just to forbid their use in the input model and property ***/
-	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-    CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
+	CT_INFINITY CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
+    /* CT_BUILTIN_FUNC_RATIONAL_OF_INT  CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
 
 
@@ -147,7 +147,7 @@ let unzip l = List.fold_left
 %left OP_IMPLIES           /* lowest precedence */
 %left OP_DISJUNCTION /* CT_OR */
 %left OP_CONJUNCTION       /* medium precedence */
-%left DOUBLEDOT            /* high precedence */
+/*%left DOUBLEDOT      */      /* high precedence */
 %nonassoc CT_NOT           /* highest precedence */
 
 %left OP_PLUS OP_MINUS     /* lowest precedence */
@@ -280,16 +280,6 @@ decl_var_list:
 ;
 
 /************************************************************/
-
-variable_name:
-	| NAME {
-		(* Stupid feature for April 1st 2024 *)
-		if $1 = "April1st" then (raise Exceptions.April1st);
-
-		(* Normal mode: return variable name *)
-		 $1
-		 }
-;
 
 
 /************************************************************/
@@ -1014,8 +1004,9 @@ linear_term:
 ;
 
 
+/** WARNING: unused rules => disabled 2024/11/08 */
 /* Linear expression over rationals only */
-rational_linear_expression:
+/*rational_linear_expression:
 	| rational_linear_term { $1 }
 	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
 	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
@@ -1026,15 +1017,15 @@ rational_linear_expression:
 		)else
 			NumConst.div $1 $3
 		}
-	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
+	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } / * linear_term a la deuxieme place * /
 ;
 
-/* Linear term over rationals only */
+/ * Linear term over rationals only  * /
 rational_linear_term:
 	| rational { $1 }
 	| OP_MINUS rational_linear_term { NumConst.neg $2 }
 	| LPAREN rational_linear_expression RPAREN { $2 }
-;
+;*/
 
 /************************************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
@@ -1133,10 +1124,14 @@ forall_common_prefix:
 
 checked_name_decl:
   | NAME {
-    if contains $1 "___" then
+	(* Stupid April fool feature for 1st April 2024 *)
+	if $1 = "April1st" then (raise Exceptions.April1st)
+
+	(* Normal mode: return variable name *)
+	else (if contains $1 "___" then
       failwith
         "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
-    else $1
+    else $1)
   }
 ;
 

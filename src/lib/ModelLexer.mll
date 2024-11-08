@@ -170,7 +170,7 @@ rule token = parse
 	| '\''             { APOSTROPHE }
 	| ':'              { COLON }
 	| ','              { COMMA }
-	| ".."             { DOUBLEDOT }
+(* 	| ".."             { DOUBLEDOT } *)
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}
