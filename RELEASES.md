@@ -6,6 +6,10 @@
 ### Major features
 * implement the integer hull [JLR15] to ensure termination of IM and EF over bounded parameter domains (work in progress)
 
+### Internal
+* Remplace ocamlyacc with Menhir
+
+
 *******************************************************
 ## release 3.4-alpha2 (2024-09-18) Cheese Durian
 
