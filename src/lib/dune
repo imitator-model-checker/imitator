@@ -8,12 +8,24 @@
   parsingStructure
   result))
 
-(menhir
- (explain true)
- (modules ModelParser PropertyParser))
-
 (ocamllex
  (modules ModelLexer PropertyLexer))
+
+(menhir
+ (flags --dump --explain)
+ (modules ModelParser PropertyParser))
+
+(rule
+ (targets ModelParser.conflicts)
+ (deps ModelParser.mly)
+ (action
+  (run menhir --dump --explain %{deps})))
+
+(rule
+ (targets PropertyParser.conflicts)
+ (deps PropertyParser.mly)
+ (action
+  (run menhir --dump --explain %{deps})))
 
 (env
  (dev

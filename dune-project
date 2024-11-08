@@ -1,6 +1,6 @@
-(lang dune 3.16)
+(lang dune 3.8)
 
-(using menhir 3.0)
+(using menhir 2.1)
 
 (name IMITATOR)
 
