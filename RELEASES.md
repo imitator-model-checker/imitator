@@ -7,7 +7,8 @@
 * implement the integer hull [JLR15] to ensure termination of IM and EF over bounded parameter domains (work in progress)
 
 ### Internal
-* Remplace ocamlyacc with Menhir
+* Better detections of division by 0 in model
+* Replace ocamlyacc with Menhir
 
 
 *******************************************************
