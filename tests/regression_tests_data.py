@@ -916,7 +916,7 @@ Error                                   : division by 0
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/02/28
+		# Last modified            : 2024/11/08
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (discrete int in init definition)',
 		'tags'       : 'syntax',
@@ -924,8 +924,8 @@ Error                                   : division by 0
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-int-init.res' , 'content' : """
-Number of IPTAs                         : 1
-		""" # HACK: only way to check that syntax is correct?!
+Error                                   : model parsing error
+		"""
 			} # end result file
 			,
 		] # end expectations
@@ -939,7 +939,7 @@ Number of IPTAs                         : 1
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/02/28
+		# Last modified            : 2024/11/08
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (discrete rational in init definition)',
 		'tags'       : 'syntax',
@@ -947,8 +947,8 @@ Number of IPTAs                         : 1
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-rational-init.res' , 'content' : """
-Number of IPTAs                         : 1
-		""" # HACK: only way to check that syntax is correct?!
+Error                                   : model parsing error
+		"""
 			} # end result file
 			,
 		] # end expectations
@@ -962,7 +962,7 @@ Number of IPTAs                         : 1
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/02/28
+		# Last modified            : 2024/11/08
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (constant int in definition)',
 		'tags'       : 'syntax',
@@ -970,8 +970,8 @@ Number of IPTAs                         : 1
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-int-def.res' , 'content' : """
-Number of IPTAs                         : 1
-		""" # HACK: only way to check that syntax is correct?!
+Error                                   : model parsing error
+		"""
 			} # end result file
 			,
 		] # end expectations
@@ -985,7 +985,7 @@ Number of IPTAs                         : 1
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/02/28
+		# Last modified            : 2024/11/08
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (constant rational in definition)',
 		'tags'       : 'syntax',
@@ -993,8 +993,8 @@ Number of IPTAs                         : 1
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-rational-def.res' , 'content' : """
-Number of IPTAs                         : 1
-		""" # HACK: only way to check that syntax is correct?!
+Error                                   : model parsing error
+		"""
 			} # end result file
 			,
 		] # end expectations

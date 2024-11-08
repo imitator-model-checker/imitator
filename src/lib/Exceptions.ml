@@ -21,6 +21,9 @@
 (* For constraint conversion *)
 exception False_exception
 
+(** Exception raised when a static division by 0 (i.e., at the parsing level) is found *)
+exception Static_division_by_0 of string
+
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 

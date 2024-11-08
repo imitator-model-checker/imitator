@@ -100,6 +100,15 @@ let unzip l = List.fold_left
 	(List.rev l)
 ;;
 
+(* Check whether n1/n2 is defined and, if not (i.e., if n2 = 0), raises an exception *)
+let check_absence_of_division_by_0_or_abort (n1 : NumConst.t) (n2 : NumConst.t) : unit =
+	if NumConst.equal n1 NumConst.zero then(
+(* 		print_error ("Division by 0 (" ^ (NumConst.string_of_numconst n1) ^ "/" ^ (NumConst.string_of_numconst n2) ^ ") spotted during the parsing!"); *)
+		raise (Static_division_by_0 ("" ^ (NumConst.string_of_numconst n1) ^ "/" ^ (NumConst.string_of_numconst n2) ^ ""))
+	);
+	()
+
+
 %}
 
 %token <NumConst.t> INT
@@ -833,6 +842,7 @@ init_discrete_continuous_definition:
 ;
 
 init_discrete_definition:
+	/** WARNING: CT_RATIONAL means here… 'discrete'! ***/
     | CT_RATIONAL OP_EQ init_discrete_expression SEMICOLON { $3 }
 ;
 
@@ -917,11 +927,40 @@ arithmetic_term:
 	| arithmetic_factor { Parsed_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
 	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable ($2, 0), Parsed_mul) }
-	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
-	| OP_MINUS arithmetic_factor { Parsed_factor(Parsed_unary_min $2) }
+
+	| arithmetic_term op_mul_or_div arithmetic_factor {
+		(* Try to simplify whenever possible, and detect division by zero (i.e., two numbers of the same type) *)
+		match $1, $3 with
+		| Parsed_factor (Parsed_constant (ParsedValue.Weak_number_value n1)) , Parsed_constant (ParsedValue.Weak_number_value n2) ->
+			if $2 = Parsed_mul then
+			Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.mul n1 n2)))
+			else(
+			(* Check division by 0 *)
+			check_absence_of_division_by_0_or_abort n1 n2;
+			Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.div n1 n2)))
+			)
+
+		| Parsed_factor (Parsed_constant (ParsedValue.Rat_value n1)) , Parsed_constant (ParsedValue.Rat_value n2) ->
+			if $2 = Parsed_mul then
+			Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.mul n1 n2)))
+			else(
+			(* Check division by 0 *)
+			check_absence_of_division_by_0_or_abort n1 n2;
+			Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.div n1 n2)))
+			)
+
+		| _ -> Parsed_product_quotient ($1, $3, $2)
+		}
+
+	| OP_MINUS arithmetic_factor {
+		(* Try to simplify whenever possible (i.e., two numbers of the same type) *)
+		match $2 with
+		| Parsed_constant (ParsedValue.Weak_number_value n) -> Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.neg n)))
+		| Parsed_constant (ParsedValue.Rat_value n) -> Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.neg n)))
+		| _ -> Parsed_factor(Parsed_unary_min $2) }
 ;
 
-product_quotient:
+op_mul_or_div:
   | OP_MUL { Parsed_mul }
   | OP_DIV { Parsed_div }
 ;
@@ -1083,11 +1122,8 @@ rational:
 	| integer { $1 }
 	| float { $1 }
 	| integer OP_DIV pos_integer {
-		if NumConst.equal $3 NumConst.zero then(
-			print_error "Division by 0 spotted during the parsing!";
-			raise (InvalidModel)
-		)else
-			NumConst.div $1 $3
+		check_absence_of_division_by_0_or_abort $1 $3;
+		NumConst.div $1 $3
 	}
 ;
 

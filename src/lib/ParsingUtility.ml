@@ -142,6 +142,12 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			let failure_message = "Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 
+		(* Static division by 0 *)
+		| Static_division_by_0 error_message ->
+			(* Abort properly *)
+			let failure_message = "Division by 0 (" ^ error_message ^ ") spotted during the parsing!" in
+			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+
 		(* Problem with an included file *)
 		| IncludeFileNotFound included_file ->
 			(* Abort properly *)
