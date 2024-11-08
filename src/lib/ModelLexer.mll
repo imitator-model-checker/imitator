@@ -38,6 +38,8 @@ rule token = parse
 			let c = try(
 				open_in absolute_filename
 			)with
+				(* Lib.ModelParser.MenhirBasics.Error *)
+				| Error _
 				| Sys_error _ ->
 					(* Abort properly *)
 (* 					print_error(e); *)
