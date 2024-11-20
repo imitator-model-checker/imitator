@@ -1007,7 +1007,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the flows *)
 	let flow_array = Array.make nb_automata (Array.make 0 []) in
-	
+
 	(* Does the model has any clock with a rate <>1? *)
 	let has_non_1rate_clocks = ref false in
 	(* Maintain the index of no_sync *)
@@ -1202,9 +1202,9 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 	=
 
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
-  
+
   (*** NOTE/TODO: why (Array.length transitions) ?! ***)
-  
+
   let array_of_transitions : (((AbstractModel.transition_index list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
   (* Create the empty array transition_index -> transition *)
   let dummy_transition = {
@@ -1215,7 +1215,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
   let automaton_of_transition : Automaton.automaton_index array = Array.make nb_transitions (-1) in
-  
+
   (* Maintain an index for the next transition *)
   let transition_index = ref 0 in
 
@@ -1256,7 +1256,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 
               (* Update the transition array *)
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
-              
+
               (* Add the transition to the description *)
               transitions_description.(!transition_index) <- {
 					guard   = converted_guard;
@@ -1266,7 +1266,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 				};
               (* Add the automaton *)
               automaton_of_transition.(!transition_index) <- automaton_index;
-              
+
               (* Increment the index *)
               transition_index := !transition_index + 1;
 
@@ -1747,7 +1747,7 @@ let check_projection_definition variable_infos = function
 (*------------------------------------------------------------*)
 (*let check_optimization parameters_names = function
 	| No_parsed_optimization -> true
-	
+
 	| Parsed_minimize parameter_name | Parsed_maximize parameter_name ->
 		if not (List.mem parameter_name parameters_names) then(
 		print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
@@ -1791,7 +1791,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 		)
 		list_of_variables
 	;
-	
+
 	(* If something went wrong: raise an error *)
 	multiply_defined_variables = [] && all_defined
 
@@ -1845,7 +1845,7 @@ let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_
 		)
 		list_of_variables
 	;
-	
+
 	(* If something went wrong: raise an error *)
 	multiply_defined_variables = [] && all_defined && all_intervals_ok
 
@@ -1915,7 +1915,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate
-		
+
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
 
@@ -1930,7 +1930,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-		
+
 		(* Until and variants *)
 		| Parsed_ER (parsed_state_predicate_phi, parsed_state_predicate_psi)
 		| Parsed_EU (parsed_state_predicate_phi, parsed_state_predicate_psi)
@@ -1981,7 +1981,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
@@ -1991,20 +1991,20 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 				(check_parameter_name " in the optimization definition" variable_infos parameter_name)
 
-		
+
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate ->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Cycles *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-		
+
 		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
 			(* Do a fold_left to check everything even in case of failure *)
@@ -2021,15 +2021,15 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Deadlock-free synthesis *)
 		| Parsed_Deadlock_Freeness -> true
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Inverse method with complete, non-convex result *)
 		| Parsed_IM parsed_pval
 		(* Non-complete, non-deterministic inverse method with convex result *)
@@ -2040,19 +2040,19 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		| Parsed_IMunion parsed_pval
 			->
 			check_parsed_pval useful_parsing_model_information parsed_pval
-		
+
 		(* PRP *)
 		| Parsed_PRP (parsed_state_predicate, parsed_pval) ->
 			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 				(check_parsed_pval useful_parsing_model_information parsed_pval)
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Cartography *)
 		| Parsed_Cover_cartography (parsed_hyper_rectangle, step)
 		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
@@ -2068,7 +2068,7 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 				(* The step has to be > 0 *)
 				(NumConst.g step NumConst.zero)
 				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
-	
+
 		(* Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step)
 		(* Parametric reachability preservation *)
@@ -2084,9 +2084,9 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(*------------------------------------------------------------*)
 		(* Observer patterns *)
 		(*------------------------------------------------------------*)
-		
+
 		(* CASE TWO ACTIONS *)
-		
+
 		(* if a2 then a1 has happened before *)
 		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 ))
 		(* everytime a2 then a1 has happened before *)
@@ -2098,10 +2098,10 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			evaluate_and
 				(check_action_name index_of_actions a1)
 				(check_action_name index_of_actions a2)
-		
+
 
 		(* CASE ACTION + DEADLINE *)
-		
+
 		(* a within d *)
 		| Parsed_pattern (ParsingStructure.Parsed_action_deadline ( a , d ))
 			->
@@ -2116,14 +2116,14 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 
 		(* CASE 2 ACTIONS + DEADLINE *)
-		
+
 		(* if a2 then a1 happened within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_acyclic (a1, a2, d))
 		(* everytime a2 then a1 happened within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclic (a1, a2, d))
 		(* everytime a2 then a1 happened once within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d))
-		
+
 		(* if a1 then eventually a2 within d *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_response_acyclic (a1, a2, d))
 		(* everytime a1 then eventually a2 within d *)
@@ -2195,9 +2195,9 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 (** Convert the parsed hyper_rectangle into a valid hyper_rectangle *)
 (*------------------------------------------------------------*)
 let convert_parsed_hyper_rectangle variable_infos (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : HyperRectangle.hyper_rectangle =
-	
+
 	let hyper_rectangle = new HyperRectangle.hyper_rectangle in
-	
+
 	List.iter (fun (variable_name, a, b) ->
 		try
 			(* Get the variable index *)
@@ -2242,9 +2242,9 @@ let convert_projection_definition (index_of_variables : (Automaton.variable_name
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
 	observer_structure					: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * AbstractModel.guard array * AbstractModel.transition list array array;
-	
+
 	nb_transitions_for_observer			: int;
-	
+
 	initial_observer_constraint_option	: LinearConstraint.px_linear_constraint option;
 }
 
@@ -2262,7 +2262,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 	match parsed_property_option with
 	(* No property, no observer *)
 	| None -> None, None
-	
+
 	(* Some property *)
 	| Some parsed_property ->
 		let property , converted_observer_structure_option =
@@ -2285,14 +2285,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			EF (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-			
+
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate ->
 			(* Return a property and no observer *)
 			AGnot (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-		
+
 		(* Global invariant *)
 		| Parsed_AG parsed_state_predicate ->
 			(* Return a property and no observer *)
@@ -2481,7 +2481,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
 			EFpmin (
@@ -2491,7 +2491,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			)
 			,
 			None
-		
+
 		(* Reachability with maximization of a parameter valuation *)
 		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
 			EFpmax (
@@ -2501,53 +2501,53 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			)
 			,
 			None
-		
+
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate ->
 			EFtmin (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Cycles *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			Cycle_through (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-		
+
 		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list ->
 			Cycle_through_generalized (List.map (PropertyConverter.convert_state_predicate useful_parsing_model_information) parsed_state_predicate_list)
 			,
 			None
 
-		
+
 		(* Infinite-run (cycle) with non-Zeno assumption *)
 		| Parsed_NZ_Cycle -> NZ_Cycle, None
-		
+
 
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Deadlock-free synthesis *)
 		| Parsed_Deadlock_Freeness -> Deadlock_Freeness, None
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Inverse method with complete, non-convex result *)
 		| Parsed_IM parsed_pval ->
 			IM (convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
 			None
-			
+
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| Parsed_ConvexIM parsed_pval ->
 			ConvexIM (convert_parsed_pval useful_parsing_model_information parsed_pval)
@@ -2572,47 +2572,47 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			,
 			None
 
-			
+
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
-		
+
 		(* Cartography *)
 		| Parsed_Cover_cartography (parsed_hyper_rectangle, step) ->
 			Cover_cartography ((convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle) , step)
 			,
 			None
-		
+
 		(* Cover the whole cartography using learning-based abstractions *)
 		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
 			Learning_cartography ((PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step))
 			,
 			None
-		
+
 		(* Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step) ->
 			Shuffle_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
-		
+
 		(* Look for the border using the cartography*)
 		| Parsed_Border_cartography (parsed_hyper_rectangle, step) ->
 			Border_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
 			,
 			None
-		
+
 		(* Randomly pick up values for a given number of iterations *)
 		| Parsed_Random_cartography (parsed_hyper_rectangle, nb, step) ->
 			Random_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , nb , step)
 			,
 			None
-		
+
 		(* Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, nb, step) ->
 			RandomSeq_cartography (convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , nb , step)
 			,
 			None
-	
+
 		(* Parametric reachability preservation *)
 		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step) ->
 			PRPC (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle variable_infos parsed_hyper_rectangle , step)
@@ -2623,9 +2623,9 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		(*------------------------------------------------------------*)
 		(* Observer patterns *)
 		(*------------------------------------------------------------*)
-		
+
 		(* CASE TWO ACTIONS *)
-		
+
 		(* if a2 then a1 has happened before *)
 		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_acyclic _)
 		(* everytime a2 then a1 has happened before *)
@@ -2634,68 +2634,68 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		| Parsed_pattern (ParsingStructure.Parsed_action_precedence_cyclicstrict _)
 
 		(* CASE ACTION + DEADLINE *)
-		
+
 		(* a within d *)
 		| Parsed_pattern (ParsingStructure.Parsed_action_deadline _)
-		
+
 		(* CASE 2 ACTIONS + DEADLINE *)
-		
+
 		(* if a2 then a1 happened within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_acyclic _)
 		(* everytime a2 then a1 happened within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclic _)
 		(* everytime a2 then a1 happened once within d before *)
 		| Parsed_pattern (ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _)
-		
+
 		(* if a1 then eventually a2 within d *)
 		| Parsed_pattern (Parsed_TB_response_acyclic _)
 		(* everytime a1 then eventually a2 within d *)
 		| Parsed_pattern (Parsed_TB_response_cyclic _)
 		(* everytime a1 then eventually a2 within d once before next *)
 		| Parsed_pattern (Parsed_TB_response_cyclicstrict _)
-		
+
 		(* CASE SEQUENCES *)
-		
+
 		(* sequence a1, …, an *)
 		| Parsed_pattern (Parsed_Sequence_acyclic _)
 		(* always sequence a1, …, an *)
 		| Parsed_pattern (Parsed_Sequence_cyclic _)
-		
+
 			->
-			
+
 			(* Print some information *)
 			print_message Verbose_low ("*** The property is an observer pattern. Generating the observer…");
-			
+
 			(* First, let us retrieve some useful information *)
-			
+
 			(* Get the silent action index for the observer *)
 			let observer_nosync_index = match observer_nosync_index_option with
 				| Some action_index -> action_index
 				| None -> raise (InternalError ("An observer action should have been defined."))
 			in
-			
+
 			(* Get the observer automaton index *)
 			let observer_automaton_index = match observer_automaton_index_option with
 				| Some automaton_index -> automaton_index
 				| None -> raise (InternalError ("An observer automaton index should have been defined."))
 			in
-			
+
 			(* Print some information *)
 			print_message Verbose_total ("*** Retrieved the observer automaton index: `" ^ (string_of_int observer_automaton_index) ^ "`");
-			
+
 			(* Get the local clock for the observer *)
 			(*** WARNING: quite a HACK, here ***)
 			let clock_obs = useful_parsing_model_information.nb_parameters + useful_parsing_model_information.nb_clocks - 1 in
-			
+
 			(* Print some information *)
 			print_message Verbose_total ("*** Retrieved the observer's clock index (if any): `" ^ (string_of_int clock_obs) ^ "`");
-			
+
 			(* Create the function action index -> action name *)
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
-			
+
 			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
 			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (ExpressionConverter.Convert.linear_term_of_linear_expression variable_infos parsed_duration) true in
-			
+
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
 				ObserverPatterns.get_observer_automaton action_index_of_action_name p_linear_term_of_parsed_duration nb_actions observer_automaton_index observer_nosync_index clock_obs parsed_property in
@@ -2709,22 +2709,22 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 					) nb_transitions_for_locations transitions_for_this_location
 				) 0 observer_transitions
 			in
-			
+
 			(* Create the structure *)
 			let converted_observer_structure = {
 				observer_structure					= observer_actions , observer_actions_per_location , observer_location_urgency , observer_invariants , observer_transitions;
-				
+
 				nb_transitions_for_observer			= nb_transitions_for_observer;
-				
+
 				initial_observer_constraint_option	= initial_observer_constraint;
 			}
 			in
-			
+
 			(* Return the property and the structure *)
 			abstract_property
 			,
 			Some converted_observer_structure
-	
+
 		(*------------------------------------------------------------*)
 		(* Games *)
 		(*------------------------------------------------------------*)
@@ -2739,7 +2739,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 
 		(* Get the synthesis or emptiness type *)
 		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Convert the projection definition *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2956,10 +2956,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Stop here if model not well formed *)
  	if not (constants_consistent && all_variables_different && all_automata_different && controllable_actions_checked && at_least_one_automaton) then raise InvalidModel;
- 	
- 	
- 	
- 	
+
+
+
+
  	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2983,14 +2983,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		end;
 	);
 
-	
+
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
 	);
 
 
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Start building variable lists *)
@@ -3117,7 +3117,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| None -> []
 		| Some observer_clock_name -> [observer_clock_name]
 	in
-	
+
 	(* Second handle the special_reset_clock *)
 	let with_special_reset_clock = match parsed_property_option with
 	| Some parsed_property ->
@@ -3127,20 +3127,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			->
 			print_message Verbose_high ("\nDefining special reset clock…");
 			true
-			
+
 		| _ -> false
 		end
-	
+
 	| None -> false
 	in
-	
+
 	let special_reset_clock_list = if with_special_reset_clock then [Constants.special_reset_clock_name] else [] in
-	
+
 
 	(*------------------------------------------------------------*)
 	(* Create lists *)
 	(*------------------------------------------------------------*)
-	
+
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
 
 	(* Make only one list for all variables *)
@@ -3169,7 +3169,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| Some _ ->
 			(* Print some information *)
 			print_message Verbose_high ("\nObserver automaton index is: " ^ (string_of_int (nb_automata - 1)));
-			
+
 			Some (nb_automata - 1)
 	in
 
@@ -3181,9 +3181,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print some information *)
 	print_message Verbose_high ("\nSetting dimensions…");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_rationals;
-	
-	
-	
+
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the parameter dimensions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3342,7 +3342,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		Array.to_list (Array.mapi (fun location_index _ -> location_index) array_of_location_names.(automaton_index));
 	done;
 	let (locations_per_automaton : automaton_index -> location_index list) = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
-	
+
 	(* Create the access function returning a location name *)
 	let location_names = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3369,13 +3369,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Get user functions metadata from parsed functions *)
     (* Get only used user functions definition *)
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
-    let used_function_definitions =
+    let used_function_definitions, unused_functions_definitions =
         (*
         if options#no_variable_autoremove then
             parsed_model.fun_definitions
         else
         *)
-            List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
+            List.partition (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
     in
 
 (*    let used_function_definitions = parsed_model.fun_definitions in*)
@@ -3481,6 +3481,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
+	(* try to convert unused functions to check syntax *)
+	let _ = List.iter(fun (parsed_fun_def : parsed_fun_definition) -> DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def |> ignore) unused_functions_definitions in
 
     (* Try to convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
     let user_functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
@@ -3540,29 +3542,29 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		then raise InvalidModel;
 
 	print_message Verbose_medium ("Model syntax successfully checked.");
-	
 
-	
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
 	if not (check_property_option useful_parsing_model_information parsed_property_option)
 		then raise InvalidProperty;
 
 	print_message Verbose_medium ("Property syntax successfully checked.");
-	
 
-	
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
 	let (actions : action_index list), array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
-	
+
 	let nb_actions = List.length actions in
-	
+
 	(* Print some information *)
 	print_message Verbose_high ("The model contains " ^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ ".");
 
@@ -3570,11 +3572,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the abstract property from the parsed property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
 	(* We may need to create additional structures for the observer, if any *)
-	
+
 	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information nb_actions observer_automaton_index_option observer_nosync_index_option parsed_property_option in
-	
+
 	(* Convert some variables to catch up with older code below *)
 	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option = match converted_observer_structure_option with
 		| None -> None, 0, None
@@ -3583,17 +3585,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			converted_observer_structure.nb_transitions_for_observer,
 			converted_observer_structure.initial_observer_constraint_option
 	in
-	
-	
 
 
 
-	
+
+
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the transitions to their final form *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
 	print_message Verbose_high ("*** Building transitions…");
 	(* Count the number of transitions *)
 	let nb_transitions_without_observer =
@@ -3606,7 +3608,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) 0 transitions
 	in
 	let nb_transitions = nb_transitions_without_observer + nb_transitions_for_observer in
-	
+
 	(* Print some information *)
 	print_message Verbose_total ("" ^ (string_of_int nb_transitions_without_observer) ^ " transition" ^ (s_of_int nb_transitions_without_observer) ^ " in the model, and " ^ (string_of_int nb_transitions_for_observer) ^ " additional transition" ^ (s_of_int nb_transitions_for_observer) ^ " for the observer");
 
@@ -3626,9 +3628,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		begin
 		match observer_structure_option with
 		| None -> raise (InternalError ("No observer structure saved although it should have been set at that point"))
-		
+
 		(*** TODO: create a structure !!! ***)
-		
+
 		| Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions) ->
 			print_message Verbose_high ("*** Adding observer data to automata…");
 			(* Retrieve the number of locations of the observer *)
@@ -3649,9 +3651,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			stopwatches_array.(observer_id)		<- Array.make nb_locations [];
 			(* Update stopwatches (no stopwatches in observers) *)
 			flow_array.(observer_id)			<- Array.make nb_locations [];
-			
+
 			(* Update transitions *)
-			
+
 			(* First convert the transitions to transition_index, and update the transitions_description *)
 
 			(* Maintain an index for the next transition *)
@@ -3675,7 +3677,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 							| Invalid_argument e -> raise (InternalError ("Invalid argument `" ^ e ^ "` when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
 						;
 						end;
-						
+
 						(* Increment the index *)
 						transition_index := !transition_index + 1;
 
@@ -3685,13 +3687,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				) actions_for_this_location;
 			) observer_transitions
 			in
-			
+
 			(* Then update transitions *)
 			transitions.(observer_id) <- observer_transitions;
-			
+
 		end;
 	end;
-	
+
 	(*** TODO : perform init for observer (location) ***)
 
 
@@ -3742,7 +3744,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let variable_names = fun variable_index ->
 		(* Add a safety mechanism *)
 		try(
-			array_of_variable_names.(variable_index) 
+			array_of_variable_names.(variable_index)
 		) with Invalid_argument msg -> raise (InternalError ("Could not find name of variable `" ^ (string_of_int variable_index) ^ "` in function `variable_names`. Additional details: `" ^ msg ^ "`"))
 	in
 
@@ -3753,7 +3755,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			action_types.(action_index)
 		) with Invalid_argument msg -> raise (InternalError ("Could not find type of action `" ^ (string_of_int action_index) ^ "` in function `action_types`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Create the functional representation for the actions of every automaton *)
 	let actions_per_automaton = fun automaton_index ->
 		(* Add a safety mechanism *)
@@ -3761,7 +3763,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			actions_per_automaton.(automaton_index)
 		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` in function `actions_per_automaton`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Create the functional representation for the actions of every location of every automaton *)
 	let actions_per_location = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3769,7 +3771,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			actions_per_location.(automaton_index).(location_index)
 		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `actions_per_location`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Invariants *)
 	let invariants = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3777,7 +3779,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			invariants.(automaton_index).(location_index)
 		) with Invalid_argument msg -> raise (InternalError ("Could not find invariant for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `invariants`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Accepting locations *)
 	let is_accepting = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3785,7 +3787,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			location_acceptance.(automaton_index).(location_index) = Location_accepting
 		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_accepting`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Urgency *)
 	let is_urgent = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3793,7 +3795,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			location_urgency.(automaton_index).(location_index) = Location_urgent
 		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_urgent`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Costs *)
 	let costs = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3801,7 +3803,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			costs.(automaton_index).(location_index)
 		) with Invalid_argument msg -> raise (InternalError ("Cost of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `costs`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Stopwatches *)
 	let stopwatches = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3809,7 +3811,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			stopwatches_array.(automaton_index).(location_index)
 		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `stopwatches`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Flow *)
 	let flow = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
@@ -3817,7 +3819,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			flow_array.(automaton_index).(location_index)
 		) with Invalid_argument msg -> raise (InternalError ("List of flows at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `flow`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Transitions *)
 	let transitions = fun automaton_index location_index action_index ->
 		(* Add a safety mechanism *)
@@ -3825,7 +3827,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			transitions.(automaton_index).(location_index).(action_index)
 		) with Invalid_argument msg -> raise (InternalError ("Transitions of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` via action of index `" ^ (string_of_int action_index) ^ "` not found in function `transitions`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Transition description *)
 	let transitions_description = fun transition_index ->
 		(* Add a safety mechanism *)
@@ -3833,7 +3835,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			transitions_description.(transition_index)
 		) with Invalid_argument msg -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `transitions_description`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Automaton of transition *)
 	let automaton_of_transition = fun transition_index ->
 		(* Add a safety mechanism *)
@@ -3841,13 +3843,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			automaton_of_transition.(transition_index)
 		) with Invalid_argument msg -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `automaton_of_transition`. Additional details: `" ^ msg ^ "`"))
 	in
-	
+
 	(* Actions *)
 	let action_names = fun action_index ->
 		try (array_of_action_names.(action_index))
 		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the model."))
 	in
-	
+
 	let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
 
 
@@ -3922,7 +3924,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* By default: yes, it is strongly deterministic *)
 	let strongly_deterministic = ref true in
-	
+
 	(* And now check for any counterexample *)
 	(* For all PTA *)
 	begin
@@ -3946,7 +3948,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 					(* Update flag *)
 					strongly_deterministic := false;
-					
+
 					(* Raise exception to not test further *)
 					raise Not_strongly_deterministic;
 				);
@@ -3958,8 +3960,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		Not_strongly_deterministic -> ();
 	;
 	end;
-	
-	
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the presence of silent transitions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3971,7 +3973,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let has_silent_actions = List.exists (fun action_index ->
 		action_types action_index = Action_type_nosync
 	) actions in
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
@@ -3987,10 +3989,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 	(* 1) Get ALL constraints of guards and invariants *)
-	
+
 	(* Print some information *)
 	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model…");
-	
+
 	(*** BADPROG ***)
 	let all_constraints = ref [] in
 	(* For all PTA *)
@@ -4023,7 +4025,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Detecting the L/U nature of the model…");
-	
+
 	let lu_status =
 	try(
 		let l_parameters, u_parameters = LinearConstraint.partition_lu parameters !all_constraints in
@@ -4036,11 +4038,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) with Not_LU -> PTA_notLU
 	in
 
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check existence of invariants *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let has_invariants = 
+	let has_invariants =
 	(* For all PTA *)
 	List.exists (fun automaton_index ->
 		let locations_for_this_automaton = locations_per_automaton automaton_index in
@@ -4065,7 +4067,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check existence of complex updates *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
 	let transition_contains_complex_update (transition : AbstractModel.transition) : bool =
 		let is_clock_update_complex = function
 			| No_potential_update
@@ -4076,8 +4078,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		let is_updates_complex (clock_update, _) = is_clock_update_complex clock_update in
 		is_updates_complex transition.updates
 	in
-	
-	let has_complex_updates : bool = 
+
+	let has_complex_updates : bool =
 	(* For all PTA *)
 	List.exists (fun automaton_index ->
 		let locations_for_this_automaton = locations_per_automaton automaton_index in
@@ -4173,14 +4175,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		parameter_bounds_array.(parameter_index) <- bounds;
 
 	) parameters;
-	
+
 	(* Detect unbounded model, i.e., at least one parameter is unbounded in at least one direction *)
 	let unbounded_parameters = List.exists (fun parameter_index ->
 		let lower_bound = parameter_bounds_array.(parameter_index).lower in
 		let upper_bound = parameter_bounds_array.(parameter_index).upper in
 		lower_bound = Unbounded || upper_bound = Unbounded
 	) parameters in
-	
+
 	(* Build functional view *)
 	let parameter_bounds parameter_index = parameter_bounds_array.(parameter_index) in
 
@@ -4286,7 +4288,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				(*** TODO: print source too (and guard, and reset?!) ***)
 			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton `" ^ (automata_names automaton_index) ^ "` via action `" ^ (action_names (transition.action)) ^ "` to location `" ^ (location_names automaton_index (transition.target)) ^ "`")
 		done;
-		
+
 		print_message Verbose_total ("");
 	);
 
@@ -4335,7 +4337,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| None -> print_message Verbose_medium ("No global time clock `" ^ Constants.global_time_clock_name ^ "` detected.");
 	end;
 
-	
+
 	(* Debug print: strong determinism *)
 	if !strongly_deterministic then
 		print_message Verbose_low ("This PTA is strongly deterministic.")
@@ -4343,7 +4345,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_medium ("This PTA is not strongly deterministic.")
 	;
 
-	
+
 	(* Debug print: silent transitions *)
 	if has_silent_actions then
 		print_message Verbose_medium ("Silent actions detected.")
@@ -4493,5 +4495,5 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	}
 
 	,
-	
+
 	abstract_property_option
