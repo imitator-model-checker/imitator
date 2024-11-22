@@ -107,6 +107,7 @@ val compute_invariant : AbstractModel.abstract_model -> DiscreteState.global_loc
 (** Compute the invariant associated to a location and valuate the value of the discrete variables   *)
 val compute_valuated_invariant : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.px_linear_constraint
 
+val flush_invariant_cache : unit -> unit
 
 (************************************************************)
 (************************************************************)

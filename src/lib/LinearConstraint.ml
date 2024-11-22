@@ -5237,14 +5237,49 @@ let is_px_linear_upper_bounded (k : px_linear_constraint) =
 	get_minimized_inequalities k |>
 	List.exists (fun ineq -> match ineq with 
 		| Less_Or_Equal (t1,t2) | Less_Than (t1,t2)
-		| Greater_Or_Equal (t2,t1) | Greater_Than (t2,t1) | Equal (t1 ,t2) ->
+		| Greater_Or_Equal (t2,t1) | Greater_Than (t2,t1) ->
 			begin
 				let t1_sign = get_clock_sign_from_term t1 in 
 				let t2_sign = get_clock_sign_from_term t2 in 
 				t1_sign = Some P && t2_sign = None ||
 				t2_sign = Some M && t1_sign = None
 			end
+		| Equal (t1 ,t2) -> 
+			begin
+				let t1_sign = get_clock_sign_from_term t1 in 
+				let t2_sign = get_clock_sign_from_term t2 in 
+				match t1_sign,t2_sign with 
+				| Some _ , None -> true
+				| None, Some _ -> true
+				| _ -> false
+			end
 	)
+
+let add_dimension_to_linear_constraint insertion_index k = 
+	let rec new_term t =
+		match t with 
+		| Variable x -> if x >= insertion_index then Variable (x + 1) else t
+		| Unary_Plus x -> Unary_Plus (new_term x)
+		| Unary_Minus x -> Unary_Minus (new_term x)
+		| Plus (x,y) -> Plus (new_term x, new_term y)
+		| Minus (x,y) -> Minus (new_term x, new_term y)
+		| Times (coeff, x) -> Times (coeff, new_term x)
+		| Coefficient _ -> t
+	in
+	px_get_minimized_inequalities k |>
+	List.map (fun (ineq : px_linear_inequality) -> 
+		match ineq with 
+		| Greater_Or_Equal (x,y) -> Greater_Or_Equal (new_term x, new_term y)
+		| Greater_Than (x,y) -> Greater_Than (new_term x, new_term y)
+		| Less_Or_Equal (x,y) -> Less_Or_Equal (new_term x, new_term y)
+		| Less_Than (x,y) -> Less_Than (new_term x, new_term y)
+		| Equal (x,y) -> Equal (new_term x, new_term y)
+	)
+
+
+let add_dimension_to_px_linear_constraint d k = make_px_constraint @@ add_dimension_to_linear_constraint d k
+let add_dimension_to_pxd_linear_constraint d k = make_pxd_constraint @@ add_dimension_to_linear_constraint d k
+let add_dimension_to_p_linear_constraint d k = make_p_constraint @@ add_dimension_to_linear_constraint d k
 
 (*------------------------------------------------------------*)
 (* Point exhibition *)

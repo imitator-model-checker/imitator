@@ -148,7 +148,7 @@ let cached_array_indexing_from_list list array_opt_ref =
         array#get
     | Some array -> array#get
 
-class locationManager initial_count state_space model = object
+class locationManager initial_count model = object
   val mutable invariants = ref []
   val mutable accepting = ref []
   val mutable urgent = ref []
@@ -212,26 +212,57 @@ class transitionManager = object
 end
 
 
+let location_name_of_global_location (model : abstract_model) (global_location : DiscreteState.global_location) =
+  let string_of_location_list (model : abstract_model) location_list = 
+    let location_names = List.mapi model.location_names location_list in 
+    let location_list_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") location_names) in
+    String.sub location_list_string 0 (String.length location_list_string-1)
+  in
 
-let iter_on_nnconvex_px f constr = 
-  LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint constr |>
-  List.map f |>
-  LinearConstraint.px_time_past_assign
+  let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
+    if List.length discrete_mapping_list = 0 then 
+      ""
+    else
+      let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s_is_%s" (model.variable_names index) (string_of_value value)) discrete_mapping_list in  
+      let discrete_valuations_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") discrete_valuation_strings) in 
+      String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-1)
+  in
+  let location_list, discrete_mapping_list = locations_and_discrete_of_global_location model global_location in  
+  Printf.sprintf "%s__%s" (string_of_location_list model location_list) (string_of_discrete_mapping_list model discrete_mapping_list)
 
-let controller_synthesis (system_model : AbstractModel.abstract_model) (options : Options.imitator_options) (state_space : stateSpace) (strategy : locationStrategyMap) =
-  let fresh_action = 
-     let action_count = ref 0 in 
-     fun () -> let fresh = !action_count in action_count := !action_count + 1; fresh
+
+let controller_synthesis (system_model : AbstractModel.abstract_model) (options : Options.imitator_options) (strategy : locationStrategyMap) =
+  let fresh_action, get_nb_actions, action_types, action_names, actions = 
+     let nb_actions = ref 0 in 
+     let action_types = Hashtbl.create 100 in 
+     let action_names = Hashtbl.create 100 in 
+     let actions_ref = ref [] in 
+     (fun (action_type : action_type) name_opt -> 
+      let fresh = !nb_actions in nb_actions := !nb_actions + 1;
+      Hashtbl.add action_types fresh action_type;
+      actions_ref := fresh :: (!actions_ref);
+      (match name_opt with 
+      | Some name -> Hashtbl.add action_names fresh name
+      | None -> Hashtbl.add action_names fresh "tau");
+      fresh),
+      (fun () -> !nb_actions),
+      Hashtbl.find action_types,
+      Hashtbl.find action_names,
+      (fun () -> !actions_ref)
+
   in 
 
   let action_of_original_action = 
     let tbl = Hashtbl.create 100 in
-    fun lbl -> match Hashtbl.find_opt tbl lbl with 
+    fun action_index -> match Hashtbl.find_opt tbl action_index with 
     Some action -> action 
-    | None -> let action = fresh_action () in Hashtbl.add tbl lbl action; action
+    | None -> 
+      let action_name = system_model.action_names action_index in 
+      let action_type = Action_type_sync in 
+      let action = fresh_action action_type (Some action_name) in Hashtbl.add tbl action_index action; action
   in 
      
-  let location_manager = new locationManager 0 state_space system_model in 
+  let location_manager = new locationManager 0 system_model in 
   let transition_manager = new transitionManager in
   
   let create_urgent_choice_loc_of_global_location global_location = 
@@ -241,31 +272,118 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
       is_urgent = true;
       is_accepting = false;
       location_name =
-      let base_loc_name = string_of_global_location system_model global_location in
+      let base_loc_name = location_name_of_global_location system_model global_location in
       Printf.sprintf "%s_make_choice" base_loc_name
     }
   in
 
 
   (* Add epsilon parameter *)
-  let epsilon_param = system_model.nb_variables in 
+  let epsilon_param = system_model.nb_parameters in 
   let nb_parameters = system_model.nb_parameters + 1 in 
   let nb_variables = system_model.nb_variables + 1 in 
-  let variable_names i = if i = epsilon_param then "ε" else system_model.variable_names i in
+  let nb_ppl_variables = system_model.nb_ppl_variables + 1 in 
+  let clocks = List.map ((+)1) system_model.clocks in 
+  let discrete = List.map ((+)1) system_model.discrete in 
+  let discrete_rationals = List.map ((+)1) system_model.discrete_rationals in
+  let variable_names i = if i = epsilon_param then "epsilon" else if i < epsilon_param then system_model.variable_names i else  system_model.variable_names (i-1) in
   let parameters = epsilon_param :: system_model.parameters in 
-  let parameters_and_discrete = epsilon_param :: system_model.parameters_and_discrete in 
-  let parameters_and_clocks = epsilon_param :: system_model.parameters_and_clocks in
+  let parameters_and_discrete = parameters @ discrete in 
+  let parameters_and_clocks = parameters @ clocks in
+  let clocks_and_discrete = clocks @ discrete in 
+  let transitions_description = fun t -> 
+    let original_description = system_model.transitions_description t in
+    let guard = original_description.guard in 
+    let guard' = match guard with 
+    | Continuous_guard pxd -> 
+      let pxd' = LinearConstraint.add_dimension_to_pxd_linear_constraint epsilon_param pxd in
+      Continuous_guard pxd'
+    | Discrete_continuous_guard g -> 
+      let pxd' = LinearConstraint.add_dimension_to_pxd_linear_constraint epsilon_param g.continuous_guard in 		
+      Discrete_continuous_guard {g with continuous_guard = pxd'}
+    | True_guard -> True_guard
+    | False_guard -> False_guard
+    | Discrete_guard x -> Discrete_guard x
+    in
+    
+    {original_description with guard = guard'}
+  in 
+  let invariants = fun a l -> 
+    let invariant = system_model.invariants a l in 
+    let invariant' = match invariant with 
+    | Continuous_guard pxd -> Continuous_guard (LinearConstraint.add_dimension_to_pxd_linear_constraint epsilon_param pxd)
+    | Discrete_continuous_guard g -> 
+      let pxd' = LinearConstraint.add_dimension_to_pxd_linear_constraint epsilon_param g.continuous_guard in 
+      Discrete_continuous_guard {g with continuous_guard = pxd'}
+    | True_guard -> True_guard
+    | False_guard -> False_guard
+    | Discrete_guard x -> Discrete_guard x
+    in
+    invariant' in 
+
+  let is_clock x = List.mem x clocks in 
+  let is_discrete x = List.mem x discrete in 
+  
+
+  LinearConstraint.set_dimensions (nb_parameters) (system_model.nb_clocks) (system_model.nb_discrete);
+  State.flush_invariant_cache ();
+
+  let epsilon_term = LinearConstraint.make_p_linear_term [(NumConst.one,epsilon_param)] (NumConst.zero) in
+  let initial_epsilon_constraint = LinearConstraint.make_p_constraint [LinearConstraint.make_p_linear_inequality epsilon_term Op_g] in 
+
+  let initial_constraint = LinearConstraint.add_dimension_to_px_linear_constraint epsilon_param (LinearConstraint.px_copy system_model.initial_constraint) in 
+  
+  let initial_p_constraint = LinearConstraint.add_dimension_to_p_linear_constraint epsilon_param (LinearConstraint.p_copy system_model.initial_p_constraint) in   
+
+  LinearConstraint.px_intersection_assign_p initial_constraint [initial_epsilon_constraint];
+  
+  let dimension_extended_system_model = {system_model with 
+  nb_parameters;nb_variables;parameters_and_discrete;
+  parameters_and_clocks;parameters; variable_names; 
+  transitions_description;invariants; initial_constraint;initial_p_constraint;
+  discrete;clocks} in 
+  AlgoStateBased.compute_static_time_polyhedrons dimension_extended_system_model;
 
 
 
+  let add_dimension_to_px_nnconvex_constraint variable k = 
+    k |> 
+    LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint |>
+    List.map (fun k -> LinearConstraint.add_dimension_to_px_linear_constraint variable k) |>
+    LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints 
+  in 
+
+  (* Extend parametric dimension pre-process*)
+  strategy#iter (fun _ location_strategy -> 
+    let location_strategy' = 
+      !location_strategy |>
+      List.map (fun entry ->
+        match entry with 
+        | ActionEntry e -> 
+          let {winning_move; prioritized_winning_zone; _} = e in 
+          let winning_move = LinearConstraint.add_dimension_to_px_linear_constraint epsilon_param winning_move in 
+          let prioritized_winning_zone = add_dimension_to_px_nnconvex_constraint epsilon_param prioritized_winning_zone in 
+          ActionEntry {e with winning_move; prioritized_winning_zone}
+        | WaitEntry {prioritized_winning_zone} -> 
+          let prioritized_winning_zone = add_dimension_to_px_nnconvex_constraint epsilon_param prioritized_winning_zone in 
+          WaitEntry  {prioritized_winning_zone}
+      ) in 
+    location_strategy := location_strategy'
+  );
+  
   (* Pre-processing step *)
-  let no_upper = LinearConstraint.is_px_linear_upper_bounded >> not in 
+  let no_upper = LinearConstraint.is_px_linear_upper_bounded >> not in
+  let px_nnconvex_leq_px_linear nn lin = 
+    LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint nn |>
+    List.for_all (fun k -> LinearConstraint.px_is_leq k lin)
+  in
   strategy#iter (fun _ location_strategy -> 
     let location_strategy' = 
       !location_strategy |>
       List.map (fun entry -> 
         match entry with 
-        | ActionEntry e when no_upper e.winning_move -> 
+                                                        (* Optimization - urgent is enough if winning zone is included in move*)
+        | ActionEntry e when no_upper e.winning_move && not @@ px_nnconvex_leq_px_linear e.prioritized_winning_zone e.winning_move -> 
           let {winning_move;prioritized_winning_zone; _} = e in 
           
           let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
@@ -284,7 +402,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
           List.fold_left (
             fun acc k ->
               let pxd_past =  LinearConstraint.pxd_of_px_constraint k in  
-              AlgoStateBased.apply_time_past_no_stopwatch pxd_past;
+              AlgoStateBased.apply_time_past_no_stopwatch pxd_past; (* TODO: use normal time past function ?*)
               let px_past = LinearConstraint.pxd_hide_discrete_and_collapse pxd_past in 
               let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
               LinearConstraint.px_nnconvex_px_intersection_assign intersection px_past;
@@ -298,20 +416,18 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
     location_strategy := location_strategy'
   );
 
-  
-
   (* Main synthesis step *)
   strategy#iter (fun global_location location_strategy -> 
     (* Create location for src symb state *)
-    let base_loc_name = string_of_global_location system_model global_location in 
+    let base_loc_name = location_name_of_global_location system_model global_location in 
     let src_urgent_loc = create_urgent_choice_loc_of_global_location global_location in 
 
     List.iteri (fun i entry -> 
-      let connect invariant prioritized_winning_zone =
+      let connect invariant is_urgent prioritized_winning_zone =
         let new_loc = location_manager#create_location None
         {
           invariant;
-          is_urgent = false;
+          is_urgent;
           is_accepting = false;
           location_name = Printf.sprintf "%s_choose_%d" base_loc_name i
         } in
@@ -320,7 +436,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
         transition_manager#add_transition src_urgent_loc 
         {
           guard = Continuous_guard pxd;
-          action = fresh_action();
+          action = fresh_action Action_type_nosync None;
           updates = No_potential_update, [];
           target = new_loc;
         }
@@ -328,47 +444,47 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
         new_loc
       in
       let choose_loc = match entry with 
-      | ActionEntry {winning_move;destination;action;prioritized_winning_zone; transition} -> 
+      | ActionEntry {winning_move;destination;action;prioritized_winning_zone; _} -> 
         let winning_move_pxd = LinearConstraint.pxd_of_px_constraint winning_move in 
         let winning_move_past_pxd = LinearConstraint.pxd_copy winning_move_pxd in 
-        AlgoStateBased.apply_time_past_no_stopwatch winning_move_past_pxd;
-
-
+        AlgoStateBased.apply_time_past dimension_extended_system_model global_location winning_move_past_pxd;
+        (* Compute if q_i should be urgent *)
+        let winning_move_nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint winning_move  in
+        let winning_zone_included_in_winning_move = LinearConstraint.px_nnconvex_constraint_is_leq prioritized_winning_zone winning_move_nn in
+        let winning_move_not_upper_bounded = not @@ LinearConstraint.is_px_linear_upper_bounded winning_move in 
+        let is_urgent = winning_zone_included_in_winning_move && winning_move_not_upper_bounded in 
         (* For each entry in strategy create location *)
-        let new_loc = connect (Continuous_guard winning_move_past_pxd) prioritized_winning_zone in
+        let new_loc = connect (Continuous_guard winning_move_past_pxd) is_urgent prioritized_winning_zone in
         
         let target = create_urgent_choice_loc_of_global_location destination in 
         transition_manager#add_transition new_loc {
           guard = Continuous_guard winning_move_pxd;
-          action;
+          action = action_of_original_action action;
           updates = No_potential_update, [];
           target;
         };
         new_loc
       | WaitEntry {prioritized_winning_zone} -> 
-        connect (True_guard) prioritized_winning_zone
+        connect (True_guard) false prioritized_winning_zone
       in 
       let symbolic_state_overapproximation : State.state = {global_location; px_constraint = LinearConstraint.px_true_constraint()} in
-      AlgoStateBased.combined_transitions_and_states_from_one_state_functional options system_model symbolic_state_overapproximation |>
-      List.map (fun (ct, s) -> StateSpace.get_action_from_combined_transition system_model ct, s.global_location) |>
-      List.filter (fst >> system_model.is_controllable_action >> not) |>
+      AlgoStateBased.combined_transitions_and_states_from_one_state_functional options dimension_extended_system_model symbolic_state_overapproximation |>
+      List.map (fun (ct, s) -> StateSpace.get_action_from_combined_transition dimension_extended_system_model ct, s.global_location) |>
+      List.filter (fst >> dimension_extended_system_model.is_controllable_action >> not) |>
       
       List.iter (fun (action, global_location) -> 
-        let action = action_of_original_action action in 
+        let action' = action_of_original_action action in 
         let target = create_urgent_choice_loc_of_global_location global_location in 
         transition_manager#add_transition choose_loc {
           guard = True_guard;
-          action;
+          action = action';
           updates = No_potential_update, [];
           target;
         }
       )
-      
       ) (!location_strategy)
   );
 
-  
-  
   let model = generate_abstract_controller_model system_model 
   ~nb_locations: location_manager#nb_locations 
   ~invariants: location_manager#invariants
@@ -380,8 +496,13 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (options 
   ~actions_per_location: transition_manager#actions_per_location
   ~transitions_description: transition_manager#transitions_description
   ~nb_parameters ~nb_variables ~parameters ~variable_names ~parameters_and_clocks ~parameters_and_discrete  
+  ~action_types: action_types ~action_names: action_names 
+  ~actions:(actions ()) ~actions_per_automaton:(fun _ -> actions()) ~nb_actions:(get_nb_actions ())
+  ~discrete ~clocks ~initial_constraint ~initial_p_constraint
+  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete
+  ~clocks_and_discrete
   in
-
+  
   print_highlighted_message Shell_result Verbose_standard ("\nStrategy generation results:");
   (* Write controller to file *)
   let imi_file_name = options#files_prefix ^ "-controller.imi" in

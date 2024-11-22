@@ -1211,7 +1211,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
 				(*** TODO: check if this test is really worth it ***)
 					let is_possible = State.is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint guard in
-					if not is_possible then (
+				if not is_possible then (
 						(* Statistics *)
 						counter_nb_early_unsatisfiable#increment;
 						print_message Verbose_medium "** early skip transition (constraint+guard unsatisfiable) **"
@@ -1245,7 +1245,29 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 		true
 	) with Unsat_exception -> false
 
+(*------------------------------------------------------------*)
+(** (Re)compute the time elapsing/past polyhedrons with respect to the input model  *)
+(*------------------------------------------------------------*)
+(*** NOTE: Only used in AlgoPTGStrategyGenerator to extend dimensions of generated controller model ***)
+let compute_static_time_polyhedrons (model : AbstractModel.abstract_model) = 
+	let variables_elapse		= model.clocks in
+	let variables_constant		= model.parameters_and_discrete in
+	let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
+	let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
 
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high "Computed the static time elapsing polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+		print_message Verbose_high "";
+		print_message Verbose_high "Computed the static time past polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+		print_message Verbose_high "";
+	);
+
+	(* Save them *)
+	time_elapsing_polyhedron	:= Some time_el_polyhedron;
+	time_past_polyhedron 		:= Some time_pa_polyhedron
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing *)
@@ -1255,25 +1277,7 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 	if not model.has_non_1rate_clocks then(
-		let variables_elapse		= model.clocks in
-		let variables_constant		= model.parameters_and_discrete in
-		let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
-		let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high "Computed the static time elapsing polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
-			print_message Verbose_high "";
-			print_message Verbose_high "Computed the static time past polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
-			print_message Verbose_high "";
-		);
-
-		(* Save them *)
-		time_elapsing_polyhedron	:= Some time_el_polyhedron;
-		time_past_polyhedron 		:= Some time_pa_polyhedron;
-
+		compute_static_time_polyhedrons model;
 	);
 
 	(* Get the declared init state with initial constraint C_0(X) *)

@@ -787,6 +787,11 @@ val epsilon_temporal_lower_bound_px_linear_constraint : variable -> px_linear_co
 (* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
 val is_px_linear_upper_bounded : px_linear_constraint -> bool
 
+(* Insert a new dimension into a linear constraint. Shifts appropriate variables in the constraint*)
+val add_dimension_to_px_linear_constraint : variable -> px_linear_constraint -> px_linear_constraint
+val add_dimension_to_pxd_linear_constraint : variable -> pxd_linear_constraint -> pxd_linear_constraint
+val add_dimension_to_p_linear_constraint : variable -> p_linear_constraint -> p_linear_constraint
+
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)
 val p_nnconvex_exhibit_point : p_nnconvex_constraint -> p_valuation

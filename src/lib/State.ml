@@ -86,6 +86,8 @@ let upd_hash clock_update =
 (* Cache for computed invariants *)
 let inv_cache = Cache.make loc_hash 200
 
+let flush_invariant_cache () = Cache.flush inv_cache
+
 (*(* Cache for clock updates *)
 let upd_cache = Cache.make upd_hash 100*)
 

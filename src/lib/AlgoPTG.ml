@@ -683,6 +683,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		model 
 		~strategy:locationStrategy;
 
+		AlgoPTGStrategyGenerator.controller_synthesis
+		model
+		options
+		locationStrategy;
+
 		(* Return the result *)
 		self#compute_result;
 

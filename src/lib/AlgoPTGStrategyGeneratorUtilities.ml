@@ -178,71 +178,93 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_false_constraint();
   }
 
+  let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
+    if List.length discrete_mapping_list = 0 then 
+      "[]"
+    else
+      let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s ↦ %s" (model.variable_names index) (AbstractValue.string_of_value value)) discrete_mapping_list in  
+      let discrete_valuations_string = "[" ^ (List.fold_left (fun acc str -> Printf.sprintf "%s%s, " acc str) ("") discrete_valuation_strings) in 
+      String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-2)  ^ "]"  
+
 let generate_simple_model (system_model : abstract_model) 
 	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
 	~location_names ~is_accepting ~is_urgent ~invariants
 	~actions_per_location ~transitions ~transitions_description
-  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete
+  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
+  ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
+  ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
+  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
 	: simple_abstract_model = 
   {
-    nb_automata = system_model.nb_automata;
-    nb_actions = system_model.nb_actions;
+    nb_automata = 1;
+    nb_actions = nb_actions;
     nb_clocks  = system_model.nb_clocks; 
     nb_discrete = system_model.nb_discrete; 
     nb_rationals  = system_model.nb_rationals;
     nb_parameters;
     nb_variables;
-    nb_ppl_variables = system_model.nb_ppl_variables;
+    nb_ppl_variables;
     nb_locations;
     nb_transitions;
     has_invariants = system_model.has_invariants;
     has_complex_updates = system_model.has_complex_updates;
     bounded_parameters = system_model.bounded_parameters;
     parameters_bounds = system_model.parameters_bounds;
-    clocks = system_model.clocks;
-    is_clock = system_model.is_clock;
-    discrete = system_model.discrete;
-    discrete_rationals = system_model.discrete_rationals;
-    is_discrete = system_model.is_discrete;
+    clocks;
+    is_clock;
+    discrete;
+    discrete_rationals;
+    is_discrete;
     parameters;
-    clocks_and_discrete = system_model.clocks_and_discrete;
+    clocks_and_discrete;
     parameters_and_discrete;
     parameters_and_clocks;
     variable_names;
     discrete_names_by_type_group = system_model.discrete_names_by_type_group;
     type_of_variables = system_model.type_of_variables;
     automata = [0];
-    automata_names = (fun automata_index -> system_model.automata_names automata_index ^ "-controller");
+    automata_names = (fun automata_index -> system_model.automata_names automata_index ^ "_controller");
     locations_per_automaton = (fun _ -> List.init nb_locations (fun x -> (x-1) + 1));
     location_names;
     is_accepting;
     is_urgent;
-    actions = system_model.actions;
-    controllable_actions = system_model.controllable_actions;
-    action_names = system_model.action_names;
-    action_types = system_model.action_types;
-    actions_per_automaton = system_model.actions_per_automaton;
+    actions = actions;
+    controllable_actions = [];
+    action_names = action_names;
+    action_types = action_types;
+    actions_per_automaton = actions_per_automaton;
     automata_per_action = (fun _ -> [0]);
     actions_per_location = actions_per_location;
-    is_controllable_action = system_model.is_controllable_action;
+    is_controllable_action = (fun _ -> false);
     invariants;
     transitions;
     transitions_description;
     automaton_of_transition = (fun _ -> 0);
-    initial_location = DiscreteState.make_location [(0,0)] [];
-    initial_constraint = system_model.initial_constraint;
-    initial_p_constraint = system_model.initial_p_constraint;
+    initial_location = 
+      (
+      DiscreteState.initialize 1 (system_model.nb_clocks + nb_parameters) (system_model.nb_clocks + nb_parameters + system_model.nb_discrete - 1);  
+      let discrete_mapping = List.map (fun d -> d,DiscreteState.get_discrete_value system_model.initial_location d) discrete in 
+      DiscreteState.make_location [(0,0)] discrete_mapping);
+    initial_constraint;
+    initial_p_constraint;
   }
 
 let generate_abstract_controller_model (system_model : abstract_model)
 	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
 	~location_names ~is_accepting ~is_urgent ~invariants
 	~actions_per_location ~transitions ~transitions_description
-  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete =
+  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
+  ~action_types ~action_names ~actions  ~actions_per_automaton ~nb_actions
+  ~discrete ~clocks ~initial_constraint ~initial_p_constraint
+  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete =
   let simple_model = generate_simple_model system_model
     ~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
     ~location_names ~is_accepting ~is_urgent ~invariants
     ~actions_per_location ~transitions ~transitions_description
-    ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete
+    ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
+    ~action_types ~action_names ~nb_actions ~actions ~actions_per_automaton
+    ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
+    ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete 
+    ~clocks_and_discrete
 	in
 	generate_abstract_model simple_model
