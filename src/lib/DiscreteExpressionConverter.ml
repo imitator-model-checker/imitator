@@ -215,7 +215,7 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 (*        let has_clock_updated_with_non_linear = List.length assigned_clocks_with_non_linear_expr > 0 in*)
         (* Is any non-linear operation found on continuous variables (clock / parameter) *)
         let has_nonlinear_operation_on_continuous = List.length nonlinear_operation_on_continuous > 0 in
-        
+
         (* Print errors *)
 
         List.iter (fun variable_name ->
@@ -339,10 +339,6 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
 (* Check if user function definition is well formed *)
 let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
-
-    (* Get code bloc and return expression of the function *)
-    let code_bloc, return_expr_opt = fun_def.body in
-
     (* Check if all variables in function definition are defined *)
     let is_all_variables_defined =
 
@@ -377,6 +373,12 @@ let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
         ParsingStructureMeta.all_functions_defined_in_parsed_fun_def variable_infos (Some print_function_in_fun_not_declared) fun_def
 
     in
+
+    if not (is_all_variables_defined && is_all_functions_defined) then
+        raise InvalidModel;
+
+    (* Get code bloc and return expression of the function *)
+    let code_bloc, return_expr_opt = fun_def.body in
 
     (* Check if there isn't duplicate parameter with inconsistent types *)
     let is_consistent_duplicate_parameters =
