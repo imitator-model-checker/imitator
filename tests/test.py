@@ -193,7 +193,7 @@ def test(binary_name, tests, logfile, logfile_name):
             )
         )
         print_to_screen(
-            " Benchmark {}: {}{} … ".format(
+            "         Benchmark {}: {}{} … ".format(
                 benchmark_id,
                 test_case["purpose"],
                 " - tags: [{}]".format(test_case["tags"])
@@ -289,9 +289,9 @@ def test(binary_name, tests, logfile, logfile_name):
         # If all test cases passed, increment the number of passed benchmarks
         if passed:
             passed_benchmarks += 1
-            print_to_screen(" " + bcolors.GOOD + "PASSED!" + bcolors.NORMAL)
+            print_to_screen("\r " + bcolors.GOOD + "PASSED!" + bcolors.NORMAL)
         else:
-            print_to_screen(" " + bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
+            print_to_screen("\r " + bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
 
         # Increment the benchmark id
         benchmark_id += 1
