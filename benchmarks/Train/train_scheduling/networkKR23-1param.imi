@@ -1,0 +1,137 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Some alternative modeling for Figure 1 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations"
+ * Description      : Some alternative modeling for Figure 1 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan. One parameter: schedule constraint for the red train.
+ * Correctness      : Satisfiable schedule
+ * Scalable         : ?
+ * Generated        : no
+ * Categories       : train
+ * Source           : "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan. Formal Methods 2023. DOI: https://doi.org/10.1007/978-3-031-27481-7_5
+ * bibkey           : [KR23]
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/04/23
+ * Last modified    : 2024/07/05
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x_Blue,
+ 	x_Green,
+ 	x_Red,
+ 	x_abs,
+		: clock;
+
+(* Discrete *)
+	segment_1_free,
+	segment_2_free,
+	segment_3_free,
+	segment_4_free,
+	segment_5_free,
+	segment_6_free,
+	segment_7_free,
+	segment_8_free,
+	segment_9_free,
+	segment_10_free,
+	segment_11_free,
+		: bool;
+
+(* Parameters *)
+(* 	DURATION_SEGMENT_2, *)
+(* 	DURATION_SEGMENT_7, *)
+	p_red_finish,
+		: parameter;
+
+(* Durations *)
+	DURATION_SEGMENT_1		= 8,
+	DURATION_SEGMENT_1_2	= 2,
+	DURATION_SEGMENT_1_3	= 1,
+	DURATION_SEGMENT_2		= 8,
+	DURATION_SEGMENT_2_6	= 1,
+	DURATION_SEGMENT_2_7	= 1,
+	DURATION_SEGMENT_3		= 8,
+	DURATION_SEGMENT_3_4	= 1,
+	DURATION_SEGMENT_3_5	= 1,
+	DURATION_SEGMENT_4		= 7,
+	DURATION_SEGMENT_4_8	= 1,
+	DURATION_SEGMENT_4_9	= 1,
+	DURATION_SEGMENT_5		= 6,
+	DURATION_SEGMENT_6		= 8,
+	DURATION_SEGMENT_6_11	= 1,
+	DURATION_SEGMENT_7		= 8,
+	DURATION_SEGMENT_7_10	= 1,
+	DURATION_SEGMENT_8		= 8,
+	DURATION_SEGMENT_8_10	= 3,
+	DURATION_SEGMENT_9		= 8,
+	DURATION_SEGMENT_10		= 8,
+	DURATION_SEGMENT_11		= 8,
+		: rational;
+
+(* Segments numbering: left first, then bottom first *)
+
+(************************************************************)
+#include "networkKR23-trains-greenblue.imi";
+#include "networkKR23-trains-red.imi";
+(************************************************************)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[train_Green] := node_A,
+		loc[train_Blue]  := node_A,
+		loc[train_Red]   := node_D,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		segment_1_free  := True,
+		segment_2_free  := True,
+		segment_3_free  := True,
+		segment_4_free  := True,
+		segment_5_free  := True,
+		segment_6_free  := True,
+		segment_7_free  := True,
+		segment_8_free  := True,
+		segment_9_free  := True,
+		segment_10_free := True,
+		segment_11_free := True,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x_Blue	= 0
+		& x_Green	= 0
+		& x_Red		= 0
+		& x_abs		= 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+(* 		& DURATION_SEGMENT_2 >= 0 *)
+(* 		& DURATION_SEGMENT_7 >= 0 *)
+		& p_red_finish >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
