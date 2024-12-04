@@ -1693,6 +1693,31 @@ end
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2024/12/04
+		# Last modified            : 2024/12/04
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test include + reachability synthesis (train model)',
+		'tags'       : 'include',
+		'input_files': ['tests_include_model/trainSPI-2-last-2.imi', 'tests_include_model/trainSPI-2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'trainSPI-2-last-2.res' , 'content' : """
+BEGIN CONSTRAINT
+ MAX_DURATION >= 75
+& bound_last >= 63
+END CONSTRAINT		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# AUTOMATIC VARIABLES REMOVAL
