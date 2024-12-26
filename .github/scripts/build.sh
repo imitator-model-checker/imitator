@@ -59,11 +59,6 @@ eval $(opam env)
 # instal ppl
 [ ! -d "$(opam var lib)/ppl" ] && bash "${SCRIPT_FOLDER}/install-ppl.sh"
 
-# patch oasis for OSX
-if [[ "$RUNNER_OS" = "macOS" ]]; then
-  patch -p0 <"${PATCH_FOLDER}/oasis-config.patch"
-fi
-
 # Build IMITATOR
 dune build
 
