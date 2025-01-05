@@ -194,6 +194,7 @@ let generate_simple_model (system_model : abstract_model)
   ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
   ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
   ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
+  ~initial_location_index
 	: simple_abstract_model = 
   {
     nb_automata = 1;
@@ -244,7 +245,7 @@ let generate_simple_model (system_model : abstract_model)
       (
       DiscreteState.initialize 1 (system_model.nb_clocks + nb_parameters) (system_model.nb_clocks + nb_parameters + system_model.nb_discrete - 1);  
       let discrete_mapping = List.map (fun d -> d,DiscreteState.get_discrete_value system_model.initial_location d) discrete in 
-      DiscreteState.make_location [(0,0)] discrete_mapping);
+      DiscreteState.make_location [(0,initial_location_index)] discrete_mapping);
     initial_constraint;
     initial_p_constraint;
   }
@@ -256,7 +257,8 @@ let generate_abstract_controller_model (system_model : abstract_model)
   ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
   ~action_types ~action_names ~actions  ~actions_per_automaton ~nb_actions
   ~discrete ~clocks ~initial_constraint ~initial_p_constraint
-  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete =
+  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
+  ~initial_location_index =
   let simple_model = generate_simple_model system_model
     ~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
     ~location_names ~is_accepting ~is_urgent ~invariants
@@ -265,6 +267,7 @@ let generate_abstract_controller_model (system_model : abstract_model)
     ~action_types ~action_names ~nb_actions ~actions ~actions_per_automaton
     ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
     ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete 
-    ~clocks_and_discrete
+    ~clocks_and_discrete 
+    ~initial_location_index
 	in
 	generate_abstract_model simple_model

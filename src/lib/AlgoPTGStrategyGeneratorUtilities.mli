@@ -123,4 +123,5 @@ val generate_abstract_controller_model :
 	initial_constraint:(LinearConstraint.px_linear_constraint) -> initial_p_constraint:(LinearConstraint.p_linear_constraint) ->
 	nb_ppl_variables:int -> is_clock:(clock_index -> bool) -> discrete_rationals:(variable_index list) -> 
 	is_discrete:(discrete_index -> bool) -> clocks_and_discrete:(variable_index list) -> 
+	initial_location_index:location_index ->
 	abstract_model

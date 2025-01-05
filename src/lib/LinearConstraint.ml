@@ -5148,17 +5148,25 @@ let get_clock_sign_from_term term =
 	else 
 		None
 
-(* Replace all strict inequalities involving clocks with non-strict within a px_linear constraint *)
-let close_clocks_px_linear_constraint (k : px_linear_constraint) =
+
+let generic_close_clocks_px_linear_constraint bound_type (k : px_linear_constraint) =
 	let strict_to_not_strict_clock inequality =
 		match inequality with
-		| Less_Than (x,y) | Greater_Than (y,x) -> 
+		| Less_Than (x,y) | Greater_Than (y,x) | Less_Or_Equal (x,y) | Greater_Or_Equal (y,x) -> 
 			begin
 				let x_sign = get_clock_sign_from_term x in 
 				let y_sign = get_clock_sign_from_term y in 
 				match x_sign, y_sign with 
-				| Some _, None
-				| None, Some _ -> Less_Or_Equal (x,y)
+				(* Case 1: Inequality is a clock upper bound *)
+				| Some P, None
+				| None, Some M -> (match bound_type with 
+					| Upper -> Less_Or_Equal (x,y)
+					| Lower -> Less_Than (x,y))
+				(* Case 2: Inequality is a clock lower bound *)
+				| None, Some P 
+				| Some M, None -> (match bound_type with 
+					| Upper -> Less_Than (x,y)
+					| Lower -> Less_Or_Equal (x,y))
 				| _ -> inequality
 			end 
 		|_ -> inequality
@@ -5169,13 +5177,22 @@ let close_clocks_px_linear_constraint (k : px_linear_constraint) =
 	make_px_constraint (List.map strict_to_not_strict_clock inequality_list)
 
 
+(* Replace all strict inequalities involving upper bounded clocks with non-strict within a px_linear constraint *)
+let close_upper_clocks_px_linear_constraint = 
+	generic_close_clocks_px_linear_constraint Upper
+
+
+(* Replace all strict inequalities involving lower bounded clocks with non-strict within a px_linear constraint *)
+let close_lower_clocks_px_linear_constraint = 
+	generic_close_clocks_px_linear_constraint Lower
+
 
 let extract_parametric_bound bound_type bound_shape inequality = 
 	let strictness = match inequality with
 	| Greater_Than _ | Less_Than _ -> Strict 
 	| _ -> Not_Strict
 	in
-	match inequality with 
+	match inequality with
 	| Less_Or_Equal (t1,t2) | Less_Than (t1,t2)
 	| Greater_Or_Equal (t2,t1) | Greater_Than (t2,t1)-> 
 		begin
@@ -5188,10 +5205,20 @@ let extract_parametric_bound bound_type bound_shape inequality =
 			| Lower, None, Some P -> Some (bound_shape P t2 t1, strictness)
 			| _ -> None
 		end
-	| _ -> None
+	| Equal(t1,t2) -> 
+		begin
+			let t1_sign = get_clock_sign_from_term t1 in 
+			let t2_sign = get_clock_sign_from_term t2 in 
+			match t1_sign, t2_sign with 
+			| Some P, None -> Some (bound_shape P t1 t2, strictness)
+			| Some M, None -> Some (bound_shape M t1 t2, strictness)
+			| None, Some M -> Some (bound_shape M t2 t1, strictness) 
+			| None, Some P -> Some (bound_shape P t2 t1, strictness)
+			| _ -> None
+		end
 		
 let generic_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_linear_constraint) =
-	let closed_clocks = close_clocks_px_linear_constraint k in 
+	let closed_clocks = generic_close_clocks_px_linear_constraint bound_type k in 
 	let inequality_list = px_get_minimized_inequalities k in 
 	let inequality_list_closed = px_get_minimized_inequalities closed_clocks in
 	let bound_equalities = List.filter_map (fun inequality -> extract_parametric_bound bound_type bound_shape inequality) inequality_list in 

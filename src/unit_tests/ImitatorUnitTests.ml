@@ -29,22 +29,22 @@ module LinearConstraintTests = struct
   let close_clocks_true () = 
     let input = LinearConstraint.px_true_constraint () in 
     let expected = LinearConstraint.px_true_constraint () in 
-    let result = LinearConstraint.close_clocks_px_linear_constraint input in
+    let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in
     Alcotest.(check px_linear_constraint) "close clocks on true should be unchanged" expected result
   let close_clocks_simple_strict () = 
     let input = simple_px_constraint "x" "<" 5 in
     let expected = simple_px_constraint "x" "<=" 5 in
-    let result = LinearConstraint.close_clocks_px_linear_constraint input in 
+    let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in 
     Alcotest.(check px_linear_constraint) "close clocks on strict should become non-strict" expected result
   let close_clocks_simple_non_strict () = 
       let input = simple_px_constraint "x" "<=" 5 in
       let expected = simple_px_constraint "x" "<=" 5 in
-      let result = LinearConstraint.close_clocks_px_linear_constraint input in 
+      let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in 
       Alcotest.(check px_linear_constraint) "close clocks on non-strict should remain non-strict" expected result
   let close_clocks_simple_strict_param () = 
     let input = simple_px_constraint "p" "<" 5 in
     let expected = simple_px_constraint "p" "<" 5 in
-    let result = LinearConstraint.close_clocks_px_linear_constraint input in 
+    let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in 
     Alcotest.(check px_linear_constraint) "close clocks on param strict should remain strict" expected result
 
   let close_clocks_complex_constr () = 
@@ -64,7 +64,7 @@ module LinearConstraintTests = struct
       diagonal_px_constraint "p" "<=" "x" 5;
       simple_px_constraint "y" ">=" 2;
     ]  in 
-    let result = LinearConstraint.close_clocks_px_linear_constraint input in 
+    let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in 
     Alcotest.(check @@ neg px_linear_constraint) "sanity check: complex example should not be false" (LinearConstraint.px_false_constraint()) input;
     Alcotest.(check px_linear_constraint) "close clocks on complex constr should be correct" expected result
 
@@ -374,6 +374,50 @@ let precise_lower_bound_simple_constr_1 () =
     let result = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint input in 
     Alcotest.(check px_nnconvex_pair) "upper bound of parameter constraint should split in/out correctly" expected result
 
+
+
+  
+  let precise_upper_bound_eq_test () = 
+    let input = intersection_px_constraint [
+      diagonal_px_constraint "x" "=" "p" 0;
+    ] in 
+    let expected = nn_convex_px (
+      intersection_px_constraint [
+      diagonal_px_constraint "x" "=" "p" 0;
+      ];
+    ),
+    LinearConstraint.false_px_nnconvex_constraint() in
+    let result = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint input in 
+    Alcotest.(check px_nnconvex_pair) "upper bound of parameter constraint should handle equality correctly" expected result
+
+
+
+  let epsilon_upper_bound_eq_test () =
+    let input = simple_px_constraint "x" "=" 5 in
+    let expected = 
+    nn_convex_px (
+      intersection_px_constraint [
+        simple_px_constraint "x" "=" 5;
+        simple_px_constraint "epsilon"">=" 0;
+      ]),
+      nn_convex_px (LinearConstraint.px_false_constraint()) in
+    let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
+    Alcotest.(check px_nnconvex_pair) "epsilon upper bound of simple constraint should handle equality correctly " expected result
+
+  let epsilon_lower_bound_eq_test () =
+    let input = simple_px_constraint "x" "=" 5 in
+    let expected = 
+    nn_convex_px (
+      intersection_px_constraint [
+        simple_px_constraint "x" "=" 5;
+        simple_px_constraint "epsilon"">=" 0;
+      ]),
+      nn_convex_px (LinearConstraint.px_false_constraint()) in
+    let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
+    Alcotest.(check px_nnconvex_pair) "epsilon lower bound of simple constraint should handle equality correctly " expected result
+
+
+
   let is_px_linear_upper_bounded_test_1 () = 
     let input = intersection_px_constraint [
       diagonal_px_constraint "x" ">" "p" 0;
@@ -438,6 +482,10 @@ run "Unit tests" [
         test_case "Lower ε-bound on complex constr" `Quick LinearConstraintTests.epsilon_lower_bound_complex_constr_1;
 
         test_case "Upper bound splitting works" `Quick LinearConstraintTests.precise_upper_bound_split_test;
+
+        test_case "Upper bound equality simple" `Quick LinearConstraintTests.precise_upper_bound_eq_test;
+        test_case "Upper ε-bound equality simple" `Quick LinearConstraintTests.epsilon_upper_bound_eq_test;
+        test_case "Lower ε-bound equality simple" `Quick LinearConstraintTests.epsilon_lower_bound_eq_test;
 
         test_case "Is Upper bounded simple false" `Quick LinearConstraintTests.is_px_linear_upper_bounded_test_1;
         test_case "Is Upper bounded simple true" `Quick LinearConstraintTests.is_px_linear_upper_bounded_test_2;
