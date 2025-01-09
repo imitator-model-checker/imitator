@@ -589,7 +589,7 @@ action_declarations_list:
   | name_or_array_access comma_opt { [Single_action $1] }
   | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA COMMA action_declarations_list { Multiple_actions ($1, $2, $4) :: $7 }
   | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA comma_opt { [Multiple_actions ($1, $2, $4)] }
-
+;
 
 /************************************************************/
 
