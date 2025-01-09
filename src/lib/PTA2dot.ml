@@ -81,8 +81,8 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 			(* Real silent action (no name, no synchronization) *)
 			| Action_type_nosync -> "style=dotted, color=gray40, "
 		)
-	(* Add dashed style if the transition is uncontrollable: a transition is considered uncontrollable if it is not controllable AND there are some controllable actions *)
-	^ (if model.controllable_actions <> [] && not (model.is_controllable_action transition.action) then "style=dashed, "
+	(* Add dashed style if the transition is uncontrollable: a transition is considered uncontrollable if it is not controllable AND there are some (un)controllable actions defined *)
+	^ (if model.has_controllable_or_uncontrollable_actions && not (model.is_controllable_action transition.action) then "style=dashed, "
 		else "")
 
 	(* LABEL *)
