@@ -77,8 +77,7 @@ type simple_abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
-	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
-	has_controllable_or_uncontrollable_actions : bool;
+
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)
@@ -158,7 +157,7 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       is_urgent = simple_model.is_urgent;
       actions = simple_model.actions;
       controllable_actions = simple_model.controllable_actions;
-      has_controllable_or_uncontrollable_actions = simple_model.has_controllable_or_uncontrollable_actions; (*** TODO: Mikael, please double check ***)
+      has_controllable_or_uncontrollable_actions = false; (* Final controller does not know of controllable/uncontrollable actions *)
       action_names = simple_model.action_names;
       action_types = simple_model.action_types;
       actions_per_automaton = simple_model.actions_per_automaton;
@@ -194,7 +193,7 @@ let generate_simple_model (system_model : abstract_model)
 	~location_names ~is_accepting ~is_urgent ~invariants
 	~actions_per_location ~transitions ~transitions_description
   ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-  ~action_types ~action_names ~actions ~has_controllable_or_uncontrollable_actions ~actions_per_automaton ~nb_actions
+  ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
   ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
   ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
   ~initial_location_index
@@ -234,7 +233,6 @@ let generate_simple_model (system_model : abstract_model)
     is_urgent;
     actions = actions;
     controllable_actions = [];
-    has_controllable_or_uncontrollable_actions = system_model.has_controllable_or_uncontrollable_actions; (*** TODO: Mikael, please double check, maybe it should be "false" because the above list is empty? ***)
     action_names = action_names;
     action_types = action_types;
     actions_per_automaton = actions_per_automaton;
@@ -259,7 +257,7 @@ let generate_abstract_controller_model (system_model : abstract_model)
 	~location_names ~is_accepting ~is_urgent ~invariants
 	~actions_per_location ~transitions ~transitions_description
   ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-  ~action_types ~action_names ~actions ~has_controllable_or_uncontrollable_actions ~actions_per_automaton ~nb_actions
+  ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
   ~discrete ~clocks ~initial_constraint ~initial_p_constraint
   ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
   ~initial_location_index =
@@ -268,7 +266,7 @@ let generate_abstract_controller_model (system_model : abstract_model)
     ~location_names ~is_accepting ~is_urgent ~invariants
     ~actions_per_location ~transitions ~transitions_description
     ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-    ~action_types ~action_names ~nb_actions ~actions ~has_controllable_or_uncontrollable_actions ~actions_per_automaton
+    ~action_types ~action_names ~nb_actions ~actions ~actions_per_automaton
     ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
     ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete 
     ~clocks_and_discrete 

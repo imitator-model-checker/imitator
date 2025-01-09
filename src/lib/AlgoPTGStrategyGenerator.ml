@@ -540,7 +540,6 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
   ~nb_parameters ~nb_variables ~parameters ~variable_names ~parameters_and_clocks ~parameters_and_discrete  
   ~action_types: action_types ~action_names: action_names 
   ~actions:(actions ()) ~actions_per_automaton:(fun _ -> actions()) ~nb_actions:(get_nb_actions ())
-  ~has_controllable_or_uncontrollable_actions: system_model.has_controllable_or_uncontrollable_actions (*** TODO: Mikael, please double check ***)
   ~discrete ~clocks ~initial_constraint ~initial_p_constraint
   ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete
   ~clocks_and_discrete
