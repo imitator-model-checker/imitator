@@ -139,19 +139,26 @@ let get_declared_synclabs_names =
 (** Check that all controllable actions were declared; also warn for multiply declared names *)
 (*------------------------------------------------------------*)
 let check_controllable_actions (controllable_actions : string list) (all_actions : string list) : bool =
+
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Starting to check (un)controllable actions (" ^ (string_of_list_of_string_with_sep "-" controllable_actions) ^ "), with list of known actions (" ^ (string_of_list_of_string_with_sep "-" all_actions) ^ ")");
+	);
+
 	(* 1. Check duplicates (no big deal) *)
 	(* Compute the multiply defined variables *)
 	let multiply_defined_names = elements_existing_several_times controllable_actions in
+	begin
 	(* Print a warning for each of them *)
 	match multiply_defined_names with
-		| [] -> true
+		| [] -> ()
 		| _ -> List.iter (fun variable_name -> print_warning ("Action `" ^ variable_name ^ "` is listed several times in the list of controllable actions.")) multiply_defined_names;
+	end;
 
 	(* 2. Check for undefined actions *)
 	(*** NOTE: using fold_left instead of for_all to get ALL errors *)
 	let all_valid = List.fold_left (fun current_valid action_name ->
 		if not (List.mem action_name all_actions) then (
-			print_error ("The action `" ^ action_name ^ "` declared as controllable was not declared for any automaton."); false)
+			print_error ("The action `" ^ action_name ^ "` declared as (un)controllable was not declared for any automaton."); false)
 		else current_valid
 	) true controllable_actions in
 	all_valid
@@ -2936,7 +2943,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let controllable_actions_checked : bool = match parsed_model.controllable_actions with
 	| Parsed_controllable_actions controllable_action_names
 	| Parsed_uncontrollable_actions controllable_action_names
-		-> check_controllable_actions controllable_action_names action_names
+		->
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n*** Checking (un)controllable actions…");
+			);
+			check_controllable_actions controllable_action_names action_names
 	| Parsed_no_controllable_actions -> true
 	in
 

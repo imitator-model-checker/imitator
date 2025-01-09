@@ -1262,6 +1262,52 @@ var
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2025/01/09
+		# Last modified            : 2025/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undefined controllable action',
+		'tags'       : 'syntax,controllable',
+		'input_files': ['parametric_timed_games/controllable-nonexistent.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'controllable-nonexistent.res' , 'content' : """
+Error                                   : invalid model
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2025/01/09
+		# Last modified            : 2025/01/09
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test undefined uncontrollable action',
+		'tags'       : 'syntax,controllable',
+		'input_files': ['parametric_timed_games/uncontrollable-nonexistent.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'uncontrollable-nonexistent.res' , 'content' : """
+Error                                   : invalid model
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [1]',
