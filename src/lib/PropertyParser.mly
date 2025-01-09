@@ -91,7 +91,19 @@ let resolve_property l =
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.unexpanded_parsed_property> main
+%type <ParsingStructure.unexpanded_parsed_property>			main
+%type <unit>												and_opt
+%type <ParsingStructure.parsed_discrete_arithmetic_expression>	arithmetic_expression
+%type <ParsingStructure.parsed_discrete_factor>				arithmetic_factor
+%type <ParsedValue.parsed_value>							binary_word
+%type <ParsingStructure.parsed_boolean_expression>			boolean_expression
+%type <unit>												comma_opt
+%type <ParsingStructure.parsed_pattern>						pattern
+%type <ParsingStructure.unexpanded_parsed_property_type>	property
+%type <unit>												property_kw_opt
+%type <ParsingStructure.unexpanded_parsed_property>			quantified_property
+%type <ParsingStructure.parsed_synthesis_type>				synth_or_exhibit
+%type <ParsingStructure.parsed_interval>					timed_interval
 %%
 
 /************************************************************/
