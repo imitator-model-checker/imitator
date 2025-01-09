@@ -262,7 +262,7 @@ let footer = "\n"
 
 (* Controllable actions *)
 let string_of_controllable_actions (model : AbstractModel.abstract_model) : string =
-	if model.controllable_actions = [] then "" else(
+	if not model.has_controllable_or_uncontrollable_actions then "" else(
 		"\ncontrollable actions: " ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names model.controllable_actions)) ^ ";\n"
 	)
 

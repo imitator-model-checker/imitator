@@ -3712,11 +3712,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
-	let controllable_actions_indices : action_index list = match parsed_model.controllable_actions with
+	let (controllable_actions_indices, has_controllable_or_uncontrollable_actions) : (action_index list * bool) = match parsed_model.controllable_actions with
 		| Parsed_controllable_actions controllable_action_names ->
 			print_message Verbose_high ("      Controllable actions detected");
 			(* Convert to a list of controllable actions *)
 			make_controllable_actions controllable_action_names index_of_actions
+			,
+			true
 
 		| Parsed_uncontrollable_actions controllable_action_names ->
 			print_message Verbose_high ("      Uncontrollable actions detected");
@@ -3724,15 +3726,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let uncontrollable_actions_indices = make_controllable_actions controllable_action_names index_of_actions in
 			(* Take complement *)
 			list_diff actions uncontrollable_actions_indices
+			,
+			true
 
 		| Parsed_no_controllable_actions ->
 			print_message Verbose_high ("      No controllable actions detected");
 			[]
+			,
+			false
 	 in
 
 	(* Is an action controllable? *)
 	let is_controllable_action action_index = List.mem action_index controllable_actions_indices in
-
 
 
 
@@ -4454,6 +4459,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	actions = actions;
 	(* Only controllable action indexes *)
 	controllable_actions = controllable_actions_indices;
+	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
+	has_controllable_or_uncontrollable_actions = has_controllable_or_uncontrollable_actions;
 	(* Action names *)
 	action_names = action_names;
 	(* The type of actions *)

@@ -70,6 +70,8 @@ type simple_abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
+	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
+	has_controllable_or_uncontrollable_actions : bool;
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)
@@ -118,7 +120,7 @@ val generate_abstract_controller_model :
 	variable_names:(variable_index -> variable_name) -> parameters:variable_index list -> 
 	parameters_and_clocks:variable_index list -> parameters_and_discrete:variable_index list -> 
 	action_types:(action_index -> action_type) -> action_names:(action_index -> action_name) -> 
-	actions:(action_index list) -> actions_per_automaton:(automaton_index -> action_index list) ->
+	actions:(action_index list) -> has_controllable_or_uncontrollable_actions:bool -> actions_per_automaton:(automaton_index -> action_index list) ->
 	nb_actions:int -> discrete:(discrete_index list) -> clocks:(clock_index list) ->
 	initial_constraint:(LinearConstraint.px_linear_constraint) -> initial_p_constraint:(LinearConstraint.p_linear_constraint) ->
 	nb_ppl_variables:int -> is_clock:(clock_index -> bool) -> discrete_rationals:(variable_index list) -> 
