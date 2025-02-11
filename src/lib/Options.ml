@@ -264,6 +264,10 @@ class imitator_options =
 			 even if not doing so violates an invarant *)
 		val mutable ptg_no_forced_uncontrollables		= false
 
+		val mutable ptg_no_strategy_generation = false
+
+		val mutable ptg_no_strategy_printing = false
+
 		(* process again green states *)
 		val mutable recompute_green					= false
 
@@ -390,6 +394,8 @@ class imitator_options =
 		method ptg_notonthefly						= ptg_notonthefly
 		method ptg_propagate_losing_states			= ptg_propagate_losing_states
 		method ptg_no_forced_uncontrollables = ptg_no_forced_uncontrollables
+		method ptg_no_strategy_generation = ptg_no_strategy_generation
+		method ptg_no_strategy_printing = ptg_no_strategy_printing
 
 		method states_limit							= states_limit
 		method statistics							= statistics
@@ -1062,6 +1068,10 @@ class imitator_options =
 				");
 
 				("-PTG-no-forced-uncontrollables", Unit (fun _ -> ptg_no_forced_uncontrollables <- true), "In game algorithms: use classic semantics where the environment cannot be forced to take an action even if not doing so violates an invarant. Default: false, i.e. use new semantics");
+
+				("-PTG-no-strategy-printing", Unit (fun _ -> ptg_no_strategy_printing <- true), "In game algorithms: Do not print the generated strategy");
+
+				("-PTG-no-strategy-generation", Unit (fun _ -> ptg_no_strategy_generation <- true), "In game algorithms: Turn strategy generation off entirely - for experiments");
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]
 				");

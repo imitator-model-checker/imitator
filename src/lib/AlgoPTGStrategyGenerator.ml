@@ -242,7 +242,7 @@ let location_name_of_global_location (model : abstract_model) (global_location :
 
 
 
-let controller_synthesis (system_model : AbstractModel.abstract_model) (state_space : stateSpace) (options : Options.imitator_options) (strategy : locationStrategyMap) =
+let controller_synthesis (system_model : AbstractModel.abstract_model) (state_space : stateSpace) (options : Options.imitator_options) (strategy : locationStrategyMap) ~callback =
   let fresh_action, get_nb_actions, action_types, action_names, actions = 
      let nb_actions = ref 0 in 
      let action_types = Hashtbl.create 100 in 
@@ -546,6 +546,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
   ~initial_location_index
   in
   
+  callback();
   print_highlighted_message Shell_result Verbose_standard ("\nStrategy generation results:");
   (* Write controller to file *)
   let imi_file_name = options#files_prefix ^ "-controller.imi" in

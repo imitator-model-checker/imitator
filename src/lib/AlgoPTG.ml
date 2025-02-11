@@ -136,7 +136,6 @@ class stateSpacePTG_full model options = object
 	inherit stateSpacePTG
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
-		print_exp ("PTG: Generating full statespace (not on the fly)");
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
 		let process_successors_from_state_index source_state_index = 
@@ -163,7 +162,6 @@ class stateSpacePTG_full model options = object
 		in 
 
 		let rec bfs unexplored_state_indices depth = 
-			print_exp (Printf.sprintf "Expanding frontier of %d states " (List.length unexplored_state_indices));
 			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
 				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
 			if unexplored_state_indices' = [] || depth = depth_limit then () else bfs unexplored_state_indices' (depth+1)
@@ -171,7 +169,6 @@ class stateSpacePTG_full model options = object
 		let initial_state_index = state_space#get_initial_state_index in 
 		passed_states#add initial_state_index;
 		bfs [initial_state_index] 1;
-		print_exp (Printf.sprintf "PTG: Finished generating full statespace. Total states: %d" state_space#nb_states)
 
 	method compute_symbolic_successors source_state_index = 
 		state_space#get_successors_with_combined_transitions source_state_index
@@ -481,6 +478,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
 		
 		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move bad_zone in
+		LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred (self#constr_of_state_index state);
 		
 		let global_location_src = (state_space#get_state state).global_location in 
 		let global_location_index_src = state_space#get_global_location_index state in 
@@ -572,6 +570,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (winningZone#find x) x) in
 				let forced_moves_changed_winning_zone = self#process_forced_move state bad (forcedMoves#find state) in 
 				let winning_zone_changed = 
+					if options#ptg_no_strategy_generation then 
+						let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ winningZone#find state) good_edges winningZone#find in
+						let new_zone = self#safe_timed_pred state good bad in 
+						if (winningZone#find state) #!= new_zone then (winningZone#replace state new_zone; true) else false
+					else
 					List.fold_left (||) forced_moves_changed_winning_zone
 						(List.map(fun edge -> self#backtrack_single_controllable_edge edge bad winningZone#find) good_edges) in 
 				if winning_zone_changed then 
@@ -664,7 +667,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria waiting init) do
-			print_exp (Printf.sprintf "Waiting list size: %d, state space size: %d" waiting#length state_space#nb_states);
 			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
 		(*	print_message Verbose_standard (edge_list_to_str waiting#to_list model state_space);			*)
 			let e, edge_status = waiting#extract in 			
@@ -694,22 +696,40 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method run =
 
 		start_time <- Unix.gettimeofday();
-
+		
 		(* Compute the parametric timed game *)
 		self#compute_PTG;
-		if not @@ LinearConstraint.p_nnconvex_constraint_is_false synthesized_constraint then
-			begin
-				AlgoPTGStrategyGenerator.print_strategy
-				model 
-				state_space
-				~strategy:locationStrategy;
-			
-				AlgoPTGStrategyGenerator.controller_synthesis
-				model
-				state_space
-				options
-				locationStrategy;
-			end;
+
+		self#print_algo_message_newline Verbose_experiments (
+			"Parameter synthesis algorithm completed " ^ after_seconds () ^ "."
+		);
+		if not @@ options#ptg_no_strategy_generation then
+			if not @@ LinearConstraint.p_nnconvex_constraint_is_false synthesized_constraint then
+				begin
+					if not @@ options#ptg_no_strategy_printing then
+					begin 
+						AlgoPTGStrategyGenerator.print_strategy
+						model 
+						state_space
+						~strategy:locationStrategy;
+						self#print_algo_message_newline Verbose_experiments (
+							"Printed strategy " ^ after_seconds () ^ "."
+						);
+					end;
+				
+					AlgoPTGStrategyGenerator.controller_synthesis
+					model
+					state_space
+					options
+					locationStrategy
+					~callback:(fun () -> 
+						self#print_algo_message_newline Verbose_experiments (
+							"Strategy -> Controller algorithm completed " ^ after_seconds () ^ "."
+						);
+						);
+
+				end;
+
 		(* Return the result *)
 		self#compute_result;
 

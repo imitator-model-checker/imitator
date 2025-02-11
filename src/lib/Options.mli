@@ -139,6 +139,9 @@ class imitator_options :
 			 even if not doing so violates an invarant *)
 		method ptg_no_forced_uncontrollables: bool
 
+		method ptg_no_strategy_printing : bool
+		method ptg_no_strategy_generation : bool
+
 		method pi_compatible				: bool
 		method precomputepi0				: bool
 		method property_file_name			: string option

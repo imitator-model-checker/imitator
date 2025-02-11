@@ -53,4 +53,4 @@ end
 
 val print_strategy : abstract_model -> stateSpace -> strategy:locationStrategyMap -> unit
 
-val controller_synthesis : abstract_model -> stateSpace -> Options.imitator_options -> locationStrategyMap -> unit
+val controller_synthesis : abstract_model -> stateSpace -> Options.imitator_options -> locationStrategyMap -> callback:(unit -> unit) -> unit
