@@ -96,6 +96,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
 	val mutable parameters_consistent_with_init : LinearConstraint.p_linear_constraint = LinearConstraint.p_false_constraint () (* Dummy initialization *)
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** For debug/testing efficiency *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	val mutable nb_of_calls_to_AF_per_state_index : (State.state_index, int) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -107,6 +112,13 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
 	method private au_rec (state_index : State.state_index) (passed : State.state_index list) (depth_AU : int) : LinearConstraint.p_nnconvex_constraint =
+
+		(*** NOTE/DEBUG: check multiple calls to AF with same state index ***)
+		if Hashtbl.mem nb_of_calls_to_AF_per_state_index state_index then(
+			Hashtbl.replace nb_of_calls_to_AF_per_state_index state_index ((Hashtbl.find nb_of_calls_to_AF_per_state_index state_index) + 1);
+		)else(
+			Hashtbl.add nb_of_calls_to_AF_per_state_index state_index 1
+		);
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium ("Entering au_ref with depth " ^ (string_of_int depth_AU));
@@ -212,7 +224,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					)
 				)else(
 					(* Valuate local variables *)
-					let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in
+					let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (model.initial_p_constraint) in
 					let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
 					(* Compute all successors via all possible outgoing transitions *)
@@ -410,6 +422,12 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			end;
 			ResultProcessor.print_warnings_of_termination_status termination_status;
 		end;
+
+		(*** NOTE/DEBUG: check multiple calls to AF with same state index ***)
+		self#print_algo_message Verbose_low "Number of calls to AF";
+		Hashtbl.iter (fun state_index nb ->
+			self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " -> " ^ (string_of_int nb));
+		) nb_of_calls_to_AF_per_state_index;
 
 		(* Return the result *)
 		self#compute_result;
