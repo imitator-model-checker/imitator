@@ -78,8 +78,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
-	(* Set of explored state indexes *)
-	val passed_states = new State.stateIndexSet
+	(* Set of explored state indexes, i.e., we computed their successors *)
+	val computed_successors = new State.stateIndexSet
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Hash table for caching known results of AF *)
@@ -233,13 +233,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					(* Compute all successors via all possible outgoing transitions: the list is made of transitions and state index; if the current state was not met before, we compute successors and add them to the state space immediately. Otherwise, we simply get everything from the state space. *)
 					let transitions_and_successors_list : (StateSpace.combined_transition * State.state_index) list =
 						(* Only compute the successors from scratch if the state was not explored before *)
-						if passed_states#mem state_index then
-						state_space#get_successors_with_combined_transitions state_index
+						if computed_successors#mem state_index then
+							state_space#get_successors_with_combined_transitions state_index
 						(* Else: state never met before, compute its successors for real *)
 						else(
-							(* Add to the set of explored states *)
-							passed_states#add state_index;
-
+							let successors =
 							(* Compute all successors for real *)
 							let transitions_and_concrete_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
 							(* Add the successors one by one *)
@@ -252,15 +250,25 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 								(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
 								let addition_result = state_space#add_state Equality_check None successor in
 								let successor_state_index = match addition_result with
-								| New_state state_index
-								| State_already_present state_index
-								| State_replacing state_index
-									-> state_index
+								| New_state some_state_index
+								| State_already_present some_state_index
+								| State_replacing some_state_index
+									-> some_state_index
 								in
+
+								(* Add the transition to the state space *)
+								state_space#add_transition (state_index, combined_transition, successor_state_index);
 
 								(* Convert the state to its state index *)
 								combined_transition , successor_state_index
 							) transitions_and_concrete_successors_list
+
+							in
+							(* Add to the set of explored states *)
+							computed_successors#add state_index;
+
+							(* Return the previously computed successors *)
+							successors
 						)
 					in
 
@@ -272,9 +280,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
 						);
-
-						(* Add the transition to the state space *)
-						state_space#add_transition (state_index, combined_transition, successor_state_index);
 
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
@@ -448,13 +453,15 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		end;
 
 		(*** NOTE/DEBUG: check multiple calls to AF with same state index ***)
-		self#print_algo_message Verbose_low "Number of calls to AF";
-		let total_nb_calls = ref 0 in
-		Hashtbl.iter (fun state_index nb ->
-			self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " -> " ^ (string_of_int nb));
-			total_nb_calls := !total_nb_calls + nb;
-		) nb_of_calls_to_AF_per_state_index;
-		self#print_algo_message Verbose_low ("In total: " ^ (string_of_int !total_nb_calls) ^ " call" ^ (OCamlUtilities.s_of_int !total_nb_calls) ^ " to AF")	;
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "Number of calls to AF";
+			let total_nb_calls = ref 0 in
+			Hashtbl.iter (fun state_index nb ->
+				self#print_algo_message Verbose_high ("State " ^ (string_of_int state_index) ^ " -> " ^ (string_of_int nb));
+				total_nb_calls := !total_nb_calls + nb;
+			) nb_of_calls_to_AF_per_state_index;
+			self#print_algo_message Verbose_high ("In total: " ^ (string_of_int !total_nb_calls) ^ " call" ^ (OCamlUtilities.s_of_int !total_nb_calls) ^ " to AF");
+		);
 
 		(* Return the result *)
 		self#compute_result;
