@@ -619,6 +619,12 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	(************************************************************)
 
+	(*------------------------------------------------------------*)
+	(** Checks whether a state index exists in the state space *)
+	(*------------------------------------------------------------*)
+	method state_index_exists (state_index : state_index) : bool =
+		Hashtbl.mem state_space.all_states state_index
+
 (*	(*------------------------------------------------------------*)
 	(** Pretty-printing method for debug *)
 	(*------------------------------------------------------------*)
