@@ -31,11 +31,11 @@ if [[ "$RUNNER_OS" = "macOS" ]]; then
 fi
 
 # clean previous builds
-information "Cleaning previous builds"
+information "Cleaning previous builds..."
 make clean
 
 # compile ppl
-./configure -q --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp --disable-documentation --enable-interfaces=ocaml || {
+./configure -q --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp ${EXTRA_ARGS} --disable-documentation --enable-interfaces=ocaml || {
     error "Failed to configure PPL-${PPL_VERSION}."
     cd ../
     rm -rf ppl-${PPL_VERSION}*

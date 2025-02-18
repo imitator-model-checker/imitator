@@ -95,7 +95,10 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
       exit 1
     }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install wget opam gmp ppl graphviz plotutils
+  brew install wget opam gmp ppl graphviz plotutils &>error.log || {
+      error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
+      exit 1
+    }
 fi
 
 # python fix
@@ -103,7 +106,7 @@ information "Fixing python symlink..."
 
 [ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/local/bin/python"
 
-# install opam and ocaml libraries
+# initialise opam
 information "Initialising opam..."
 
 [[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing &>error.log || opam init -a &>error.log || {
@@ -111,12 +114,18 @@ information "Initialising opam..."
   exit 1
 }
 
-information "Installing opam and OCaml libraries..."
-
 # switch to ocaml 4.14
+
+information "Switching to OCaml 4.14.1..."
+
 opam switch create 4.14.2
 opam switch 4.14.1
-opam install -y extlib fileutils alcotest menhir &>error.log || {
+
+# install opam and ocaml libraries
+
+information "Installing opam and OCaml libraries..."
+
+opam install -y extlib fileutils oasis alcotest menhir &>error.log || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
 }
