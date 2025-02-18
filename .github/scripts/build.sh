@@ -95,10 +95,7 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
       exit 1
     }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install wget opam gmp ppl graphviz plotutils &>error.log || {
-      error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
-      exit 1
-    }
+  brew install wget opam gmp ppl graphviz plotutils
 fi
 
 # python fix
