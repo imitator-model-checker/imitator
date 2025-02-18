@@ -2,9 +2,33 @@
 
 set -a
 
-# initialize functions for printing messages
+# global variables for options
 
-if [ "$1" = "-f" ] || [ "$1" = "--fancy" ]; then
+FANCY=false
+
+# options for script
+
+while getopts "hf" opt; do
+  case ${opt} in
+    h )
+      echo "Usage: $0 [-OPTIONS]"
+      echo "Options list:"
+      echo "  -h    Display this help message"
+      echo "  -f    Fancy the output"
+      exit 0
+      ;;
+    f )
+      FANCY=true
+      ;;
+    \? )
+      echo "Invalid option: $OPTARG. Executing the script without options."
+      ;;
+  esac
+done
+
+# initialize printing functions with or without colors
+
+if [ $FANCY = "true" ]; then
   error() { echo -e "\033[31mERROR: \033[0m$1";}
   warning() { echo -e "\033[33mWARNING: \033[0m$1";}
   information() { echo -e "\033[32mINFO: \033[0m$1";}
