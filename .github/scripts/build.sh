@@ -11,10 +11,16 @@ FANCY=false
 while getopts "hf" opt; do
   case ${opt} in
     h )
-      echo "Usage: $0 [-OPTIONS]"
+      clear
+      echo "Usage: $0 [-Options]"
+      echo
+      echo "Description:"
+      echo "This script builds IMITATOR. It also installs the necessary dependencies for the build."
+      echo
       echo "Options list:"
-      echo "  -h    Display this help message"
-      echo "  -f    Fancy the output"
+      echo "    -h    Display this help message"
+      echo "    -f    Fancy the output"
+      echo
       exit 0
       ;;
     f )
@@ -26,7 +32,7 @@ while getopts "hf" opt; do
   esac
 done
 
-# initialize printing functions with or without colors
+# initialize printing functions with or without -f option
 
 if [ $FANCY = "true" ]; then
   error() { echo -e "\033[31mERROR: \033[0m$1";}
