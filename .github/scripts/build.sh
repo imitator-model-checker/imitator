@@ -60,12 +60,12 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
   DEBIAN_FRONTEND=noninteractive
   sudo apt-get update -qq
   sudo apt-get install -qq wget unzip curl build-essential libtinfo-dev g++ m4 opam python3 \
-    libgmp-dev libmpfr-dev libppl-dev graphviz plotutils || {
+    libgmp-dev libmpfr-dev libppl-dev graphviz plotutils &>error.log || {
       error "One of the depedencies had an issue installing itself. Please use the command $(cmd "apt-get update") or make sure that $(cmd "sudo") rights have been granted"
       exit 1
     }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install opam gmp ppl graphviz plotutils || {
+  brew install opam gmp ppl graphviz plotutils &>error.log || {
       error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
       exit 1
     }
@@ -79,35 +79,41 @@ information "Fixing python symlink..."
 # install opam and ocaml libraries
 information "Initialising opam..."
 
-[[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing || opam init -a
+[[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing &>error.log || opam init -a &>error.log || {
+  error "An issue has occured while initialising opam. Please check the error log."
+  exit 1
+}
 
 information "Installing opam and OCaml libraries..."
 
-opam install -y extlib fileutils oasis alcotest menhir || echo -e 
+opam install -y extlib fileutils oasis alcotest menhir &>error.log || {
+  error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
+  exit 1
+}
 eval $(opam env)
 
 # install mlgmp
 information "Installing mlgmp..."
 
 if [ ! -d "$(opam var lib)/gmp" ]; then
-  bash "${SCRIPT_FOLDER}/install-mlgmp.sh" || {
-    error "An issue has occured while installing mlgmp."
+  bash "${SCRIPT_FOLDER}/install-mlgmp.sh" &>error.log || {
+    error "An issue has occured while installing mlgmp. Please check the error log."
     exit 1
   }
 else
-  note "mmlgmp already installed. Skipping."
+  note "mlgmp already installed. Skipping."
 fi
 
 # instal ppl
-information "Installing ppl..."
+information "Installing PPL..."
 
 if [ ! -d "$(opam var lib)/ppl" ]; then
-  bash "${SCRIPT_FOLDER}/install-ppl.sh" || {
-    error "An issue has occured while installing plp."
+  bash "${SCRIPT_FOLDER}/install-ppl.sh" &>error.log || {
+    error "An issue has occured while installing plp. Please check the error log."
     exit 1
   }
 else
-  note "ppl already installed. Skipping."
+  note "PPL already installed. Skipping."
 fi
 
 # patch oasis for OSX
@@ -118,11 +124,11 @@ fi
 
 # Cleaning previous builds
 information "Cleaning previous builds..."
-dune clean 2>&1 >/dev/null
+dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build 2>&1 >/dev/null || {
+dune build &>error.log || {
   error "An issue has occured while building IMITATOR. Please check the error log."
   exit 1
 }
@@ -136,6 +142,7 @@ if [ ! -z "${GITHUB_WORKSPACE}" ]; then
   mv "imitator" "imitator-${tag}-${platform}-amd64"
 fi
 
+rm -f error.log
 success "IMITATOR has been built successfully."
 
 exit 0 
