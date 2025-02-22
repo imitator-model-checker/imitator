@@ -142,6 +142,9 @@ class imitator_options :
 		method ptg_no_strategy_printing : bool
 		method ptg_no_strategy_generation : bool
 
+		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
+		method ptg_picking_strategy : AbstractAlgorithm.waitingListStrategy
+
 		method pi_compatible				: bool
 		method precomputepi0				: bool
 		method property_file_name			: string option

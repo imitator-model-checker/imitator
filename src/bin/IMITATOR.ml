@@ -1223,10 +1223,10 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit with 
+				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit, options#ptg_picking_strategy with 
 					(* State space should be fully generated first if a depth limit has been set *)
-					| true, _ -> new AlgoPTG.stateSpacePTG_full model options
-					| false, Some _ -> 
+					| true, _, _ -> new AlgoPTG.stateSpacePTG_full model options
+					| false, Some _, AbstractAlgorithm.SingleQueue -> 
 							print_warning "Since a depth limit has been set, state space will be generated first! (not OTF)";
 							new AlgoPTG.stateSpacePTG_full model options
 					| _ -> new AlgoPTG.stateSpacePTG_OTF model options
