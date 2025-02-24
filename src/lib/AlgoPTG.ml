@@ -40,8 +40,6 @@ let bot = LinearConstraint.false_px_nnconvex_constraint
 
 let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
 let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
-let print_PTG = print_message Verbose_low
-let print_exp = print_message Verbose_experiments
 
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
 
@@ -63,12 +61,12 @@ let edge_to_str = fun ({state; action; state';_}, status : edge * edge_status) m
 
 	Printf.sprintf "%d (loc %s) --%s-> %d (loc %s) (%s)" state location_name action_str state' location_name' (status_to_string status)
 
-let edge_list_to_str seq model state_space = "[" ^ 
+let edge_list_to_str list model state_space = "[" ^ 
 	List.fold_left 
 		(fun acc edge -> Printf.sprintf "%s, %s" acc (edge_to_str edge model state_space))
 		("") (
-		seq) 
-	^ "]"
+		list) 
+	^ "]" 
 
 class unionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
@@ -179,15 +177,6 @@ class stateSpacePTG_full model options = object
 	method compute_symbolic_successors source_state_index = 
 		state_space#get_successors_with_combined_transitions source_state_index
 end
-
-
-let compare_edge e1 e2 = match e1, e2 with
-	| (_, Unexplored), (_, Unexplored) -> PriorityQueue.Equal
-	| _, (_, Unexplored) -> PriorityQueue.Equal
-	| (_, Unexplored), _ -> PriorityQueue.Equal
-	| _ -> PriorityQueue.Equal
-
-
 
 type item = edge * edge_status
 
@@ -470,7 +459,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		in
 			
 		forcedMoves#replace state_index forced_moves;
-		print_PTG (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
+		if verbose_mode_greater Verbose_medium then 
+			print_message Verbose_low (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
 		
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
@@ -486,7 +476,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Explores forward in order to discover winning states *)
 	method private forward_exploration e passed= 
 		let {state';_} = e in 
-		print_PTG ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
+		print_message Verbose_low ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
 		passed#add state';
 
 
@@ -502,13 +492,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			end;
 
 		(* TODO: Rewrite deadlock detection after new forced uncontrollable semantics *)
-	(**	if self#is_dead_lock state' then 
-			begin
-				if options#ptg_propagate_losing_states then 
-					(losingZone#replace state' @@ (self#constr_of_state_index >> nn) state'; 
-					waiting #<- (e, BackpropLosing));
-				coverage_pruning := true
-			end; *)
 
 		coverage_pruning := !coverage_pruning && options#coverage_pruning;
 
@@ -516,14 +499,15 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			match self#global_constraint_pruning state', !coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
-					print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
 				| _, true -> 
 					coverage_pruning_counter#increment;
-					print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
 				| _ ->
 					(depends#find state')#add e;
 					waiting #<-- (self#get_edges state');
-					print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
+					if verbose_mode_greater Verbose_medium then 
+						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
 		end;
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
@@ -622,7 +606,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		begin
 			match backtrack_type with 
 			| Winning -> 
-				print_PTG "\tWINNING ZONE PROPAGATION:";
+				print_message Verbose_medium "\tWINNING ZONE PROPAGATION:";
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (winningZone#find x) x) in
 				let forced_moves_changed_winning_zone = self#process_forced_move state bad (forcedMoves#find state) in 
 				let winning_zone_changed = 
@@ -639,7 +623,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						if state = state_space#get_initial_state_index then init_winning_zone_changed := true
 					end
 			| Losing -> 		
-				print_PTG "\tLOSING ZONE PROPAGATION:";
+				print_message Verbose_medium "\tLOSING ZONE PROPAGATION:";
 				let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ losingZone#find state) good_edges losingZone#find in
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (losingZone#find x) x) in
 				LinearConstraint.px_nnconvex_difference_assign bad good;
@@ -724,10 +708,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria initial_state) do
-			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
-		(*	print_message Verbose_standard (edge_list_to_str waiting#to_list model state_space);			*)
+			if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
 			let e, edge_status = waiting#extract in 			
-			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
+			if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
 			if not @@ passed#mem e.state' then  
 				self#forward_exploration e passed
 			else
