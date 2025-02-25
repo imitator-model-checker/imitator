@@ -16,22 +16,9 @@
    -cclib
    -lgmpxx)))
 
-(rule
- (target imitator)
- (deps IMITATOR.exe)
- (mode
-  (promote
-   (into ../../bin)))
- (action
-  (progn
-   (echo "\nCopying main binary file to bin/imitator \226\128\166")
-   (run chmod u+w %{deps})
-   (run strip %{deps})
-   (copy %{deps} %{target}))))
-
 (install
  (section bin)
- (files imitator))
+ (files IMITATOR.exe as imitator))
 
 (rule
  (with-stdout-to
@@ -51,3 +38,16 @@
    (-I %{env:OPAM_SWITCH_PREFIX=}/lib/ppl)
   )))
 
+
+(rule
+ (target imitator)
+ (deps IMITATOR.exe)
+ (mode
+  (promote
+   (into ../../bin)))
+ (action
+  (progn
+   (echo "\nCopying main binary file to bin/imitator \226\128\166")
+   (run chmod u+w %{deps})
+   (run strip %{deps})
+   (copy %{deps} %{target}))))
