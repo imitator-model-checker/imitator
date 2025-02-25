@@ -18,7 +18,7 @@
 
 (install
  (section bin)
- (files IMITATOR.exe as imitator))
+ (files IMITATOR.exe))
 
 (rule
  (with-stdout-to
