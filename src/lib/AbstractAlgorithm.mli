@@ -128,6 +128,11 @@ type ptg_controller_mode =
 	| Draw
 	| No_Draw
 
+(** Waiting list strategy for AlgoPTG **)
+type waitingListStrategy =
+	| SingleQueue
+	| Frontier of {init: int; step:  int; update: int}
+
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
 

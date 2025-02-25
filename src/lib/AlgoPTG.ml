@@ -40,8 +40,6 @@ let bot = LinearConstraint.false_px_nnconvex_constraint
 
 let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
 let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
-let print_PTG = print_message Verbose_low
-let print_exp = print_message Verbose_experiments
 
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
 
@@ -63,12 +61,12 @@ let edge_to_str = fun ({state; action; state';_}, status : edge * edge_status) m
 
 	Printf.sprintf "%d (loc %s) --%s-> %d (loc %s) (%s)" state location_name action_str state' location_name' (status_to_string status)
 
-let edge_list_to_str seq model state_space = "[" ^ 
+let edge_list_to_str list model state_space = "[" ^ 
 	List.fold_left 
 		(fun acc edge -> Printf.sprintf "%s, %s" acc (edge_to_str edge model state_space))
 		("") (
-		seq) 
-	^ "]"
+		list) 
+	^ "]" 
 
 class unionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
@@ -96,6 +94,7 @@ class virtual stateSpacePTG  = object(self)
 	method state_space = state_space
 	method virtual initialize_state_space : unit -> unit
 	method virtual compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+	method virtual unexplored_successors : int
 	initializer 
 		self#initialize_state_space ()
 end
@@ -108,6 +107,7 @@ let add_transitions_and_states_to_state_space state_space transitions_and_states
 
 class stateSpacePTG_OTF model options = object
 	inherit stateSpacePTG
+	method unexplored_successors = 0
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
@@ -135,6 +135,8 @@ end
 class stateSpacePTG_full model options = object
 	inherit stateSpacePTG
 	val mutable passed_states = new State.stateIndexSet
+	val mutable unexplored_successors = 0
+	method unexplored_successors = unexplored_successors
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
@@ -164,7 +166,9 @@ class stateSpacePTG_full model options = object
 		let rec bfs unexplored_state_indices depth = 
 			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
 				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
-			if unexplored_state_indices' = [] || depth = depth_limit then () else bfs unexplored_state_indices' (depth+1)
+			if depth = depth_limit then
+				unexplored_successors <- depth_limit
+			else if unexplored_state_indices' = [] then () else bfs unexplored_state_indices' (depth+1)
 		in
 		let initial_state_index = state_space#get_initial_state_index in 
 		passed_states#add initial_state_index;
@@ -174,59 +178,91 @@ class stateSpacePTG_full model options = object
 		state_space#get_successors_with_combined_transitions source_state_index
 end
 
+type item = edge * edge_status
 
-let compare_edge e1 e2 = match e1, e2 with
-	| (_, Unexplored), (_, Unexplored) -> PriorityQueue.Equal
-	| _, (_, Unexplored) -> PriorityQueue.Equal
-	| (_, Unexplored), _ -> PriorityQueue.Equal
-	| _ -> PriorityQueue.Equal
-
-
-
-class virtual ['a] waitingList list = object(self)
-	method virtual queue : 'a
-	method virtual add : edge * edge_status -> unit
-	method virtual extract : edge * edge_status
+class virtual ['a] nextItem = object
+	method virtual add : 'a -> unit
+	method virtual extract : 'a
 	method virtual is_empty : bool
-	method virtual to_list : (edge * edge_status) list
+	method virtual to_list : 'a list
 	method virtual length : int
-	method virtual add_all : 'a waitingList -> unit
-	method virtual of_list : (edge * edge_status) list -> unit
-	initializer 
-		self#of_list list
+	method virtual add_all : 'a list -> unit
+	method virtual unexplored_successors : int 
 end
 
-
-module EdgePriorityQueue = PriorityQueue.Make(struct type t = (edge * edge_status) let compare = compare_edge end)
-
-(*class prioQueue list = object
-	inherit ([EdgePriorityQueue.queue] waitingList list)
-	val mutable queue = EdgePriorityQueue.empty 
-	method queue = queue
-	method add e = queue <- EdgePriorityQueue.insert queue e
-	method extract = let (elt, queue') = EdgePriorityQueue.extract queue in queue <- queue'; elt
-	method is_empty = EdgePriorityQueue.is_empty queue
-	method to_list = EdgePriorityQueue.to_list queue
-	method length = EdgePriorityQueue.length queue
-	method add_all waitingList = queue <- EdgePriorityQueue.merge queue waitingList#queue
-	method of_list list = queue <- EdgePriorityQueue.of_list list	
-end*)
-
-class normalQueue list = object
-	inherit ([(edge * edge_status) Queue.t] waitingList list)
-	val queue = Queue.create () 
-	method queue = queue
+class nextItem_single_queue = object
+	inherit ([item] nextItem)
+	val queue = Queue.create ()
 	method add e = Queue.add e queue
 	method extract = Queue.pop queue
 	method is_empty = Queue.is_empty queue
 	method to_list = List.of_seq (Queue.to_seq queue)
 	method length = Queue.length queue
-	method add_all waitingList = Queue.transfer waitingList#queue queue 
-	method of_list list = List.iter (fun e -> Queue.add e queue) list
+	method add_all list = List.iter (fun e -> Queue.add e queue) list
+	method unexplored_successors = 0
 end
 
-let (#<-) (queue : 'a waitingList) elem = queue#add elem   
-let (#<--) (queue1 : 'a waitingList) (queue2 : 'a waitingList) = queue1#add_all queue2
+type phase = Initial | Exploring | Updating
+class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth : int) (total_depth_limit : int) = object(self)
+	inherit ([item] nextItem)
+	val mutable explore = []
+	val mutable explore' = []
+	val mutable update = []
+	val mutable update' = []
+	val mutable phase = Initial
+	val mutable depth = explore_depth - init_depth
+	val mutable total_depth = 0
+	val mutable unexplored_successors = 0
+	method add e = match e with 
+	| _, Unexplored -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
+	| _ -> update' <- e::update'
+	method extract = 
+		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
+		(List.length explore) (List.length explore') (List.length update) (List.length update') 
+		(match phase with Initial -> depth - explore_depth + init_depth | _ -> depth)
+		(match phase with Exploring -> "Exploring" | Initial -> "Initial Exploring" |_ -> "Updating")
+		total_depth);
+
+		let swap_phase () = 
+			(match phase with  
+			| Initial | Exploring -> if update' != [] then phase <- Updating
+			| Updating -> if explore' != [] then phase <- Exploring);
+			depth <- 0
+		in
+		let increment_depth () = 
+			match phase with 
+			| Initial | Exploring -> 
+				if explore' = [] then swap_phase () else 
+					(explore <- explore'; explore' <- []; 
+					total_depth <- total_depth + 1;
+					depth <- depth + 1;)
+			| Updating -> if update' = [] then swap_phase () else (update <- update'; update' <- []; depth <- depth + 1)
+		in
+
+		let rec extract_aux () = 
+			let depth_limit, curr_list, update_curr_list = match phase with 
+			| Initial | Exploring -> explore_depth, explore, fun xs -> explore <- xs 
+			| _ -> update_depth, update, fun xs -> update <- xs in 
+			match curr_list with 
+			| [] -> 
+				if depth = depth_limit then
+					swap_phase ()
+				else 
+					increment_depth ();
+				extract_aux ()
+			| x::xs -> 	update_curr_list xs; x 
+		in
+		extract_aux ()
+
+	method is_empty = List.length update = 0 && List.length update' = 0 && List.length explore = 0 && List.length explore' = 0
+	method to_list = explore @ explore' @ update @ update'
+	method length = List.length update + List.length update' + List.length explore + List.length explore'
+	method add_all list = List.iter self#add list
+	method unexplored_successors = unexplored_successors
+end
+
+let (#<-) (queue : 'a nextItem) elem = queue#add elem
+let (#<--) (queue1 : 'a nextItem) (queue2 : 'a list) = queue1#add_all queue2
 
 (************************************************************)
 (************************************************************)
@@ -249,6 +285,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Counters *)
 	(*------------------------------------------------------------*)
 
+	val cumulative_pruning_counter = Statistics.create_discrete_counter_and_register "PTG Cumulative pruning count: " Statistics.States_counter Verbose_experiments
+	val coverage_pruning_counter = Statistics.create_discrete_counter_and_register "PTG Coverage pruning count: " Statistics.States_counter Verbose_experiments
 	
 	(************************************************************)
 	(* Class methods *)
@@ -269,6 +307,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val locationWinningZone = new AlgoPTGStrategyGenerator.locationUnionZoneMap
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
+
+
+	val waiting : item nextItem = 
+		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
+		match options#ptg_picking_strategy with 
+		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier init step update depth_limit
+		| AbstractAlgorithm.SingleQueue -> new nextItem_single_queue
 
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
@@ -297,10 +342,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			{state; action; transition; state'}, Unexplored
 			) successors in
 		action_state_list
-
-	(* Edges from a symbolic state as a queue *)
-	method private get_edge_queue state_index =
-		new normalQueue @@ self#get_edges state_index;
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
 	method private get_controllable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> model.is_controllable_action e.action)
@@ -418,7 +459,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		in
 			
 		forcedMoves#replace state_index forced_moves;
-		print_PTG (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
+		if verbose_mode_greater Verbose_medium then 
+			print_message Verbose_low (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
 		
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
@@ -432,9 +474,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			false
 
 	(* Explores forward in order to discover winning states *)
-	method private forward_exploration e waiting passed= 
+	method private forward_exploration e passed= 
 		let {state';_} = e in 
-		print_PTG ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
+		print_message Verbose_low ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
 		passed#add state';
 
 
@@ -450,29 +492,27 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			end;
 
 		(* TODO: Rewrite deadlock detection after new forced uncontrollable semantics *)
-	(**	if self#is_dead_lock state' then 
-			begin
-				if options#ptg_propagate_losing_states then 
-					(losingZone#replace state' @@ (self#constr_of_state_index >> nn) state'; 
-					waiting #<- (e, BackpropLosing));
-				coverage_pruning := true
-			end; *)
 
 		coverage_pruning := !coverage_pruning && options#coverage_pruning;
 
 		begin 
 			match self#global_constraint_pruning state', !coverage_pruning with 
-				|	true, _ -> print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
-				| _, true -> print_PTG (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
+				|	true, _ -> 
+					cumulative_pruning_counter#increment;
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
+				| _, true -> 
+					coverage_pruning_counter#increment;
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
 				| _ ->
 					(depends#find state')#add e;
-					waiting #<-- (self#get_edge_queue state');
-					print_PTG ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
+					waiting #<-- (self#get_edges state');
+					if verbose_mode_greater Verbose_medium then 
+						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
 		end;
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
-	method private edge_set_to_queue_with_status edge_set status = 
-		new normalQueue @@ List.map (fun e -> (e, status)) (edge_set#to_list)
+	method private edge_set_to_list_with_status edge_set status = 
+		List.map (fun e -> (e, status)) (edge_set#to_list)
 
 
 	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
@@ -550,7 +590,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 
 	(* General method for backpropagation of winning/losing zones *)
-	method private backtrack e waiting backtrack_type = 
+	method private backtrack e backtrack_type = 
 		let {state; state';_} = e in 
 		let get_pred_from_edges default edges zone = 
 			List.fold_left (|||) default @@
@@ -566,24 +606,24 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		begin
 			match backtrack_type with 
 			| Winning -> 
-				print_PTG "\tWINNING ZONE PROPAGATION:";
+				print_message Verbose_medium "\tWINNING ZONE PROPAGATION:";
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (winningZone#find x) x) in
 				let forced_moves_changed_winning_zone = self#process_forced_move state bad (forcedMoves#find state) in 
 				let winning_zone_changed = 
 					if options#ptg_no_strategy_generation then 
 						let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ winningZone#find state) good_edges winningZone#find in
 						let new_zone = self#safe_timed_pred state good bad in 
-						if (winningZone#find state) #!= new_zone then (winningZone#replace state new_zone; true) else false
+						if forced_moves_changed_winning_zone || (winningZone#find state) #!= new_zone then (winningZone#replace state new_zone; true) else false
 					else
 					List.fold_left (||) forced_moves_changed_winning_zone
 						(List.map(fun edge -> self#backtrack_single_controllable_edge edge bad winningZone#find) good_edges) in 
 				if winning_zone_changed then 
 					begin
-						waiting #<-- (self#edge_set_to_queue_with_status (depends#find state) BackpropWinning);
+						waiting #<-- (self#edge_set_to_list_with_status (depends#find state) BackpropWinning);
 						if state = state_space#get_initial_state_index then init_winning_zone_changed := true
 					end
 			| Losing -> 		
-				print_PTG "\tLOSING ZONE PROPAGATION:";
+				print_message Verbose_medium "\tLOSING ZONE PROPAGATION:";
 				let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ losingZone#find state) good_edges losingZone#find in
 				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (losingZone#find x) x) in
 				LinearConstraint.px_nnconvex_difference_assign bad good;
@@ -591,7 +631,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				if (losingZone#find state) #!= new_zone then
 					begin
 						losingZone#replace state new_zone;
-						waiting #<-- (self#edge_set_to_queue_with_status (depends#find state) BackpropLosing);
+						waiting #<-- (self#edge_set_to_list_with_status (depends#find state) BackpropLosing);
 						if state = state_space#get_initial_state_index then init_losing_zone_changed := true 
 					end;
 		end;
@@ -616,7 +656,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_and_losing_zone
 	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
-	method private termination_criteria waiting init = 
+	method private termination_criteria init = 
 		let queue_empty = waiting#is_empty in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
 		let propagate_losing_states = options#ptg_propagate_losing_states in 
@@ -648,46 +688,48 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let propagate_losing_states = options#ptg_propagate_losing_states in 
 
 		(* === ALGORITHM INITIALIZATION === *)
-		let init = state_space#get_initial_state_index in 
+		let initial_state = state_space#get_initial_state_index in 
 
 		if not options#ptg_no_forced_uncontrollables then
-			self#save_forced_moves init;
+			self#save_forced_moves initial_state;
 		
 		let passed = new State.stateIndexSet in 
-		passed#add init;
-		let waiting = self#get_edge_queue init in 
+		passed#add initial_state;
+
+		waiting#add_all (self#get_edges initial_state);
 
 		(* If goal is init then initial winning zone is it's own constraint*)
-		if self#matches_state_predicate init then
-			winningZone#replace init @@ (self#constr_of_state_index >> nn) init;
+		if self#matches_state_predicate initial_state then
+			winningZone#replace initial_state @@ (self#constr_of_state_index >> nn) initial_state;
 
 		(* If init is deadlock then initial losing zone is it's own constraint*)
-		if self#matches_state_predicate init && propagate_losing_states then
-			(losingZone#replace init @@ (self#constr_of_state_index >> nn) init; init_losing_zone_changed := true);
+		if self#matches_state_predicate initial_state && propagate_losing_states then
+			(losingZone#replace initial_state @@ (self#constr_of_state_index >> nn) initial_state; init_losing_zone_changed := true);
 
 		(* === ALGORITHM MAIN LOOP === *)
-		while (not @@ self#termination_criteria waiting init) do
-			print_PTG ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
-		(*	print_message Verbose_standard (edge_list_to_str waiting#to_list model state_space);			*)
+		while (not @@ self#termination_criteria initial_state) do
+			if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
 			let e, edge_status = waiting#extract in 			
-			print_PTG (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
+			if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
 			if not @@ passed#mem e.state' then  
-				self#forward_exploration e waiting passed
+				self#forward_exploration e passed
 			else
 				match edge_status with
 					| Unexplored -> 
-						self#backtrack e waiting Winning;
-						if propagate_losing_states then self#backtrack e waiting Losing
+						self#backtrack e Winning;
+						if propagate_losing_states then self#backtrack e Losing
 					| BackpropWinning -> 
-						self#backtrack e waiting Winning
+						self#backtrack e Winning
 					| BackpropLosing -> 
-						self#backtrack e waiting Losing
+						self#backtrack e Losing
 		done;
 
 		if propagate_losing_states then
 	(*		print_PTG (Printf.sprintf "And these losing zones: %s" (losingZone#to_str())); *)
 
-		let winning_parameters = project_params (self#initial_constraint () &&& winningZone#find init) in
+		let winning_parameters = project_params (self#initial_constraint () &&& winningZone#find initial_state) in
 		synthesized_constraint <- winning_parameters
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -762,6 +804,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
+		if waiting#unexplored_successors != 0 then termination_status <- Depth_limit (Number waiting#unexplored_successors);
+		if state_space_ptg#unexplored_successors != 0 then termination_status <- Depth_limit (Number state_space_ptg#unexplored_successors);
+
 		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)

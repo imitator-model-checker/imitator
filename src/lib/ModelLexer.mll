@@ -25,8 +25,11 @@ let line=ref 1;;
 
 }
 
+(* Support Windows CRLF line endings *)
+let newline = '\r' | '\n' | "\r\n"
+
 rule token = parse
-	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
+	  newline             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
 	(* C style include *)
@@ -187,5 +190,5 @@ and comment_ocaml = parse
             if !comment_depth == 0 then () else comment_ocaml lexbuf }
   | eof
     { failwith "End of file inside a comment in model." }
-  | '\n'  { line := !line + 1 ; comment_ocaml lexbuf }
+  | newline  { line := !line + 1 ; comment_ocaml lexbuf }
   | _     { comment_ocaml lexbuf }
