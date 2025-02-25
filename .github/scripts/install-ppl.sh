@@ -30,17 +30,17 @@ if [[ "$RUNNER_OS" = "macOS" ]]; then
     EXTRA_ARGS="--with-gmp=$(brew --prefix)"
 fi
 
-# clean previous builds
-information "Cleaning previous builds..."
-make clean
-
 # compile ppl
-./configure -q --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp ${EXTRA_ARGS} --disable-documentation --enable-interfaces=ocaml || {
+./configure -q --prefix=$(opam var prefix) --with-mlgmp=$(opam var lib)/gmp --disable-documentation --enable-interfaces=ocaml || {
     error "Failed to configure PPL-${PPL_VERSION}."
     cd ../
     rm -rf ppl-${PPL_VERSION}*
     exit 1
 }
+
+# clean previous builds
+information "Cleaning previous builds..."
+make clean
 
 # compile Ocaml interface
 
@@ -61,7 +61,7 @@ make install || {
 }
 
 cd ../
-rm -rf ppl-${PPL_VERSION}*
+rm -rf ppl-${PPL_VERSION}* $(opam var lib)/libppl.*
 
 # copy META file
 information "Copying META file..."

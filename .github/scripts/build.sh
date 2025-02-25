@@ -116,7 +116,7 @@ information "Initialising opam..."
 
 information "Installing opam and OCaml libraries..."
 
-opam install -y extlib fileutils oasis alcotest menhir &>error.log || {
+opam install -y extlib fileutils alcotest menhir &>error.log || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
 }
