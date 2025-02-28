@@ -108,16 +108,16 @@ let add_transitions_and_states_to_state_space state_space transitions_and_states
 class stateSpacePTG_OTF model options = object
 	inherit stateSpacePTG
 	method unexplored_successors = 0
-	val mutable passed_states = new State.stateIndexSet
+	val mutable explored_states = new State.stateIndexSet
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
 	method compute_symbolic_successors source_state_index = 
-		if passed_states#mem source_state_index then 
+		if explored_states#mem source_state_index then 
 			state_space#get_successors_with_combined_transitions source_state_index
 		else 
 		begin
-			passed_states#add source_state_index;
+			explored_states#add source_state_index;
 			let state = state_space#get_state source_state_index in 
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
 			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
@@ -315,6 +315,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier init step update depth_limit
 		| AbstractAlgorithm.SingleQueue -> new nextItem_single_queue
 
+
+
+
+	val passed = new State.stateIndexSet
+
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
 
@@ -474,7 +479,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			false
 
 	(* Explores forward in order to discover winning states *)
-	method private forward_exploration e passed= 
+	method private forward_exploration e  = 
 		let {state';_} = e in 
 		print_message Verbose_low ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
 		passed#add state';
@@ -693,7 +698,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		if not options#ptg_no_forced_uncontrollables then
 			self#save_forced_moves initial_state;
 		
-		let passed = new State.stateIndexSet in 
 		passed#add initial_state;
 
 		waiting#add_all (self#get_edges initial_state);
@@ -714,7 +718,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			if verbose_mode_greater Verbose_medium then 
 				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
 			if not @@ passed#mem e.state' then  
-				self#forward_exploration e passed
+				self#forward_exploration e
 			else
 				match edge_status with
 					| Unexplored -> 
