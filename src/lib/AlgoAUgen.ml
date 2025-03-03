@@ -78,16 +78,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
-	(* Set of explored state indexes, i.e., we computed their successors *)
+	(** Set of explored state indexes, i.e., we computed their successors *)
 	val computed_successors = new State.stateIndexSet
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Hash table for caching known results of AF *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
-
-	val mutable debug_nb_AF_calls : int = 0
-	val mutable debug_nb_instructions : int = 0
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -130,7 +125,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
 
 		(* First check whether the result of AF(state_index) is known from the cache *)
-		if (*Hashtbl.mem cache_result_AF state_index*)false then(
+		if options#cache_in_AF && Hashtbl.mem cache_result_AF state_index then(
 			LinearConstraint.p_nnconvex_copy (Hashtbl.find cache_result_AF state_index)
 		)else(
 
@@ -380,7 +375,9 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		(* Cache the result *)
 		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future ***)
-(* 		Hashtbl.add cache_result_AF state_index (LinearConstraint.p_nnconvex_copy af_result); *)
+		if options#cache_in_AF then(
+			Hashtbl.add cache_result_AF state_index (*(LinearConstraint.p_nnconvex_copy*) af_result ;
+		);
 
 		(* Return result *)
 		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future as the result of AF ***)
@@ -397,9 +394,14 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		start_time <- Unix.gettimeofday();
 
-(* !!! NOTE : de-BUG !!! *)
 (* 		print_warning "There is an instability in AF, AU, AW, AR and EG algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem."; *)
-(* !!! NOTE : de-BUG !!! *)
+
+		(* Recall whether the cache is used *)
+		if options#cache_in_AF then(
+			self#print_algo_message Verbose_high "Cache system will be used in AF.";
+		)else(
+			self#print_algo_message Verbose_standard "Cache system is disabled for AF.";
+		);
 
 		(* Build initial state *)
 		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in

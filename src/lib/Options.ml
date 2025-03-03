@@ -151,6 +151,9 @@ class imitator_options =
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
 		val mutable acyclic							= false
 
+		(* Cache results in AF to avoid recomputation *)
+		val mutable cache_in_AF						= true
+
 		(* limit on number of tiles computed by a cartography *)
 		val mutable carto_tiles_limit				= None
 
@@ -301,6 +304,7 @@ class imitator_options =
 		method check_ippta							= check_ippta
 		method check_point							= check_point
 
+		method cache_in_AF							= cache_in_AF
 		method comparison_operator					= value_of_option "comparison_operator" comparison_operator
 		method is_set_comparison_operator			= comparison_operator <> None
 		method set_comparison_operator b			= comparison_operator <- Some b
@@ -1039,6 +1043,9 @@ class imitator_options =
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
 
+				("-no-cache-in-AF", Unit (fun () -> cache_in_AF <- false), "In AF and AU, do NOT cache the result of previously computed nodes. Disabling the cache presumably reduces the state space but increases the computation time.
+				");
+
 				("-no-coverage-pruning", Unit (fun () -> coverage_pruning <- false), " In PTG: does not prune exploration of states that are fully covered (winning or losing). Default: enabled (i.e., tests coverage and prunes).
 				");
 
@@ -1450,6 +1457,20 @@ class imitator_options =
 
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
+
+			(*------------------------------------------------------------*)
+			(* Check that -no-cache-in-AF is only enabled (i.e., cache_in_AF is disabled) for AF/AU *)
+			(*------------------------------------------------------------*)
+			if not cache_in_AF then(
+				let incompatible_mode =
+				if imitator_mode = Algorithm then(
+					match (get_option_property()).property with
+						(* Accepting infinite-run (cycle) through a state predicate *)
+						| AF _ | AR _ | AU _ | AW _ | EG _ | AF_timed _ | AR_timed _ | AU_timed _ | AW_timed _ -> false
+						| _ -> true
+				) else true in
+				if incompatible_mode then print_warning ("Option -no-cache-in-AF is only useful for AF/AU/EG algorithms.");
+			);
 
 			(*------------------------------------------------------------*)
 			(* Only BFS (no NDFS) for generalized acceptance conditions, so far *)

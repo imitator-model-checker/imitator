@@ -2448,6 +2448,10 @@ property := #synth A (state_predicate) W_[-p, p] (state_predicate);
 \end{IMITATORproperty}
 
 
+For algorithms using \styleTCTL{AU} (\ie{} \styleTCTL{AF}, \styleTCTL{AU}, \styleTCTL{AR}, \styleTCTL{AW}, \styleTCTL{EG}), together with their timed extension, an option \styleOption{-no-cache-in-AF} might be useful, that disables a caching system consisting in keeping in memory the result of \styleTCTL{AU} on a node, at the cost of more memory.
+Disabling it using option \styleOption{-no-cache-in-AF} may result in less memory at the price of a slower analysis.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parameter synthesis using patterns}\label{section:algorithm:patterns}
@@ -4398,6 +4402,12 @@ The possible values for this option are:
 %------------------------------------------------------------
 For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
 do not put accepting states at the head of the successors list.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-cache-in-AF} (default: disabled, \ie{} cache is used)}
+%------------------------------------------------------------
+For algorithms using \styleTCTL{AU} (\ie{} \styleTCTL{AF}, \styleTCTL{AU}, \styleTCTL{AR}, \styleTCTL{AW}, \styleTCTL{EG}), together with their timed extension, this option disables a caching system consisting in keeping in memory the result of \styleTCTL{AU} on a node, at the cost of more memory.
+Disabling the cache using this option may result in less memory at the price of a slower analysis.
 
 
 %------------------------------------------------------------

@@ -30,6 +30,9 @@ class imitator_options :
 
 		method acyclic						: bool
 (* 		method best_worst_case : bool *)
+
+		method cache_in_AF					: bool
+
 		method carto_tiles_limit			: int option
 		method carto_time_limit				: int option
 		method check_ippta					: bool
