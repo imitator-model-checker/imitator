@@ -50,6 +50,9 @@ fi
 # install opam and ocaml libraries
 [[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing || opam init -a
 
+# switch to ocaml 4.14
+opam switch create 4.14.2
+opam switch 4.14.1
 opam install -y extlib fileutils oasis alcotest menhir
 eval $(opam env)
 
