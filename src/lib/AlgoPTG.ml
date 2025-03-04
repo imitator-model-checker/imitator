@@ -44,6 +44,7 @@ let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
 type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
 
 type edge_status = BackpropLosing | BackpropWinning | Unexplored
+
 type backtrack_type = Winning | Losing
 
 let status_to_string = function 
@@ -51,7 +52,12 @@ let status_to_string = function
 	| BackpropLosing -> "BACKPROP(LOSING)"
 	| BackpropWinning -> "BACKPROP(WINNING)"
 
-let edge_to_str = fun ({state; action; state';_}, status : edge * edge_status) model state_space -> 	
+
+type timestamp = int
+type data_structure_item = {edge: edge; status: edge_status; timestamp: timestamp}
+
+
+let edge_to_str = fun ({edge = {state; action; state';_}; status; _}) model state_space -> 	
 	let action_str = model.action_names action in 
 	let location = Array.get (DiscreteState.get_locations ((state_space#get_state state).global_location)) 0 in 
 	let location' = Array.get (DiscreteState.get_locations ((state_space#get_state state').global_location)) 0 in 
@@ -86,6 +92,9 @@ class dependsMap =
 [state_index, edgeSet] defaultHashTable
 (fun _ -> new edgeSet)
 
+class timeStampMap = 
+[state_index, int] defaultHashTable
+(fun _ -> 0)
 
 
 
@@ -178,8 +187,6 @@ class stateSpacePTG_full model options = object
 		state_space#get_successors_with_combined_transitions source_state_index
 end
 
-type item = edge * edge_status
-
 class virtual ['a] nextItem = object
 	method virtual add : 'a -> unit
 	method virtual extract : 'a
@@ -191,7 +198,7 @@ class virtual ['a] nextItem = object
 end
 
 class nextItem_single_queue = object
-	inherit ([item] nextItem)
+	inherit ([data_structure_item] nextItem)
 	val queue = Queue.create ()
 	method add e = Queue.add e queue
 	method extract = Queue.pop queue
@@ -204,7 +211,7 @@ end
 
 type phase = Initial | Exploring | Updating
 class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth : int) (total_depth_limit : int) = object(self)
-	inherit ([item] nextItem)
+	inherit ([data_structure_item] nextItem)
 	val mutable explore = []
 	val mutable explore' = []
 	val mutable update = []
@@ -214,7 +221,7 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 	val mutable total_depth = 0
 	val mutable unexplored_successors = 0
 	method add e = match e with 
-	| _, Unexplored -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
+	| {status = Unexplored;_} -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
 	| _ -> update' <- e::update'
 	method extract = 
 		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
@@ -225,7 +232,8 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 
 		let swap_phase () = 
 			(match phase with  
-			| Initial | Exploring -> if update' != [] then phase <- Updating
+			| Initial -> if update' = [] then phase <- Exploring else phase <- Updating
+			| Exploring -> if update' != [] then phase <- Updating
 			| Updating -> if explore' != [] then phase <- Exploring);
 			depth <- 0
 		in
@@ -236,7 +244,9 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 					(explore <- explore'; explore' <- []; 
 					total_depth <- total_depth + 1;
 					depth <- depth + 1;)
-			| Updating -> if update' = [] then swap_phase () else (update <- update'; update' <- []; depth <- depth + 1)
+			| Updating -> if update' = [] then swap_phase () else 
+					(update <- update'; update' <- []; 
+					depth <- depth + 1)
 		in
 
 		let rec extract_aux () = 
@@ -287,7 +297,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val cumulative_pruning_counter = Statistics.create_discrete_counter_and_register "PTG Cumulative pruning count: " Statistics.States_counter Verbose_experiments
 	val coverage_pruning_counter = Statistics.create_discrete_counter_and_register "PTG Coverage pruning count: " Statistics.States_counter Verbose_experiments
-	
+	val update_pruning_counter = Statistics.create_discrete_counter_and_register "PTG Update pruning count: " Statistics.Global_counter Verbose_experiments
+	val update_counter = Statistics.create_discrete_counter_and_register "PTG Total updates count " Statistics.Global_counter Verbose_experiments
+
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -304,12 +316,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val forcedMoves = new unionZoneMap
 	val losingZone = new unionZoneMap
 	val depends = new dependsMap
+	val timeStampMap = new timeStampMap
 
 	val locationWinningZone = new AlgoPTGStrategyGenerator.locationUnionZoneMap
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
 
-	val waiting : item nextItem = 
+	val waiting : data_structure_item nextItem = 
 		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
 		match options#ptg_picking_strategy with 
 		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier init step update depth_limit
@@ -319,6 +332,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 
 	val passed = new State.stateIndexSet
+	
+	val fresh_timestamp : unit -> timestamp = 
+		let ts_r = ref 1 in
+		fun () -> let ts = !ts_r in ts_r := ts + 1; ts
+
 
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
@@ -344,13 +362,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let successors = state_space_ptg#compute_symbolic_successors state in
 		let action_state_list = List.map (fun (transition, state') ->
 			let action = StateSpace.get_action_from_combined_transition model transition in
-			{state; action; transition; state'}, Unexplored
+			{edge = {state; action; transition; state'}; status = Unexplored; timestamp = 0}
 			) successors in
 		action_state_list
 
 	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
-	method private get_controllable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> model.is_controllable_action e.action)
-	method private get_uncontrollable_edges = self#get_edges >> List.map fst >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
+	method private get_controllable_edges = self#get_edges >> List.map (fun e -> e.edge) >> List.filter (fun e -> model.is_controllable_action e.action)
+	method private get_uncontrollable_edges = self#get_edges >> List.map (fun e -> e.edge) >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
 
 	(* Whether or not a state is accepting  *)
 	method private matches_state_predicate state_index =
@@ -492,7 +510,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		if self#matches_state_predicate state' then 
 			begin 
 				winningZone#replace state' @@ (self#constr_of_state_index >> nn) state';
-				waiting #<- (e, BackpropWinning);
+				waiting #<- {edge =  e; status= BackpropWinning; timestamp = fresh_timestamp ()};
 				coverage_pruning := true
 			end;
 
@@ -517,7 +535,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
 	method private edge_set_to_list_with_status edge_set status = 
-		List.map (fun e -> (e, status)) (edge_set#to_list)
+		List.map (fun e -> {edge = e; status; timestamp = fresh_timestamp ()}) (edge_set#to_list)
 
 
 	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
@@ -714,20 +732,20 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		while (not @@ self#termination_criteria initial_state) do
 			if verbose_mode_greater Verbose_medium then 
 				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
-			let e, edge_status = waiting#extract in 			
+			let {edge; status; timestamp} = waiting#extract in 			
 			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str (e, edge_status) model state_space));
-			if not @@ passed#mem e.state' then  
-				self#forward_exploration e
+				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str {edge; status; timestamp} model state_space));
+			if not @@ passed#mem edge.state' then  
+				self#forward_exploration edge
 			else
-				match edge_status with
+				match status with
 					| Unexplored -> 
-						self#backtrack e Winning;
-						if propagate_losing_states then self#backtrack e Losing
+						self#backtrack edge Winning;
+						if propagate_losing_states then self#backtrack edge Losing
 					| BackpropWinning -> 
-						self#backtrack e Winning
+						self#backtrack edge Winning
 					| BackpropLosing -> 
-						self#backtrack e Losing
+						self#backtrack edge Losing
 		done;
 
 		if propagate_losing_states then
@@ -785,7 +803,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+ & MINWAIT > 5*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_result =
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
