@@ -116,6 +116,9 @@ information "Initialising opam..."
 
 information "Installing opam and OCaml libraries..."
 
+# switch to ocaml 4.14
+opam switch create 4.14.2
+opam switch 4.14.1
 opam install -y extlib fileutils alcotest menhir &>error.log || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
