@@ -95,7 +95,7 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
       exit 1
     }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install opam gmp ppl graphviz plotutils &>error.log || {
+  brew install wget opam gmp ppl graphviz plotutils &>error.log || {
       error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
       exit 1
     }
@@ -104,7 +104,7 @@ fi
 # python fix
 information "Fixing python symlink..."
 
-[ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/bin/python"
+[ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/local/bin/python"
 
 # install opam and ocaml libraries
 information "Initialising opam..."
