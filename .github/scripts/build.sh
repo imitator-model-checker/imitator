@@ -41,11 +41,11 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
     libgmp-dev libmpfr-dev libppl-dev \
     graphviz plotutils
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install opam gmp ppl graphviz plotutils
+  brew install wget opam gmp ppl graphviz plotutils
 fi
 
 # python fix
-[ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/bin/python"
+[ ! -x "$(command -v python)" ] && sudo ln -s $(which python3) "/usr/local/bin/python"
 
 # install opam and ocaml libraries
 [[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing || opam init -a
