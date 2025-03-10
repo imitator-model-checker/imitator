@@ -362,7 +362,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let successors = state_space_ptg#compute_symbolic_successors state in
 		let action_state_list = List.map (fun (transition, state') ->
 			let action = StateSpace.get_action_from_combined_transition model transition in
-			{edge = {state; action; transition; state'}; status = Unexplored; timestamp = 0}
+			{edge = {state; action; transition; state'}; status = Unexplored; timestamp = fresh_timestamp ()}
 			) successors in
 		action_state_list
 
@@ -738,14 +738,19 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			if not @@ passed#mem edge.state' then  
 				self#forward_exploration edge
 			else
-				match status with
-					| Unexplored -> 
-						self#backtrack edge Winning;
-						if propagate_losing_states then self#backtrack edge Losing
-					| BackpropWinning -> 
-						self#backtrack edge Winning
-					| BackpropLosing -> 
-						self#backtrack edge Losing
+				(update_counter#increment;
+				if timestamp > timeStampMap#find edge.state then 
+					(timeStampMap#replace edge.state (fresh_timestamp ());
+					match status with
+						| Unexplored -> 
+							self#backtrack edge Winning;
+							if propagate_losing_states then self#backtrack edge Losing
+						| BackpropWinning -> 
+							self#backtrack edge Winning
+						| BackpropLosing -> 
+							self#backtrack edge Losing)
+				else
+					update_pruning_counter#increment;)
 		done;
 
 		if propagate_losing_states then
