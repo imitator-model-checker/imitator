@@ -146,12 +146,6 @@ else
   note "PPL already installed. Skipping."
 fi
 
-# patch oasis for OSX
-if [[ "$RUNNER_OS" = "macOS" ]]; then
-  information "Patching oasis for OSX..."
-  patch -p0 <"${PATCH_FOLDER}/oasis-config.patch"
-fi
-
 # Cleaning previous builds
 information "Cleaning previous builds..."
 dune clean
