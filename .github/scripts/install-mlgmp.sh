@@ -14,7 +14,7 @@ make clean
 
 # compile and install
 information "Compiling mlgmp"
-make -s || {
+make -s &>$err || {
     error "An issue has occured while compiling mlgmp."
     cd ..
     rm -rf mlgmp
@@ -22,7 +22,7 @@ make -s || {
 }
 
 information "Installing mlgmp"
-make install -s || {
+make install -s &>$err || {
     error "An issue has occured while installing mlgmp."
     cd ..
     rm -rf mlgmp
@@ -33,7 +33,7 @@ cd ..
 rm -rf mlgmp
 
 # copy META file
-cp METAS/META.gmp "$(opam var lib)/gmp/META" || {
+cp METAS/META.gmp "$(opam var lib)/gmp/META" &>$err || {
     error "An issue has occured while copying META file."
     exit 1
 }

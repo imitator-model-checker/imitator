@@ -5,6 +5,7 @@ set -a
 # global variables for options
 
 FANCY=false
+err=./error.log
 
 # options for script
 
@@ -90,12 +91,12 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
   DEBIAN_FRONTEND=noninteractive
   sudo apt-get update -qq
   sudo apt-get install -qq wget unzip curl build-essential libtinfo-dev g++ m4 opam python3 \
-    libgmp-dev libmpfr-dev libppl-dev graphviz plotutils &>error.log || {
+    libgmp-dev libmpfr-dev libppl-dev graphviz plotutils &>$err || {
       error "One of the depedencies had an issue installing itself. Please use the command $(cmd "apt-get update") or make sure that $(cmd "sudo") rights have been granted"
       exit 1
     }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install wget opam gmp ppl graphviz plotutils &>error.log || {
+  brew install wget opam gmp ppl graphviz plotutils &>$err || {
       error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
       exit 1
     }
@@ -109,7 +110,7 @@ information "Fixing python symlink..."
 # initialise opam
 information "Initialising opam..."
 
-[[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing &>error.log || opam init -a &>error.log || {
+[[ ${DOCKER_RUNNING} ]] && opam init -a --disable-sandboxing &>$err || opam init -a &>$err || {
   error "An issue has occured while initialising opam. Please check the error log."
   exit 1
 }
@@ -118,7 +119,10 @@ information "Initialising opam..."
 
 information "Switching to OCaml 4.14.2..."
 
-opam switch create 4.14.2
+opam switch create 4.14.2 &>$err || {
+  error "An issue has occured while creating the switch 4.14.2. Please check the error log."
+  exit 1
+}
 opam switch 4.14.2
 
 eval $(opam env)
@@ -127,7 +131,7 @@ eval $(opam env)
 
 information "Installing opam and OCaml libraries..."
 
-opam install -y extlib fileutils oasis alcotest menhir &>error.log || {
+opam install -y extlib fileutils alcotest menhir &>$err || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
 }
@@ -136,7 +140,7 @@ opam install -y extlib fileutils oasis alcotest menhir &>error.log || {
 information "Installing mlgmp..."
 
 if [ ! -d "$(opam var lib)/gmp" ]; then
-  bash "${SCRIPT_FOLDER}/install-mlgmp.sh" &>error.log || {
+  bash "${SCRIPT_FOLDER}/install-mlgmp.sh" &>$err || {
     error "An issue has occured while installing mlgmp. Please check the error log."
     exit 1
   }
@@ -148,7 +152,7 @@ fi
 information "Installing PPL..."
 
 if [ ! -d "$(opam var lib)/ppl" ]; then
-  bash "${SCRIPT_FOLDER}/install-ppl.sh" &>error.log || {
+  bash "${SCRIPT_FOLDER}/install-ppl.sh" &>$err || {
     error "An issue has occured while installing plp. Please check the error log."
     exit 1
   }
@@ -162,7 +166,7 @@ dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build &>error.log || {
+dune build &>$err || {
   error "An issue has occured while building IMITATOR. Please check the error log."
   exit 1
 }
@@ -176,7 +180,7 @@ if [ ! -z "${GITHUB_WORKSPACE}" ]; then
   mv "imitator" "imitator-${tag}-${platform}-amd64"
 fi
 
-rm -f error.log
+rm -f $err
 success "IMITATOR has been built successfully."
 
 exit 0
