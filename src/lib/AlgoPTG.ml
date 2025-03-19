@@ -527,7 +527,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					coverage_pruning_counter#increment;
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
 				| _ ->
-					(depends#find state')#add e;
+					let successors = self#get_edges state' in 
+					List.iter (fun item -> 
+						(depends#find item.edge.state')#add item.edge) successors;
 					waiting #<-- (self#get_edges state');
 					if verbose_mode_greater Verbose_medium then 
 						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
@@ -614,7 +616,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* General method for backpropagation of winning/losing zones *)
 	method private backtrack e backtrack_type = 
-		let {state; state';_} = e in 
+		let {state;_} = e in 
 		let get_pred_from_edges default edges zone = 
 			List.fold_left (|||) default @@
 				List.map (fun edge -> 
@@ -657,8 +659,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						waiting #<-- (self#edge_set_to_list_with_status (depends#find state) BackpropLosing);
 						if state = state_space#get_initial_state_index then init_losing_zone_changed := true 
 					end;
-		end;
-		(depends#find state')#add e
+		end
 
 	(* Initial state is lost if initial constraint is included in losing zone *)
 	method private init_is_lost init =
@@ -718,6 +719,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		
 		passed#add initial_state;
 
+		let successors = self#get_edges initial_state in 
+		List.iter (fun item -> 
+			(depends#find item.edge.state')#add item.edge) successors;
 		waiting#add_all (self#get_edges initial_state);
 
 		(* If goal is init then initial winning zone is it's own constraint*)
