@@ -17,80 +17,48 @@
 (* Modules *)
 (************************************************************)
 (************************************************************)
-(* open OCamlUtilities *)
 open ImitatorUtilities
-(* open Exceptions *)
 open AbstractModel
 open AbstractProperty
 open Result
 open AlgoGeneric
-(* open Statistics *)
 open State
 open DefaultHashTable
 
-(* Notation and shorthands *)
-let (>>) f g x = g(f(x)) 
-let (>>>) f g x y = g(f x y) 
 
-let nn = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint
-let project_params = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse 
-let is_empty =  LinearConstraint.p_nnconvex_constraint_is_false 
-let (#!=) = LinearConstraint.px_nnconvex_constraint_is_equal >>> not
-let bot = LinearConstraint.false_px_nnconvex_constraint
-
-let (|||) = fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a  
-let (&&&) = fun a b -> LinearConstraint.px_nnconvex_intersection_assign a b; a
-
-type edge = {state: state_index; action: Automaton.action_index; transition: StateSpace.combined_transition; state': state_index}
-
-type edge_status = BackpropLosing | BackpropWinning | Unexplored
-
-type backtrack_type = Winning | Losing
-
-let status_to_string = function 
-	| Unexplored -> "EXPLORE"
-	| BackpropLosing -> "BACKPROP(LOSING)"
-	| BackpropWinning -> "BACKPROP(WINNING)"
-
+let nn_of_lin = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint
 
 type timestamp = int
-type data_structure_item = {edge: edge; status: edge_status; timestamp: timestamp}
+
+type item = 
+| EXPLORE of state_index
+| UPDATE of {state_index : state_index; timestamp: timestamp}
 
 
-let edge_to_str = fun ({edge = {state; action; state';_}; status; _}) model state_space -> 	
-	let action_str = model.action_names action in 
-	let location = Array.get (DiscreteState.get_locations ((state_space#get_state state).global_location)) 0 in 
-	let location' = Array.get (DiscreteState.get_locations ((state_space#get_state state').global_location)) 0 in 
-	let location_name = model.location_names 0 location in 
-	let location_name' = model.location_names 0 location' in 
+let item_to_str = fun model state_space item -> 
+	match item with 
+	| EXPLORE state_index -> 
+		let location = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in
+		let location_name = model.location_names 0 location in
+		Printf.sprintf "EXPLORE(s%d/loc %s)" state_index location_name
+	| UPDATE {state_index;_} ->
+		let location = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in
+		let location_name = model.location_names 0 location in
+		Printf.sprintf "UPDATE(s%d/loc %s)" state_index location_name
+	
 	
 
-	Printf.sprintf "%d (loc %s) --%s-> %d (loc %s) (%s)" state location_name action_str state' location_name' (status_to_string status)
 
-let edge_list_to_str list model state_space = "[" ^ 
-	List.fold_left 
-		(fun acc edge -> Printf.sprintf "%s, %s" acc (edge_to_str edge model state_space))
-		("") (
-		list) 
-	^ "]" 
+let item_list_to_str list model state_space = 
+	"[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (item_to_str model state_space) list) ^ "]"
 
 class unionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
 LinearConstraint.false_px_nnconvex_constraint
 
-module EdgeSet = Set.Make(struct type t = edge let compare = Stdlib.compare end)
-
-class edgeSet = object 
-	val mutable internal_set = EdgeSet.empty
-	method add e = internal_set <- EdgeSet.add e internal_set
-	method mem e = EdgeSet.mem e internal_set 
-	method to_list = EdgeSet.elements internal_set
-	method to_seq = EdgeSet.to_seq internal_set
-end
-
 class dependsMap =
-[state_index, edgeSet] defaultHashTable
-(fun _ -> new edgeSet)
+[state_index, State.stateIndexSet] defaultHashTable
+(fun _ -> new State.stateIndexSet)
 
 class timeStampMap = 
 [state_index, int] defaultHashTable
@@ -102,7 +70,8 @@ class virtual stateSpacePTG  = object(self)
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 	method state_space = state_space
 	method virtual initialize_state_space : unit -> unit
-	method virtual compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+	method virtual compute_symbolic_successors : state_index -> state_index list
+	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * state_index) list * (StateSpace.combined_transition * state_index) list
 	method virtual unexplored_successors : int
 	initializer 
 		self#initialize_state_space ()
@@ -114,14 +83,14 @@ let add_transitions_and_states_to_state_space state_space transitions_and_states
 		callback addition_result transition
 	) transitions_and_states
 
-class stateSpacePTG_OTF model options = object
+class stateSpacePTG_OTF model options = object(self)
 	inherit stateSpacePTG
 	method unexplored_successors = 0
 	val mutable explored_states = new State.stateIndexSet
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
-	method compute_symbolic_successors source_state_index = 
+	method private compute_symbolic_successors_with_transitions source_state_index = 
 		if explored_states#mem source_state_index then 
 			state_space#get_successors_with_combined_transitions source_state_index
 		else 
@@ -139,9 +108,20 @@ class stateSpacePTG_OTF model options = object
 					Some (transition, new_state_index)
 			)
 		end
+	method compute_symbolic_successors source_state_index = 
+		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
+	method get_partioned_edges state_index = 
+		let successors_with_transitions = self#compute_symbolic_successors_with_transitions state_index in 
+		List.fold_left (fun (acc_cont, acc_uncont) (transition, state_index) -> 
+			let action = StateSpace.get_action_from_combined_transition model transition in 
+			if model.is_controllable_action action then
+				(transition, state_index)::acc_cont, acc_uncont
+			else
+				acc_cont, (transition, state_index)::acc_uncont
+		) ([],[]) successors_with_transitions
 end
 
-class stateSpacePTG_full model options = object
+class stateSpacePTG_full model options = object(self)
 	inherit stateSpacePTG
 	val mutable passed_states = new State.stateIndexSet
 	val mutable unexplored_successors = 0
@@ -183,8 +163,19 @@ class stateSpacePTG_full model options = object
 		passed_states#add initial_state_index;
 		bfs [initial_state_index] 1;
 
-	method compute_symbolic_successors source_state_index = 
+	method private compute_symbolic_successors_with_transitions source_state_index = 
 		state_space#get_successors_with_combined_transitions source_state_index
+	method compute_symbolic_successors source_state_index = 
+		state_space#get_successors_with_combined_transitions source_state_index |> List.map snd
+	method get_partioned_edges state_index =
+		let successors_with_transitions = self#compute_symbolic_successors_with_transitions state_index in 
+		List.fold_left (fun (acc_cont, acc_uncont) (transition, state_index) -> 
+			let action = StateSpace.get_action_from_combined_transition model transition in 
+			if model.is_controllable_action action then
+				(transition, state_index)::acc_cont, acc_uncont
+			else
+				acc_cont, (transition, state_index)::acc_uncont
+		) ([],[]) successors_with_transitions
 end
 
 class virtual ['a] nextItem = object
@@ -198,7 +189,7 @@ class virtual ['a] nextItem = object
 end
 
 class nextItem_single_queue = object
-	inherit ([data_structure_item] nextItem)
+	inherit ([item] nextItem)
 	val queue = Queue.create ()
 	method add e = Queue.add e queue
 	method extract = Queue.pop queue
@@ -211,7 +202,7 @@ end
 
 type phase = Initial | Exploring | Updating
 class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth : int) (total_depth_limit : int) = object(self)
-	inherit ([data_structure_item] nextItem)
+	inherit ([item] nextItem)
 	val mutable explore = []
 	val mutable explore' = []
 	val mutable update = []
@@ -221,8 +212,8 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 	val mutable total_depth = 0
 	val mutable unexplored_successors = 0
 	method add e = match e with 
-	| {status = Unexplored;_} -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
-	| _ -> update' <- e::update'
+	| EXPLORE _ -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
+	| UPDATE _ -> update' <- e::update'
 	method extract = 
 		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
 		(List.length explore) (List.length explore') (List.length update) (List.length update') 
@@ -271,9 +262,6 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 	method unexplored_successors = unexplored_successors
 end
 
-let (#<-) (queue : 'a nextItem) elem = queue#add elem
-let (#<--) (queue1 : 'a nextItem) (queue2 : 'a list) = queue1#add_all queue2
-
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -314,7 +302,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val winningZone = new unionZoneMap
 	val forcedMoves = new unionZoneMap
-	val losingZone = new unionZoneMap
 	val depends = new dependsMap
 	val timeStampMap = new timeStampMap
 
@@ -322,13 +309,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
 
-	val waiting : data_structure_item nextItem = 
+	val waiting : item nextItem = 
 		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
 		match options#ptg_picking_strategy with 
 		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier init step update depth_limit
 		| AbstractAlgorithm.SingleQueue -> new nextItem_single_queue
-
-
 
 
 	val passed = new State.stateIndexSet
@@ -342,46 +327,29 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
 
 	(* Computes the predecessor zone of current_zone using edge *)
-	method private predecessor_nnconvex edge current_zone = 
-		let {state; transition; _} = edge in 
-		let guard = state_space#get_guard model state transition in
-		let pred_zone = self#constr_of_state_index state in 
+	method private predecessor_nnconvex transition state_index current_zone = 
+		let guard = state_space#get_guard model state_index transition in
+		let pred_zone = self#constr_of_state_index state_index in 
 		let constraints = List.map (fun z -> 
 			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state pred_zone guard z transition in 	
+			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state_index pred_zone guard z transition in 	
 			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
 			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
 			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
-		List.fold_left (|||) (bot ()) constraints
+		let result = LinearConstraint.false_px_nnconvex_constraint () in 
+		List.iter (LinearConstraint.px_nnconvex_union_assign result) constraints;
+		result
 
-	val init_losing_zone_changed = ref false 
 	val init_winning_zone_changed = ref false
-
-	(* Edges from a symbolic state *)
-	method private get_edges state = 
-		let successors = state_space_ptg#compute_symbolic_successors state in
-		let action_state_list = List.map (fun (transition, state') ->
-			let action = StateSpace.get_action_from_combined_transition model transition in
-			{edge = {state; action; transition; state'}; status = Unexplored; timestamp = fresh_timestamp ()}
-			) successors in
-		action_state_list
-
-	(* Methods for getting (un)controllable edges - should be replaced at some point to actually use proper syntax of imitator *)
-	method private get_controllable_edges = self#get_edges >> List.map (fun e -> e.edge) >> List.filter (fun e -> model.is_controllable_action e.action)
-	method private get_uncontrollable_edges = self#get_edges >> List.map (fun e -> e.edge) >> List.filter (fun e -> not @@ model.is_controllable_action e.action)
 
 	(* Whether or not a state is accepting  *)
 	method private matches_state_predicate state_index =
 		let state = (state_space#get_state state_index) in
 		(State.match_state_predicate model state_predicate state) 
 
-	(* Decides if a symbolic state is a deadlock state (no outgoing controllable actions). Used for Losing Zones *)
-	method private is_dead_lock state = 
-		self#get_controllable_edges state = [] && not @@ self#matches_state_predicate state
-
 	(* Negate a zone within a state (corresponds to taking the complement) *)
 	method private negate_zone zone state_index = 
-			let complete_zone = (self#constr_of_state_index >> nn) state_index in 
+			let complete_zone = nn_of_lin (self#constr_of_state_index state_index) in 
 			LinearConstraint.px_nnconvex_difference_assign complete_zone zone;
 			complete_zone
 		
@@ -427,7 +395,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Computes the safe timed predecessors of (nn_convex) zone g avoiding (nn_convex) zone b coming from a state *)
 	method private safe_timed_pred (state_index : state_index) (g : LinearConstraint.px_nnconvex_constraint) (b : LinearConstraint.px_nnconvex_constraint) = 
-		let result = bot () in 
+		let result = LinearConstraint.false_px_nnconvex_constraint () in 
 
 		List.iter (fun g_i -> LinearConstraint.px_nnconvex_union_assign result (self#safe_timed_pred_conv_g state_index g_i b)) 
 			(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint g);
@@ -436,15 +404,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
-		let uncontrollable_edges = self#get_uncontrollable_edges state_index in
-		let controllable_edges = self#get_controllable_edges state_index in
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
 		let uncontrollable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun {transition;_} -> 
+			fun (transition, _) -> 
 				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
 				uncontrollable_edges
 		in 
 		let controllable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun {transition;_} -> 
+			fun (transition,_) -> 
 				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
 				controllable_edges
 		in 
@@ -496,48 +463,52 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		else
 			false
 
+	(* Take a set of state_index turn it into a list of UPDATE items with fresh timestamps *)
+	method private state_set_to_update_items state_set = 
+		let timestamp = fresh_timestamp () in 
+		List.map (fun state_index -> UPDATE{state_index; timestamp}) state_set#all_elements
+
 	(* Explores forward in order to discover winning states *)
-	method private forward_exploration e  = 
-		let {state';_} = e in 
-		print_message Verbose_low ("I've not seen state " ^ (string_of_int state') ^ " before.	Exploring: ");
-		passed#add state';
-
-
+	method private explore state_index =
 		if not options#ptg_no_forced_uncontrollables then 
-			self#save_forced_moves state';
+			self#save_forced_moves state_index;
 
 		let coverage_pruning = ref false in 
-		if self#matches_state_predicate state' then 
+		if self#matches_state_predicate state_index then 
 			begin 
-				winningZone#replace state' @@ (self#constr_of_state_index >> nn) state';
-				waiting #<- {edge =  e; status= BackpropWinning; timestamp = fresh_timestamp ()};
+				winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
+				waiting#add_all (self#state_set_to_update_items (depends#find state_index));
 				coverage_pruning := true
 			end;
-
-		(* TODO: Rewrite deadlock detection after new forced uncontrollable semantics *)
 
 		coverage_pruning := !coverage_pruning && options#coverage_pruning;
 
 		begin 
-			match self#global_constraint_pruning state', !coverage_pruning with 
+			match self#global_constraint_pruning state_index, !coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state')
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
 				| _, true -> 
 					coverage_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state')
+					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
-					let successors = self#get_edges state' in 
-					List.iter (fun item -> 
-						(depends#find item.edge.state')#add item.edge) successors;
-					waiting #<-- (self#get_edges state');
+					let successors = state_space_ptg#compute_symbolic_successors state_index in
+					List.iter (fun s -> (depends#find s)#add state_index) successors;
+					let found_existing_state = 
+						List.fold_left (fun acc succ -> 
+						if passed#mem succ then 
+							true
+						else 
+							(waiting#add (EXPLORE succ);
+							passed#add succ;
+							acc)
+						) false successors
+					in 
+					if found_existing_state then 
+						waiting#add (UPDATE {state_index; timestamp = fresh_timestamp ()});
 					if verbose_mode_greater Verbose_medium then 
-						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ edge_list_to_str waiting#to_list model state_space)
+						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space)
 		end;
-
-	(* Append a status to a set of edges and turn it into a queue (linear time in size of set) *)
-	method private edge_set_to_list_with_status edge_set status = 
-		List.map (fun e -> {edge = e; status; timestamp = fresh_timestamp ()}) (edge_set#to_list)
 
 
 	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
@@ -600,13 +571,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
 		 return true if winning zone was changed otherwise false	 
 	*)
-	method private backtrack_single_controllable_edge edge bad_zone zone_map =
-		let winning_move = self#predecessor_nnconvex edge (zone_map edge.state') in
-		let {state;action;transition;state';} = edge in 
+	method private backtrack_single_controllable_edge (transition, dst) src bad_zone zone_map =
+		let winning_move = self#predecessor_nnconvex transition src (zone_map dst) in
 		(* Remove bad zone from winning move *)
+				
 		LinearConstraint.px_nnconvex_difference_assign winning_move bad_zone;
-
-		self#process_nnconvex_winning_move state (Action (action, transition)) state' bad_zone winning_move
+		let action = StateSpace.get_action_from_combined_transition model transition in 
+		self#process_nnconvex_winning_move src (Action (action, transition)) dst bad_zone winning_move
 
 	(* Process a forced move of the environment 
 		return true if the winning zone was changed otherwise false *)
@@ -614,85 +585,63 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#process_nnconvex_winning_move state Wait (-1) bad_zone forced_move
 
 
-	(* General method for backpropagation of winning/losing zones *)
-	method private backtrack e backtrack_type = 
-		let {state;_} = e in 
+	(* Method for backpropagation of winning zones *)
+	method private update state_index = 
 		let get_pred_from_edges default edges zone = 
-			List.fold_left (|||) default @@
-				List.map (fun edge -> 
-					self#predecessor_nnconvex edge (zone edge.state')
+			List.iter (LinearConstraint.px_nnconvex_union_assign default) @@
+				List.map (fun (transition, dst) -> 
+					self#predecessor_nnconvex transition state_index (zone dst)
 				)
-			edges
+			edges;
+			default
 		in
 
-		let good_edges = if backtrack_type = Winning then self#get_controllable_edges state else self#get_uncontrollable_edges state in
-		let bad_edges = if backtrack_type = Losing then self#get_controllable_edges state else self#get_uncontrollable_edges state in
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
 
+		let uncontrollable_part = get_pred_from_edges (LinearConstraint.false_px_nnconvex_constraint ()) uncontrollable_edges (fun x -> self#negate_zone (winningZone#find x) x) in
+		let forced_moves_changed_winning_zone = self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index) in 
+		let winning_moves_changed_winning_zone = 
+			if options#ptg_no_strategy_generation then 
+				let controllable_part = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index) controllable_edges winningZone#find in
+				let new_zone = self#safe_timed_pred state_index controllable_part uncontrollable_part in 
+				let changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) new_zone) in
+				if changed then (winningZone#replace state_index new_zone; true) else false
+			else
+			List.fold_left (||) false
+				(List.map(fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part winningZone#find) controllable_edges) in 
+		if winning_moves_changed_winning_zone || forced_moves_changed_winning_zone then 
 		begin
-			match backtrack_type with 
-			| Winning -> 
-				print_message Verbose_medium "\tWINNING ZONE PROPAGATION:";
-				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (winningZone#find x) x) in
-				let forced_moves_changed_winning_zone = self#process_forced_move state bad (forcedMoves#find state) in 
-				let winning_zone_changed = 
-					if options#ptg_no_strategy_generation then 
-						let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ winningZone#find state) good_edges winningZone#find in
-						let new_zone = self#safe_timed_pred state good bad in 
-						if forced_moves_changed_winning_zone || (winningZone#find state) #!= new_zone then (winningZone#replace state new_zone; true) else false
-					else
-					List.fold_left (||) forced_moves_changed_winning_zone
-						(List.map(fun edge -> self#backtrack_single_controllable_edge edge bad winningZone#find) good_edges) in 
-				if winning_zone_changed then 
-					begin
-						waiting #<-- (self#edge_set_to_list_with_status (depends#find state) BackpropWinning);
-						if state = state_space#get_initial_state_index then init_winning_zone_changed := true
-					end
-			| Losing -> 		
-				print_message Verbose_medium "\tLOSING ZONE PROPAGATION:";
-				let good = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ losingZone#find state) good_edges losingZone#find in
-				let bad = get_pred_from_edges (bot ()) bad_edges (fun x -> self#negate_zone (losingZone#find x) x) in
-				LinearConstraint.px_nnconvex_difference_assign bad good;
-				let new_zone = self#safe_timed_pred state good bad in
-				if (losingZone#find state) #!= new_zone then
-					begin
-						losingZone#replace state new_zone;
-						waiting #<-- (self#edge_set_to_list_with_status (depends#find state) BackpropLosing);
-						if state = state_space#get_initial_state_index then init_losing_zone_changed := true 
-					end;
+			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+			if state_index = state_space#get_initial_state_index then init_winning_zone_changed := true
 		end
-
-	(* Initial state is lost if initial constraint is included in losing zone *)
-	method private init_is_lost init =
-		init_losing_zone_changed := false;
-		LinearConstraint.px_nnconvex_constraint_is_leq (self#initial_constraint ()) (losingZone#find init)
 
 	(* Initial state is won if parameter valuations in its winning zone is non-empty *)
 	method private init_has_winning_witness =
 		init_winning_zone_changed := false;
-		not @@ is_empty synthesized_constraint
+		not @@ LinearConstraint.p_nnconvex_constraint_is_false synthesized_constraint
 
-	(* Initial state is exact if winning and losing zone covers initial zone  *)
+	(* Initial state is exact if winning zone covers initial zone  *)
 	method private init_is_exact init = 
-		init_losing_zone_changed := false;
 		init_winning_zone_changed := false;
-		let init_zone_nn = nn @@ self#constr_of_state_index init in 
-		let winning_and_losing_zone = LinearConstraint.px_nnconvex_copy @@ winningZone#find init ||| losingZone#find init in
-		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_and_losing_zone
+		let init_zone_nn = nn_of_lin @@ self#constr_of_state_index init in 
+		let winning_zone_nn = LinearConstraint.px_nnconvex_copy @@ winningZone#find init in 
+		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_zone_nn
 	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria init = 
 		let queue_empty = waiting#is_empty in
 		let complete_synthesis = (property.synthesis_type = Synthesis) in
-		let propagate_losing_states = options#ptg_propagate_losing_states in 
 
 		if !init_winning_zone_changed then 
-			synthesized_constraint <- project_params (self#initial_constraint () &&& winningZone#find init);
+			(let initial_winning_valuations = 
+				let initial = self#initial_constraint () in 
+				LinearConstraint.px_nnconvex_intersection_assign initial (winningZone#find init); 
+				initial in 
+			synthesized_constraint <- LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse initial_winning_valuations);
 
-		let recompute_init_lost = propagate_losing_states && !init_losing_zone_changed in
 		let recompute_init_has_winning_witness = not complete_synthesis && !init_winning_zone_changed in  
-		let recompute_init_exact = complete_synthesis && (!init_losing_zone_changed || !init_winning_zone_changed) in
+		let recompute_init_exact = complete_synthesis && !init_winning_zone_changed in
 
-		let init_lost = if recompute_init_lost then self#init_is_lost init else false in
 		let init_has_winning_witness = if recompute_init_has_winning_witness then self#init_has_winning_witness else false in 
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
@@ -703,65 +652,46 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		if time_out then termination_status <- Time_limit (Result.Number state_space#nb_states);
 
-		queue_empty || init_lost ||	init_exact || init_has_winning_witness || time_out
+		queue_empty ||	init_exact || init_has_winning_witness || time_out
 
+	method private is_update_relevant state_index timestamp =
+		if timestamp > timeStampMap#find state_index then 
+			(update_counter#increment; timeStampMap#replace state_index (fresh_timestamp ()); true)
+		else 
+			(update_pruning_counter#increment; false)
 
 
 	(* Computes the parameters for which a winning strategy exists and saves the result in synthesized_constraint *)
 	method private compute_PTG = 
-		let propagate_losing_states = options#ptg_propagate_losing_states in 
-
 		(* === ALGORITHM INITIALIZATION === *)
-		let initial_state = state_space#get_initial_state_index in 
+		let initial_state_index = state_space#get_initial_state_index in 
 
 		if not options#ptg_no_forced_uncontrollables then
-			self#save_forced_moves initial_state;
+			self#save_forced_moves initial_state_index;
 		
-		passed#add initial_state;
-
-		let successors = self#get_edges initial_state in 
-		List.iter (fun item -> 
-			(depends#find item.edge.state')#add item.edge) successors;
-		waiting#add_all (self#get_edges initial_state);
+		waiting#add (EXPLORE initial_state_index);
+		passed#add initial_state_index;
 
 		(* If goal is init then initial winning zone is it's own constraint*)
-		if self#matches_state_predicate initial_state then
-			winningZone#replace initial_state @@ (self#constr_of_state_index >> nn) initial_state;
+		if self#matches_state_predicate initial_state_index then
+			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
+			init_winning_zone_changed := true;
 
-		(* If init is deadlock then initial losing zone is it's own constraint*)
-		if self#matches_state_predicate initial_state && propagate_losing_states then
-			(losingZone#replace initial_state @@ (self#constr_of_state_index >> nn) initial_state; init_losing_zone_changed := true);
 
 		(* === ALGORITHM MAIN LOOP === *)
-		while (not @@ self#termination_criteria initial_state) do
+		while (not @@ self#termination_criteria initial_state_index) do
 			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ edge_list_to_str waiting#to_list model state_space);
-			let {edge; status; timestamp} = waiting#extract in 			
+				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ item_list_to_str waiting#to_list model state_space);
+			let item = waiting#extract in 			
 			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium (Printf.sprintf "I choose edge: \027[92m %s \027[0m" (edge_to_str {edge; status; timestamp} model state_space));
-			if not @@ passed#mem edge.state' then  
-				self#forward_exploration edge
-			else
-				(update_counter#increment;
-				if timestamp > timeStampMap#find edge.state then 
-					(timeStampMap#replace edge.state (fresh_timestamp ());
-					match status with
-						| Unexplored -> 
-							self#backtrack edge Winning;
-							if propagate_losing_states then self#backtrack edge Losing
-						| BackpropWinning -> 
-							self#backtrack edge Winning
-						| BackpropLosing -> 
-							self#backtrack edge Losing)
-				else
-					update_pruning_counter#increment;)
+				print_message Verbose_medium (Printf.sprintf "Processing item: \027[92m %s \027[0m" (item_to_str model state_space item));
+			match item with 
+				| EXPLORE state_index -> 
+					self#explore state_index
+				| UPDATE {state_index; timestamp} -> 
+					if self#is_update_relevant state_index timestamp then 
+						self#update state_index
 		done;
-
-		if propagate_losing_states then
-	(*		print_PTG (Printf.sprintf "And these losing zones: %s" (losingZone#to_str())); *)
-
-		let winning_parameters = project_params (self#initial_constraint () &&& winningZone#find initial_state) in
-		synthesized_constraint <- winning_parameters
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
@@ -776,32 +706,28 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		self#print_algo_message_newline Verbose_experiments (
 			"Parameter synthesis algorithm completed " ^ after_seconds () ^ "."
 		);
-		if not @@ options#ptg_no_strategy_generation then
-			if not @@ LinearConstraint.p_nnconvex_constraint_is_false synthesized_constraint then
-				begin
-					if not @@ options#ptg_no_strategy_printing then
-					begin 
-						AlgoPTGStrategyGenerator.print_strategy
-						model 
-						state_space
-						~strategy:locationStrategy;
-						self#print_algo_message_newline Verbose_experiments (
-							"Printed strategy " ^ after_seconds () ^ "."
-						);
-					end;
-				
-					AlgoPTGStrategyGenerator.controller_synthesis
-					model
-					state_space
-					options
-					locationStrategy
-					~callback:(fun () -> 
-						self#print_algo_message_newline Verbose_experiments (
-							"Strategy -> Controller algorithm completed " ^ after_seconds () ^ "."
-						);
-						);
+		if not @@ options#ptg_no_strategy_generation && not @@ LinearConstraint.p_nnconvex_constraint_is_false synthesized_constraint then
+		begin
+			if not @@ options#ptg_no_strategy_printing then
+			begin 
+				AlgoPTGStrategyGenerator.print_strategy
+				model 
+				state_space
+				~strategy:locationStrategy;
+				self#print_algo_message_newline Verbose_experiments (
+					"Printed strategy " ^ after_seconds () ^ "."
+				);
+			end;
+		
+			AlgoPTGStrategyGenerator.controller_synthesis
+			model
+			state_space
+			options
+			locationStrategy
+			~callback:(fun () -> 
+				self#print_algo_message_newline Verbose_experiments ("Strategy -> Controller algorithm completed " ^ after_seconds () ^ "."));
 
-				end;
+		end;
 
 		(* Return the result *)
 		self#compute_result;
@@ -823,20 +749,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			Printf.sprintf "Size of explored state space: %d" (state_space#nb_states);
 		);
 
-		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
-
 		(* Projecting onto some parameters if required by the property *)
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
 
-(*		(* Get the termination status *)
-		let termination_status = match termination_status with
-		| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
-		| Some status -> status
-		in*)
 
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
+		(* In the case of frontier waiting list strategy *)
 		if waiting#unexplored_successors != 0 then termination_status <- Depth_limit (Number waiting#unexplored_successors);
+		(* In the case of full state space compution (not on the fly) *)
 		if state_space_ptg#unexplored_successors != 0 then termination_status <- Depth_limit (Number state_space_ptg#unexplored_successors);
 
 		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
