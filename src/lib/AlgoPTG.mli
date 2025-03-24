@@ -23,22 +23,25 @@ class virtual stateSpacePTG : object
 	val mutable state_space : StateSpace.stateSpace
 	method state_space : StateSpace.stateSpace
 	method virtual initialize_state_space : unit -> unit
-	method virtual compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+	method virtual compute_symbolic_successors : state_index -> state_index list
 	method virtual unexplored_successors : int
+	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * state_index) list * (StateSpace.combined_transition * state_index) list
 end
 
 class stateSpacePTG_OTF : AbstractModel.abstract_model -> Options.imitator_options ->  object 
 	inherit stateSpacePTG
-	method initialize_state_space : unit ->unit
-	method compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+	method initialize_state_space : unit -> unit
+	method compute_symbolic_successors : state_index -> state_index list
 	method unexplored_successors : int
+	method get_partioned_edges : state_index -> (StateSpace.combined_transition * state_index) list * (StateSpace.combined_transition * state_index) list
 end
 
 class stateSpacePTG_full : AbstractModel.abstract_model -> Options.imitator_options -> object 
 	inherit stateSpacePTG
-	method initialize_state_space : unit ->unit
-	method compute_symbolic_successors : state_index -> (StateSpace.combined_transition * state_index) list
+	method initialize_state_space : unit -> unit
+	method compute_symbolic_successors : state_index -> state_index list
 	method unexplored_successors : int
+	method get_partioned_edges : state_index -> (StateSpace.combined_transition * state_index) list * (StateSpace.combined_transition * state_index) list
 end
 
 (************************************************************)
