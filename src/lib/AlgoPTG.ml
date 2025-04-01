@@ -35,6 +35,11 @@ type item =
 | UPDATE of {state_index : state_index; timestamp: timestamp}
 
 
+type strategy_action = 
+  | Wait
+  | Action of {action_index: Automaton.action_index; transition: StateSpace.combined_transition; dst: DiscreteState.global_location}
+
+
 let item_to_str = fun model state_space item -> 
 	match item with 
 	| EXPLORE state_index -> 
@@ -52,8 +57,12 @@ let item_to_str = fun model state_space item ->
 let item_list_to_str list model state_space = 
 	"[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (item_to_str model state_space) list) ^ "]"
 
-class unionZoneMap = 
+class stateUnionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
+LinearConstraint.false_px_nnconvex_constraint
+
+class locationUnionZoneMap = 
+[DiscreteState.global_location, LinearConstraint.px_nnconvex_constraint] defaultHashTable
 LinearConstraint.false_px_nnconvex_constraint
 
 class dependsMap =
@@ -64,14 +73,17 @@ class timeStampMap =
 [state_index, int] defaultHashTable
 (fun _ -> 0)
 
-
+(* State in or out of state space *)
+type ptg_state = 
+| InSP of state_index
+| NotInSP of State.state
 
 class virtual stateSpacePTG  = object(self)
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 	method state_space = state_space
 	method virtual initialize_state_space : unit -> unit
 	method virtual compute_symbolic_successors : state_index -> state_index list
-	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * state_index) list * (StateSpace.combined_transition * state_index) list
+	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
 	method virtual unexplored_successors : int
 	initializer 
 		self#initialize_state_space ()
@@ -86,7 +98,10 @@ let add_transitions_and_states_to_state_space state_space transitions_and_states
 class stateSpacePTG_OTF model options = object(self)
 	inherit stateSpacePTG
 	method unexplored_successors = 0
-	val mutable explored_states = new State.stateIndexSet
+	val including_check = options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check
+	val explored_states = new State.stateIndexSet
+	(* Optimization: Only recompute successors in updates IF an included check has succeeded *)
+	val recompute_successors = new State.stateIndexSet 
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
@@ -101,29 +116,50 @@ class stateSpacePTG_OTF model options = object(self)
 			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
 			(fun addition_result transition -> 
 				match addition_result with 
-				| New_state new_state_index
-				| State_replacing new_state_index
-				| State_already_present new_state_index -> 
-					state_space#add_transition (source_state_index, transition, new_state_index);
-					Some (transition, new_state_index)
+				(* Including check *)
+				| State_replacing state_index ->
+					state_space#add_transition (source_state_index, transition, state_index);
+				  recompute_successors#add state_index;
+					Some (transition, state_index)
+					
+				| New_state state_index
+				(* Inclusion check *)
+				| State_already_present state_index -> 
+					state_space#add_transition (source_state_index, transition, state_index);
+					Some (transition, state_index)
 			)
 		end
 	method compute_symbolic_successors source_state_index = 
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
 	method get_partioned_edges state_index = 
-		let successors_with_transitions = self#compute_symbolic_successors_with_transitions state_index in 
-		List.fold_left (fun (acc_cont, acc_uncont) (transition, state_index) -> 
-			let action = StateSpace.get_action_from_combined_transition model transition in 
-			if model.is_controllable_action action then
-				(transition, state_index)::acc_cont, acc_uncont
-			else
-				acc_cont, (transition, state_index)::acc_uncont
-		) ([],[]) successors_with_transitions
+		if including_check && recompute_successors#mem state_index then 
+			(let state = state_space#get_state state_index in 
+			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
+			List.fold_left (fun (acc_cont, acc_uncont) item -> 
+				let (transition, state) = item in 
+				let edge = transition, NotInSP state in 
+				let action = StateSpace.get_action_from_combined_transition model transition in 
+				if model.is_controllable_action action then
+					edge::acc_cont, acc_uncont
+				else
+					acc_cont, edge::acc_uncont
+			) ([],[]) successors )
+		else
+			(let successors = self#compute_symbolic_successors_with_transitions state_index in
+			List.fold_left (fun (acc_cont, acc_uncont) item -> 
+				let (transition, state_index) = item in 
+				let edge = transition, InSP state_index in 
+				let action = StateSpace.get_action_from_combined_transition model transition in 
+				if model.is_controllable_action action then
+					edge::acc_cont, acc_uncont
+				else
+					acc_cont, edge::acc_uncont
+			) ([],[]) successors )
 end
 
 class stateSpacePTG_full model options = object(self)
 	inherit stateSpacePTG
-	val mutable passed_states = new State.stateIndexSet
+	val passed_states = new State.stateIndexSet
 	val mutable unexplored_successors = 0
 	method unexplored_successors = unexplored_successors
 	method initialize_state_space () = 		
@@ -171,10 +207,11 @@ class stateSpacePTG_full model options = object(self)
 		let successors_with_transitions = self#compute_symbolic_successors_with_transitions state_index in 
 		List.fold_left (fun (acc_cont, acc_uncont) (transition, state_index) -> 
 			let action = StateSpace.get_action_from_combined_transition model transition in 
+			let edge = transition, InSP state_index in 
 			if model.is_controllable_action action then
-				(transition, state_index)::acc_cont, acc_uncont
+				edge::acc_cont, acc_uncont
 			else
-				acc_cont, (transition, state_index)::acc_uncont
+				acc_cont, edge::acc_uncont
 		) ([],[]) successors_with_transitions
 end
 
@@ -300,12 +337,12 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val mutable termination_status = Regular_termination
 
-	val winningZone = new unionZoneMap
-	val forcedMoves = new unionZoneMap
+	val winningZone = new stateUnionZoneMap
+	val forcedMoves = new stateUnionZoneMap
 	val depends = new dependsMap
 	val timeStampMap = new timeStampMap
 
-	val locationWinningZone = new AlgoPTGStrategyGenerator.locationUnionZoneMap
+	val locationWinningZone = new locationUnionZoneMap
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
 
@@ -477,6 +514,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		if self#matches_state_predicate state_index then 
 			begin 
 				winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
+				let location = (state_space#get_state state_index).global_location in 
+				let winning_zone_loc = locationWinningZone#find location in 
+				LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
 				waiting#add_all (self#state_set_to_update_items (depends#find state_index));
 				coverage_pruning := true
 			end;
@@ -511,15 +551,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		end;
 
 
-	method private process_convex_winning_move state action state' bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
+	method private process_convex_winning_move state action bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
 		
 		let safe_timed_pred = self#safe_timed_pred_conv_g state winning_move bad_zone in
 		LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred (self#constr_of_state_index state);
 		
-		let global_location_src = (state_space#get_state state).global_location in 
-		let global_location_index_src = state_space#get_global_location_index state in 
+		let global_location_src = (state_space#get_state state).global_location in
 
-		let current_winning_zone_glob = locationWinningZone#find global_location_index_src in
+		let current_winning_zone_glob = locationWinningZone#find global_location_src in
 
 		let winning_zone_changed = 
 			let current_winning_zone_state = winningZone#find state in
@@ -540,75 +579,114 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				LinearConstraint.px_nnconvex_union_assign current_winning_zone_glob safe_timed_pred;
 
 				let strategy_entry = match action with 
-				| Action (a, transition) -> 
+				| Action {action_index; transition; dst} -> 
 						(* Extend strategy with new partition *)
 
-					let global_location_index_dst = state_space#get_global_location_index state' in 
 						ActionEntry {
-								action = a;
+								action = action_index;
 								winning_move;
 								transition;
 								prioritized_winning_zone = safe_timed_pred;
-								destination = global_location_index_dst, state_space#get_location global_location_index_dst
+								destination = dst
 						}
 				| Wait ->
 					(* Extend strategy with a wait entry *)
 					WaitEntry {prioritized_winning_zone = safe_timed_pred}
 				in
-				let strategy = locationStrategy#find (global_location_index_src, global_location_src) in 
+				let strategy = locationStrategy#find global_location_src in 
 				strategy := strategy_entry :: !strategy;
 			end;
 		winning_zone_changed
 		
 
 
-	method private process_nnconvex_winning_move state action state' bad_zone winning_move = 
+	method private process_nnconvex_winning_move state action bad_zone winning_move = 
 		List.fold_left (||) false 
-		(List.map (fun g_i -> self#process_convex_winning_move state action state' bad_zone g_i) 
+		(List.map (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
 		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
 
 
 	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
 		 return true if winning zone was changed otherwise false	 
 	*)
-	method private backtrack_single_controllable_edge (transition, dst) src bad_zone zone_map =
-		let winning_move = self#predecessor_nnconvex transition src (zone_map dst) in
+	method private backtrack_single_controllable_edge (transition, (dst : ptg_state)) src bad_zone =
+		let winning_move, dst_global_location = match dst with 
+			| NotInSP {global_location;px_constraint} ->
+				let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+				LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
+				self#predecessor_nnconvex transition src target_zone, global_location
+			| InSP state_index -> 
+				let target_zone = winningZone#find state_index in 
+				self#predecessor_nnconvex transition src target_zone, (state_space#get_state state_index).global_location
+			
+		in
+			
 		(* Remove bad zone from winning move *)
-				
 		LinearConstraint.px_nnconvex_difference_assign winning_move bad_zone;
-		let action = StateSpace.get_action_from_combined_transition model transition in 
-		self#process_nnconvex_winning_move src (Action (action, transition)) dst bad_zone winning_move
+		let action_index = StateSpace.get_action_from_combined_transition model transition in 
+		self#process_nnconvex_winning_move src (Action {action_index;transition;dst = dst_global_location}) bad_zone winning_move
 
 	(* Process a forced move of the environment 
 		return true if the winning zone was changed otherwise false *)
 	method private process_forced_move state bad_zone forced_move = 
-		self#process_nnconvex_winning_move state Wait (-1) bad_zone forced_move
+		self#process_nnconvex_winning_move state Wait bad_zone forced_move
 
 
 	(* Method for backpropagation of winning zones *)
 	method private update state_index = 
-		let get_pred_from_edges default edges zone = 
-			List.iter (LinearConstraint.px_nnconvex_union_assign default) @@
-				List.map (fun (transition, dst) -> 
-					self#predecessor_nnconvex transition state_index (zone dst)
-				)
-			edges;
-			default
+
+		(* Compute moves to successors restricted to certain target zones based on the provided function  *)
+		let compute_moves_to_succesors init successor_list target_zone_of_state = 
+			List.iter (fun (transition, ptg_state) ->
+					let target_zone = target_zone_of_state ptg_state in 
+					let move_to_target = self#predecessor_nnconvex transition state_index target_zone in
+					LinearConstraint.px_nnconvex_union_assign init move_to_target
+			) successor_list;
+			init
+		in 
+
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in
+
+		let uncontrollable_part = compute_moves_to_succesors 
+			(LinearConstraint.false_px_nnconvex_constraint ())
+			uncontrollable_edges
+			(function 
+				| InSP state_index -> 
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (self#constr_of_state_index state_index) in 
+					LinearConstraint.px_nnconvex_difference_assign target_zone (winningZone#find state_index);
+					target_zone
+				| NotInSP {global_location;px_constraint} -> 
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+					LinearConstraint.px_nnconvex_difference_assign target_zone (locationWinningZone#find global_location);
+					target_zone
+			)
 		in
 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
-
-		let uncontrollable_part = get_pred_from_edges (LinearConstraint.false_px_nnconvex_constraint ()) uncontrollable_edges (fun x -> self#negate_zone (winningZone#find x) x) in
 		let forced_moves_changed_winning_zone = self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index) in 
 		let winning_moves_changed_winning_zone = 
 			if options#ptg_no_strategy_generation then 
-				let controllable_part = get_pred_from_edges (LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index) controllable_edges winningZone#find in
-				let new_zone = self#safe_timed_pred state_index controllable_part uncontrollable_part in 
-				let changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) new_zone) in
-				if changed then (winningZone#replace state_index new_zone; true) else false
+				let {global_location;px_constraint} = (state_space#get_state state_index) in 
+
+				let controllable_part = compute_moves_to_succesors 
+					(LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index)
+					controllable_edges
+					(function 
+						| InSP state_index -> winningZone#find state_index
+						| NotInSP {global_location;px_constraint} -> 
+							let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+							LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
+							target_zone
+					)
+				in
+				let safe_timed_pred =  self#safe_timed_pred state_index controllable_part uncontrollable_part in 
+				LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred px_constraint;
+				let location_winning_zone = locationWinningZone#find global_location in 
+				LinearConstraint.px_nnconvex_union_assign location_winning_zone safe_timed_pred;
+				let changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) safe_timed_pred) in
+				if changed then (winningZone#replace state_index safe_timed_pred; true) else false
 			else
 			List.fold_left (||) false
-				(List.map(fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part winningZone#find) controllable_edges) in 
+				(List.map(fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part) controllable_edges) in 
 		if winning_moves_changed_winning_zone || forced_moves_changed_winning_zone then 
 		begin
 			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
@@ -712,7 +790,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			begin 
 				AlgoPTGStrategyGenerator.print_strategy
 				model 
-				state_space
 				~strategy:locationStrategy;
 				self#print_algo_message_newline Verbose_experiments (
 					"Printed strategy " ^ after_seconds () ^ "."
