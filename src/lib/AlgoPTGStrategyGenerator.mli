@@ -6,12 +6,7 @@ open AbstractValue
 open DiscreteState
 
 
-type strategy_action = 
-  | Wait
-  | Action of action_index * combined_transition
-
-
-type location_strategy_key = global_location_index * global_location
+type location_strategy_key =  global_location
 
 type strategy_action_entry = {
   winning_move : LinearConstraint.px_linear_constraint;
@@ -51,6 +46,6 @@ class locationUnionZoneMap : object
 end
 
 
-val print_strategy : abstract_model -> stateSpace -> strategy:locationStrategyMap -> unit
+val print_strategy : abstract_model -> strategy:locationStrategyMap -> unit
 
 val controller_synthesis : abstract_model -> stateSpace -> Options.imitator_options -> locationStrategyMap -> callback:(unit -> unit) -> unit

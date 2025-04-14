@@ -13,14 +13,11 @@ class ['a] array (ls : 'a list) = object
   method get = Array.get internal_array 
 end
 
-type strategy_action = 
-  | Wait
-  | Action of action_index * combined_transition
 
 let (>>) f g x = g (f x)
 
 
-type location_strategy_key = global_location_index * global_location
+type location_strategy_key = global_location
 
 type strategy_action_entry = {
   winning_move : LinearConstraint.px_linear_constraint;
@@ -48,7 +45,6 @@ class locationUnionZoneMap =
 [global_location_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
 LinearConstraint.false_px_nnconvex_constraint
 
-let global_location_of_global_location_index state_space i = state_space#get_location i
 
 
 let format_zone_string (string : string) = 
@@ -83,7 +79,7 @@ let string_of_global_location (model : abstract_model) (global_location : Discre
   let location_list, discrete_mapping_list = locations_and_discrete_of_global_location model global_location in  
   Printf.sprintf "(%s, %s)" (string_of_location_list model location_list) (string_of_discrete_mapping_list model discrete_mapping_list)
 
-let string_of_strategy_entry (model : abstract_model) (state_space : stateSpace) (strategy_entry : strategy_entry) =
+let string_of_strategy_entry (model : abstract_model) (strategy_entry : strategy_entry) =
   match strategy_entry with 
     WaitEntry {prioritized_winning_zone} -> 
       Printf.sprintf "\t(When: %s, then wait until: environment takes an action)" 
@@ -93,25 +89,22 @@ let string_of_strategy_entry (model : abstract_model) (state_space : stateSpace)
       (format_zone_string (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names prioritized_winning_zone))
       (format_zone_string (LinearConstraint.string_of_px_linear_constraint model.variable_names winning_move))
       (model.action_names action) 
-      (string_of_global_location model (snd destination))
+      (string_of_global_location model destination)
 
 
-let string_of_state_strategy (model : abstract_model) (state_space : stateSpace) (state_strategy : location_strategy) = 
-  let strategy_entry_strings = List.rev @@ List.map (string_of_strategy_entry model state_space) state_strategy in
+let string_of_state_strategy (model : abstract_model) (state_strategy : location_strategy) = 
+  let strategy_entry_strings = List.rev @@ List.map (string_of_strategy_entry model) state_strategy in
   let state_strategy_string = List.fold_left (fun acc str -> Printf.sprintf "%s%s,\n" acc str) ("") strategy_entry_strings in
   String.sub state_strategy_string 0 (String.length state_strategy_string-2)
 
-let print_strategy (model : abstract_model) state_space ~strategy = 
+let print_strategy (model : abstract_model) ~strategy = 
   print_message Verbose_standard "Printing strategy that ensures controller win:";
-  strategy#iter (fun (_, global_location) location_strategy -> 
-    let str = string_of_state_strategy model state_space !location_strategy in 
+  strategy#iter (fun global_location location_strategy -> 
+    let str = string_of_state_strategy model !location_strategy in 
     print_message Verbose_standard @@ Printf.sprintf "%s -> \n%s\n" (string_of_global_location model global_location) str
   )
 
 
-class winningMovesPerAction = [action_index, LinearConstraint.px_nnconvex_constraint] defaultHashTable LinearConstraint.false_px_nnconvex_constraint 
-
-class winningMovesPerState = [state_index, winningMovesPerAction] defaultHashTable (fun _ -> new winningMovesPerAction)
 
 class transitionsPerAction = [action_index, transition_index list] defaultHashTable (fun _ -> [])
 
@@ -119,7 +112,7 @@ class transitionsPerLocation = [location_index, transitionsPerAction] defaultHas
 
 class actionsPerLocation = [location_index, stateIndexSet] defaultHashTable (fun _ -> new stateIndexSet)
 
-class locationPerGlobalLocation = [global_location_index, location_index option] defaultHashTable (fun _ -> None)
+class locationPerGlobalLocation = [global_location, location_index option] defaultHashTable (fun _ -> None)
 
 type location_info = {
   invariant : invariant;
@@ -127,22 +120,6 @@ type location_info = {
   is_urgent : bool;
   location_name : location_name;
 }
-let get_location_info_from_state (state_space : stateSpace) (model : abstract_model) state_index : location_info = 
-  let zone = (state_space#get_state state_index).px_constraint in
-  let global_location = state_space#get_location state_index in
-  let locations = DiscreteState.get_locations global_location in 
-
-  let invariant = Continuous_guard (LinearConstraint.pxd_of_px_constraint zone) in
-  let is_accepting = DiscreteState.is_accepting model.is_accepting global_location in
-  let is_urgent = AbstractModelUtilities.is_global_location_urgent model global_location in
-  let location_name = model.location_names 0 (Array.get locations 0) in 
-
-  {
-    invariant = invariant;
-    is_accepting;
-    is_urgent;
-    location_name;
-  }
 
 let cached_array_indexing_from_list list array_opt_ref =
   match !array_opt_ref with 
@@ -160,7 +137,7 @@ class locationManager initial_count original_initial_global_location = object
   val mutable location_names = ref []
   val mutable location_counter = ref initial_count
   val location_per_global_location = new locationPerGlobalLocation
-  method create_location (cache : global_location_index option)(location_info : location_info) = 
+  method create_location (cache : global_location option)(location_info : location_info) = 
     let create_new_location () = 
       let fresh_loc = !location_counter in
       location_counter := !location_counter + 1;
@@ -278,30 +255,20 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
       let action = fresh_action action_type (Some action_name) in Hashtbl.add tbl action_index action; action
   in 
      
-  (* Build global_location -> global_location_index map *)
-  let global_location_index_of_global_location = 
-    let tbl = Hashtbl.create 100 in 
-    strategy#iter (fun (global_location_index, global_location) _ -> 
-      Hashtbl.add tbl global_location global_location_index
-    );
-    fun x -> try Some (Hashtbl.find tbl x) with Not_found -> None
-  in
-  
-  let original_initial_global_location_index = state_space#get_global_location_index state_space#get_initial_state_index in 
-  let location_manager = new locationManager 0 original_initial_global_location_index in 
+  let original_initiat_global_location = (state_space#get_state state_space#get_initial_state_index).global_location in 
+  let location_manager = new locationManager 0 original_initiat_global_location in 
   let transition_manager = new transitionManager in
   
-  let create_urgent_choice_loc_of_global_location global_location_index_opt = 
-    let location_name, is_accepting = match global_location_index_opt with
-    Some global_location_index -> 
-      let global_location = global_location_of_global_location_index state_space global_location_index in 
+  let create_urgent_choice_loc_of_global_location global_location_opt = 
+    let location_name, is_accepting = match global_location_opt with
+    Some global_location -> 
       if DiscreteState.is_accepting system_model.is_accepting global_location then
-        Printf.sprintf "l%d_ACCEPTING" global_location_index, true (* Mark locations in controller as accepting for visualization purposes *)
+        Printf.sprintf "l%s_ACCEPTING" (location_name_of_global_location system_model global_location), true (* Mark locations in controller as accepting for visualization purposes *)
       else 
-        Printf.sprintf "l%d" global_location_index, false
+        Printf.sprintf "l%s" (location_name_of_global_location system_model global_location), false
     | None -> fresh_trap_name (), false
     in
-    location_manager#create_location global_location_index_opt
+    location_manager#create_location global_location_opt
     {
       invariant = True_guard;
       is_urgent = true;
@@ -456,9 +423,9 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
 
 
   (* Main synthesis step *)
-  strategy#iter (fun (global_location_index, global_location) location_strategy -> 
+  strategy#iter (fun global_location location_strategy -> 
     (* Create location for src symb state *)
-    let src_urgent_loc = create_urgent_choice_loc_of_global_location @@ Some global_location_index in 
+    let src_urgent_loc = create_urgent_choice_loc_of_global_location @@ Some global_location in 
 
     List.iteri (fun i entry -> 
       let connect invariant is_urgent prioritized_winning_zone =
@@ -467,7 +434,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
           invariant;
           is_urgent;
           is_accepting = false;
-          location_name = Printf.sprintf "l%d_%d" global_location_index i
+          location_name = Printf.sprintf "l%s_%d" (location_name_of_global_location system_model global_location) i
         } in
         List.iter (fun k ->
         let pxd = LinearConstraint.pxd_of_px_constraint k in 
@@ -494,7 +461,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
         (* For each entry in strategy create location *)
         let new_loc = connect (Continuous_guard winning_move_past_pxd) is_urgent prioritized_winning_zone in
         
-        let target = create_urgent_choice_loc_of_global_location (Some (fst destination)) in 
+        let target = create_urgent_choice_loc_of_global_location (Some destination) in 
         transition_manager#add_transition new_loc {
           guard = Continuous_guard winning_move_pxd;
           action = action_of_original_action action;
@@ -509,13 +476,13 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
       AlgoStateBased.combined_transitions_and_states_from_one_state_functional options dimension_extended_system_model symbolic_state_overapproximation |>
       List.map (fun (ct, s) -> 
         StateSpace.get_action_from_combined_transition dimension_extended_system_model ct, 
-        global_location_index_of_global_location s.global_location
+        s.global_location
         ) |>
       List.filter (fst >> dimension_extended_system_model.is_controllable_action >> not) |>
       
-      List.iter (fun (action, global_location_index) -> 
+      List.iter (fun (action, global_location) -> 
         let action' = action_of_original_action action in 
-        let target = create_urgent_choice_loc_of_global_location global_location_index in 
+        let target = create_urgent_choice_loc_of_global_location (Some global_location) in 
         transition_manager#add_transition choose_loc {
           guard = True_guard;
           action = action';
