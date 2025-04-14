@@ -629,13 +629,13 @@ let apply_updates_assign_backward = apply_updates_assign_gen LinearConstraint.Ti
 (************************************************************)
 
 (* state struct for constructing set type *)
-module State = struct
+module StateIndexStructure = struct
 	type t = state_index
 	let compare = compare
 end
 
 (* set of states for efficient lookup *)
-module StateIndexSet = Set.Make(State)
+module StateIndexSet = Set.Make(StateIndexStructure)
 
 
 
