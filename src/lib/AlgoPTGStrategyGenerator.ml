@@ -41,12 +41,6 @@ class locationStrategyMap =
 [location_strategy_key, location_strategy ref] defaultHashTable
 (fun _ -> ref [])
 
-class locationUnionZoneMap = 
-[global_location_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
-LinearConstraint.false_px_nnconvex_constraint
-
-
-
 let format_zone_string (string : string) = 
   let b = Buffer.create 10 in
   String.iter (fun c -> if c == '\n' then Buffer.add_char b ' ' else Buffer.add_char b c) string;
