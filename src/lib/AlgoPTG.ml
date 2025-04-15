@@ -60,11 +60,11 @@ let item_list_to_str list model state_space =
 
 class stateUnionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
-LinearConstraint.false_px_nnconvex_constraint
+(fun _ -> LinearConstraint.false_px_nnconvex_constraint ())
 
 class locationUnionZoneMap = 
 [DiscreteState.global_location, LinearConstraint.px_nnconvex_constraint] defaultHashTable
-LinearConstraint.false_px_nnconvex_constraint
+(fun _ -> LinearConstraint.false_px_nnconvex_constraint ())
 
 class dependsMap =
 [state_index, State.stateIndexSet] defaultHashTable

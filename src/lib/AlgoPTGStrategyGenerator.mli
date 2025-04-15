@@ -1,8 +1,6 @@
 open AbstractModel
 open Automaton
-open State
 open StateSpace
-open AbstractValue
 open DiscreteState
 
 
@@ -34,15 +32,7 @@ class locationStrategyMap : object
     method iter : (location_strategy_key -> location_strategy ref -> unit) -> unit
     method fold : 'c. (location_strategy_key -> location_strategy ref -> 'c -> 'c) -> 'c -> 'c
 	method is_empty : bool
-end
-
-class locationUnionZoneMap : object 
-	val mutable internal_tbl : (global_location_index, LinearConstraint.px_nnconvex_constraint) Hashtbl.t
-	method replace : global_location_index -> LinearConstraint.px_nnconvex_constraint -> unit
-	method find : global_location_index -> LinearConstraint.px_nnconvex_constraint    
-    method iter : (global_location_index -> LinearConstraint.px_nnconvex_constraint -> unit) -> unit
-    method fold : 'c. (global_location_index -> LinearConstraint.px_nnconvex_constraint -> 'c -> 'c) -> 'c -> 'c
-	method is_empty : bool
+  method merge_keys : (location_strategy_key -> location_strategy_key) -> (location_strategy ref-> location_strategy ref -> location_strategy ref) -> unit
 end
 
 
