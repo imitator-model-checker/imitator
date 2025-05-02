@@ -2902,7 +2902,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric Timed Game parameter synthesis}\label{section:algorithm:ptg}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Given a Parametric Timed Game (PTA enriched with controllable/uncontrollable actions) synthesizes a parameter constraint such that, for any parameter valuation in that constraint, a winning strategy exists for the controllable player. Based on the algorithm on Timed Games described in~\cite{DBLP:conf/concur/CassezDFLL05} and further extended for Parametric Timed Games in \cite{DBLP:conf/wodes/JovanovicFLR12}.
+Given a Parametric Timed Game (PTA enriched with controllable/uncontrollable actions) synthesizes a parameter constraint such that, for any parameter valuation in that constraint, a winning strategy exists for the controllable player~\cite{DBLP:conf/tacas/DahlsenJensenFPP24}. Based on the algorithm on Timed Games described in~\cite{DBLP:conf/concur/CassezDFLL05} and further extended for Parametric Timed Games in \cite{DBLP:conf/wodes/JovanovicFLR12}.
 
 The property syntax is of the following form:
 
@@ -2910,6 +2910,18 @@ The property syntax is of the following form:
 property := #synth Win(state_predicate);
 \end{IMITATORproperty}
 
+This synthesizes a parameter constraint guaranteeing a winning strategy for any parameter valuation within it. A winning strategy dictates when to take controllable actions (or wait, forcing the environment to act) such that - regardless of uncontrollable actions - the state predicate is eventually satisfied (e.g., reaching an accepting location).
+
+\subsection{Strategy Generation}\label{section:algorithm:ptg:strategy}
+During execution, the algorithm constructs a winning strategy, which is output as a textual representation upon termination. This strategy guarantees that the state predicate is eventually satisfied for all runs starting from parameter valuations within the synthesized constraint. To disable strategy output, use \styleOption{-PTG-no-strategy-printing}. To disable construction of a winning strategy entirely see \cref{section:algorithm:ptg:no-strategy}.
+
+\subsection{Controller Generation}\label{section:algorithm:ptg:controller}  
+After the main algorithm terminates (and strategy output completes, unless disabled), the controller generation procedure begins. This step converts the winning strategy into a timed automaton controller, saved as an \imitator file. When composed in parallel with the original game, this controller enforces the strategy, guaranteeing that the state predicate is eventually satisfied in all runs.
+
+
+
+\subsection{Disabling Strategy Generation}\label{section:algorithm:ptg:no-strategy}
+To disable strategy generation entirely (including computation, printing, and controller conversion), use \styleOption{-PTG-no-strategy-generation}. This significantly accelerates the algorithm on larger examples when only the parameter constraint synthesis is needed.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
