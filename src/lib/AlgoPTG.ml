@@ -86,6 +86,8 @@ class virtual stateSpacePTG  = object(self)
 	method virtual compute_symbolic_successors : state_index -> state_index list
 	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
 	method virtual unexplored_successors : int
+	method virtual merge_mapping : state_index -> state_index
+	method virtual merge_occured : bool
 	method virtual passed_states : State.stateIndexSet
 	initializer 
 		self#initialize_state_space ()
@@ -100,7 +102,10 @@ let add_transitions_and_states_to_state_space state_space transitions_and_states
 class stateSpacePTG_OTF model options = object(self)
 	inherit stateSpacePTG
 	method unexplored_successors = 0
-	val including_check = options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check
+	val including_check = 
+	options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || 
+	options#comparison_operator = AbstractAlgorithm.Including_check ||
+	options#comparison_operator = AbstractAlgorithm.Strong_Double_Inclusion_check
 	
 	(* Explored: Internal set keeping track of states have had their successors computed *)
 	val explored_states = new State.stateIndexSet
@@ -109,6 +114,14 @@ class stateSpacePTG_OTF model options = object(self)
 		Modified by state space in case of successful including checks *)
 	val passed_states = new State.stateIndexSet
 	method passed_states = passed_states
+
+	(* Merge mapping: Mapping from states removed by merging (strong including check) to their representative state *)
+	val merge_mapping = Hashtbl.create 20
+	method merge_mapping state_index = try Hashtbl.find merge_mapping state_index with Not_found -> state_index
+
+	(* Merge occured: Only true if a merge by including check has happened in the last state space expansion *)
+	val mutable merge_occured = false
+	method merge_occured = if merge_occured then (merge_occured <- false; true) else false
 
 	(* Optimization: Only recompute successors in updates IF an included check has succeeded *)
 	val recompute_successors = new State.stateIndexSet 
@@ -134,10 +147,23 @@ class stateSpacePTG_OTF model options = object(self)
 					passed_states#remove_or_do_nothing state_index;
 					Some (transition, state_index)
 					
-				(* Inclusion check or New state *)
 				| New_state state_index
+				(* Inclusion check *)
 				| State_already_present state_index -> 
 					state_space#add_transition (source_state_index, transition, state_index);
+					Some (transition, state_index)
+
+				(* Strong including check *)
+				| State_replacing_several (state_index, eaten_states) -> 
+					state_space#add_transition (source_state_index, transition, state_index);
+					recompute_successors#add state_index;
+					explored_states#remove_or_do_nothing state_index;
+					passed_states#remove_or_do_nothing state_index;
+					merge_occured <- true;
+
+					List.iter (fun x -> Hashtbl.add merge_mapping x state_index) eaten_states; 
+					if verbose_mode_greater Verbose_low then 
+						print_message Verbose_low (Printf.sprintf "STRONG INCLUSION HAPPENED: ate %d states" @@ List.length eaten_states);
 					Some (transition, state_index)
 			)
 		end
@@ -168,6 +194,8 @@ class stateSpacePTG_full model options = object(self)
 	val passed_states = new State.stateIndexSet
 	method passed_states = passed_states
 	val mutable unexplored_successors = 0
+	method merge_mapping x = x
+	method merge_occured = false
 	method unexplored_successors = unexplored_successors
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
@@ -187,6 +215,13 @@ class stateSpacePTG_full model options = object(self)
 					else 
 					(explored_states#add new_state_index;
 					Some new_state_index)
+				| State_replacing_several (state_index, _) -> 
+					state_space#add_transition (source_state_index, transition, state_index);
+					if explored_states#mem state_index then 
+						None
+					else 
+					(explored_states#add state_index;
+					Some state_index)
 			)
 		in
 
@@ -206,18 +241,18 @@ class stateSpacePTG_full model options = object(self)
 		explored_states#add initial_state_index;
 		bfs [initial_state_index] 1;
 
-	method private compute_symbolic_successors_with_transitions source_state_index = 
-		state_space#get_successors_with_combined_transitions source_state_index
 	method compute_symbolic_successors source_state_index = 
 		state_space#get_successors_with_combined_transitions source_state_index |> List.map snd
 	method get_partioned_edges state_index =
-		let successors_with_transitions = self#compute_symbolic_successors_with_transitions state_index in 
+		let successors_with_transitions = state_space#get_successors_with_combined_transitions state_index in 
 		List.partition_map (fun (transition, state_index) -> 
 			let edge = transition, InSP state_index in 
 			let action = StateSpace.get_action_from_combined_transition model transition in 
 			if model.is_controllable_action action then Left edge else Right edge)
 		successors_with_transitions
 end
+
+
 
 class virtual ['a] nextItem = object
 	method virtual add : 'a -> unit
@@ -226,12 +261,20 @@ class virtual ['a] nextItem = object
 	method virtual to_list : 'a list
 	method virtual length : int
 	method virtual add_all : 'a list -> unit
-	method virtual unexplored_successors : int 
+	method virtual unexplored_successors : int
+	method virtual apply_merge : (state_index -> state_index) -> unit
 end
+
+
+(* TODO: possible to speedup with some fancy path compression (have to use hashtbl directly then. )*)
+let rec lookup_merge_map merge_map state_index = 
+	if merge_map state_index = state_index then state_index else 
+		let merger_state_index = merge_map state_index in 
+		lookup_merge_map merge_map merger_state_index
 
 class nextItem_single_queue = object
 	inherit ([item] nextItem)
-	val queue = Queue.create ()
+	val mutable queue = Queue.create ()
 	method add e = Queue.add e queue
 	method extract = Queue.pop queue
 	method is_empty = Queue.is_empty queue
@@ -239,6 +282,30 @@ class nextItem_single_queue = object
 	method length = Queue.length queue
 	method add_all list = List.iter (fun e -> Queue.add e queue) list
 	method unexplored_successors = 0
+	method apply_merge merge_mapping = 
+		let new_queue = Queue.create () in 
+		let represented_explore = new State.stateIndexSet in
+		let represented_update = new State.stateIndexSet in
+		Seq.iter (fun item -> 
+			match item with 
+			| EXPLORE state_index -> 
+				let merger_state_index = lookup_merge_map merge_mapping state_index in
+				if merger_state_index = state_index then 
+					Queue.add item new_queue
+				else if not (represented_explore#mem merger_state_index) then
+					(Queue.add (EXPLORE merger_state_index) new_queue;
+					represented_explore#add merger_state_index)
+			| UPDATE {state_index;timestamp} -> 
+				let merger_state_index = lookup_merge_map merge_mapping state_index in
+				if merger_state_index = state_index then 
+					Queue.add item new_queue
+				else if not (represented_update#mem merger_state_index) then 
+					Queue.add (UPDATE {state_index = merger_state_index; timestamp}) new_queue;
+					represented_update#add merger_state_index
+				
+		)
+		(Queue.to_seq queue);
+		queue <- new_queue
 end
 
 type phase = Initial | Exploring | Updating
@@ -301,6 +368,7 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 	method length = List.length update + List.length update' + List.length explore + List.length explore'
 	method add_all list = List.iter self#add list
 	method unexplored_successors = unexplored_successors
+	method apply_merge _ = ()
 end
 
 (************************************************************)
@@ -549,6 +617,12 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					in 
 					if found_existing_state then 
 						waiting#add (UPDATE {state_index; timestamp = fresh_timestamp ()});
+					if state_space_ptg#merge_occured then 
+						(waiting#apply_merge (state_space_ptg#merge_mapping);
+						winningZone#merge_keys state_space_ptg#merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
+						forcedMoves#merge_keys state_space_ptg#merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
+						depends#merge_keys state_space_ptg#merge_mapping (fun a b -> a#union b; a);
+						lastUpdate#merge_keys state_space_ptg#merge_mapping min);
 					if verbose_mode_greater Verbose_medium then 
 						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space)
 		end;

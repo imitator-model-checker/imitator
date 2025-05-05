@@ -639,7 +639,7 @@ module StateIndexSet = Set.Make(StateIndexStructure)
 
 
 
-
+type t = StateIndexSet.t
 (**************************************************************)
 (* Encapsulation in a class *)
 (*** NOTE: technically, we could better create a *generic* class and instantiate it with StateIndexSet when needed ***)
@@ -654,6 +654,7 @@ class stateIndexSet =
 	val mutable the_set = StateIndexSet.empty
 	
 
+	method t = the_set
 	
 	(************************************************************)
 	(* Access methods *)
@@ -723,6 +724,8 @@ class stateIndexSet =
 		the_set <- StateIndexSet.remove element the_set
 	
 
+	method union (a : stateIndexSet) = let res = StateIndexSet.union a#t the_set in the_set <- res
+	
 (************************************************************)
 (************************************************************)
 end;;
