@@ -227,13 +227,13 @@ type abstract_model = {
 	automata_names : automaton_index -> automaton_name;
 
 	(* The locations for each automaton *)
-	locations_per_automaton : automaton_index -> location_index list;
+	mutable locations_per_automaton : automaton_index -> location_index list;
 	(* The location names for each automaton *)
-	location_names : automaton_index -> location_index -> location_name;
+	mutable location_names : automaton_index -> location_index -> location_name;
 	(* The acceptance for each location *)
-	is_accepting : automaton_index -> location_index -> bool;
+	mutable is_accepting : automaton_index -> location_index -> bool;
 	(* The urgency for each location *)
-	is_urgent : automaton_index -> location_index -> bool;
+	mutable is_urgent : automaton_index -> location_index -> bool;
 
 	(* All action indexes *)
 	actions : action_index list;
