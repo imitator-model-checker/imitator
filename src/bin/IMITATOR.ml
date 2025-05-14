@@ -155,7 +155,7 @@ if not options#is_set_output_result then(
 		| Algorithm | Syntax_check | State_space_computation
 			-> true
 
-		| Translation _
+		| Translation _ | Temp_testonthefly
 			-> false
 	in
 
@@ -339,6 +339,7 @@ begin match property_option, options#imitator_mode with
 		);
 
 	| _, State_space_computation
+	| _, Temp_testonthefly
 	| None, _ ->
 		(* Nothing to do *)
 		()
@@ -394,6 +395,7 @@ begin match property_option, options#imitator_mode with
 			options#set_comparison_operator Equality_check;
 		);
 
+	| _, Temp_testonthefly
 	| None, _ -> ()
 
 end;
@@ -423,6 +425,7 @@ begin match property_option, options#imitator_mode with
 
 	(* Otherwise: leave unchanged *)
 	| _, State_space_computation
+	| _, Temp_testonthefly
 	| None, _ -> ()
 end;
 
@@ -451,6 +454,7 @@ begin match property_option, options#imitator_mode with
 
 	(* Otherwise: leave unchanged *)
 	| _, State_space_computation
+	| _, Temp_testonthefly
 	| None, _ -> ()
 end;
 
@@ -481,6 +485,7 @@ begin match property_option, options#imitator_mode with
 		);
 
 	| _, State_space_computation
+	| _, Temp_testonthefly
 	| None, _ ->
 		(* Nothing to do *)
 		()
@@ -704,6 +709,27 @@ match options#imitator_mode with
 
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar model options in
+
+		(*** NOTE: duplicate code with what follows ***)
+
+		let result = concrete_algorithm#run in
+
+		(* Stop the main algorithm counters *)
+		counter_algorithm_and_parsing#stop;
+		counter_main_algorithm#stop;
+
+		(* Process and terminate *)
+		ResultProcessor.process_result_and_terminate model result concrete_algorithm#algorithm_name None global_counter
+
+
+	(************************************************************)
+	(* Temporary algorithm to test on-the-fly model modification *)
+	(************************************************************)
+	| Temp_testonthefly ->
+(* 		raise (NotImplemented "IMITATOR.ml > Temp_testonthefly") *)
+
+		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
+		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoOntheflyModification.algoOntheflyModification model options in
 
 		(*** NOTE: duplicate code with what follows ***)
 

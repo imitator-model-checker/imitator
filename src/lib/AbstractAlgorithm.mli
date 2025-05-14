@@ -46,6 +46,9 @@ type imitator_mode =
 	(* Full state space computation, until fully explored or some preliminary termination *)
 	| State_space_computation
 
+	(* Temporary algorithm to test on-the-fly modfication *)
+	| Temp_testonthefly
+
 	(* Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)
 

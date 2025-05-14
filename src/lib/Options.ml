@@ -583,6 +583,10 @@ class imitator_options =
 				else if mode = "statespace" then
 					imitator_mode <- State_space_computation
 
+				(* Case: temporary on-the-fly model modification *)
+				else if mode = "onthefly" then
+					imitator_mode <- Temp_testonthefly
+
 				else(
 					print_error ("The mode `" ^ mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
