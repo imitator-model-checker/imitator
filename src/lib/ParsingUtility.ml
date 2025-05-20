@@ -54,16 +54,19 @@ let print_error_and_abort (options : Options.imitator_options) (error_message : 
 
 
 (* Defining types for errors *)
-type model_or_property =
+type parsed_structure_type =
 	| Model
+	| OnTheFlyModification
 	| Property
 
-let parsing_error_of model_or_property error_message = match model_or_property with
+let parsing_error_of parsed_structure_type error_message = match parsed_structure_type with
 	| Model -> Result.ModelParsing_error error_message
+	| OnTheFlyModification -> Result.ModelParsing_error error_message (*** TODO ***)
 	| Property -> Result.ModelParsing_error error_message
 
-let filenotfound_error_of model_or_property = match model_or_property with
+let filenotfound_error_of parsed_structure_type = match parsed_structure_type with
 	| Model -> Result.ModelFileNotFound_error
+	| OnTheFlyModification -> Result.ModelFileNotFound_error (*** TODO ***)
 	| Property -> Result.PropertyFileNotFound_error
 
 
@@ -72,7 +75,7 @@ let filenotfound_error_of model_or_property = match model_or_property with
 (************************************************************)
 
 (* Generic parser that returns the abstract structure *)
-let parser_lexer_gen (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer lexbuf string_of_input file_name =
+let parser_lexer_gen (parsed_structure_type : parsed_structure_type) (options : Options.imitator_options) the_parser the_lexer lexbuf string_of_input file_name =
 	(* Parsing *)
 	print_message Verbose_total ("Preparing actual parsing…");
 	let parsing_structure = try (
@@ -117,14 +120,14 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			in
 			(* Abort properly *)
 			let failure_message = "Parsing error in file `" ^ file_name ^ "` " ^ error_message in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		| UnexpectedToken c ->
 			(* Print some information *)
 			print_message Verbose_total ("Parsing error detected `UnexpectedToken`. Processing…");
 			(* Abort properly *)
 			let failure_message = "Parsing error in file `" ^ file_name ^ "`: unexpected token `" ^ (Char.escaped c) ^ "`." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		
 		(*** HACK: added because of some mysterious exception raised during parsing (2020/04/16) ***)
@@ -133,26 +136,26 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			print_message Verbose_total ("Parsing error detected `index out of bounds`. Processing…");
 			(* Abort properly *)
 			let failure_message = "Mysterious parsing error in file `" ^ file_name ^ "`, maybe at the very beginning." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 		
 		| Failure f ->
 			(* Print some information *)
 			print_message Verbose_total ("Parsing error detected `Failure`. Processing…");
 			(* Abort properly *)
 			let failure_message = "Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		(* Static division by 0 *)
 		| Static_division_by_0 error_message ->
 			(* Abort properly *)
 			let failure_message = "Division by 0 (" ^ error_message ^ ") spotted during the parsing!" in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		(* Problem with an included file *)
 		| IncludeFileNotFound included_file ->
 			(* Abort properly *)
 			let failure_message = "File `" ^ included_file ^ "` (included by `" ^ file_name ^ "`) not found." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		(* April 1st *)
 		| April1st ->
@@ -165,14 +168,14 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 
 
 (* Parse a file and return the abstract structure *)
-let parser_lexer_from_file (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer file_name =
+let parser_lexer_from_file (parsed_structure_type : parsed_structure_type) (options : Options.imitator_options) the_parser the_lexer file_name =
 	(* Open file *)
 	print_message Verbose_total ("Opening in_channel…");
 	let in_channel = try (open_in file_name) with
 		| Sys_error e ->
 			(* Abort properly *)
 			let failure_message = "The file `" ^ file_name ^ "` could not be opened.\n" ^ e in
-			print_error_and_abort options failure_message (filenotfound_error_of model_or_property)
+			print_error_and_abort options failure_message (filenotfound_error_of parsed_structure_type)
 	in
 	(* Lexing *)
 	print_message Verbose_total ("Lexing…");
@@ -181,7 +184,7 @@ let parser_lexer_from_file (model_or_property : model_or_property) (options : Op
 		| Failure f ->
 			(* Abort properly *)
 			let failure_message = "Lexing error in file `" ^ file_name ^ "`: " ^ f in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 	in
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () =
@@ -191,7 +194,7 @@ let parser_lexer_from_file (model_or_property : model_or_property) (options : Op
 	in
 	(* Generic function *)
 	print_message Verbose_total ("Calling parser lexer…");
-	parser_lexer_gen model_or_property options the_parser the_lexer lexbuf string_of_input file_name
+	parser_lexer_gen parsed_structure_type options the_parser the_lexer lexbuf string_of_input file_name
 
 
 (*(* Parse a string and return the abstract structure *)
@@ -327,3 +330,33 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
+
+
+(************************************************************)
+(* Compile an on-the-fly modification of the model *)
+(************************************************************)
+let parsing_structure_of_ontheflycommand (options : Options.imitator_options) =
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*	(* Statistics *)
+	parsing_counter#start;*)
+
+	(* Parsing the main model *)
+	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
+	let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update = parser_lexer_from_file Model options ModelUpdateParser.main ModelUpdateLexer.token options#model_file_name in
+
+(*	(* Statistics *)
+	parsing_counter#stop;
+
+	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");*)
+
+	(*** USELESS, even increases memory x-( ***)
+	(* Gc.major (); *)
+
+	(*** TODO / temporary ***)
+	parsed_ontheflyupdate
+
+

@@ -51,6 +51,7 @@ class algoOntheflyModification (model : AbstractModel.abstract_model) (options :
 	(** Main method *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run =
+			let _ = ParsingUtility.parsing_structure_of_ontheflycommand options in
 		raise (NotImplemented ("algoOntheflyModification > run"))
 
 

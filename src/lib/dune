@@ -9,11 +9,11 @@
   result))
 
 (ocamllex
- (modules ModelLexer PropertyLexer))
+ (modules ModelLexer PropertyLexer ModelUpdateLexer))
 
 (menhir
  (flags --dump --explain)
- (modules ModelParser PropertyParser))
+ (modules ModelParser PropertyParser ModelUpdateParser))
 
 (rule
  (targets ModelParser.conflicts)
@@ -24,6 +24,12 @@
 (rule
  (targets PropertyParser.conflicts)
  (deps PropertyParser.mly)
+ (action
+  (run menhir --dump --explain %{deps})))
+
+(rule
+ (targets ModelUpdateParser.conflicts)
+ (deps ModelUpdateParser.mly)
  (action
   (run menhir --dump --explain %{deps})))
 
