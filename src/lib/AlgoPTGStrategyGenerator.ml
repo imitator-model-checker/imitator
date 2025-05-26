@@ -239,6 +239,11 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
     fun () -> let fresh = !nb_traps in nb_traps := !nb_traps + 1; Printf.sprintf "trap_%d" fresh
   in
 
+  let fresh_loc_name = 
+    let nb_locs = ref 0 in
+    fun () -> let fresh = !nb_locs in nb_locs := !nb_locs + 1; Printf.sprintf "l%d" fresh
+  in
+
   let action_of_original_action = 
     let tbl = Hashtbl.create 100 in
     fun action_index -> match Hashtbl.find_opt tbl action_index with 
@@ -257,9 +262,9 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
     let location_name, is_accepting = match global_location_opt with
     Some global_location -> 
       if DiscreteState.is_accepting system_model.is_accepting global_location then
-        Printf.sprintf "l%s_ACCEPTING" (location_name_of_global_location system_model global_location), true (* Mark locations in controller as accepting for visualization purposes *)
+        Printf.sprintf "%s_ACCEPTING" (fresh_loc_name ()), true (* Mark locations in controller as accepting for visualization purposes *)
       else 
-        Printf.sprintf "l%s" (location_name_of_global_location system_model global_location), false
+        Printf.sprintf "%s" (fresh_loc_name ()), false
     | None -> fresh_trap_name (), false
     in
     location_manager#create_location global_location_opt
@@ -428,7 +433,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
           invariant;
           is_urgent;
           is_accepting = false;
-          location_name = Printf.sprintf "l%s_%d" (location_name_of_global_location system_model global_location) i
+          location_name = Printf.sprintf "%s_%d" (fresh_loc_name ()) i
         } in
         List.iter (fun k ->
         let pxd = LinearConstraint.pxd_of_px_constraint k in 
