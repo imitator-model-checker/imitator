@@ -252,11 +252,11 @@ class stateSpacePTG_full model options = object(self)
 		successors_with_transitions
 end
 
-
+type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap; forcedMoves : stateUnionZoneMap}
 
 class virtual ['a] nextItem = object
 	method virtual add : 'a -> unit
-	method virtual extract : 'a
+	method virtual extract : merge_dependant_datastructures -> 'a
 	method virtual is_empty : bool
 	method virtual to_list : 'a list
 	method virtual length : int
@@ -276,7 +276,7 @@ class nextItem_single_queue = object
 	inherit ([item] nextItem)
 	val mutable queue = Queue.create ()
 	method add e = Queue.add e queue
-	method extract = Queue.pop queue
+	method extract _ = Queue.pop queue
 	method is_empty = Queue.is_empty queue
 	method to_list = List.of_seq (Queue.to_seq queue)
 	method length = Queue.length queue
@@ -309,7 +309,7 @@ class nextItem_single_queue = object
 end
 
 type phase = Initial | Exploring | Updating
-class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth : int) (total_depth_limit : int) = object(self)
+class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options.imitator_options) (init_depth : int) (explore_depth : int) (update_depth : int) (total_depth_limit : int) = object(self)
 	inherit ([item] nextItem)
 	val mutable explore = []
 	val mutable explore' = []
@@ -322,12 +322,47 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 	method add e = match e with 
 	| EXPLORE _ -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
 	| UPDATE _ -> update' <- e::update'
-	method extract = 
+	method extract {lastUpdate; depends; winningZone; forcedMoves} = 
 		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
 		(List.length explore) (List.length explore') (List.length update) (List.length update') 
 		(match phase with Initial -> depth - explore_depth + init_depth | _ -> depth)
 		(match phase with Exploring -> "Exploring" | Initial -> "Initial Exploring" |_ -> "Updating")
 		total_depth);
+
+		let attempt_merge candidates = 
+			match options#merge_algorithm with 
+			| AbstractAlgorithm.Merge_none -> candidates
+			| _ -> 
+				let merge_mapping_tbl = Hashtbl.create 100 in
+				
+				let candidate_indices = List.map (fun item -> match item with EXPLORE i -> i | _ -> raise (Exceptions.InternalError "Error in extraction: Candidates cannot be UPDATE items.")) candidates in 
+													(* merger <- mergee *)
+				let merge_callback merger mergee = Hashtbl.add merge_mapping_tbl mergee merger in 
+				
+				(* Call merge algorithm and build the merge mapping table via callback*)
+				let merged_indices = state_space#merge candidate_indices merge_callback in
+
+				let merge_mapping state_index = try Hashtbl.find merge_mapping_tbl state_index with Not_found -> state_index in 
+				
+				(* Merge all table datastructures *)
+				winningZone#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
+				forcedMoves#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
+				depends#merge_keys merge_mapping (fun a b -> a#union b; a);
+				lastUpdate#merge_keys merge_mapping min;
+
+				
+				(* Apply merge map to the queued updates as well *)
+				update' <- List.map (fun item -> 
+					match item with 
+					| EXPLORE _ -> raise (Exceptions.InternalError "Error in extraction: Update list cannot contain EXPLORE items")
+					| UPDATE {state_index; timestamp} -> 
+							let merger = lookup_merge_map merge_mapping state_index in 
+							UPDATE {state_index = merger; timestamp}
+					) update';
+
+				List.map (fun i -> EXPLORE i) merged_indices
+		in
+				
 
 		let swap_phase () = 
 			(match phase with  
@@ -336,15 +371,15 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 			| Updating -> if explore' != [] then phase <- Exploring);
 			depth <- 0
 		in
-		let increment_depth () = 
+		let next_layer () = 
 			match phase with 
 			| Initial | Exploring -> 
 				if explore' = [] then swap_phase () else 
-					(explore <- explore'; explore' <- []; 
+					(explore <- attempt_merge (List.rev explore'); explore' <- []; 
 					total_depth <- total_depth + 1;
 					depth <- depth + 1;)
 			| Updating -> if update' = [] then swap_phase () else 
-					(update <- update'; update' <- []; 
+					(update <- List.rev update'; update' <- []; 
 					depth <- depth + 1)
 		in
 
@@ -357,7 +392,7 @@ class nextItem_frontier (init_depth : int) (explore_depth : int) (update_depth :
 				if depth = depth_limit then
 					swap_phase ()
 				else 
-					increment_depth ();
+					next_layer ();
 				extract_aux ()
 			| x::xs -> 	update_curr_list xs; x 
 		in
@@ -421,7 +456,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val waiting : item nextItem = 
 		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
 		match options#ptg_picking_strategy with 
-		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier init step update depth_limit
+		| AbstractAlgorithm.Frontier {init; step; update} -> new nextItem_frontier (state_space_ptg#state_space) options init step update depth_limit
 		| AbstractAlgorithm.SingleQueue -> new nextItem_single_queue
 	
 	val fresh_timestamp : unit -> timestamp = 
@@ -837,7 +872,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		while (not @@ self#termination_criteria initial_state_index) do
 			if verbose_mode_greater Verbose_medium then 
 				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ item_list_to_str waiting#to_list model state_space);
-			let item = waiting#extract in 			
+			let item = waiting#extract {lastUpdate;depends;winningZone;forcedMoves} in 			
 			if verbose_mode_greater Verbose_medium then 
 				print_message Verbose_medium (Printf.sprintf "Processing item: \027[92m %s \027[0m" (item_to_str model state_space item));
 			match item with 
