@@ -266,6 +266,8 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(** The current new state indexes *)
 		val mutable new_states_indexes : state_index list
 
+		val mutable state_indices_removed_by_strong_double_inclusion : State.state_index list 
+
 		(** Variable to remain of the termination *)
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : exploration_limit_reached
