@@ -2083,7 +2083,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(*------------------------------------------------------------*)
 	(** Method to merge one state with its siblings *)
 	(*------------------------------------------------------------*)
-	method private merge_one_state queue (si : state_index) (look_in_queue : bool) : unit =
+	method private merge_one_state queue (si : state_index) (look_in_queue : bool) (callback : state_index -> state_index -> unit) : unit =
 		let options = Input.get_options () in
 
 		print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
@@ -2118,6 +2118,7 @@ class stateSpace (guessed_nb_transitions : int) =
 							(*Statistics*)
 							nb_merged#increment;
 							did_something := true;
+							callback si sj;
 
 							(*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
 							print_message Verbose_experiments ("[Merge] State " ^ (string_of_int si) ^ " is mergeable with " ^ (string_of_int sj));
@@ -2163,7 +2164,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(*------------------------------------------------------------*)
 	(*------------------------------------------------------------*)
-	method merge (queue : state_index list) : state_index list =
+	method merge (queue : state_index list) (callback : state_index -> state_index -> unit) : state_index list =
 
 	(*
 			(*TEMP: print transitions*)
@@ -2297,9 +2298,9 @@ class stateSpace (guessed_nb_transitions : int) =
 						main_merger tail;
 						if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 							match options#merge_candidates with
-							| Merge_candidates_visited -> self#merge_one_state queue s false
-							| Merge_candidates_queue -> self#merge_one_state queue s true
-							| Merge_candidates_ordered -> begin (self#merge_one_state queue s true) ; (self#merge_one_state queue s false) end
+							| Merge_candidates_visited -> self#merge_one_state queue s false callback
+							| Merge_candidates_queue -> self#merge_one_state queue s true callback
+							| Merge_candidates_ordered -> begin (self#merge_one_state queue s true callback) ; (self#merge_one_state queue s false callback) end
 					end
 		in
 

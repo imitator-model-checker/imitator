@@ -333,7 +333,7 @@ class stateSpace : int ->
 		method merge212 : state_index list -> state_index list
 
 		(* Merge refactor 2022 - DYLAN *)
-		method merge : state_index list -> state_index list
+		method merge : state_index list -> (state_index -> state_index -> unit) -> state_index list
 
 		(** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 		method empty_states_for_comparison : unit

@@ -4927,7 +4927,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := state_space#merge !queue;
+                    queue := state_space#merge !queue (fun _ _ -> ());
                     (match options#exploration_order with
                         | Exploration_queue_BFS_RS -> hashtbl_filter (state_space#test_state_index) rank_hashtable
                         | _ -> ();
@@ -5117,7 +5117,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := state_space#merge !new_states_after_merging;
+                new_states_after_merging := state_space#merge !new_states_after_merging (fun _ _ -> ());
             | Merge_212 ->
                 let eaten_states = state_space#merge212 !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;
