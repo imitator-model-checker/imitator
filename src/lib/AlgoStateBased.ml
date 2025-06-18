@@ -883,13 +883,27 @@ let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (
         model.transitions_description transition_index
     in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total "Entering compute_new_location_guards_updates…";
+	);
+
+
     (*** BEGIN code with local variables ***)
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copying location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display source_location));
+	);
+
 	(* Create an extended location *)
 	let copied_location : DiscreteState.global_location = DiscreteState.copy_location source_location in
+
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copied location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display copied_location));
+	);
+
 	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables copied_location local_variables_table in
 
     (* Get functions that enable reading / writing global variables at a given location *)
