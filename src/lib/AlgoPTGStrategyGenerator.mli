@@ -24,17 +24,7 @@ type strategy_entry =
 
 type location_strategy = strategy_entry list
   
-
-class locationStrategyMap : object 
-	val mutable internal_tbl : (location_strategy_key, location_strategy ref) Hashtbl.t
-	method replace : location_strategy_key -> location_strategy ref -> unit
-	method find : location_strategy_key -> location_strategy ref    
-    method iter : (location_strategy_key -> location_strategy ref -> unit) -> unit
-    method fold : 'c. (location_strategy_key -> location_strategy ref -> 'c -> 'c) -> 'c -> 'c
-	method is_empty : bool
-  method merge_keys : (location_strategy_key -> location_strategy_key) -> (location_strategy ref-> location_strategy ref -> location_strategy ref) -> unit
-end
-
+class locationStrategyMap : [location_strategy_key, location_strategy ref] DefaultHashTable.defaultHashTable
 
 val print_strategy : abstract_model -> strategy:locationStrategyMap -> unit
 
