@@ -33,12 +33,16 @@ class ['a, 'b] defaultHashTable (default : 'a -> 'b) = object
       fun key old_value -> 
         let merger = lookup_key_mapping key in 
         if merger = key then
-          Hashtbl.add new_tbl key old_value
+          (if not @@ Hashtbl.mem new_tbl key then Hashtbl.replace new_tbl key old_value)
         else 
-          let new_value = match Hashtbl.find_opt internal_tbl merger with 
+          let new_value = match Hashtbl.find_opt new_tbl merger with 
           | Some value -> merge_values value old_value
-          | None -> old_value in 
-          Hashtbl.add new_tbl merger new_value
+          | None -> match Hashtbl.find_opt internal_tbl merger with 
+            | Some value -> merge_values value old_value
+            | None -> old_value 
+          in 
+          Hashtbl.replace new_tbl merger new_value
     )
-    internal_tbl
+    internal_tbl;
+    internal_tbl <- new_tbl
 end
