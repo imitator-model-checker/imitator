@@ -411,7 +411,7 @@ end
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) ?state_predicate_avoid (state_space_ptg : stateSpacePTG)=
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	(************************************************************)
@@ -482,11 +482,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		result
 
 	val init_winning_zone_changed = ref false
-
-	(* Whether or not a state is accepting  *)
-	method private matches_state_predicate state_index =
-		let state = (state_space#get_state state_index) in
-		(State.match_state_predicate model state_predicate state) 
 
 	(* Negate a zone within a state (corresponds to taking the complement) *)
 	method private negate_zone zone state_index = 
@@ -611,24 +606,31 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Explores forward in order to discover winning states *)
 	method private explore state_index =
-		if not options#ptg_no_forced_uncontrollables then 
-			self#save_forced_moves state_index;
+		let state = state_space#get_state state_index in 
+		
 
-		let coverage_pruning = ref false in 
-		if self#matches_state_predicate state_index then 
-			begin 
-				winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
-				let location = (state_space#get_state state_index).global_location in 
-				let winning_zone_loc = locationWinningZone#find location in 
-				LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
-				waiting#add_all (self#state_set_to_update_items (depends#find state_index));
-				coverage_pruning := true
-			end;
+		let is_avoid_state = match state_predicate_avoid with 
+		| Some predicate ->  (State.match_state_predicate model predicate state) 
+		| None -> false in
 
-		coverage_pruning := !coverage_pruning && options#coverage_pruning;
+		let is_goal_state = State.match_state_predicate model state_predicate state in
 
-		begin 
-			match self#global_constraint_pruning state_index, !coverage_pruning with 
+		if is_avoid_state then 
+			(if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium @@ Printf.sprintf "\n\t Not adding sucessors of state %d due to avoid state" state_index)
+		else 
+			(if not options#ptg_no_forced_uncontrollables then self#save_forced_moves state_index;
+			if is_goal_state then 
+				begin 
+					winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
+					let location = (state_space#get_state state_index).global_location in 
+					let winning_zone_loc = locationWinningZone#find location in 
+					LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
+					waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+				end;
+
+			let coverage_pruning = is_goal_state && options#coverage_pruning in 
+			match self#global_constraint_pruning state_index, coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
@@ -636,7 +638,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					coverage_pruning_counter#increment;
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
-					let successors = state_space_ptg#compute_symbolic_successors state_index in
+					(let successors = state_space_ptg#compute_symbolic_successors state_index in
 					List.iter (fun s -> (depends#find s)#add state_index) successors;
 					let found_existing_state = 
 						List.fold_left (fun acc succ -> 
@@ -659,8 +661,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						depends#merge_keys state_space_ptg#merge_mapping (fun a b -> a#union b; a);
 						lastUpdate#merge_keys state_space_ptg#merge_mapping min);
 					if verbose_mode_greater Verbose_medium then 
-						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space)
-		end;
+						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space))
+			)
 
 
 	method private process_convex_winning_move state action bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
@@ -862,8 +864,10 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		waiting#add (EXPLORE initial_state_index);
 		state_space_ptg#passed_states#add initial_state_index;
 
+		let initial_state = state_space#get_state initial_state_index in 
+
 		(* If goal is init then initial winning zone is it's own constraint*)
-		if self#matches_state_predicate initial_state_index then
+		if State.match_state_predicate model state_predicate initial_state then
 			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
 			init_winning_zone_changed := true;
 

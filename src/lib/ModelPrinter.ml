@@ -1188,6 +1188,8 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 		| Win state_predicate -> "Win(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
 
+				(* Parametric timed game: reachability condition *)
+		| WinAvoid (state_predicate1, state_predicate2) -> "WinAvoid(" ^ (string_of_state_predicate model state_predicate1) ^ ", " ^ (string_of_state_predicate model state_predicate2) ^")"
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)
 	)

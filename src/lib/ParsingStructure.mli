@@ -694,6 +694,7 @@ type parsed_property_type =
 	(* Parametric timed game: reachability condition *)
 	| Parsed_Win of parsed_state_predicate
 
+	| Parsed_WinAvoid of parsed_state_predicate * parsed_state_predicate
 
 type unexpanded_parsed_property_type =
 	| Unexpanded_Parsed_Valid
@@ -737,6 +738,7 @@ type unexpanded_parsed_property_type =
 	| Unexpanded_Parsed_PRPC of unexpanded_parsed_state_predicate * parsed_pdomain * NumConst.t
 	| Unexpanded_Parsed_pattern of parsed_pattern
 	| Unexpanded_Parsed_Win of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_WinAvoid of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
 
 type parsed_property = {
 	(* Emptiness or synthesis *)

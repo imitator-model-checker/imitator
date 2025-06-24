@@ -2170,7 +2170,10 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 		(* Parametric timed game: reachability condition *)
 		| Parsed_Win parsed_state_predicate -> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
+		| Parsed_WinAvoid (parsed_state_predicate1, parsed_state_predicate2) -> 
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1)
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2)
 		end
 
 
@@ -2740,6 +2743,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		| Parsed_Win parsed_state_predicate ->
 			(* Return a property and no observer *)
 			Win (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		| Parsed_WinAvoid (parsed_state_predicate1, parsed_state_predicate2) ->
+			(* Return a property and no observer *)
+			WinAvoid (
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate1,
+				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate2
+			)
 			,
 			None
 		in

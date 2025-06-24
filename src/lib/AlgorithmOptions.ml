@@ -210,7 +210,7 @@ let default_state_comparison (property : AbstractProperty.abstract_property) : A
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> Inclusion_check
+	| Win _ | WinAvoid _ -> Inclusion_check
 
 
 
@@ -406,7 +406,7 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _
+	| Win _ | WinAvoid _
 		(* No reversed inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check || state_comparison_operator = Inclusion_check
 
@@ -597,7 +597,7 @@ let merge_needed (property : AbstractProperty.abstract_property) : bool =
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> false
+	| Win _ | WinAvoid _ -> false
 
 (*------------------------------------------------------------*)
 (** Returns whether the property requires a global clock measuring the absolute time *)
@@ -635,7 +635,8 @@ let needs_global_clock (property : AbstractProperty.abstract_property) : bool =
 	| Random_cartography _
 	| RandomSeq_cartography _
 	| PRPC _
-	| Win _
+	| Win _ 
+	| WinAvoid _
 		-> false
 
 	| EFtmin _
@@ -938,7 +939,7 @@ let supports_witness (property : AbstractProperty.abstract_property) : bool =
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> true
+	| Win _ | WinAvoid _ -> true
 
 
 (*------------------------------------------------------------*)
@@ -1057,7 +1058,7 @@ let supports_cumulative_pruning (property : AbstractProperty.abstract_property) 
 
 	(* Parametric timed game: reachability condition *)
 	(*** TODO: double check ***)
-	| Win _ -> true
+	| Win _ | WinAvoid _ -> true
 
 
 (*------------------------------------------------------------*)
@@ -1301,7 +1302,8 @@ let text_of_property (property : AbstractProperty.abstract_property) : string =
 
 	(* Parametric timed game: reachability condition *)
 	| Win _ -> "parametric timed game with reachability condition (" ^ synthesis_or_witness ^ ")"
-
+	
+	| WinAvoid _ -> "parametric timed game with reachability condition and avoid condition (" ^ synthesis_or_witness ^ ")"
 
 (************************************************************)
 (** Get the v0 of a property, if any *)
@@ -1344,7 +1346,7 @@ let v0_option_of_property (property : AbstractProperty.abstract_property) : Abst
 	| IMK _
 	| IMunion _
 
-	| Win _
+	| Win _ | WinAvoid _
 		-> None
 
 	| Cover_cartography (v0, _)
@@ -1434,7 +1436,7 @@ let accepting_state_predicates_of_property (property : AbstractProperty.abstract
 
 	| Cycle_through state_predicate
 	| PRP (state_predicate, _)
-	| Win (state_predicate)
+	| Win (state_predicate) | WinAvoid (state_predicate , _)
 		-> [state_predicate]
 
 	| ER (_, state_predicate_2)
