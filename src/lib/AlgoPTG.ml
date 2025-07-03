@@ -674,14 +674,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		let current_winning_zone_glob = locationWinningZone#find global_location_src in
 
-		let winning_zone_changed = 
-			let current_winning_zone_state = winningZone#find state in
-			(* Extend winning zone of STATE with newly found safe timed pred *)
-			if not @@ LinearConstraint.px_nnconvex_constraint_is_equal current_winning_zone_state safe_timed_pred then
-				(LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
-				true)
-			else false
-		in
+		let current_winning_zone_state = winningZone#find state in
+		(* Extend winning zone of STATE with newly found safe timed pred *)
+		LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
 
 		(* Make safe_timed_pred a partition of winning zone of LOCATION *)
 		LinearConstraint.px_nnconvex_difference_assign safe_timed_pred current_winning_zone_glob;		
@@ -709,20 +704,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				in
 				let strategy = locationStrategy#find global_location_src in 
 				strategy := strategy_entry :: !strategy;
-			end;
-		winning_zone_changed
+			end
 		
 
 
 	method private process_nnconvex_winning_move state action bad_zone winning_move = 
-		List.fold_left (||) false 
-		(List.map (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
-		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
+		List.iter (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
+		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move)
 
 
-	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
-		 return true if winning zone was changed otherwise false	 
-	*)
+	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy *)
 	method private backtrack_single_controllable_edge (transition, (dst : ptg_state)) src bad_zone =
 		let winning_move, dst_global_location = match dst with 
 			| NotInSP {global_location;px_constraint} ->
@@ -740,8 +731,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let action_index = StateSpace.get_action_from_combined_transition model transition in 
 		self#process_nnconvex_winning_move src (Action {action_index;transition;dst = dst_global_location}) bad_zone winning_move
 
-	(* Process a forced move of the environment 
-		return true if the winning zone was changed otherwise false *)
+	(* Process a forced move of the environment *)
 	method private process_forced_move state bad_zone forced_move = 
 		self#process_nnconvex_winning_move state Wait bad_zone forced_move
 
@@ -776,32 +766,31 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			)
 		in
 
-		let forced_moves_changed_winning_zone = self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index) in 
-		let winning_moves_changed_winning_zone = 
-			if options#ptg_no_strategy_generation then 
-				let {global_location;px_constraint} = (state_space#get_state state_index) in 
+		let orig_winning_zone = LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index in 
+		self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index);
+		if options#ptg_no_strategy_generation then 
+			let {global_location;px_constraint} = (state_space#get_state state_index) in 
 
-				let controllable_part = compute_moves_to_succesors 
-					(LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index)
-					controllable_edges
-					(function 
-						| InSP state_index -> winningZone#find state_index
-						| NotInSP {global_location;px_constraint} -> 
-							let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
-							LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
-							target_zone
-					)
-				in
-				let safe_timed_pred =  self#safe_timed_pred state_index controllable_part uncontrollable_part in 
-				LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred px_constraint;
-				let location_winning_zone = locationWinningZone#find global_location in 
-				LinearConstraint.px_nnconvex_union_assign location_winning_zone safe_timed_pred;
-				let changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) safe_timed_pred) in
-				if changed then (winningZone#replace state_index safe_timed_pred; true) else false
-			else
-			List.fold_left (||) false
-				(List.map(fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part) controllable_edges) in 
-		if winning_moves_changed_winning_zone || forced_moves_changed_winning_zone then 
+			let controllable_part = compute_moves_to_succesors 
+				(LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index)
+				controllable_edges
+				(function 
+					| InSP state_index -> winningZone#find state_index
+					| NotInSP {global_location;px_constraint} -> 
+						let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+						LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
+						target_zone
+				)
+			in
+			let safe_timed_pred =  self#safe_timed_pred state_index controllable_part uncontrollable_part in 
+			LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred px_constraint;
+			let location_winning_zone = locationWinningZone#find global_location in 
+			LinearConstraint.px_nnconvex_union_assign location_winning_zone safe_timed_pred;
+			winningZone#replace state_index safe_timed_pred
+		else
+			List.iter (fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part) controllable_edges;
+		let winning_zone_changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) orig_winning_zone) in 
+		if winning_zone_changed then 
 		begin
 			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
 			if state_index = state_space#get_initial_state_index then init_winning_zone_changed := true
