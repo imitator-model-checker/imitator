@@ -467,19 +467,23 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
 
+	method private predecessor_linear_general transition state_index guard pred_zone current_zone = 
+		let pxd_pred = DeadlockExtra.dl_predecessor model state_space state_index pred_zone guard current_zone transition in 	
+		LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred
+
+	method private predecessor_linear transition state_index current_zone =
+		let guard = state_space#get_guard model state_index transition in
+		let pred_zone = self#constr_of_state_index state_index in 
+		self#predecessor_linear_general transition state_index guard pred_zone current_zone
+
 	(* Computes the predecessor zone of current_zone using edge *)
 	method private predecessor_nnconvex transition state_index current_zone = 
 		let guard = state_space#get_guard model state_index transition in
 		let pred_zone = self#constr_of_state_index state_index in 
-		let constraints = List.map (fun z -> 
-			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state_index pred_zone guard z transition in 	
-			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
-			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
-			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
-		let result = LinearConstraint.false_px_nnconvex_constraint () in 
-		List.iter (LinearConstraint.px_nnconvex_union_assign result) constraints;
-		result
+		current_zone |> 
+		LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint |>
+		List.map (self#predecessor_linear_general transition state_index guard pred_zone) |>
+		LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints
 
 	val init_winning_zone_changed = ref false
 
@@ -541,23 +545,22 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
 		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
-		let uncontrollable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, _) -> 
-				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
-				uncontrollable_edges
-		in 
-		let controllable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition,_) -> 
-				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
+		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun (transition, succ_ptg_state) -> 
+				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
+				uncontrollable_edges in 
+		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun (transition, succ_ptg_state) ->
+				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
 				controllable_edges
 		in 
-		let uncontrollable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_guards 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone 
 		in
-		let controllable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_guards 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone 
 		in
 
 		let invariant = self#constr_of_state_index state_index in
@@ -568,17 +571,17 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			| true -> 
 				let forced_moves = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint invariant in
 
-				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_guards;
-				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_guards;
+				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_zone;
+				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_zone;
 				forced_moves
 			| false ->
 				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
 				
-				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_guards;
-				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_guards_closed;
+				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
+				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_zone_closed;
 
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_guards;
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_guards_closed; 
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_zone;
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed; 
 
 				LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
 				inv_bound_in
