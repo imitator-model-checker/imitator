@@ -411,7 +411,7 @@ end
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) ?state_predicate_avoid (state_space_ptg : stateSpacePTG)=
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	(************************************************************)
@@ -467,26 +467,25 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private constr_of_state_index state = (state_space#get_state state).px_constraint
 	method private get_global_location state = state_space#get_location (state_space#get_global_location_index state)
 
+	method private predecessor_linear_general transition state_index guard pred_zone current_zone = 
+		let pxd_pred = DeadlockExtra.dl_predecessor model state_space state_index pred_zone guard current_zone transition in 	
+		LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred
+
+	method private predecessor_linear transition state_index current_zone =
+		let guard = state_space#get_guard model state_index transition in
+		let pred_zone = self#constr_of_state_index state_index in 
+		self#predecessor_linear_general transition state_index guard pred_zone current_zone
+
 	(* Computes the predecessor zone of current_zone using edge *)
 	method private predecessor_nnconvex transition state_index current_zone = 
 		let guard = state_space#get_guard model state_index transition in
 		let pred_zone = self#constr_of_state_index state_index in 
-		let constraints = List.map (fun z -> 
-			(* TODO : Become independent on DeadlockExtra  - ie. make general method for convex pred *)
-			let pxd_pred = DeadlockExtra.dl_predecessor model state_space state_index pred_zone guard z transition in 	
-			let px_pred = LinearConstraint.pxd_hide_discrete_and_collapse pxd_pred in 
-			LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_pred
-			) @@ LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint current_zone in 
-		let result = LinearConstraint.false_px_nnconvex_constraint () in 
-		List.iter (LinearConstraint.px_nnconvex_union_assign result) constraints;
-		result
+		current_zone |> 
+		LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint |>
+		List.map (self#predecessor_linear_general transition state_index guard pred_zone) |>
+		LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints
 
 	val init_winning_zone_changed = ref false
-
-	(* Whether or not a state is accepting  *)
-	method private matches_state_predicate state_index =
-		let state = (state_space#get_state state_index) in
-		(State.match_state_predicate model state_predicate state) 
 
 	(* Negate a zone within a state (corresponds to taking the complement) *)
 	method private negate_zone zone state_index = 
@@ -546,23 +545,22 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
 		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
-		let uncontrollable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, _) -> 
-				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
-				uncontrollable_edges
-		in 
-		let controllable_guards = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition,_) -> 
-				LinearConstraint.pxd_hide_discrete_and_collapse @@ state_space#get_guard model state_index transition) 
+		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun (transition, succ_ptg_state) -> 
+				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
+				uncontrollable_edges in 
+		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
+			fun (transition, succ_ptg_state) ->
+				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
 				controllable_edges
 		in 
-		let uncontrollable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_guards 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone 
 		in
-		let controllable_guards_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
+		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_guards 
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone 
 		in
 
 		let invariant = self#constr_of_state_index state_index in
@@ -573,17 +571,17 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			| true -> 
 				let forced_moves = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint invariant in
 
-				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_guards;
-				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_guards;
+				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_zone;
+				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_zone;
 				forced_moves
 			| false ->
 				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
 				
-				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_guards;
-				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_guards_closed;
+				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
+				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_zone_closed;
 
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_guards;
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_guards_closed; 
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_zone;
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed; 
 
 				LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
 				inv_bound_in
@@ -611,24 +609,31 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Explores forward in order to discover winning states *)
 	method private explore state_index =
-		if not options#ptg_no_forced_uncontrollables then 
-			self#save_forced_moves state_index;
+		let state = state_space#get_state state_index in 
+		
 
-		let coverage_pruning = ref false in 
-		if self#matches_state_predicate state_index then 
-			begin 
-				winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
-				let location = (state_space#get_state state_index).global_location in 
-				let winning_zone_loc = locationWinningZone#find location in 
-				LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
-				waiting#add_all (self#state_set_to_update_items (depends#find state_index));
-				coverage_pruning := true
-			end;
+		let is_avoid_state = match state_predicate_avoid with 
+		| Some predicate ->  (State.match_state_predicate model predicate state) 
+		| None -> false in
 
-		coverage_pruning := !coverage_pruning && options#coverage_pruning;
+		let is_goal_state = State.match_state_predicate model state_predicate state in
 
-		begin 
-			match self#global_constraint_pruning state_index, !coverage_pruning with 
+		if is_avoid_state then 
+			(if verbose_mode_greater Verbose_medium then 
+				print_message Verbose_medium @@ Printf.sprintf "\n\t Not adding sucessors of state %d due to avoid state" state_index)
+		else 
+			(if not options#ptg_no_forced_uncontrollables then self#save_forced_moves state_index;
+			if is_goal_state then 
+				begin 
+					winningZone#replace state_index (nn_of_lin (self#constr_of_state_index state_index));
+					let location = (state_space#get_state state_index).global_location in 
+					let winning_zone_loc = locationWinningZone#find location in 
+					LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
+					waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+				end;
+
+			let coverage_pruning = is_goal_state && options#coverage_pruning in 
+			match self#global_constraint_pruning state_index, coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
@@ -636,7 +641,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					coverage_pruning_counter#increment;
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
-					let successors = state_space_ptg#compute_symbolic_successors state_index in
+					(let successors = state_space_ptg#compute_symbolic_successors state_index in
 					List.iter (fun s -> (depends#find s)#add state_index) successors;
 					let found_existing_state = 
 						List.fold_left (fun acc succ -> 
@@ -659,8 +664,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						depends#merge_keys state_space_ptg#merge_mapping (fun a b -> a#union b; a);
 						lastUpdate#merge_keys state_space_ptg#merge_mapping min);
 					if verbose_mode_greater Verbose_medium then 
-						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space)
-		end;
+						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space))
+			)
 
 
 	method private process_convex_winning_move state action bad_zone (winning_move : LinearConstraint.px_linear_constraint) =
@@ -672,14 +677,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		let current_winning_zone_glob = locationWinningZone#find global_location_src in
 
-		let winning_zone_changed = 
-			let current_winning_zone_state = winningZone#find state in
-			(* Extend winning zone of STATE with newly found safe timed pred *)
-			if not @@ LinearConstraint.px_nnconvex_constraint_is_equal current_winning_zone_state safe_timed_pred then
-				(LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
-				true)
-			else false
-		in
+		let current_winning_zone_state = winningZone#find state in
+		(* Extend winning zone of STATE with newly found safe timed pred *)
+		LinearConstraint.px_nnconvex_union_assign current_winning_zone_state safe_timed_pred;
 
 		(* Make safe_timed_pred a partition of winning zone of LOCATION *)
 		LinearConstraint.px_nnconvex_difference_assign safe_timed_pred current_winning_zone_glob;		
@@ -707,20 +707,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				in
 				let strategy = locationStrategy#find global_location_src in 
 				strategy := strategy_entry :: !strategy;
-			end;
-		winning_zone_changed
+			end
 		
 
 
 	method private process_nnconvex_winning_move state action bad_zone winning_move = 
-		List.fold_left (||) false 
-		(List.map (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
-		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move))
+		List.iter (fun g_i -> self#process_convex_winning_move state action bad_zone g_i) 
+		(LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint winning_move)
 
 
-	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy 
-		 return true if winning zone was changed otherwise false	 
-	*)
+	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy *)
 	method private backtrack_single_controllable_edge (transition, (dst : ptg_state)) src bad_zone =
 		let winning_move, dst_global_location = match dst with 
 			| NotInSP {global_location;px_constraint} ->
@@ -738,8 +734,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let action_index = StateSpace.get_action_from_combined_transition model transition in 
 		self#process_nnconvex_winning_move src (Action {action_index;transition;dst = dst_global_location}) bad_zone winning_move
 
-	(* Process a forced move of the environment 
-		return true if the winning zone was changed otherwise false *)
+	(* Process a forced move of the environment *)
 	method private process_forced_move state bad_zone forced_move = 
 		self#process_nnconvex_winning_move state Wait bad_zone forced_move
 
@@ -774,32 +769,31 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			)
 		in
 
-		let forced_moves_changed_winning_zone = self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index) in 
-		let winning_moves_changed_winning_zone = 
-			if options#ptg_no_strategy_generation then 
-				let {global_location;px_constraint} = (state_space#get_state state_index) in 
+		let orig_winning_zone = LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index in 
+		self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index);
+		if options#ptg_no_strategy_generation then 
+			let {global_location;px_constraint} = (state_space#get_state state_index) in 
 
-				let controllable_part = compute_moves_to_succesors 
-					(LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index)
-					controllable_edges
-					(function 
-						| InSP state_index -> winningZone#find state_index
-						| NotInSP {global_location;px_constraint} -> 
-							let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
-							LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
-							target_zone
-					)
-				in
-				let safe_timed_pred =  self#safe_timed_pred state_index controllable_part uncontrollable_part in 
-				LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred px_constraint;
-				let location_winning_zone = locationWinningZone#find global_location in 
-				LinearConstraint.px_nnconvex_union_assign location_winning_zone safe_timed_pred;
-				let changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) safe_timed_pred) in
-				if changed then (winningZone#replace state_index safe_timed_pred; true) else false
-			else
-			List.fold_left (||) false
-				(List.map(fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part) controllable_edges) in 
-		if winning_moves_changed_winning_zone || forced_moves_changed_winning_zone then 
+			let controllable_part = compute_moves_to_succesors 
+				(LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index)
+				controllable_edges
+				(function 
+					| InSP state_index -> winningZone#find state_index
+					| NotInSP {global_location;px_constraint} -> 
+						let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+						LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
+						target_zone
+				)
+			in
+			let safe_timed_pred =  self#safe_timed_pred state_index controllable_part uncontrollable_part in 
+			LinearConstraint.px_nnconvex_px_intersection_assign safe_timed_pred px_constraint;
+			let location_winning_zone = locationWinningZone#find global_location in 
+			LinearConstraint.px_nnconvex_union_assign location_winning_zone safe_timed_pred;
+			winningZone#replace state_index safe_timed_pred
+		else
+			List.iter (fun edge -> self#backtrack_single_controllable_edge edge state_index uncontrollable_part) controllable_edges;
+		let winning_zone_changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) orig_winning_zone) in 
+		if winning_zone_changed then 
 		begin
 			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
 			if state_index = state_space#get_initial_state_index then init_winning_zone_changed := true
@@ -862,8 +856,10 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		waiting#add (EXPLORE initial_state_index);
 		state_space_ptg#passed_states#add initial_state_index;
 
+		let initial_state = state_space#get_state initial_state_index in 
+
 		(* If goal is init then initial winning zone is it's own constraint*)
-		if self#matches_state_predicate initial_state_index then
+		if State.match_state_predicate model state_predicate initial_state then
 			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
 			init_winning_zone_changed := true;
 

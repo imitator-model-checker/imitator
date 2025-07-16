@@ -119,6 +119,7 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
 	| "Win"            { CT_WIN }
+	| "WinAvoid"	   { CT_WINAVOID }
 	| "within"         { CT_WITHIN }
 	| "list"           { CT_LIST }
 	| "stack"          { CT_STACK }

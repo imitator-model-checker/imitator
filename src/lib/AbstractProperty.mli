@@ -237,6 +237,9 @@ type property =
 	(* Parametric timed game: reachability condition *)
 	| Win of state_predicate
 
+	(* Parametric timed game: reachability condition + avoid condition *)
+	| WinAvoid of (state_predicate * state_predicate)
+
 
 
 type synthesis_type =
