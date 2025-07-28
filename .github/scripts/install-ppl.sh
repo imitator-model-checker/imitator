@@ -4,7 +4,7 @@
 PPL_VERSION=1.2
 
 # download PPL
-wget -q --no-check-certificate https://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
+wget -q --no-check-certificate https://support.bugseng.com/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
 unzip -qq ppl-${PPL_VERSION}.zip
 
 cd ppl-${PPL_VERSION}
@@ -13,9 +13,9 @@ patch -p0 <"${PATCH_FOLDER}/ppl_gc.patch"
 
 # Patch clang for OSX
 if [[ "$RUNNER_OS" = "macOS" ]]; then
-    # patch clang
-    patch -p0 <"${PATCH_FOLDER}/clang5.patch"
-    EXTRA_ARGS="--with-gmp=$(brew --prefix)"
+  # patch clang
+  patch -p0 <"${PATCH_FOLDER}/clang5.patch"
+  EXTRA_ARGS="--with-gmp=$(brew --prefix)"
 fi
 
 # compile ppl
