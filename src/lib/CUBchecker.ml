@@ -3716,6 +3716,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Initial constraint of the model projected onto P and all clocks non-negative *)
 		px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint;
 
+		(* Is in coalition*)
+		is_in_coalition = model.is_in_coalition;
+		(* Has a coalition *)
+		has_coalition = model.has_coalition;
+		informations = model.informations;
 		(* Property defined by the user *)
 		(*** TODO ***)
 		(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)

@@ -242,7 +242,7 @@ class algoIMK (model : AbstractModel.abstract_model) ((*property*)_ : AbstractPr
 			end;*)
 			
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state None None in
 		
 		begin
 		match addition_result with

@@ -25,6 +25,7 @@ open AbstractProperty
 open AlgoStateBased
 open Statistics
 open State
+open Exceptions
 
 
 
@@ -119,7 +120,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				
 				(*** NOTE: do NOT do it if NOT cumulative_pruning ***)
 				
-				if (options#cumulative_pruning) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
+				if ((options#cumulative_pruning) || model.has_coalition) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
 					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
 				)else(
 					(* The constraint is new! *)
@@ -242,10 +243,12 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		
 		(* Reset the mini-cache (for the p-constraint) *)
 		self#reset_minicache;
+
+		let action_index = StateSpace.get_action_from_combined_transition model combined_transition in 
 		
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
-		
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state (Some source_state_index) (Some action_index) in
+
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in
 		
@@ -271,6 +274,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			
 				(*** NOTE: do NOT perform this test depending on the option ***)
 				if options#cumulative_pruning then(
+				(* if options#cumulative_pruning then(	 *)
 					(* Check whether new_state.px_constraint <= synthesized_constraint *)
 					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 						(* Print some information *)
@@ -294,7 +298,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Retrieve the new state index *)
 		(*** HACK ***)
 		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
-		
+			
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
 
@@ -308,7 +312,16 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
-			self#terminate_if_witness property;
+			if state_space#has_coalition then(
+				if property.synthesis_type = Witness then(
+					(* state_space#display_all_strategies (model.location_names); *)
+					self#terminate_if_witness_strategy property new_state_index;
+				);
+				if property.synthesis_type = Synthesis then(
+					self#synthesis_strategy property new_state_index;
+				);
+			) else(
+			self#terminate_if_witness property; )
 		); (* end if target *)
 
 
@@ -318,9 +331,10 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		(* The state is kept in any case *)
 		true
-(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
-	
 
+
+(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
+ 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

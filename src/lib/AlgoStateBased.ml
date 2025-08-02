@@ -2697,7 +2697,6 @@ let intersect_with_timed_interval_constraint_option  (model : AbstractModel.abst
 
 
 
-
 (************************************************************)
 (************************************************************)
 (* Types *)
@@ -2812,6 +2811,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	val nb_POSITIVE_EXAMPLES_MAX : int = 6
 	val nb_NEGATIVE_EXAMPLES_MAX : int = 6
 
+	(*** Useful for strategic operations : memorize the tuple (wining state, constraint) if needed ***)
+
+	val mutable winning_states_and_constraint : state_index list = []
 
 	(*------------------------------------------------------------*)
 	(* Counters *)
@@ -2926,6 +2928,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(*** NOTE: here, we use the mini-cache system ***)
 		let p_constraint = self#compute_p_constraint_with_minicache px_linear_constraint in
+		
+		(* let str_p_constraint = LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint in
+		let str_synthetized_cstr = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint in
+		Printf.printf "state Constraint: %s\n\n" str_p_constraint;
+		Printf.printf "synthetisized Constraint: %s\n\n" str_synthetized_cstr; *)
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
@@ -3316,11 +3323,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model successor));
 					);
 
-					(* Try to add the state to the state space *)
+					(* Try to add the state to the state space *) (* succesor and action_index add to manage strategic computation*)
 					let added : bool = self#add_a_new_state source_state_index combined_transition successor in
 
 					(* Update *)
-					has_successors := !has_successors || added;
+					has_successors := !has_successors || added;					
 
 				) successors;
 
@@ -4155,6 +4162,33 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			raise TerminateAnalysis;
 		)
 
+	(* Define what to do when a target state is find in a strategic state_space with a witness property for each covered Algo*)
+	method terminate_if_witness_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		if abstract_property.synthesis_type = Witness then (
+			let strategy_found () =
+			(* Update termination status *)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			self#print_algo_message Verbose_standard "The strategy guaranteeing the property is:\n";
+			winning_states_and_constraint <- [target_state_index];
+		
+			termination_status <- Some Result.Witness_found;
+		
+			raise TerminateAnalysis
+			in
+			match abstract_property.property with
+			| EF _ -> strategy_found ()
+			| AGnot _ -> state_space#kill_strategy target_state_index  (* Kill the state and cut the branch if taget state found in AGnot*)
+			| EU _ -> strategy_found()
+			| _ -> ()  (* Add some more Algo later here *)
+		)
+
+	(* Define what to do when a target state is find in a strategic state_space with a strategic property for each covered Algo*)
+	method synthesis_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		match abstract_property.property with
+		| EF _  -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| AGnot _ -> state_space#kill_strategy target_state_index 
+		| EU _ -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| _ -> () (* Add some more Algo later here *)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
@@ -5003,7 +5037,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		bfs_current_depth <- 1;
 
 		(* To check whether the time limit / state limit is reached *)
-		limit_reached <- Keep_going;
 
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		algorithm_keep_going <- true;
@@ -5017,6 +5050,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
 		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
+			(* state_space#display_all_strategy; *)
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -5257,9 +5291,28 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
 		(* Create the state space *)
-		state_space <- new StateSpace.stateSpace guessed_nb_transitions;
+		state_space <- new StateSpace.stateSpace guessed_nb_transitions ;
+		if model.has_coalition then (
 
-		(* Check whether the algorithm should immediately terminate because of an unsatisfiable initial state *)
+			(* Construire la liste des automates dans la coalition *)
+			let in_coalition =
+			  List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
+			in
+		  
+			(* if (List.length in_coalition) < ((model.nb_automata+1)/2) then ( *)
+			(match self#algorithm_name with
+			| "AGnot" -> 
+				options#set_memoized_strategies_inclusion;
+				options#deactivate_cumulative_pruning;
+			| _ -> options#deactivate_cumulative_pruning;);
+		
+
+			(* Le nombre de "vrais" actions *)
+			let nb_sync_action =
+				List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in
+
+			state_space#strategy_initialisation model.has_coalition nb_sync_action in_coalition model.informations model.automata_per_action;
+		);
 		let termination_at_initial_state : Result.imitator_result option = self#try_termination_at_initial_state in
 
 		match termination_at_initial_state with
@@ -5274,7 +5327,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		| None ->
 
 			(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state with
+		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state None None with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
 				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

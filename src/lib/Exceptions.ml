@@ -80,3 +80,5 @@ exception TypeError of string
 
 (* Used when a function isn't found *)
 exception UndefinedFunction of string
+
+exception NoAliveStrategy

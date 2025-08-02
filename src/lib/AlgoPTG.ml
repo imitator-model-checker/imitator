@@ -152,7 +152,7 @@ end
 
 let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback = 
 	List.filter_map (fun (transition, s) -> 
-		let addition_result =  state_space#add_state comparison_operator None s in 
+		let addition_result =  state_space#add_state comparison_operator None s None None in 
 		callback addition_result transition
 	) transitions_and_states
 
@@ -161,7 +161,7 @@ class stateSpacePTG_OTF model options = object
 	val mutable passed_states = new State.stateIndexSet
 	method initialize_state_space () = 		
 		let state = AlgoStateBased.create_initial_state options model false in
-		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
+		let _ = state_space#add_state AbstractAlgorithm.No_check None state None None in ()
 	method compute_symbolic_successors source_state_index = 
 		if passed_states#mem source_state_index then 
 			state_space#get_successors_with_combined_transitions source_state_index
@@ -188,7 +188,7 @@ class stateSpacePTG_full model options = object
 	method initialize_state_space () = 		
 		print_exp ("PTG: Generating full statespace (not on the fly)");
 		let state = AlgoStateBased.create_initial_state options model false in
-		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
+		let _ = state_space#add_state AbstractAlgorithm.No_check None state None None in
 		let process_successors_from_state_index source_state_index = 
 			let state = state_space#get_state source_state_index in 
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in

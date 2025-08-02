@@ -25,6 +25,7 @@ open Statistics
 open AbstractModel
 open Result
 
+
 (************************************************************)
 (* Statistics *)
 (************************************************************)
@@ -266,6 +267,25 @@ let add_custom_details _ =
         add_custom_details_delimiters (Logger.json_string_of_details ())
     else
         ""
+
+
+let string_strategy (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) : string =
+  let winning_states = state_space#get_winning_states in
+  let buffer = Buffer.create (List.length winning_states * 500) in
+
+  List.iter (fun state_idx ->
+    let formatted = state_space#format_strategy_index
+      state_idx
+      model.automata_names
+      model.location_names
+      model.action_names
+      model.variable_names
+    in
+    Buffer.add_string buffer formatted
+  ) winning_states;
+
+  Buffer.contents buffer
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -524,6 +544,13 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 	(* Handle the constraint nature separately *)
 	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint single_synthesis_result.result in
 
+	let strategy_str =
+	if model.has_coalition then
+		string_strategy model single_synthesis_result.state_space
+	else
+		""
+	in
+
 	(* Prepare the string to write *)
 	let file_content =
 		(* 1) Header *)
@@ -541,6 +568,8 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 
 		(* 4) The actual result with delimiters *)
 		^ (add_constraints_delimiters result_str)
+		^ "\n-----------------------------------------------------------\n\n"
+		^ (strategy_str)
 
 		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"

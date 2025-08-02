@@ -100,6 +100,12 @@ type simple_abstract_model = {
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
+
+	(* Is in coalition*)
+	is_in_coalition : automaton_index -> bool;
+	(* Has a coalition *)
+	has_coalition : bool;
+	informations : (automaton_index array) array;
 }
 
 type location_names = automaton_index -> location_index -> location_name

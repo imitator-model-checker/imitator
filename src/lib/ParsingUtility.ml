@@ -252,6 +252,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
 		
+		
 		Some parsed_property
 	)else(
 		None

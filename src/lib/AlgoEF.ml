@@ -57,6 +57,20 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 
+	if model.has_coalition then (
+		
+		(* Garder uniquement les plus grandes stratégies *)
+		let filtered_strategies = state_space#keep_different_winning_strategies winning_states_and_constraint in
+
+		(* Affichage des stratégies conservées *)
+		state_space#display_strategy_constraint_index_list filtered_strategies model.automata_names model.location_names model.action_names model.variable_names;
+
+		let long = List.length filtered_strategies in
+		print_message Verbose_standard ("Nombre d'états gagnants avec stratégie maximale : " ^ (string_of_int long) ^ ".");
+
+		state_space#initialize_winning_states filtered_strategies;
+
+	);
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
@@ -72,7 +86,7 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 		(* Branching between Witness/Synthesis and Exemplification *)
 		if property.synthesis_type = Exemplification then(
 			(* Return the result *)
-			Runs_exhibition_result
+			Runs_exhibition_result 
 			{
 				(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
 				(*** NOTE: use rev since we added the runs by reversed order ***)

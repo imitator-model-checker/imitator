@@ -369,6 +369,7 @@ let print_header_string () =
 	^ "*                          LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*        LIPN, Université Sorbonne Paris Nord & CNRS, France  *\n"
 	^ "*  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France  *\n"
+	^ "*                      Phase de Test par Adrien actuellement  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                             *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash_info)) " ") ^ git_branch_and_hash_info ^ "  *\n"

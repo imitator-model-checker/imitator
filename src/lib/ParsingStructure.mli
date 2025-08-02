@@ -244,6 +244,9 @@ type parsed_location = {
 
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
+type parsed_automaton_namelist = automaton_name list
+
+type parsed_automaton_namelist_list = (automaton_name * (automaton_name list)) list
 
 type parsed_template_definition = {
     template_name       : template_name;
@@ -572,7 +575,12 @@ type parsed_property_type =
 	(* Parametric timed game: reachability condition *)
 	| Parsed_Win of parsed_state_predicate
 
+	(*------------------------------------------------------------*)
+	(* Stategies *)
+	(*------------------------------------------------------------*)
+	| Parsed_Strategies of parsed_automaton_namelist * parsed_property_type
 
+	| Parsed_Large_Strategies of parsed_automaton_namelist_list * parsed_property_type
 
 type parsed_property = {
 	(* Emptiness or synthesis *)

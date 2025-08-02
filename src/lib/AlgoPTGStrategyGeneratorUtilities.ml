@@ -107,7 +107,12 @@ type simple_abstract_model = {
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
-	
+
+	(* Is in coalition*)
+	is_in_coalition : automaton_index -> bool;
+	(* Has a coalition *)
+	has_coalition : bool;
+  informations : (automaton_index array) array;
 }
 
 
@@ -176,6 +181,9 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       initial_constraint = simple_model.initial_constraint;
       initial_p_constraint = simple_model.initial_p_constraint;
       px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_false_constraint();
+      is_in_coalition = simple_model.is_in_coalition;
+      has_coalition = simple_model.has_coalition;
+      informations = simple_model.informations;
   }
 
 let generate_simple_model (system_model : abstract_model) 
@@ -230,7 +238,10 @@ let generate_simple_model (system_model : abstract_model)
     automaton_of_transition = (fun _ -> 0);
     initial_location = DiscreteState.make_location [(0,0)] [];
     initial_constraint = system_model.initial_constraint;
-    initial_p_constraint = system_model.initial_p_constraint;
+    initial_p_constraint = system_model.initial_p_constraint;      
+    is_in_coalition = system_model.is_in_coalition;
+    has_coalition = system_model.has_coalition;
+    informations = system_model.informations;
   }
 
 let generate_abstract_controller_model (system_model : abstract_model)

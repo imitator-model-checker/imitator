@@ -270,6 +270,8 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		val nb_POSITIVE_EXAMPLES_MAX : int
 		val nb_NEGATIVE_EXAMPLES_MAX : int
 
+		val mutable winning_states_and_constraint : state_index list 
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
@@ -392,6 +394,10 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method terminate_if_witness : AbstractProperty.abstract_property -> unit
+
+		method terminate_if_witness_strategy : AbstractProperty.abstract_property -> state_index -> unit
+
+		method synthesis_strategy : AbstractProperty.abstract_property -> state_index ->  unit
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

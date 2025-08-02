@@ -126,7 +126,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 		(* Add it to the state space *)
 		(*** BEGIN copied from AlgoStateBased ***)
 		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state with
+		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state None None with
 			(* The state is necessarily new as the state space was empty *)
 			| StateSpace.New_state state_index -> state_index
 			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

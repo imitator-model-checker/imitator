@@ -74,6 +74,7 @@ let resolve_property l =
 	CT_U CT_U_timed
 	CT_VALID
 	CT_W CT_W_timed CT_WIN CT_WITHIN
+	CT_BEG_COALITION CT_END_COALITION
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -346,9 +347,14 @@ property:
 	/*------------------------------------------------------------*/
 	| CT_WIN state_predicate { Parsed_Win ($2) }
 
+	/*------------------------------------------------------------*/
+	/* Stategies */
+	/*------------------------------------------------------------*/
+	| CT_BEG_COALITION name_list CT_END_COALITION property { Parsed_Strategies ($2,$4) }
+
+	| CT_BEG_COALITION name_list_paren CT_END_COALITION property {Parsed_Large_Strategies ($2,$4)}
+
 ;
-
-
 /************************************************************/
 pattern:
 /************************************************************/
@@ -689,11 +695,25 @@ float:
 /************************************************************/
 /** NAMES, etc. */
 /************************************************************/
+name_list:
+	| name_nonempty_list { $1 }
+	| { [] }
+;
 
 
 name_nonempty_list:
 	NAME COMMA name_nonempty_list { $1 :: $3}
 	| NAME comma_opt { [$1] }
+;
+
+name_list_paren:
+	| name_nonempty_list_paren { $1 }
+	| { [] }
+;
+
+name_nonempty_list_paren:
+  | NAME LPAREN name_list RPAREN COMMA name_nonempty_list_paren { ($1, $3) :: $6 }
+  | NAME LPAREN name_list RPAREN { [($1, $3)] }
 ;
 
 /************************************************************/
