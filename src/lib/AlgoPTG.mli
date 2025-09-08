@@ -29,8 +29,6 @@ class virtual stateSpacePTG : object
 	method virtual initialize_state_space : unit -> unit
 	method virtual compute_symbolic_successors : state_index -> state_index list
 	method virtual unexplored_successors : int
-	method virtual merge_mapping : state_index -> state_index
-	method virtual merge_occured : bool
 	method virtual passed_states : State.stateIndexSet
 	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
 end
@@ -40,8 +38,6 @@ class stateSpacePTG_OTF : AbstractModel.abstract_model -> Options.imitator_optio
 	method initialize_state_space : unit -> unit
 	method compute_symbolic_successors : state_index -> state_index list
 	method unexplored_successors : int
-	method merge_mapping : state_index -> state_index
-	method merge_occured : bool
 	method passed_states : State.stateIndexSet
 	method get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
 end
@@ -51,8 +47,6 @@ class stateSpacePTG_full : AbstractModel.abstract_model -> Options.imitator_opti
 	method initialize_state_space : unit -> unit
 	method compute_symbolic_successors : state_index -> state_index list
 	method unexplored_successors : int
-	method merge_mapping : state_index -> state_index
-	method merge_occured : bool
 	method passed_states : State.stateIndexSet
 	method get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
 end

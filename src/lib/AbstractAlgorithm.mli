@@ -239,12 +239,6 @@ type state_comparison_operator =
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
 
-	(* STRONGER VERSION OF DOUBLE INCLUSION by Mikael *)
-	(* Does not add the new state if it is included in another state, or if other states are included into the current state,
-	   in which case the new state replaces the first old one in the state space as well as removing the rest of the included states.
-	   Might reduce the state space size (side effect) *)
-	| Strong_Double_Inclusion_check
-
 
 
 (************************************************************)

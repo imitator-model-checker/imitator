@@ -46,8 +46,6 @@ type addition_result =
 	| State_already_present of state_index
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
-	(* The new state replaced a several former states (because the newer is larger), returns the first old state index and a list of removed states *)
-	| State_replacing_several of (state_index * state_index list)
 
 (************************************************************)
 (** Concrete run *)

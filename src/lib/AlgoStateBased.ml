@@ -2831,8 +2831,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(** The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
-	val mutable state_indices_removed_by_strong_double_inclusion : State.state_index list = []
-
 	(** Variable to remind of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
@@ -3423,7 +3421,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				| StateSpace.New_state _ -> "NEW STATE"
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
-				| StateSpace.State_replacing_several _ -> "BIGGER STATE than several former states"
 			 in
 			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "`: ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
@@ -5086,8 +5083,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				if List.mem source_state_index state_indices_removed_by_strong_double_inclusion then 
-					current_post_n_plus_1 else
 				((* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 

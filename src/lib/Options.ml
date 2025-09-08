@@ -475,8 +475,6 @@ class imitator_options =
 					comparison_operator <- Some AbstractAlgorithm.Including_check
 				else if comparison_operator_string = "doubleinclusion" then
 					comparison_operator <- Some AbstractAlgorithm.Double_inclusion_check
-				else if comparison_operator_string = "strongdoubleinclusion" then
-					comparison_operator <- Some AbstractAlgorithm.Strong_Double_Inclusion_check
 				else(
 					print_error ("The value of `-comparison` `" ^ comparison_operator_string ^ "` is not valid.");
 					Arg.usage speclist usage_msg;

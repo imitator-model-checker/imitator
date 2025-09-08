@@ -47,9 +47,6 @@ type addition_result =
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
 
-	(* The new state replaced a several former states (because the newer is larger), returns the first old state index and a list of removed states *)
-	| State_replacing_several of (state_index * state_index list)
-
 (************************************************************)
 (* Transitions *)
 (************************************************************)
@@ -1500,10 +1497,6 @@ class stateSpace (guessed_nb_transitions : int) =
 				}
 			)else state_to_look_for in
 
-			(* For strong including check *)
-			let eaten_state_indices = ref [] in 
-			let representative_state_index_option = ref None in 
-
 			(* Iterate on each state *)
 			List.iter (fun (state_index : State.state_index) ->
 				let state = self#get_state state_index in
@@ -1595,58 +1588,9 @@ class stateSpace (guessed_nb_transitions : int) =
 							(* Stop looking for states *)
 							raise (Found_new state_index)
 						))
-					| Strong_Double_Inclusion_check -> 
-						(* First check: new <= old *)
-						(* Invariant (to be confirmed): IF Strong double inclusion check is selected and new <= old, 
-							then there exists no state old' in the state space such that old' <= new. 
-							Proof sketch: If that was the case then old' <= old, so old would already have eaten old' by previous inclusion OR strong including check
-							depending on the order of addition *)
-						statespace_dcounter_nb_state_comparisons#increment;
-						if State.state_included_in state_to_look_for state clocks_to_remove_in_comparisons then(
-							(* Statistics *)
-							statespace_dcounter_nb_states_included#increment;
-							(* Because of the above invariant we can safely stop now *)
-							raise (Found_old state_index)
-						)
-						(* Second check: old <= new *)
-						else(
-						statespace_dcounter_nb_state_comparisons#increment;
-						if State.state_included_in state state_to_look_for clocks_to_remove_in_comparisons then (
-							(* Print some information *)
-							print_message Verbose_medium ("Found an old state < the new state");
-
-							match !representative_state_index_option with 
-							| Some _ -> 
-							  eaten_state_indices := state_index :: !eaten_state_indices
-							| None -> 
-							  (* Replace old with new *)
-							  self#replace_constraint state_index state_to_look_for.px_constraint;
-							  (* The representative for future merges has been found *)
-							  representative_state_index_option := Some state_index;
-
-							(* Statistics *)
-							statespace_dcounter_nb_states_including#increment;	
-						))
-
 			) old_states;
-			(* If states have been eaten then a Strong including check has taken place *)
-			match !representative_state_index_option with 
-			| Some representative_state_index -> 
-				if !eaten_state_indices = [] then 
-					(* If no states were eaten, then we can simply signal a normal including check has happened *)
-					Some (State_replacing representative_state_index)
-				else
-					(* Merge all included states into the representative index *)
-					(self#merge_states_and_transitions representative_state_index !eaten_state_indices;
-
-					(* Print information *)
-					print_message Verbose_medium (Printf.sprintf "Strong including check merging %s into %s" 
-					(string_of_list_of_string (List.map string_of_state_index !eaten_state_indices))
-					(string_of_state_index representative_state_index));
-
-					Some (State_replacing_several (representative_state_index, !eaten_state_indices)))
-			| None -> None
-
+			(* Not found! *)
+			None
 		)	with
 			| Found_old state_index -> Some (State_already_present state_index)
 			| Found_new state_index -> Some (State_replacing state_index)
@@ -1666,9 +1610,6 @@ class stateSpace (guessed_nb_transitions : int) =
 		| Some (State_replacing _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `State_replacing` denotes that the state space may have been defined in a function presumably without side-effects")
 		(* Impossible situation: this does not happen *)
 		| Some (New_state _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `New_state` cannot happen as find_state_index does not create new states")
-		(* Impossible situation: this does not happen *)
-		| Some (State_replacing_several _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `State_replacing_several` denotes that the state space may have been defined in a function presumably without side-effects")
-
 
 
 

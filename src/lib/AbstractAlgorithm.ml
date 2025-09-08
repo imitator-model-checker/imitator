@@ -242,12 +242,6 @@ type state_comparison_operator =
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
 
-	(* STRONGER VERSION OF DOUBLE INCLUSION by Mikael *)
-	(* Does not add the new state if it is included in another state, or if other states are included into the current state,
-	   in which case the new state replaces the first old one in the state space as well as removing the rest of the included states.
-	   Might reduce the state space size (side effect) *)
-	| Strong_Double_Inclusion_check
-
 
 (************************************************************)
 (* Predicates on mode *)
@@ -347,8 +341,6 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
-
-	| Strong_Double_Inclusion_check -> "strong double inclusion check"
 
 let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
 	| Merge_candidates_ordered	-> "ordered"
