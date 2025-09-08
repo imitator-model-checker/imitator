@@ -79,6 +79,10 @@ type ptg_state =
 | InSP of state_index
 | NotInSP of State.state
 
+let zone_of_ptg_state state_space = function
+	| InSP state_index -> let state : State.state = (state_space#get_state state_index) in state.px_constraint
+	| NotInSP state -> state.px_constraint
+
 class virtual stateSpacePTG  = object(self)
 	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 	method state_space = state_space
