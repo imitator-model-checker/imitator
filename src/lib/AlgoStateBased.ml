@@ -1462,8 +1462,16 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
-
+		let new_constraint = 
+			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+			(* Expand to entire invariant if this abstraction is turned on *)
+			if options#ptg_abstraction then 
+				Option.map 
+				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
+				k
+			else k
+		in
+				
 		(* Check the satisfiability *)
 		match new_constraint with
 			| None ->

@@ -274,6 +274,8 @@ class imitator_options =
 		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
 		val mutable ptg_picking_strategy = AbstractAlgorithm.SingleQueue
 
+		val mutable ptg_abstraction = false
+
 		(* process again green states *)
 		val mutable recompute_green					= false
 
@@ -404,6 +406,7 @@ class imitator_options =
 		method ptg_no_strategy_generation = ptg_no_strategy_generation
 		method ptg_no_strategy_printing = ptg_no_strategy_printing
 		method ptg_picking_strategy = ptg_picking_strategy
+		method ptg_abstraction = ptg_abstraction
 
 		method states_limit							= states_limit
 		method statistics							= statistics
@@ -1121,6 +1124,9 @@ class imitator_options =
 					 Int set_ptg_waiting_list_frontier_param_step; 
 					 Int set_ptg_waiting_list_frontier_param_update]),
 					 "In game algorithms: Set the depth parameters for frontier strategy (if enabled). Usage: init step update");
+				
+				("-PTG-abstraction", Unit (fun _ -> ptg_abstraction <- true), "In game algorithms: Enable a coarse abstraction where states are defined only by their discrete part");
+
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]
 				");

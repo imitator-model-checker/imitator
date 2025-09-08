@@ -1351,8 +1351,8 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(* Return a new location_index for a given location, unless it is already stored in the location indexes hashtable *)
-	method private new_location_index (location : DiscreteState.global_location) : location_index =
-		let new_index = try (
+	method private new_location_index (location : DiscreteState.global_location) : location_index * bool =
+		let new_index, is_new = try (
 (*			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total ("Trying to find global location index in `index_of_locations`");
 				print_message Verbose_total ("Current state space:");
@@ -1365,7 +1365,7 @@ class stateSpace (guessed_nb_transitions : int) =
 (* 			print_message Verbose_total ("Global location index " ^ (string_of_int location_index) ^ " found in `index_of_locations`"); *)
 
 			(* Return *)
-			location_index
+			location_index, false
 		) with Not_found -> (
 (* 			print_message Verbose_total ("Global location index not found in `index_of_locations`"); *)
 			(* If not found: add it *)
@@ -1378,10 +1378,10 @@ class stateSpace (guessed_nb_transitions : int) =
 			(* Check length (COULD BE REMOVED) *)
 			(* if DynArray.length state_space.locations <> Hashtbl.length state_space.index_of_locations then(
 				raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
-				new_index;
+				new_index, true;
 		) in
 		(* Return new index *)
-		new_index
+		new_index, is_new
 
 	(** Perform the insertion of a new state in a state space *)
 	method private insert_state location_index (new_state : state) =
@@ -1434,7 +1434,19 @@ class stateSpace (guessed_nb_transitions : int) =
 	method private find_state_index (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (state_to_look_for : State.state) : addition_result option =
 		let result : addition_result option =
 
-		let location_index = self#new_location_index state_to_look_for.global_location in
+		let location_index, is_new = self#new_location_index state_to_look_for.global_location in
+
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		if options#ptg_abstraction then 
+			if is_new then 
+				None
+			else
+				let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
+				Some (State_already_present (List.hd old_states))
+		else
+		
 
 		(* Shortcut: If no check requested: does not test anything *)
 		if state_comparison = No_check then (
@@ -1463,8 +1475,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			);
 
 			(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
-			(* Retrieve the input options *)
-			let options = Input.get_options () in
+
 			let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
 				match global_time_clock_option with
 				(* Nothing to do *)
@@ -1674,7 +1685,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		match self#find_state_index state_comparison global_time_clock_option new_state with
 		(* Not found: insert state *)
 		| None ->
-			let location_index = self#new_location_index new_state.global_location in
+			let location_index, _ = self#new_location_index new_state.global_location in
 			let new_state_index = self#insert_state location_index new_state in
 
 			(* Print some information *)
@@ -1802,7 +1813,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_message Verbose_high "Merging: update hash table";
 		let the_state = self#get_state merger_state_index in
 		let l = the_state.global_location in
-		let li = self#new_location_index l in
+		let li, _ = self#new_location_index l in
 		(* Get all states with that hash *)
 
 		let bucket = Hashtbl.find_all state_space.states_for_comparison li in
@@ -1841,7 +1852,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		let s = self#get_state si in
 		let l = s.global_location in
-		let location_index = self#new_location_index l in
+		let location_index, _ = self#new_location_index l in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 
@@ -1862,7 +1873,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
 		let s = self#get_state si in
 		let location = s.global_location in
-		let location_index = self#new_location_index location in
+		let location_index, _ = self#new_location_index location in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 
