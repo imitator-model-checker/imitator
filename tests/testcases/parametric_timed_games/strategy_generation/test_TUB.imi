@@ -1,0 +1,24 @@
+uncontrollable actions: u1,u2;
+
+var x,y,z:clock;
+
+automaton test
+
+actions: u1,u2;
+
+loc l0: invariant z<5
+    when True do {x:=0} sync u1 goto l1;
+
+loc l1: invariant x<5
+    when y>=5 do {} sync u2 goto l2;
+
+accepting loc l2: invariant True
+    when True goto l2;
+end
+
+init := loc[test] = l0
+     & x=0
+     & y=0
+     & z=0
+     ;
+end

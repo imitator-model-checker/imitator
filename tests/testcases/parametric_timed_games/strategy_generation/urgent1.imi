@@ -1,0 +1,32 @@
+
+uncontrollable actions: u ;
+
+var 
+    x,y : clock;
+
+automaton plate
+
+actions: c, u;
+
+loc l0 : invariant True
+    when x = 1 do {y:=0} sync c goto l1;
+
+urgent loc l1 : invariant True
+    when x = 2 sync u goto goal;
+
+accepting loc goal : invariant True
+    when True goto goal;
+
+end 
+
+
+
+init := {
+    discrete = 
+        loc[plate] <- l0
+    ;
+    continuous = x = 0
+    ;
+}
+
+end
