@@ -193,26 +193,6 @@ class transitionManager = object
 end
 
 
-let location_name_of_global_location (model : abstract_model) (global_location : DiscreteState.global_location) =
-  let string_of_location_list (model : abstract_model) location_list = 
-    let location_names = List.mapi model.location_names location_list in 
-    let location_list_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") location_names) in
-    String.sub location_list_string 0 (String.length location_list_string-1)
-  in
-
-  let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
-    if List.length discrete_mapping_list = 0 then 
-      ""
-    else
-      let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s_is_%s" (model.variable_names index) (string_of_value value)) discrete_mapping_list in  
-      let discrete_valuations_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") discrete_valuation_strings) in 
-      String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-1)
-  in
-  let location_list, discrete_mapping_list = locations_and_discrete_of_global_location model global_location in  
-  Printf.sprintf "%s__%s" (string_of_location_list model location_list) (string_of_discrete_mapping_list model discrete_mapping_list)
-
-
-
 let controller_synthesis (system_model : AbstractModel.abstract_model) (state_space : stateSpace) (options : Options.imitator_options) (strategy : locationStrategyMap) ~callback =
   let fresh_action, get_nb_actions, action_types, action_names, actions = 
      let nb_actions = ref 0 in 

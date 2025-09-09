@@ -168,7 +168,7 @@ class stateSpacePTG_OTF model options = object(self)
 			successors)
 end
 
-class stateSpacePTG_full model options = object(self)
+class stateSpacePTG_full model options = object
 	inherit stateSpacePTG
 	val explored_states = new State.stateIndexSet
 	val passed_states = new State.stateIndexSet

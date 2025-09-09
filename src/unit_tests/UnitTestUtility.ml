@@ -69,15 +69,6 @@ module LinearConstraintUtility = struct
     let inequal = LinearConstraint.make_px_linear_inequality term op in 
     LinearConstraint.make_px_constraint [inequal]
 
-
-  let diagonal_px_constraint var1 op var2 const = 
-    let term = LinearConstraint.make_px_linear_term 
-      [numconst_var_of_string P var1; numconst_var_of_string M var2] 
-      (NumConst.neg (NumConst.numconst_of_int const)) in
-    let op = op_of_string op in 
-    let inequal = LinearConstraint.make_px_linear_inequality term op in 
-    LinearConstraint.make_px_constraint [inequal]
-
   let multi_diagonal_px_constraint var1 op var2 var3 const = 
     let term = LinearConstraint.make_px_linear_term 
       [numconst_var_of_string P var1; numconst_var_of_string M var2; numconst_var_of_string M var3] 
