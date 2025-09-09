@@ -140,7 +140,7 @@ type waitingListStrategy =
 type ptg_abstraction = 
 	| Location
 	| Convex_Hull
-	| None
+	| No_Abstraction
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1
