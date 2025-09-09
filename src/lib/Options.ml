@@ -274,7 +274,7 @@ class imitator_options =
 		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
 		val mutable ptg_picking_strategy = AbstractAlgorithm.SingleQueue
 
-		val mutable ptg_abstraction = false
+		val mutable ptg_abstraction = AbstractAlgorithm.No_Abstraction
 
 		(* process again green states *)
 		val mutable recompute_green					= false
@@ -791,6 +791,21 @@ class imitator_options =
 				exit(1);
 			)
 
+			and set_ptg_abstraction abstraction =
+				if abstraction = "location" then
+					ptg_abstraction <- AbstractAlgorithm.Location
+				else if abstraction = "ch" then 
+					ptg_abstraction <- AbstractAlgorithm.Convex_Hull
+				else if abstraction = "none" then 
+					ptg_abstraction <- AbstractAlgorithm.No_Abstraction 
+				else(
+				print_error ("The value of `-PTG-abstraction` `" ^ abstraction ^ "` is not valid.");
+				Arg.usage speclist usage_msg;
+				abort_program ();
+				exit(1);
+				)
+
+
 			and set_ptg_waiting_list_frontier_param_init init =
 					match ptg_picking_strategy with 
 						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with init}
@@ -1123,7 +1138,10 @@ class imitator_options =
 					 Int set_ptg_waiting_list_frontier_param_update]),
 					 "In game algorithms: Set the depth parameters for frontier strategy (if enabled). Usage: init step update");
 				
-				("-PTG-abstraction", Unit (fun _ -> ptg_abstraction <- true), "In game algorithms: Enable a coarse abstraction where states are defined only by their discrete part");
+				("-PTG-abstraction", String(set_ptg_abstraction), "In game algorithms: The abstraction to use when computing the state space.
+				Use value `location` for the coarsest abstraction that identifies any two states with the same location.
+				Use value `ch` for the using the convex hull of reachable zones.
+				Use value `none` for using no abstractions (Default)");
 
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]

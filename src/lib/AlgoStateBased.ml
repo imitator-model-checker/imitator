@@ -1465,7 +1465,7 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
 		let new_constraint = 
 			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
 			(* Expand to entire invariant if this abstraction is turned on *)
-			if options#ptg_abstraction then 
+			if options#ptg_abstraction = Location then 
 				Option.map 
 				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
 				k

@@ -137,6 +137,10 @@ type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
 
+type ptg_abstraction = 
+	| Location
+	| Convex_Hull
+	| None
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1

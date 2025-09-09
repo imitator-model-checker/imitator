@@ -148,7 +148,7 @@ class imitator_options :
 		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
 		method ptg_picking_strategy : AbstractAlgorithm.waitingListStrategy
 
-		method ptg_abstraction : bool
+		method ptg_abstraction : AbstractAlgorithm.ptg_abstraction
 
 		method pi_compatible				: bool
 		method precomputepi0				: bool

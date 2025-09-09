@@ -133,6 +133,11 @@ type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
 
+type ptg_abstraction = 
+	| Location
+	| Convex_Hull
+	| No_Abstraction
+
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
 

@@ -1436,7 +1436,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
-		if options#ptg_abstraction then 
+		if options#ptg_abstraction = Location then 
 			if is_new then 
 				None
 			else
