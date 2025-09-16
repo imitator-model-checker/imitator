@@ -39,24 +39,60 @@ type strategy_action =
   | Wait
   | Action of {action_index: Automaton.action_index; transition: StateSpace.combined_transition; dst: DiscreteState.global_location}
 
+(* Pretty printing *)
+let wrap code s =
+  Printf.sprintf "\027[%sm%s\027[0m" code s
 
-let string_of_state_index state_space model state_index = 
-	let location = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in
+let red    = wrap "91"
+let green  = wrap "92"
+let yellow = wrap "93"
+let blue   = wrap "94"
+let magenta = wrap "95"
+let cyan   = wrap "96"
+
+let bold = wrap "1"
+
+let format_zone_string (string : string) = 
+  let b = Buffer.create 10 in
+  String.iter (fun c -> if c == '\n' then Buffer.add_char b ' ' else Buffer.add_char b c) string;
+  String.trim @@ Buffer.contents b
+let string_of_zone variable_names px_constraint = 
+	px_constraint |>
+	LinearConstraint.string_of_px_linear_constraint variable_names |>
+	format_zone_string
+
+let string_of_nnc_zone variable_names px_constraint = 
+	px_constraint |>
+	LinearConstraint.string_of_px_nnconvex_constraint variable_names |>
+	format_zone_string
+
+let string_of_state_index ?(include_zone = false) state_space model state_index  = 
+	let state = (state_space#get_state state_index) in 
+	let location = Array.get (DiscreteState.get_locations (state.global_location)) 0 in
 	let location_name = model.location_names 0 location in
-	Printf.sprintf "s%d/loc %s" state_index location_name
+	if include_zone then 
+		Printf.sprintf "s%d = loc %s | %s" state_index location_name 
+		(string_of_zone model.variable_names state.px_constraint)
+	else Printf.sprintf "s%d/loc %s" state_index location_name
 
-let item_to_str = fun model state_space item -> 
+let item_to_str = fun ?(include_zone = false) model state_space item -> 
+	let explore : ('a, 'b, 'c) format = if include_zone then "[EXPLORE] %s" else "EXPLORE(%s)" in 
+	let update : ('a, 'b, 'c) format = if include_zone then "[UPDATE] %s" else "UPDATE(%s)" in 
 	match item with 
 	| EXPLORE state_index -> 
-		Printf.sprintf "EXPLORE(%s)" (string_of_state_index state_space model state_index)
+		blue @@ Printf.sprintf explore (string_of_state_index state_space model state_index ~include_zone)
 	| UPDATE {state_index;_} ->
-		Printf.sprintf "UPDATE(%s)" (string_of_state_index state_space model state_index)
+		magenta @@ Printf.sprintf update (string_of_state_index state_space model state_index ~include_zone)
 	
-	
-
-
 let item_list_to_str list model state_space = 
 	"[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (item_to_str model state_space) list) ^ "]"
+
+let print_delta_list_with_reason model state_space items reason = 
+	if items <> [] then
+	print_message Verbose_low (Printf.sprintf "\tQ+=%s\n\tReason: %s" 
+	(item_list_to_str items model state_space) @@ reason);
+
+
 
 class stateUnionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
@@ -397,6 +433,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val locationWinningZone = new locationUnionZoneMap
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
+	method private print_delta_list_with_reason = print_delta_list_with_reason model state_space
 
 	val waiting : item nextItem = 
 		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
@@ -534,7 +571,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			
 		forcedMoves#replace state_index forced_moves;
 		if verbose_mode_greater Verbose_medium then 
-			print_message Verbose_low (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
+			print_message Verbose_medium (Printf.sprintf "Computed forced moves for state %d: %s" state_index (string_of_nnc_zone model.variable_names forced_moves))
 		
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
@@ -574,17 +611,20 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					let location = (state_space#get_state state_index).global_location in 
 					let winning_zone_loc = locationWinningZone#find location in 
 					LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
-					waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+					let update_items = self#state_set_to_update_items (depends#find state_index) in 
+					waiting#add_all update_items;
+					if verbose_mode_greater Verbose_low then 
+						self#print_delta_list_with_reason update_items (bold @@ cyan "Target state");
 				end;
 
 			let coverage_pruning = is_goal_state && options#coverage_pruning in 
 			match self#global_constraint_pruning state_index, coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
+					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
 				| _, true -> 
 					coverage_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
+					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
 					(let successors = state_space_ptg#compute_symbolic_successors state_index in
 					List.iter (fun s -> 
@@ -598,15 +638,21 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 							not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
 							)
 						else 
-							(waiting#add (EXPLORE succ);
+							(
+							let item = EXPLORE succ in 	
+							waiting#add item;
 							state_space_ptg#passed_states#add succ;
+							if verbose_mode_greater Verbose_low then
+								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State");
 							acc)
 						) false successors
 					in 
 					if found_existing_state_with_non_empty_winning_zone then 
-						waiting#add (UPDATE {state_index; timestamp = fresh_timestamp ()});
-					if verbose_mode_greater Verbose_medium then 
-						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space))
+						let item = UPDATE {state_index; timestamp = fresh_timestamp ()} in 
+						waiting#add item;
+						if verbose_mode_greater Verbose_low then
+								self#print_delta_list_with_reason [item] (bold @@ magenta "Transition to partially winning state");
+					)
 			)
 
 
@@ -737,7 +783,15 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let winning_zone_changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) orig_winning_zone) in 
 		if winning_zone_changed then 
 		begin
-			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+			let update_items = self#state_set_to_update_items (depends#find state_index) in 
+			if verbose_mode_greater Verbose_low then 
+				print_message Verbose_low (Printf.sprintf "\t%s %s %s" 
+				(green @@ string_of_nnc_zone model.variable_names orig_winning_zone)
+				(bold "→")
+				(bold @@ green @@ string_of_nnc_zone model.variable_names @@ winningZone#find state_index));
+				if verbose_mode_greater Verbose_low then 
+					self#print_delta_list_with_reason update_items (bold @@ green @@ "Winning zone changed");
+			waiting#add_all update_items;
 			if state_index = state_space#get_initial_state_index then init_winning_zone_changed := true
 		end
 
@@ -751,7 +805,17 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		init_winning_zone_changed := false;
 		let init_zone_nn = nn_of_lin @@ self#constr_of_state_index init in 
 		let winning_zone_nn = LinearConstraint.px_nnconvex_copy @@ winningZone#find init in 
-		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_zone_nn
+
+		let included = LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_zone_nn in
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low @@ bold @@ yellow "\tInitial winning zone has changed (checking zone coverage)";
+			let symbol = bold @@ if included then "⊆" else "⊄" in
+			print_message Verbose_low (Printf.sprintf "\t%s %s %s" 
+			(bold @@ blue @@ string_of_nnc_zone model.variable_names init_zone_nn)
+			symbol
+			(bold @@ green @@ string_of_nnc_zone model.variable_names winning_zone_nn));
+			
+		included
 	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria init = 
@@ -778,7 +842,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		if time_out then termination_status <- Time_limit (Result.Number state_space#nb_states);
 
-		queue_empty ||	init_exact || init_has_winning_witness || time_out
+		let terminate = queue_empty ||	init_exact || init_has_winning_witness || time_out in 
+		if verbose_mode_greater Verbose_low && terminate then 
+			print_message Verbose_low @@ bold @@ yellow @@ (Printf.sprintf "Termination reason: %s"
+			(if queue_empty then "Fixed point" 
+			else if init_exact then "Initial state winning" 
+			else if init_has_winning_witness then "Winning witness found"
+			else "Timed out"));
+		terminate
 
 	method private is_update_relevant state_index timestamp =
 		if timestamp > lastUpdate#find state_index then 
@@ -805,14 +876,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
 			init_winning_zone_changed := true;
 
-
+		let iter = ref 1 in 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria initial_state_index) do
-			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ item_list_to_str waiting#to_list model state_space);
+			if verbose_mode_greater Verbose_low then 
+				(print_message Verbose_low (yellow @@ bold @@ Printf.sprintf "- Main algorithm loop iteration %d -" !iter);
+				print_message Verbose_low ("\tQ=" ^ item_list_to_str waiting#to_list model state_space);
+				incr iter);
 			let item = waiting#extract {lastUpdate;depends;winningZone;forcedMoves} in 			
-			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium (Printf.sprintf "Processing item: \027[92m %s \027[0m" (item_to_str model state_space item));
+			if verbose_mode_greater Verbose_low then 
+				print_message Verbose_low ("\t" ^ item_to_str model state_space item ~include_zone:true);
 			match item with 
 				| EXPLORE state_index -> 
 					self#explore state_index
