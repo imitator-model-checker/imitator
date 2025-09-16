@@ -587,20 +587,23 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
 					(let successors = state_space_ptg#compute_symbolic_successors state_index in
-					List.iter (fun s -> (depends#find s)#add state_index) successors;
-					let found_existing_state = 
+					List.iter (fun s -> 
+						if state_index <> s then (depends#find s)#add state_index) 
+						successors;
+					let found_existing_state_with_non_empty_winning_zone = 
 						List.fold_left (fun acc succ -> 
 						if state_space_ptg#passed_states#mem succ then 
 							(print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration" 
 							(string_of_state_index state_space model succ));
-							true)
+							not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
+							)
 						else 
 							(waiting#add (EXPLORE succ);
 							state_space_ptg#passed_states#add succ;
 							acc)
 						) false successors
 					in 
-					if found_existing_state then 
+					if found_existing_state_with_non_empty_winning_zone then 
 						waiting#add (UPDATE {state_index; timestamp = fresh_timestamp ()});
 					if verbose_mode_greater Verbose_medium then 
 						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space))
