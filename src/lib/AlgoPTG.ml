@@ -873,8 +873,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		(* If goal is init then initial winning zone is it's own constraint*)
 		if State.match_state_predicate model state_predicate initial_state then
-			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
-			init_winning_zone_changed := true;
+			(winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
+			init_winning_zone_changed := true);
 
 		let iter = ref 1 in 
 		(* === ALGORITHM MAIN LOOP === *)
