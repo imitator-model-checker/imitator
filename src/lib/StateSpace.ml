@@ -1436,14 +1436,33 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
-		if options#ptg_abstraction = Location then 
+		
+		match options#ptg_abstraction with 
+		| Location | Convex_Hull -> 
+			(* There is only one symbolic state per location in these abstraction levels *)
+			let get_representative_state_index location_index = 
+				(* Exactly one binding per existing location *)
+				Hashtbl.find state_space.states_for_comparison location_index
+			in 
+				
 			if is_new then 
 				None
-			else
-				let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
-				Some (State_already_present (List.hd old_states))
-		else
+			else if options#ptg_abstraction = Location then
+				let representative = get_representative_state_index location_index in 
+				Some (State_already_present representative)
+			else 
+				(* Convex Hull case *) 
+				let representative = get_representative_state_index location_index in 
+				let representative_state = self#get_state representative in 
+				
+				if State.state_included_in state_to_look_for representative_state [] then 
+					Some (State_already_present representative)
+				else
+				(LinearConstraint.px_hull_assign representative_state.px_constraint state_to_look_for.px_constraint;
+				Some (State_replacing representative))
+				
 		
+		| No_Abstraction ->
 
 		(* Shortcut: If no check requested: does not test anything *)
 		if state_comparison = No_check then (

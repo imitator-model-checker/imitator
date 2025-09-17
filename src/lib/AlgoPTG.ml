@@ -142,7 +142,11 @@ class stateSpacePTG_OTF model options = object(self)
 	method unexplored_successors = 0
 	val including_check = 
 	options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || 
-	options#comparison_operator = AbstractAlgorithm.Including_check
+	options#comparison_operator = AbstractAlgorithm.Including_check || 
+	options#ptg_abstraction = AbstractAlgorithm.Convex_Hull
+
+	val reexploration_counter = Statistics.create_hybrid_counter_and_register "PTG Total reexplorations: " Statistics.States_counter Verbose_experiments
+
 	
 	(* Explored: Internal set keeping track of states have had their successors computed *)
 	val explored_states = new State.stateIndexSet
@@ -187,14 +191,18 @@ class stateSpacePTG_OTF model options = object(self)
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
 	method get_partioned_edges state_index = 
 		if including_check && recompute_successors#mem state_index then 
-			(recompute_successors#remove state_index;
+			(reexploration_counter#increment;
+			reexploration_counter#start;
+			recompute_successors#remove state_index;
 			let state = state_space#get_state state_index in 
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			(List.partition_map (fun (transition, state) -> 
+			let edges = (List.partition_map (fun (transition, state) -> 
 				let edge = transition, NotInSP state in 
 				let action = StateSpace.get_action_from_combined_transition model transition in 
 				if model.is_controllable_action action then Left edge else Right edge)
-			successors))
+			successors) in 
+			reexploration_counter#stop;
+			edges)
 		else
 			(let successors = self#compute_symbolic_successors_with_transitions state_index in			
 			List.partition_map (fun (transition, state_index) -> 
