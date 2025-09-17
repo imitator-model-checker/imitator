@@ -627,9 +627,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
 					(let successors = state_space_ptg#compute_symbolic_successors state_index in
-					List.iter (fun s -> 
-						if state_index <> s then (depends#find s)#add state_index) 
-						successors;
+					List.iter (fun s -> (depends#find s)#add state_index) successors;
 					let found_existing_state_with_non_empty_winning_zone = 
 						List.fold_left (fun acc succ -> 
 						if state_space_ptg#passed_states#mem succ then 
