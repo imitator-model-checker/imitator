@@ -1337,10 +1337,18 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 
-		(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-		print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
-		let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
-		(* Print some information *)
+		let current_constraint = 
+			match options#ptg_abstraction with 
+			| Location -> 
+				(* Perform intersection of I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [invariant ; discrete_constraint]
+			| _ ->
+				(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)]
+		in
+			(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
