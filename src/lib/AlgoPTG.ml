@@ -809,15 +809,15 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Initial state is exact if winning zone covers initial zone  *)
 	method private init_is_exact init = 
 		init_winning_zone_changed := false;
-		let init_zone_nn = nn_of_lin @@ self#constr_of_state_index init in 
 		let winning_zone_nn = LinearConstraint.px_nnconvex_copy @@ winningZone#find init in 
+		let initial_constraint = self#initial_constraint () in  
 
-		let included = LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_zone_nn in
+		let included = LinearConstraint.px_nnconvex_constraint_is_leq initial_constraint winning_zone_nn in
 		if verbose_mode_greater Verbose_low then 
-			print_message Verbose_low @@ bold @@ yellow "\tInitial winning zone has changed (checking zone coverage)";
+			print_message Verbose_low @@ bold @@ yellow "\tInitial winning zone has changed (checking initial constraint coverage)";
 			let symbol = bold @@ if included then "⊆" else "⊄" in
 			print_message Verbose_low (Printf.sprintf "\t%s %s %s" 
-			(bold @@ blue @@ string_of_nnc_zone model.variable_names init_zone_nn)
+			(bold @@ blue @@ string_of_nnc_zone model.variable_names initial_constraint)
 			symbol
 			(bold @@ green @@ string_of_nnc_zone model.variable_names winning_zone_nn));
 			
