@@ -28,7 +28,6 @@
   (ocaml
    (>= 4.08))
   dune
-  oasis
   menhir
   mlgmp
   ppl
