@@ -15,10 +15,10 @@
  * License          : 
  * 
  * Created          : 2015/03/19
- * Last modified    : 2021/10/11
+ * Last modified    : 2025/07/16
  * Model version    : 
  * 
- * IMITATOR version : 3.2
+ * IMITATOR version : 3.4
  ******************************************************************************)
 
 
@@ -100,18 +100,18 @@ actions: start, T2done, init_buffer_empty, init_buffer_nonempty;
 (*** NOTE: we have to first assign the buffer to something, and then (in a different transition) sync on start, because other tasks need to *read* the buffer value ***)
 loc camera0: invariant ckT1T2 = 0
 	(* No frame in buffer *)
-	when True sync init_buffer_empty do {buffer34 := FRAME_EMPTY, buffer34_highest := FRAME_EMPTY} goto camera1;
+	when True sync init_buffer_empty do {buffer34 <- FRAME_EMPTY, buffer34_highest <- FRAME_EMPTY} goto camera1;
 	when True sync init_buffer_nonempty goto camera1;
 
 loc camera1: invariant ckT1T2 = 0
 	when True goto camera2;
 
 loc camera2: invariant ckT1T2 = 0
-	when True do {register23 := FRAME_EMPTY} goto camera3;
+	when True do {register23 <- FRAME_EMPTY} goto camera3;
 	when True goto camera3;
 
 loc camera3: invariant ckT1T2 = 0
-	when True do {frame_in_3 := FRAME_EMPTY} goto camera4;
+	when True do {frame_in_3 <- FRAME_EMPTY} goto camera4;
 	when True goto camera4;
 
 (* Now launch the Start signal *)
@@ -121,7 +121,7 @@ loc camera4: invariant ckT1T2 = 0
 (* Process T1 and T2 together *)
 loc T1T2: invariant ckT1T2 <= T2WCL
 	(* Add the frame to the register *)
-	when ckT1T2 >= T2BCL sync T2done do {register23 := FRAME_THEFRAME} goto T1T2done;
+	when ckT1T2 >= T2BCL sync T2done do {register23 <- FRAME_THEFRAME} goto T1T2done;
 
 (* The end *)
 loc T1T2done: invariant True
@@ -143,7 +143,7 @@ loc T3preinit: invariant True
 (* Processing *)
 loc T3process: invariant ckT3 <= T3CET
 	(* If buffer not full AND frame not yet written: write frame from the current register *)
-	when ckT3 = T3CET & buffer34 = FRAME_EMPTY & buffer34_highest < frame_in_3 sync T3_done do {buffer34 := frame_in_3, buffer34_highest := frame_in_3} goto T3wait;
+	when ckT3 = T3CET & buffer34 = FRAME_EMPTY & buffer34_highest < frame_in_3 sync T3_done do {buffer34 <- frame_in_3, buffer34_highest <- frame_in_3} goto T3wait;
 	(* If buffer not full BUT frame already stored earlier: discard *)
 	when ckT3 = T3CET & buffer34 = FRAME_EMPTY & buffer34_highest >= frame_in_3 sync T3_done goto T3wait;
 
@@ -153,7 +153,7 @@ loc T3process: invariant ckT3 <= T3CET
 (* Waiting after processing *)
 loc T3wait: invariant ckT3 <= P3_uncertain
 	(* Copy the frame from the register into the task *)
-	when ckT3 = P3_uncertain sync T3_start do {ckT3 := 0, frame_in_3 := register23} goto T3process;
+	when ckT3 = P3_uncertain sync T3_start do {ckT3 <- 0, frame_in_3 <- register23} goto T3process;
 
 end (* T3 *)
 
@@ -173,7 +173,7 @@ loc T4process_nonempty: invariant ckT4 <= T4CET_nonempty
 	(* If another frame: wait for next round *)
 	when ckT4 = T4CET_nonempty & frame_in_4 < FRAME_THEFRAME sync T4_done goto T4wait;
 	(* If THE frame: the end! Update clock to stop time *)
-	when ckT4 = T4CET_nonempty & frame_in_4 = FRAME_THEFRAME & ckT1T2 + T1WCET= e2e do {ckT4 := 0} sync T4_done goto T4end_ok;
+	when ckT4 = T4CET_nonempty & frame_in_4 = FRAME_THEFRAME & ckT1T2 + T1WCET= e2e do {ckT4 <- 0} sync T4_done goto T4end_ok;
 
 (* Processing an empty frame *)
 loc T4process_empty: invariant ckT4 <= T4CET_empty
@@ -182,10 +182,10 @@ loc T4process_empty: invariant ckT4 <= T4CET_empty
 (* Waiting after processing *)
 loc T4wait: invariant ckT4 <= P4_uncertain
 	(* 0 frame in buffer *)
-	when ckT4 = P4_uncertain & buffer34 = FRAME_EMPTY do {ckT4 := 0} sync T4_start_empty goto T4process_empty;
+	when ckT4 = P4_uncertain & buffer34 = FRAME_EMPTY do {ckT4 <- 0} sync T4_start_empty goto T4process_empty;
 
 	(* 1 frame in buffer *)
-	when ckT4 = P4_uncertain & FRAME_EMPTY < buffer34 do {ckT4 := 0, frame_in_4 := buffer34, buffer34 := FRAME_EMPTY} sync T4_start_nonempty goto T4process_nonempty;
+	when ckT4 = P4_uncertain & FRAME_EMPTY < buffer34 do {ckT4 <- 0, frame_in_4 <- buffer34, buffer34 <- FRAME_EMPTY} sync T4_start_nonempty goto T4process_nonempty;
 
 
 (* The end! *)
@@ -198,30 +198,30 @@ end (* T4 *)
 (* Initial state *)
 (************************************************************)
 
-init := {
+init <- {
 	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[cameraT1T2] := camera0,
-		loc[T3] := T3preinit,
-		loc[T4] := T4preinit,
+		loc[cameraT1T2] <- camera0,
+		loc[T3] <- T3preinit,
+		loc[T4] <- T4preinit,
 
 		(*------------------------------------------------------------
 			 INITIAL DISCRETE VARIABLES
 			------------------------------------------------------------*)
 		(* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
-		frame_in_4 := FRAME_OTHER,
+		frame_in_4 <- FRAME_OTHER,
 
 		(* Required by IMITATOR, but in fact will be nondeterministically initialized by the PTA cameraT1T2 *)
-		buffer34 := FRAME_OTHER,
-		buffer34_highest := FRAME_OTHER,
+		buffer34 <- FRAME_OTHER,
+		buffer34_highest <- FRAME_OTHER,
 
 		(* We assume there is another frame in the task 3 (again, this has no importance *)
-		frame_in_3 := FRAME_OTHER2,
+		frame_in_3 <- FRAME_OTHER2,
 
 		(* We assume there is another frame in the register (this has no importance *)
-		register23 := FRAME_OTHER3,
+		register23 <- FRAME_OTHER3,
 	;
 
 	continuous =

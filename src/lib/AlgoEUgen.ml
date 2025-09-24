@@ -285,7 +285,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
 				new_states_indexes <- new_state_index :: new_states_indexes;
-			
 		end (* end if new state *)
 		;
 		

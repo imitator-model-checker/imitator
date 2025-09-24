@@ -137,6 +137,10 @@ type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
 
+type ptg_abstraction = 
+	| Location
+	| Convex_Hull
+	| No_Abstraction
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1
@@ -243,8 +247,6 @@ type state_comparison_operator =
 	| Double_inclusion_check
 
 
-
-
 (************************************************************)
 (* Predicates on mode *)
 (************************************************************)
@@ -343,8 +345,6 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
-
-
 
 let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
 	| Merge_candidates_ordered	-> "ordered"

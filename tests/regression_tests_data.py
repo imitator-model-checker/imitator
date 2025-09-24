@@ -4500,7 +4500,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'queue-statespace.states' , 'content' : """
-  pta: lend, r = 1, i = 2, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+  pta: lend, r = 1, i = 2, s3 = queue([2, 3]), s2 = queue(), s1 = queue([1, 2]) ==>
 &True
 
   Projection onto the parameters:

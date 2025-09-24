@@ -119,6 +119,8 @@ let cHECK_ASSERT_DIMENSIONS = true
 	
 	let ppl_tcounter_hull_assign_if_exact = create_hybrid_counter_and_register "hull_assign_if_exact" PPL_counter Verbose_low
 
+	let ppl_tcounter_hull_assign = create_hybrid_counter_and_register "hull_assign" PPL_counter Verbose_low
+
 	let ppl_tcounter_intersection_assign = create_hybrid_counter_and_register "intersection_assign" PPL_counter Verbose_low
 
 	let ppl_tcounter_unconstrain = create_hybrid_counter_and_register "unconstrain" PPL_counter Verbose_low
@@ -444,11 +446,9 @@ let ippl_bounds_from_above =
 let ippl_copy_linear_constraint linear_constraint =
 	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint) ppl_tcounter_copy
 
-(*
 (** Perform the hull (version with side effect) *)
 let ippl_hull_assign linear_constraint1 linear_constraint2 =
 	ippl_generic (fun () -> ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2) ppl_tcounter_hull_assign
-*)
 
 (** Perform the hull if the result is exact (version with side effect) *)
 let ippl_hull_assign_if_exact linear_constraint1 linear_constraint2 =
@@ -2370,6 +2370,7 @@ let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersec
 	
 let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 
+let px_hull_assign = ippl_hull_assign
 
 (*------------------------------------------------------------*)
 (* Convex negation *)

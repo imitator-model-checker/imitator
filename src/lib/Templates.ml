@@ -813,6 +813,7 @@ let expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_pr
   | Unexpanded_Parsed_PRPC (pred1, pdomain, n) -> Parsed_PRPC (expand_state_predicate g_decls pred1, pdomain, n)
   | Unexpanded_Parsed_pattern pattern -> Parsed_pattern pattern
   | Unexpanded_Parsed_Win pred1 -> Parsed_Win (expand_state_predicate g_decls pred1)
+  | Unexpanded_Parsed_WinAvoid (pred1, pred2) -> Parsed_WinAvoid (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
 
 let expand_property (g_decls: variable_declarations) (property: unexpanded_parsed_property): parsed_property =
   { synthesis_type = property.unexpanded_synthesis_type

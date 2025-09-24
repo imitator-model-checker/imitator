@@ -74,7 +74,7 @@ let resolve_property l =
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_U CT_U_timed
 	CT_VALID
-	CT_W CT_W_timed CT_WIN CT_WITHIN
+	CT_W CT_W_timed CT_WIN CT_WINAVOID CT_WITHIN
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -361,7 +361,7 @@ property:
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
 	| CT_WIN state_predicate { Unexpanded_Parsed_Win ($2) }
-
+	| CT_WINAVOID state_predicate state_predicate { Unexpanded_Parsed_WinAvoid ($2,$3) }
 ;
 
 

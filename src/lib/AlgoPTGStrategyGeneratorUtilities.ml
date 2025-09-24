@@ -178,15 +178,7 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       initial_constraint = simple_model.initial_constraint;
       initial_p_constraint = simple_model.initial_p_constraint;
       px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_false_constraint();
-  }
-
-  let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
-    if List.length discrete_mapping_list = 0 then 
-      "[]"
-    else
-      let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s ↦ %s" (model.variable_names index) (AbstractValue.string_of_value value)) discrete_mapping_list in  
-      let discrete_valuations_string = "[" ^ (List.fold_left (fun acc str -> Printf.sprintf "%s%s, " acc str) ("") discrete_valuation_strings) in 
-      String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-2)  ^ "]"  
+  } 
 
 let generate_simple_model (system_model : abstract_model) 
 	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables

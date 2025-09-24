@@ -1,0 +1,23 @@
+controllable actions: c;
+
+var
+	x : clock;
+
+automaton PTG
+
+actions: c, u;
+
+loc l1: invariant True		(* L1 *)
+	when x>=1 sync c goto Goal;
+	when x<1 sync u goto l1;
+
+accepting loc Goal: invariant True		(* goal *)
+
+end
+
+init :=
+	& loc[PTG] = l1
+	& x = 0
+;
+
+end

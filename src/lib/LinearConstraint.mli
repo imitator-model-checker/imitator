@@ -506,7 +506,7 @@ val px_intersection_assign_p : px_linear_constraint -> p_linear_constraint list 
 val px_intersection_assign_x : px_linear_constraint -> x_linear_constraint list -> unit
 
 (** Perform the hull assignation *)
-(* val hull_assign : linear_constraint -> linear_constraint -> unit *)
+val px_hull_assign : px_linear_constraint -> px_linear_constraint -> unit
 
 (** Perform convex hull, if the result is exact  *)
 (* val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool *)

@@ -116,22 +116,21 @@ information "Initialising opam..."
 }
 
 # switch to ocaml 4.14
-
 information "Switching to OCaml 4.14.2..."
 
-opam switch create 4.14.2 &>$err || {
+opam switch create imitator 4.14.2 &>$err || {
   error "An issue has occured while creating the switch 4.14.2. Please check the error log."
   exit 1
 }
-opam switch 4.14.2
 
+opam switch imitator
 eval $(opam env)
 
 # install opam and ocaml libraries
 
 information "Installing opam and OCaml libraries..."
 
-opam install -y extlib fileutils alcotest menhir &>$err || {
+opam install -y extlib fileutils oasis alcotest menhir &>$err || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
 }

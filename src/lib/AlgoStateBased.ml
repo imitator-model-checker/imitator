@@ -883,13 +883,27 @@ let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (
         model.transitions_description transition_index
     in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total "Entering compute_new_location_guards_updates…";
+	);
+
+
     (*** BEGIN code with local variables ***)
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copying location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display source_location));
+	);
+
 	(* Create an extended location *)
 	let copied_location : DiscreteState.global_location = DiscreteState.copy_location source_location in
+
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copied location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display copied_location));
+	);
+
 	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables copied_location local_variables_table in
 
     (* Get functions that enable reading / writing global variables at a given location *)
@@ -1323,10 +1337,18 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 
-		(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-		print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
-		let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
-		(* Print some information *)
+		let current_constraint = 
+			match options#ptg_abstraction with 
+			| Location -> 
+				(* Perform intersection of I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [invariant ; discrete_constraint]
+			| _ ->
+				(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)]
+		in
+			(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
@@ -1448,8 +1470,16 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
-
+		let new_constraint = 
+			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+			(* Expand to entire invariant if this abstraction is turned on *)
+			if options#ptg_abstraction = Location then 
+				Option.map 
+				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
+				k
+			else k
+		in
+				
 		(* Check the satisfiability *)
 		match new_constraint with
 			| None ->
@@ -4924,7 +4954,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := state_space#merge !queue;
+                    queue := state_space#merge !queue (fun _ _ -> ());
                     (match options#exploration_order with
                         | Exploration_queue_BFS_RS -> hashtbl_filter (state_space#test_state_index) rank_hashtable
                         | _ -> ();
@@ -5061,7 +5091,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				(* Count the states for verbose purpose: *)
+				((* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 
 				(* Perform the post *)
@@ -5075,7 +5105,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 				(* Return the concatenation of the new states *)
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
-				List.rev_append current_post_n_plus_1 new_states
+				List.rev_append current_post_n_plus_1 new_states)
 			) [] !post_n
 			)
 			with TerminateAnalysis ->(
@@ -5112,7 +5142,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := state_space#merge !new_states_after_merging;
+                new_states_after_merging := state_space#merge !new_states_after_merging (fun _ _ -> ());
             | Merge_212 ->
                 let eaten_states = state_space#merge212 !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;

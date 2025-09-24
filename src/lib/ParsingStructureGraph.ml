@@ -509,6 +509,10 @@ let all_components_used_in_property_option parsed_property_option =
 		| Parsed_Cycle_Through parsed_state_predicate
         | Parsed_Win parsed_state_predicate
 			-> ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate
+        | Parsed_WinAvoid (parsed_state_predicate1, parsed_state_predicate2)
+            -> 
+            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate1;
+            ParsingStructureMeta.get_variables_in_parsed_state_predicate_with_accumulator variables_used_ref parsed_state_predicate2
 
 		(* Accepting infinite-run (cycle) through a generalized condition (list of state predicates, and one of them must hold on at least one state in a given cycle) *)
 		| Parsed_Cycle_Through_generalized parsed_state_predicate_list
