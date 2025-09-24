@@ -11,44 +11,44 @@ err=./error.log
 
 while getopts "hf" opt; do
   case ${opt} in
-    h )
-      clear
-      echo "Usage: $0 [-Options]"
-      echo
-      echo "Description:"
-      echo "This script builds IMITATOR. It also installs the necessary dependencies for the build."
-      echo
-      echo "Options list:"
-      echo "    -h    Display this help message"
-      echo "    -f    Fancy the output"
-      echo
-      exit 0
-      ;;
-    f )
-      FANCY=true
-      ;;
-    \? )
-      echo "Invalid option: $OPTARG. Executing the script without options."
-      ;;
+  h)
+    clear
+    echo "Usage: $0 [-Options]"
+    echo
+    echo "Description:"
+    echo "This script builds IMITATOR. It also installs the necessary dependencies for the build."
+    echo
+    echo "Options list:"
+    echo "    -h    Display this help message"
+    echo "    -f    Fancy the output"
+    echo
+    exit 0
+    ;;
+  f)
+    FANCY=true
+    ;;
+  \?)
+    echo "Invalid option: $OPTARG. Executing the script without options."
+    ;;
   esac
 done
 
 # initialize printing functions with or without -f option
 
 if [ $FANCY = "true" ]; then
-  error() { echo -e "\033[31mERROR: \033[0m$1";}
-  warning() { echo -e "\033[33mWARNING: \033[0m$1";}
-  information() { echo -e "\033[32mINFO: \033[0m$1";}
-  note() { echo -e "\033[34mNOTE: \033[0m$1";}
-  success() { echo -e "\033[92mSUCCESS: \033[0m$1";}
-  cmd() { echo -e "\033[35m$1\033[0m";}
+  error() { echo -e "\033[31mERROR: \033[0m$1"; }
+  warning() { echo -e "\033[33mWARNING: \033[0m$1"; }
+  information() { echo -e "\033[32mINFO: \033[0m$1"; }
+  note() { echo -e "\033[34mNOTE: \033[0m$1"; }
+  success() { echo -e "\033[92mSUCCESS: \033[0m$1"; }
+  cmd() { echo -e "\033[35m$1\033[0m"; }
 else
-  error() { echo -e "ERROR: $1";}
-  warning() { echo -e "WARNING: $1";}
-  information() { echo -e "INFO: $1";}
-  note() { echo -e "NOTE: $1";}
-  success() { echo -e "SUCCESS: $1";}
-  cmd() { echo -e "$1";}
+  error() { echo -e "ERROR: $1"; }
+  warning() { echo -e "WARNING: $1"; }
+  information() { echo -e "INFO: $1"; }
+  note() { echo -e "NOTE: $1"; }
+  success() { echo -e "SUCCESS: $1"; }
+  cmd() { echo -e "$1"; }
 fi
 
 # check OS
@@ -92,14 +92,14 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
   sudo apt-get update -qq
   sudo apt-get install -qq wget unzip curl build-essential libtinfo-dev g++ m4 opam python3 \
     libgmp-dev libmpfr-dev libppl-dev graphviz plotutils &>$err || {
-      error "One of the depedencies had an issue installing itself. Please use the command $(cmd "apt-get update") or make sure that $(cmd "sudo") rights have been granted"
-      exit 1
-    }
+    error "One of the depedencies had an issue installing itself. Please use the command $(cmd "apt-get update") or make sure that $(cmd "sudo") rights have been granted"
+    exit 1
+  }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
   brew install wget opam gmp ppl graphviz plotutils &>$err || {
-      error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
-      exit 1
-    }
+    error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
+    exit 1
+  }
 fi
 
 # python fix
@@ -165,10 +165,13 @@ dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build &>$err || {
-  error "An issue has occured while building IMITATOR. Please check the error log."
-  exit 1
-}
+dune build
+
+# TODO: uncomment when bugs are fixed
+# dune build &>$err || {
+#   error "An issue has occured while building IMITATOR. Please check the error log."
+#   exit 1
+# }
 
 # rename artefact
 if [ ! -z "${GITHUB_WORKSPACE}" ]; then
