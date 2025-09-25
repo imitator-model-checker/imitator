@@ -1,7 +1,7 @@
 (executable
- (name IMITATOR)
+ (name VALIDATOR)
  (modes byte exe)
- (libraries lib)
+ (libraries lib crowbar)
  (link_flags
   (:include link_flags.%{system})
   (:standard
@@ -18,7 +18,7 @@
 
 (install
  (section bin)
- (files IMITATOR.exe))
+ (files VALIDATOR.exe))
 
 (rule
  (with-stdout-to
@@ -40,11 +40,11 @@
 
 
 (rule
- (target imitator)
- (deps IMITATOR.exe)
+ (target validator)
+ (deps VALIDATOR.exe)
  (mode
   (promote
-   (into ../../bin)))
+   (into ../../../bin)))
  (action
   (progn
    (echo "\nCopying main binary file to bin/imitator \226\128\166")

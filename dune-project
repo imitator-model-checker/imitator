@@ -25,6 +25,7 @@
   "IMITATOR is a software tool for parametric verification and robustness analysis of real-time systems with parameters. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features.")
  (depends
   (alcotest :with-test)
+  (crowbar :with-test)
   (ocaml
    (>= 4.08))
   dune
