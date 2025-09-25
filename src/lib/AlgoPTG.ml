@@ -868,9 +868,6 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private compute_PTG = 
 		(* === ALGORITHM INITIALIZATION === *)
 		let initial_state_index = state_space#get_initial_state_index in 
-
-		if not options#ptg_no_forced_uncontrollables then
-			self#save_forced_moves initial_state_index;
 		
 		waiting#add (EXPLORE initial_state_index);
 		state_space_ptg#passed_states#add initial_state_index;
