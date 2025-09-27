@@ -1,6 +1,6 @@
 (executable
  (name VALIDATOR)
- (modes byte exe)
+ (modes exe)
  (libraries lib crowbar)
  (link_flags
   (:include link_flags.%{system})
