@@ -2787,13 +2787,9 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
-
-  (* Instantiate the template calls and expand syntatic variables *)
-  let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
-  let parsed_model = expand_model parsed_model in
-
-  print_message Verbose_high ("\n*** Link variables to declarations.");
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) = 
+	
+	print_message Verbose_high ("\n*** Link variables to declarations.");
   (* Recompute model to link variables to their declarations, and return all variables declarations *)
   let parsed_model, variable_refs = ParsingStructureUtilities.link_variables_in_parsed_model parsed_model in
 
@@ -4524,3 +4520,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	,
 	
 	abstract_property_option
+
+(*------------------------------------------------------------*)
+(** Convert the unexpanded parsed model and the unexpanded parsed property into an abstract model and an abstract property *)
+(*------------------------------------------------------------*)
+let abstract_structures_of_unexpanded_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+
+  (* Instantiate the template calls and expand syntatic variables *)
+  let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
+  let parsed_model = expand_model parsed_model in
+
+	abstract_structures_of_parsing_structures options parsed_model parsed_property_option
