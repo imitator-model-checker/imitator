@@ -207,6 +207,42 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* Parsing the property *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+let compile_unexpanded_parsed_property options =
+	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
+	let property_parsing =
+		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
+		||
+		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
+	in
+
+	if property_parsing then(
+		(* Statistics *)
+		parsing_counter#start;
+
+		(* Get the file name *)
+		let property_file_name = match options#property_file_name with
+			| Some property_file_name -> property_file_name
+			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
+		in
+		
+		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
+		
+		(* Parsing the property *)
+		let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
+
+		(* Statistics *)
+		parsing_counter#stop;
+
+		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
+		
+		Some parsed_property
+	)else(
+		None
+	)
+
 
 (************************************************************)
 (** Compile the concrete model and convert it into an abstract model *)
@@ -237,39 +273,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(* Parsing the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
-	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
-	let property_parsing =
-		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
-		||
-		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
-	in
-
-	let parsed_property_option =
-	if property_parsing then(
-		(* Statistics *)
-		parsing_counter#start;
-
-		(* Get the file name *)
-		let property_file_name = match options#property_file_name with
-			| Some property_file_name -> property_file_name
-			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
-		in
-		
-		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
-		
-		(* Parsing the property *)
-		let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
-
-		(* Statistics *)
-		parsing_counter#stop;
-
-		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
-		
-		Some parsed_property
-	)else(
-		None
-	)
-	in
+	let parsed_property_option = compile_unexpanded_parsed_property options in 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Conversion to abstract structures *)
