@@ -190,7 +190,7 @@ class imitator_options :
 		(* Other methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		method parse : unit
+		method parse : ?skip_model:bool -> ?from_arg_list:string array option -> unit -> unit
 
 		(* Recall options, print info, and check compatibility with the actual algorithm *)
 		method recall_and_warn : AbstractModel.abstract_model -> AbstractProperty.abstract_property option -> unit

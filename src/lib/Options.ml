@@ -450,7 +450,7 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
-		method parse =
+		method parse ?(skip_model=false) ?(from_arg_list : string array option = None) = fun () ->
 			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [property" ^ Constants.property_extension ^ "] [options]" in
 
 			(* Get the verbose mode *)
@@ -1212,10 +1212,13 @@ class imitator_options =
 			) in
 
 			(* Actual parsing *)
-			Arg.parse speclist anon_fun usage_msg;
+			match from_arg_list with 
+			| None -> Arg.parse speclist anon_fun usage_msg;
+			| Some args -> Arg.parse_argv args speclist anon_fun usage_msg;
+			
 
 			(* Case no file *)
-			if nb_args < 1 then(
+			if nb_args < 1 && not skip_model then(
 				print_error ("Please give a file name for the model.");
 				print_message Verbose_standard usage_msg;
 				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");

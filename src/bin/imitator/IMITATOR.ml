@@ -96,7 +96,7 @@ options_parsing_counter#start;*)
 (* Object with command line options *)
 let options = new imitator_options in
 
-options#parse;
+options#parse ();
 
 (* Set the options (for other modules) *)
 Input.set_options options;
