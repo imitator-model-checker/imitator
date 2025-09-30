@@ -1,6 +1,5 @@
 open Crowbar
 open Lib
-open AbstractModel
+open ParsingStructure
 
-
-val abstract_model : abstract_model gen
+val parsed_model : parsed_model gen
