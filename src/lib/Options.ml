@@ -1211,6 +1211,7 @@ class imitator_options =
 				)
 			) in
 
+			if skip_model then nb_args <- 1;
 			(* Actual parsing *)
 			(match from_arg_list with 
 			| None -> Arg.parse speclist anon_fun usage_msg
