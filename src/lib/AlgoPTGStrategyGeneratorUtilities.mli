@@ -1,5 +1,6 @@
 open AbstractModel
 open Automaton
+open State
 
 type simple_abstract_model = {
 	(* General information **)
@@ -69,7 +70,6 @@ type simple_abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
-
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)
@@ -100,6 +100,12 @@ type simple_abstract_model = {
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
+
+	(* Is in coalition*)
+	is_in_coalition : automaton_index -> bool;
+	(* Has a coalition *)
+	has_coalition : bool;
+	informations : (automaton_index array) array;
 }
 
 type location_names = automaton_index -> location_index -> location_name
@@ -111,17 +117,8 @@ type transitions = automaton_index -> location_index -> action_index -> (transit
 type transitions_description = transition_index -> transition
 
 val generate_abstract_controller_model : 
-	abstract_model -> nb_locations:int -> nb_transitions:int -> nb_parameters:int -> nb_variables:int -> 
+	abstract_model -> nb_locations:state_index -> nb_transitions:state_index -> 
 	location_names:location_names -> is_accepting:is_accepting -> is_urgent:is_urgent -> 
 	invariants:invariants -> actions_per_location:actions_per_location -> 
 	transitions:transitions -> transitions_description:transitions_description -> 
-	variable_names:(variable_index -> variable_name) -> parameters:variable_index list -> 
-	parameters_and_clocks:variable_index list -> parameters_and_discrete:variable_index list -> 
-	action_types:(action_index -> action_type) -> action_names:(action_index -> action_name) -> 
-	actions:(action_index list) -> actions_per_automaton:(automaton_index -> action_index list) ->
-	nb_actions:int -> discrete:(discrete_index list) -> clocks:(clock_index list) ->
-	initial_constraint:(LinearConstraint.px_linear_constraint) -> initial_p_constraint:(LinearConstraint.p_linear_constraint) ->
-	nb_ppl_variables:int -> is_clock:(clock_index -> bool) -> discrete_rationals:(variable_index list) -> 
-	is_discrete:(discrete_index -> bool) -> clocks_and_discrete:(variable_index list) -> 
-	initial_location_index:location_index ->
 	abstract_model

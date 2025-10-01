@@ -1,2 +1,0 @@
-property := #witness AGnot(loc[pta] = l6);
-projectresult(p1);

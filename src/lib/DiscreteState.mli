@@ -32,6 +32,8 @@ type global_location_index = int
 (** Global location: location for each automaton + value of the discrete *)
 type global_location
 
+type locations = location_index array
+
 (* Extended global location: location for each automaton + value of the discrete and local variables *)
 (*** NOTE (ÉA, 2013/04/14): might be one day deleted with the local variables table made independent ***)
 type global_location_and_local_variables
@@ -96,6 +98,7 @@ val get_global_location : global_location_and_local_variables -> global_location
 
 (** Get array of locations *)
 val get_locations : global_location -> location_index array
+val get_discrete : global_location -> AbstractValue.abstract_value array
 
 (** Get the location associated to some automaton *)
 val get_location : global_location -> automaton_index -> location_index

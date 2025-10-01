@@ -142,24 +142,11 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 			let failure_message = "Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 
-		(* Static division by 0 *)
-		| Static_division_by_0 error_message ->
-			(* Abort properly *)
-			let failure_message = "Division by 0 (" ^ error_message ^ ") spotted during the parsing!" in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
 		(* Problem with an included file *)
 		| IncludeFileNotFound included_file ->
 			(* Abort properly *)
 			let failure_message = "File `" ^ included_file ^ "` (included by `" ^ file_name ^ "`) not found." in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
-		(* April 1st *)
-		| April1st ->
-			print_message Verbose_standard Constants.fish;
-			terminate_program();
-			(* Necessary to make the program compile (even though this line won't be executed) *)
-			exit(0)
 	in
 	parsing_structure
 
@@ -222,7 +209,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
-	let parsed_model : ParsingStructure.unexpanded_parsed_model = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
+	let parsed_model : ParsingStructure.parsed_model_with_templates = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
 
 	(* Statistics *)
 	parsing_counter#stop;
@@ -258,12 +245,13 @@ let compile_model_and_property (options : Options.imitator_options) =
 		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
 		
 		(* Parsing the property *)
-		let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
+		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
 
 		(* Statistics *)
 		parsing_counter#stop;
 
 		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
+		
 		
 		Some parsed_property
 	)else(
@@ -327,3 +315,4 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
+

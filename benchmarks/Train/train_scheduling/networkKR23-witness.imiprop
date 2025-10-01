@@ -1,1 +1,0 @@
-property := #witness EF(loc[train_Green] = node_D && loc[train_Blue] = node_B && loc[train_Red] = node_A);

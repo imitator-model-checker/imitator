@@ -21,9 +21,6 @@
 (* For constraint conversion *)
 exception False_exception
 
-(** Exception raised when a static division by 0 (i.e., at the parsing level) is found *)
-exception Static_division_by_0 of string
-
 (** Exception raised when a division by 0 is found *)
 exception Division_by_0 of string
 
@@ -84,5 +81,4 @@ exception TypeError of string
 (* Used when a function isn't found *)
 exception UndefinedFunction of string
 
-(** Used for April 1st keyword *)
-exception April1st
+exception NoAliveStrategy

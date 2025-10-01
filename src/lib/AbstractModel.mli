@@ -107,6 +107,8 @@ type transition = {
 
 type transition_index = int
 
+
+
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
@@ -144,8 +146,6 @@ type lu_status =
 	| PTA_L
 	(* U-PTA *)
 	| PTA_U
-
-
 
 
 
@@ -239,8 +239,6 @@ type abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
-	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
-	has_controllable_or_uncontrollable_actions : bool;
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)
@@ -289,4 +287,10 @@ type abstract_model = {
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint: LinearConstraint.px_linear_constraint;
 
+	(* Is in coalition*)
+	is_in_coalition : automaton_index -> bool;
+	(* Has a coalition *)
+	has_coalition : bool;
+	(* Array automaton_index -> automaton_index list reprensts the automata a memeber of the coalition can see*)
+	informations : (automaton_index array) array;
 }

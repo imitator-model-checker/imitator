@@ -69,7 +69,6 @@ rule token = parse
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
-	| "EG"             { CT_EG }
  	| "IM"             { CT_TRACEPRESERVATION }
  	| "IMconvex"       { CT_IMCONVEX }
  	| "IMK"            { CT_IMK }
@@ -98,9 +97,7 @@ rule token = parse
 	| "before"         { CT_BEFORE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
-	| "exists"         { CT_EXISTS }
 	| "False"          { CT_FALSE }
-	| "forall"         { CT_FORALL }
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
@@ -119,11 +116,12 @@ rule token = parse
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
 	| "Win"            { CT_WIN }
-	| "WinAvoid"	   { CT_WINAVOID }
 	| "within"         { CT_WITHIN }
 	| "list"           { CT_LIST }
 	| "stack"          { CT_STACK }
 	| "queue"          { CT_QUEUE }
+	| "<<"		   	   { CT_BEG_COALITION }
+	| ">>"			   { CT_END_COALITION }
 
 
 
@@ -131,7 +129,7 @@ rule token = parse
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
   | "0b"['0'-'9']+ as lxm { BINARYWORD lxm }
-(*	| '"' [^'"']* '"' as lxm { STRING lxm }*) (* a string between double quotes *)
+	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
 	(* Comparison operators *)
 	| "<="             { OP_LEQ }
@@ -143,7 +141,6 @@ rule token = parse
 
 	(* Assignment *)
 	| ":="             { OP_ASSIGN }
-	| "<-"             { OP_ASSIGN }
 
 	(* Boolean operators *)
 	| '&'              { OP_CONJUNCTION }
@@ -161,8 +158,8 @@ rule token = parse
 	(* Parentheses and the like *)
 	| '('              { LPAREN }
 	| ')'              { RPAREN }
-(* 	| '{'              { LBRACE } *)
-(* 	| '}'              { RBRACE } *)
+	| '{'              { LBRACE }
+	| '}'              { RBRACE }
 	| '['              { LSQBRA }
 	| ']'              { RSQBRA }
 

@@ -139,26 +139,19 @@ let get_declared_synclabs_names =
 (** Check that all controllable actions were declared; also warn for multiply declared names *)
 (*------------------------------------------------------------*)
 let check_controllable_actions (controllable_actions : string list) (all_actions : string list) : bool =
-
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Starting to check (un)controllable actions (" ^ (string_of_list_of_string_with_sep "-" controllable_actions) ^ "), with list of known actions (" ^ (string_of_list_of_string_with_sep "-" all_actions) ^ ")");
-	);
-
 	(* 1. Check duplicates (no big deal) *)
 	(* Compute the multiply defined variables *)
 	let multiply_defined_names = elements_existing_several_times controllable_actions in
-	begin
 	(* Print a warning for each of them *)
 	match multiply_defined_names with
-		| [] -> ()
+		| [] -> true
 		| _ -> List.iter (fun variable_name -> print_warning ("Action `" ^ variable_name ^ "` is listed several times in the list of controllable actions.")) multiply_defined_names;
-	end;
 
 	(* 2. Check for undefined actions *)
 	(*** NOTE: using fold_left instead of for_all to get ALL errors *)
 	let all_valid = List.fold_left (fun current_valid action_name ->
 		if not (List.mem action_name all_actions) then (
-			print_error ("The action `" ^ action_name ^ "` declared as (un)controllable was not declared for any automaton."); false)
+			print_error ("The action `" ^ action_name ^ "` declared as controllable was not declared for any automaton."); false)
 		else current_valid
 	) true controllable_actions in
 	all_valid
@@ -981,6 +974,38 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   locations_per_automaton
 
 
+let make_large_positional_strategy parsed_automaton_namelist_list nb_automata get_automaton_index=
+
+	(* Initialise la coalition vide *)
+	let coalition = ref [] in
+
+	(* Initialise informations : tableau d'arrays vides *)
+	let informations = Array.make nb_automata [||] in
+
+	(* Parcours des éléments du parsed_automaton_namelist_list *)
+	List.iter (fun (automaton_name, visible_names) ->
+		let automaton_index = get_automaton_index automaton_name in
+
+		(* Ajout à la coalition *)
+		coalition := automaton_index :: !coalition;
+
+		(* Conversion de la liste des automates visibles en indices *)
+		let visible_indices = 
+			List.map get_automaton_index visible_names
+			|> Array.of_list
+		in
+
+		(* Mise à jour de informations *)
+		informations.(automaton_index) <- visible_indices
+
+	) parsed_automaton_namelist_list;
+
+	(!coalition, informations)
+
+	
+
+
+
 (*------------------------------------------------------------*)
 (** Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
@@ -1134,12 +1159,17 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				if location.flow <> [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
+                                let numconst_of_flow_value = function
+                                        | Flow_rat_value r -> r
+                                        | Flow_var _ -> raise  (InternalError "[make_automata]: unreachable code")
+                                in
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
 					List.sort_uniq compare
 					(
 						List.map (fun (clock_name, flow_value) ->
-							(index_of_variable_name variable_infos clock_name), flow_value
+							(index_of_variable_name variable_infos clock_name),
+                                                        (numconst_of_flow_value flow_value)
 						) location.flow
 					);
 
@@ -1932,9 +1962,6 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 		(* Unavoidability *)
 		| Parsed_AF parsed_state_predicate
 
-		(* Exists globally *)
-		| Parsed_EG parsed_state_predicate
-
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
@@ -2170,10 +2197,15 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 
 		(* Parametric timed game: reachability condition *)
 		| Parsed_Win parsed_state_predicate -> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-		| Parsed_WinAvoid (parsed_state_predicate1, parsed_state_predicate2) -> 
-			evaluate_and
-				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1)
-				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2)
+
+
+		(*------------------------------------------------------------*)
+		(* Strategy *)
+		(*------------------------------------------------------------*)
+
+		| Parsed_Strategies (_, _)-> true  (* Modify it later*)
+		| Parsed_Large_Strategies (_,_) -> true
+
 		end
 
 
@@ -2307,13 +2339,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		| Parsed_AG parsed_state_predicate ->
 			(* Return a property and no observer *)
 			AG (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
-			,
-			None
-
-		(* Exists globally *)
-		| Parsed_EG parsed_state_predicate ->
-			(* Return a property and no observer *)
-			EG (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 
@@ -2745,14 +2770,6 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 			Win (PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-		| Parsed_WinAvoid (parsed_state_predicate1, parsed_state_predicate2) ->
-			(* Return a property and no observer *)
-			WinAvoid (
-				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate1,
-				PropertyConverter.convert_state_predicate useful_parsing_model_information parsed_state_predicate2
-			)
-			,
-			None
 		in
 
 		(* Get the synthesis or emptiness type *)
@@ -2775,6 +2792,14 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 		}
 		,
 		converted_observer_structure_option
+	
+		(*------------------------------------------------------------*)
+		(* Strategy *)
+		(*------------------------------------------------------------*)
+
+		(* | Parsed_Strategies (parsed_automaton_namelist, parsed_property_option)->  *)
+
+
 
 (************************************************************)
 (************************************************************)
@@ -2782,16 +2807,15 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (************************************************************)
 (************************************************************)
 
-
+ 
 
 (*------------------------------------------------------------*)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model_with_templates) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-  (* Instantiate the template calls and expand syntatic variables *)
-  let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
-  let parsed_model = expand_model parsed_model in
+  (* Instantiate the template calls *)
+  let parsed_model = instantiate_model parsed_model in
 
   print_message Verbose_high ("\n*** Link variables to declarations.");
   (* Recompute model to link variables to their declarations, and return all variables declarations *)
@@ -2954,11 +2978,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let controllable_actions_checked : bool = match parsed_model.controllable_actions with
 	| Parsed_controllable_actions controllable_action_names
 	| Parsed_uncontrollable_actions controllable_action_names
-		->
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("\n*** Checking (un)controllable actions…");
-			);
-			check_controllable_actions controllable_action_names action_names
+		-> check_controllable_actions controllable_action_names action_names
 	| Parsed_no_controllable_actions -> true
 	in
 
@@ -2979,8 +2999,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Stop here if model not well formed *)
  	if not (constants_consistent && all_variables_different && all_automata_different && controllable_actions_checked && at_least_one_automaton) then raise InvalidModel;
  	
- 	
- 	
+ 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Vérifier que les propriétés stratégiques ne mettent pas le bazar *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
  	
  	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
@@ -3051,12 +3073,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Iter on unused components and print warnings *)
     ComponentSet.iter (function
         | Fun_component function_name ->
-(*            print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
+		(* print_warning ("Function `" ^ function_name ^ "` is declared but never used in the model; it is therefore removed from the model.")*)
             print_warning ("Function `" ^ function_name ^ "` is declared but never used.")
         | Variable_component ((variable_name, _) as variable_ref) when VariableInfo.is_local variable_ref ->
             print_warning ("Local variable `" ^ variable_name ^ "` is declared but never used.")
-(*        | Param_component (param_name, function_name) ->*)
-(*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
+		(*        | Param_component (param_name, function_name) ->*)
+		(*            print_warning ("Formal parameter `" ^ param_name ^ "` in `" ^ function_name ^ "` is declared but never used.")*)
         | _ -> ()
     ) unused_components;
 
@@ -3400,7 +3422,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
             List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
     in
 
-(*    let used_function_definitions = parsed_model.fun_definitions in*)
+		(*    let used_function_definitions = parsed_model.fun_definitions in*)
 
     let used_function_definitions =
         if options#no_variable_autoremove then
@@ -3564,7 +3586,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_medium ("Model syntax successfully checked.");
 	
 
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3581,7 +3602,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let (actions : action_index list), array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
 	
 	let nb_actions = List.length actions in
 	
@@ -3594,7 +3615,54 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(* We may need to create additional structures for the observer, if any *)
-	
+
+
+	(* Strategy detection*)
+	let get_automaton_index name =
+		try
+		  Hashtbl.find index_of_automata name
+		with Not_found ->
+		  Printf.printf "[ERREUR] Automate inconnu : %s\n" name;
+		  Printf.printf "Contenu actuel de la table index_of_automata :\n";
+		  Hashtbl.iter
+			(fun k v ->
+			   Printf.printf "  - %s -> %d\n" k v)
+			index_of_automata;
+		  raise Not_found
+	  in
+	  
+	let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
+
+	let parsed_property_option, list_coalition, informations,has_coalition =
+	match parsed_property_option with
+	| Some parsed_property ->
+		begin
+		  match parsed_property.property with
+		  | Parsed_Strategies (parsed_automaton_namelist, prop) ->
+			print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Positionnal strategy detected");
+			  let coalition =
+				List.map get_automaton_index parsed_automaton_namelist
+			  in
+			  let updated_property = { parsed_property with property = prop } in
+				let informations = Array.make nb_automata [||] in
+				List.iter(fun idx ->
+					informations.(idx) <- [|idx|];
+				)coalition;
+			  (Some updated_property, coalition, informations,true)
+			| Parsed_Large_Strategies (parsed_automaton_namelist_list, prop) ->
+				print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Strategy detected");
+				let coalition, informations = make_large_positional_strategy parsed_automaton_namelist_list nb_automata get_automaton_index in 
+				let updated_property = { parsed_property with property = prop } in
+				(Some updated_property, coalition, informations,true)
+		  | _ -> (Some parsed_property, [], [| [||] |],false)
+		end
+	| None -> (None, [], [| [||] |],false )
+  in
+  
+
+	(* Construction de la stratégie positionnelle *)
+	let is_in_coalition k = List.mem k list_coalition in
+
 	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information nb_actions observer_automaton_index_option observer_nosync_index_option parsed_property_option in
 	
 	(* Convert some variables to catch up with older code below *)
@@ -3606,10 +3674,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			converted_observer_structure.initial_observer_constraint_option
 	in
 	
-	
-
-
-
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3723,13 +3787,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Converting the controllable actions…");
 
-	let (controllable_actions_indices, has_controllable_or_uncontrollable_actions) : (action_index list * bool) = match parsed_model.controllable_actions with
+	let controllable_actions_indices : action_index list = match parsed_model.controllable_actions with
 		| Parsed_controllable_actions controllable_action_names ->
 			print_message Verbose_high ("      Controllable actions detected");
 			(* Convert to a list of controllable actions *)
 			make_controllable_actions controllable_action_names index_of_actions
-			,
-			true
 
 		| Parsed_uncontrollable_actions controllable_action_names ->
 			print_message Verbose_high ("      Uncontrollable actions detected");
@@ -3737,18 +3799,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let uncontrollable_actions_indices = make_controllable_actions controllable_action_names index_of_actions in
 			(* Take complement *)
 			list_diff actions uncontrollable_actions_indices
-			,
-			true
 
 		| Parsed_no_controllable_actions ->
 			print_message Verbose_high ("      No controllable actions detected");
 			[]
-			,
-			false
 	 in
 
 	(* Is an action controllable? *)
 	let is_controllable_action action_index = List.mem action_index controllable_actions_indices in
+
 
 
 
@@ -3894,11 +3953,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building automata per action…");
 	let automata_per_action = make_automata_per_action actions_per_automaton nb_automata nb_actions in
 
-(*	(* Convert the costs *)
+		(*	(* Convert the costs *)
 	print_message Verbose_total ("*** Building costs (if any)…");
 	let costs = convert_costs index_of_variables constants costs in*)
 
-(*	(* Convert the invariants *)
+		(*	(* Convert the invariants *)
 	print_message Verbose_total ("*** Building invariants…");
 	let invariants = convert_invariants index_of_variables constants invariants in*)
 
@@ -3921,13 +3980,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print metrics if verbose low or in any case in mode translation *)
 	if verbose_mode_greater Verbose_low || (match options#imitator_mode with AbstractAlgorithm.Translation _ -> true | _ -> false) then(
 		print_message Verbose_standard (
-				let nb_declared_actions = List.length (List.filter (fun a -> action_types a = Action_type_sync) actions) in
 			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
 			^ ", "
 			^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
-			^ (string_of_int nb_declared_actions) ^ " declared synchronization action" ^ (s_of_int nb_declared_actions) ^ ", "
-			^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ " (synchronized or not), "
+			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 			^ (string_of_int nb_rationals) ^ " rational variable" ^ (s_of_int nb_rationals) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
@@ -4470,8 +4527,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	actions = actions;
 	(* Only controllable action indexes *)
 	controllable_actions = controllable_actions_indices;
-	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
-	has_controllable_or_uncontrollable_actions = has_controllable_or_uncontrollable_actions;
 	(* Action names *)
 	action_names = action_names;
 	(* The type of actions *)
@@ -4501,12 +4556,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* An array transition_index -> automaton_index *)
 	automaton_of_transition = automaton_of_transition;
 
-    (* The list of declared functions *)
-    functions_table = functions_table;
+	(* The list of declared functions *)
+	functions_table = functions_table;
 
-    (* Local variables table type *)
-    (*** WARNING (ÉA, 2023/04/14): probably has nothing to do here ***)
-    local_variables_table = local_variables_table;
+	(* Local variables table type *)
+	(*** WARNING (ÉA, 2023/04/14): probably has nothing to do here ***)
+	local_variables_table = local_variables_table;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;
@@ -4518,9 +4573,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	initial_p_constraint = initial_p_constraint;
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
+	
+	(* Is in coalition*)
+	is_in_coalition = is_in_coalition;	
+	(* Has a coalition *)
+	has_coalition = has_coalition;
 
+	informations = informations
 	}
 
-	,
-	
-	abstract_property_option
+	, abstract_property_option

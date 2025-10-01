@@ -92,9 +92,6 @@ type property =
 	(* Global invariant *)
 	| AG of state_predicate
 
-	(* Exists globally *)
-	| EG of state_predicate
-
 	(* Exists until *)
 	| EU of state_predicate * state_predicate
 
@@ -236,9 +233,6 @@ type property =
 
 	(* Parametric timed game: reachability condition *)
 	| Win of state_predicate
-
-	(* Parametric timed game: reachability condition + avoid condition *)
-	| WinAvoid of (state_predicate * state_predicate)
 
 
 

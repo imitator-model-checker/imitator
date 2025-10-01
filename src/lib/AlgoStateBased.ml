@@ -1,3 +1,4 @@
+
 (************************************************************
  *
  *                       IMITATOR
@@ -693,19 +694,8 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 	time_polyhedron
 
 
-let apply_time_shift_no_stopwatch (direction : LinearConstraint.time_direction) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
-		let time_polyhedron =
-			(* Choose the right variable depending on time direction *)
-			let appropriate_variable = match direction with
-				| LinearConstraint.Time_forward	-> !time_elapsing_polyhedron
-				| LinearConstraint.Time_backward	-> !time_past_polyhedron
-			in
-			match appropriate_variable with
-			| Some polyedron -> polyedron
-			| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift_no_stopwatch`.")
-		in
-		(* Apply time elapsing *)
-		LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint
+
+
 
 let apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 	(* If urgent: no time elapsing *)
@@ -762,18 +752,6 @@ let apply_time_elapsing = apply_time_shift LinearConstraint.Time_forward
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 let apply_time_past = apply_time_shift LinearConstraint.Time_backward
-
-
-(*------------------------------------------------------------*)
-(** Apply time elapsing in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
-(*------------------------------------------------------------*)
-let apply_time_elapsing_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_forward
-
-
-(*------------------------------------------------------------*)
-(** Apply time past in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
-(*------------------------------------------------------------*)
-let apply_time_past_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_backward
 
 
 
@@ -883,27 +861,13 @@ let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (
         model.transitions_description transition_index
     in
 
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total "Entering compute_new_location_guards_updates…";
-	);
-
-
     (*** BEGIN code with local variables ***)
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
 
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Copying location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display source_location));
-	);
-
 	(* Create an extended location *)
 	let copied_location : DiscreteState.global_location = DiscreteState.copy_location source_location in
-
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Copied location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display copied_location));
-	);
-
 	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables copied_location local_variables_table in
 
     (* Get functions that enable reading / writing global variables at a given location *)
@@ -1225,7 +1189,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
 				(*** TODO: check if this test is really worth it ***)
 					let is_possible = State.is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint guard in
-				if not is_possible then (
+					if not is_possible then (
 						(* Statistics *)
 						counter_nb_early_unsatisfiable#increment;
 						print_message Verbose_medium "** early skip transition (constraint+guard unsatisfiable) **"
@@ -1259,29 +1223,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 		true
 	) with Unsat_exception -> false
 
-(*------------------------------------------------------------*)
-(** (Re)compute the time elapsing/past polyhedrons with respect to the input model  *)
-(*------------------------------------------------------------*)
-(*** NOTE: Only used in AlgoPTGStrategyGenerator to extend dimensions of generated controller model ***)
-let compute_static_time_polyhedrons (model : AbstractModel.abstract_model) = 
-	let variables_elapse		= model.clocks in
-	let variables_constant		= model.parameters_and_discrete in
-	let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
-	let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
 
-	(* Print some information *)
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high "Computed the static time elapsing polyhedron:";
-		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
-		print_message Verbose_high "";
-		print_message Verbose_high "Computed the static time past polyhedron:";
-		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
-		print_message Verbose_high "";
-	);
-
-	(* Save them *)
-	time_elapsing_polyhedron	:= Some time_el_polyhedron;
-	time_past_polyhedron 		:= Some time_pa_polyhedron
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing *)
@@ -1291,7 +1233,25 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 	if not model.has_non_1rate_clocks then(
-		compute_static_time_polyhedrons model;
+		let variables_elapse		= model.clocks in
+		let variables_constant		= model.parameters_and_discrete in
+		let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
+		let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high "Computed the static time elapsing polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+			print_message Verbose_high "";
+			print_message Verbose_high "Computed the static time past polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+			print_message Verbose_high "";
+		);
+
+		(* Save them *)
+		time_elapsing_polyhedron	:= Some time_el_polyhedron;
+		time_past_polyhedron 		:= Some time_pa_polyhedron;
+
 	);
 
 	(* Get the declared init state with initial constraint C_0(X) *)
@@ -1337,18 +1297,10 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 
-		let current_constraint = 
-			match options#ptg_abstraction with 
-			| Location -> 
-				(* Perform intersection of I_l0(X) and D_i = d_i *)
-				print_message Verbose_high ("Performing intersection of I_l0(X) and D_i = d_i");	
-				LinearConstraint.pxd_intersection [invariant ; discrete_constraint]
-			| _ ->
-				(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-				print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");	
-				LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)]
-		in
-			(* Print some information *)
+		(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+		print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
+		let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
+		(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
@@ -1470,16 +1422,8 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = 
-			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
-			(* Expand to entire invariant if this abstraction is turned on *)
-			if options#ptg_abstraction = Location then 
-				Option.map 
-				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
-				k
-			else k
-		in
-				
+		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+
 		(* Check the satisfiability *)
 		match new_constraint with
 			| None ->
@@ -2753,7 +2697,6 @@ let intersect_with_timed_interval_constraint_option  (model : AbstractModel.abst
 
 
 
-
 (************************************************************)
 (************************************************************)
 (* Types *)
@@ -2868,6 +2811,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	val nb_POSITIVE_EXAMPLES_MAX : int = 6
 	val nb_NEGATIVE_EXAMPLES_MAX : int = 6
 
+	(*** Useful for strategic operations : memorize the tuple (wining state, constraint) if needed ***)
+
+	val mutable winning_states_and_constraint : state_index list = []
 
 	(*------------------------------------------------------------*)
 	(* Counters *)
@@ -2982,6 +2928,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(*** NOTE: here, we use the mini-cache system ***)
 		let p_constraint = self#compute_p_constraint_with_minicache px_linear_constraint in
+		
+		(* let str_p_constraint = LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint in
+		let str_synthetized_cstr = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint in
+		Printf.printf "state Constraint: %s\n\n" str_p_constraint;
+		Printf.printf "synthetisized Constraint: %s\n\n" str_synthetized_cstr; *)
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
@@ -3372,11 +3323,11 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model successor));
 					);
 
-					(* Try to add the state to the state space *)
+					(* Try to add the state to the state space *) (* succesor and action_index add to manage strategic computation*)
 					let added : bool = self#add_a_new_state source_state_index combined_transition successor in
 
 					(* Update *)
-					has_successors := !has_successors || added;
+					has_successors := !has_successors || added;					
 
 				) successors;
 
@@ -4211,6 +4162,33 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			raise TerminateAnalysis;
 		)
 
+	(* Define what to do when a target state is find in a strategic state_space with a witness property for each covered Algo*)
+	method terminate_if_witness_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		if abstract_property.synthesis_type = Witness then (
+			let strategy_found () =
+			(* Update termination status *)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			self#print_algo_message Verbose_standard "The strategy guaranteeing the property is:\n";
+			winning_states_and_constraint <- [target_state_index];
+		
+			termination_status <- Some Result.Witness_found;
+		
+			raise TerminateAnalysis
+			in
+			match abstract_property.property with
+			| EF _ -> strategy_found ()
+			| AGnot _ -> state_space#kill_strategy target_state_index  (* Kill the state and cut the branch if taget state found in AGnot*)
+			| EU _ -> strategy_found()
+			| _ -> ()  (* Add some more Algo later here *)
+		)
+
+	(* Define what to do when a target state is find in a strategic state_space with a strategic property for each covered Algo*)
+	method synthesis_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		match abstract_property.property with
+		| EF _  -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| AGnot _ -> state_space#kill_strategy target_state_index 
+		| EU _ -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| _ -> () (* Add some more Algo later here *)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
@@ -4954,7 +4932,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := state_space#merge !queue (fun _ _ -> ());
+                    queue := state_space#merge !queue;
                     (match options#exploration_order with
                         | Exploration_queue_BFS_RS -> hashtbl_filter (state_space#test_state_index) rank_hashtable
                         | _ -> ();
@@ -5023,7 +5001,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		print_message Verbose_standard (
 			let nb_states = state_space#nb_states in
 			let nb_transitions = state_space#nb_transitions in
-			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Verification completed" in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
 			"\n" ^ fixpoint_str ^ (*" at a depth of "
 			^ (string_of_int bfs_current_depth) ^ ""
 			^ *)": "
@@ -5059,7 +5037,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		bfs_current_depth <- 1;
 
 		(* To check whether the time limit / state limit is reached *)
-		limit_reached <- Keep_going;
 
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		algorithm_keep_going <- true;
@@ -5073,6 +5050,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
 		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
+			(* state_space#display_all_strategy; *)
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -5091,7 +5069,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				((* Count the states for verbose purpose: *)
+				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 
 				(* Perform the post *)
@@ -5105,7 +5083,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 				(* Return the concatenation of the new states *)
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
-				List.rev_append current_post_n_plus_1 new_states)
+				List.rev_append current_post_n_plus_1 new_states
 			) [] !post_n
 			)
 			with TerminateAnalysis ->(
@@ -5142,7 +5120,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := state_space#merge !new_states_after_merging (fun _ _ -> ());
+                new_states_after_merging := state_space#merge !new_states_after_merging;
             | Merge_212 ->
                 let eaten_states = state_space#merge212 !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;
@@ -5313,9 +5291,28 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 
 		(* Create the state space *)
-		state_space <- new StateSpace.stateSpace guessed_nb_transitions;
+		state_space <- new StateSpace.stateSpace guessed_nb_transitions ;
+		if model.has_coalition then (
 
-		(* Check whether the algorithm should immediately terminate because of an unsatisfiable initial state *)
+			(* Construire la liste des automates dans la coalition *)
+			let in_coalition =
+			  List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
+			in
+		  
+			(* if (List.length in_coalition) < ((model.nb_automata+1)/2) then ( *)
+			(match self#algorithm_name with
+			| "AGnot" -> 
+				options#set_memoized_strategies_inclusion;
+				options#deactivate_cumulative_pruning;
+			| _ -> options#deactivate_cumulative_pruning;);
+		
+
+			(* Le nombre de "vrais" actions *)
+			let nb_sync_action =
+				List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in
+
+			state_space#strategy_initialisation model.has_coalition nb_sync_action in_coalition model.informations model.automata_per_action;
+		);
 		let termination_at_initial_state : Result.imitator_result option = self#try_termination_at_initial_state in
 
 		match termination_at_initial_state with
@@ -5330,7 +5327,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		| None ->
 
 			(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state with
+		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state None None with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
 				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

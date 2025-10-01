@@ -1,0 +1,30 @@
+(************************************************************)
+  automaton system
+(************************************************************)
+synclabs: a1,a2,a3,a4,a5,a8;
+
+loc s0: invariant True
+	when True sync a3 do {} goto s1;
+	when True sync a2 do {} goto s2;
+
+loc s1: invariant True
+	when True sync a2 do {} goto s2;
+	when True sync a1 do {} goto s3;
+
+loc s2: invariant True
+	when True sync a4 do {} goto s4;
+	when True sync a1 do {} goto s3;
+	when True sync a3 do {} goto s1;
+
+loc s3: invariant True
+	when True sync a3 do {} goto s4;
+	when True sync a5 do {} goto s5;
+
+loc s4: invariant True
+	when True sync a4 do {} goto s3;
+	when True sync a8 do {} goto s5;
+
+loc s5: invariant True
+	
+end (* system *)
+

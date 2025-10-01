@@ -57,7 +57,7 @@ class algoPostStar (model : AbstractModel.abstract_model) (options : Options.imi
 	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state None None in
 		
 		(* Print some information *)
 		print_message Verbose_total ("New state addition attempt successfully performed.");

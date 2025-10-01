@@ -27,6 +27,7 @@ open Automaton
 open State
 open AbstractModel
 open AbstractAlgorithm
+open Strategy
 
 
 (************************************************************)
@@ -46,6 +47,7 @@ type addition_result =
 	| State_already_present of state_index
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
+
 
 (************************************************************)
 (* Transitions *)
@@ -133,6 +135,9 @@ type symbolic_run = {
 }
 
 
+(* A strategy maps a global location index to a list of allowed action indices *)
+(* type strategy = (DiscreteState.global_location_index, action_index list) Hashtbl.t *)
+
 (************************************************************)
 (* Set of state index *)
 (************************************************************)
@@ -165,8 +170,13 @@ type state_space = {
 	(* The number of generated states (even not added to the state space) *)
 	nb_generated_states : int ref;
 
+	mutable has_coalition : bool;
 	(* An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
 	mutable all_states : (State.state_index, abstract_state) Hashtbl.t;
+
+	(* An array 'state_index'-> 'strategy'; Remindeer strategy : 'automaton_index'->'location_index'->'action_index'*)
+	strategies : (State.state_index, strategy_index)Hashtbl.t;
+	mutable informations : (Automaton.automaton_index array) array;
 
 	(* The id of the initial state *)
 	(*** NOTE: mutable due to the fact that the initial state can be merged with another state *)
@@ -188,6 +198,11 @@ type state_space = {
 
 	(* An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : State.state_index ref;
+
+	mutable nb_sync_action : int;
+
+	mutable in_coalition : automaton_index list;
+
 }
 
 
@@ -236,6 +251,7 @@ exception Found_old of State.state_index
 (** State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
 exception Found_new of State.state_index
 
+exception NoAliveStrategy
 
 
 (************************************************************)
@@ -282,6 +298,10 @@ let counter_empty_states_for_comparison = create_hybrid_counter_and_register "St
 (* Counters for experiments of merging-in-pta *)
 (* let tcounter_skip_test = create_discrete_counter_and_register "StateSpace.Skip tests" Algorithm_counter Verbose_experiments *)
 
+(* Strategic fonctions counters *)
+let counter_create_strategy = create_hybrid_counter_and_register "StateSpace.create_strategy" States_counter Verbose_experiments
+let counter_compare_strategy_inclusive = create_hybrid_counter_and_register "StateSpace.compare_strategy_inclusive" States_counter Verbose_experiments
+let counter_kill_strategy = create_discrete_counter_and_register "StateSpace.kill_strategy" States_counter Verbose_experiments
 
 
 (************************************************************)
@@ -385,6 +405,9 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(* Create initial state space *)
 	let initial_state_space =
+		let has_coalition = false in
+		let strategies =  Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		let informations = [| [||] |] in
 		(* Create a hashtable : state_index -> State.abstract_state for the reachable states *)
 		let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 		(* Create a hashtable : location -> location_index for the locations *)
@@ -401,6 +424,9 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* Create the state space *)
 		{
 			nb_generated_states   = ref 0;
+			has_coalition         = has_coalition;
+			strategies	          = strategies;
+			informations          = informations;
 			all_states            = states;
 			initial               = None;
 			index_of_locations    = index_of_locations;
@@ -408,6 +434,8 @@ class stateSpace (guessed_nb_transitions : int) =
 			states_for_comparison = states_for_comparison;
 			transitions_table     = transitions_table;
 			next_state_index      = ref 0;
+			nb_sync_action        = 0;
+			in_coalition          = [];
 		}
 	in
 	(*------------------------------------------------------------*)
@@ -421,12 +449,84 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	val mutable state_space = initial_state_space
 
+	val mutable winning_states : state_index list = []
+
+	val mutable automata_per_action : action_index -> (automaton_index list) = fun _ -> []
+
+
+
+	(************************************************************)
+	(**** Strategic Initialisation *****)
+	(************************************************************)
+
+	  (* Initialize strategy-related information for coalition-based reasoning *)
+	method strategy_initialisation (has_coalition : bool) (nb_sync_action : int) (coalition : automaton_index list)(new_info : (automaton_index array) array)(automata_per_act : action_index -> (automaton_index list)):unit=
+		state_space.has_coalition <- has_coalition;
+		state_space.nb_sync_action <- nb_sync_action;
+		state_space.in_coalition <- coalition;
+		state_space.informations <- new_info;
+		automata_per_action <- automata_per_act;
+		Strategy.initialize_strategies [];
+		Hashtbl.replace state_space.strategies 0 0
+		
+
+	method initialize_winning_states (new_winning_states : state_index list) : unit =
+		winning_states <- new_winning_states;
+
 
 	(************************************************************)
 	(************************************************************)
 	(* Simple get methods *)
 	(************************************************************)
 	(************************************************************)
+
+	method get_winning_states : state_index list =
+		winning_states
+
+	method get_state_space_location : DiscreteState.global_location DynArray.t = state_space.locations
+
+	(******* get methods for strategic computations *******)
+	
+	 (* Returns true if the model is using strategic reasoning (i.e., contains a strategic operator) *)
+	method has_coalition : bool =
+		state_space.has_coalition;
+
+	(* Find the most recently added (and alive) strategy *)
+	method find_last_alive_strategy : (state_index) =
+		let rec search i =
+			if i < 0 then raise NoAliveStrategy
+			else
+			let strat_idx = Hashtbl.find state_space.strategies i in
+			if Strategy.is_dead strat_idx then(
+				search(i-1)
+			)
+			else 
+				(i)
+		in
+		search (!(state_space.next_state_index) - 1)
+
+
+	(* Return a list of all alive strategies in the state space *)
+	method find_all_alive_strategies : (state_index * Strategy.strategy_index) list =
+		let all_alive = Strategy.find_all_alive_strategies () in
+		List.iter(fun idx -> Printf.printf "%d;" idx)all_alive;
+		if List.length all_alive = 0 then(raise NoAliveStrategy);
+		let result = ref [] in
+		Hashtbl.iter (fun state_index _ ->
+			let strat_index = Hashtbl.find state_space.strategies state_index in
+			if (List.mem strat_index all_alive) then(
+			result := (state_index, strat_index) :: !result);
+		) state_space.all_states;
+		!result
+
+
+	(* Retrieve the strategy associated to a specific state index *)
+	method find_strategy_index (state_index:state_index) : strategy_index =
+		Hashtbl.find state_space.strategies state_index
+
+
+	(******* Other get methods *******)
+
 	(** Return the number of generated states (not necessarily present in the state space) *)
 	method get_nb_gen_states : int = !(state_space.nb_generated_states)
 
@@ -617,12 +717,6 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* Methods computing things from the state space without modifications *)
 	(************************************************************)
 	(************************************************************)
-
-(*	(*------------------------------------------------------------*)
-	(** Checks whether a state index exists in the state space *)
-	(*------------------------------------------------------------*)
-	method state_index_exists (state_index : state_index) : bool =
-		Hashtbl.mem state_space.all_states state_index*)
 
 (*	(*------------------------------------------------------------*)
 	(** Pretty-printing method for debug *)
@@ -889,7 +983,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* SCC detection *)
 	(*------------------------------------------------------------*)
 
-	(* When a state is encountered for a second time, then a loop may exist (or more generally an SCC): `reconstruct_scc state_space source_state_index` tries to reconstruct the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+	(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): `reconstruct_scc state_space source_state_index` reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 	(*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
 	method reconstruct_scc source_state_index : scc option =
 		(* Print some information *)
@@ -899,13 +993,13 @@ class stateSpace (guessed_nb_transitions : int) =
 		let current_index = ref 0 in
 
 		(* Hashtable state_index -> tarjan_node *)
-		let tarjan_nodes :  (state_index, tarjan_node) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		let tarjan_nodes = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 
 		(* tarjan_node stack *)
-		let stack : tarjan_node Stack.t = Stack.create () in
+		let stack = Stack.create () in
 
 		(* Get the tarjan_node associated with a state_index; create it if not found in the Hashtable *)
-		let tarjan_node_of_state_index state_index : tarjan_node =
+		let tarjan_node_of_state_index state_index =
 			(* If present in the hashtable already *)
 			if Hashtbl.mem tarjan_nodes state_index then(
 				Hashtbl.find tarjan_nodes state_index
@@ -925,7 +1019,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(* Get the index field from a tarjan_node; raise InternalError if index = None *)
-		let get_index tarjan_node : state_index =
+		let get_index tarjan_node =
 			match tarjan_node.index with
 				| Some ll -> ll
 				| _ -> raise (InternalError "v.index should not be undefined at that point")
@@ -1342,14 +1436,77 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	(************************************************************)
 
+
+	(******* Methods useful for strategic computations ******)
+
+	(** mark a strategy of a state as killed**)
+	method kill_strategy (state_index : state_index) : unit =
+		counter_kill_strategy#increment;
+
+		let strategy_index = Hashtbl.find state_space.strategies state_index in
+		Strategy.kill_strategy strategy_index;
+
+
+	(* ATTENTION : A Utilise UNIQUEMENT en fin de calcul, pertube le Hash des stratégies*)
+	method propagate_killed_strategy : unit = 
+		Strategy.propagate_killed_strategy();
+
+	(* Take a list of strategies and return the list of all the biggest strategy (au sens de l'inclusion)*)
+	method keep_biggest_strategies
+		(strategies : (state_index * strategy_index) list)
+		: state_index list = 
+
+		(* Build the list of non-subsumed strategies *)
+		let rec loop remaining kept =
+			match remaining with
+			| [] -> List.rev kept
+			| (idx, strat_idx) :: rest ->
+					let is_subsumed = List.exists (fun (_, kept_strat_idx) ->
+						self#compare_strategy_inclusive strat_idx kept_strat_idx
+					) kept in
+					if is_subsumed then
+						loop rest kept
+					else
+						let kept_filtered = List.filter (fun (_, s_idx) ->
+							not (self#compare_strategy_inclusive s_idx strat_idx)
+						) kept in
+						loop rest ((idx, strat_idx) :: kept_filtered)
+		in
+
+		let state_strat_list = loop strategies [] in
+		let result = ref [] in
+		List.iter (fun (state_index, _) ->
+			result := state_index :: !result
+		) state_strat_list;
+		!result
+
+
+	method keep_different_winning_strategies(winning_states : state_index list) : state_index list =
+
+		print_message Verbose_experiments  ("Nombre d'états gagnants avant filtrage : " ^ string_of_int (List.length winning_states) ^".");
+		let seen : strategy_index list ref = ref [] in
+		let result : (state_index) list ref = ref [] in
+
+		List.iter (fun state_idx ->
+			let strat_idx = Hashtbl.find state_space.strategies state_idx in
+			if not (List.exists (fun s -> s = strat_idx) !seen) then (
+			seen := strat_idx :: !seen;
+			result := (state_idx) :: !result
+			)
+		) winning_states;
+
+		List.rev !result
+
+
+
 	(** Increment the number of generated states (even though not member of the state space) *)
 	method increment_nb_gen_states =
 		state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
 
 
 	(* Return a new location_index for a given location, unless it is already stored in the location indexes hashtable *)
-	method private new_location_index (location : DiscreteState.global_location) : location_index * bool =
-		let new_index, is_new = try (
+	method private new_location_index (location : DiscreteState.global_location) : location_index =
+		let new_index = try (
 (*			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total ("Trying to find global location index in `index_of_locations`");
 				print_message Verbose_total ("Current state space:");
@@ -1362,7 +1519,7 @@ class stateSpace (guessed_nb_transitions : int) =
 (* 			print_message Verbose_total ("Global location index " ^ (string_of_int location_index) ^ " found in `index_of_locations`"); *)
 
 			(* Return *)
-			location_index, false
+			location_index
 		) with Not_found -> (
 (* 			print_message Verbose_total ("Global location index not found in `index_of_locations`"); *)
 			(* If not found: add it *)
@@ -1375,10 +1532,10 @@ class stateSpace (guessed_nb_transitions : int) =
 			(* Check length (COULD BE REMOVED) *)
 			(* if DynArray.length state_space.locations <> Hashtbl.length state_space.index_of_locations then(
 				raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
-				new_index, true;
+				new_index;
 		) in
 		(* Return new index *)
-		new_index, is_new
+		new_index
 
 	(** Perform the insertion of a new state in a state space *)
 	method private insert_state location_index (new_state : state) =
@@ -1431,38 +1588,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	method private find_state_index (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (state_to_look_for : State.state) : addition_result option =
 		let result : addition_result option =
 
-		let location_index, is_new = self#new_location_index state_to_look_for.global_location in
-
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
-		
-		match options#ptg_abstraction with 
-		| Location | Convex_Hull -> 
-			(* There is only one symbolic state per location in these abstraction levels *)
-			let get_representative_state_index location_index = 
-				(* Exactly one binding per existing location *)
-				Hashtbl.find state_space.states_for_comparison location_index
-			in 
-				
-			if is_new then 
-				None
-			else if options#ptg_abstraction = Location then
-				let representative = get_representative_state_index location_index in 
-				Some (State_already_present representative)
-			else 
-				(* Convex Hull case *) 
-				let representative = get_representative_state_index location_index in 
-				let representative_state = self#get_state representative in 
-				
-				if State.state_included_in state_to_look_for representative_state [] then 
-					Some (State_already_present representative)
-				else
-				(LinearConstraint.px_hull_assign representative_state.px_constraint state_to_look_for.px_constraint;
-				Some (State_replacing representative))
-				
-		
-		| No_Abstraction ->
+		let location_index = self#new_location_index state_to_look_for.global_location in
 
 		(* Shortcut: If no check requested: does not test anything *)
 		if state_comparison = No_check then (
@@ -1491,7 +1617,8 @@ class stateSpace (guessed_nb_transitions : int) =
 			);
 
 			(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
-
+			(* Retrieve the input options *)
+			let options = Input.get_options () in
 			let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
 				match global_time_clock_option with
 				(* Nothing to do *)
@@ -1504,35 +1631,12 @@ class stateSpace (guessed_nb_transitions : int) =
 			)
 			in
 
-			(*** WARNING: inefficient computation: at EVERY search, we RECOMPUTE all IHs! Should be optimized by storing them somewhere ***)
-			(* Case IH: apply IH to the state before its (potential) addition *)
-			let state_to_look_for = if options#ih then (
-				let global_location: DiscreteState.global_location = state_to_look_for.global_location in
-				let px_constraint : LinearConstraint.px_linear_constraint = state_to_look_for.px_constraint in
-				(* Apply IH and rebuild state *)
-				{
-					global_location = global_location;
-					px_constraint = LinearConstraint.px_ih px_constraint;
-				}
-			)else state_to_look_for in
-
 			(* Iterate on each state *)
 			List.iter (fun (state_index : State.state_index) ->
 				let state = self#get_state state_index in
 
 				print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
 
-				(*** WARNING: horrible computation: at EVERY search, we RECOMPUTE all IHs! Should be optimized by storing them somewhere ***)
-				(* Case IH: apply IH to the state before its (potential) addition *)
-				let state = if options#ih then (
-					let global_location: DiscreteState.global_location = state.global_location in
-					let px_constraint : LinearConstraint.px_linear_constraint = state.px_constraint in
-					(* Apply IH and rebuild state *)
-					{
-						global_location = global_location;
-						px_constraint = LinearConstraint.px_ih px_constraint;
-					}
-				)else state in
 
 				(* Branch depending on the check function used for state comparison *)
 				match state_comparison with
@@ -1607,7 +1711,9 @@ class stateSpace (guessed_nb_transitions : int) =
 							(* Stop looking for states *)
 							raise (Found_new state_index)
 						))
+
 			) old_states;
+
 			(* Not found! *)
 			None
 		)	with
@@ -1615,6 +1721,91 @@ class stateSpace (guessed_nb_transitions : int) =
 			| Found_new state_index -> Some (State_replacing state_index)
 	)
 	in result
+
+		(* Tries to find an existing state with a matching strategy.
+		If an existing state has a strategy that is inclusive with the one provided, it is reused or updated.
+		Otherwise, returns None. *)
+	method private find_state_index_strategy
+		(state_comparison : AbstractAlgorithm.state_comparison_operator)
+		(global_time_clock_option : Automaton.clock_index option)
+		(state_to_look_for : State.state)
+		(state_strategy_index : strategy_index) : addition_result option =
+
+		(* Shortcut: if no comparison is requested, return None *)
+		if state_comparison = No_check then None
+		else
+			let location_index = self#new_location_index state_to_look_for.global_location in
+			let old_states =
+			try Hashtbl.find_all state_space.states_for_comparison location_index
+			with Not_found -> []
+			in
+
+			let options = Input.get_options () in
+			let clocks_to_remove =
+			if options#no_global_time_in_comparison then
+				match global_time_clock_option with
+				| Some c -> [c]
+				| None -> []
+			else []
+			in
+
+			let rec search = function
+			| [] -> None
+			| state_index :: rest ->
+				let old_strategy_index = Hashtbl.find state_space.strategies state_index in
+
+				let old_state = self#get_state state_index in
+				let matches =
+					match state_comparison with
+					| Equality_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						(State.state_equals state_to_look_for old_state clocks_to_remove) && (old_strategy_index = state_strategy_index)
+
+					| Inclusion_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						(State.state_included_in state_to_look_for old_state clocks_to_remove) && (self#compare_strategy_inclusive state_strategy_index old_strategy_index)
+
+					| Including_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if State.state_included_in old_state state_to_look_for clocks_to_remove then (
+						if State.state_included_in state_to_look_for old_state clocks_to_remove then
+							true
+						else (
+							self#replace_constraint state_index state_to_look_for.px_constraint;
+							raise (Found_new state_index)
+						)
+						) else false
+
+					| Double_inclusion_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if (State.state_included_in state_to_look_for old_state clocks_to_remove) && (self#compare_strategy_inclusive state_strategy_index old_strategy_index) then true
+						else (
+						statespace_dcounter_nb_state_comparisons#increment;
+						if (State.state_included_in old_state state_to_look_for clocks_to_remove) && (self#compare_strategy_inclusive old_strategy_index state_strategy_index) then (
+							self#replace_constraint state_index state_to_look_for.px_constraint;
+							if old_strategy_index <> state_strategy_index then(
+								self#add_strategy_index_to_state state_index state_strategy_index;
+							);
+							raise (Found_new state_index)
+						) else false
+						)
+
+					| No_check -> false
+      		in
+
+				if matches then (
+					statespace_dcounter_nb_states_included#increment;
+					raise (Found_old state_index)
+				) else
+					search rest
+				
+
+			in
+
+			try search old_states
+			with
+			| Found_old state_index -> Some (State_already_present state_index)
+			| Found_new state_index -> Some (State_replacing state_index)
 
 
 	(* Checks whether a state exists in the state space (using equality comparison); a global clock may optionally be passed, in which case the comparison is done *after* eliminating that clock *)
@@ -1634,35 +1825,66 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 	(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
-	method add_state (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (new_state : state) : addition_result =
-		(* Statistics *)
+
+  (* Try to add a new state to the state space (or retrieve an existing one).
+     Also creates a new strategy if strategic reasoning is enabled. *)
+
+	method add_state
+		(state_comparison : AbstractAlgorithm.state_comparison_operator)
+		(global_time_clock_option : Automaton.clock_index option)
+		(new_state : state)
+		(source_state_index_opt : state_index option)
+		(action_index_opt : action_index option)
+		: addition_result =
+
 		counter_add_state#increment;
 		counter_add_state#start;
 
-		let result : addition_result =
-
-		(* Try to find the state index associated to the state in the state space, if any *)
-		match self#find_state_index state_comparison global_time_clock_option new_state with
-		(* Not found: insert state *)
-		| None ->
-			let location_index, _ = self#new_location_index new_state.global_location in
-			let new_state_index = self#insert_state location_index new_state in
-
-			(* Print some information *)
-			print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
-
-			(* Return *)
-			New_state new_state_index
-		(* Found: return it directly *)
-		| Some addition_result ->
-			addition_result
-
+		(* Determine the strategy index if applicable *)
+		let (find_state, strategy_index_opt) =
+			match action_index_opt, source_state_index_opt with
+			| Some action_index, Some source_state_index when state_space.has_coalition ->
+				let strategy_index = self#create_strategy_index source_state_index action_index
+				in
+				let find_state = self#find_state_index_strategy
+				state_comparison global_time_clock_option new_state strategy_index
+				in
+				(find_state, Some strategy_index)
+			| _ ->
+				let find_state = self#find_state_index
+				state_comparison global_time_clock_option new_state
+				in
+				(find_state, None)
 		in
 
-		(* Statistics *)
-		counter_add_state#stop;
+		(* Add strategy index to the state if needed *)
+		let add_strategy_for_state index =
+			match strategy_index_opt with
+			| Some idx -> self#add_strategy_index_to_state index idx
+			| None -> ()
+		in
 
+		(* Decide on the appropriate result based on whether the state already exists *)
+		let result : addition_result =
+			match find_state with
+			| None ->
+				let location_index = self#new_location_index new_state.global_location in
+				let new_state_index = self#insert_state location_index new_state in
+				add_strategy_for_state new_state_index;
+				print_message Verbose_total ("Inserted new state #" ^ string_of_int new_state_index ^ ".");
+				New_state new_state_index
+
+			| Some (State_replacing state_index) ->
+				add_strategy_for_state state_index;
+				State_replacing state_index
+
+			| Some other_result ->
+				other_result
+		in
+
+		counter_add_state#stop;
 		result
+
 
 
 	(** Add a combined transition to the state space *)
@@ -1737,6 +1959,233 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		()
 
+	method display_strategy_constraint_index_list (state_index_list : state_index list)(automata_names : automaton_index -> automaton_name)(location_names : automaton_index -> location_index -> location_name)(action_names : action_index -> action_name)(variable_names : variable_index -> variable_name):unit=
+		
+		List.iter(fun idx ->
+		if ImitatorUtilities.verbose_mode_greater Verbose_standard then(
+		let state = self#get_state idx in
+		let constraint_val = state.px_constraint in 
+		let str_constraint = LinearConstraint.string_of_px_linear_constraint variable_names constraint_val in
+		self#display_strategy_index idx automata_names location_names action_names;
+		self#display_discrete state;
+		print_message Verbose_standard ("Constraint: " ^ (str_constraint) ^"\n \n");
+		);
+		)state_index_list;
+
+	(* Affiche une stratégie à partir de son index *)
+	method private display_strategy_index
+		(state_index : state_index)
+		(automata_names : automaton_index -> automaton_name)
+		(location_names : automaton_index -> location_index -> location_name)
+		(action_names : action_index -> action_name)
+		: unit =
+
+		let coalition = state_space.in_coalition in
+		let strategy_index = Hashtbl.find state_space.strategies state_index in
+		let strategy = Strategy.get_strategy strategy_index in
+
+		Printf.printf "Strategy for source state #%d (strategy index %d):\n"
+			state_index strategy_index;
+
+		(* Affiche la coalition avec les automates visibles *)
+		let coalition_str =
+			coalition
+			|> List.map (fun ai ->
+				let seen = state_space.informations.(ai) in
+				let seen_names = List.map automata_names (Array.to_list seen) in
+				Printf.sprintf "%s(%s)" (automata_names ai) (String.concat ", " seen_names)
+			)
+			|> String.concat ", "
+		in
+		Printf.printf "Coalition : %s\n\n" coalition_str;
+
+		(* Affiche les entrées de stratégie *)
+		Array.iter (fun ((main_automaton, seen_locations), action) ->
+			let view_str =
+			let seen_automata = state_space.informations.(main_automaton) in
+			let seen_pairs =
+				List.mapi (fun i loc ->
+				let seen_ai = seen_automata.(i) in
+				let name_ai = automata_names seen_ai in
+				let name_loc = location_names seen_ai loc in
+				Printf.sprintf "%s: %s" name_ai name_loc
+				) seen_locations
+			in
+			Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs)
+			in
+			let action_str = action_names action in
+			Printf.printf "View: %s → Action: %s\n" view_str action_str
+		) strategy;
+
+		(* Cas spécial : stratégie morte *)
+		let dead_entry = ((-1, [-1]), -1) in
+		if Array.exists (fun entry -> entry = dead_entry) strategy then
+			Printf.printf "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n"
+
+
+	(* Display the discrete values of the state at the given index *)
+	method private display_discrete (state : State.state)  : unit = 
+		let global_loc = state.global_location in
+		let discrete_values = DiscreteState.get_discrete global_loc in
+		if Array.length discrete_values <> 0 then(
+		Printf.printf "    Discrete values: [";
+		Array.iteri (fun i value ->
+			if i > 0 then print_string "; ";
+			Printf.printf "%s" (AbstractValue.string_of_value value)
+		) discrete_values;
+		Printf.printf "]\n\n";);
+
+
+
+	(* Create a strategy index for a successor state, updating only if the action is relevant to the coalition *)
+	method private create_strategy_index
+		(source_state_index : state_index)
+		(action : action_index) : strategy_index =
+
+		counter_create_strategy#increment;
+		counter_create_strategy#start;
+
+		let source_strategy_index =
+			Hashtbl.find state_space.strategies source_state_index
+		in
+
+		(* Automates impliqués dans l'action *)
+		let involved_automata = automata_per_action action in
+
+		(* Chercher le premier automate de la coalition impliqué dans l'action *)
+		let main_automaton_opt =
+			List.find_opt (fun aut -> List.mem aut involved_automata) state_space.in_coalition
+		in
+
+		match main_automaton_opt with
+		| None ->
+			(* Aucun automate de la coalition n'est impliqué *)
+			counter_create_strategy#stop;
+			source_strategy_index
+		| Some main_automaton ->
+
+			(* Si l'action est locale, ou que ce n’est pas une action de la coalition, on ne fait rien *)
+			if (action >= state_space.nb_sync_action) then (
+				counter_create_strategy#stop;
+				source_strategy_index
+			) else (
+
+				(* Récupération des localisations *)
+				let global_location_index =
+				(Hashtbl.find state_space.all_states source_state_index).global_location_index
+				in
+				let source_locations =
+				DiscreteState.get_locations (DynArray.get state_space.locations global_location_index)
+				in
+
+				(* Automates vus par les automates impliqués *)
+				let seen_automata =
+				List.fold_left (fun acc automaton ->
+					let seen = Array.to_list state_space.informations.(automaton) in
+					acc @ seen
+				) [] involved_automata
+				|> List.sort_uniq compare
+				in
+
+				let seen_locations =
+				List.map (Array.get source_locations) seen_automata
+				in
+				let partial_view : Strategy.partial_view = (main_automaton, seen_locations) in
+
+				(* Création de la nouvelle stratégie *)
+				let new_strategy_index =
+				Strategy.create_strategy source_strategy_index partial_view action
+				in
+
+				counter_create_strategy#stop;
+				new_strategy_index
+			)
+
+
+
+
+	(* Add a new strategy to the strategy table for the given state index *)
+	method private add_strategy_index_to_state index (strategy_index : strategy_index) = 
+		Hashtbl.replace state_space.strategies index strategy_index;
+
+	(* Compare two strategies for exact equality (same total number of actions and same mapping) *)
+	method private compare_strategy_inclusive (candidate_idx : strategy_index) (container_idx : strategy_index) : bool =
+		
+		counter_compare_strategy_inclusive#increment;
+		counter_compare_strategy_inclusive#start;
+
+		if candidate_idx = container_idx  then( 
+			counter_compare_strategy_inclusive#stop;
+			true)
+		else 
+			let options = Input.get_options() in
+			if not options#memoized_strategies_inclusion then(
+				counter_compare_strategy_inclusive#stop;
+				false) 
+			else( 
+				let inc = Strategy.is_included candidate_idx container_idx in
+				counter_compare_strategy_inclusive#stop;
+				inc) 
+
+
+	method format_strategy_index
+	(state_index : state_index)
+	(automata_names : automaton_index -> automaton_name)
+	(location_names : automaton_index -> location_index -> location_name)
+	(action_names : action_index -> action_name)
+	(variable_names : variable_index -> variable_name)
+	: string =
+
+	let buffer = Buffer.create 500 in
+
+	let coalition = state_space.in_coalition in
+	let strategy_index = Hashtbl.find state_space.strategies state_index in
+	let strategy = Strategy.get_strategy strategy_index in
+
+	Buffer.add_string buffer (Printf.sprintf "Strategy for source state #%d (strategy index %d):\n"
+								state_index strategy_index);
+
+	(* Affiche la coalition avec les automates visibles *)
+	let coalition_str =
+		coalition
+		|> List.map (fun ai ->
+			let seen = state_space.informations.(ai) in
+			let seen_names = List.map automata_names (Array.to_list seen) in
+			Printf.sprintf "%s(%s)" (automata_names ai) (String.concat ", " seen_names)
+		)
+		|> String.concat ", "
+	in
+	Buffer.add_string buffer (Printf.sprintf "Coalition : %s\n\n" coalition_str);
+
+	(* Affiche les entrées de stratégie *)
+	Array.iter (fun ((main_automaton, seen_locations), action) ->
+		let seen_automata = state_space.informations.(main_automaton) in
+		let seen_pairs =
+		List.mapi (fun i loc ->
+			let seen_ai = seen_automata.(i) in
+			let name_ai = automata_names seen_ai in
+			let name_loc = location_names seen_ai loc in
+			Printf.sprintf "%s: %s" name_ai name_loc
+		) seen_locations
+		in
+		let view_str = Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs) in
+		let action_str = action_names action in
+		Buffer.add_string buffer (Printf.sprintf "View: %s → Action: %s\n" view_str action_str)
+	) strategy;
+
+	(* Cas spécial : stratégie morte *)
+	let dead_entry = ((-1, [-1]), -1) in
+	if Array.exists (fun entry -> entry = dead_entry) strategy then
+		Buffer.add_string buffer "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n";
+
+	(* Ajout de la contrainte associée à l’état *)
+	let constraint_val = (self#get_state state_index).px_constraint in
+	let str_constraint = LinearConstraint.string_of_px_linear_constraint variable_names constraint_val in
+	Buffer.add_string buffer (Printf.sprintf "Constraint:  %s\n\n\n" str_constraint);
+
+	Buffer.contents buffer
+
+
 
 	(************************************************************)
 	(************************************************************)
@@ -1748,10 +2197,8 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* THE FOLLOWING WAS ADDED FROM V2.12 *)
 	(************************************************************)
 
-	(*------------------------------------------------------------*)
 	(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
-	(*------------------------------------------------------------*)
-	method private merge_states_ulrich (merger_state_index : state_index) (merged : state_index list) : unit =
+	method private merge_states_ulrich merger_state_index merged : unit =
 		(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *)
 		print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 
@@ -1773,7 +2220,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_message Verbose_high "Merging: update hash table";
 		let the_state = self#get_state merger_state_index in
 		let l = the_state.global_location in
-		let li, _ = self#new_location_index l in
+		let li = self#new_location_index l in
 		(* Get all states with that hash *)
 
 		let bucket = Hashtbl.find_all state_space.states_for_comparison li in
@@ -1804,15 +2251,13 @@ class stateSpace (guessed_nb_transitions : int) =
 	(*		done*)
 		) merged
 
-	(*------------------------------------------------------------*)
-	(** Get states sharing the same location and discrete values from hash_table, excluding s *)
+	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
 	(*** NOTE/TODO (ÉA, 2022/10/19): is that significantly different from the get_siblings method in Dylan's code (3.2)? Shall we merge both? ***)
-	(*------------------------------------------------------------*)
-	method private get_siblings_212 (si : state_index) : ((state_index * LinearConstraint.px_linear_constraint) list) =
+	method private get_siblings_212 si =
 
 		let s = self#get_state si in
 		let l = s.global_location in
-		let location_index, _ = self#new_location_index l in
+		let location_index = self#new_location_index l in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 
@@ -1826,19 +2271,18 @@ class stateSpace (guessed_nb_transitions : int) =
 		) [] sibs
 
 
-	(*------------------------------------------------------------*)
-	(** Get states sharing the same location and discrete values from hash_table, excluding s *)
-	(*------------------------------------------------------------*)
-	method private get_siblings_32 (si : state_index) (queue : state_index list) (look_in_queue : bool) : ((state_index * LinearConstraint.px_linear_constraint) list) =
+	(* Get states sharing the same location and discrete values from hash_table, excluding s *)
+	method private get_siblings_32 (si : state_index) queue (look_in_queue : bool) =
 		print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
 		let s = self#get_state si in
 		let location = s.global_location in
-		let location_index, _ = self#new_location_index location in
+		let location_index = self#new_location_index location in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 
 		(* lookup px_constraints and exclude si itself *)
-		let result = (List.fold_left (fun siblings sj ->
+		let result = 
+			(List.fold_left (fun siblings sj ->
 			(* Remove sj if sj=si or if look  *)
 			if sj = si || (look_in_queue && not(List.mem sj queue))
 				then siblings
@@ -1853,13 +2297,11 @@ class stateSpace (guessed_nb_transitions : int) =
 		result
 
 
-	(*------------------------------------------------------------*)
-	(** Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
-	(*------------------------------------------------------------*)
-	method merge212 (new_states : state_index list) : state_index list =
+	(* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
+	method merge212 new_states : state_index list =
 
 		(* function for merging one state with its siblings *)
-		let merge_state (si : state_index) =
+		let merge_state si =
 			print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 			let state = self#get_state si in
 			let c = state.px_constraint in
@@ -1892,7 +2334,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 
 		(* Iterate list of new states and try to merge them, return eaten states *)
-		let rec main_merger (states : state_index list) : state_index list =
+		let rec main_merger states =
 			match states with
 				| [] -> []
 				| s :: ss -> begin
@@ -1923,80 +2365,73 @@ class stateSpace (guessed_nb_transitions : int) =
 		(* return eaten states *)
 		(*list_diff new_states*)
 		eaten
-	
 
-	(* Merges the state represtented by mergee_index into the state represented by merger_index*)
-	method private merge_one_state_into_another merger_index mergee_index = 
-		(* Remove merged_index from transitions, replaced with merger_index*)
-		let rec update_target src successors merger_index mergee_index =
-			match successors with
-			| []->[]
-			| (combined_transition, target_index)::tail ->
-				if target_index = mergee_index
-				then
-					begin
-						print_message Verbose_high ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
-								^ " (previous: " ^ string_of_int target_index ^ ", new: " ^ string_of_int merger_index ^ ")");
-						(combined_transition, merger_index) :: (update_target src tail merger_index mergee_index)
-					end
-				else (combined_transition, target_index) :: (update_target src tail merger_index mergee_index)
-		in
-
-		(* Transitions with merged as target **)
-		Hashtbl.iter (fun src successors -> (Hashtbl.replace state_space.transitions_table src (update_target src successors merger_index mergee_index))) state_space.transitions_table;
-
-		let transitions_merged = self#get_successors_with_combined_transitions mergee_index in
-		(* Transitions with merged as source **)
-		Hashtbl.remove state_space.transitions_table mergee_index;
-		List.iter (
-			fun (combined_transition , target_state_index) ->
-				print_message Verbose_high ("Merge transitions: update source in transition " ^ (string_of_list_of_int combined_transition)
-											^ " (previous: " ^ string_of_int mergee_index ^ ", new: " ^ string_of_int merger_index ^ ")");
-				self#add_transition (merger_index, combined_transition, target_state_index)
-		) transitions_merged;
-
-		(* If the state was the initial state: replace with the merger state_index *)
-		let init = self#get_initial_state_index in
-		if mergee_index = init then(
-			print_message Verbose_low ("The initial state in the reachability state_space has been merged with another one.");
-			state_space.initial <- Some merger_index;
-		);
-
-		print_message Verbose_high ("Merging: remove state " ^ (string_of_int mergee_index));
-		(*Remove state from all_states and states_for_comparison*)
-		Hashtbl.remove state_space.all_states mergee_index;
-		Hashtbl.filter_map_inplace (
-				fun _ state_index -> if state_index = mergee_index then None else Some state_index
-				(*filter_map_inplace discard binding associated to None, update if Some*)
-			) state_space.states_for_comparison
-
-
-	(* Merge all the states represented by mergee_index_List into the state represented by merger_index *)
-	method private merge_states_and_transitions merger_index mergee_index_list =
-		match mergee_index_list with
-			| [] -> ()
-			| mergee_index::q ->
-			begin
-				self#merge_states_and_transitions merger_index q;
-				self#merge_one_state_into_another merger_index mergee_index
-			end
 
 	(************************************************************)
 	(** BEGIN MERGE 3.2 - DYLAN *)
 	(************************************************************)
 
-	(*------------------------------------------------------------*)
-	(*------------------------------------------------------------*)
-	method private update_statespace (merger_index : state_index) (merged_index_list : state_index list) : unit =
+	method private update_statespace merger_index merged_index_list =
 		tcounter_merge_statespace#start;
-
 		let options = Input.get_options () in
 
+		let rec merge_transitions merger_index merged_index_list =
+			match merged_index_list with
+				| [] -> ()
+				| merged_index::q ->
+				begin
+					merge_transitions merger_index q;
 
+					(* Remove merged_index from transitions, replaced with merger_index*)
+					let rec update_target src successors merger_index merged_index =
+						match successors with
+						| []->[]
+						| (combined_transition, target_index)::tail ->
+							if target_index = merged_index
+							then
+								begin
+									print_message Verbose_high ("Merge transitions: update target in transition " ^ (string_of_list_of_int combined_transition)
+											^ " (previous: " ^ string_of_int target_index ^ ", new: " ^ string_of_int merger_index ^ ")");
+									(combined_transition, merger_index) :: (update_target src tail merger_index merged_index)
+								end
+							else (combined_transition, target_index) :: (update_target src tail merger_index merged_index)
+					in
+
+					(* Transitions with merged as target **)
+					Hashtbl.iter (fun src successors -> (Hashtbl.replace state_space.transitions_table src (update_target src successors merger_index merged_index))) state_space.transitions_table;
+
+					let transitions_merged = self#get_successors_with_combined_transitions merged_index in
+					(* Transitions with merged as source **)
+					Hashtbl.remove state_space.transitions_table merged_index;
+					List.iter (
+						fun (combined_transition , target_state_index) ->
+							print_message Verbose_high ("Merge transitions: update source in transition " ^ (string_of_list_of_int combined_transition)
+														^ " (previous: " ^ string_of_int merged_index ^ ", new: " ^ string_of_int merger_index ^ ")");
+							self#add_transition (merger_index, combined_transition, target_state_index)
+					) transitions_merged;
+
+					(* If the state was the initial state: replace with the merger state_index *)
+					let init = self#get_initial_state_index in
+					if merged_index = init then(
+						print_message Verbose_low ("The initial state in the reachability state_space has been merged with another one.");
+						state_space.initial <- Some merger_index;
+					);
+
+					print_message Verbose_high ("Merging: remove state " ^ (string_of_int merged_index));
+					(*Remove state from all_states and states_for_comparison*)
+					Hashtbl.remove state_space.all_states merged_index;
+					Hashtbl.filter_map_inplace (
+							fun _ state_index -> if state_index = merged_index then None else Some state_index
+							(*filter_map_inplace discard binding associated to None, update if Some*)
+						) state_space.states_for_comparison;
+
+					()
+				end
+		in
 
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
 		(* Merge refactor copy_and_reduce **)
-		let copy_and_reduce (merger_state : state_index) (eaten : state_index list) : unit =
+		let copy_and_reduce merger_state eaten =
 			(* make a copy of the reachable part of the state space with the eaten states replaced by the merger_state *)
 			let new_states = Hashtbl.create 1024 in
 			let new_trans = Hashtbl.create 1024 in
@@ -2042,7 +2477,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		begin
 		match options#merge_algorithm with
 		| Merge_reconstruct -> copy_and_reduce merger_index merged_index_list
-		| Merge_onthefly -> self#merge_states_and_transitions merger_index merged_index_list
+		| Merge_onthefly -> merge_transitions merger_index merged_index_list
 		| Merge_none -> raise(InternalError("Impossible case: merge_algorithm cannot be `Merge_none`"))
 		| Merge_212 -> raise(InternalError("Impossible case: merge_algorithm cannot be `Merge_212`"))
 		end;
@@ -2050,94 +2485,9 @@ class stateSpace (guessed_nb_transitions : int) =
 		tcounter_merge_statespace#stop;
 		()
 
+	method merge queue =
 
-	(*------------------------------------------------------------*)
-	(** Method to merge one state with its siblings *)
-	(*------------------------------------------------------------*)
-	method private merge_one_state queue (si : state_index) (look_in_queue : bool) (callback : state_index -> state_index -> unit) : unit =
-		let options = Input.get_options () in
-
-		print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
-
-		let merging_states (s_merger : state_index) (s_merged : state_index) =
-		(* Merge si and sj. Note that C(si) = siUsj from the test *)
-			self#update_statespace s_merger [s_merged];
-		in
-
-		let state = self#get_state si in
-		let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
-
-		let did_something = ref true in
-		let main_merging si look_in_queue =
-			did_something := false;
-			(* get merge candidates as pairs (index, state) *)
-			let candidates = self#get_siblings_32 si queue look_in_queue in
-
-			(* try to merge with siblings, restart if merge found, return merged states *)
-			let rec merging merged_states candidates = begin
-				begin
-				match candidates with
-					| [] -> () (* here, we are really done *)
-					| m :: tail -> begin
-						let sj,c' = m in
-
-
-				print_message Verbose_high ("[Merge] Check if states " ^ (string_of_int si) ^ " and " ^ (string_of_int sj) ^ "are mergeable");
-
-						if are_mergeable_32 c c'
-						then begin
-							(*Statistics*)
-							nb_merged#increment;
-							did_something := true;
-							callback si sj;
-
-							(*Here, si = siUsj from the test / IRL c = cUc', transitions not performed etc.'*)
-							print_message Verbose_experiments ("[Merge] State " ^ (string_of_int si) ^ " is mergeable with " ^ (string_of_int sj));
-
-							begin
-							match options#merge_update with
-							| Merge_update_merge -> merging_states si sj; ();
-							| Merge_update_candidates -> ();
-							(*| Merge_update_level -> ();*)
-							end;
-
-							(* Print some information *)
-							print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
-
-							let merged' = sj :: merged_states in
-							(merging merged' tail)
-						end
-						else
-						begin
-							(* try to eat the rest of them *)
-							merging merged_states tail
-						end
-					end;
-				end;
-				begin
-				match options#merge_update with
-				| Merge_update_merge -> ();
-				| Merge_update_candidates -> self#update_statespace si merged_states;
-				(*| Merge_update_level -> ();*)
-				end;
-			end;
-			(* *)
-			in
-			merging [] candidates;
-		in
-
-		main_merging si look_in_queue;
-		while options#merge_restart && !did_something do (* Restart only if option restart is set *)
-			print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
-			main_merging si look_in_queue
-		done;
-		()
-
-	(*------------------------------------------------------------*)
-	(*------------------------------------------------------------*)
-	method merge (queue : state_index list) (callback : state_index -> state_index -> unit) : state_index list =
-
-	(*
+		(*
 			(*TEMP: print transitions*)
 				let transitions = state_space.transitions_table in
 				let print_transition_table transitions =
@@ -2173,7 +2523,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				(print_states_for_comparison state_space);
 				(print_transition_table transitions);
 				(* END TEMP print transitions*)
-	*)
+		*)
 
 		(* Statistics *)
 		tcounter_merge#start;
@@ -2181,16 +2531,19 @@ class stateSpace (guessed_nb_transitions : int) =
 		let options = Input.get_options () in
 
 
-		(*** WARNING (2024/05/03): commenting this (unused!!) code out make one non-regression test fail! 'Test EF with complex safety property on coffee drinker with int' ***)
-		(*(* function for merging one state with its siblings *)
+		(* function for merging one state with its siblings *)
 		(*** TODO (ÉA, 2022/10/19: make standalone method? ***)
-		let merge_state (si : state_index) (look_in_queue : bool) : unit =
+		let merge_state (si : state_index) (look_in_queue : bool) =
 			print_message Verbose_medium("[Merge] Try to merge state " ^ (string_of_int si));
 
 			let merging_states (s_merger : state_index) (s_merged : state_index) =
-			(* Merge si and sj. Note that C(si) = siUsj from the test *)
-				self#update_statespace s_merger [s_merged];
+			(* Merge si and sj. Note that C(si) = si ∪ sj from the test *)
+			if self#has_coalition  then (
+				if (self#compare_strategy_inclusive (Hashtbl.find state_space.strategies s_merged) (Hashtbl.find state_space.strategies s_merger)) then(
+					self#update_statespace s_merger [s_merged]);)
+			else (self#update_statespace s_merger [s_merged])
 			in
+
 
 			let state = self#get_state si in
 			let (c : LinearConstraint.px_linear_constraint) = state.px_constraint in
@@ -2258,24 +2611,25 @@ class stateSpace (guessed_nb_transitions : int) =
 				print_message Verbose_experiments ("Restart for state " ^ (string_of_int si));
 				main_merging si look_in_queue
 			done;
-		in*)
+		in
 
 		(* Iterate list of states and try to merge them in the state space *)
-		let rec main_merger (states : state_index list) : unit =
+		let rec main_merger states =
 			match states with
 				| [] -> ()
 				| s :: tail ->
 					begin
 						main_merger tail;
 						if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
+
 							match options#merge_candidates with
-							| Merge_candidates_visited -> self#merge_one_state queue s false callback
-							| Merge_candidates_queue -> self#merge_one_state queue s true callback
-							| Merge_candidates_ordered -> begin (self#merge_one_state queue s true callback) ; (self#merge_one_state queue s false callback) end
+							| Merge_candidates_visited -> merge_state s false
+							| Merge_candidates_queue -> merge_state s true
+							| Merge_candidates_ordered -> begin (merge_state s true) ; (merge_state s false) end
 					end
 		in
 
-		(* Main *)
+		(*Main*)
 		main_merger queue;
 
 		let new_queue = List.filter (self#test_state_index) queue in
@@ -2285,7 +2639,6 @@ class stateSpace (guessed_nb_transitions : int) =
 		(*state_space.states_for_comparison <- Hashtbl.create 1024;*)
 
 		print_message Verbose_high "\n---\n";
-
 		(* return *)
 		new_queue
 

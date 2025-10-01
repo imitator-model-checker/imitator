@@ -25,6 +25,7 @@ open Gc
 (************************************************************)
 open OCamlUtilities
 
+
 (************************************************************)
 (** Global time counter *)
 (************************************************************)
@@ -489,12 +490,3 @@ let terminate_program () =
 	flush stderr;
 	flush stdout;
 	exit(0)
-
-(* Misc *)
-
-let contains s1 s2 =
-  let re = Str.regexp_string s2 in
-  try
-     ignore (Str.search_forward re s1 0);
-     true
-  with Not_found -> false

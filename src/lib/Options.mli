@@ -30,9 +30,6 @@ class imitator_options :
 
 		method acyclic						: bool
 (* 		method best_worst_case : bool *)
-
-		method cache_in_AF					: bool
-
 		method carto_tiles_limit			: int option
 		method carto_time_limit				: int option
 		method check_ippta					: bool
@@ -43,6 +40,9 @@ class imitator_options :
 		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
 
 		method coverage_pruning				: bool
+		method memoized_strategies_inclusion : bool
+		method set_memoized_strategies_inclusion : unit
+		method deactivate_cumulative_pruning : unit
 		(* Cumulative pruning: when a new state is computed, check whether it is included into the previously computed constraints *)
 		(*** NOTE: might be expensive in the case of thousands of disjuncts in the computed constraints, cf. [AHW18], therefore this option can be set to false when needed ***)
 		method cumulative_pruning			: bool
@@ -68,8 +68,6 @@ class imitator_options :
 
 		method files_prefix					: string
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
-
-		method ih							: bool
 
 		method layer						: bool
 		method is_set_layer					: bool
@@ -107,9 +105,6 @@ class imitator_options :
 		method no_time_elapsing				: bool
 		method no_variable_autoremove		: bool
 
-		(* New queue-based version of EF (EXPERIMENTAL) *)
-		method new_queue_based_EU			: bool
-
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method					: AbstractAlgorithm.nz_method
 		method is_set_nz_method				: bool
@@ -137,18 +132,6 @@ class imitator_options :
 
 		(* In game algorithms: propagate losing states *)
 		method ptg_propagate_losing_states	: bool
-		
-		(* In game algorithms: use classic semantic where the environment cannot be forced to take an action 
-			 even if not doing so violates an invarant *)
-		method ptg_no_forced_uncontrollables: bool
-
-		method ptg_no_strategy_printing : bool
-		method ptg_no_strategy_generation : bool
-
-		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
-		method ptg_picking_strategy : AbstractAlgorithm.waitingListStrategy
-
-		method ptg_abstraction : AbstractAlgorithm.ptg_abstraction
 
 		method pi_compatible				: bool
 		method precomputepi0				: bool

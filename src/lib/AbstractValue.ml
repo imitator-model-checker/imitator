@@ -295,7 +295,7 @@ and deep_copy_container_value = function
         let cpy = values |> Stack.to_seq |> List.of_seq |> List.map deep_copy |> List.rev |> List.to_seq |> Stack.of_seq in
         Abstract_stack_value cpy
     | Abstract_queue_value values ->
-        let cpy = values |> Queue.to_seq |> List.of_seq |> List.map deep_copy |> List.to_seq |> Queue.of_seq in
+        let cpy = values |> Queue.to_seq |> List.of_seq |> List.map deep_copy |> List.rev |> List.to_seq |> Queue.of_seq in
         Abstract_queue_value cpy
     | Abstract_list_value _ as v -> v
 
@@ -307,7 +307,7 @@ let is_rational_value = function
 
 (* Convert any abstract value to Int32 value, if possible, else raise an error *)
 let to_int_value = function
-    (* WARNING !!!! conversion to int should be dependant of the platform ! *)
+    (* Warning !!!! conversion to int should be dependant of the platform ! *)
     | Abstract_scalar_value (Abstract_number_value Abstract_rat_value v) -> Int32.of_int (NumConst.to_int v)
     | Abstract_scalar_value (Abstract_number_value Abstract_int_value v) -> v
     | v -> raise (InternalError ("Unable to convert `" ^ string_of_value v ^ "` to Int32.t value"))

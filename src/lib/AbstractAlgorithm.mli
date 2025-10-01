@@ -18,16 +18,15 @@
 (************************************************************)
 
 type translation =
-	| DOT
 	| HyTech
 	| IMI
-	| ImiProp
-	| JaniSpec
+	| DOT
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
+  | JaniSpec
 
 
 (************************************************************)
@@ -127,16 +126,6 @@ type ptg_controller_mode =
 	| No_Generation
 	| Draw
 	| No_Draw
-
-(** Waiting list strategy for AlgoPTG **)
-type waitingListStrategy =
-	| SingleQueue
-	| Frontier of {init: int; step:  int; update: int}
-
-type ptg_abstraction = 
-	| Location
-	| Convex_Hull
-	| No_Abstraction
 
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int

@@ -593,30 +593,28 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case translation *)
 	(************************************************************)
-	(*------------------------------------------------------------*)
-	(* Translation to text language (IMITATOR, other model checkers, TikZ…) *)
-	(*------------------------------------------------------------*)
+	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
 	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation JaniSpec | Translation DOT ->
 
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
-			| Translation DOT       -> PTA2dot.string_of_model options
-			| Translation HyTech	-> PTA2HyTech.string_of_model options
 			| Translation IMI		-> ModelPrinter.string_of_model
-			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
+			| Translation HyTech	-> PTA2HyTech.string_of_model options
 			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model options
 			| Translation Uppaal	-> PTA2Uppaal.string_of_model options
+			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
+			| Translation DOT       -> PTA2dot.string_of_model options
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
 		(*** NOTE: not super nice… ***)
 		let suffix = match options#imitator_mode with
-			| Translation DOT       -> ".dot"
-			| Translation HyTech	-> ".hy"
 			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
-			| Translation JaniSpec	-> ".jani"
+			| Translation HyTech	-> ".hy"
 			| Translation TikZ		-> ".tex"
 			| Translation Uppaal	-> "-uppaal.xml"
+      | Translation JaniSpec	-> ".jani"
+			| Translation DOT       -> ".dot"
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -637,42 +635,7 @@ match options#imitator_mode with
 
 		terminate_program()
 
-	(*------------------------------------------------------------*)
-	(* Translation of property *)
-	(*------------------------------------------------------------*)
-	| Translation ImiProp ->
-
-		(*** TODO! check ***)
-		(*** NOTE: at this stage, we are sure to have defined a property ***)
-		let property = match property_option with
-			| Some property -> property
-			| None -> raise (InternalError "A property should have been set when regenerating the property")
-		in
-
-		print_message Verbose_standard ("Regenerating the property to a new file.");
-
-		let suffix = "-imiprop.imiprop" in
-		let target_language_file = options#files_prefix ^ suffix in
-		let regenerated_property = ModelPrinter.string_of_abstract_property model property in
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ regenerated_property ^ "\n");
-		);
-
-		(* Write *)
-		write_to_file target_language_file regenerated_property;
-		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
-
-		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
-			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
-			)) ) None;
-
-		terminate_program()
-
-
-	(*------------------------------------------------------------*)
-	(* Translation of the model to a graphics *)
-	(*------------------------------------------------------------*)
+	(* Translation to a graphics *)
 	| Translation JPG | Translation PDF | Translation PNG ->
 		print_message Verbose_medium ("Translating model to a graphics…");
 		let translated_model = PTA2dot.string_of_model options model in
@@ -782,11 +745,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
-
-			(* EXPERIMENTAL NEW VERSION *)
-			| EF state_predicate when options#new_queue_based_EU ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEFBFS model property options state_predicate in myalgo
-
 			| EF state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEF.algoEF model property options state_predicate in myalgo
 
@@ -794,17 +752,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Safety *)
 			(************************************************************)
-
-			(* EXPERIMENTAL NEW VERSION *)
-			| AGnot state_predicate when options#new_queue_based_EU ->
-
-				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
-				if property.synthesis_type = Witness then(
-					print_warning "Exhibition of a subset of parameter valuations is not sound for this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
-				);
-
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoAGnotBFS model property options state_predicate in myalgo
-
 			| AGnot state_predicate ->
 
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
@@ -817,16 +764,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Global invariant *)
 			(************************************************************)
-
-			(* EXPERIMENTAL NEW VERSION *)
-			| AG state_predicate when options#new_queue_based_EU ->
-				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
-				if property.synthesis_type = Witness then(
-					print_warning "Exhibition of a subset of parameter valuations is not sound for this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
-				);
-
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoAGBFS model property options state_predicate in myalgo
-
 			| AG state_predicate ->
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
 				if property.synthesis_type = Witness then(
@@ -835,12 +772,6 @@ match options#imitator_mode with
 
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAG.algoAG model property options state_predicate in myalgo
 
-
-			(************************************************************)
-			(* Exists globally *)
-			(************************************************************)
-			| EG state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoEG model property options state_predicate in myalgo
 
 			(************************************************************)
 			(* Exists release *)
@@ -852,11 +783,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists until *)
 			(************************************************************)
-
-			(* EXPERIMENTAL NEW VERSION *)
-			| EU (state_predicate_phi, state_predicate_psi) when options#new_queue_based_EU ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEUBFS model property options state_predicate_phi state_predicate_psi in myalgo
-
 			| EU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo
 
@@ -864,9 +790,9 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Exists weak until *)
 			(************************************************************)
-			| EW (state_predicate_phi, state_predicate_psi) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFgenBFS.algoEWBFS model property options state_predicate_phi state_predicate_psi in myalgo
-
+			| EW _ (*(state_predicate_phi, state_predicate_psi)*) ->
+				raise (NotImplemented("EW"))
+(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEU.algoEU model property options state_predicate_phi state_predicate_psi in myalgo *)
 
 			(************************************************************)
 			(* Unavoidability *)
@@ -894,7 +820,6 @@ match options#imitator_mode with
 			(************************************************************)
 			| AU (state_predicate_phi, state_predicate_psi) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAUgen.algoAU model property options state_predicate_phi state_predicate_psi in myalgo
-
 
 			(************************************************************)
 			(* Always weak until *)
@@ -1223,26 +1148,17 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit, options#ptg_picking_strategy with 
+				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit with 
 					(* State space should be fully generated first if a depth limit has been set *)
-					| true, _, _ -> new AlgoPTG.stateSpacePTG_full model options
-					| false, Some _, AbstractAlgorithm.SingleQueue -> 
+					| true, _ -> new AlgoPTG.stateSpacePTG_full model options
+					| false, Some _ -> 
 							print_warning "Since a depth limit has been set, state space will be generated first! (not OTF)";
 							new AlgoPTG.stateSpacePTG_full model options
 					| _ -> new AlgoPTG.stateSpacePTG_OTF model options
 				in 
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate state_space_ptg in myalgo
-			
-			| WinAvoid (state_predicate_reach, state_predicate_avoid) -> 
-				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit, options#ptg_picking_strategy with 
-					(* State space should be fully generated first if a depth limit has been set *)
-					| true, _, _ -> new AlgoPTG.stateSpacePTG_full model options
-					| false, Some _, AbstractAlgorithm.SingleQueue -> 
-							print_warning "Since a depth limit has been set, state space will be generated first! (not OTF)";
-							new AlgoPTG.stateSpacePTG_full model options
-					| _ -> new AlgoPTG.stateSpacePTG_OTF model options
-				in 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate_reach ~state_predicate_avoid state_space_ptg in myalgo
+
+
 
 			(************************************************************)
 			(* Begin distributed cartography *)

@@ -14,83 +14,6 @@
  ************************************************************)
 
 (**************************************************)
-(**************************************************)
-(* GMP multi-precision integers *)
-(**************************************************)
-(**************************************************)
-
-(**************************************************)
-(* Type definition *)
-(**************************************************)
-type gmpz = Gmp.Z.t
-
-(**************************************************)
-(** {2 Constants} *)
-(**************************************************)
-
-(* 0 *)
-let gmpz_zero = Gmp.Z.zero
-(* 1 *)
-let gmpz_one = Gmp.Z.one
-(* -1 *)
-let gmpz_minus_one = Gmp.Z.from_int (-1)
-
-(**************************************************)
-(** {2 Conversion functions} *)
-(**************************************************)
-
-(* Convert an integer to a Gmp.Z *)
-let gmpz_of_int = Gmp.Z.from_int
-
-(* Convert a Gmp.Z to a string *)
-let string_of_gmpz = Gmp.Z.to_string
-
-(**************************************************)
-(** {2 Arithmetic functions} *)
-(**************************************************)
-
-(* Negation *)
-let gmpz_neg  = Gmp.Z.neg
-
-(* Compute ceiling division *)
-let gmpz_cdiv (n : gmpz) (d : gmpz) : gmpz =
-	(* Apply cdiv *)
-	Gmp.Z.cdiv_q n d
-
-(* Compute floor division *)
-let gmpz_fdiv (n : gmpz) (d : gmpz) : gmpz =
-	(* Apply fdiv *)
-	Gmp.Z.fdiv_q n d
-
-(* Absolute *)
-let gmpz_abs a =
-	if Gmp.Z.cmp a gmpz_zero >= 0 then a
-	else gmpz_neg a
-
-
-(**************************************************)
-(** {2 Comparison functions} *)
-(**************************************************)
-
-(* Equal *)
-let gmpz_equal (a : gmpz) (b : gmpz) : bool =
-	(Gmp.Z.cmp a b) = 0
-
-(* Not equal *)
-let gmpz_neq (a : gmpz) (b : gmpz) : bool =
-	(Gmp.Z.cmp a b) <> 0
-
-let gmpz_is_one (gmp_z : gmpz) : bool =
-	gmpz_equal gmp_z gmpz_one
-
-
-(**************************************************)
-(**************************************************)
-(* GMP multi-precision rationals *)
-(**************************************************)
-(**************************************************)
-
-(**************************************************)
 (* Type definition *)
 (**************************************************)
 
@@ -263,17 +186,15 @@ let numconst_of_mpq m = m
 
 let numconst_of_mpz z = Gmp.Q.from_z z
 
-(* let numconst_of_frac (numerator : gmpz) (denominator : gmpz) = Gmp.Q.of_mpz2 numerator denominator *)
-
 let mpq_of_numconst = get_mpq
 
 let string_of_numconst a =
 	(* Avoid 0/1 *)
 	if a =/ (Gmp.Q.zero) then "0" else(
 		(* Avoid 1/1 *)
-		let den : gmpz = get_den a in
-		if den = (gmpz_of_int 1) then
-			string_of_gmpz (get_num a)
+		let den = get_den a in
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
 		else
 			(* Nice predefined function *)
 			Gmp.Q.to_string (get_mpq a)
@@ -285,9 +206,9 @@ let jani_string_of_numconst a =
 	(* Avoid 0/1 *)
 	if a =/ (Gmp.Q.zero) then "0" else(
 		(* Avoid 1/1 *)
-		let den : gmpz = get_den a in
-		if den = (gmpz_of_int 1) then
-			string_of_gmpz (get_num a)
+		let den = get_den a in
+		if den = (Gmp.Z.from_int 1) then
+			Gmp.Z.to_string (get_num a)
 		else
 			(* Nice predefined function *)
 			let str = Gmp.Q.to_string (get_mpq a) in
@@ -351,9 +272,9 @@ let is_integer n =
 	equal n zero || equal n one ||
 	(* Then check denominator = 1 *)
 	(
-		(*print_string (string_of_gmpz (get_num n));
+		(*print_string (Gmp.Z.to_string (get_num n));
 		print_string "/";
-		print_string (string_of_gmpz (get_num n));
+		print_string (Gmp.Z.to_string (get_num n));
 		print_string "\n";
 		print_string ("  Check num = den: " ^ (string_of_bool ((get_num n) = (get_den n))));
 		print_string "\n";
@@ -361,13 +282,13 @@ let is_integer n =
 		print_string "\n";*)
 		(*** WARNING: should not use directly (get_num n) = (get_den n), because got strange results ***)
 (* 		(Gmp.Z.cmp (get_num n) (get_den n)) > 0 *)
-		(Gmp.Z.cmp (get_den n) (gmpz_of_int 1)) = 0
+		(Gmp.Z.cmp (get_den n) (Gmp.Z.from_int 1)) = 0
 	)
 
 
 (* Convert to int without checking anything *)
 let raw_to_int n =
-	let den : gmpz = get_num n in
+	let den = get_num n in
 	Gmp.Z.to_int den
 
 
@@ -526,7 +447,7 @@ let random_integer min max =
 	let nb = get_num nb in
 
 	(* Compute random *)
-	let random_number : gmpz = Gmp.Z.urandomm (random_generator()) nb in
+	let random_number = Gmp.Z.urandomm (random_generator()) nb in
 
 	(* 	let plouf = Gmp.Q.mpz_urandomm in *)
 

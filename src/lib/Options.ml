@@ -151,9 +151,6 @@ class imitator_options =
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
 		val mutable acyclic							= false
 
-		(* Cache results in AF to avoid recomputation *)
-		val mutable cache_in_AF						= true
-
 		(* limit on number of tiles computed by a cartography *)
 		val mutable carto_tiles_limit				= None
 
@@ -200,9 +197,6 @@ class imitator_options =
 		(* Remove global time clock when comparing states (expensive!) *)
 		val mutable no_global_time_in_comparison	= false
 
-		(* Use integer hull for termination of selected algorithms [JLR15] (EXPERIMENTAL) *)
-		val mutable ih : bool						= false
-
 		(* Layered NDFS *)
 		val mutable layer : bool option				= None
 
@@ -217,9 +211,6 @@ class imitator_options =
         val mutable merge_candidates : AbstractAlgorithm.merge_candidates option = None
         val mutable merge_update     : AbstractAlgorithm.merge_update option = None
         val mutable merge_restart    : bool option = None
-
-		(* New queue-based version of EF (EXPERIMENTAL) *)
-		val mutable new_queue_based_EU				= false
 
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
@@ -263,19 +254,6 @@ class imitator_options =
 		(* In game algorithms: propagate losing states *)
 		val mutable ptg_propagate_losing_states		= false
 
-		(* In game algorithms: use classic semantic where the environment cannot be forced to take an action 
-			 even if not doing so violates an invarant *)
-		val mutable ptg_no_forced_uncontrollables		= false
-
-		val mutable ptg_no_strategy_generation = false
-
-		val mutable ptg_no_strategy_printing = false
-
-		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
-		val mutable ptg_picking_strategy = AbstractAlgorithm.SingleQueue
-
-		val mutable ptg_abstraction = AbstractAlgorithm.No_Abstraction
-
 		(* process again green states *)
 		val mutable recompute_green					= false
 
@@ -290,6 +268,9 @@ class imitator_options =
 
 		(* limit on runtime *)
 		val mutable time_limit						= None
+
+		val mutable memoized_strategies_inclusion = false
+
 
 
 		(************************************************************)
@@ -306,13 +287,13 @@ class imitator_options =
 		method check_ippta							= check_ippta
 		method check_point							= check_point
 
-		method cache_in_AF							= cache_in_AF
 		method comparison_operator					= value_of_option "comparison_operator" comparison_operator
 		method is_set_comparison_operator			= comparison_operator <> None
 		method set_comparison_operator b			= comparison_operator <- Some b
 
 		method cumulative_pruning					= cumulative_pruning
 		method coverage_pruning = coverage_pruning
+		method memoized_strategies_inclusion = memoized_strategies_inclusion
 
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
@@ -335,8 +316,6 @@ class imitator_options =
 
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
-
-		method ih									= ih
 
 		method layer								= value_of_option "layer" layer
 		method is_set_layer							= layer <> None
@@ -375,8 +354,6 @@ class imitator_options =
 		method no_random							= no_random
 		method no_variable_autoremove				= no_variable_autoremove
 
-		method new_queue_based_EU					= new_queue_based_EU
-
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method : AbstractAlgorithm.nz_method = value_of_option "nz_method" nz_method
 		method is_set_nz_method : bool				= nz_method <> None
@@ -402,11 +379,6 @@ class imitator_options =
 		method ptg_controller_mode = ptg_controller_mode
 		method ptg_notonthefly						= ptg_notonthefly
 		method ptg_propagate_losing_states			= ptg_propagate_losing_states
-		method ptg_no_forced_uncontrollables = ptg_no_forced_uncontrollables
-		method ptg_no_strategy_generation = ptg_no_strategy_generation
-		method ptg_no_strategy_printing = ptg_no_strategy_printing
-		method ptg_picking_strategy = ptg_picking_strategy
-		method ptg_abstraction = ptg_abstraction
 
 		method states_limit							= states_limit
 		method statistics							= statistics
@@ -444,6 +416,13 @@ class imitator_options =
 		method set_no_time_elapsing =
 			no_time_elapsing <- true
 
+		method set_memoized_strategies_inclusion = 
+			print_warning "The memoïzed_stratgies_inclusion has been set to True";
+			memoized_strategies_inclusion <- true
+
+		method deactivate_cumulative_pruning = 
+			print_warning "The cumulative_pruning option has been de-activated because strategic_computation doesn't support it";
+			cumulative_pruning <- false
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Parse method *)
@@ -778,48 +757,7 @@ class imitator_options =
 						abort_program ();
 						exit(1);
 				)
-			
-			and set_ptg_waiting_list_strategy strategy = 
-				if strategy = "queue" then 
-					ptg_picking_strategy <- AbstractAlgorithm.SingleQueue
-				else if strategy = "frontier" then
-						ptg_picking_strategy <- AbstractAlgorithm.Frontier {init = 10; step =  3; update = 3}
-				else(
-				print_error ("The value of `-PTG-waiting-list-strategy` `" ^ strategy ^ "` is not valid.");
-				Arg.usage speclist usage_msg;
-				abort_program ();
-				exit(1);
-			)
 
-			and set_ptg_abstraction abstraction =
-				if abstraction = "location" then
-					ptg_abstraction <- AbstractAlgorithm.Location
-				else if abstraction = "ch" then 
-					ptg_abstraction <- AbstractAlgorithm.Convex_Hull
-				else if abstraction = "none" then 
-					ptg_abstraction <- AbstractAlgorithm.No_Abstraction 
-				else(
-				print_error ("The value of `-PTG-abstraction` `" ^ abstraction ^ "` is not valid.");
-				Arg.usage speclist usage_msg;
-				abort_program ();
-				exit(1);
-				)
-
-
-			and set_ptg_waiting_list_frontier_param_init init =
-					match ptg_picking_strategy with 
-						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with init}
-					| AbstractAlgorithm.SingleQueue -> ()
-
-			and set_ptg_waiting_list_frontier_param_step step =
-					match ptg_picking_strategy with 
-						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with step}
-					| AbstractAlgorithm.SingleQueue -> ()
-
-			and set_ptg_waiting_list_frontier_param_update update =
-					match ptg_picking_strategy with 
-						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with update}
-					| AbstractAlgorithm.SingleQueue -> ()
 
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
@@ -978,9 +916,6 @@ class imitator_options =
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
-				("-ih", Unit (fun () -> ih <- true), " Uses the integer hull [JLR15] for termination of selected algorithms. Default: disabled.
-				");
-
 				("-imi2DOT", Unit (fun _ ->
 					imitator_mode <- Translation DOT
 				), "   Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
@@ -992,10 +927,6 @@ class imitator_options =
 				("-imi2IMI", Unit (fun _ ->
 					imitator_mode <- Translation IMI
 				), "   Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
-
-				("-imi2imiprop", Unit (fun _ ->
-					imitator_mode <- Translation ImiProp
-				), "   Regenerate the property into an IMITATOR property, and exit without performing any analysis. Default: disabled");
 
 				("-imi2Jani", Unit (fun _ ->
 					imitator_mode <- Translation JaniSpec
@@ -1056,12 +987,7 @@ class imitator_options =
         Use `statespace`  for the generation of the entire parametric state space.
         ");
 
-				("-new-queue-EF", Unit (fun () -> new_queue_based_EU <- true), "New queue-based BFS version of EF and EU (EXPERIMENTAL).");
-
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
-				");
-
-				("-no-cache-in-AF", Unit (fun () -> cache_in_AF <- false), "In AF and AU, do NOT cache the result of previously computed nodes. Disabling the cache presumably reduces the state space but increases the computation time.
 				");
 
 				("-no-coverage-pruning", Unit (fun () -> coverage_pruning <- false), " In PTG: does not prune exploration of states that are fully covered (winning or losing). Default: enabled (i.e., tests coverage and prunes).
@@ -1122,28 +1048,6 @@ class imitator_options =
 				("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
 				");
 
-				("-PTG-no-forced-uncontrollables", Unit (fun _ -> ptg_no_forced_uncontrollables <- true), "In game algorithms: use classic semantics where the environment cannot be forced to take an action even if not doing so violates an invarant. Default: false, i.e. use new semantics");
-
-				("-PTG-no-strategy-printing", Unit (fun _ -> ptg_no_strategy_printing <- true), "In game algorithms: Do not print the generated strategy");
-
-				("-PTG-no-strategy-generation", Unit (fun _ -> ptg_no_strategy_generation <- true), "In game algorithms: Turn strategy generation off entirely - for experiments");
-
-				("-PTG-waiting-list-strategy", String(set_ptg_waiting_list_strategy), "In game algorithms: Set the strategy for picking the next edge to explore.
-				Use value `queue` for a simple fifo queue (Default).
-				Use value `frontier` to use the frontier method. ");
-
-				("-PTG-frontier-params", Tuple(
-					[Int set_ptg_waiting_list_frontier_param_init; 
-					 Int set_ptg_waiting_list_frontier_param_step; 
-					 Int set_ptg_waiting_list_frontier_param_update]),
-					 "In game algorithms: Set the depth parameters for frontier strategy (if enabled). Usage: init step update");
-				
-				("-PTG-abstraction", String(set_ptg_abstraction), "In game algorithms: The abstraction to use when computing the state space.
-				Use value `location` for the coarsest abstraction that identifies any two states with the same location.
-				Use value `ch` for the using the convex hull of reachable zones.
-				Use value `none` for using no abstractions (Default)");
-
-
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]
 				");
 
@@ -1187,6 +1091,8 @@ class imitator_options =
 					print_newline();
 					exit 0), " Print version number and exit.
 				");
+				("-memoized_strategies_inclusion",Unit (fun() -> memoized_strategies_inclusion <- true)," Be careful manipulating this option, not relevant for reachability property with positionnal strategy.
+				");
 
 			] in
 
@@ -1217,9 +1123,7 @@ class imitator_options =
 			(* Case no file *)
 			if nb_args < 1 then(
 				print_error ("Please give a file name for the model.");
-				print_message Verbose_standard usage_msg;
-				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");
-(* 				Arg.usage speclist usage_msg; *)
+				Arg.usage speclist usage_msg;
 				abort_program ();
 				exit(1)
 			);
@@ -1227,9 +1131,7 @@ class imitator_options =
 			(* Case no property file, although it is needed *)
 			if nb_args = 1 && (property_needed imitator_mode = Second_file_required) then(
 				print_error ("Please give a file name for the property.");
-				print_message Verbose_standard usage_msg;
-				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");
-(* 				Arg.usage speclist usage_msg; *)
+				Arg.usage speclist usage_msg;
 				abort_program ();
 				exit(1)
 			);
@@ -1264,29 +1166,15 @@ class imitator_options =
 				match imitator_mode with
 				| Syntax_check
 				| State_space_computation
+				| Translation _
 				->
 					(* Warn *)
 					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
 					(* Delete property file *)
 					property_file_name <- None;
-
-				| Translation target_translation when target_translation <> ImiProp ->
-					(* Warn *)
-					print_warning ("No need for a property in this mode: property file `" ^ (a_of_a_option property_file_name) ^ "` is ignored!");
-					(* Delete property file *)
-					property_file_name <- None;
-
 				| _ -> ()
 			);
 
-			(*------------------------------------------------------------*)
-			(* Check that a property is defined in mode Translation ImiProp *)
-			(*------------------------------------------------------------*)
-			if property_file_name = None && imitator_mode = Translation ImiProp then(
-				print_error "A property must be defined in order to regenerate the property";
-				abort_program ();
-				exit(1);
-			);
 
 
 
@@ -1481,20 +1369,6 @@ class imitator_options =
 
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
-
-			(*------------------------------------------------------------*)
-			(* Check that -no-cache-in-AF is only enabled (i.e., cache_in_AF is disabled) for AF/AU *)
-			(*------------------------------------------------------------*)
-			if not cache_in_AF then(
-				let incompatible_mode =
-				if imitator_mode = Algorithm then(
-					match (get_option_property()).property with
-						(* Accepting infinite-run (cycle) through a state predicate *)
-						| AF _ | AR _ | AU _ | AW _ | EG _ | AF_timed _ | AR_timed _ | AU_timed _ | AW_timed _ -> false
-						| _ -> true
-				) else true in
-				if incompatible_mode then print_warning ("Option -no-cache-in-AF is only useful for AF/AU/EG algorithms.");
-			);
 
 			(*------------------------------------------------------------*)
 			(* Only BFS (no NDFS) for generalized acceptance conditions, so far *)
@@ -1931,6 +1805,6 @@ class imitator_options =
 
 
 			()
-
+				
 
 	end

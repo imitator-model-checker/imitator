@@ -1,0 +1,98 @@
+// Automatically generated from test_OL.imi using OL_translator.py
+
+var
+
+(* Parameters *)
+	p,maxp (* The cost of the demoniac strategy *)
+		: discrete;
+
+
+(************************************************************)
+  automaton demon
+(************************************************************)
+
+synclabs: pass,s0s1,s0s2,s1s2,s1s3,s2s1,s2s3,s2s3s1,s2s4,s2s4s1,s2s4s3,s3s4,s3s5,s4s3,s4s5;
+
+loc To_s0: invariant p<=maxp
+	when True do {} goto s0;
+
+loc To_s1: invariant p<=maxp
+	when True do {} goto s1;
+
+loc To_s2: invariant p<=maxp
+	when True do {} goto s2;
+
+loc To_s3: invariant p<=maxp
+	when True do {} goto s3;
+
+loc To_s4: invariant p<=maxp
+	when True do {} goto s4;
+
+loc To_s5: invariant p<=maxp
+	when True do {} goto s5;
+
+loc s0: invariant True
+	when True sync pass do {} goto To_s1;
+	when True sync pass do {} goto To_s2;
+	when True sync s0s1 do {if p<3 then p := 3 end} goto To_s2;
+	when True sync s0s2 do {if p<2 then p := 2 end} goto To_s1;
+
+
+loc s1: invariant True
+	when True sync pass do {} goto To_s2;
+	when True sync pass do {} goto To_s3;
+	when True sync s1s2 do {if p<2 then p := 2 end} goto To_s3;
+	when True sync s1s3 do {if p<1 then p := 1 end} goto To_s2;
+
+
+loc s2: invariant True
+	when True sync pass do {} goto To_s4;
+	when True sync pass do {} goto To_s3;
+	when True sync pass do {} goto To_s1;
+	when True sync s2s4 do {if p<4 then p := 4 end} goto To_s3;
+	when True sync s2s4 do {if p<4 then p := 4 end} goto To_s1;
+	when True sync s2s3 do {if p<1 then p := 1 end} goto To_s4;
+	when True sync s2s3 do {if p<1 then p := 1 end} goto To_s1;
+	when True sync s2s1 do {if p<3 then p := 3 end} goto To_s4;
+	when True sync s2s1 do {if p<3 then p := 3 end} goto To_s3;
+	when True sync s2s4s3 do {if p<5 then p := 5 end} goto To_s1;
+	when True sync s2s4s1 do {if p<7 then p := 7 end} goto To_s3;
+	when True sync s2s3s1 do {if p<4 then p := 4 end} goto To_s4;
+
+
+loc s3: invariant True
+	when True sync pass do {} goto To_s4;
+	when True sync pass do {} goto To_s5;
+	when True sync s3s4 do {if p<3 then p := 3 end} goto To_s5;
+	when True sync s3s5 do {if p<5 then p := 5 end} goto To_s4;
+
+
+loc s4: invariant True
+	when True sync pass do {} goto To_s3;
+	when True sync pass do {} goto To_s5;
+	when True sync s4s3 do {if p<4 then p := 4 end} goto To_s5;
+	when True sync s4s5 do {if p<8 then p := 8 end} goto To_s3;
+
+
+loc s5: invariant True
+
+end (* demon *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init :=
+	& loc[demon] = s0
+	& p = 0
+
+	& maxp = 8
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -102,21 +102,8 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (property : Abstract
 				false
 			)else(
 			
-				if options#ih then(
-					(* Update K := K ^ IH( not s) *)
-					(*** NOTE: most probably easy to simplify! (certainly over-complicated) ***)
-					let not_s = LinearConstraint.true_p_nnconvex_constraint () in
-					LinearConstraint.p_nnconvex_difference_assign not_s (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
-
-					(* Apply IH to the negation *)
-					let ih_not_s = LinearConstraint.p_nnconvex_ih not_s in
-
-					(* Intersect *)
-					LinearConstraint.p_nnconvex_intersection_assign k_result ih_not_s;
-				)else(
-					(* Update K := K ^ not s *)
-					LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
-				);
+				(* Update K := K ^ not s *)
+				LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
@@ -130,14 +117,7 @@ class algoIMcomplete (model : AbstractModel.abstract_model) (property : Abstract
 		) (* end if pi-incompatible *)
 		else(
 			(* Update K := K ^ s *)
-			if options#ih then(
-				(*** TODO: we could just apply to the projected constraint p_constraint (done so to save programming time) ***)
-				let px_ih = LinearConstraint.px_ih constr in
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_ih in
-				LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
-			)else(
-				LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
-			);
+			LinearConstraint.p_nnconvex_p_intersection_assign k_result p_constraint;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(

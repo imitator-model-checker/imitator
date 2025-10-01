@@ -1,0 +1,7 @@
+name="ppl"
+version="20021123"
+description="bindings to PPL library (manual entry)"
+archive(byte) = "stdlib_stream.a"
+exists_if = "std_stream.cma"
+directory="/home/.opam/4.07.1/lib"
+

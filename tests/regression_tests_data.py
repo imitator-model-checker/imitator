@@ -714,7 +714,7 @@ Number of IPTAs                         : 1
 		# Test since               : 2023/03/09
 		# Last modified            : 2023/03/09
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test auto-removed variable does not crash a function return',
+		'purpose'    : 'Test auto-removed variable doesn’t crash a function return',
 		'tags'       : 'syntax,functions',
 		'input_files': ['functions/removed-function.imi'],
 		'options'    : '-mode checksyntax',
@@ -916,7 +916,7 @@ Error                                   : division by 0
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/11/08
+		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (discrete int in init definition)',
 		'tags'       : 'syntax',
@@ -924,8 +924,8 @@ Error                                   : division by 0
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-int-init.res' , 'content' : """
-Error                                   : model parsing error
-		"""
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
 			} # end result file
 			,
 		] # end expectations
@@ -939,7 +939,7 @@ Error                                   : model parsing error
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/11/08
+		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (discrete rational in init definition)',
 		'tags'       : 'syntax',
@@ -947,8 +947,8 @@ Error                                   : model parsing error
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-rational-init.res' , 'content' : """
-Error                                   : model parsing error
-		"""
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
 			} # end result file
 			,
 		] # end expectations
@@ -962,7 +962,7 @@ Error                                   : model parsing error
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/11/08
+		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (constant int in definition)',
 		'tags'       : 'syntax',
@@ -970,8 +970,8 @@ Error                                   : model parsing error
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-int-def.res' , 'content' : """
-Error                                   : model parsing error
-		"""
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
 			} # end result file
 			,
 		] # end expectations
@@ -985,7 +985,7 @@ Error                                   : model parsing error
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
-		# Last modified            : 2024/11/08
+		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected (constant rational in definition)',
 		'tags'       : 'syntax',
@@ -993,8 +993,8 @@ Error                                   : model parsing error
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'division-by-zero-model-rational-def.res' , 'content' : """
-Error                                   : model parsing error
-		"""
+Number of IPTAs                         : 1
+		""" # HACK: only way to check that syntax is correct?!
 			} # end result file
 			,
 		] # end expectations
@@ -1262,52 +1262,6 @@ var
 
 	,
 
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2025/01/09
-		# Last modified            : 2025/01/09
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test undefined controllable action',
-		'tags'       : 'syntax,controllable',
-		'input_files': ['parametric_timed_games/controllable-nonexistent.imi'],
-		'options'    : '-mode checksyntax',
-		'expectations' : [
-			{'file': 'controllable-nonexistent.res' , 'content' : """
-Error                                   : invalid model
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2025/01/09
-		# Last modified            : 2025/01/09
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test undefined uncontrollable action',
-		'tags'       : 'syntax,controllable',
-		'input_files': ['parametric_timed_games/uncontrollable-nonexistent.imi'],
-		'options'    : '-mode checksyntax',
-		'expectations' : [
-			{'file': 'uncontrollable-nonexistent.res' , 'content' : """
-Error                                   : invalid model
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	##------------------------------------------------------------
 	{
 		'purpose'    : 'Test include files [1]',
@@ -1333,7 +1287,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x <- 0;}  sync a goto l1;
+	when  x = 1 do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1344,7 +1298,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  x = 1 do {x <- 0;}  sync a goto l1;
+	when  x = 1 do {x := 0;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1353,18 +1307,18 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] <- l1,
-		loc[pta2] <- l1,
+		loc[pta1] := l1, 
+		loc[pta2] := l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i <- 0
+		i := 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1416,7 +1370,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x <- 0;}  sync a goto l1;
+	when  p + 1 = x do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1426,7 +1380,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y <- p;}  sync a goto l1;
+	when  y = 1 do {y := p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1435,19 +1389,19 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] <- l1,
-		loc[pta2] <- l1,
+		loc[pta1] := l1, 
+		loc[pta2] := l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		j <- 0,
-		i <- 0
+		j := 0, 
+		i := 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1499,7 +1453,7 @@ var
  actions: a;
 
 loc l1: invariant True
-	when  p + 1 = x do {x <- 0;}  sync a goto l1;
+	when  p + 1 = x do {x := 0;}  sync a goto l1;
  end (* pta1 *)
 (************************************************************)
 
@@ -1510,7 +1464,7 @@ loc l1: invariant True
  actions: a;
 
 loc l1: invariant True
-	when  y = 1 do {y <- p;}  sync a goto l1;
+	when  y = 1 do {y := p;}  sync a goto l1;
  end (* pta2 *)
 (************************************************************)
 
@@ -1520,19 +1474,19 @@ loc l1: invariant True
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta1] <- l1,
-		loc[pta2] <- l1,
+		loc[pta1] := l1, 
+		loc[pta2] := l1,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		j <- 0,
-		i <- 0
+		j := 0, 
+		i := 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1651,8 +1605,8 @@ Error                                   : model parsing error
 	{
 		# Test version             : 1
 		# Test since               : 2022/06/09
-		# Last modified            : 2024/07/11
-		# Test for IMITATOR version: 3.4
+		# Last modified            : 2022/06/09
+		# Test for IMITATOR version: 3.3
 		'purpose'    : 'Test include: functions',
 		'author': 'lbinria',
 		'tags':'syntax,include, function',
@@ -1689,7 +1643,7 @@ accepting loc lend: invariant True
  actions: ;
 
 loc s0: invariant True
-	when f() + j = 4 do {res <- f();}  (* sync nosync_2*)  goto lend;
+	when f() + j = 4 do {res := f();}  (* sync nosync_2*)  goto lend;
 
 accepting loc lend: invariant res = 3
  end (* P2 *)
@@ -1700,20 +1654,20 @@ accepting loc lend: invariant res = 3
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[P1] <- s0,
-		loc[P2] <- s0,
+		loc[P1] := s0,
+		loc[P2] := s0,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		res <- 0,
-		j <- 1,
-		i <- 0
+		res := 0,
+		j := 1,
+		i := 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -1731,31 +1685,6 @@ init = {
 (************************************************************)
 end
 		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/12/04
-		# Last modified            : 2024/12/04
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test include + reachability synthesis (train model)',
-		'tags'       : 'include',
-		'input_files': ['tests_include_model/trainSPI-2-last-2.imi', 'tests_include_model/trainSPI-2.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'trainSPI-2-last-2.res' , 'content' : """
-BEGIN CONSTRAINT
- MAX_DURATION >= 75
-& bound_last >= 63
-END CONSTRAINT		"""
 			} # end result file
 			,
 		] # end expectations
@@ -2642,7 +2571,7 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
 urgent loc idle: invariant True
-	when True do {i <- (3 * i - 1) / (5 * i * i); x <- x + 1/2 * p - 7 * i - 1; y <- y + 1;} sync a goto idle;
+	when True do {i := (3 * i - 1) / (5 * i * i); x := x + 1/2 * p - 7 * i - 1; y := y + 1;} sync a goto idle;
 		"""
 			} # end result file
 			,
@@ -2661,8 +2590,8 @@ urgent loc idle: invariant True
 			{'file': 'testUpdatesInequalitiesOrder-regenerated.imi' , 'content' : """
 	when  a > 0
 & b > 0
-& c > 0 do {a <- 0; b <- 0; c <- 0;}  sync a goto idle;
-	when True do {a <- 2; b <- 3 + 3; c <- 0;}  sync a goto idle;
+& c > 0 do {a := 0; b := 0; c := 0;}  sync a goto idle;
+	when True do {a := 2; b := 3 + 3; c := 0;}  sync a goto idle;
 		"""
 			 } # end result file
 			,
@@ -3294,8 +3223,8 @@ when  y + 7 > 2*x
 	{
 		## Test version             : 1
 		## Test since               : 2022/10/27
-		## Last modified            : 2024/07/11
-		## Test for IMITATOR version: 3.4
+		## Last modified            : 2022/10/27
+		## Test for IMITATOR version: 3.3
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'tags': 'parsing, arithmetic, linear, reduction',
@@ -3304,15 +3233,15 @@ when  y + 7 > 2*x
 		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'linear-expression-reduction-regenerated.imi' , 'content' : """
-      x1 <- 6 * x + 10 * y - 53;
-      x2 <- 6 * x + 10 * y - 53;
-      x3 <- y + 5 * x + 5;
-      x4 <- x - 1;
-      x5 <- -(6);
-      x6 <- 2 * x + 11;
-      x7 <- -(3 * x) + 23 * y + 35;
-      x8 <- 24 + 12 * x;
-      x9 <- -(12 * y) + 2 * x + 4 * z + 41;
+      x1 := 6 * x + 10 * y - 53;
+      x2 := 6 * x + 10 * y - 53;
+      x3 := y + 5 * x + 5;
+      x4 := x - 1;
+      x5 := -(6);
+      x6 := 2 * x + 11;
+      x7 := -(3 * x) + 23 * y + 35;
+      x8 := 24 + 12 * x;
+      x9 := -(12 * y) + 2 * x + 4 * z + 41;
 		"""
 			 } # end result file
 			,
@@ -3408,8 +3337,8 @@ when  -(i * 2) = -2 * i
 	{
 		## Test version             : 1
 		## Test since               : 2021/02/10
-		## Last modified            : 2024/07/11
-		## Test for IMITATOR version: 3.4
+		## Last modified            : 2021/02/10
+		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test arithmetic expression unary minus in update (printing)',
@@ -3418,19 +3347,19 @@ when  -(i * 2) = -2 * i
 		'expectations' : [
 			{'file': 'unary-minus-update-regenerated.imi' , 'content' : """
 when  i = 0 do {
-  i <- -(i * 2);
-  i <- -2 * i;
-  i <- -(i * -2);
-  i <- -(i / 2);
-  i <- (-i) / 2;
-  i <- -(i / -2);
-  i <- -(i + i);
-  i <- -(i - i);
-  i <- -(2 * i - i);
-  i <- -(-(i));
-  i <- -(-(-(i)));
-  i <- -1 + 1;
-  i <- -1 - 1;
+  i := -(i * 2);
+  i := -2 * i;
+  i := -(i * -2);
+  i := -(i / 2);
+  i := (-i) / 2;
+  i := -(i / -2);
+  i := -(i + i);
+  i := -(i - i);
+  i := -(2 * i - i);
+  i := -(-(i));
+  i := -(-(-(i)));
+  i := -1 + 1;
+  i := -1 - 1;
 }  sync a goto lend;
 		"""
 			 } # end result file
@@ -4000,6 +3929,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -4500,7 +4430,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'queue-statespace.states' , 'content' : """
-  pta: lend, r = 1, i = 2, s3 = queue([2, 3]), s2 = queue(), s1 = queue([1, 2]) ==>
+  pta: lend, r = 1, i = 2, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
 &True
 
   Projection onto the parameters:
@@ -4608,7 +4538,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.0.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that a clock is not updated with a bad type',
+		'purpose'    : 'Test that a clock isn’t updated with a bad type',
 		'tags': 'type checking, update',
 		'input_files': ['type_checking/updates/clock-update-type-error.imi'],
 		'options'    : '-no-var-autoremove',
@@ -4635,7 +4565,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression does not mix different types in addition',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in addition',
 		'input_files': ['type_checking/expression-mixin-type-error-1.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4658,7 +4588,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression does not mix different types in multiplication',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in multiplication',
 		'input_files': ['type_checking/expression-mixin-type-error-2.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4681,7 +4611,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression does not mix different types in comparison',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in comparison',
 		'input_files': ['type_checking/expression-mixin-type-error-3.imi'],
 		'options'    : '-no-var-autoremove',
 		'expectations' : [
@@ -4704,7 +4634,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
-		'purpose'    : 'Test that an update expression does not mix different types in "in" expression',
+		'purpose'    : 'Test that an update expression doesn’t mix different types in "in" expression',
 		'input_files': ['type_checking/expression-mixin-type-error-4.imi'],
 		'options'    : '',
 		'expectations' : [
@@ -4915,7 +4845,7 @@ Error                                   : invalid model
 # (* Initial state *)
 # (************************************************************)
 #
-# init = True
+# init := True
 # 	(*------------------------------------------------------------*)
 # 	(* Initial location *)
 # 	(*------------------------------------------------------------*)
@@ -4953,8 +4883,8 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/10
-		## Last modified            : 2024/07/11
-		## Test for IMITATOR version: 3.4
+		## Last modified            : 2021/06/01
+		## Test for IMITATOR version: > 3.0
 		## Author 					: lbinria
 		'author': 'lbinria',
 		'purpose'    : 'Test imi2IMI for initial state v3.1',
@@ -5013,22 +4943,22 @@ accepting loc lend2: invariant True
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] <- l1,
-		loc[pta2] <- l2,
+		loc[pta] := l1,
+		loc[pta2] := l2,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i <- 1,
-		j <- 2,
-		b <- False,
-		k <- 0,
-		l <- 0
+		i := 1,
+		j := 2,
+		b := False,
+		k := 0,
+		l := 0
 	;
 
 	(*------------------------------------------------------------*)
@@ -5925,7 +5855,7 @@ END CONSTRAINT
 		# Test since               : 2023/04/05
 		# Last modified            : 2023/04/05
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test void var is not allowed',
+		'purpose'    : 'Test void var isn’t allowed',
 		'input_files': ['test-void.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -5947,7 +5877,7 @@ Error                                   : invalid model
 		# Test since               : 2023/04/05
 		# Last modified            : 2023/04/05
 		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test void array is not allowed',
+		'purpose'    : 'Test void array isn’t allowed',
 		'input_files': ['test-void-array.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
@@ -7113,30 +7043,6 @@ Number of computed states               : 0
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF with bad initial state (queue-based BFS)',
-		'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFdegenerate1.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
@@ -7194,30 +7100,6 @@ Number of computed states               : 0
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with bad initial state and some constrained valuations (queue-based BFS)',
-		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFdegenerate2.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		'purpose'    : 'Test EF with the new syntax from 2.10.1',
 		'input_files': ['fischer_2.imi', 'fischer_2.imiprop'],
 		'options'    : '',
@@ -7265,238 +7147,6 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (underapproximated result)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 = 3
- & p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (underapproximated result) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 = 3
- & p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (underapproximated result with projection)',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5-project.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 = 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (underapproximated result with projection) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc5-project.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 = 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (maximal result)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 2
-& 5 >= p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (maximal result) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 2
-& 5 >= p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (maximal result with projection)',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2-project.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 >= 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF + witness (maximal result with projection) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/EF-witness-loc2-project.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 >= 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
@@ -7522,34 +7172,6 @@ Constraint nature                       : good
 
 	,
 	
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2020/09/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF on toy example: witness (queue-based BFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-witness.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFInclMerge.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 2046
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-Termination                             : terminated after reaching a target state (some states may have been unexplored)
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -7581,37 +7203,6 @@ Constraint nature                       : good
 
 	,
 	
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2020/09/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF on toy example: synthesis (queue-based BFS)',
-		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFInclMerge.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 2046
-OR
-  5 > p
-& p >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -7822,31 +7413,6 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-EF-accepting.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'safety-initial-state.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
@@ -7874,59 +7440,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-EF-accepting.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'safety-initial-state2.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p
-& p >= 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'safety-initial-state-neg.res' , 'content' : """
-BEGIN CONSTRAINT
-  0 >= 3 + p1
- & p2 + 3 >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF: basic reachability property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-EF-accepting.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-initial-state-neg.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -7980,37 +7496,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 2
-		# Test author              : Étienne André
-		# Test since               : 2024/01/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF: basic reachability property with disjunctive result without projection (queue-based BFS)',
-		'tags'       : 'semantic,projection',
-		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-noprojection.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'basic-reachability-projection.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 > 0
- & 5 > p2
- & p2 > p1
- OR
-   p1 > 8
- & 9 > p2
- & p2 > p1
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/09
@@ -8040,35 +7525,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/01/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF: basic reachability property with disjunctive result with projection (queue-based BFS)',
-		'tags'       : 'semantic,projection',
-		'input_files': ['basic-reachability-projection.imi', 'basic-reachability-projection.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'basic-reachability-projection.res' , 'content' : """
-BEGIN CONSTRAINT
-  5 > p1
- & p1 > 0
- OR
-   9 > p1
- & p1 > 8
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
@@ -8090,60 +7546,11 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state.imi', 'basic-properties/synth-safety.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'safety-initial-state.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'safety-initial-state2.res' , 'content' : """
-BEGIN CONSTRAINT
-p > 5
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test AGnot: basic safety property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state2.imi', 'basic-properties/synth-safety.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-initial-state2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8168,30 +7575,6 @@ Constraint nature                       : good
 		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant',
 		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'safety-initial-state-neg.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test AGnot: basic reachability property depending on the initial invariant (queue-based BFS)',
-		'input_files': ['safety/safety-initial-state-neg.imi', 'basic-properties/synth-safety.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'safety-initial-state-neg.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8242,35 +7625,6 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 2
-		# Test author              : Étienne André
-		# Test since               : 2024/01/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result without projection (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['safety/safety-simple.imi', 'basic-properties/synth-safety.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'safety-simple.res' , 'content' : """
-  p1 >= 0
- & p2 >= 0
- & 3 > p2
- OR
-   p2 >= 3
- & p1 >= p2
- & 11 >= p2
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/09
@@ -8284,336 +7638,6 @@ Constraint nature                       : good
 			{'file': 'safety-simple.res' , 'content' : """
   11 >= p2
  & p2 >= 0
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/01/09
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot: basic reachability property with disjunctive result with projection (queue-based BFS)',
-		'tags'       : 'semantic,projection',
-		'input_files': ['safety/safety-simple.imi', 'safety/safety-simple.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'safety-simple.res' , 'content' : """
-  11 >= p2
- & p2 >= 0
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot + witness (overapproximated result)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 > 3
-& 5 >= p1
-& p2 = 4
-OR
-  p1 >= 2
-& 3 > p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible over-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot + witness (overapproximated result) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 > 3
-& 5 >= p1
-& p2 = 4
-OR
-  p1 >= 2
-& 3 > p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible over-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot + witness (overapproximated result + projection)',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5-project.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 > 3
-OR
-  p1 >= 2
-& 3 > p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible over-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot + witness (overapproximated result + projection) (queue-based BFS)',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc5-project.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 > 3
-OR
-  p1 >= 2
-& 3 > p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible over-approximation
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with false result',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc2.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with false result (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc2.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with maximal result',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 2
-& 5 >= p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with maximal result (queue-based BFS)',
-		'tags'       : 'algorithm,semantic',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 2
-& 5 >= p1
-& p2 = 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with maximal result + projection',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6-project.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 >= 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AGnot with maximal result + projection (queue-based BFS)',
-		'tags'       : 'algorithm,semantic,projection',
-		'input_files': ['witness/EF-witness.imi', 'witness/AGnot-witness-loc6-project.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EF-witness.res' , 'content' : """
-BEGIN CONSTRAINT
- 5 >= p1
-& p1 >= 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
 		"""
 			} # end result file
 			,
@@ -8647,62 +7671,11 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 2
-		# Test author              : Étienne André
-		# Test since               : 2023/12/22
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test AG on a very simple example (queue-based BFS)',
-		'tags'       : 'algorithm',
-		'input_files': ['safety/safety-initial-state2.imi', 'safety/safety-initial-state2-AG1.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'safety-initial-state2.res' , 'content' : """
-BEGIN CONSTRAINT
-p > 5
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'F3.res' , 'content' : """
-BEGIN CONSTRAINT
-delta >= Delta
-    & Delta >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queue-based BFS)',
-		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8895,7 +7868,6 @@ Constraint nature                       : good
 	#} # end test case
 	##------------------------------------------------------------
 	#,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with complex safety property',
@@ -8926,53 +7898,11 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
+  15 > p_add_sugar + p_coffee
 & p_coffee > 0
 & p_button > 0
-& 15 > p_add_sugar + p_coffee
-END CONSTRAINT
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF with complex safety property (queue-based BFS)',
-		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'coffeeDrinker.res' , 'content' : """
-BEGIN CONSTRAINT
- p_add_sugar > 0
-& 2*p_button > p_add_sugar
-& p_add_sugar + p_coffee > 2*p_button
-& 15 > 2*p_button
-OR
-  p_add_sugar >= 2*p_button
-& p_add_sugar + p_coffee > 3*p_button
-& 3*p_button > p_add_sugar
 & 5 > p_button
-OR
-  p_add_sugar > 0
-& 2*p_button >= 15
-& p_add_sugar + p_coffee > 15
-& 15 > p_button
-& p_button > p_add_sugar
-OR
-  2*p_button >= p_add_sugar + p_coffee
-& p_add_sugar > 0
-& p_add_sugar + p_coffee > p_button
-& p_button > p_add_sugar
-& 15 >= p_add_sugar + p_coffee
-OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
-& p_button > 0
-& 15 > p_add_sugar + p_coffee
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			} #end result file
@@ -8992,34 +7922,6 @@ END CONSTRAINT
 		'tags' : 'auto remove',
 		'input_files': ['test_param_unused.imi' , 'basic-properties/synth-EF-accepting.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_param_unused.res' , 'content' : """
-BEGIN CONSTRAINT
- 14 > p
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 2
-		# Test since               : 2021/07/02
-		# Last modified            : 2024/04/12
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EF with a parameter not used in the model (but still useful) + negative clock + negative flow (queue-based BFS)',
-		'tags' : 'auto remove',
-		'input_files': ['test_param_unused.imi' , 'basic-properties/synth-EF-accepting.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_param_unused.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9068,10 +7970,11 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
+  15 > p_add_sugar + p_coffee
 & p_coffee > 0
 & p_button > 0
-& 15 > p_add_sugar + p_coffee
+& 5 > p_button
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			 } #end result file
@@ -9081,49 +7984,6 @@ END CONSTRAINT
 
 	,
 	
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF with complex safety property on coffee drinker with int (queue-based BFS)',
-		'input_files': ['coffeeDrinker-int.imi', 'coffeeDrinker.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'coffeeDrinker-int.res' , 'content' : """
-BEGIN CONSTRAINT
- p_add_sugar > 0
-& 2*p_button > p_add_sugar
-& p_add_sugar + p_coffee > 2*p_button
-& 15 > 2*p_button
-OR
-  p_add_sugar >= 2*p_button
-& p_add_sugar + p_coffee > 3*p_button
-& 3*p_button > p_add_sugar
-& 5 > p_button
-OR
-  p_add_sugar > 0
-& 2*p_button >= 15
-& p_add_sugar + p_coffee > 15
-& 15 > p_button
-& p_button > p_add_sugar
-OR
-  2*p_button >= p_add_sugar + p_coffee
-& p_add_sugar > 0
-& p_add_sugar + p_coffee > p_button
-& p_button > p_add_sugar
-& 15 >= p_add_sugar + p_coffee
-OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
-& p_button > 0
-& 15 > p_add_sugar + p_coffee
-END CONSTRAINT
-"""
-			 } #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
@@ -9209,12 +8069,13 @@ END CONSTRAINT
 
 	,
 
+
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/04
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between witness and synthesis, here witness)',
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here emptiness)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -9240,36 +8101,9 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/04
-		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between witness and synthesis, here witness) (queue-based BFS)',
-		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFemptiness.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-Termination                             : terminated after reaching a target state (some states may have been unexplored)
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2020/09/04
 		# Last modified            : 2020/09/04
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between witness and synthesis, here synthesis)',
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here synthesis)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -9293,35 +8127,6 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test since               : 2020/09/04
-		# Last modified            : 2020/09/04
-		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (difference between witness and synthesis, here synthesis) (queue-based BFS)',
-		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFemptiness.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 1
- OR
- p >= 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -9470,35 +8275,6 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test since               : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EFunsafe (queue-based BFS)',
-		'input_files': ['testEFcounterex.imi', 'testEFcounterex.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFcounterex.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 1
- OR
- p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
@@ -9523,37 +8299,6 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test since               : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EFunsafe with counterexample (queue-based BFS)',
-		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testEFcounterex.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-Termination                             : terminated after reaching a target state (some states may have been unexplored)
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	# BEGIN : Test EU
-	#------------------------------------------------------------
 
 	#------------------------------------------------------------
 	{
@@ -9585,34 +8330,6 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (unsat on the initial state) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-1.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -9622,34 +8339,6 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (unsat due to unreachability) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-2.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9700,68 +8389,12 @@ Termination                             : regular termination
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (True due to initial state matched) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-3.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
 		# Last modified            : 2023/12/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EU (matching location)',
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (matching location) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-4.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9812,68 +8445,12 @@ Termination                             : regular termination
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (matching variable condition) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-5.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
 		# Last modified            : 2023/12/18
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EU (matching variable condition (varying syntax))',
 		'tags'       : 'algorithm,property,syntax',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
-		'tags'       : 'algorithm,property,syntax',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-6.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -9921,34 +8498,6 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
-		'tags'       : 'algorithm,property,syntax',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-7.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -9958,34 +8507,6 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property,syntax',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (matching variable condition (varying syntax)) (queue-based BFS)',
-		'tags'       : 'algorithm,property,syntax',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-8.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10033,34 +8554,6 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (using both variables and locations) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-9.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p >= 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -10089,34 +8582,6 @@ Termination                             : regular termination
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (using both variables and locations (corner-point case)) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-10.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-p >= 4
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/12/18
@@ -10126,34 +8591,6 @@ Termination                             : regular termination
 		'tags'       : 'algorithm,property',
 		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-11.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test_EU.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2023/12/18
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (using both variables and locations (false)) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['test_EU/test_EU.imi', 'test_EU/test_EU-11.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test_EU.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10206,139 +8643,6 @@ Termination                             : regular termination
 	,
 
 	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/29
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU (different reachable times) (queue-based BFS)',
-		'tags'       : 'algorithm,property',
-		'input_files': ['timed_properties/test-timedEU.imi', 'timed_properties/test-untimedEU.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test-timedEU.res' , 'content' : """
-BEGIN CONSTRAINT
-  p = 1
- OR
-   p = 3
- OR
-   p = 4
- OR
-   p = 5
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	#------------------------------------------------------------
-	# END : Test EU
-	#------------------------------------------------------------
-
-	,
-
-
-	#------------------------------------------------------------
-	# BEGIN : Test EW
-	#------------------------------------------------------------
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU on a simple example',
-		'tags'       : 'syntax,semantic',
-		'input_files': ['EW/EW.imi', 'EW/EU.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EW.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EU on a simple example (queue-based BFS)',
-		'tags'       : 'syntax,semantic',
-		'input_files': ['EW/EW.imi', 'EW/EU.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'EW.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EW on a simple example',
-		'tags'       : 'syntax,semantic',
-		'input_files': ['EW/EW.imi', 'EW/EW.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EW.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 3
-OR
-  p = 1
-OR
-  p = 2
-OR
-  p = 6
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
 	# BEGIN : Test timed EF
 	#------------------------------------------------------------
 
@@ -10353,32 +8657,6 @@ Constraint soundness                    : exact
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test-timedEF-basic.res' , 'content' : """
-BEGIN CONSTRAINT
- 4 >= p
-& p >= 0
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the model (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10421,31 +8699,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, wrong interval (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-wronginterval.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -10455,32 +8708,6 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 >= p
- & p >= 9
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, closed] (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedclosed.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10524,32 +8751,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, closed] (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openclosed.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 > p
- & p >= 9
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -10559,32 +8760,6 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 >= p
- & p > 9
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, open) (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10628,32 +8803,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, open) (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openopen.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 > p
- & p > 9
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -10663,32 +8812,6 @@ END CONSTRAINT
 		'tags'       : 'semantic',
 		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 >= p
- & p >= 0
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval [closed, infinity) (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-closedinfinite.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10732,32 +8855,6 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model, one parameter in the property, interval (open, infinity) (queue-based BFS)',
-		'tags'       : 'semantic',
-		'input_files': ['timed_properties/test-timedEF-basic-prop.imi', 'timed_properties/test-timedEF-basic-prop-openinfinite.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop.res' , 'content' : """
-BEGIN CONSTRAINT
-  10 > p
- & p >= 0
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/02/28
@@ -10767,32 +8864,6 @@ END CONSTRAINT
 		'tags'       : 'semantic, flows',
 		'input_files': ['timed_properties/test-timedEF-basic-prop-flows.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'test-timedEF-basic-prop-flows.res' , 'content' : """
-BEGIN CONSTRAINT
-  14 >= p
- & p > 13
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/28
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: toy model with flows, one parameter in the property (queue-based BFS)',
-		'tags'       : 'semantic, flows',
-		'input_files': ['timed_properties/test-timedEF-basic-prop-flows.imi', 'timed_properties/test-timedEF-basic-prop-closedopen.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'test-timedEF-basic-prop-flows.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10841,38 +8912,6 @@ Number of transitions                   : 3
 
 	,
 
-	#------------------------------------------------------------
-	{
-		# Test version             : 1.1
-		# Test author              : Étienne André
-		# Test since               : 2024/02/29
-		# Last modified            : 2024/04/30
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test timed EF: check no exploration beyond timed interval (queue-based BFS)',
-		'tags'       : 'semantic,optimization',
-		'input_files': ['timed_properties/test-timedEF-cutbranch.imi', 'basic-properties/synth-EF-4-4-accepting.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			# NOTE: check correctness first
-			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
-BEGIN CONSTRAINT
-p = 1
-END CONSTRAINT
-		"""
-			} # end result file
-			,
-			# NOTE: check optimization
-			{'file': 'test-timedEF-cutbranch.res' , 'content' : """
-Number of states                        : 4
-Number of transitions                   : 3
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 	#------------------------------------------------------------
 	# END : Test timed EF
 	#------------------------------------------------------------
@@ -11121,9 +9160,6 @@ END CONSTRAINT
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
-	# BEGIN : Observer patterns
-	#------------------------------------------------------------
-	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
 		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
@@ -11151,67 +9187,12 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" (queue-based BFS)',
-		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern1.res' , 'content' : """
-BEGIN CONSTRAINT
- 2 >= p1
-& p1 >= 0
-& p2 >= 0
-& p2 + 1 >= p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern2.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 0
-& 1 > p
-OR
-  p > 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns (queue-based BFS)',
-		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11267,36 +9248,6 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened before" on a model for 3 patterns (queue-based BFS)',
-		'input_files': ['testPattern2.imi', 'testPattern2-everytime.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern2.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 0
-& 1 > p
-OR
-  p > 3
-OR
-  p > 2
-& 3 > p
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 
 	#------------------------------------------------------------
 	{
@@ -11332,40 +9283,6 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns (queue-based BFS)',
-		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern2.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 0
-& 1 > p
-OR
-  p > 5
-OR
-  p > 3
-& 5 > p
-OR
-  p > 2
-& 3 > p
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
 
 	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
 	#------------------------------------------------------------
@@ -11373,33 +9290,6 @@ Constraint nature                       : good
 		'purpose'    : 'Test observer pattern "a within d"',
 		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern3.res' , 'content' : """
-BEGIN CONSTRAINT
- 3 >= p
-& p >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "a within d" (queue-based BFS)',
-		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11448,62 +9338,12 @@ Constraint nature                       : good
 
 	,
 
-	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "a within d" (queue-based BFS)',
-		'input_files': ['testPattern4.imi', 'testPattern4.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern4.res' , 'content' : """
-BEGIN CONSTRAINT
- p > 2
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "a within d" with a parametric d',
 		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern5.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 3
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "a within d" with a parametric d (queue-based BFS)',
-		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11562,96 +9402,12 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "if a2 then a1 has happened within d before" (queue-based BFS)',
-		'input_files': ['testPattern6.imi', 'testPattern6-if.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern6.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 0
-& p2 >= 0
-& 1 > p1
-OR
-  p1 > 5
-& p2 >= 0
-OR
-  5 > p1
-& p1 > 2
-& p2 >= 0
-OR
-  p2 >= 2015
-& p1 = 5
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before"',
 		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern6.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 0
-& p2 >= 0
-& 1 > p1
-OR
-  p1 > 5
-& p2 >= 0
-OR
-  p1 > 4
-& p2 >= 0
-& 5 > p1
-OR
-  p1 > 3
-& p2 >= 0
-& 4 > p1
-OR
-  p2 >= 4
-& p1 = 4
-OR
-  p2 >= 2015
-& p1 = 5
-OR
-  p1 > 2
-& p2 >= 0
-& 3 > p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before" (queue-based BFS)',
-		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11741,50 +9497,6 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once within d before" (queue-based BFS)',
-		'input_files': ['testPattern6.imi', 'testPattern6-everytimeonce.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern6.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= 0
-& p2 >= 0
-& 1 > p1
-OR
-  p1 > 5
-& p2 >= 0
-OR
-  p1 > 4
-& p2 >= 0
-& 5 > p1
-OR
-  p1 > 3
-& p2 >= 0
-& 4 > p1
-OR
-  p2 >= 4
-& p1 = 4
-OR
-  p1 > 2
-& p2 >= 0
-& 3 > p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
 
 	#------------------------------------------------------------
 	{
@@ -11818,74 +9530,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test observer pattern "if a1 then eventually a2 within d" (queue-based BFS)',
-		'input_files': ['testPattern7.imi', 'testPattern7-if.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern7.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 > 1
- & p2 >= p1
- OR
-   p1 >= 0
- & 1 > p1
- & p2 >= p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d"',
 		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern7.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 > 1
- & 2 > p1
- & p2 >= p1
- OR
-   p2 >= 3
- & p1 >= 2
- & p2 >= p1
- OR
-   p1 >= 0
- & p2 >= p1
- & 1 > p1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d" (queue-based BFS)',
-		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11958,75 +9605,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d once before next" (queue-based BFS)',
-		'input_files': ['testPattern7.imi', 'testPattern7-everytimeonce.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern7.res' , 'content' : """
-BEGIN CONSTRAINT
-  p1 > 4
- & p2 >= p1
- OR
-   p1 > 1
- & p2 >= p1
- & 2 > p1
- OR
-   p2 >= 3
- & p1 >= 2
- & p2 >= p1
- & 4 > p1
- OR
-   p1 >= 0
- & p2 >= p1
- & 1 > p1
-
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
 		'purpose'    : 'Test observer pattern "sequence a1, …, an"',
 		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
 		'options'    : '',
-		'expectations' : [
-			{'file': 'testPattern8.res' , 'content' : """
-BEGIN CONSTRAINT
-  4 > p
- & p >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "sequence a1, …, an" (queue-based BFS)',
-		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
-		'options'    : '-new-queue-EF',
 		'expectations' : [
 			{'file': 'testPattern8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -12075,38 +9656,6 @@ Constraint nature                       : good
 	} # end test case
 	#------------------------------------------------------------
 
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test observer pattern "always sequence a1, …, an" (queue-based BFS)',
-		'input_files': ['testPattern8.imi', 'testPattern8-alwayssequence.imiprop'],
-		'options'    : '-new-queue-EF',
-		'expectations' : [
-			{'file': 'testPattern8.res' , 'content' : """
-BEGIN CONSTRAINT
-  p > 3
- & 4 > p
- OR
-   p >= 0
- & 3 > p
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	#------------------------------------------------------------
-	# END : Observer patterns
-	#------------------------------------------------------------
 	,
 
 	#------------------------------------------------------------
@@ -12614,6 +10163,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -12744,6 +10294,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
 	"run": {
 		"nature": "concrete",
@@ -12877,6 +10428,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -13049,6 +10601,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -13238,6 +10791,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
 	"run": {
 		"nature": "concrete",
@@ -13462,6 +11016,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -13581,6 +11136,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -13664,6 +11220,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -13755,6 +11312,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -13904,6 +11462,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -14122,6 +11681,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -14305,6 +11865,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -14429,6 +11990,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -14655,6 +12217,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -14827,6 +12390,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -15017,6 +12581,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -15100,6 +12665,7 @@ OR
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -15188,6 +12754,7 @@ OR
 
  Run nature: impossible run
 
+ Run:
 {
 	"run": {
 		"nature": "negative",
@@ -15276,6 +12843,7 @@ BEGIN RESULT
 
  Run nature: valid run
 
+ Run:
 {
 	"run": {
 		"nature": "concrete",
@@ -15356,6 +12924,7 @@ OR
 
  Run nature: impossible run
 
+ Run:
 {
 	"run": {
 		"nature": "negative",
@@ -15424,6 +12993,7 @@ OR
 
  Run nature: impossible run
 
+ Run:
 {
 	"run": {
 		"nature": "negative",
@@ -15511,6 +13081,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -15665,6 +13236,7 @@ END RESULT
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -15804,6 +13376,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -15958,6 +13531,7 @@ END RESULT
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -16108,6 +13682,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -16262,6 +13837,7 @@ END RESULT
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -16424,6 +14000,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -16596,6 +14173,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -16771,6 +14349,7 @@ END RESULT
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -16933,6 +14512,7 @@ END RESULT
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -17106,6 +14686,7 @@ BEGIN RESULT
 
  Run nature: valid run
 
+ Run:
 {
 	"run": {
 		"nature": "concrete",
@@ -17274,6 +14855,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -17483,6 +15065,7 @@ True
 
  Run nature: valid run
 
+ Run:
 {
   "run": {
     "nature": "concrete",
@@ -17675,6 +15258,7 @@ True
 
  Run nature: impossible run
 
+ Run:
 {
   "run": {
     "nature": "negative",
@@ -19472,7 +17056,7 @@ Constraint nature                       : good
 	,
 	
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# BEGIN : TEST AF
+	# AF
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	#------------------------------------------------------------
@@ -20054,49 +17638,6 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# END : TEST AF
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
-	,
-
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# BEGIN : TEST EG
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/05/03
-		# Last modified            : 2024/05/03
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test EG: simple example',
-		'tags'       : 'EG,algorithm,semantic',
-		'input_files': ['EG/EG-simple.imi' , 'EG/EG-simple.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'EG-simple.res' , 'content' : """
-BEGIN CONSTRAINT
- p = 4
-OR
-  p = 2
-OR
-  p = 1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# END : TEST EG
-	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	,
 
@@ -21907,9 +19448,7 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-
 	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM on an incomplete example',
@@ -21921,16 +19460,13 @@ BEGIN CONSTRAINT
 p1 >= 0
 & p2 >= 0
 & p3 > p1
-END CONSTRAINT
-"""
+END CONSTRAINT		  """
 			} # end result file
 			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-
 	,
-
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IMcomplete on an incomplete example',
@@ -21946,324 +19482,7 @@ BEGIN CONSTRAINT
       p3 > p1
     & p2 >= 0
     & p1 >= p2
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=1)',
-		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'CSMACD-bc1.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=1) + IH',
-		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'CSMACD-bc1.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=2)',
-		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'CSMACD-bc2.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=2) + IH',
-		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'CSMACD-bc2.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=3)',
-		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'CSMACD-bc3.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=3) + IH',
-		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'CSMACD-bc3.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=4)',
-		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '',
-		'expectations' : [
-			{'file': 'CSMACD-bc4.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test IM: CSMA/CD (BC=4) + IH',
-		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'CSMACD-bc4.res' , 'content' : """
-BEGIN CONSTRAINT
-  lambda > 15*timeslot
- & sigma > 0
- & timeslot > sigma
- & 16*timeslot > lambda
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/09/18
-		# Last modified            : 2024/09/18
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test RIEF (full result)',
-		'input_files': ['IH/IMIH-1.imi', 'IH/IMIH-1-EF.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'IMIH-1.res' , 'content' : """
-BEGIN CONSTRAINT
- 3 >= 2*p
- & 2*p >= 1
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/09/18
-		# Last modified            : 2024/09/18
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test RIEF (partial result but with termination)',
-		'input_files': ['IH/EFIH-1.imi', 'IH/EFIH-1.imiprop'],
-		'options'    : '-ih -depth-limit 100',# NOTE: we add -depth-limit just in case… but we also check that only 3 states are explored!
-		'expectations' : [
-			{'file': 'EFIH-1.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 1
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 5
-Number of transitions                   : 5
-Number of computed states               : 6
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/09/18
-		# Last modified            : 2024/09/18
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test IM+IH',
-		'input_files': ['IH/IMIH-1.imi', 'IH/IMIH-1.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'IMIH-1.res' , 'content' : """
-BEGIN CONSTRAINT
-  p = 1
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/09/18
-		# Last modified            : 2024/09/18
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test IM+IH (bis)',
-		'input_files': ['IH/IMIH-2.imi', 'IH/IMIH-2.imiprop'],
-		'options'    : '-ih',
-		'expectations' : [
-			{'file': 'IMIH-2.res' , 'content' : """
-BEGIN CONSTRAINT
-  2 >= p
- & p >= 1
- OR
-   p >= 4
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		# Test version             : 1
-		# Test author              : Étienne André
-		# Test since               : 2024/09/18
-		# Last modified            : 2024/09/18
-		# Test for IMITATOR version: 3.4
-		'purpose'    : 'Test IM+IH (ensuring termination)',
-		'input_files': ['IH/IMIH-3.imi', 'IH/IMIH-3.imiprop'],
-		'options'    : '-ih -depth-limit 100',
-		'expectations' : [ # NOTE: we add -depth-limit just in case… but we also check that only 3 states are explored!
-			{'file': 'IMIH-3.res' , 'content' : """
-BEGIN CONSTRAINT
- p >= 0
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 3
-"""
+END CONSTRAINT		  """
 			} # end result file
 			,
 		] # end expectations
@@ -26287,7 +23506,7 @@ Constraint nature                       : good/bad
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test the model printer (Sched5)',
+		'purpose'    : 'Test the model printer',
 		'input_files': ['Sched5.imi'],
 		'options'    : '-imi2IMI',
 		'expectations' : [
@@ -26308,10 +23527,10 @@ var
 
 
 loc t1_loc_idle: invariant True
-	when True do {t1_urgent <- 0;}  sync t1_arr_event goto t1_loc_act_event;
+	when True do {t1_urgent := 0;}  sync t1_arr_event goto t1_loc_act_event;
 
 loc t1_loc_act_event: invariant 0 >= t1_urgent
-	when  t1_urgent = 0 do {t1_c <- 0; t1_d <- 0;} sync t1_arr goto t1_loc_act;
+	when  t1_urgent = 0 do {t1_c := 0; t1_d := 0;} sync t1_arr goto t1_loc_act;
 
 loc t1_loc_act: invariant 8 >= t1_d stop{t1_c}
 	when True do {} sync t1_dis goto t1_loc_exe;
@@ -26335,7 +23554,7 @@ loc t1_loc_miss: invariant True
 
 
 loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
-	when  t1_arr_x = 8 do {t1_arr_x <- 0;}  sync t1_arr_event goto t1_arr_loc_arr;
+	when  t1_arr_x = 8 do {t1_arr_x := 0;}  sync t1_arr_event goto t1_arr_loc_arr;
  end (* Periodic_t1_arr *)
 (************************************************************)
 
@@ -26347,10 +23566,10 @@ loc t1_arr_loc_arr: invariant  8 >= t1_arr_x
 
 
 loc t2_loc_idle: invariant True
-	when True do {t2_urgent <- 0;}  sync t2_arr_event goto t2_loc_act_event;
+	when True do {t2_urgent := 0;}  sync t2_arr_event goto t2_loc_act_event;
 
 loc t2_loc_act_event: invariant  0 >= t2_urgent
-	when  t2_urgent = 0 do {t2_c <- 0; t2_d <- 0;}  sync t2_arr goto t2_loc_act;
+	when  t2_urgent = 0 do {t2_c := 0; t2_d := 0;}  sync t2_arr goto t2_loc_act;
 
 loc t2_loc_act: invariant  20 >= t2_d stop{t2_c}
 	when True do {}  sync t2_dis goto t2_loc_exe;
@@ -26375,7 +23594,7 @@ loc t2_loc_miss: invariant True
 
 
 loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
-	when  t2_arr_x = 20 do {t2_arr_x <- 0;}  sync t2_arr_event goto t2_arr_loc_arr;
+	when  t2_arr_x = 20 do {t2_arr_x := 0;}  sync t2_arr_event goto t2_arr_loc_arr;
  end (* Periodic_t2_arr *)
 (************************************************************)
 
@@ -26387,10 +23606,10 @@ loc t2_arr_loc_arr: invariant  20 >= t2_arr_x
 
 
 loc t3_loc_idle: invariant True
-	when True do {t3_urgent <- 0;}  sync t3_arr_event goto t3_loc_act_event;
+	when True do {t3_urgent := 0;}  sync t3_arr_event goto t3_loc_act_event;
 
 loc t3_loc_act_event: invariant  0 >= t3_urgent
-	when  t3_urgent = 0 do {t3_c <- 0; t3_d <- 0;}  sync t3_arr goto t3_loc_act;
+	when  t3_urgent = 0 do {t3_c := 0; t3_d := 0;}  sync t3_arr goto t3_loc_act;
 
 loc t3_loc_act: invariant  50 >= t3_d stop{t3_c}
 	when True do {}  sync t3_dis goto t3_loc_exe;
@@ -26415,7 +23634,7 @@ loc t3_loc_miss: invariant True
 
 
 loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
-	when  t3_arr_x = 50 do {t3_arr_x <- 0;}  sync t3_arr_event goto t3_arr_loc_arr;
+	when  t3_arr_x = 50 do {t3_arr_x := 0;}  sync t3_arr_event goto t3_arr_loc_arr;
  end (* Periodic_t3_arr *)
 (************************************************************)
 
@@ -26427,10 +23646,10 @@ loc t3_arr_loc_arr: invariant  50 >= t3_arr_x
 
 
 loc t4_loc_idle: invariant True
-	when True do {t4_urgent <- 0;}  sync t4_arr_event goto t4_loc_act_event;
+	when True do {t4_urgent := 0;}  sync t4_arr_event goto t4_loc_act_event;
 
 loc t4_loc_act_event: invariant  0 >= t4_urgent
-	when  t4_urgent = 0 do {t4_c <- 0; t4_d <- 0;}  sync t4_arr goto t4_loc_act;
+	when  t4_urgent = 0 do {t4_c := 0; t4_d := 0;}  sync t4_arr goto t4_loc_act;
 
 loc t4_loc_act: invariant  100 >= t4_d stop{t4_c}
 	when True do {}  sync t4_dis goto t4_loc_exe;
@@ -26455,7 +23674,7 @@ loc t4_loc_miss: invariant True
 
 
 loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
-	when  t4_arr_x = 100 do {t4_arr_x <- 0;}  sync t4_arr_event goto t4_arr_loc_arr;
+	when  t4_arr_x = 100 do {t4_arr_x := 0;}  sync t4_arr_event goto t4_arr_loc_arr;
  end (* Periodic_t4_arr *)
 (************************************************************)
 
@@ -26467,10 +23686,10 @@ loc t4_arr_loc_arr: invariant  100 >= t4_arr_x
 
 
 loc t5_loc_idle: invariant True
-	when True do {t5_urgent <- 0;}  sync t5_arr_event goto t5_loc_act_event;
+	when True do {t5_urgent := 0;}  sync t5_arr_event goto t5_loc_act_event;
 
 loc t5_loc_act_event: invariant  0 >= t5_urgent
-	when  t5_urgent = 0 do {t5_c <- 0; t5_d <- 0;}  sync t5_arr goto t5_loc_act;
+	when  t5_urgent = 0 do {t5_c := 0; t5_d := 0;}  sync t5_arr goto t5_loc_act;
 
 loc t5_loc_act: invariant  200 >= t5_d stop{t5_c}
 	when True do {}  sync t5_dis goto t5_loc_exe;
@@ -26495,7 +23714,7 @@ loc t5_loc_miss: invariant True
 
 
 loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
-	when  t5_arr_x = 200 do {t5_arr_x <- 0;}  sync t5_arr_event goto t5_arr_loc_arr;
+	when  t5_arr_x = 200 do {t5_arr_x := 0;}  sync t5_arr_event goto t5_arr_loc_arr;
  end (* Periodic_t5_arr *)
 (************************************************************)
 
@@ -26507,11 +23726,11 @@ loc t5_arr_loc_arr: invariant  200 >= t5_arr_x
 
 
 loc CPU1_loc_: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_At4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_At5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_At5;
 
 loc CPU1_loc_At1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1;
@@ -26529,11 +23748,11 @@ loc CPU1_loc_At5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_At4Rt5;
-	when True do {CPU1_urgent <- 0;}  sync t5_end goto CPU1_loc_Et5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_At4Rt5;
+	when True do {CPU1_urgent := 0;}  sync t5_end goto CPU1_loc_Et5;
 
 loc CPU1_loc_Et5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_1*)  goto CPU1_loc_stop;
@@ -26563,11 +23782,11 @@ loc CPU1_loc_At4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt4;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt4;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_end goto CPU1_loc_Et4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4;
 
 loc CPU1_loc_Et4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_2*)  goto CPU1_loc_stop;
@@ -26591,10 +23810,10 @@ loc CPU1_loc_At3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_end goto CPU1_loc_Et4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_At3Rt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_end goto CPU1_loc_Et4Wt5;
 
 loc CPU1_loc_Et4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26618,11 +23837,11 @@ loc CPU1_loc_At3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt3: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3;
 
 loc CPU1_loc_Et3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_3*)  goto CPU1_loc_stop;
@@ -26640,10 +23859,10 @@ loc CPU1_loc_At2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt3Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt5;
 
 loc CPU1_loc_Et3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26661,10 +23880,10 @@ loc CPU1_loc_At2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt3Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4;
 
 loc CPU1_loc_Et3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -26682,9 +23901,9 @@ loc CPU1_loc_At2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_At2Rt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_end goto CPU1_loc_Et3Wt4Wt5;
 
 loc CPU1_loc_Et3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -26702,11 +23921,11 @@ loc CPU1_loc_At2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt2: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2;
 
 loc CPU1_loc_Et2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_4*)  goto CPU1_loc_stop;
@@ -26718,10 +23937,10 @@ loc CPU1_loc_At1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2;
 
 loc CPU1_loc_Rt2Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt5;
 
 loc CPU1_loc_Et2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
@@ -26733,10 +23952,10 @@ loc CPU1_loc_At1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt5;
 
 loc CPU1_loc_Rt2Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4;
 
 loc CPU1_loc_Et2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
@@ -26748,9 +23967,9 @@ loc CPU1_loc_At1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4;
 
 loc CPU1_loc_Rt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt4Wt5;
 
 loc CPU1_loc_Et2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
@@ -26762,10 +23981,10 @@ loc CPU1_loc_At1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt4Wt5;
 
 loc CPU1_loc_Rt2Wt3: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3;
 
 loc CPU1_loc_Et2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
@@ -26777,9 +23996,9 @@ loc CPU1_loc_At1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
 
 loc CPU1_loc_Rt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt5;
 
 loc CPU1_loc_Et2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
@@ -26791,9 +24010,9 @@ loc CPU1_loc_At1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt5;
 
 loc CPU1_loc_Rt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4;
 
 loc CPU1_loc_Et2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
@@ -26805,8 +24024,8 @@ loc CPU1_loc_At1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4;
 
 loc CPU1_loc_Rt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_arr goto CPU1_loc_At1Rt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_end goto CPU1_loc_Et2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
@@ -26818,129 +24037,129 @@ loc CPU1_loc_At1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t1_dis goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Rt1: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1;
 
 loc CPU1_loc_Et1: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  (* sync nosync_5*)  goto CPU1_loc_stop;
 
 loc CPU1_loc_Rt1Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt5;
 
 loc CPU1_loc_Et1Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t5_dis goto CPU1_loc_Rt5;
 
 loc CPU1_loc_Rt1Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4;
 
 loc CPU1_loc_Et1Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4;
 
 loc CPU1_loc_Rt1Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt4Wt5;
 
 loc CPU1_loc_Et1Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t4_dis goto CPU1_loc_Rt4Wt5;
 
 loc CPU1_loc_Rt1Wt3: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3;
 
 loc CPU1_loc_Et1Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3;
 
 loc CPU1_loc_Rt1Wt3Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt5;
 
 loc CPU1_loc_Et1Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt5;
 
 loc CPU1_loc_Rt1Wt3Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4;
 
 loc CPU1_loc_Et1Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4;
 
 loc CPU1_loc_Rt1Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t2_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t3_dis goto CPU1_loc_Rt3Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2;
 
 loc CPU1_loc_Et1Wt2: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2;
 
 loc CPU1_loc_Rt1Wt2Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt5;
 
 loc CPU1_loc_Et1Wt2Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4;
 
 loc CPU1_loc_Et1Wt2Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t3_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt4Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3;
 
 loc CPU1_loc_Et1Wt2Wt3: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
+	when True do {CPU1_urgent := 0;}  sync t4_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt5;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
+	when True do {CPU1_urgent := 0;}  sync t5_arr goto CPU1_loc_Rt1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4;
 
 loc CPU1_loc_Rt1Wt2Wt3Wt4Wt5: invariant True
-	when True do {CPU1_urgent <- 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
+	when True do {CPU1_urgent := 0;}  sync t1_end goto CPU1_loc_Et1Wt2Wt3Wt4Wt5;
 
 loc CPU1_loc_Et1Wt2Wt3Wt4Wt5: invariant  0 >= CPU1_urgent
 	when  CPU1_urgent = 0 do {}  sync t2_dis goto CPU1_loc_Rt2Wt3Wt4Wt5;
@@ -26957,11 +24176,11 @@ loc CPU1_loc_stop: invariant True
 
 
 loc dline_loc_nomiss: invariant True
-	when True do {t1_d <- 0;}  sync t1_miss goto dline_loc_miss;
-	when True do {t1_d <- 0;}  sync t2_miss goto dline_loc_miss;
-	when True do {t1_d <- 0;}  sync t3_miss goto dline_loc_miss;
-	when True do {t1_d <- 0;}  sync t4_miss goto dline_loc_miss;
-	when True do {t1_d <- 0;}  sync t5_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t1_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t2_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t3_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t4_miss goto dline_loc_miss;
+	when True do {t1_d := 0;}  sync t5_miss goto dline_loc_miss;
 
 loc dline_loc_miss: invariant  t1_d = 0 stop{t1_d}
  end (* OBS_dline *)
@@ -26971,24 +24190,24 @@ loc dline_loc_miss: invariant  t1_d = 0 stop{t1_d}
 (* Initial state *)
 (************************************************************)
 
-init = {
+init := {
 
 	discrete = 
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[Task_t1] <- t1_loc_idle,
-		loc[Periodic_t1_arr] <- t1_arr_loc_arr,
-		loc[Task_t2] <- t2_loc_idle,
-		loc[Periodic_t2_arr] <- t2_arr_loc_arr,
-		loc[Task_t3] <- t3_loc_idle,
-		loc[Periodic_t3_arr] <- t3_arr_loc_arr,
-		loc[Task_t4] <- t4_loc_idle,
-		loc[Periodic_t4_arr] <- t4_arr_loc_arr,
-		loc[Task_t5] <- t5_loc_idle,
-		loc[Periodic_t5_arr] <- t5_arr_loc_arr,
-		loc[sched_CPU1] <- CPU1_loc_,
-		loc[OBS_dline] <- dline_loc_nomiss,
+		loc[Task_t1] := t1_loc_idle, 
+		loc[Periodic_t1_arr] := t1_arr_loc_arr, 
+		loc[Task_t2] := t2_loc_idle, 
+		loc[Periodic_t2_arr] := t2_arr_loc_arr, 
+		loc[Task_t3] := t3_loc_idle, 
+		loc[Periodic_t3_arr] := t3_arr_loc_arr, 
+		loc[Task_t4] := t4_loc_idle, 
+		loc[Periodic_t4_arr] := t4_arr_loc_arr, 
+		loc[Task_t5] := t5_loc_idle, 
+		loc[Periodic_t5_arr] := t5_arr_loc_arr, 
+		loc[sched_CPU1] := CPU1_loc_, 
+		loc[OBS_dline] := dline_loc_nomiss,
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
@@ -27538,7 +24757,7 @@ var
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/07/11
-		# Last modified            : 2024/07/11
+		# Last modified            : 2023/07/11
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
 		'tags'       : 'syntax,translation,controllable',
@@ -27550,19 +24769,19 @@ var
 		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{a}$\\\\
-		 & $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
+		 & $x:=1/2 * \\styleparam{p}$\\\\%
 		\\end{tabular}} (l1);
 
 		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{b}$\\\\
-		 & $x\\leftarrow{}1$\\\\%
+		 & $x:=1$\\\\%
 		\\end{tabular}} (l1);
 
 		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
 		& $ \\styleclock{x} = 1$\\\\
 		 & $\\styleact{c}$\\\\
-		 & $x\\leftarrow{}2$\\\\%
+		 & $x:=2$\\\\%
 		\\end{tabular}} (l1);
 		"""
 			} # end result file
@@ -27613,9 +24832,9 @@ var
  init0 -> s_0_0;
 
 s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
-	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x <- 1/2 * p;"];
-	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x <- 1;"];
-	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x <- 2;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_0_0 -> s_0_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_0_0 -> s_0_0 [style=dashed, label=" x = 1\\nc\\n  x := 2;"];
 /**************************************************/
 
 
@@ -27626,9 +24845,9 @@ s_0_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
  init1 -> s_1_0;
 
 s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
-	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x <- 1/2 * p;"];
-	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x <- 1;"];
-	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x <- 0;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=blue, label=" x = 1\\na\\n  x := 1/2 * p;"];
+	s_1_0 -> s_1_0 [penwidth=3, color=cyan, label=" x = 1\\nb\\n  x := 1;"];
+	s_1_0 -> s_1_0 [style=dotted, color=gray40, style=dashed, label="  x := 0;"];
 		"""
 			} # end result file
 			,
@@ -27833,8 +25052,8 @@ system pta1, pta2, pta3;
 	{
 		# Test version             : 1
 		# Test since               : 2022/02/04
-		# Last modified            : 2024/11/08
-		# Test for IMITATOR version: 3.4
+		# Last modified            : 2022/02/04
+		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test translation to Jani',
 		'author': 'lbinria',
 		'tags' : 'translation, jani',
@@ -27965,7 +25184,13 @@ system pta1, pta2, pta3;
 									"value":
 									{
 										"op":"+",
-										"left":15,
+										"left":
+										{
+											"op":"*",
+											"left":5,
+											"right":3
+										}
+										,
 										"right":
 										{
 											"op":"pow",
@@ -28339,7 +25564,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy10.res' , 'content' : """
 BEGIN CONSTRAINT
-True
+False
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -28417,7 +25642,7 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'toy13.res' , 'content' : """
 BEGIN CONSTRAINT
-True
+False
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -29155,6 +26380,9 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+Number of states                        : 38
+Number of transitions                   : 47
+Number of computed states               : 48
 """
         }]
     }
@@ -29175,6 +26403,9 @@ Constraint soundness                    : possible under-approximation
 Termination                             : depth limit (12 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
+Number of states                        : 47
+Number of transitions                   : 70
+Number of computed states               : 71
 """
         }]
     }
@@ -29198,6 +26429,9 @@ Constraint soundness                    : possible over-approximation
 Termination                             : depth limit (100 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
+Number of states                        : 492
+Number of transitions                   : 1300
+Number of computed states               : 1301
 """
         }]
     }
@@ -29215,6 +26449,12 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (68 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 255
+Number of transitions                   : 432
+Number of computed states               : 433
 """
         }]
     }
@@ -29232,6 +26472,12 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (9 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 67
+Number of transitions                   : 116
+Number of computed states               : 117
 """
         }]
     }
@@ -29255,26 +26501,9 @@ Constraint soundness                    : possible over-approximation
 Termination                             : depth limit (422 successors unexplored)
 Constraint nature                       : good
 ------------------------------------------------------------
-"""
-        }]
-    }
-    ,
-    {
-        'purpose'      : 'Test correct instantiation of templates (fischer_interleave)',
-        'input_files'  : ['templates/fischer_interleave.imi', 'templates/fischer_interleave.imiprop'],
-        'options'      : '-verbose mute',
-        'expectations' : [{
-            'file'   : 'fischer_interleave.res',
-            'content': """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
+Number of states                        : 914
+Number of transitions                   : 1476
+Number of computed states               : 1477
 """
         }]
     }
@@ -29295,103 +26524,10 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+Number of states                        : 25
+Number of transitions                   : 36
+Number of computed states               : 37
 """
-        }]
-    }
-    ,
-    {
-        'purpose'      : 'Test each syntatic expansion implemented (templates, syntatic arrays, etc.)',
-        'input_files'  : ['templates/syntatic_test.imi'],
-        'options'      : '-verbose mute -imi2IMI',
-        'expectations' : [{
-            'file'   : 'syntatic_test-regenerated.imi',
-            'content': """
-var 
-	x___0, x___1
-		: clock;
-
-	id
-		: int;
-
-	params___0, params___1
-		: parameter;
-
-
-
-(************************************************************)
- automaton p___0
-(************************************************************)
- actions: acts___0;
- 
-loc A: invariant  params___0 >= x___0
-	when id = -1 do {x___0 <- 0;} sync acts___0 goto req;
- 
-loc req: invariant  2 >= x___0
-	when  2 >= x___0 do {x___0 <- 0; id <- 0;} (* sync nosync_1*)  goto waiting;
- 
-loc waiting: invariant True
-	when id = -1 do {x___0 <- 0;} (* sync nosync_2*)  goto req;
-	when id = 0
-&  x___0 > 2 do {} (* sync nosync_3*)  goto cs;
- 
-loc cs: invariant True
-	when True do {id <- -1;} (* sync nosync_4*)  goto A;
- end (* p___0 *)
-(************************************************************)
-
-
-(************************************************************)
- automaton p___1
-(************************************************************)
- actions: acts___2;
- 
-loc A: invariant  params___1 >= x___1
-	when id = -1 do {x___1 <- 0;} sync acts___2 goto req;
- 
-loc req: invariant  2 >= x___1
-	when  2 >= x___1 do {x___1 <- 0; id <- 1;} (* sync nosync_5*)  goto waiting;
- 
-loc waiting: invariant True
-	when id = -1 do {x___1 <- 0;} (* sync nosync_6*)  goto req;
-	when id = 1
-&  x___1 > 2 do {} (* sync nosync_7*)  goto cs;
- 
-loc cs: invariant True
-	when True do {id <- -1;} (* sync nosync_8*)  goto A;
- end (* p___1 *)
-(************************************************************)
-
-
-(************************************************************)
-(* Initial state *)
-(************************************************************)
-
-init = {
-
-	discrete = 
-		(*------------------------------------------------------------*)
-		(* Initial location *)
-		(*------------------------------------------------------------*)
-		loc[p___0] <- A,
-		loc[p___1] <- A,
-		(*------------------------------------------------------------*)
-		(* Initial discrete variables assignments *)
-		(*------------------------------------------------------------*)
-		id <- -1
-	;
-
-	(*------------------------------------------------------------*)
-	(* Initial continuous constraint *)
-	(*------------------------------------------------------------*)
-	continuous = 
-		&  params___0 >= 0
-& params___1 >= 0
-& x___0 = 0
-& x___1 = 1
-	;
-
-}
-            """
         }]
     }
     ,

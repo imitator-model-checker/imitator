@@ -86,8 +86,6 @@ let upd_hash clock_update =
 (* Cache for computed invariants *)
 let inv_cache = Cache.make loc_hash 200
 
-let flush_invariant_cache () = Cache.flush inv_cache
-
 (*(* Cache for clock updates *)
 let upd_cache = Cache.make upd_hash 100*)
 
@@ -629,17 +627,17 @@ let apply_updates_assign_backward = apply_updates_assign_gen LinearConstraint.Ti
 (************************************************************)
 
 (* state struct for constructing set type *)
-module StateIndexStructure = struct
+module State = struct
 	type t = state_index
 	let compare = compare
 end
 
 (* set of states for efficient lookup *)
-module StateIndexSet = Set.Make(StateIndexStructure)
+module StateIndexSet = Set.Make(State)
 
 
 
-type t = StateIndexSet.t
+
 (**************************************************************)
 (* Encapsulation in a class *)
 (*** NOTE: technically, we could better create a *generic* class and instantiate it with StateIndexSet when needed ***)
@@ -654,7 +652,6 @@ class stateIndexSet =
 	val mutable the_set = StateIndexSet.empty
 	
 
-	method t = the_set
 	
 	(************************************************************)
 	(* Access methods *)
@@ -724,8 +721,6 @@ class stateIndexSet =
 		the_set <- StateIndexSet.remove element the_set
 	
 
-	method union (a : stateIndexSet) = let res = StateIndexSet.union a#t the_set in the_set <- res
-	
 (************************************************************)
 (************************************************************)
 end;;

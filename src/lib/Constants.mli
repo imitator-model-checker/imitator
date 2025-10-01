@@ -196,6 +196,3 @@ val list_string : string
 val stack_string : string
 val queue_string : string
 val void_string : string
-
-(** April fool 2024 *)
-val fish : string

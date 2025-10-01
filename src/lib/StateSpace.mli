@@ -19,7 +19,7 @@
 (************************************************************)
 open Automaton
 open State
-
+open Strategy
 
 (************************************************************)
 (************************************************************)
@@ -46,6 +46,8 @@ type addition_result =
 	| State_already_present of state_index
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
+
+
 
 (************************************************************)
 (** Concrete run *)
@@ -117,8 +119,6 @@ type symbolic_run = {
 }
 
 
-
-
 (************************************************************)
 (** Predecessors table *)
 (************************************************************)
@@ -164,8 +164,9 @@ val string_of_state_index : state_index -> string
 (* Class definition *)
 (**************************************************************)
 (**************************************************************)
-class stateSpace : int ->
+class stateSpace : int  ->
 	object
+
 
 		(************************************************************)
 		(************************************************************)
@@ -177,8 +178,22 @@ class stateSpace : int ->
 		(* Simple get methods *)
 		(************************************************************)
 
+		method strategy_initialisation : bool -> int -> automaton_index list -> (automaton_index array) array -> (action_index -> (automaton_index list))-> unit
+
+		method initialize_winning_states : state_index list -> unit 
+
+		method get_winning_states : state_index list
+
+		method get_state_space_location : DiscreteState.global_location DynArray.t 
+
+		method has_coalition : bool
+
+		method find_last_alive_strategy : state_index
+
+		method find_all_alive_strategies : (state_index * strategy_index) list
+
 		(*------------------------------------------------------------*)
-		(** Return the number of generated states (not necessarily present in the state space) *)
+		(** Return the number of generated states (not necessarily present in the state space) **)
 		(*------------------------------------------------------------*)
 		method get_nb_gen_states : int
 
@@ -233,11 +248,6 @@ class stateSpace : int ->
 		(************************************************************)
 
 		(*------------------------------------------------------------*)
-		(** Checks whether a state index exists in the state space *)
-		(*------------------------------------------------------------*)
-(* 		method state_index_exists : state_index -> bool *)
-
-		(*------------------------------------------------------------*)
 		(** Checks whether a state exists in the state space (using equality comparison); a global clock may optionally be passed, in which case the comparison is done *after* eliminating that clock *)
 		(*------------------------------------------------------------*)
 		method state_exists : Automaton.clock_index option -> State.state -> bool
@@ -287,7 +297,7 @@ class stateSpace : int ->
 
 
 		(*------------------------------------------------------------*)
-		(* When a state is encountered for a second time, then a loop may exist (or more generally an SCC): 'reconstruct_scc state_space state_index' tries to reconstruct the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+		(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
 		(*------------------------------------------------------------*)
 		method reconstruct_scc : state_index -> scc option
 
@@ -313,12 +323,23 @@ class stateSpace : int ->
 		(** Methods modifying the state space *)
 		(************************************************************)
 
+		method kill_strategy : state_index -> unit
+
+		method propagate_killed_strategy :  unit 
+
+		method keep_biggest_strategies : (state_index * strategy_index) list -> (state_index) list 
+
+		method keep_different_winning_strategies :(state_index list) -> state_index list
+
+		method find_strategy_index : state_index -> strategy_index 
+
+
 		(** Increment the number of generated states (even though not member of the state space) *)
 		method increment_nb_gen_states : unit
 
 		(** Add a state to a state space: takes as input the state space, a comparison instruction, a global clock index option (to first remove the global clock before comparison, if requested), the state to add, and returns whether the state was indeed added or not *)
 		(*** NOTE: side-effects possible! If the former state is SMALLER than the new state and the state_comparison is Including_check, then the constraint of this former state is updated to the newer one ***)
-		method add_state : AbstractAlgorithm.state_comparison_operator -> Automaton.clock_index option -> state -> addition_result
+		method add_state : AbstractAlgorithm.state_comparison_operator -> Automaton.clock_index option -> state -> state_index option-> action_index option ->addition_result
 
 		(** Add a transition to the state space *)
 		method add_transition : (state_index * combined_transition * state_index) -> unit
@@ -327,11 +348,19 @@ class stateSpace : int ->
 		(*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
 		method add_p_constraint_to_states : LinearConstraint.p_linear_constraint -> unit
 
+		method display_strategy_constraint_index_list : (state_index list) -> (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> ( action_index -> action_name) -> (variable_index -> variable_name) -> unit
+
+		(* method display_strategy_index: state_index -> (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) ->(action_index -> action_name) -> unit  *)
+
+		(* method display_discrete : State.state -> unit *)
+
+		method format_strategy_index : state_index -> (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (action_index -> action_name) -> (variable_index -> variable_name) -> string 
+
 		(* Merge of v2.12 (ULRICH) *)
 		method merge212 : state_index list -> state_index list
 
 		(* Merge refactor 2022 - DYLAN *)
-		method merge : state_index list -> (state_index -> state_index -> unit) -> state_index list
+		method merge : state_index list -> state_index list
 
 		(** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 		method empty_states_for_comparison : unit

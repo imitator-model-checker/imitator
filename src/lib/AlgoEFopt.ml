@@ -90,7 +90,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) ((*property*)_ : 
 	method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
 
 	(** The closed operator (>= for minimization, and <= for maximization) *)
-	method virtual closed_op : LinearConstraint.comparison_op
+	method virtual closed_op : LinearConstraint.op
 
 	(* Various strings *)
 	method virtual str_optimum : string
@@ -435,7 +435,7 @@ class virtual algoEFopt (model : AbstractModel.abstract_model) ((*property*)_ : 
 		(* Only process if we have to *)
 		if keep_processing then(
 			(* Try to add the new state to the state space *)
-			let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+			let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state None None in
 			
 			begin
 			match addition_result with

@@ -1,6 +1,5 @@
 (executable
  (name IMITATOR)
- (modes byte exe)
  (libraries lib)
  (link_flags
   (:include link_flags.%{system})
@@ -16,9 +15,10 @@
    -cclib
    -lgmpxx)))
 
+
 (install
  (section bin)
- (files IMITATOR.exe))
+ (files imitator))
 
 (rule
  (with-stdout-to
@@ -33,10 +33,7 @@
 (env
  (dev
   (flags
-   (:standard -warn-error -A -g)
-   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/gmp/)
-   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/ppl)
-  )))
+   (:standard -warn-error -A))))
 
 
 (rule

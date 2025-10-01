@@ -25,11 +25,8 @@ let line=ref 1;;
 
 }
 
-(* Support Windows CRLF line endings *)
-let newline = '\r' | '\n' | "\r\n"
-
 rule token = parse
-	  newline             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
+	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
 	(* C style include *)
@@ -41,8 +38,6 @@ rule token = parse
 			let c = try(
 				open_in absolute_filename
 			)with
-				(* Lib.ModelParser.MenhirBasics.Error *)
-				| Error _
 				| Sys_error _ ->
 					(* Abort properly *)
 (* 					print_error(e); *)
@@ -51,7 +46,7 @@ rule token = parse
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
-			let p : ParsingStructure.unexpanded_parsed_model = ModelParser.main token lb in
+			let p : ParsingStructure.parsed_model_with_templates = ModelParser.main token lb in
 			INCLUDE p
     }
 
@@ -90,7 +85,6 @@ rule token = parse
 	| "flow"           { CT_FLOW }
 	| "fn"             { CT_FUN   }
 	| "for"            { CT_FOR }
-	| "forall"         { CT_FORALL }
 	| "from"           { CT_FROM }
 	| "function"       { CT_FUN   }
 	| "goto"           { CT_GOTO }
@@ -115,7 +109,6 @@ rule token = parse
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
-	| "synt_var"       { CT_SYNT_VAR }
 	| "template"       { CT_TEMPLATE }
  	| "then"           { CT_THEN }
 	| "to"             { CT_TO }
@@ -149,7 +142,6 @@ rule token = parse
 
 	(* Assignment *)
 	| ":="             { OP_ASSIGN }
-	| "<-"             { OP_ASSIGN }
 
 	(* Boolean operators *)
 	| '&'              { OP_CONJUNCTION }
@@ -175,7 +167,7 @@ rule token = parse
 	| '\''             { APOSTROPHE }
 	| ':'              { COLON }
 	| ','              { COMMA }
-(* 	| ".."             { DOUBLEDOT } *)
+	| ".."             { DOUBLEDOT }
 	| ';'              { SEMICOLON }
 
 	| eof              { EOF}
@@ -190,5 +182,5 @@ and comment_ocaml = parse
             if !comment_depth == 0 then () else comment_ocaml lexbuf }
   | eof
     { failwith "End of file inside a comment in model." }
-  | newline  { line := !line + 1 ; comment_ocaml lexbuf }
+  | '\n'  { line := !line + 1 ; comment_ocaml lexbuf }
   | _     { comment_ocaml lexbuf }

@@ -57,6 +57,20 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 
+	if model.has_coalition then (
+		
+		(* Garder uniquement les plus grandes stratégies *)
+		let filtered_strategies = state_space#keep_different_winning_strategies winning_states_and_constraint in
+
+		(* Affichage des stratégies conservées *)
+		state_space#display_strategy_constraint_index_list filtered_strategies model.automata_names model.location_names model.action_names model.variable_names;
+
+		let long = List.length filtered_strategies in
+		print_message Verbose_standard ("Nombre d'états gagnants avec stratégie maximale : " ^ (string_of_int long) ^ ".");
+
+		state_space#initialize_winning_states filtered_strategies;
+
+	);
 
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
@@ -72,7 +86,7 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 		(* Branching between Witness/Synthesis and Exemplification *)
 		if property.synthesis_type = Exemplification then(
 			(* Return the result *)
-			Runs_exhibition_result
+			Runs_exhibition_result 
 			{
 				(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
 				(*** NOTE: use rev since we added the runs by reversed order ***)
@@ -93,16 +107,7 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 
 			(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 			(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-			let soundness = if termination_status = Regular_termination then Constraint_exact else(
-				(* Check if the set of valuations is the entire set of possible valuations *)
-
-				(* Retrieve the initial parameter constraint *)
-				let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property (self#get_initial_p_nnconvex_constraint_or_die) in
-
-				(* Check equality *)
-				if LinearConstraint.p_nnconvex_constraint_is_equal initial_p_nnconvex_constraint result then Constraint_exact
-				else Constraint_maybe_under
-			) in
+			let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 			(* Return the result *)
 			Single_synthesis_result

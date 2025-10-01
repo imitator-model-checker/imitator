@@ -1203,8 +1203,11 @@ class algoNDFS (model : AbstractModel.abstract_model) (property : AbstractProper
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
+
+		let action_index = StateSpace.get_action_from_combined_transition model combined_transition in
+		
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state (Some source_state_index) (Some action_index) in
 
 		begin
 		match addition_result with

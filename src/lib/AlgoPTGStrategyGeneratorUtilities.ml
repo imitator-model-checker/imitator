@@ -77,7 +77,6 @@ type simple_abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
-
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)
@@ -108,7 +107,12 @@ type simple_abstract_model = {
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
-	
+
+	(* Is in coalition*)
+	is_in_coalition : automaton_index -> bool;
+	(* Has a coalition *)
+	has_coalition : bool;
+  informations : (automaton_index array) array;
 }
 
 
@@ -157,7 +161,6 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       is_urgent = simple_model.is_urgent;
       actions = simple_model.actions;
       controllable_actions = simple_model.controllable_actions;
-      has_controllable_or_uncontrollable_actions = false; (* Final controller does not know of controllable/uncontrollable actions *)
       action_names = simple_model.action_names;
       action_types = simple_model.action_types;
       actions_per_automaton = simple_model.actions_per_automaton;
@@ -178,90 +181,76 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       initial_constraint = simple_model.initial_constraint;
       initial_p_constraint = simple_model.initial_p_constraint;
       px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_false_constraint();
-  } 
+      is_in_coalition = simple_model.is_in_coalition;
+      has_coalition = simple_model.has_coalition;
+      informations = simple_model.informations;
+  }
 
 let generate_simple_model (system_model : abstract_model) 
-	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
-	~location_names ~is_accepting ~is_urgent ~invariants
-	~actions_per_location ~transitions ~transitions_description
-  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-  ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
-  ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
-  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
-  ~initial_location_index
+  ~nb_locations ~nb_transitions
+  ~location_names ~is_accepting ~is_urgent ~invariants
+  ~actions_per_location ~transitions ~transitions_description
 	: simple_abstract_model = 
   {
-    nb_automata = 1;
-    nb_actions = nb_actions;
+    nb_automata = system_model.nb_automata;
+    nb_actions = system_model.nb_actions;
     nb_clocks  = system_model.nb_clocks; 
     nb_discrete = system_model.nb_discrete; 
     nb_rationals  = system_model.nb_rationals;
-    nb_parameters;
-    nb_variables;
-    nb_ppl_variables;
+    nb_parameters = system_model.nb_parameters;
+    nb_variables  = system_model.nb_variables;
+    nb_ppl_variables = system_model.nb_ppl_variables;
     nb_locations;
     nb_transitions;
     has_invariants = system_model.has_invariants;
     has_complex_updates = system_model.has_complex_updates;
     bounded_parameters = system_model.bounded_parameters;
     parameters_bounds = system_model.parameters_bounds;
-    clocks;
-    is_clock;
-    discrete;
-    discrete_rationals;
-    is_discrete;
-    parameters;
-    clocks_and_discrete;
-    parameters_and_discrete;
-    parameters_and_clocks;
-    variable_names;
+    clocks = system_model.clocks;
+    is_clock = system_model.is_clock;
+    discrete = system_model.discrete;
+    discrete_rationals = system_model.discrete_rationals;
+    is_discrete = system_model.is_discrete;
+    parameters = system_model.parameters;
+    clocks_and_discrete = system_model.clocks_and_discrete;
+    parameters_and_discrete = system_model.parameters_and_discrete;
+    parameters_and_clocks = system_model.parameters_and_clocks;
+    variable_names = system_model.variable_names;
     discrete_names_by_type_group = system_model.discrete_names_by_type_group;
     type_of_variables = system_model.type_of_variables;
     automata = [0];
-    automata_names = (fun automata_index -> system_model.automata_names automata_index ^ "_controller");
+    automata_names = (fun automata_index -> system_model.automata_names automata_index ^ "-controller");
     locations_per_automaton = (fun _ -> List.init nb_locations (fun x -> (x-1) + 1));
     location_names;
     is_accepting;
     is_urgent;
-    actions = actions;
-    controllable_actions = [];
-    action_names = action_names;
-    action_types = action_types;
-    actions_per_automaton = actions_per_automaton;
+    actions = system_model.actions;
+    controllable_actions = system_model.controllable_actions;
+    action_names = system_model.action_names;
+    action_types = system_model.action_types;
+    actions_per_automaton = system_model.actions_per_automaton;
     automata_per_action = (fun _ -> [0]);
     actions_per_location = actions_per_location;
-    is_controllable_action = (fun _ -> false);
+    is_controllable_action = system_model.is_controllable_action;
     invariants;
     transitions;
     transitions_description;
     automaton_of_transition = (fun _ -> 0);
-    initial_location = 
-      (
-      DiscreteState.initialize 1 (system_model.nb_clocks + nb_parameters) (system_model.nb_clocks + nb_parameters + system_model.nb_discrete - 1);  
-      let discrete_mapping = List.map (fun d -> d,DiscreteState.get_discrete_value system_model.initial_location d) discrete in 
-      DiscreteState.make_location [(0,initial_location_index)] discrete_mapping);
-    initial_constraint;
-    initial_p_constraint;
+    initial_location = DiscreteState.make_location [(0,0)] [];
+    initial_constraint = system_model.initial_constraint;
+    initial_p_constraint = system_model.initial_p_constraint;      
+    is_in_coalition = system_model.is_in_coalition;
+    has_coalition = system_model.has_coalition;
+    informations = system_model.informations;
   }
 
 let generate_abstract_controller_model (system_model : abstract_model)
-	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
+	~nb_locations ~nb_transitions
 	~location_names ~is_accepting ~is_urgent ~invariants
-	~actions_per_location ~transitions ~transitions_description
-  ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-  ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
-  ~discrete ~clocks ~initial_constraint ~initial_p_constraint
-  ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete ~clocks_and_discrete
-  ~initial_location_index =
-  let simple_model = generate_simple_model system_model
-    ~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
-    ~location_names ~is_accepting ~is_urgent ~invariants
-    ~actions_per_location ~transitions ~transitions_description
-    ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
-    ~action_types ~action_names ~nb_actions ~actions ~actions_per_automaton
-    ~discrete ~clocks ~initial_constraint ~initial_p_constraint 
-    ~nb_ppl_variables ~is_clock ~discrete_rationals ~is_discrete 
-    ~clocks_and_discrete 
-    ~initial_location_index
+	~actions_per_location ~transitions ~transitions_description =
+	let simple_model = generate_simple_model system_model 
+		~nb_locations ~nb_transitions ~location_names
+		~is_accepting ~is_urgent ~invariants
+		~actions_per_location ~transitions ~transitions_description 
 	in
 	generate_abstract_model simple_model
