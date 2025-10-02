@@ -25,41 +25,35 @@ let check_eq_result model (a : Result.imitator_result) (b : Result.imitator_resu
       | _ -> fail "")
     | _ -> raise @@ ValidatorError "Validator can only compare Single Synthesis Results"
 
+let build_options_and_property ~args_label = 
+  let imitator_args_file = ArgStash.get_exn args_label in 
+
+                    (* append empty string in beginning to please argument parser *)
+  let arg_array = Array.append [|" ";"-verbose=mute"|] @@ Arg.read_arg imitator_args_file in
+  let options = new Options.imitator_options in
+  options#parse ~from_arg_list:(Some arg_array) ~skip_model:true ();
+  (* Reset for arg parsing again *)
+  Arg.current := 0;
+
+  let unexpanded_parsed_property_option = ParsingUtility.compile_unexpanded_parsed_property options in 
+    (* Assumption: The property is simple and doesn't include variables. 
+     Variables in properties do not make sense when models are randomly generated
+     TODO: Throw error if a parsed property has variables *)
+  let parsed_property_option = Option.map (fun property -> Templates.expand_property [] property) unexpanded_parsed_property_option in
+  options, parsed_property_option
 
 let () =
   ArgStash.stash ~names:[imitator_args_label_a; imitator_args_label_b];
-  let imitator_args_file_a = ArgStash.get_exn imitator_args_label_a in 
-  let imitator_args_file_b = ArgStash.get_exn imitator_args_label_b in 
-
-                    (* append empty string in beginning to please argument parser *)
-  let arg_array_a = Array.append [|" ";"-verbose=mute"|] @@ Arg.read_arg imitator_args_file_a in
-  let arg_array_b = Array.append [|" ";"-verbose=mute"|] @@ Arg.read_arg imitator_args_file_b in 
-
-  let options_a = new Options.imitator_options in
-  let options_b = new Options.imitator_options in
-
-  options_a#parse ~from_arg_list:(Some arg_array_a) ~skip_model:true ();
-  (* Reset for arg parsing again *)
-  Arg.current := 0;
-  options_b#parse ~from_arg_list:(Some arg_array_b) ~skip_model:true ();
-  Arg.current := 0;
-  let unexpanded_parsed_property_a = ParsingUtility.compile_unexpanded_parsed_property options_a in 
-  let unexpanded_parsed_property_b = ParsingUtility.compile_unexpanded_parsed_property options_b in 
-
-  (* Assumption: The property is simple and doesn't include variables. 
-     Variables in properties do not make sense when models are randomly generated
-     TODO: Throw error if a parsed property has variables *)
-  let parsed_property_a = Option.map (fun property -> Templates.expand_property [] property) unexpanded_parsed_property_a in
-  let parsed_property_b = Option.map (fun property -> Templates.expand_property [] property) unexpanded_parsed_property_b in
-  
+  let options_a, parsed_property_option_a = build_options_and_property ~args_label:imitator_args_label_a in 
+  let options_b, parsed_property_option_b = build_options_and_property ~args_label:imitator_args_label_b in 
 
   add_test ~name:"The two configurations give the same result" [parsed_model] (fun parsed_model ->
     Input.set_options options_a;
-    let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_a in 
+    let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_option_a in 
     let result_a = ImitatorRunner.run options_a model property_a in 
 
     Input.set_options options_b;
-    let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_b in 
+    let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
     let result_b = ImitatorRunner.run options_b model property_b in
 
     check_eq_result model result_a result_b
