@@ -28,7 +28,7 @@ let set_dimensions nb_dimensions =
 	begin
 	match !nb_dim with
 	| None -> nb_dim := Some nb_dimensions
-	| Some _ -> raise (InternalError "Trying to set the number of dimensions of HyperRectangle although it was already set before.")
+	| Some _ -> nb_dim := Some nb_dimensions
 	end;
 	()
 

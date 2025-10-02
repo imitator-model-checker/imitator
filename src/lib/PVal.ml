@@ -37,7 +37,11 @@ let set_dimensions nb_dimensions =
 		nb_dim := Some nb_dimensions;
 		(* Set list of all dimensions *)
 		all_dimensions := Some (OCamlUtilities.list_of_interval 0 (nb_dimensions - 1));
-	| _ -> raise (InternalError "Trying to set the number of dimensions of PVal although it was already set before.")
+	| Some _ -> 
+		(* Set number of dimensions *)
+		nb_dim := Some nb_dimensions;
+		(* Set list of all dimensions *)
+		all_dimensions := Some (OCamlUtilities.list_of_interval 0 (nb_dimensions - 1));
 	end;
 	()
 
