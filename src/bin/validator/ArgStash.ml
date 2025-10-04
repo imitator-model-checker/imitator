@@ -86,3 +86,16 @@ let get_exn (flag_name : string) : string =
 let get_or ~default flag_name =
   match get flag_name with Some v -> v | None -> default
 
+let get_all (flag_names : string list) : string array = 
+  flag_names |>
+  List.filter_map (fun flag -> Option.map (fun res -> [flag; res]) @@ get flag) |>
+  List.concat |>
+  Array.of_list
+
+let stash_and_retrieve ?(include_binary=true) (names : string list) : string array =
+  let bin = Sys.argv.(0) in  
+  stash ~names;
+  if include_binary then 
+    Array.append [|bin|] @@ get_all names
+  else
+    get_all names

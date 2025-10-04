@@ -57,3 +57,14 @@ val get_exn : string -> string
     ]}
 *)
 val get_or : default:string -> string -> string
+
+
+(** [stash_and_retrieve arg_list] removes arguments in [arg_list] from [Sys.argv] 
+    and returns them as a parsable string array
+    
+    The optional flag [?include_binary] is [true] by default. It will include the binary itself
+    in the 0th index of the returned array to allow easy argument parsing.
+
+    May restart program, so should be called near program start
+*)
+val stash_and_retrieve : ?include_binary:bool -> string list -> string array 
