@@ -33,10 +33,12 @@ let () =
     ) 
   | CompareOutput {config_file_a;config_file_b} ->
   begin
+    let i = ref 0 in 
     let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property ~imitator_args_file:config_file_a in 
     let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property ~imitator_args_file:config_file_b in 
 
     add_test ~name:"The two configurations give the same result" [ModelGen.parsed_model] (fun parsed_model ->
+      print_endline (Printf.sprintf "%d" !i);
       Input.set_options options_a;
       let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_option_a in 
       let result_a = ImitatorRunner.run options_a model property_a in 
@@ -45,6 +47,8 @@ let () =
       let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
       let result_b = ImitatorRunner.run options_b model property_b in
 
-      Comparison.check_eq_result model result_a result_b
+      Comparison.check_eq_result model result_a result_b;
+      State.flush_invariant_cache ();
+      incr i
     )
   end

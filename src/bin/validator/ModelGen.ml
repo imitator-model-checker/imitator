@@ -3,11 +3,23 @@ open Lib
 
 (** Intermediate, AFL-friendly representation *)
 module SimpleModel = struct
+  type cop = 
+  | EQ | L | LEQ | G | GEQ
 
-  type transition = {controllable : bool}
+  type term = 
+  | SConstant of int 
+  | SClock of int
+
+  type bool_expr = 
+  | SComp of term * cop * term
+
+  
+
+  type transition = {controllable : bool; guard : bool_expr list}
   type t = { 
     transitions : (transition option) array array list;
     accepting : bool array array;
+    nb_clocks: int
   }
 
   type byte_reader = { s : string; mutable i : int }
@@ -20,12 +32,38 @@ module SimpleModel = struct
   let next_bool br threshold =
     next_byte br < threshold
 
-  let next_int br ~max =
-    assert (max < 255);
-    next_byte br mod (max + 1)
+  let next_int br ?(min = 0) range =
+    let max = min + range in 
+    assert (max <= 255);
+    (next_byte br mod max) + min
+
+  let sample_uniform br xs =
+    let idx = next_int br (List.length xs) in 
+    List.nth xs idx
     
-  let next_transition br =
-    if next_bool br 126 then {controllable = true} else {controllable = false}
+
+  let const_int_from_bytes br = 
+    let sample = next_int br 10 in 
+    SConstant sample
+
+  let clock_from_bytes br nb_clocks = 
+    let sample = next_int br nb_clocks in 
+    SClock sample
+    
+
+  let comparison_from_bytes br nb_clocks = 
+    let clock = clock_from_bytes br nb_clocks in 
+    let constant = const_int_from_bytes br in 
+    let oper = sample_uniform br [EQ; GEQ; G; L; LEQ] in 
+    SComp (clock, oper, constant)
+
+  let guard_from_bytes br nb_clocks = 
+    let comparison = comparison_from_bytes br nb_clocks in
+    [comparison]
+    
+  let transition_from_bytes br nb_clocks =
+    let guard = guard_from_bytes br nb_clocks in 
+    if next_bool br 126 then {controllable = true; guard} else {controllable = false; guard}
 
   (* 
     Probability to be accepting = (i/(n-1))^2, scaled down such that the
@@ -40,7 +78,7 @@ module SimpleModel = struct
     num /. denom  
 
 
-  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~density  =
+  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader  =
     Array.init nb_auto (fun i ->
       Array.init nb_loc_of_automaton.(i) (fun j ->
         let prob = prob_accepting (nb_loc_of_automaton.(i)) j in
@@ -49,52 +87,75 @@ module SimpleModel = struct
       ))
 
 
-  let adjacency_matrix_from_bytes ~rows ~columns ~byte_reader ~density  =
+  let adjacency_matrix_from_bytes ~rows ~columns ~byte_reader ~density ~nb_clocks  =
     let matrix : (transition option) array array = Array.make_matrix rows columns None in 
 
     (* Spanning tree *)
     let parents = ref [0] in
     for i = 1 to rows - 1 do 
-      let parent_pos = next_int byte_reader ~max:(List.length !parents - 1) in 
-      let parent = List.nth !parents parent_pos in 
-      let trans = next_transition byte_reader in 
+      let parent = sample_uniform byte_reader !parents in
+      let trans = transition_from_bytes byte_reader nb_clocks in 
       matrix.(parent).(i) <- Some trans;
       parents := i::!parents
     done;
     
     let threshold = int_of_float (255. *. density) in 
     let transform = function Some x -> Some x | None -> 
-      if next_bool byte_reader threshold then Some (next_transition byte_reader) else None in  
+      if next_bool byte_reader threshold then Some (transition_from_bytes byte_reader nb_clocks) else None in  
     Array.map (Array.map transform) matrix
 
   let gen : t gen =                 
-    map [range ~min:1 3; bytes_fixed 128] 
-      (fun nb_auto random_blob ->
+    map [range ~min:1 1; range ~min:1 2; bytes_fixed 128] 
+      (fun nb_auto nb_clocks random_blob ->
         let byte_reader = {s = random_blob; i = 0} in 
-        let nb_loc_of_automaton = Array.init nb_auto (fun _ -> next_int byte_reader ~max:8 + 2) in 
+        let nb_loc_of_automaton = Array.init nb_auto (fun _ -> next_int byte_reader ~min:10 5) in 
         let matrices =
         List.init nb_auto (fun a_id ->
-          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.1)
+          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.1 ~nb_clocks)
         in
-        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~density:0.1 in 
-        { transitions = matrices; accepting})
+        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader in 
+        { transitions = matrices; accepting; nb_clocks})
 
 end
 
 let automaton_name n = Printf.sprintf "automaton_%d" n
 let location_name n = Printf.sprintf "loc_%d" n
 
+let clock_name n = Printf.sprintf "clock_%d" n 
+
+let parameter_name n = Printf.sprintf "p_%d" n
+
+
 let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) : ParsingStructure.parsed_automaton =
-  let open ParsingStructure in 
   let open SimpleModel in 
+  let open ParsingStructure in 
+
+  let parsed_term_of_term term = 
+    let factor =
+    match term with 
+    | SConstant i -> Parsed_constant (Int_value (Int32.of_int i))
+    | SClock i -> Parsed_variable (clock_name i, i) in
+    Parsed_term (Parsed_factor factor) in
+
+  let parsed_op_of_op = function EQ -> PARSED_OP_EQ | L -> PARSED_OP_LEQ | LEQ -> PARSED_OP_LEQ | G -> PARSED_OP_G | GEQ -> PARSED_OP_GEQ in 
+
+  let parsed_dicrete_boolean_expression_of_bool_exprs bool_expr = 
+    match bool_expr with 
+    | SComp (t1, op, t2) -> 
+      let parsed_t1 = parsed_term_of_term t1 in 
+      let parsed_t2 = parsed_term_of_term t2 in 
+      let parsed_op = parsed_op_of_op op in
+      Parsed_comparison ((Parsed_arithmetic_expr parsed_t1), parsed_op, (Parsed_arithmetic_expr parsed_t2)) in
+
   let locations =
     Array.mapi (fun i row -> 
       let transitions = ref [] in 
       Array.iteri (fun j transition ->
         match transition with 
-        | Some {controllable} -> 
+        | Some {controllable; guard} ->
+          let guard = List.map parsed_dicrete_boolean_expression_of_bool_exprs guard in  
           let label = Printf.sprintf (if controllable then "c%d" else "u%d") a_id in 
-          transitions := ([], [], Sync label, location_name j) :: !transitions
+          transitions := (guard, [], Sync label, location_name j) :: !transitions
         | None -> ()
       ) row;
       {
@@ -126,10 +187,13 @@ let parsed_model_of_simple_model (sm : SimpleModel.t) : ParsingStructure.parsed_
   let automata = List.mapi (fun i matrix -> 
     parsed_automaton_of_matrix i matrix sm.accepting.(i)
   ) sm.transitions in
+  
+  let clocks = List.init sm.nb_clocks (fun i -> (DiscreteType.Var_type_clock, [clock_name i, None])) in
+
   {
       automata;
       controllable_actions = Parsed_controllable_actions controllable_actions_list;
-	    variable_declarations = [];
+	    variable_declarations = clocks;
 	    fun_definitions = [];
 	    init_definition = init_definition;
   }
