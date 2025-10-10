@@ -22,11 +22,12 @@ let () =
     let sample_number = ref 1 in 
     add_test ~name:(Printf.sprintf "Sampling 10 models into %s/" validator_options.output_folder_path)[ModelGen.parsed_model] (fun parsed_model -> 
       let model, _ = ModelConverter.abstract_structures_of_parsing_structures options parsed_model None in
+      let output_folder = Printf.sprintf "%s/samples" validator_options.output_folder_path in
       if !sample_number <= 10 then 
         ModelOutput.output_model 
         ~draw:draw_pdf 
         ~sample_number:!sample_number 
-        ~output_folder:validator_options.output_folder_path
+        ~output_folder
         options
         model;
       incr sample_number
@@ -47,7 +48,14 @@ let () =
       let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
       let result_b = ImitatorRunner.run options_b model property_b in
 
-      Comparison.check_eq_result model result_a result_b;
+      (try 
+        Comparison.check_eq_result model result_a result_b
+      with exn -> 
+        let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
+        Printf.printf "Saving counter example in %s\n" output_folder;
+        ModelOutput.output_model ~sample_number:!i ~output_folder options_b model;
+        raise exn : unit);
+
       State.flush_invariant_cache ();
       incr i
     )
