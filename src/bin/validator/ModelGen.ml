@@ -111,7 +111,7 @@ module SimpleModel = struct
         let nb_loc_of_automaton = Array.init nb_auto (fun _ -> next_int byte_reader ~min:10 5) in 
         let matrices =
         List.init nb_auto (fun a_id ->
-          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.1 ~nb_clocks)
+          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.05 ~nb_clocks)
         in
         let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader in 
         { transitions = matrices; accepting; nb_clocks})
@@ -177,7 +177,12 @@ let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition op
 let parsed_model_of_simple_model (sm : SimpleModel.t) : ParsingStructure.parsed_model = 
   let open SimpleModel in
   let nb_automata = List.length sm.transitions in 
-  let init_definition = List.init nb_automata (fun i -> ParsingStructure.Parsed_loc_assignment (automaton_name i, location_name 0)) in
+  
+  let init_loc_definition = List.init nb_automata (fun i -> ParsingStructure.Parsed_loc_assignment (automaton_name i, location_name 0)) in
+  let init_clock_definition = List.init sm.nb_clocks (fun i -> 
+    ParsingStructure.Parsed_linear_predicate (Parsed_linear_constraint 
+    (Linear_term (Variable (NumConst.one, clock_name i)), PARSED_OP_EQ, Linear_term (Constant (NumConst.zero)))))
+  in
   let controllable_actions_list = 
     List.filteri (fun i _ -> Array.exists (fun automata_transitions -> 
       Array.exists (fun transition -> match transition with None -> false | Some t -> t.controllable) automata_transitions)
@@ -195,7 +200,7 @@ let parsed_model_of_simple_model (sm : SimpleModel.t) : ParsingStructure.parsed_
       controllable_actions = Parsed_controllable_actions controllable_actions_list;
 	    variable_declarations = clocks;
 	    fun_definitions = [];
-	    init_definition = init_definition;
+	    init_definition = init_loc_definition @ init_clock_definition;
   }
 
 let parsed_model : ParsingStructure.parsed_model gen =
