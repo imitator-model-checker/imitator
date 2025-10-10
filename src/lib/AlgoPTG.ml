@@ -641,7 +641,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						if state_space_ptg#passed_states#mem succ then 
 							(print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration" 
 							(string_of_state_index state_space model succ));
-							not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
+							acc || not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
 							)
 						else 
 							(
