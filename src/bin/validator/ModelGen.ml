@@ -19,6 +19,7 @@ module SimpleModel = struct
   type t = { 
     transitions : (transition option) array array list;
     accepting : bool array array;
+    invariants : bool_expr list array array;
     nb_clocks: int
   }
 
@@ -51,18 +52,18 @@ module SimpleModel = struct
     SClock sample
     
 
-  let comparison_from_bytes br nb_clocks = 
+  let comparison_from_bytes br nb_clocks ~opers = 
     let clock = clock_from_bytes br nb_clocks in 
     let constant = const_int_from_bytes br in 
-    let oper = sample_uniform br [EQ; GEQ; G; L; LEQ] in 
+    let oper = sample_uniform br opers in 
     SComp (clock, oper, constant)
 
-  let guard_from_bytes br nb_clocks = 
-    let comparison = comparison_from_bytes br nb_clocks in
+  let bool_expr_from_bytes br nb_clocks ~opers = 
+    let comparison = comparison_from_bytes br nb_clocks ~opers in
     [comparison]
     
   let transition_from_bytes br nb_clocks =
-    let guard = guard_from_bytes br nb_clocks in 
+    let guard = bool_expr_from_bytes br nb_clocks ~opers:[EQ; GEQ; G; L; LEQ] in 
     if next_bool br 126 then {controllable = true; guard} else {controllable = false; guard}
 
   (* 
@@ -86,6 +87,11 @@ module SimpleModel = struct
         next_bool byte_reader threshold
       ))
 
+  let invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~nb_clocks = 
+    Array.init nb_auto (fun i -> 
+      Array.init nb_loc_of_automaton.(i) (fun _ ->
+        bool_expr_from_bytes byte_reader nb_clocks ~opers:[L; LEQ]
+      ))
 
   let adjacency_matrix_from_bytes ~rows ~columns ~byte_reader ~density ~nb_clocks  =
     let matrix : (transition option) array array = Array.make_matrix rows columns None in 
@@ -105,7 +111,7 @@ module SimpleModel = struct
     Array.map (Array.map transform) matrix
 
   let gen : t gen =                 
-    map [range ~min:1 1; range ~min:1 2; bytes_fixed 128] 
+    map [range ~min:1 1; range ~min:3 1; bytes_fixed 128] 
       (fun nb_auto nb_clocks random_blob ->
         let byte_reader = {s = random_blob; i = 0} in 
         let nb_loc_of_automaton = Array.init nb_auto (fun _ -> next_int byte_reader ~min:10 5) in 
@@ -114,7 +120,8 @@ module SimpleModel = struct
           adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.05 ~nb_clocks)
         in
         let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader in 
-        { transitions = matrices; accepting; nb_clocks})
+        let invariants = invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~byte_reader in
+        { transitions = matrices; accepting; nb_clocks; invariants})
 
 end
 
@@ -126,7 +133,7 @@ let clock_name n = Printf.sprintf "clock_%d" n
 let parameter_name n = Printf.sprintf "p_%d" n
 
 
-let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) : ParsingStructure.parsed_automaton =
+let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) (invariants : SimpleModel.bool_expr list array): ParsingStructure.parsed_automaton =
   let open SimpleModel in 
   let open ParsingStructure in 
 
@@ -134,12 +141,12 @@ let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition op
     let factor =
     match term with 
     | SConstant i -> Parsed_constant (Int_value (Int32.of_int i))
-    | SClock i -> Parsed_variable (clock_name i, i) in
+    | SClock i -> Parsed_variable (clock_name i, 0) in
     Parsed_term (Parsed_factor factor) in
 
-  let parsed_op_of_op = function EQ -> PARSED_OP_EQ | L -> PARSED_OP_LEQ | LEQ -> PARSED_OP_LEQ | G -> PARSED_OP_G | GEQ -> PARSED_OP_GEQ in 
+  let parsed_op_of_op = function EQ -> PARSED_OP_EQ | L -> PARSED_OP_L | LEQ -> PARSED_OP_LEQ | G -> PARSED_OP_G | GEQ -> PARSED_OP_GEQ in 
 
-  let parsed_dicrete_boolean_expression_of_bool_exprs bool_expr = 
+  let parsed_dicrete_boolean_expression_of_bool_expr bool_expr = 
     match bool_expr with 
     | SComp (t1, op, t2) -> 
       let parsed_t1 = parsed_term_of_term t1 in 
@@ -153,17 +160,18 @@ let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition op
       Array.iteri (fun j transition ->
         match transition with 
         | Some {controllable; guard} ->
-          let guard = List.map parsed_dicrete_boolean_expression_of_bool_exprs guard in  
+          let guard = List.map parsed_dicrete_boolean_expression_of_bool_expr guard in  
           let label = Printf.sprintf (if controllable then "c%d" else "u%d") a_id in 
           transitions := (guard, [], Sync label, location_name j) :: !transitions
         | None -> ()
       ) row;
+      let invariant = List.map parsed_dicrete_boolean_expression_of_bool_expr invariants.(i) in 
       {
         name = location_name i;
         urgency = Parsed_location_nonurgent;
         acceptance = if accepting.(i) then Parsed_location_accepting else Parsed_location_nonaccepting;
         cost = None;
-        invariant = [];
+        invariant;
         stopped = [];
         flow = [];
         transitions = !transitions;
@@ -190,15 +198,16 @@ let parsed_model_of_simple_model (sm : SimpleModel.t) : ParsingStructure.parsed_
     ) @@ 
     List.init nb_automata (fun i -> Printf.sprintf "c%d" i) in 
   let automata = List.mapi (fun i matrix -> 
-    parsed_automaton_of_matrix i matrix sm.accepting.(i)
+    parsed_automaton_of_matrix i matrix sm.accepting.(i) sm.invariants.(i)
   ) sm.transitions in
   
-  let clocks = List.init sm.nb_clocks (fun i -> (DiscreteType.Var_type_clock, [clock_name i, None])) in
+  let clock_decls = List.init sm.nb_clocks (fun i -> (clock_name i, None)) in 
+  let variable_declarations = [DiscreteType.Var_type_clock, clock_decls] in
 
   {
       automata;
       controllable_actions = Parsed_controllable_actions controllable_actions_list;
-	    variable_declarations = clocks;
+	    variable_declarations;
 	    fun_definitions = [];
 	    init_definition = init_loc_definition @ init_clock_definition;
   }
