@@ -15,7 +15,7 @@ module SimpleModel = struct
 
   
 
-  type transition = {controllable : bool; guard : bool_expr list}
+  type transition = {controllable : bool; guard : bool_expr list; resets: int list}
   type t = { 
     transitions : (transition option) array array list;
     accepting : bool array array;
@@ -62,9 +62,19 @@ module SimpleModel = struct
     let comparison = comparison_from_bytes br nb_clocks ~opers in
     [comparison]
     
+  let resets_from_bytes br nb_clocks =
+    (* each clock has an independent chance to be added to the list of resets *)
+    let should_add_reset () = next_bool br 25 in
+    let rec compute_resets acc = function
+    | 0 -> acc
+    | n -> if should_add_reset () then compute_resets ((n - 1)  :: acc) (n - 1) else acc in 
+    compute_resets [] nb_clocks
+
   let transition_from_bytes br nb_clocks =
     let guard = bool_expr_from_bytes br nb_clocks ~opers:[EQ; GEQ; G; L; LEQ] in 
-    if next_bool br 126 then {controllable = true; guard} else {controllable = false; guard}
+    let controllable = next_bool br 126 in 
+    let resets = resets_from_bytes br nb_clocks in
+    {controllable; guard; resets}
 
   (* 
     Probability to be accepting = (i/(n-1))^2, scaled down such that the
@@ -157,16 +167,23 @@ let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition op
       let parsed_t2 = parsed_term_of_term t2 in 
       let parsed_op = parsed_op_of_op op in
       Parsed_comparison ((Parsed_arithmetic_expr parsed_t1), parsed_op, (Parsed_arithmetic_expr parsed_t2)) in
+  
+  let parsed_instruction_of_reset reset = 
+    let term_0 = Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero))) in
+    let bool_expr_0 = Parsed_discrete_bool_expr (Parsed_arithmetic_expr term_0) in
+    let variable = Parsed_scalar_update (clock_name reset, 0) in
+    Parsed_assignment (variable, bool_expr_0) in
 
   let locations =
     Array.mapi (fun i row -> 
       let transitions = ref [] in 
       Array.iteri (fun j transition ->
         match transition with 
-        | Some {controllable; guard} ->
+        | Some {controllable; guard; resets} ->
           let guard = List.map parsed_dicrete_boolean_expression_of_bool_expr guard in  
           let label = Printf.sprintf (if controllable then "c%d" else "u%d") a_id in 
-          transitions := (guard, [], Sync label, location_name j) :: !transitions
+          let parsed_seq_code_bloc = List.map parsed_instruction_of_reset resets in 
+          transitions := (guard, parsed_seq_code_bloc, Sync label, location_name j) :: !transitions
         | None -> ()
       ) row;
       let invariant = List.map parsed_dicrete_boolean_expression_of_bool_expr invariants.(i) in 
