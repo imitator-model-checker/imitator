@@ -79,12 +79,16 @@ module SimpleModel = struct
     num /. denom  
 
 
-  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader  =
+  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~guarantee_accepting  =
     Array.init nb_auto (fun i ->
+      let accepting_loc_exists = ref false in 
       Array.init nb_loc_of_automaton.(i) (fun j ->
         let prob = prob_accepting (nb_loc_of_automaton.(i)) j in
         let threshold = int_of_float (255. *. prob) in
-        next_bool byte_reader threshold
+        let accepting = next_bool byte_reader threshold in
+        if accepting then accepting_loc_exists := true;
+        let forced_accepting =  j = nb_loc_of_automaton.(i) - 1 && not !accepting_loc_exists && guarantee_accepting in
+        accepting || forced_accepting 
       ))
 
   let invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~nb_clocks = 
@@ -119,7 +123,7 @@ module SimpleModel = struct
         List.init nb_auto (fun a_id ->
           adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.05 ~nb_clocks)
         in
-        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader in 
+        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~guarantee_accepting:true in 
         let invariants = invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~byte_reader in
         { transitions = matrices; accepting; nb_clocks; invariants})
 
