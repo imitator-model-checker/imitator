@@ -2,7 +2,7 @@ open Lib
 module ImitatorOptions = Options
 
 let build_imitator_options_and_property ~imitator_args_file = 
-  let default_args = [|" "; "-verbose=mute"|] in 
+  let default_args = [|" "; "-verbose=mute"; "-time-limit=1"|] in 
                     (* append empty string in beginning to please argument parser *)
   let arg_array = Array.append default_args @@ Arg.read_arg imitator_args_file in
   let options = new ImitatorOptions.imitator_options in
