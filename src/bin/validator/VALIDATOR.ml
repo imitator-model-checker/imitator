@@ -39,7 +39,7 @@ let () =
     let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property ~imitator_args_file:config_file_b in 
 
     add_test ~name:"The two configurations give the same result" [ModelGen.parsed_model] (fun parsed_model ->
-      print_endline (Printf.sprintf "%d" !i);
+      print_endline (Printf.sprintf "\x1b[2K[%d]" !i);
       Input.set_options options_a;
       let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_option_a in 
       let result_a = ImitatorRunner.run options_a model property_a in 
@@ -57,6 +57,7 @@ let () =
         raise exn : unit);
 
       State.flush_invariant_cache ();
+      print_string "\x1b[1F";
       incr i
     )
   end
