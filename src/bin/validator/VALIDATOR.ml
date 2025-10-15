@@ -51,9 +51,16 @@ let () =
       (try 
         Comparison.check_eq_result model result_a result_b
       with exn -> 
+        Printf.printf "Found counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
+        
+        Printf.printf "Attempting to reduce ... \n";
+        let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
+        let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
+        Printf.printf "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+
         let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
-        Printf.printf "Saving counter example in %s\n" output_folder;
-        ModelOutput.output_model ~sample_number:!i ~output_folder options_b model;
+        Printf.printf "Saving reduced counter example in %s\n" output_folder;
+        ModelOutput.output_model ~sample_number:!i ~output_folder options_b reduced_model;
         raise exn : unit);
 
       State.flush_invariant_cache ();
