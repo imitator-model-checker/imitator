@@ -1,6 +1,7 @@
 type mode =
-  | SampleModelGenerator of {draw_pdf : bool}
+  | SampleModelGenerator of {draw_pdf:bool}
   | CompareOutput of { config_file_a : string; config_file_b : string }
+  | Reduce of { model_file : string; config_file_a : string; config_file_b : string }
 
 type t = {
   mode : mode;

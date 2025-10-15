@@ -70,3 +70,23 @@ let () =
       incr i
     )
   end
+  | Reduce {model_file;config_file_a;config_file_b} -> 
+    let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a ~model_file in 
+    let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property config_file_b ~model_file in 
+
+	  let unexpanded_parsed_model : ParsingStructure.unexpanded_parsed_model = ParsingUtility.compile_unexpanded_parsed_model options_a in
+    let parsed_model = Templates.expand_model unexpanded_parsed_model in 
+
+    let model, _ = ParsingUtility.compile_model_and_property options_a in 
+    Printf.printf "Reducer provided with a counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
+    
+    Printf.printf "Attempting to reduce while preserving counter example\n";
+    let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
+    let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
+    Printf.printf "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+
+    let output_folder = Printf.sprintf "%s/reducer" validator_options.output_folder_path in
+    let file_name = Printf.sprintf "%s_reduced" options_a#files_prefix in 
+    Printf.printf "Saving reduced counter example in %s/%s\n" output_folder file_name;
+    ModelOutput.output_model ~file_name ~output_folder options_b reduced_model; 
+    ()

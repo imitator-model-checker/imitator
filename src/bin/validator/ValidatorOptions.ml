@@ -3,6 +3,7 @@
 type mode =
   | SampleModelGenerator of {draw_pdf:bool}
   | CompareOutput of { config_file_a : string; config_file_b : string }
+  | Reduce of { model_file : string; config_file_a : string; config_file_b : string }
 
 type t = {
   mode : mode;
@@ -27,11 +28,12 @@ let parse_mode (s : string) : mode =
   match String.split_on_char ':' s with
   | ["sample-pdf"] -> SampleModelGenerator {draw_pdf=true}
   | ["sample-nopdf"] -> SampleModelGenerator {draw_pdf=false}
-  | "compare" :: a :: b :: [] -> CompareOutput { config_file_a = a; config_file_b = b }
+  | "compare" :: config_file_a :: config_file_b :: [] -> CompareOutput {config_file_a;config_file_b}
+  | "reduce" :: model_file :: config_file_a :: config_file_b :: [] -> Reduce {model_file;config_file_a;config_file_b}
   | _ ->
       fail_without_usage
         ("invalid -mode argument \"" ^ s
-        ^ "\". Expected \"sample-pdf\", \"sample-nopdf\" or \"compare:<config_file_a>:<config_file_b>\".")
+        ^ "\". Expected \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\".")
 
 let set_mode s = mode_ref := Some (parse_mode s)
 let set_output s = output_ref := s
@@ -40,7 +42,7 @@ let speclist : (string * Arg.spec * string) list =
   [
     ( "-mode",
       Arg.String set_mode,
-      "Select mode: \"sample-pdf\", \"sample-nopdf\" or \"compare:<config_file_a>:<config_file_b>\"" );
+      "Select mode: \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\"." );
     ( "-output",
       Arg.String set_output,
       Printf.sprintf "Output folder path (default: %s)" default_output );
@@ -60,7 +62,7 @@ let parse (args: string array) : t =
     match !mode_ref with
     | Some m -> m
     | None ->
-        fail_with_usage "-mode is required. Expected \"sample-pdf\", \"sample-nopdf\" or \"compare:<config_file_a>:<config_file_b>\"."
+        fail_with_usage "-mode is required. Expected \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\"."
   in
   { mode; output_folder_path = !output_ref }
 
