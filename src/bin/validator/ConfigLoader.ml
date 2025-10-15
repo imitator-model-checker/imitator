@@ -1,12 +1,18 @@
 open Lib
 module ImitatorOptions = Options
 
-let build_imitator_options_and_property ~imitator_args_file = 
-  let default_args = [|" "; "-verbose=mute"; "-time-limit=1"|] in 
+let build_imitator_options_and_property ?model_file imitator_args_file   = 
+  let default_args = Array.append [|" "; "-verbose=mute"; "-time-limit=1"|] 
+    (match model_file with 
+    | Some model_file -> [|model_file|]
+    | None -> [||]) 
+  in 
                     (* append empty string in beginning to please argument parser *)
   let arg_array = Array.append default_args @@ Arg.read_arg imitator_args_file in
   let options = new ImitatorOptions.imitator_options in
-  options#parse ~from_arg_list:(Some arg_array) ~skip_model:true ();
+  let skip_model = Option.is_none model_file in 
+
+  options#parse ~from_arg_list:(Some arg_array) ~skip_model ();
   (* Reset for arg parsing again *)
   Arg.current := 0;
 

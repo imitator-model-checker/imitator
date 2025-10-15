@@ -35,8 +35,8 @@ let () =
   | CompareOutput {config_file_a;config_file_b} ->
   begin
     let i = ref 0 in 
-    let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property ~imitator_args_file:config_file_a in 
-    let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property ~imitator_args_file:config_file_b in 
+    let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a in 
+    let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property config_file_b in 
 
     add_test ~name:"The two configurations give the same result" [ModelGen.parsed_model] (fun parsed_model ->
       print_endline (Printf.sprintf "\x1b[2K[%d]" !i);
