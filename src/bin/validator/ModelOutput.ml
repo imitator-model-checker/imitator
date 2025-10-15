@@ -1,7 +1,7 @@
 open Lib
 
-let output_model ?(draw=false) ~sample_number ~output_folder options model  = 
-  let path = Printf.sprintf "%s/sampled_model_%d" output_folder sample_number in 
+let output_model ?(draw=false) ~file_name ~output_folder options model  = 
+  let path = Printf.sprintf "%s/%s" output_folder file_name in 
   let imi_file_name = path ^ ".imi" in
   let imi_file = open_out imi_file_name in
   output_string imi_file @@ ModelPrinter.string_of_model model; 

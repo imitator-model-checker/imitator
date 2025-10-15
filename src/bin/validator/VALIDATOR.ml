@@ -23,10 +23,11 @@ let () =
     add_test ~name:(Printf.sprintf "Sampling 10 models into %s/" validator_options.output_folder_path)[ModelGen.parsed_model] (fun parsed_model -> 
       let model, _ = ModelConverter.abstract_structures_of_parsing_structures options parsed_model None in
       let output_folder = Printf.sprintf "%s/samples" validator_options.output_folder_path in
+      let file_name = Printf.sprintf "sampled_model_%d" !sample_number in 
       if !sample_number <= 10 then 
         ModelOutput.output_model 
         ~draw:draw_pdf 
-        ~sample_number:!sample_number 
+        ~file_name 
         ~output_folder
         options
         model;
@@ -59,8 +60,9 @@ let () =
         Printf.printf "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
 
         let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
-        Printf.printf "Saving reduced counter example in %s\n" output_folder;
-        ModelOutput.output_model ~sample_number:!i ~output_folder options_b reduced_model;
+        let file_name = Printf.sprintf "counter_example_%d" !i in 
+        Printf.printf "Saving reduced counter example in %s/%s\n" output_folder file_name; 
+        ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
         raise exn : unit);
 
       State.flush_invariant_cache ();
