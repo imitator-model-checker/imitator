@@ -331,3 +331,25 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
+
+
+(************************************************************)
+(** Compile the concrete model and convert it only to a parsed model and not a full abstract model *)
+(************************************************************)
+let compile_unexpanded_parsed_model (options : Options.imitator_options) = 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Statistics *)
+	parsing_counter#start;
+
+	(* Parsing the main model *)
+	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
+	let parsed_model : ParsingStructure.unexpanded_parsed_model = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
+
+	(* Statistics *)
+	parsing_counter#stop;
+
+	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
+	parsed_model

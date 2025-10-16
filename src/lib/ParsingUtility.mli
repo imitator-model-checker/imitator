@@ -22,6 +22,9 @@ val compile_property: Options.imitator_options -> AbstractModel.useful_parsing_m
 (** Parse the property file and convert it into an unexpanded parsed property *)
 val compile_unexpanded_parsed_property : Options.imitator_options -> ParsingStructure.unexpanded_parsed_property option
 
+(** Parse the model file and convert it into an unexpanded parsed model *)
+val compile_unexpanded_parsed_model : Options.imitator_options -> ParsingStructure.unexpanded_parsed_model
+
 (** Parse the model, and property file if needed, and convert them into an abstract representation *)
 val compile_model_and_property: Options.imitator_options -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)
 
