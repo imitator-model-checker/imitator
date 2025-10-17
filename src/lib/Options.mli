@@ -161,7 +161,7 @@ class imitator_options :
 		method set_subsumption				: bool -> unit
 
 		method sync_auto_detection			: bool
-		method time_limit					: int option
+		method time_limit					: float option
 		method timed_mode					: bool
 		method graphical_state_space		: graphical_state_space
 		method with_graphics_source			: bool

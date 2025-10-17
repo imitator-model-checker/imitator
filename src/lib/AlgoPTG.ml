@@ -842,7 +842,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let init_exact = if recompute_init_exact then self#init_is_exact init else false in
 
 		let time_out = match options#time_limit with 
-			Some time_limit -> ImitatorUtilities.time_from start_time > float_of_int time_limit
+			Some time_limit -> ImitatorUtilities.time_from start_time > time_limit
 			| None -> false
 		in
 

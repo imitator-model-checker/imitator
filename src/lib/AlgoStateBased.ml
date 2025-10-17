@@ -2530,7 +2530,7 @@ let check_limits (options : Options.imitator_options) (current_depth_option : in
 	begin
 	match options#time_limit, start_time_option with
 		| Some limit, Some start_time ->
-			if time_from start_time > (float_of_int limit) then(
+			if time_from start_time > limit then(
 				raise (LimitDetectedException Time_limit_reached)
 			)
 		| _ -> ()

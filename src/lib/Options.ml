@@ -1173,7 +1173,7 @@ class imitator_options =
 				("-time-elapsing-after", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: disabled.
 				");
 
-				("-time-limit", Int (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.
+				("-time-limit", Float (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Supports decimal values. Default: no limit.
 				");
 
 				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.
@@ -1857,7 +1857,7 @@ class imitator_options =
 			begin
 			match time_limit with
 				| None -> print_message Verbose_medium "Considering no time limit (default)."
-				| Some limit -> print_warning (Constants.program_name ^ " will try to stop after " ^ (string_of_int limit) ^ " seconds.")
+				| Some limit -> print_warning (Constants.program_name ^ " will try to stop after " ^ (string_of_float limit) ^ " seconds.")
 			end;
 
 			(* Cartography: Tiles limit *)
@@ -1909,7 +1909,7 @@ class imitator_options =
 					| None -> raise (InternalError ("Impossible situation in options, `-cart-time-limit` should be set at that point"))
 					| Some limit -> limit
 				in
-				time_limit <- Some limit;
+				time_limit <- Some (float_of_int limit);
 			);
 
 
