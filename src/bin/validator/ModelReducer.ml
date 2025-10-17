@@ -29,7 +29,7 @@ let model_is_still_counter_example parsed_model ~options_a ~options_b ~parsed_pr
   Input.set_options options_b;
   let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
   let result_b = ImitatorRunner.run options_b model property_b in 
-  not @@ Comparison.eq_result model result_a result_b
+  not @@ Comparison.eq_result result_a result_b
 
 let minimize_transitions (parsed_model : ParsingStructure.parsed_model) ~original_nb_transitions ~model_is_still_counter_example  = 
 

@@ -8,6 +8,7 @@ type mode =
 type t = {
   mode : mode;
   output_folder_path : string;
+  time_limit: float option;
 }
 
 let default_output = "validator-output"
@@ -15,6 +16,8 @@ let default_output = "validator-output"
 (* Mutable holders populated during parsing *)
 let mode_ref : mode option ref = ref None
 let output_ref = ref default_output
+
+let time_limit_ref = ref None 
 
 let usage_msg =
   "Usage: validator [options]\n\
@@ -38,6 +41,8 @@ let parse_mode (s : string) : mode =
 let set_mode s = mode_ref := Some (parse_mode s)
 let set_output s = output_ref := s
 
+let set_time_limit s = time_limit_ref := Some s
+
 let speclist : (string * Arg.spec * string) list =
   [
     ( "-mode",
@@ -46,6 +51,11 @@ let speclist : (string * Arg.spec * string) list =
     ( "-output",
       Arg.String set_output,
       Printf.sprintf "Output folder path (default: %s)" default_output );
+    ( "-time-limit",
+      Arg.Float set_time_limit,
+      Printf.sprintf "Set time limit for each internal imitator run.
+      Providing -time-limit t is equivalent to including -time-limit=t each arg config file. Supports decimal values."
+      )
   ]
 
 let anon_fun (_ : string) = () (* no positional args right now *)
@@ -64,7 +74,7 @@ let parse (args: string array) : t =
     | None ->
         fail_with_usage "-mode is required. Expected \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\"."
   in
-  { mode; output_folder_path = !output_ref }
+  { mode; output_folder_path = !output_ref; time_limit = !time_limit_ref}
 
 let arg_list : string list =
   List.map (fun (opt, _, _) -> opt) speclist

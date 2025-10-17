@@ -1,13 +1,19 @@
 open Lib
 module ImitatorOptions = Options
 
-let build_imitator_options_and_property ?model_file imitator_args_file   = 
-  let default_args = Array.append [|" "; "-verbose=mute"; "-time-limit=1"|] 
-    (match model_file with 
-    | Some model_file -> [|model_file|]
-    | None -> [||]) 
+let build_imitator_options_and_property ?model_file imitator_args_file ~(validator_options : ValidatorOptions.t)   = 
+(* append empty string in beginning to please argument parser *)
+  let time_limit_arg = match validator_options.time_limit with 
+    | Some t -> [|Printf.sprintf "-time-limit=%f" t|] 
+    | None -> [||] 
   in 
-                    (* append empty string in beginning to please argument parser *)
+  let model_file_arg = match model_file with 
+    | Some model_file -> [|model_file|]
+    | None -> [||]
+  in
+
+  let default_args = Array.concat [[|" "; "-verbose=mute"|]; time_limit_arg; model_file_arg] in
+                    
   let arg_array = Array.append default_args @@ Arg.read_arg imitator_args_file in
   let options = new ImitatorOptions.imitator_options in
   let skip_model = Option.is_none model_file in 

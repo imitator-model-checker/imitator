@@ -6,6 +6,7 @@ type mode =
 type t = {
   mode : mode;
   output_folder_path : string;
+  time_limit: float option;
 }
 
 val parse : string array -> t
