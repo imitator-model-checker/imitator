@@ -65,7 +65,7 @@ let () =
 
           let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
           let file_name = Printf.sprintf "counter_example_%d" !i in 
-          Printf.printf "Saving reduced counter example as %s/%s\n.imi" output_folder file_name; 
+          Printf.printf "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
           ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
           raise exn : unit);
 
