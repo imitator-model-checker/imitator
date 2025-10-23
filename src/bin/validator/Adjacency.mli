@@ -1,0 +1,1 @@
+val generate : sampler:Sampler.t -> nodes:int -> density:float -> bool array array 

@@ -95,22 +95,13 @@ module SimpleModel = struct
         bool_expr_from_sampler sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
       ))
 
-  let adjacency_matrix_from_sampler ~rows ~columns ~sampler ~density ~nb_clocks ~nb_parameters  =
-    let matrix : (transition option) array array = Array.make_matrix rows columns None in 
+  let transition_of_edge sampler nb_clocks nb_parameters has_edge =
+    if has_edge then Some (transition_from_sampler sampler ~nb_clocks ~nb_parameters)
+    else None
 
-    (* Spanning tree *)
-    let parents = ref [0] in
-    for i = 1 to rows - 1 do 
-      let parent = Sampler.sample_uniform sampler ~from:!parents in
-      let trans = transition_from_sampler sampler ~nb_clocks ~nb_parameters in 
-      matrix.(parent).(i) <- Some trans;
-      parents := i::!parents
-    done;
-    
-    let transform = function Some x -> Some x | None -> 
-      if Sampler.next_bool sampler ~prob:density then Some (transition_from_sampler sampler ~nb_clocks ~nb_parameters) else None in  
-    Array.map (Array.map transform) matrix
-
+  let generate_transition_matrix ~sampler ~density ~nb_clocks ~nb_parameters ~nb_locations =
+    Adjacency.generate ~sampler ~nodes:nb_locations ~density
+    |> Array.map (Array.map (transition_of_edge sampler nb_clocks nb_parameters))
   let gen : t gen =                 
     map [range ~min:1 1; range ~min:1 2; range ~min:1 1; bytes_fixed 128] 
       (fun nb_auto nb_clocks nb_parameters random_blob ->
@@ -118,7 +109,7 @@ module SimpleModel = struct
         let nb_loc_of_automaton = Array.init nb_auto (fun _ -> Sampler.next_int sampler ~min:10 5) in 
         let matrices =
         List.init nb_auto (fun a_id ->
-          adjacency_matrix_from_sampler ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~sampler ~density:0.1 ~nb_clocks ~nb_parameters)
+          generate_transition_matrix ~nb_locations:(nb_loc_of_automaton.(a_id)) ~sampler ~density:0.1 ~nb_clocks ~nb_parameters)
         in
         let accepting = accepting_locations_from_sampler ~nb_auto ~nb_loc_of_automaton ~sampler ~guarantee_accepting:true in 
         let invariants = invariants_from_sampler ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~nb_parameters ~sampler in
