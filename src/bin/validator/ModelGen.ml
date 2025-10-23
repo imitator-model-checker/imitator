@@ -25,38 +25,18 @@ module SimpleModel = struct
     nb_parameters : int;
   }
 
-  type byte_reader = { s : string; mutable i : int }
-
-  let next_byte br =
-    let c = String.get br.s (br.i mod String.length br.s) in
-    br.i <- br.i + 1;
-    int_of_char c
-
-  let next_bool br threshold =
-    next_byte br < threshold
-
-  let next_int br ?(min = 0) range =
-    let max = min + range in 
-    assert (max <= 255);
-    (next_byte br mod max) + min
-
-  let sample_uniform br xs =
-    let idx = next_int br (List.length xs) in 
-    List.nth xs idx
-    
 
   let const_int_from_bytes br = 
-    let sample = next_int br 10 in 
+    let sample = Sampler.next_int br 10 in 
     SConstant sample
 
   let variable_from_bytes br ~nb_clocks ~nb_parameters = 
-    let coinflip = next_bool br 128 in
-    match coinflip with 
-    | true ->  
-      let sample = next_int br nb_clocks in 
+    let coinflip = Sampler.next_bool br ~prob:0.5 in
+    if nb_parameters = 0 || coinflip then 
+      let sample = Sampler.next_int br nb_clocks in 
       SClock sample
-    | false -> 
-      let sample = next_int br nb_parameters in 
+    else
+      let sample = Sampler.next_int br nb_parameters in 
       SParam sample
     
     
@@ -64,7 +44,7 @@ module SimpleModel = struct
   let comparison_from_bytes br ~nb_clocks ~nb_parameters ~opers = 
     let clock = variable_from_bytes br ~nb_clocks ~nb_parameters in 
     let constant = const_int_from_bytes br in 
-    let oper = sample_uniform br opers in 
+    let oper = Sampler.sample_uniform br ~from:opers in 
     SComp (clock, oper, constant)
 
   let bool_expr_from_bytes br ~nb_clocks ~nb_parameters ~opers = 
@@ -73,7 +53,7 @@ module SimpleModel = struct
     
   let resets_from_bytes br nb_clocks =
     (* each clock has an independent chance to be added to the list of resets *)
-    let should_add_reset () = next_bool br 25 in
+    let should_add_reset () = Sampler.next_bool br ~prob:0.1 in
     let rec compute_resets acc = function
     | 0 -> acc
     | n -> if should_add_reset () then compute_resets ((n - 1)  :: acc) (n - 1) else acc in 
@@ -81,7 +61,7 @@ module SimpleModel = struct
 
   let transition_from_bytes br ~nb_clocks ~nb_parameters =
     let guard = bool_expr_from_bytes br ~nb_clocks ~nb_parameters ~opers:[EQ; GEQ; G; L; LEQ] in 
-    let controllable = next_bool br 126 in 
+    let controllable = Sampler.next_bool br ~prob:0.5 in 
     let resets = resets_from_bytes br nb_clocks in
     {controllable; guard; resets}
 
@@ -98,52 +78,50 @@ module SimpleModel = struct
     num /. denom  
 
 
-  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~guarantee_accepting  =
+  let accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~sampler ~guarantee_accepting  =
     Array.init nb_auto (fun i ->
       let accepting_loc_exists = ref false in 
       Array.init nb_loc_of_automaton.(i) (fun j ->
         let prob = prob_accepting (nb_loc_of_automaton.(i)) j in
-        let threshold = int_of_float (255. *. prob) in
-        let accepting = next_bool byte_reader threshold in
+        let accepting = Sampler.next_bool sampler ~prob in
         if accepting then accepting_loc_exists := true;
         let forced_accepting =  j = nb_loc_of_automaton.(i) - 1 && not !accepting_loc_exists && guarantee_accepting in
         accepting || forced_accepting 
       ))
 
-  let invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~nb_clocks ~nb_parameters = 
+  let invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~sampler ~nb_clocks ~nb_parameters = 
     Array.init nb_auto (fun i -> 
       Array.init nb_loc_of_automaton.(i) (fun _ ->
-        bool_expr_from_bytes byte_reader ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
+        bool_expr_from_bytes sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
       ))
 
-  let adjacency_matrix_from_bytes ~rows ~columns ~byte_reader ~density ~nb_clocks ~nb_parameters  =
+  let adjacency_matrix_from_bytes ~rows ~columns ~sampler ~density ~nb_clocks ~nb_parameters  =
     let matrix : (transition option) array array = Array.make_matrix rows columns None in 
 
     (* Spanning tree *)
     let parents = ref [0] in
     for i = 1 to rows - 1 do 
-      let parent = sample_uniform byte_reader !parents in
-      let trans = transition_from_bytes byte_reader ~nb_clocks ~nb_parameters in 
+      let parent = Sampler.sample_uniform sampler ~from:!parents in
+      let trans = transition_from_bytes sampler ~nb_clocks ~nb_parameters in 
       matrix.(parent).(i) <- Some trans;
       parents := i::!parents
     done;
     
-    let threshold = int_of_float (255. *. density) in 
     let transform = function Some x -> Some x | None -> 
-      if next_bool byte_reader threshold then Some (transition_from_bytes byte_reader ~nb_clocks ~nb_parameters) else None in  
+      if Sampler.next_bool sampler ~prob:density then Some (transition_from_bytes sampler ~nb_clocks ~nb_parameters) else None in  
     Array.map (Array.map transform) matrix
 
   let gen : t gen =                 
     map [range ~min:1 1; range ~min:1 2; range ~min:1 1; bytes_fixed 128] 
       (fun nb_auto nb_clocks nb_parameters random_blob ->
-        let byte_reader = {s = random_blob; i = 0} in 
-        let nb_loc_of_automaton = Array.init nb_auto (fun _ -> next_int byte_reader ~min:10 5) in 
+        let sampler = Sampler.create ~seed:random_blob in 
+        let nb_loc_of_automaton = Array.init nb_auto (fun _ -> Sampler.next_int sampler ~min:10 5) in 
         let matrices =
         List.init nb_auto (fun a_id ->
-          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~byte_reader ~density:0.1 ~nb_clocks ~nb_parameters)
+          adjacency_matrix_from_bytes ~rows:(nb_loc_of_automaton.(a_id)) ~columns:(nb_loc_of_automaton.(a_id)) ~sampler ~density:0.1 ~nb_clocks ~nb_parameters)
         in
-        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~byte_reader ~guarantee_accepting:true in 
-        let invariants = invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~nb_parameters ~byte_reader in
+        let accepting = accepting_locations_from_bytes ~nb_auto ~nb_loc_of_automaton ~sampler ~guarantee_accepting:true in 
+        let invariants = invariants_from_bytes ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~nb_parameters ~sampler in
         { transitions = matrices; accepting; nb_clocks; nb_parameters; invariants})
 
 end
