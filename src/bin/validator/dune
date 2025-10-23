@@ -1,7 +1,7 @@
 (executable
  (name VALIDATOR)
  (modes exe)
- (libraries lib crowbar)
+ (libraries lib crowbar gen)
  (link_flags
   (:include link_flags.%{system})
   (:standard

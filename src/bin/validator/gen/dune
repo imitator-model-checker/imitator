@@ -1,0 +1,9 @@
+(library
+ (name gen)
+ (libraries lib crowbar)
+)
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
