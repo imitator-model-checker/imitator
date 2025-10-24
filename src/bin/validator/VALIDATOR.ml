@@ -1,6 +1,9 @@
 open Crowbar
 open Lib
 open Gen
+open Comp
+open Runner
+open Red
 
 module ImitatorOptions = Options
 
@@ -52,7 +55,7 @@ let () =
       let result_b = ImitatorRunner.run options_b model property_b in
 
       (try 
-        Comparison.check_eq_result model result_a result_b
+        ComparisonCrowbar.check_eq_result model result_a result_b
       with exn -> 
         match exn with 
         | Comparison.TimeOutResult -> incr time_outs

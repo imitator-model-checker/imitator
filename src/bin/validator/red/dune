@@ -1,0 +1,9 @@
+(library
+ (name red)
+ (libraries lib comp runner)
+)
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

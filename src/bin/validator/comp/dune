@@ -1,0 +1,9 @@
+(library
+ (name comp)
+ (libraries lib crowbar)
+)
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

@@ -1,0 +1,9 @@
+(library
+ (name runner)
+ (libraries lib)
+)
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
