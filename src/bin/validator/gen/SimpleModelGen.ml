@@ -21,7 +21,7 @@ module Expr = struct
     let oper = Sampler.sample_uniform sampler ~from:opers in 
     SComp (clock, oper, constant)
 
-  let bool_expr sampler ~nb_clocks ~nb_parameters ~opers = 
+  let formula sampler ~nb_clocks ~nb_parameters ~opers = 
     let comparison = comparison sampler ~nb_clocks ~nb_parameters ~opers in
     [comparison]
 end
@@ -36,7 +36,7 @@ module Transition = struct
     compute_resets [] nb_clocks
 
   let transition sampler ~nb_clocks ~nb_parameters =
-    let guard = Expr.bool_expr sampler ~nb_clocks ~nb_parameters ~opers:[EQ; GEQ; G; L; LEQ] in 
+    let guard = Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[EQ; GEQ; G; L; LEQ] in 
     let controllable = Sampler.next_bool sampler ~prob:0.5 in 
     let resets = resets sampler nb_clocks in
     {controllable; guard; resets}
@@ -71,7 +71,7 @@ module Automaton = struct
   let invariants ~nb_auto ~nb_loc_of_automaton ~sampler ~nb_clocks ~nb_parameters = 
     Array.init nb_auto (fun i -> 
       Array.init nb_loc_of_automaton.(i) (fun _ ->
-        Expr.bool_expr sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
+        Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
       ))
 
   let transition_of_edge sampler nb_clocks nb_parameters has_edge =
