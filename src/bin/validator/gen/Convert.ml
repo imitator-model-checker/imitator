@@ -64,7 +64,7 @@ let location_to_parsed a_id location_id simple_transitions invariants accepting 
     transitions = !transitions;
   }
 
-let automaton_to_parsed (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) (invariants : SimpleModel.bool_expr list array): ParsingStructure.parsed_automaton =
+let automaton_to_parsed (a_id : int) (matrix : (transition option) array array) (accepting : bool array) (invariants : bool_expr list array): ParsingStructure.parsed_automaton =
   let locations =
     Array.mapi (fun i row -> 
       location_to_parsed a_id i row invariants accepting

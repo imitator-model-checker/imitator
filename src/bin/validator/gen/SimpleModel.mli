@@ -1,3 +1,4 @@
+
 type cop = 
 | EQ | L | LEQ | G | GEQ
 
@@ -18,5 +19,3 @@ type t = {
   nb_clocks: int;
   nb_parameters : int;
 }
-
-val gen : t Crowbar.gen
