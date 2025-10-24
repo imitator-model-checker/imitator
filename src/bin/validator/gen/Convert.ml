@@ -1,100 +1,124 @@
 open Lib
-let automaton_name n = Printf.sprintf "automaton_%d" n
-let location_name n = Printf.sprintf "loc_%d" n
+open ParsingStructure
+open SimpleModel
 
-let clock_name n = Printf.sprintf "clock_%d" n 
+module Names = struct 
+  let automaton n = Printf.sprintf "automaton_%d" n
+  let location n = Printf.sprintf "l%d" n
+  let clock = function 0 -> "x" | 1 -> "y" | 2 -> "z" | n -> Printf.sprintf "clk_%d" n 
+  let parameter = function 0 -> "p" | 1 -> "q" | 2 -> "r" | n -> Printf.sprintf "p_%d" n 
+  let controllable_action a_id = Printf.sprintf "c%d" a_id
+  let uncontrollable_action a_id = Printf.sprintf "u%d" a_id
+  let actions a_id = [controllable_action a_id; uncontrollable_action a_id]
+end
 
-let parameter_name n = Printf.sprintf "p_%d" n
+module Expr = struct 
+  let term = function
+    | SConstant i -> Parsed_term (Parsed_factor (Parsed_constant (Int_value (Int32.of_int i))))
+    | SClock i    -> Parsed_term (Parsed_factor (Parsed_variable (Names.clock i, 0)))
+    | SParam i    -> Parsed_term (Parsed_factor (Parsed_variable (Names.parameter i, 0)))
 
+  let op = function
+  | EQ -> PARSED_OP_EQ
+  | L  -> PARSED_OP_L
+  | LEQ -> PARSED_OP_LEQ
+  | G  -> PARSED_OP_G
+  | GEQ -> PARSED_OP_GEQ
 
-let parsed_automaton_of_matrix (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) (invariants : SimpleModel.bool_expr list array): ParsingStructure.parsed_automaton =
-  let open SimpleModel in 
-  let open ParsingStructure in 
+  let bool_expr = function
+    | SComp (t1, op_, t2) ->
+        Parsed_comparison
+          (Parsed_arithmetic_expr (term t1), op op_, Parsed_arithmetic_expr (term t2))
 
-  let parsed_term_of_term term = 
-    let factor =
-    match term with 
-    | SConstant i -> Parsed_constant (Int_value (Int32.of_int i))
-    | SClock i -> Parsed_variable (clock_name i, 0)
-    | SParam i -> Parsed_variable (parameter_name i, 0) in
-    Parsed_term (Parsed_factor factor) in
+  let reset i =
+    let zero = Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero))) in
+    let value = Parsed_discrete_bool_expr (Parsed_arithmetic_expr zero) in
+    Parsed_assignment (Parsed_scalar_update (Names.clock i, 0), value)
+end 
 
-  let parsed_op_of_op = function EQ -> PARSED_OP_EQ | L -> PARSED_OP_L | LEQ -> PARSED_OP_LEQ | G -> PARSED_OP_G | GEQ -> PARSED_OP_GEQ in 
+let transition_to_parsed a_id destination_id = function {controllable;guard;resets} ->
+  let guard = List.map Expr.bool_expr guard in
+  let parsed_seq_code_bloc = List.map Expr.reset resets in
+  let label =
+    if controllable then Names.controllable_action a_id
+    else Names.uncontrollable_action a_id 
+  in
+  (guard, parsed_seq_code_bloc, Sync label, Names.location destination_id)
 
-  let parsed_dicrete_boolean_expression_of_bool_expr bool_expr = 
-    match bool_expr with 
-    | SComp (t1, op, t2) -> 
-      let parsed_t1 = parsed_term_of_term t1 in 
-      let parsed_t2 = parsed_term_of_term t2 in 
-      let parsed_op = parsed_op_of_op op in
-      Parsed_comparison ((Parsed_arithmetic_expr parsed_t1), parsed_op, (Parsed_arithmetic_expr parsed_t2)) in
-  
-  let parsed_instruction_of_reset reset = 
-    let term_0 = Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero))) in
-    let bool_expr_0 = Parsed_discrete_bool_expr (Parsed_arithmetic_expr term_0) in
-    let variable = Parsed_scalar_update (clock_name reset, 0) in
-    Parsed_assignment (variable, bool_expr_0) in
+let location_to_parsed a_id location_id simple_transitions invariants accepting = 
+  let transitions = ref [] in 
+  Array.iteri (fun j transition_option ->
+    Option.may (fun simple_transition -> 
+      transitions := (transition_to_parsed a_id j simple_transition)::!transitions
+    ) transition_option
+  ) simple_transitions;
+  let invariant = List.map Expr.bool_expr invariants.(location_id) in 
+  {
+    name = Names.location location_id;
+    urgency = Parsed_location_nonurgent;
+    acceptance = if accepting.(location_id) then Parsed_location_accepting else Parsed_location_nonaccepting;
+    cost = None;
+    invariant;
+    stopped = [];
+    flow = [];
+    transitions = !transitions;
+  }
 
+let automaton_to_parsed (a_id : int) (matrix : (SimpleModel.transition option) array array) (accepting : bool array) (invariants : SimpleModel.bool_expr list array): ParsingStructure.parsed_automaton =
   let locations =
     Array.mapi (fun i row -> 
-      let transitions = ref [] in 
-      Array.iteri (fun j transition ->
-        match transition with 
-        | Some {controllable; guard; resets} ->
-          let guard = List.map parsed_dicrete_boolean_expression_of_bool_expr guard in  
-          let label = Printf.sprintf (if controllable then "c%d" else "u%d") a_id in 
-          let parsed_seq_code_bloc = List.map parsed_instruction_of_reset resets in 
-          transitions := (guard, parsed_seq_code_bloc, Sync label, location_name j) :: !transitions
-        | None -> ()
-      ) row;
-      let invariant = List.map parsed_dicrete_boolean_expression_of_bool_expr invariants.(i) in 
-      {
-        name = location_name i;
-        urgency = Parsed_location_nonurgent;
-        acceptance = if accepting.(i) then Parsed_location_accepting else Parsed_location_nonaccepting;
-        cost = None;
-        invariant;
-        stopped = [];
-        flow = [];
-        transitions = !transitions;
-      }
+      location_to_parsed a_id i row invariants accepting
     ) matrix
     |> Array.to_list
   in
-  (automaton_name a_id, ["c" ^ string_of_int a_id; "u" ^ string_of_int a_id], locations)
+  (Names.automaton a_id, Names.actions a_id, locations)
 
 
-let parsed_model_of_simple_model (sm : SimpleModel.t) : ParsingStructure.parsed_model = 
-  let open SimpleModel in
-  let nb_automata = List.length sm.transitions in 
-  
-  let init_loc_definition = List.init nb_automata (fun i -> ParsingStructure.Parsed_loc_assignment (automaton_name i, location_name 0)) in
-  let init_clock_definition = List.init sm.nb_clocks (fun i -> 
-    ParsingStructure.Parsed_linear_predicate (Parsed_linear_constraint 
-    (Linear_term (Variable (NumConst.one, clock_name i)), PARSED_OP_EQ, Linear_term (Constant (NumConst.zero)))))
+let init_locations nb_automata =
+  List.init nb_automata (fun i ->
+    Parsed_loc_assignment (Names.automaton i, Names.location 0))
+
+let init_clocks nb_clocks =
+  List.init nb_clocks (fun i ->
+    Parsed_linear_predicate (Parsed_linear_constraint
+      (Linear_term (Variable (NumConst.one, Names.clock i)),
+       PARSED_OP_EQ,
+       Linear_term (Constant (NumConst.zero)))))
+
+let init_parameters nb_params =
+  List.init nb_params (fun i ->
+    Parsed_linear_predicate (Parsed_linear_constraint
+      (Linear_term (Variable (NumConst.one, Names.parameter i)),
+       PARSED_OP_GEQ,
+       Linear_term (Constant (NumConst.zero)))))
+
+let controllable_actions sm =
+  List.filteri (fun i _ ->
+    Array.exists (Array.exists (function Some t -> t.controllable | None -> false))
+      (List.nth sm.automata i)
+  ) (List.init (List.length sm.automata) Names.controllable_action)
+
+let variable_declarations sm =
+  let clocks = List.init sm.nb_clocks (fun i -> (Names.clock i, None)) in
+  let params = List.init sm.nb_parameters (fun i -> (Names.parameter i, None)) in
+  [DiscreteType.Var_type_clock, clocks;
+   DiscreteType.Var_type_parameter, params]
+
+let parsed_model_of_simple_model sm =
+  let nb_automata = List.length sm.automata in
+  let automata =
+    List.mapi (fun i matrix ->
+      automaton_to_parsed i matrix sm.accepting.(i) sm.invariants.(i))
+    sm.automata
   in
-  let init_parameter_definition = List.init sm.nb_parameters (fun i -> 
-    ParsingStructure.Parsed_linear_predicate (Parsed_linear_constraint 
-    (Linear_term (Variable (NumConst.one, parameter_name i)), PARSED_OP_GEQ, Linear_term (Constant (NumConst.zero)))))
-  in
-  let controllable_actions_list = 
-    List.filteri (fun i _ -> Array.exists (fun automata_transitions -> 
-      Array.exists (fun transition -> match transition with None -> false | Some t -> t.controllable) automata_transitions)
-      (List.nth sm.transitions i)
-    ) @@ 
-    List.init nb_automata (fun i -> Printf.sprintf "c%d" i) in 
-  let automata = List.mapi (fun i matrix -> 
-    parsed_automaton_of_matrix i matrix sm.accepting.(i) sm.invariants.(i)
-  ) sm.transitions in
-  
-  let clock_decls = List.init sm.nb_clocks (fun i -> (clock_name i, None)) in 
-  let param_decls = List.init sm.nb_parameters (fun i -> (parameter_name i, None)) in
-  let variable_declarations = [DiscreteType.Var_type_clock, clock_decls; DiscreteType.Var_type_parameter, param_decls] in
-
   {
-      automata;
-      controllable_actions = Parsed_controllable_actions controllable_actions_list;
-	    variable_declarations;
-	    fun_definitions = [];
-	    init_definition = init_loc_definition @ init_clock_definition @ init_parameter_definition;
+    automata;
+    controllable_actions =
+      Parsed_controllable_actions (controllable_actions sm);
+    variable_declarations = variable_declarations sm;
+    fun_definitions = [];
+    init_definition =
+      init_locations nb_automata
+      @ init_clocks sm.nb_clocks
+      @ init_parameters sm.nb_parameters;
   }

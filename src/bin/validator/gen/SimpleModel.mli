@@ -12,7 +12,7 @@ type bool_expr =
 type transition = {controllable : bool; guard : bool_expr list; resets: int list}
 
 type t = { 
-  transitions : (transition option) array array list;
+  automata : (transition option) array array list;
   accepting : bool array array;
   invariants : bool_expr list array array;
   nb_clocks: int;

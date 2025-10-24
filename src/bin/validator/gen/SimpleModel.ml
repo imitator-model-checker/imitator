@@ -15,7 +15,7 @@ type bool_expr =
 
 type transition = {controllable : bool; guard : bool_expr list; resets: int list}
 type t = { 
-  transitions : (transition option) array array list;
+  automata : (transition option) array array list;
   accepting : bool array array;
   invariants : bool_expr list array array;
   nb_clocks: int;
@@ -110,4 +110,4 @@ let gen : t gen =
       in
       let accepting = accepting_locations_from_sampler ~nb_auto ~nb_loc_of_automaton ~sampler ~guarantee_accepting:true in 
       let invariants = invariants_from_sampler ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~nb_parameters ~sampler in
-      { transitions = matrices; accepting; nb_clocks; nb_parameters; invariants})
+      { automata = matrices; accepting; nb_clocks; nb_parameters; invariants})
