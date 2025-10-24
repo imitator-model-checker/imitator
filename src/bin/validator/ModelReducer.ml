@@ -71,7 +71,6 @@ let adjacency_matrix_of_parsed_locations parsed_locations =
   adj
 
 let remove_islands_from_automaton ((names, actions, locations) : ParsingStructure.parsed_automaton) =
-  let open ParsingStructure in 
   let adj = adjacency_matrix_of_parsed_locations locations in 
   let n = Array.length adj in
   let indeg = Array.make n false in
