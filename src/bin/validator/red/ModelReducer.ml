@@ -24,13 +24,9 @@ let remove_transition_from_parsed_model (parsed_model : ParsingStructure.parsed_
   {parsed_model with automata = automata'}
 
 let model_is_still_counter_example parsed_model ~options_a ~options_b ~parsed_property_option_a ~parsed_property_option_b = 
-  Input.set_options options_a;
-  let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_option_a in 
-  let result_a = ImitatorRunner.run options_a model property_a in 
+  let result_a, _ = ModelRunner.run options_a parsed_model parsed_property_option_a in 
+  let result_b, _ = ModelRunner.run options_b parsed_model parsed_property_option_b in 
 
-  Input.set_options options_b;
-  let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
-  let result_b = ImitatorRunner.run options_b model property_b in 
   not @@ Comparison.eq_result result_a result_b
 
 let minimize_transitions (parsed_model : ParsingStructure.parsed_model) ~original_nb_transitions ~model_is_still_counter_example  = 

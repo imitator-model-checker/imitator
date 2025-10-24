@@ -46,13 +46,9 @@ let () =
 
     add_test ~name:"The two configurations give the same result" [ModelGen.parsed_model] (fun parsed_model ->
       print_endline (Printf.sprintf "\x1b[2K[%d | TO: %d]" !i !time_outs);
-      Input.set_options options_a;
-      let model, property_a = ModelConverter.abstract_structures_of_parsing_structures options_a parsed_model parsed_property_option_a in 
-      let result_a = ImitatorRunner.run options_a model property_a in 
-
-      Input.set_options options_b;
-      let model, property_b = ModelConverter.abstract_structures_of_parsing_structures options_b parsed_model parsed_property_option_b in 
-      let result_b = ImitatorRunner.run options_b model property_b in
+      
+      let result_a, _ = ModelRunner.run options_a parsed_model parsed_property_option_a in 
+      let result_b, model = ModelRunner.run options_b parsed_model parsed_property_option_b in 
 
       (try 
         ComparisonCrowbar.check_eq_result model result_a result_b
@@ -72,8 +68,6 @@ let () =
           Printf.printf "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
           ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
           raise exn : unit);
-
-      State.flush_invariant_cache ();
       print_string "\x1b[1F";
       incr i
     )
