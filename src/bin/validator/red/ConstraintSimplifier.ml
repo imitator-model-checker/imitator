@@ -38,6 +38,53 @@ module Invariants = struct
       ) model
 end
 
+module Guards = struct 
+let non_trivial_guard_indices automata =
+  automata
+  |> List.mapi (fun ai (_, _, locs) ->
+       locs
+       |> List.mapi (fun li loc ->
+            loc.transitions
+            |> List.mapi (fun ti (guards, _, _, _) ->
+                 if guards <> true_constraint then Some (ai, li, ti) else None)
+            |> List.filter_map (fun x -> x))
+       |> List.flatten)
+  |> List.flatten
+
+  let set_guard_true (model : parsed_model) (ai, li, ti) =
+    let automata' =
+      List.mapi (fun i (name, actions, locations) ->
+        if i = ai then
+          let locations' =
+            List.mapi (fun j loc ->
+              if j = li then
+                let transitions' =
+                  List.mapi (fun k (guards, code, sync, target) ->
+                    if k = ti then
+                      (true_constraint, code, sync, target)
+                    else
+                      (guards, code, sync, target)
+                  ) loc.transitions
+                in
+                { loc with transitions = transitions' }
+              else loc
+            ) locations
+          in
+          (name, actions, locations')
+        else
+          (name, actions, locations)
+      ) model.automata
+    in
+    { model with automata = automata' }
+  let simplify ~predicate model =
+    non_trivial_guard_indices model.automata
+    |> List.fold_left (fun acc idx ->
+        let candidate = set_guard_true acc idx in
+        if predicate candidate then candidate else acc
+      ) model
+end
+
 let simplify ~predicate model = 
-  model |> 
-  Invariants.simplify ~predicate
+  model 
+  |> Invariants.simplify ~predicate
+  |> Guards.simplify ~predicate
