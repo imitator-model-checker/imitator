@@ -5170,7 +5170,12 @@ let generic_close_clocks_px_linear_constraint bound_type (k : px_linear_constrai
 					| Lower -> Less_Or_Equal (x,y))
 				| _ -> inequality
 			end 
-		|_ -> inequality
+		| Equal(x, y) -> 
+				let x_sign = get_clock_sign_from_term x in 
+				let y_sign = get_clock_sign_from_term y in 
+				match x_sign, y_sign with 
+				| Some _, None | None, Some _ -> Less_Than (x, x) (* false*)
+				| _ -> inequality
 	in
 	(* Get the list of inequalities *)
 	let inequality_list = px_get_minimized_inequalities k in
@@ -5236,6 +5241,15 @@ let generic_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_l
 	px_nnconvex_constraint_of_px_linear_constraints bounds_in, (* IN - bounds inside of input *)
 	px_nnconvex_constraint_of_px_linear_constraints bounds_out (* OUT - bounds outside of input *)
 
+let generic_epsilon_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_linear_constraint) = 
+	let inequality_list = px_get_minimized_inequalities k in 
+	inequality_list 
+	|> List.filter_map @@ extract_parametric_bound bound_type bound_shape
+	|> List.map fst
+	|> List.map (fun equality -> make_px_constraint (equality::inequality_list))
+	|> px_nnconvex_constraint_of_px_linear_constraints
+	
+
 (* Computes the 'face' of a px_linear constraint - either the upper or lower *)
 let precise_temporal_upper_bound_px_linear_constraint = 
 	generic_temporal_bound_px_linear_constraint Upper (fun _ x y -> Equal(x,y))
@@ -5250,7 +5264,7 @@ let epsilon_temporal_upper_bound_px_linear_constraint (epsilon_parameter : varia
 	 | P -> Greater_Or_Equal (clock_term, Minus(plt_term, epsilon))
 	 | M -> Less_Or_Equal (clock_term, Plus(plt_term, epsilon))
 	in 
-	generic_temporal_bound_px_linear_constraint Upper bound_shape
+	generic_epsilon_temporal_bound_px_linear_constraint Upper bound_shape
 
 let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : variable) =
 	let epsilon = Variable(epsilon_parameter) in 
@@ -5258,7 +5272,7 @@ let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : varia
 	| P -> Less_Or_Equal (clocK_term, Plus(plt_term, epsilon))
 	| M -> Greater_Or_Equal (clocK_term, Minus(plt_term, epsilon))
  in
-	generic_temporal_bound_px_linear_constraint Lower bound_shape
+	generic_epsilon_temporal_bound_px_linear_constraint Lower bound_shape
 
 (* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
 let is_px_linear_upper_bounded (k : px_linear_constraint) = 

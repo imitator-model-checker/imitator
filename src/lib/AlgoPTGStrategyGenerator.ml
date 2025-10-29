@@ -378,21 +378,19 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
             else
               [ActionEntry {e with prioritized_winning_zone = intersection}]
           in
-
-          let bound_in, bound_out = LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint epsilon_param winning_move in
-          LinearConstraint.px_nnconvex_union_assign bound_in bound_out;
-          bound_in |>
-          LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint |>
-          List.fold_left (
-            fun acc k ->
-              let pxd_past =  LinearConstraint.pxd_of_px_constraint k in  
-              AlgoStateBased.apply_time_past_no_stopwatch pxd_past; (* TODO: use normal time past function ?*)
-              let px_past = LinearConstraint.pxd_hide_discrete_and_collapse pxd_past in 
-              let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
-              LinearConstraint.px_nnconvex_px_intersection_assign intersection px_past;
-              let new_entry = ActionEntry {e with winning_move = k; prioritized_winning_zone = intersection}  in 
-              new_entry::acc
-          ) init
+          winning_move
+          |> LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint epsilon_param
+          |> LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint
+          |> List.fold_left (
+              fun acc k ->
+                let pxd_past =  LinearConstraint.pxd_of_px_constraint k in  
+                AlgoStateBased.apply_time_past_no_stopwatch pxd_past; (* TODO: use normal time past function ?*)
+                let px_past = LinearConstraint.pxd_hide_discrete_and_collapse pxd_past in 
+                let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
+                LinearConstraint.px_nnconvex_px_intersection_assign intersection px_past;
+                let new_entry = ActionEntry {e with winning_move = k; prioritized_winning_zone = intersection}  in 
+                new_entry::acc
+            ) init
         | _ -> [entry]
       ) |>
       List.flatten 
