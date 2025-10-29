@@ -553,8 +553,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone 
 		in
 
-		let invariant = self#constr_of_state_index state_index in
 		let global_location = (state_space#get_state state_index).global_location in
+
+		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in 
 
 		(* forced moves are different if location is urgent! *)
 		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with 
