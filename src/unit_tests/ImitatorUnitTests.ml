@@ -61,8 +61,8 @@ module LinearConstraintTests = struct
       simple_px_constraint "q" "<" 6;
       diagonal_px_constraint "p" "<" "q" 0;
       simple_px_constraint "z" "<=" 2;
-      diagonal_px_constraint "p" "<=" "x" 5;
-      simple_px_constraint "y" ">=" 2;
+      diagonal_px_constraint "p" "<" "x" 5;
+      simple_px_constraint "y" ">" 2;
     ]  in 
     let result = LinearConstraint.close_upper_clocks_px_linear_constraint input in 
     Alcotest.(check @@ neg px_linear_constraint) "sanity check: complex example should not be false" (LinearConstraint.px_false_constraint()) input;
@@ -122,7 +122,7 @@ module LinearConstraintTests = struct
     let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
     nn_convex_px (
       intersection_px_constraint [
-        diagonal_px_constraint "x" ">=" "p" 0;
+        diagonal_px_constraint "x" ">" "p" 0;
         diagonal_px_constraint "y" "=" "q" 2;
       ]
     ) in
@@ -139,12 +139,12 @@ module LinearConstraintTests = struct
     let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
     union_px_constraint [
       intersection_px_constraint [
-        diagonal_px_constraint "x" ">=" "p" 0;
+        diagonal_px_constraint "x" ">" "p" 0;
         diagonal_px_constraint "y" "<=" "q" 2;
         simple_px_constraint "z" "=" 2;
       ];
       intersection_px_constraint [
-        diagonal_px_constraint "x" ">=" "p" 0;
+        diagonal_px_constraint "x" ">" "p" 0;
         diagonal_px_constraint "y" "=" "q" 2;
         simple_px_constraint "z" "<=" 2;
       ];
@@ -222,7 +222,7 @@ let precise_lower_bound_simple_constr_1 () =
     let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
     nn_convex_px (
       intersection_px_constraint [
-        diagonal_px_constraint "x" "<=" "p" 0;
+        diagonal_px_constraint "x" "<" "p" 0;
         diagonal_px_constraint "y" "=" "q" 2;
       ]
     ) in
@@ -239,12 +239,12 @@ let precise_lower_bound_simple_constr_1 () =
     let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
     union_px_constraint [
       intersection_px_constraint [
-        diagonal_px_constraint "x" "<=" "p" 0;
+        diagonal_px_constraint "x" "<" "p" 0;
         diagonal_px_constraint "y" ">=" "q" 2;
         simple_px_constraint "z" "=" 4;
       ];
       intersection_px_constraint [
-        diagonal_px_constraint "x" "<=" "p" 0;
+        diagonal_px_constraint "x" "<" "p" 0;
         diagonal_px_constraint "y" "=" "q" 2;
         simple_px_constraint "z" ">=" 4;
       ];
@@ -273,14 +273,14 @@ let precise_lower_bound_simple_constr_1 () =
 
   let epsilon_upper_bound_simple_constr_1 () =
     let input = simple_px_constraint "x" "<" 5 in
-    let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
+    let expected =
     nn_convex_px (
       intersection_px_constraint [
-        simple_px_constraint "x" "<=" 5;
+        simple_px_constraint "x" "<" 5;
         diagonal_px_constraint "x" ">=" "-epsilon" 5
       ]) in
     let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon upper bound of simple constraint should be correct" expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon upper bound of simple constraint should be correct" expected result
 
 
   let epsilon_upper_bound_complex_constr_1 () = 
@@ -290,37 +290,37 @@ let precise_lower_bound_simple_constr_1 () =
       simple_px_constraint "x" "<" 4;
       simple_px_constraint "y" "<" 4;
     ] in 
-    let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
+    let expected = 
     union_px_constraint [
       intersection_px_constraint[
         diagonal_px_constraint "y" "<=" "x" 2;
         diagonal_px_constraint "x" "<=" "y" 3;
-        simple_px_constraint "x" "<=" 4;
-        simple_px_constraint "y" "<=" 4;
+        simple_px_constraint "x" "<" 4;
+        simple_px_constraint "y" "<" 4;
         diagonal_px_constraint "x" ">=" "-epsilon" 4;
       ];
       intersection_px_constraint[
         diagonal_px_constraint "y" "<=" "x" 2;
         diagonal_px_constraint "x" "<=" "y" 3;
-        simple_px_constraint "x" "<=" 4;
-        simple_px_constraint "y" "<=" 4;
+        simple_px_constraint "x" "<" 4;
+        simple_px_constraint "y" "<" 4;
         diagonal_px_constraint "y" ">=" "-epsilon" 4;
       ]
     ]
     in
     let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon upper bound of complex constraint should be correct" expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon upper bound of complex constraint should be correct" expected result
   
   let epsilon_lower_bound_simple_constr_1 () =
     let input = simple_px_constraint "x" ">" 5 in
-    let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
+    let expected = 
     nn_convex_px (
       intersection_px_constraint [
-        simple_px_constraint "x" ">=" 5;
+        simple_px_constraint "x" ">" 5;
         diagonal_px_constraint "x" "<=" "epsilon" 5
       ]) in
     let result = LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon lower bound of simple constraint should be correct" expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon lower bound of simple constraint should be correct" expected result
 
 
   let epsilon_lower_bound_complex_constr_1 () = 
@@ -330,25 +330,25 @@ let precise_lower_bound_simple_constr_1 () =
       simple_px_constraint "z" ">" 4;
       diagonal_px_constraint "y" ">" "q" 2;
     ] in 
-    let expected = nn_convex_px (LinearConstraint.px_false_constraint()),
+    let expected =
     union_px_constraint [
       intersection_px_constraint [
-        diagonal_px_constraint "x" "<=" "p" 0;
-        diagonal_px_constraint "y" ">=" "q" 2;
-        diagonal_px_constraint "x" "<=" "p" 0;
-        simple_px_constraint "z" ">=" 4;
+        diagonal_px_constraint "x" "<" "p" 0;
+        diagonal_px_constraint "y" ">" "q" 2;
+        diagonal_px_constraint "x" "<" "p" 0;
+        simple_px_constraint "z" ">" 4;
         diagonal_px_constraint "z" "<=" "epsilon" 4;
       ];
       intersection_px_constraint [
-        diagonal_px_constraint "x" "<=" "p" 0;
-        diagonal_px_constraint "y" ">=" "q" 2;
-        diagonal_px_constraint "x" "<=" "p" 0;
-        simple_px_constraint "z" ">=" 4;
+        diagonal_px_constraint "x" "<" "p" 0;
+        diagonal_px_constraint "y" ">" "q" 2;
+        diagonal_px_constraint "x" "<" "p" 0;
+        simple_px_constraint "z" ">" 4;
         multi_diagonal_px_constraint "y" "<=" "q" "epsilon" 2;
       ];
      ] in
     let result = LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon lower bound of complex constraint should be correct" expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon lower bound of complex constraint should be correct" expected result
 
   let precise_upper_bound_split_test () = 
     let input = intersection_px_constraint [
@@ -366,7 +366,7 @@ let precise_lower_bound_simple_constr_1 () =
     ),
     nn_convex_px (
       intersection_px_constraint [
-        diagonal_px_constraint "x" ">=" "p" 0;
+        diagonal_px_constraint "x" ">" "p" 0;
         diagonal_px_constraint "y" "=" "q" 2;
         simple_px_constraint "z" "<=" 2;
       ];
@@ -399,10 +399,9 @@ let precise_lower_bound_simple_constr_1 () =
       intersection_px_constraint [
         simple_px_constraint "x" "=" 5;
         simple_px_constraint "epsilon"">=" 0;
-      ]),
-      nn_convex_px (LinearConstraint.px_false_constraint()) in
+      ]) in
     let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon upper bound of simple constraint should handle equality correctly " expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon upper bound of simple constraint should handle equality correctly " expected result
 
   let epsilon_lower_bound_eq_test () =
     let input = simple_px_constraint "x" "=" 5 in
@@ -411,10 +410,10 @@ let precise_lower_bound_simple_constr_1 () =
       intersection_px_constraint [
         simple_px_constraint "x" "=" 5;
         simple_px_constraint "epsilon"">=" 0;
-      ]),
-      nn_convex_px (LinearConstraint.px_false_constraint()) in
+      ])
+    in
     let result = LinearConstraint.epsilon_temporal_upper_bound_px_linear_constraint (var_of_string "epsilon") input in 
-    Alcotest.(check px_nnconvex_pair) "epsilon lower bound of simple constraint should handle equality correctly " expected result
+    Alcotest.(check px_nnconvex_constraint) "epsilon lower bound of simple constraint should handle equality correctly " expected result
 
 
 

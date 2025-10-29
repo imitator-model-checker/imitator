@@ -785,8 +785,8 @@ val px_nnconvex_constraint_is_equal : px_nnconvex_constraint -> px_nnconvex_cons
 val precise_temporal_upper_bound_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint * px_nnconvex_constraint
 val precise_temporal_lower_bound_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint * px_nnconvex_constraint
 (* Computes the 'face' of a px_linear_constraint with some epsilon parameter - either upper or lower *)
-val epsilon_temporal_upper_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint * px_nnconvex_constraint
-val epsilon_temporal_lower_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint * px_nnconvex_constraint
+val epsilon_temporal_upper_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint
+val epsilon_temporal_lower_bound_px_linear_constraint : variable -> px_linear_constraint -> px_nnconvex_constraint
 
 
 (* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
