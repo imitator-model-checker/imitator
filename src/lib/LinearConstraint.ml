@@ -5170,7 +5170,12 @@ let generic_close_clocks_px_linear_constraint bound_type (k : px_linear_constrai
 					| Lower -> Less_Or_Equal (x,y))
 				| _ -> inequality
 			end 
-		|_ -> inequality
+		| Equal(x, y) -> 
+				let x_sign = get_clock_sign_from_term x in 
+				let y_sign = get_clock_sign_from_term y in 
+				match x_sign, y_sign with 
+				| Some _, None | None, Some _ -> Less_Than (x, x) (* false*)
+				| _ -> inequality
 	in
 	(* Get the list of inequalities *)
 	let inequality_list = px_get_minimized_inequalities k in
