@@ -567,19 +567,53 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			| false ->
 				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
 				
+				if verbose_mode_greater Verbose_low then 
+					print_message Verbose_low 
+					(Printf.sprintf "\tFM Computation:\n\t\tunctrl: %s\n\t\tunctrl_closed: %s\n\t\tctrl: %s\n\t\tctrl_closed: %s\n\t\tinv: %s\n\t\tinv_bound_in: %s\n\t\tinv_bound_out: %s"
+					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone)
+					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone_closed)
+					(green @@ string_of_nnc_zone model.variable_names controllable_zone)
+					(green @@ string_of_nnc_zone model.variable_names controllable_zone_closed)
+					(yellow @@ string_of_zone model.variable_names invariant)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					); 
+
+
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_zone_closed;
+
+				if verbose_mode_greater Verbose_low then 
+					print_message Verbose_low 
+					(Printf.sprintf "\t\tinv_bound_in ∩ unctrl: %s\n\t\tinv_bound_out ∩ unctrl_closed: %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					); 
 
 				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_zone;
 				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed; 
 
+
+				if verbose_mode_greater Verbose_low then 
+					print_message Verbose_low 
+					(Printf.sprintf "\t\t(inv_bound_in ∩ unctrl) ∖ ctrl: %s\n\t\t(inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed: %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					); 
+
+
 				LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
+				if verbose_mode_greater Verbose_low then 
+					print_message Verbose_low 
+					(Printf.sprintf "\t\t((inv_bound_in ∩ unctrl) ∖ ctrl) ∪ ((inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed): %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					); 
 				inv_bound_in
 		in
 			
 		forcedMoves#replace state_index forced_moves;
-		if verbose_mode_greater Verbose_medium then 
-			print_message Verbose_medium (Printf.sprintf "Computed forced moves for state %d: %s" state_index (string_of_nnc_zone model.variable_names forced_moves))
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves))
 		
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
@@ -791,7 +825,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		begin
 			let update_items = self#state_set_to_update_items (depends#find state_index) in 
 			if verbose_mode_greater Verbose_low then 
-				print_message Verbose_low (Printf.sprintf "\t%s %s %s" 
+				print_message Verbose_low (Printf.sprintf "\t%s: %s %s %s" 
+				(string_of_state_index state_space model state_index)
 				(green @@ string_of_nnc_zone model.variable_names orig_winning_zone)
 				(bold "→")
 				(bold @@ green @@ string_of_nnc_zone model.variable_names @@ winningZone#find state_index));
