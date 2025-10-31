@@ -146,7 +146,7 @@ module Structural = struct
       ) locations;
       redir
 
-    let apply ~redirs_per_automaton ~predicate (model : parsed_model) = 
+    let apply ~redirs_per_automaton ~predicate (model : parsed_model) ~action_counter = 
       let resolve aid name =
         let rec aux visited n =
           match Hashtbl.find_opt redirs_per_automaton.(aid) n with
@@ -158,9 +158,19 @@ module Structural = struct
         aux (StringSet.singleton name) name 
       in
 
-      let automata' = 
+      let update_action_counter aid locations drop =
+        locations 
+        |> List.filter (fun loc -> StringSet.mem loc.name drop)
+        |> List.map (fun loc -> loc.transitions)
+        |> List.flatten
+        |> List.filter_map (fun (_ ,_, sync, _) -> match sync with Sync name -> Some name | _ -> None)
+        |> List.iter (ActionCounter.remove_label action_counter ~automaton_id:aid)
+      in
+
+      let automata = 
         List.mapi (fun aid (name, actions, locations) -> 
           let drop = Hashtbl.fold (fun k _ acc -> StringSet.add k acc) redirs_per_automaton.(aid) StringSet.empty in 
+          update_action_counter aid locations drop;
           let locations' = 
             locations 
             |> List.filter (fun loc -> not (StringSet.mem loc.name drop))
@@ -174,7 +184,8 @@ module Structural = struct
                 { loc with transitions = trans' }
               )
           in 
-          (name, actions, locations')
+          let actions' = ActionCounter.filter_local_actions action_counter ~automaton_id:aid actions in  
+          (name, actions', locations')
         ) (model.automata) 
       in
 
@@ -183,19 +194,23 @@ module Structural = struct
         fun name -> List.assoc name map
       in 
 
-      let init_definition' = 
+      let init_definition = 
         model.init_definition
         |> List.map (function 
           | Parsed_loc_assignment (a_name, loc_name) -> 
             Parsed_loc_assignment (a_name, resolve (aid_of_name a_name) loc_name)
           | p -> p) in 
 
-      let candidate = {model with automata = automata'; init_definition = init_definition'} in
+      let controllable_actions = ActionCounter.filter_controllable_actions action_counter model.controllable_actions in 
 
-      if predicate candidate then candidate else (warning (); model) 
+      let candidate = {model with automata; init_definition; controllable_actions} in
+      
+      if predicate candidate 
+      then (ActionCounter.commit action_counter; candidate) 
+      else (ActionCounter.revert action_counter; warning (); model) 
   end
 
-  let coalesce ~predicate (model : parsed_model) = 
+  let coalesce ~predicate ~action_counter (model : parsed_model) = 
     let succ, pred = Graph.build_succ_pred model in
     let classify = Action.classifier model in
     let redirs =
@@ -204,7 +219,7 @@ module Structural = struct
           Coalesce.compute_redirections succ.(aid) pred.(aid) classify locs)
       |> Array.of_list
     in
-    Coalesce.apply ~redirs_per_automaton:redirs ~predicate model
+    Coalesce.apply ~redirs_per_automaton:redirs ~predicate model ~action_counter
 end
 
 module Predicate = struct
@@ -239,7 +254,7 @@ module Predicate = struct
 
     {model with automata = automata'; init_definition = init_definition'}, !succesful
 
-  let one_coalsecing_pass (model : parsed_model) ~predicate = 
+  let one_coalescing_pass (model : parsed_model) ~predicate ~action_counter = 
     let redirs = Array.init (List.length model.automata) (fun _ -> Hashtbl.create 32) in 
     let resolve aid name =
       let rec aux visited n =
@@ -258,25 +273,33 @@ module Predicate = struct
        |> List.fold_left (fun (candidate, aid, changed) location ->
           location.transitions
           |> List.filter (fun (_, _, _, dst) -> dst <> location.name)
-          |> List.fold_left (fun (candidate, aid, changed) (_, _, _, dst) -> 
+          |> List.fold_left (fun (candidate, aid, changed) (_, _, sync, dst) -> 
              let src = resolve aid location.name in 
              let dst = resolve aid dst in 
              if src = dst then (candidate, aid, changed) else 
              let candidate', sucessful = merge_pair candidate ~aid ~src ~dst in
+             (match sync with 
+             | Sync label -> ActionCounter.remove_label action_counter ~automaton_id:aid label
+             | NoSync -> ());
              if sucessful && predicate candidate' then 
               begin 
+                ActionCounter.commit action_counter;
                 Hashtbl.add redirs.(aid) location.name dst;
                 (candidate', aid, true)
               end
-             else (candidate, aid, changed)
+             else 
+              begin
+                ActionCounter.revert action_counter; 
+                (candidate, aid, changed)
+              end
              ) (candidate, aid, changed)
           ) (candidate, aid + 1, changed) 
        ) (model, -1, false) in 
     candidate, changed
 
-  let coalesce ~predicate (model : parsed_model) =
+  let coalesce ~predicate (model : parsed_model) ~action_counter =
     let rec loop model =
-      let model', changed = one_coalsecing_pass model ~predicate
+      let model', changed = one_coalescing_pass model ~predicate ~action_counter
       in
       if changed then loop model' else model'
     in
@@ -284,6 +307,7 @@ module Predicate = struct
 end
 
 let coalesce ~predicate model =
+  let action_counter = ActionCounter.create model in 
   model
-  |> Structural.coalesce ~predicate
-  |> Predicate.coalesce ~predicate
+  |> Structural.coalesce ~predicate ~action_counter
+  |> Predicate.coalesce ~predicate ~action_counter
