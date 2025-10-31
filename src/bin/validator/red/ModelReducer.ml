@@ -4,6 +4,12 @@ let reduce parsed_model ~options_a ~options_b ~parsed_property_option_a ~parsed_
       ~options_a ~options_b
       ~parsed_property_option_a ~parsed_property_option_b
   in
+
+  if not (predicate parsed_model) then begin
+    prerr_endline "[Reducer] Initial model is not a valid counterexample.";
+    exit 1
+  end;
+
   parsed_model
   |> TransitionMinimizer.minimize ~original_nb_transitions ~predicate
   |> Reachability.remove_islands
