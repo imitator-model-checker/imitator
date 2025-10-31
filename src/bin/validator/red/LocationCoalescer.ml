@@ -147,7 +147,7 @@ module Structural = struct
       redir
 
     let apply ~redirs_per_automaton ~predicate (model : parsed_model) = 
-      let rec resolve aid name =
+      let resolve aid name =
         let rec aux visited n =
           match Hashtbl.find_opt redirs_per_automaton.(aid) n with
           | None -> n
@@ -208,7 +208,79 @@ module Structural = struct
 end
 
 module Predicate = struct
-  let coalesce ~predicate model = model
+  let merge_pair (model : parsed_model) ~aid ~src ~dst = 
+    let succesful = ref false in
+    let rewire ((g, code, sync, name) as transition) = 
+      if name = src then (succesful := true; (g, code, sync, dst)) else transition in 
+    let automata' = 
+        List.mapi (fun id (name, actions, locations) -> 
+          let locations' = 
+            if aid = id then 
+              locations 
+              |> List.filter (fun loc -> loc.name <> src)
+              |> List.map (fun loc -> { loc with transitions = List.map rewire loc.transitions })
+            else
+              locations 
+          in 
+          (name, actions, locations')
+        ) (model.automata) 
+    in
+    let aid_of_name = 
+      let map = List.mapi(fun i (a_name, _, _) -> a_name, i) model.automata in
+      fun name -> List.assoc name map
+    in 
+
+    let init_definition' = 
+      model.init_definition
+      |> List.map (function 
+        | Parsed_loc_assignment (a_name, loc_name) when loc_name = src && aid_of_name a_name = aid -> 
+          Parsed_loc_assignment (a_name, dst)
+        | p -> p) in 
+
+    {model with automata = automata'; init_definition = init_definition'}, !succesful
+
+  let one_coalsecing_pass (model : parsed_model) ~predicate = 
+    let redirs = Array.init (List.length model.automata) (fun _ -> Hashtbl.create 32) in 
+    let resolve aid name =
+      let rec aux visited n =
+        match Hashtbl.find_opt redirs.(aid) n with
+        | None -> n
+        | Some s ->
+            if StringSet.mem s visited then n
+            else (aux (StringSet.add s visited) s)
+      in
+      aux (StringSet.singleton name) name 
+    in    
+    let candidate, _, changed =
+    model.automata
+    |> List.fold_left (fun (candidate, aid, changed) (_, _, locations) ->
+       locations
+       |> List.fold_left (fun (candidate, aid, changed) location ->
+          location.transitions
+          |> List.filter (fun (_, _, _, dst) -> dst <> location.name)
+          |> List.fold_left (fun (candidate, aid, changed) (_, _, _, dst) -> 
+             let src = resolve aid location.name in 
+             let dst = resolve aid dst in 
+             if src = dst then (candidate, aid, changed) else 
+             let candidate', sucessful = merge_pair candidate ~aid ~src ~dst in
+             if sucessful && predicate candidate' then 
+              begin 
+                Hashtbl.add redirs.(aid) location.name dst;
+                (candidate', aid, true)
+              end
+             else (candidate, aid, changed)
+             ) (candidate, aid, changed)
+          ) (candidate, aid + 1, changed) 
+       ) (model, -1, false) in 
+    candidate, changed
+
+  let coalesce ~predicate (model : parsed_model) =
+    let rec loop model =
+      let model', changed = one_coalsecing_pass model ~predicate
+      in
+      if changed then loop model' else model'
+    in
+    loop model
 end
 
 let coalesce ~predicate model =
