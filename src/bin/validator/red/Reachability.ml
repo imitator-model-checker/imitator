@@ -37,4 +37,9 @@ let remove_islands_from_automaton (names, actions, locations) =
   names, actions, locations'
 
 let remove_islands (model : parsed_model) : parsed_model =
-  { model with automata = List.map remove_islands_from_automaton model.automata }
+  let automata' = 
+    model.automata
+    |> List.map remove_islands_from_automaton 
+    |> List.filter (fun (_, _, locations) -> List.length locations <> 0)
+  in
+  { model with automata = automata' }
