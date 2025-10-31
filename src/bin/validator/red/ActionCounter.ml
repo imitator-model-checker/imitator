@@ -3,10 +3,9 @@ open ParsingStructure
 
 
 type t = {
-  model: parsed_model;
   global: (string, int) Hashtbl.t; 
   local: (string, int) Hashtbl.t array; 
-  mutable label_for_removal: (int * string) option
+  mutable for_removal: (int * string) list
 }
 
 let create (model : parsed_model) = 
@@ -30,34 +29,38 @@ let create (model : parsed_model) =
     ) locations 
   ) model.automata; 
 
-  {model; global; local; label_for_removal = None}
+  {global; local; for_removal = []}
 
-let remove_label t ~automaton_id label = t.label_for_removal <- Some (automaton_id ,label)
+let remove_label t ~automaton_id label = t.for_removal <- (automaton_id ,label) :: t.for_removal
 
-let commit {global;local;label_for_removal; _} = 
-  match label_for_removal with 
-  | None -> ()
-  | Some (aid, label) -> 
-    let global_count = Hashtbl.find global label in 
-    let local_count = Hashtbl.find local.(aid) label in 
-    Hashtbl.replace global label (global_count - 1);
-    Hashtbl.replace local.(aid) label (local_count - 1)
-let revert t = t.label_for_removal <- None
+let remove {global;local;_} aid label = 
+  let global_count = Hashtbl.find global label in 
+  let local_count = Hashtbl.find local.(aid) label in 
+  Hashtbl.replace global label (global_count - 1);
+  Hashtbl.replace local.(aid) label (local_count - 1)
 
-let exists_locally {local; label_for_removal; _} ~automaton_id label =
-  let uncommitted_diff = match label_for_removal with 
-  | Some (aid, label') -> if aid = automaton_id && label = label' then 1 else 0 
-  | None -> 0 
+let commit t = List.iter (fun (aid, label) -> remove t aid label) t.for_removal; t.for_removal <- []
+let revert t = t.for_removal <- []
+
+ 
+
+let exists_locally {local; for_removal; _} ~automaton_id label =
+  let uncommitted_diff = 
+    for_removal 
+    |> List.filter ((=) (automaton_id, label))
+    |> List.length 
   in
   match Hashtbl.find_opt local.(automaton_id) label with 
   | None -> false
   | Some count -> 
     if count - uncommitted_diff >= 1 then true else false
     
-let exists_globally {global; label_for_removal; _} label = 
-  let uncommitted_diff = match label_for_removal with 
-  | Some (_, label') -> if label = label' then 1 else 0 
-  | None -> 0 
+let exists_globally {global; for_removal; _} label = 
+  let uncommitted_diff = 
+    for_removal 
+    |> List.map snd
+    |> List.filter ((=) label)
+    |> List.length 
   in
   match Hashtbl.find_opt global label with 
   | None -> false
