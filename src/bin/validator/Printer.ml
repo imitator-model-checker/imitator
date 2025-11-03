@@ -20,10 +20,19 @@ let should_print ~min_level ~verbosity =
 
 let msg t ~level fmt =
   if should_print ~min_level:level ~verbosity:t.verbosity then
-    kfprintf (fun f -> pp_print_flush f ()) t.fmt fmt
+    fprintf t.fmt fmt
   else
     ifprintf t.fmt fmt  (* noop formatter *)
 
 let info t fmt = msg t ~level:Normal fmt
 let debug t fmt = msg t ~level:Debug fmt
 let warn t fmt = msg t ~level:Experiments fmt
+
+
+let start_section t title =
+  if should_print ~min_level:Normal ~verbosity:t.verbosity then
+    fprintf t.fmt "@[<v 2>→ %s@," title
+
+let end_section t =
+  if should_print ~min_level:Normal ~verbosity:t.verbosity then
+    fprintf t.fmt "@]@."

@@ -1,4 +1,3 @@
-open Crowbar
 open Lib
 open Gen
 open Comp
@@ -6,6 +5,15 @@ open Runner
 open Red
 
 module ImitatorOptions = Options
+
+let move_cursor_up_and_clear n =
+  for _ = 1 to n do
+    (* Move to start of line, clear it, then move cursor up *)
+    print_string "\r\x1b[2K\x1b[A";
+  done;
+  (* Finally, move to beginning of the now-top line *)
+  print_string "\r";
+  flush stdout
 
 let validator_main () = 
   let validator_args = ArgStash.stash_and_retrieve ValidatorOptions.arg_list in
@@ -47,10 +55,12 @@ let validator_main () =
     let time_outs = ref 0 in 
     let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a ~validator_options in 
     let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property config_file_b ~validator_options in 
-
-    Printer.info printer "Searching counter examples\n";  
+    
     ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model ->
-      Printer.info printer "\x1b[2K[%d | TO: %d]\n" !i !time_outs;
+      if !i <> 0 then move_cursor_up_and_clear 2;
+      Printer.start_section printer "Searching for counter example";
+      Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
+      Printer.end_section printer;
       
       let result_a, _ = ModelRunner.run options_a parsed_model parsed_property_option_a in 
       let result_b, model = ModelRunner.run options_b parsed_model parsed_property_option_b in 
@@ -73,9 +83,8 @@ let validator_main () =
           Printer.info printer "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
           ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
           raise exn : unit);
-      Printer.info printer "\x1b[1F";
-      incr i
-    )
+      incr i;
+    );
   end
   | Reduce {model_file;config_file_a;config_file_b} -> 
     let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a ~model_file ~validator_options in 
