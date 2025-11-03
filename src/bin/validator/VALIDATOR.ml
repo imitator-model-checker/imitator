@@ -7,12 +7,14 @@ open Red
 
 module ImitatorOptions = Options
 
-let () =
+let validator_main () = 
   let validator_args = ArgStash.stash_and_retrieve ValidatorOptions.arg_list in
   let validator_options = ValidatorOptions.parse validator_args in 
   Arg.current := 0;
   
   let mode = validator_options.mode in 
+
+  let printer = Printer.create () in 
 
   match mode with 
   | SampleModelGenerator {draw_pdf} -> 
@@ -24,7 +26,8 @@ let () =
     Input.set_options options;
 
     let sample_number = ref 1 in 
-    add_test ~name:(Printf.sprintf "Sampling 10 models into %s/" validator_options.output_folder_path)[ModelGen.parsed_model] (fun parsed_model -> 
+    Printer.info printer "Sampling 10 models into %s/\n" validator_options.output_folder_path;
+    ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model -> 
       let model, _ = ModelConverter.abstract_structures_of_parsing_structures options parsed_model None in
       let output_folder = Printf.sprintf "%s/samples" validator_options.output_folder_path in
       let file_name = Printf.sprintf "sampled_model_%d" !sample_number in 
@@ -36,7 +39,8 @@ let () =
         options
         model;
       incr sample_number
-    ) 
+    );
+
   | CompareOutput {config_file_a;config_file_b} ->
   begin
     let i = ref 0 in 
@@ -44,8 +48,9 @@ let () =
     let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a ~validator_options in 
     let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property config_file_b ~validator_options in 
 
-    add_test ~name:"The two configurations give the same result" [ModelGen.parsed_model] (fun parsed_model ->
-      print_endline (Printf.sprintf "\x1b[2K[%d | TO: %d]" !i !time_outs);
+    Printer.info printer "Searching counter examples\n";  
+    ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model ->
+      Printer.info printer "\x1b[2K[%d | TO: %d]\n" !i !time_outs;
       
       let result_a, _ = ModelRunner.run options_a parsed_model parsed_property_option_a in 
       let result_b, model = ModelRunner.run options_b parsed_model parsed_property_option_b in 
@@ -56,19 +61,19 @@ let () =
         match exn with 
         | Comparison.TimeOutResult -> incr time_outs
         | _ ->
-          Printf.printf "Found counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
+          Printer.info printer "Found counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
           
-          Printf.printf "Attempting to reduce ... \n";
+          Printer.info printer "Attempting to reduce ... \n";
           let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
           let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
-          Printf.printf "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+          Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
 
           let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
           let file_name = Printf.sprintf "counter_example_%d" !i in 
-          Printf.printf "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
+          Printer.info printer "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
           ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
           raise exn : unit);
-      print_string "\x1b[1F";
+      Printer.info printer "\x1b[1F";
       incr i
     )
   end
@@ -80,13 +85,26 @@ let () =
     let parsed_model = Templates.expand_model unexpanded_parsed_model in 
 
     let model, _ = ParsingUtility.compile_model_and_property options_a in 
-    Printf.printf "Reducer provided with a counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
-    Printf.printf "Attempting to reduce while preserving counter example\n";
+    Printer.info printer "Reducer provided with a counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
+    Printer.info printer "Attempting to reduce while preserving counter example\n";
     let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
     let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
-    Printf.printf "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+    Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
 
     let output_folder = Printf.sprintf "%s/reducer" validator_options.output_folder_path in
     let file_name = Printf.sprintf "%s_reduced" options_a#files_prefix in 
-    Printf.printf "Saving reduced counter example as %s/%s.imi\n" output_folder file_name;
+    Printer.info printer "Saving reduced counter example as %s/%s.imi\n" output_folder file_name;
     ModelOutput.output_model ~file_name ~output_folder options_b reduced_model
+
+let () =
+  at_exit (fun () ->
+    flush_all ();
+    (* redirect stdout and stderr to /dev/null before Crowbar's own at_exit runs *)
+    let devnull = Unix.openfile "/dev/null" [Unix.O_WRONLY] 0o666 in
+    Unix.dup2 devnull Unix.stdout;
+    Unix.dup2 devnull Unix.stderr;
+    Unix.close devnull
+  );
+  validator_main ()
+
+  
