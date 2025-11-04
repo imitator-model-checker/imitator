@@ -74,7 +74,7 @@ let validator_main () =
           Printer.info printer "Found counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
           
           Printer.info printer "Attempting to reduce ... \n";
-          let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
+          let reduced_parsed_model = ModelReducer.reduce parsed_model ~printer ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
           let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
           Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
 
@@ -96,7 +96,7 @@ let validator_main () =
     let model, _ = ParsingUtility.compile_model_and_property options_a in 
     Printer.info printer "Reducer provided with a counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
     Printer.info printer "Attempting to reduce while preserving counter example\n";
-    let reduced_parsed_model = ModelReducer.reduce parsed_model ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
+    let reduced_parsed_model = ModelReducer.reduce parsed_model ~printer ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
     let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
     Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
 

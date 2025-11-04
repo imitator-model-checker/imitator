@@ -1,7 +1,7 @@
 open Format
 
 type verbosity =
-  | Silent | Experiments | Normal | Debug
+  | Silent | Experiments | Normal | Debug | Always
 
 type t 
 
@@ -12,6 +12,8 @@ val info : t -> ('a, formatter, unit, unit) format4 -> 'a
 val debug : t -> ('a, formatter, unit, unit) format4 -> 'a 
 
 val warn : t -> ('a, formatter, unit, unit) format4 -> 'a 
+
+val error : t -> ('a, formatter, unit, unit) format4 -> 'a
 
 val start_section : t -> string -> unit
 

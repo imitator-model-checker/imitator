@@ -1,6 +1,5 @@
 (library
- (name red)
- (libraries lib comp runner printer)
+ (name printer)
 )
 
 (env

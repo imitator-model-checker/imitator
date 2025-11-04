@@ -1,7 +1,7 @@
 open Format
 
 type verbosity =
-  | Silent | Experiments | Normal | Debug
+  | Silent | Experiments | Normal | Debug | Always
 
 type t = {
   verbosity : verbosity;
@@ -12,6 +12,7 @@ let create ?(verbosity=Normal) ?(fmt=std_formatter) () = { verbosity; fmt }
 
 let should_print ~min_level ~verbosity =
   match verbosity, min_level with
+  | Always, _ -> true
   | Silent, _ -> false
   | Experiments, (Normal | Debug) -> false
   | Normal, Debug -> false
@@ -27,6 +28,7 @@ let msg t ~level fmt =
 let info t fmt = msg t ~level:Normal fmt
 let debug t fmt = msg t ~level:Debug fmt
 let warn t fmt = msg t ~level:Experiments fmt
+let error t fmt = msg t ~level:Always fmt
 
 
 let start_section t title =
