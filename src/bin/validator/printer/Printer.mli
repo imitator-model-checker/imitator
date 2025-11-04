@@ -3,9 +3,6 @@ open Format
 type verbosity =
   | Silent | Experiments | Normal | Debug
 
-type msg_level =
-  | Experiments | Normal | Debug | Always
-
 type t 
 
 val create : ?verbosity:verbosity -> ?fmt:formatter -> unit -> t
