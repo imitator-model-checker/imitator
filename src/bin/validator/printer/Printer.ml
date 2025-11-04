@@ -1,18 +1,21 @@
 open Format
 
 type verbosity =
-  | Silent | Experiments | Normal | Debug | Always
+  | Silent | Experiments | Normal | Debug
+
+type msg_level =
+  | Experiments | Normal | Debug | Always
 
 type t = {
   verbosity : verbosity;
   fmt : formatter; 
 }
 
-let create ?(verbosity=Normal) ?(fmt=std_formatter) () = { verbosity; fmt }
+let create ?(verbosity : verbosity = Normal) ?(fmt=std_formatter) () = { verbosity; fmt }
 
 let should_print ~min_level ~verbosity =
   match verbosity, min_level with
-  | Always, _ -> true
+  | _, Always -> true (* Always-level messages always print *)
   | Silent, _ -> false
   | Experiments, (Normal | Debug) -> false
   | Normal, Debug -> false

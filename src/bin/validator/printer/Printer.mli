@@ -1,7 +1,10 @@
 open Format
 
 type verbosity =
-  | Silent | Experiments | Normal | Debug | Always
+  | Silent | Experiments | Normal | Debug
+
+type msg_level =
+  | Experiments | Normal | Debug | Always
 
 type t 
 
