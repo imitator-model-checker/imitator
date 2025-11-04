@@ -32,7 +32,7 @@ let info t fmt = msg t ~level:Normal fmt
 let debug t fmt = msg t ~level:Debug fmt
 let warn t fmt = msg t ~level:Experiments fmt
 let error t fmt = msg t ~level:Always fmt
-
+let fatal t fmt = error t (fmt ^^ "@.")
 
 let start_section t title =
   if should_print ~min_level:Normal ~verbosity:t.verbosity then
@@ -41,3 +41,7 @@ let start_section t title =
 let end_section t =
   if should_print ~min_level:Normal ~verbosity:t.verbosity then
     fprintf t.fmt "@]@."
+
+let with_section t title f = 
+  start_section t title;
+  Fun.protect ~finally:(fun () -> end_section t) f

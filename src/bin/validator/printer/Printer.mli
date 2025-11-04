@@ -15,6 +15,10 @@ val warn : t -> ('a, formatter, unit, unit) format4 -> 'a
 
 val error : t -> ('a, formatter, unit, unit) format4 -> 'a
 
+val fatal : t -> ('a, formatter, unit, unit) format4 -> 'a
+
 val start_section : t -> string -> unit
 
 val end_section : t -> unit
+
+val with_section : t -> string -> (unit -> 'a) -> 'a
