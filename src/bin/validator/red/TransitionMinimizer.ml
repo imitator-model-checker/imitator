@@ -30,14 +30,18 @@ let remove_transition_from_parsed_model (parsed_model : parsed_model) ~transitio
 
   { parsed_model with automata = automata'; controllable_actions = controllable_actions'}
 
-let minimize (model : parsed_model) ~original_nb_transitions ~predicate =
+let minimize (model : parsed_model) ~original_nb_transitions ~predicate ~printer =
+  Printer.with_section printer "Transition Minimizer" @@ fun () ->
   let action_counter = ActionCounter.create model in 
   let rec loop current idx n =
     if idx = n then current
     else
       let candidate = remove_transition_from_parsed_model current ~transition_to_remove:idx ~action_counter in
       if predicate candidate then
-        (ActionCounter.commit action_counter;
+        (
+        Printer.info printer "Removed transition";
+        flush_all ();
+        ActionCounter.commit action_counter;
         loop candidate idx (n - 1))
       else
         (ActionCounter.revert action_counter;

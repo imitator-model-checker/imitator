@@ -8,10 +8,11 @@ type msg_level =
 
 type t = {
   verbosity : verbosity;
-  fmt : formatter; 
+  formatter : formatter; 
+  mutable indentation : int;
 }
 
-let create ?(verbosity : verbosity = Normal) ?(fmt=std_formatter) () = { verbosity; fmt }
+let create ?(verbosity : verbosity = Normal) ?(formatter=std_formatter) () = { verbosity; formatter; indentation = 0 }
 
 let should_print ~min_level ~verbosity =
   match verbosity, min_level with
@@ -22,25 +23,30 @@ let should_print ~min_level ~verbosity =
 
   | _ -> true
 
-let msg t ~level fmt =
+let indent fmt indent  = 
+  fprintf fmt "%s" (String.concat "" @@ List.init indent (fun _ -> "  "))
+
+  
+let msg t ~level format_string =
   if should_print ~min_level:level ~verbosity:t.verbosity then
-    fprintf t.fmt fmt
+    fprintf t.formatter ("%a" ^^ format_string ^^ "@.") indent (t.indentation)
   else
-    ifprintf t.fmt fmt  (* noop formatter *)
+    ifprintf t.formatter format_string
 
-let info t fmt = msg t ~level:Normal fmt
-let debug t fmt = msg t ~level:Debug fmt
-let warn t fmt = msg t ~level:Experiments fmt
-let error t fmt = msg t ~level:Always fmt
-let fatal t fmt = error t (fmt ^^ "@.")
+let info t = msg t ~level:Normal
+let debug t = msg t ~level:Debug
+let warn t = msg t ~level:Experiments
+let error t = msg t ~level:Always
 
-let start_section t title =
-  if should_print ~min_level:Normal ~verbosity:t.verbosity then
-    fprintf t.fmt "@[<v 2>→ %s@," title
+let start_section t (title : ('a, formatter, unit, unit) format4) =
+  Fun.protect ~finally:(fun () -> t.indentation <- t.indentation + 1) @@
+  fun () -> info t ("→ " ^^ title)
 
 let end_section t =
   if should_print ~min_level:Normal ~verbosity:t.verbosity then
-    fprintf t.fmt "@]@."
+    t.indentation <- t.indentation - 1
+
+let flush = Format.print_flush
 
 let with_section t title f = 
   start_section t title;

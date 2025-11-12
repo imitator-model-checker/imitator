@@ -71,16 +71,16 @@ let validator_main () =
         match exn with 
         | Comparison.TimeOutResult -> incr time_outs
         | _ ->
-          Printer.info printer "Found counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
+          Printer.info printer "Found counter example with %d locations and %d transitions" model.nb_locations model.nb_transitions;
           
           Printer.info printer "Attempting to reduce ... \n";
           let reduced_parsed_model = ModelReducer.reduce parsed_model ~printer ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
           let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
-          Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+          Printer.info printer "Reduced model to %d locations and %d transitions" reduced_model.nb_locations reduced_model.nb_transitions;
 
           let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
           let file_name = Printf.sprintf "counter_example_%d" !i in 
-          Printer.info printer "Saving reduced counter example as %s/%s.imi\n" output_folder file_name; 
+          Printer.info printer "Saving reduced counter example as %s/%s.imi" output_folder file_name; 
           ModelOutput.output_model ~file_name ~output_folder options_b reduced_model;
           raise exn : unit);
       incr i;
@@ -94,15 +94,15 @@ let validator_main () =
     let parsed_model = Templates.expand_model unexpanded_parsed_model in 
 
     let model, _ = ParsingUtility.compile_model_and_property options_a in 
-    Printer.info printer "Reducer provided with a counter example with %d locations and %d transitions\n" model.nb_locations model.nb_transitions;
-    Printer.info printer "Attempting to reduce while preserving counter example\n";
+    Printer.info printer "Reducer provided with a counter example with %d locations and %d transitions" model.nb_locations model.nb_transitions;
+    Printer.info printer "Attempting to reduce while preserving counter example";
     let reduced_parsed_model = ModelReducer.reduce parsed_model ~printer ~options_a ~parsed_property_option_a ~options_b ~parsed_property_option_b ~original_nb_transitions:model.nb_transitions in 
     let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures options_a reduced_parsed_model None in 
-    Printer.info printer "Reduced model to %d locations and %d transitions\n" reduced_model.nb_locations reduced_model.nb_transitions;
+    Printer.info printer "Reduced model to %d locations and %d transitions" reduced_model.nb_locations reduced_model.nb_transitions;
 
     let output_folder = Printf.sprintf "%s/reducer" validator_options.output_folder_path in
     let file_name = Printf.sprintf "%s_reduced" options_a#files_prefix in 
-    Printer.info printer "Saving reduced counter example as %s/%s.imi\n" output_folder file_name;
+    Printer.info printer "Saving reduced counter example as %s/%s.imi" output_folder file_name;
     ModelOutput.output_model ~file_name ~output_folder options_b reduced_model
 
 let () =

@@ -7,12 +7,12 @@ let reduce parsed_model ~printer ~options_a ~options_b ~parsed_property_option_a
   in
 
   if not (predicate parsed_model) then begin
-    Printer.fatal printer "Initial model is not a valid counterexample.@,Aborting@,";
+    Printer.error printer "Initial model is not a valid counterexample.@,Aborting@,";
     exit 1
   end;
   
   parsed_model
-  |> TransitionMinimizer.minimize ~original_nb_transitions ~predicate
+  |> TransitionMinimizer.minimize ~original_nb_transitions ~predicate ~printer
   |> Reachability.remove_islands
   |> ConstraintSimplifier.simplify ~predicate
   |> LocationCoalescer.coalesce ~predicate
