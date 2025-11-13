@@ -6,14 +6,6 @@ open Red
 
 module ImitatorOptions = Options
 
-let move_cursor_up_and_clear n =
-  for _ = 1 to n do
-    (* Move to start of line, clear it, then move cursor up *)
-    print_string "\r\x1b[2K\x1b[A";
-  done;
-  (* Finally, move to beginning of the now-top line *)
-  print_string "\r";
-  flush stdout
 
 let validator_main () = 
   let validator_args = ArgStash.stash_and_retrieve ValidatorOptions.arg_list in
@@ -56,11 +48,11 @@ let validator_main () =
     let options_a, parsed_property_option_a = ConfigLoader.build_imitator_options_and_property config_file_a ~validator_options in 
     let options_b, parsed_property_option_b = ConfigLoader.build_imitator_options_and_property config_file_b ~validator_options in 
     
+    Printer.start_section printer "Searching for counter example";
+    Printer.start_live printer;
     ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model ->
-      if !i <> 0 then move_cursor_up_and_clear 2;
-      Printer.start_section printer "Searching for counter example";
+
       Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
-      Printer.end_section printer;
       
       let result_a, _ = ModelRunner.run options_a parsed_model parsed_property_option_a in 
       let result_b, model = ModelRunner.run options_b parsed_model parsed_property_option_b in 

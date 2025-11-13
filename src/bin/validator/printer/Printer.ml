@@ -10,9 +10,14 @@ type t = {
   verbosity : verbosity;
   formatter : formatter; 
   mutable indentation : int;
+  mutable live : bool;
 }
 
-let create ?(verbosity : verbosity = Normal) ?(formatter=std_formatter) () = { verbosity; formatter; indentation = 0 }
+
+let create ?(verbosity : verbosity = Normal) ?(formatter=std_formatter) () = { verbosity; formatter; indentation = 0; live = false }
+
+let start_live t = fprintf t.formatter "@."; t.live <- true
+let end_live t = t.live <- false
 
 let should_print ~min_level ~verbosity =
   match verbosity, min_level with
@@ -28,8 +33,11 @@ let indent fmt indent  =
 
   
 let msg t ~level format_string =
-  if should_print ~min_level:level ~verbosity:t.verbosity then
+  if should_print ~min_level:level ~verbosity:t.verbosity then begin
+    if t.live then
+      fprintf t.formatter "\x1b[A\r\x1b[2K";
     fprintf t.formatter ("%a" ^^ format_string ^^ "@.") indent (t.indentation)
+  end
   else
     ifprintf t.formatter format_string
 
