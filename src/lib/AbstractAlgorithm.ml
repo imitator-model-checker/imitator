@@ -125,6 +125,11 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Level of detail in graphical translations **)
+type graphics_detail = 
+	| Full
+	| Minimal
+
 (** Controller mode for AlgoPTG **)
 type ptg_controller_mode = 
 	| No_Generation

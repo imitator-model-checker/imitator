@@ -67,6 +67,7 @@ class imitator_options :
 		method extrapolation				: extrapolation
 
 		method files_prefix					: string
+		method graphics_detail				: AbstractAlgorithm.graphics_detail
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 
 		method ih							: bool

@@ -135,6 +135,9 @@ class imitator_options =
 		(*** NOTE: arbitrary initialization ***)
 		val mutable imitator_mode					= Syntax_check
 
+		(* detail when converting a model to graphics *)
+		val mutable graphics_detail = Full
+
 		(* Exploration order *)
 		(*** HACK: hard-coded default value ***)
 		val mutable exploration_order : AbstractAlgorithm.exploration_order option = Some Exploration_layer_BFS
@@ -333,6 +336,7 @@ class imitator_options =
 
 		method extrapolation						= extrapolation
 
+		method graphics_detail 					= graphics_detail
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
 
@@ -821,6 +825,19 @@ class imitator_options =
 						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with update}
 					| AbstractAlgorithm.SingleQueue -> ()
 
+			and set_graphics_detail detail_str =
+				if detail_str = "full" then 
+					graphics_detail <- Full
+				else if detail_str = "minimal" then 
+					graphics_detail <- Minimal
+				else(
+					print_error ("The value of `-graphics-detail` `" ^ detail_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
 				print_message Verbose_standard "Calling the Romeo model-checker instead of the IMITATOR core engine.";
@@ -977,6 +994,8 @@ class imitator_options =
 
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
+
+				("-graphics-detail", String set_graphics_detail, "The level of detail to use when translating to PDF, PNG, DOT, JPG. Possible values are `full` and `minimal`. Default: full");
 
 				("-ih", Unit (fun () -> ih <- true), " Uses the integer hull [JLR15] for termination of selected algorithms. Default: disabled.
 				");
