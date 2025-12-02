@@ -14,15 +14,6 @@ wget -q --no-check-certificate https://support.bugseng.com/ppl/download/ftp/rele
 unzip -qq ppl-${PPL_VERSION}.zip
 cd ppl-${PPL_VERSION}
 
-# Patch PPL
-information "Patching PPL-${PPL_VERSION}..."
-patch -p0 <"${PATCH_FOLDER}/ppl_gc.patch" &>$err || {
-    error "Failed to patch PPL-${PPL_VERSION}."
-    cd ../
-    rm -rf ppl-${PPL_VERSION}*
-    exit 1
-}
-
 # Patch clang for OSX
 if [[ "$RUNNER_OS" = "macOS" ]]; then
     information "Patching clang for OSX..."
