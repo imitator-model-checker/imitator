@@ -96,7 +96,7 @@ if [[ "$RUNNER_OS" = "Linux" ]]; then
     exit 1
   }
 elif [[ "$RUNNER_OS" = "macOS" ]]; then
-  brew install wget opam gmp ppl graphviz plotutils &>$err || {
+  brew install wget opam gmp mpfr ppl graphviz plotutils &>$err || {
     error "One of the depedencies had an issue installing itself. Please make sure that $(cmd "brew") is installed or that $(cmd "sudo") rights have been granted"
     exit 1
   }
@@ -118,10 +118,12 @@ information "Initialising opam..."
 # switch to ocaml 4.14
 information "Switching to OCaml 4.14.2..."
 
-opam switch create imitator 4.14.2 &>$err || {
-  error "An issue has occured while creating the switch 4.14.2. Please check the error log."
-  exit 1
-}
+if ! opam switch list --short | grep -q '^imitator$'; then
+  opam switch create imitator 4.14.2 &>$err || {
+    error "An issue has occured while creating the switch 4.14.2. Please check the error log."
+    exit 1
+  }
+fi
 
 opam switch imitator
 eval $(opam env)
