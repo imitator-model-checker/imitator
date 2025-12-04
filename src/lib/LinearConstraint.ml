@@ -4549,6 +4549,10 @@ let px_nnconvex_copy = nnconvex_copy
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
 let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
+
+	(* Helper to keep x alive *)
+	let keep_alive (x : 'a) = ignore (Sys.opaque_identity x) in 
+
 	(* Increment discrete counter *)
 	ppl_nncc_get_disjuncts#increment;
 
@@ -4568,10 +4572,14 @@ let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 	while not (ippl_nncc_equals_iterator iterator end_iterator) do
 		(* Get the current disjunct *)
 		let disjunct = ippl_nncc_get_disjunct iterator in
+		(* We use a copy in accordance with PPL guidelines - otherwise segfaults occur *)
+		let disjunct_copy = copy disjunct in 
+
+		(* VERY IMPORTANT LINE: Makes sure input constraint is alive (not finalized) any time we copy *)
+		keep_alive p_nnconvex_constraint;
 
 		(* Add it to the list of disjuncts *)
-		(*** NOTE: seems necessary to copy the disjunct first! (otherwise we get some strange segmentation fault) ***)
-		disjuncts := disjunct :: !disjuncts;
+		disjuncts := disjunct_copy :: !disjuncts;
 
 		(* Increment the iterator *)
 		ippl_nncc_increment_iterator iterator;
