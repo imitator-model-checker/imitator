@@ -36,10 +36,12 @@ let remove_islands_from_automaton (names, actions, locations) =
   in
   names, actions, locations'
 
-let remove_islands (model : parsed_model) : parsed_model =
+let remove_islands (model : parsed_model)  ~printer : parsed_model =
+  Printer.start_section printer "Removing unreachable locations";
   let automata' = 
     model.automata
     |> List.map remove_islands_from_automaton 
     |> List.filter (fun (_, _, locations) -> List.length locations <> 0)
   in
-  { model with automata = automata' }
+  Fun.protect ~finally:(fun () -> Printer.end_section printer) @@
+  fun () -> { model with automata = automata' }

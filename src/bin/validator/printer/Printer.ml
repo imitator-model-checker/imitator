@@ -19,6 +19,10 @@ let create ?(verbosity : verbosity = Normal) ?(formatter=std_formatter) () = { v
 let start_live t = fprintf t.formatter "@,"; t.live <- true
 let end_live t = t.live <- false
 
+let with_live t f = 
+  start_live t;
+  Fun.protect ~finally:(fun () -> end_live t) f
+
 let should_print ~min_level ~verbosity =
   match verbosity, min_level with
   | _, Always -> true (* Always-level messages always print *)

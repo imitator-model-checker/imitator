@@ -306,7 +306,8 @@ module Predicate = struct
     loop model
 end
 
-let coalesce ~predicate model =
+let coalesce ~predicate model ~printer =
+  Printer.with_section printer "Coalescing locations" @@ fun () ->
   let action_counter = ActionCounter.create model in 
   model
   |> Structural.coalesce ~predicate ~action_counter

@@ -84,7 +84,8 @@ let non_trivial_guard_indices automata =
       ) model
 end
 
-let simplify ~predicate model = 
+let simplify ~predicate model ~printer = 
+  Printer.with_section printer "Simplifying constraints" @@ fun () ->
   model 
   |> Invariants.simplify ~predicate
   |> Guards.simplify ~predicate

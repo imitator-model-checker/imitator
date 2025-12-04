@@ -13,6 +13,6 @@ let reduce parsed_model ~printer ~options_a ~options_b ~parsed_property_option_a
   
   parsed_model
   |> TransitionMinimizer.minimize ~predicate ~printer
-  |> Reachability.remove_islands
-  |> ConstraintSimplifier.simplify ~predicate
-  |> LocationCoalescer.coalesce ~predicate
+  |> Reachability.remove_islands ~printer 
+  |> ConstraintSimplifier.simplify ~predicate ~printer
+  |> LocationCoalescer.coalesce ~predicate ~printer

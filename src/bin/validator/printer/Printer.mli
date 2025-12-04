@@ -24,3 +24,5 @@ val with_section : t -> (unit, formatter, unit, unit) format4 -> (unit -> 'a) ->
 val start_live : t -> unit
 
 val end_live : t -> unit
+
+val with_live : t -> (unit -> 'a) -> 'a

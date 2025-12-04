@@ -43,7 +43,6 @@ let minimize (model : parsed_model) ~predicate ~printer =
   let transitions_kept = ref 0 in 
   let update_info = fun () -> Printer.info printer "Removed %d and skipped %d out of %d transitions" (!transitions_removed) (!transitions_kept) nb_transitions in 
 
-  Printer.start_section printer "Transition Minimizer";
 
   let action_counter = ActionCounter.create model in 
   let rec loop current idx n =
@@ -61,6 +60,8 @@ let minimize (model : parsed_model) ~predicate ~printer =
         ActionCounter.revert action_counter;
         loop current (idx + 1) n)
   in
-  Printer.start_live printer;
-  Fun.protect ~finally:(fun _ -> Printer.end_live printer; Printer.end_section printer) 
-  (fun _ -> loop model 0 nb_transitions)
+
+  Printer.with_section printer "Removing transitions" @@ fun () ->
+  Printer.with_live printer @@ fun () ->
+  update_info ();
+  loop model 0 nb_transitions
