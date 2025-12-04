@@ -73,6 +73,7 @@ tests/**/*.ps
 tests/**/*.xml
 tests/**/*.jani
 tests/**/*.hy
+tests/**/*-controller.imi
 
 # binaries
 *.native
