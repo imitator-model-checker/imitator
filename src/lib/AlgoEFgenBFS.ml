@@ -154,7 +154,7 @@ class virtual algoEUgenBFS (model : AbstractModel.abstract_model) (property : Ab
 					let compute_successors = ref true in
 
 					(* Try to add the new state to the state space *)
-					let addition_result = state_space#add_state options#comparison_operator model.global_time_clock current_symbolic_state in
+					let addition_result = state_space#add_state options#comparison_operator model.global_time_clock current_symbolic_state None None in
 
 					(*** NOTE: we first add the transition before handling the rest (important for EW and loop detection) ***)
 					begin

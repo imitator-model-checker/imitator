@@ -771,7 +771,7 @@ and expand_state_factor (g_decls: variable_declarations) (factor: unexpanded_par
   | Unexpanded_Parsed_state_predicate pred -> Parsed_state_predicate (expand_state_predicate g_decls pred)
 
 
-let expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_property_type -> parsed_property_type = function
+let rec expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_property_type -> parsed_property_type = function
   | Unexpanded_Parsed_Valid -> Parsed_Valid
   | Unexpanded_Parsed_EF pred1 -> Parsed_EF (expand_state_predicate g_decls pred1)
   | Unexpanded_Parsed_AGnot pred1 -> Parsed_AGnot (expand_state_predicate g_decls pred1)
@@ -814,6 +814,13 @@ let expand_property_type (g_decls: variable_declarations) : unexpanded_parsed_pr
   | Unexpanded_Parsed_pattern pattern -> Parsed_pattern pattern
   | Unexpanded_Parsed_Win pred1 -> Parsed_Win (expand_state_predicate g_decls pred1)
   | Unexpanded_Parsed_WinAvoid (pred1, pred2) -> Parsed_WinAvoid (expand_state_predicate g_decls pred1, expand_state_predicate g_decls pred2)
+  | Unexpanded_Parsed_Strategies (panl,ppp) -> Parsed_Strategies (panl,expand_property_type g_decls ppp)
+  | Unexpanded_Parsed_Large_Strategies (panll,ppp) -> Parsed_Large_Strategies (panll,expand_property_type g_decls ppp)
+    
+(* let expand_strategic_property_type (g_decls:variable_declarations) : unexpanded_parsed_property_type -> parsed_property_type = function
+  | Unexpanded_Parsed_Strategies (panl,ppp) -> Parsed_Strategies (panl,expand_property_type g_decls ppp)
+  | Unexpanded_Parsed_Large_Strategies (panll,ppp) -> Parsed_Large_Strategies (panll,expand_property_type g_decls ppp)
+ *)
 
 let expand_property (g_decls: variable_declarations) (property: unexpanded_parsed_property): parsed_property =
   { synthesis_type = property.unexpanded_synthesis_type

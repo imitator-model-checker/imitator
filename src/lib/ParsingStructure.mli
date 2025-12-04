@@ -287,6 +287,10 @@ type forall_index_data = {
 
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
+type parsed_automaton_namelist = automaton_name list
+
+type parsed_automaton_namelist_list = (automaton_name * (automaton_name list)) list
+
 type action_declaration =
   | Single_action of name_or_access
   | Multiple_actions of forall_index_data * variable_name * parsed_discrete_arithmetic_expression
@@ -696,6 +700,14 @@ type parsed_property_type =
 
 	| Parsed_WinAvoid of parsed_state_predicate * parsed_state_predicate
 
+	(*------------------------------------------------------------*)
+	(* Stategies *)
+	(*------------------------------------------------------------*)
+	| Parsed_Strategies of parsed_automaton_namelist * parsed_property_type
+
+	| Parsed_Large_Strategies of parsed_automaton_namelist_list * parsed_property_type
+
+
 type unexpanded_parsed_property_type =
 	| Unexpanded_Parsed_Valid
 	| Unexpanded_Parsed_EF of unexpanded_parsed_state_predicate
@@ -739,6 +751,8 @@ type unexpanded_parsed_property_type =
 	| Unexpanded_Parsed_pattern of parsed_pattern
 	| Unexpanded_Parsed_Win of unexpanded_parsed_state_predicate
 	| Unexpanded_Parsed_WinAvoid of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_Strategies of parsed_automaton_namelist * unexpanded_parsed_property_type
+	| Unexpanded_Parsed_Large_Strategies of parsed_automaton_namelist_list * unexpanded_parsed_property_type
 
 type parsed_property = {
 	(* Emptiness or synthesis *)

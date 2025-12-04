@@ -1,0 +1,87 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee machine
+ *
+ * Description     : Coffee machine (no coin, coffee is free!); a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Étienne André, Laure Petrucci
+ *
+ * Created         : 2011/01/21
+ * Last modified   : 2020/09/06
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+		
+(* Booleans *)
+	bool_a, bool_b
+		: bool;
+
+
+
+(************************************************************)
+  automaton machine
+(************************************************************)
+synclabs: press,a,b;
+
+loc etat: invariant x <= 10
+	when not(bool_a) sync a do {x := 0, bool_a := True} goto etat;
+	when not(bool_b) sync b do {x := 0, bool_b := True} goto etat;
+	when x = 10 && bool_a && bool_b goto win;
+	when x = 10 && bool_a && not(bool_b) sync a goto lose;
+	when x = 10 && bool_b && not(bool_a) sync b goto lose;
+
+
+loc win: invariant True
+	when False sync press do {x := 0, bool_a := False, bool_b := False} goto etat;
+
+loc lose: invariant True
+	when False sync press do {x := 0, bool_a := False, bool_b := False} goto etat;
+
+end (* machine *)
+
+(************************************************************)
+  automaton time
+(************************************************************)
+synclabs: pass;
+
+loc Etat1: invariant True	 
+	when True sync pass goto Etat2;
+
+loc Etat2: invariant True
+	when False sync pass goto Etat1;
+
+end
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[machine] = etat
+	& loc[time] = Etat1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

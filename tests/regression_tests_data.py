@@ -29395,5 +29395,380 @@ init = {
         }]
     }
     ,
+	#------------------------------------------------------------
+    ####               Test strategic models                 ####
+    #------------------------------------------------------------
+    
+
+    #------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: EF',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #19 (strategy index 8):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: a
+View: machine : [machine: etat, time: Etat2] → Action: b
+Constraint:   x >= 10
+
+Strategy for source state #18 (strategy index 5):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: b
+View: machine : [machine: etat, time: Etat2] → Action: a
+Constraint:   x >= 10
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: EF_2',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_EF_2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: AGnot',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_AGnot.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #15 (strategy index 8):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: a
+View: machine : [machine: etat, time: Etat2] → Action: b
+Constraint:   x >= 10
+
+Strategy for source state #14 (strategy index 5):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: b
+View: machine : [machine: etat, time: Etat2] → Action: a
+Constraint:   x >= 10
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: AF',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_AF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #8 (strategy index 4):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: a
+View: machine : [machine: etat, time: Etat2] → Action: b
+Constraint:   10 >= x
+& x >= 0
+
+Strategy for source state #15 (strategy index 5):
+Coalition : machine(machine, time)
+
+View: machine : [machine: etat, time: Etat1] → Action: b
+View: machine : [machine: etat, time: Etat2] → Action: a
+Constraint:   x >= 10
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with large strategies and synth (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_synth_large.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #127 (strategy index 96):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+
+Strategy for source state #125 (strategy index 94):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regm1
+View: voter1 : [voter1: m1] → Action: packm1
+View: voter1 : [voter1: rm1] → Action: vm11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 1
+& t >= x
+& x + 1 > t
+
+Strategy for source state #121 (strategy index 90):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regi2
+View: voter2 : [voter2: i2] → Action: packi2
+View: voter2 : [voter2: ri2] → Action: vi21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+
+Strategy for source state #117 (strategy index 86):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regm1
+View: voter1 : [voter1: m1] → Action: packm1
+View: voter1 : [voter1: rm1] → Action: vm11
+View: voter2 : [voter2: v20] → Action: regi2
+View: voter2 : [voter2: i2] → Action: packi2
+View: voter2 : [voter2: ri2] → Action: vi21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with strategies and synth (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_synth.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #127 (strategy index 96):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+
+Strategy for source state #125 (strategy index 94):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regm1
+View: voter1 : [voter1: m1] → Action: packm1
+View: voter1 : [voter1: rm1] → Action: vm11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 1
+& t >= x
+& x + 1 > t
+
+Strategy for source state #121 (strategy index 90):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regi2
+View: voter2 : [voter2: i2] → Action: packi2
+View: voter2 : [voter2: ri2] → Action: vi21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+
+Strategy for source state #117 (strategy index 86):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regm1
+View: voter1 : [voter1: m1] → Action: packm1
+View: voter1 : [voter1: rm1] → Action: vm11
+View: voter2 : [voter2: v20] → Action: regi2
+View: voter2 : [voter2: i2] → Action: packi2
+View: voter2 : [voter2: ri2] → Action: vi21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with large strategies and witness (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_witness_large.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #127 (strategy index 96):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with strategies and witness (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_witness.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+-----------------------------------------------------------
+
+Strategy for source state #127 (strategy index 96):
+Coalition : voter1(voter1), voter2(voter2)
+
+View: voter1 : [voter1: v10] → Action: regi1
+View: voter1 : [voter1: i1] → Action: packi1
+View: voter1 : [voter1: ri1] → Action: vi11
+View: voter2 : [voter2: v20] → Action: regm2
+View: voter2 : [voter2: m2] → Action: packm2
+View: voter2 : [voter2: rm2] → Action: vm21
+Constraint:   8 >= t
+& t >= 6
+& t >= x
+& x + 6 > t
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
 ### THE END
 ]

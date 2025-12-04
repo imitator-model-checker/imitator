@@ -193,6 +193,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						unsatisfied
 				in
 				if falsified_phi then(
+					(* Don't forget to kill the strategy in case of a strategic computation *)
+					if model.has_coalition then (state_space#kill_strategy state_index;);
 					(* Return false *)
 					LinearConstraint.false_p_nnconvex_constraint ()
 				)
@@ -212,6 +214,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 					(* Normal version: a loop means False *)
 					)else(
+						(* Don't forget to kill the strategy in case of a strategic computation *)
+						if model.has_coalition then (state_space#kill_strategy state_index;);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_medium then(
 							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
@@ -239,11 +243,19 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 							(*** BADPROG: map with side effets ***)
 							List.map (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
 								(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+								try 
 								state_space#increment_nb_gen_states;
 
 								(* Add or get the state_index of the successor *)
 								(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
-								let addition_result = state_space#add_state Equality_check None successor in
+									let addition_result =
+										if model.has_coalition then
+											let action_idx = StateSpace.get_action_from_combined_transition model combined_transition in
+											state_space#add_state Equality_check None successor (Some state_index) (Some action_idx)
+										else
+											state_space#add_state Equality_check None successor None None
+									in
+								
 								let successor_state_index = match addition_result with
 								| New_state some_state_index
 								| State_already_present some_state_index
@@ -256,6 +268,10 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 								(* Convert the state to its state index *)
 								combined_transition , successor_state_index
+								with 
+									| TerminateAnalysis -> raise TerminateAnalysis
+									| _ -> (combined_transition,-1)
+
 							) transitions_and_concrete_successors_list
 
 							in
@@ -267,9 +283,14 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						)
 					in
 
+					(* Kill the state if terminal for strategic computation*)
+					if model.has_coalition then if (List.length transitions_and_successors_list = 0) then state_space#kill_strategy state_index;
+
 					(* For each successor *)
 					List.iter (fun ((combined_transition , successor_state_index) : (StateSpace.combined_transition * State.state_index)) ->
 						(* Just needed once, but let us still precompute *)
+						if successor_state_index = -1 then () 
+						else 
 						let successor = state_space#get_state successor_state_index in
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
@@ -414,12 +435,30 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Add it to the state space *)
 		(*** BEGIN copied from AlgoStateBased ***)
 		(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state with
+		let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock initial_state None None with
 			(* The state is necessarily new as the state space was empty *)
 			| StateSpace.New_state state_index -> state_index
 			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
 		in
 		(*** END copied from AlgoStateBased ***)
+
+		(* Check if the strategic operator have been parsed, if yes modify the state_space*)
+	
+		if model.has_coalition then (
+		
+		(* Construire la liste des automates dans la coalition *)
+		let in_coalition =
+			List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
+		in
+
+		options#set_memoized_strategies_inclusion;
+		options#deactivate_cumulative_pruning;
+
+		let nb_sync_action =
+			List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in
+
+		state_space#strategy_initialisation model.has_coalition nb_sync_action in_coalition model.informations model.automata_per_action;
+		);
 
 		(* Increment the number of computed states *)
 		state_space#increment_nb_gen_states;
@@ -483,6 +522,27 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		(* Projecting onto some parameters if required by the property *)
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
+
+
+		if LinearConstraint.p_nnconvex_constraint_is_false result && state_space#has_coalition then (
+			try
+				
+				(* Propagate the killed strategy from the given index *)
+				state_space#propagate_killed_strategy ;
+				let state_index_to_print: int list  = if (property.synthesis_type = Synthesis) then (state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) else ([state_space#find_last_alive_strategy])
+				in
+				state_space#display_strategy_constraint_index_list state_index_to_print model.automata_names model.location_names model.action_names model.variable_names;
+
+				state_space#initialize_winning_states state_index_to_print;
+				let total = List.length state_index_to_print in
+				print_message Verbose_standard ("Total alive strategies : " ^ (string_of_int total));
+
+			with
+			| NoAliveStrategy ->
+					(* No strategy survives after propagation — property cannot be guaranteed *)
+					self#print_algo_message Verbose_standard "No alive strategy can guarantee global safety."
+			| _ -> self#print_algo_message Verbose_standard "Unexpected Error in Strategic computation"  (* Ignore any other unexpected exceptions *)
+		);				
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** TODO: double check ***)

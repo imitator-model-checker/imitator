@@ -2883,6 +2883,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
 	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 
+	(*** Useful for strategic operations : memorize the tuple (wining state, constraint) if needed ***)
+
+	val mutable winning_states_and_constraint : state_index list = []	
 
 	(************************************************************)
 	(* Class methods *)
@@ -4211,6 +4214,33 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			raise TerminateAnalysis;
 		)
 
+	(* Define what to do when a target state is find in a strategic state_space with a witness property for each covered Algo*)
+	method terminate_if_witness_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		if abstract_property.synthesis_type = Witness then (
+			let strategy_found () =
+			(* Update termination status *)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			self#print_algo_message Verbose_standard "The strategy guaranteeing the property is:\n";
+			winning_states_and_constraint <- [target_state_index];
+		
+			termination_status <- Some Result.Witness_found;
+		
+			raise TerminateAnalysis
+			in
+			match abstract_property.property with
+			| EF _ -> strategy_found ()
+			| AGnot _ -> state_space#kill_strategy target_state_index  (* Kill the state and cut the branch if taget state found in AGnot*)
+			| EU _ -> strategy_found()
+			| _ -> ()  (* Add some more Algo later here *)
+		)
+
+	(* Define what to do when a target state is find in a strategic state_space with a strategic property for each covered Algo*)
+	method synthesis_strategy (abstract_property : AbstractProperty.abstract_property) (target_state_index : state_index) : unit =
+		match abstract_property.property with
+		| EF _  -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| AGnot _ -> state_space#kill_strategy target_state_index 
+		| EU _ -> winning_states_and_constraint <- target_state_index :: winning_states_and_constraint
+		| _ -> () (* Add some more Algo later here *)		
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
@@ -5315,6 +5345,28 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		(* Create the state space *)
 		state_space <- new StateSpace.stateSpace guessed_nb_transitions;
 
+		if model.has_coalition then (
+
+			(* Construire la liste des automates dans la coalition *)
+			let in_coalition =
+			  List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
+			in
+		  
+			(* if (List.length in_coalition) < ((model.nb_automata+1)/2) then ( *)
+			(match self#algorithm_name with
+			| "AGnot" -> 
+				options#set_memoized_strategies_inclusion;
+				options#deactivate_cumulative_pruning;
+			| _ -> options#deactivate_cumulative_pruning;);
+		
+			
+			(* Le nombre de "vrais" actions *)
+			let nb_sync_action =
+				List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in
+
+			state_space#strategy_initialisation model.has_coalition nb_sync_action in_coalition model.informations model.automata_per_action;
+		);		
+
 		(* Check whether the algorithm should immediately terminate because of an unsatisfiable initial state *)
 		let termination_at_initial_state : Result.imitator_result option = self#try_termination_at_initial_state in
 
@@ -5330,7 +5382,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		| None ->
 
 			(* Add the initial state to the state space; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state with
+			let init_state_index = match state_space#add_state AbstractAlgorithm.No_check model.global_time_clock init_state None None with
 				(* The state is necessarily new as the state space was empty *)
 				| StateSpace.New_state state_index -> state_index
 				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

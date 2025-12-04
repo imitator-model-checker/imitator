@@ -43,6 +43,9 @@ class imitator_options :
 		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
 
 		method coverage_pruning				: bool
+		method memoized_strategies_inclusion : bool
+		method set_memoized_strategies_inclusion : unit
+		method deactivate_cumulative_pruning : unit
 		(* Cumulative pruning: when a new state is computed, check whether it is included into the previously computed constraints *)
 		(*** NOTE: might be expensive in the case of thousands of disjuncts in the computed constraints, cf. [AHW18], therefore this option can be set to false when needed ***)
 		method cumulative_pruning			: bool

@@ -86,3 +86,5 @@ exception UndefinedFunction of string
 
 (** Used for April 1st keyword *)
 exception April1st
+
+exception NoAliveStrategy

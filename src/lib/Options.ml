@@ -291,6 +291,8 @@ class imitator_options =
 		(* limit on runtime *)
 		val mutable time_limit						= None
 
+		val mutable memoized_strategies_inclusion = false
+
 
 		(************************************************************)
 		(* Class methods *)
@@ -313,6 +315,7 @@ class imitator_options =
 
 		method cumulative_pruning					= cumulative_pruning
 		method coverage_pruning = coverage_pruning
+		method memoized_strategies_inclusion = memoized_strategies_inclusion
 
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
@@ -443,6 +446,15 @@ class imitator_options =
 		(*** NOTE: this set method is only used for the CUB NZ algorithms ***)
 		method set_no_time_elapsing =
 			no_time_elapsing <- true
+
+		method set_memoized_strategies_inclusion = 
+			print_warning "The memoïzed_stratgies_inclusion has been set to True";
+			memoized_strategies_inclusion <- true
+
+		method deactivate_cumulative_pruning = 
+			print_warning "The cumulative_pruning option has been de-activated because strategic_computation doesn't support it";
+			cumulative_pruning <- false
+
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1187,7 +1199,8 @@ class imitator_options =
 					print_newline();
 					exit 0), " Print version number and exit.
 				");
-
+				("-memoized_strategies_inclusion",Unit (fun() -> memoized_strategies_inclusion <- true)," Be careful manipulating this option, not relevant for reachability property with positionnal strategy.
+				");
 			] in
 
 			(* function for parsing arguments *)
