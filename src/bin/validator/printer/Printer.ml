@@ -16,7 +16,7 @@ type t = {
 
 let create ?(verbosity : verbosity = Normal) ?(formatter=std_formatter) () = { verbosity; formatter; indentation = 0; live = false }
 
-let start_live t = fprintf t.formatter "@."; t.live <- true
+let start_live t = fprintf t.formatter "@,"; t.live <- true
 let end_live t = t.live <- false
 
 let should_print ~min_level ~verbosity =
