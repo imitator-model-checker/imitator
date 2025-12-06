@@ -189,7 +189,7 @@ let get_strategy (idx : strategy_index) : strategy =
 (* Mark a strategy as killed *)
 let kill_strategy (idx : strategy_index) : unit =
   if not (List.mem idx !killed_strategies) then(
-    print_message Verbose_experiments ("The strategy of index : "^ (string_of_int idx) ^"has been killed");
+    print_message Verbose_experiments ("The strategy of index : "^ (string_of_int idx) ^" has been killed");
     killed_strategies := idx :: !killed_strategies)
 
 (* List all strategies that have not been killed *)

@@ -504,7 +504,6 @@ class stateSpace (guessed_nb_transitions : int) =
 	(* Return a list of all alive strategies in the state space *)
 	method find_all_alive_strategies : (state_index * Strategy.strategy_index) list =
 		let all_alive = Strategy.find_all_alive_strategies () in
-		List.iter(fun idx -> Printf.printf "%d;" idx)all_alive;
 		if List.length all_alive = 0 then(raise NoAliveStrategy);
 		let result = ref [] in
 		Hashtbl.iter (fun state_index _ ->
@@ -2006,11 +2005,12 @@ class stateSpace (guessed_nb_transitions : int) =
 		List.iter(fun idx ->
 		if ImitatorUtilities.verbose_mode_greater Verbose_standard then(
 		let state = self#get_state idx in
-		let constraint_val = state.px_constraint in 
-		let str_constraint = LinearConstraint.string_of_px_linear_constraint variable_names constraint_val in
+		let constraint_val = state.px_constraint in
+		let constraint_without_clocks = LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse [] constraint_val in 
+		let str_constraint = LinearConstraint.string_of_p_linear_constraint variable_names constraint_without_clocks in
 		self#display_strategy_index idx automata_names location_names action_names;
 		self#display_discrete state;
-		print_message Verbose_standard ("Constraint: " ^ (str_constraint) ^"\n \n");
+		print_message Verbose_standard ("  Constraint: " ^ (str_constraint) ^"\n ");
 		);
 		)state_index_list;
 
@@ -2026,8 +2026,9 @@ class stateSpace (guessed_nb_transitions : int) =
 		let strategy_index = Hashtbl.find state_space.strategies state_index in
 		let strategy = Strategy.get_strategy strategy_index in
 
-		Printf.printf "Strategy for source state #%d (strategy index %d):\n"
-			state_index strategy_index;
+		print_message Verbose_standard ("Strategy for source state #"^(string_of_int state_index)^":" );
+		print_message Verbose_experiments ("  (Strategy index " ^(string_of_int strategy_index) ^")");
+
 
 		(* Affiche la coalition avec les automates visibles *)
 		let coalition_str =
@@ -2039,7 +2040,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			)
 			|> String.concat ", "
 		in
-		Printf.printf "Coalition : %s\n\n" coalition_str;
+		print_message Verbose_standard ("  Coalition : "^ (coalition_str));
 
 		(* Affiche les entrées de stratégie *)
 		Array.iter (fun ((main_automaton, seen_locations), action) ->
@@ -2056,7 +2057,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs)
 			in
 			let action_str = action_names action in
-			Printf.printf "View: %s → Action: %s\n" view_str action_str
+			print_message Verbose_standard ("  View: "^(view_str)^" → Action: "^(action_str)); 
 		) strategy;
 
 		(* Cas spécial : stratégie morte *)
@@ -2070,12 +2071,12 @@ class stateSpace (guessed_nb_transitions : int) =
 		let global_loc = state.global_location in
 		let discrete_values = DiscreteState.get_discrete global_loc in
 		if Array.length discrete_values <> 0 then(
-		Printf.printf "    Discrete values: [";
+		Printf.printf "  Discrete values: [";
 		Array.iteri (fun i value ->
 			if i > 0 then print_string "; ";
 			Printf.printf "%s" (AbstractValue.string_of_value value)
 		) discrete_values;
-		Printf.printf "]\n\n";);
+		Printf.printf "]\n";);
 
 
 
@@ -2184,8 +2185,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	let strategy_index = Hashtbl.find state_space.strategies state_index in
 	let strategy = Strategy.get_strategy strategy_index in
 
-	Buffer.add_string buffer (Printf.sprintf "Strategy for source state #%d (strategy index %d):\n"
-								state_index strategy_index);
+	Buffer.add_string buffer (Printf.sprintf "Strategy for source state #%d:\n" state_index );
 
 	(* Affiche la coalition avec les automates visibles *)
 	let coalition_str =
@@ -2197,7 +2197,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		)
 		|> String.concat ", "
 	in
-	Buffer.add_string buffer (Printf.sprintf "Coalition : %s\n\n" coalition_str);
+	Buffer.add_string buffer (Printf.sprintf "  Coalition : %s\n" coalition_str);
 
 	(* Affiche les entrées de stratégie *)
 	Array.iter (fun ((main_automaton, seen_locations), action) ->
@@ -2212,7 +2212,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 		let view_str = Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs) in
 		let action_str = action_names action in
-		Buffer.add_string buffer (Printf.sprintf "View: %s → Action: %s\n" view_str action_str)
+		Buffer.add_string buffer (Printf.sprintf "  View: %s → Action: %s\n" view_str action_str)
 	) strategy;
 
 	(* Cas spécial : stratégie morte *)
@@ -2222,8 +2222,9 @@ class stateSpace (guessed_nb_transitions : int) =
 
 	(* Ajout de la contrainte associée à l’état *)
 	let constraint_val = (self#get_state state_index).px_constraint in
-	let str_constraint = LinearConstraint.string_of_px_linear_constraint variable_names constraint_val in
-	Buffer.add_string buffer (Printf.sprintf "Constraint:  %s\n\n" str_constraint);
+	let constraint_without_clocks = LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse [] constraint_val in
+	let str_constraint = LinearConstraint.string_of_p_linear_constraint variable_names constraint_without_clocks in
+	Buffer.add_string buffer (Printf.sprintf "  Constraint:  %s\n\n" str_constraint);
 
 	Buffer.contents buffer
 

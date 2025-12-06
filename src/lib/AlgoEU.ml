@@ -61,7 +61,7 @@ class virtual algoEU_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 			state_space#display_strategy_constraint_index_list filtered_strategies model.automata_names model.location_names model.action_names model.variable_names;
 
 			let long = List.length filtered_strategies in
-			print_message Verbose_standard ("Nombre d'états gagnants avec stratégie maximale : " ^ (string_of_int long) ^ ".");
+			print_message Verbose_standard ("Number of winning strategies : " ^ (string_of_int long) ^ ".");
 
 			state_space#initialize_winning_states filtered_strategies;
 		);		
