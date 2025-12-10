@@ -38,7 +38,7 @@ module Transition = struct
   let transition sampler ~nb_clocks ~nb_parameters =
     let guard = Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[EQ; GEQ; G; L; LEQ] in 
     let controllable = Sampler.next_bool sampler ~prob:0.5 in 
-    let resets = resets sampler nb_clocks in
+    let resets = [] in
     {controllable; guard; resets}
 end
 
@@ -85,7 +85,7 @@ end
 
 module Generator = struct 
   let gen : t gen =
-    map [range ~min:1 1; range ~min:1 2; range ~min:1 1; bytes_fixed 128]
+    map [range ~min:1 1; range ~min:1 2; range ~min:1 2; bytes_fixed 128]
       (fun nb_auto nb_clocks nb_parameters random_blob ->
         let sampler = Sampler.create ~seed:random_blob in
         let nb_loc =

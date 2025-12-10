@@ -16,7 +16,7 @@ let adjacency_matrix_of_parsed_locations parsed_locations =
   ) parsed_locations;
   adj
 
-let remove_islands_from_automaton (names, actions, locations) =
+let remove_islands_from_automaton ~printer (name, actions, locations) =
   let adj = adjacency_matrix_of_parsed_locations locations in
   let n = Array.length adj in
   let indeg = Array.make n false in
@@ -34,14 +34,15 @@ let remove_islands_from_automaton (names, actions, locations) =
   let locations' =
     List.filteri (fun i _ -> outdeg.(i) || indeg.(i)) locations
   in
-  names, actions, locations'
+  Printer.info printer "Removed %d locations from automaton `%s` (%d remaining)" 
+  (List.length locations - List.length locations') name (List.length locations');
+  name, actions, locations'
 
 let remove_islands (model : parsed_model)  ~printer : parsed_model =
-  Printer.start_section printer "Removing unreachable locations";
+  Printer.with_section printer "Removing unreachable locations" @@ fun () ->
   let automata' = 
     model.automata
-    |> List.map remove_islands_from_automaton 
+    |> List.map @@ remove_islands_from_automaton ~printer
     |> List.filter (fun (_, _, locations) -> List.length locations <> 0)
   in
-  Fun.protect ~finally:(fun () -> Printer.end_section printer) @@
-  fun () -> { model with automata = automata' }
+  { model with automata = automata' }

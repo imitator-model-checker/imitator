@@ -7,7 +7,6 @@ let true_constraint = [Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parse
 let is_true_formula f = (f = true_constraint)
 
 module Structural = struct
-  let warning () = print_endline "Warning: Structural coalescing broke the counterexample. This suggests the bug might depend on structure or state order."
 
   type controllability = Controllable | Uncontrollable
   type action_type = Internal | Synchronized
@@ -146,7 +145,7 @@ module Structural = struct
       ) locations;
       redir
 
-    let apply ~redirs_per_automaton ~predicate (model : parsed_model) ~action_counter = 
+    let apply ~redirs_per_automaton ~predicate ~printer (model : parsed_model) ~action_counter = 
       let resolve aid name =
         let rec aux visited n =
           match Hashtbl.find_opt redirs_per_automaton.(aid) n with
@@ -205,12 +204,28 @@ module Structural = struct
 
       let candidate = {model with automata; init_definition; controllable_actions} in
       
+      let nb_model_locations = 
+        model.automata 
+        |> List.fold_left (fun acc (_, _, locs) -> acc + List.length locs) 0
+      in
+      let nb_candidate_locations = 
+        candidate.automata 
+        |> List.fold_left (fun acc (_, _, locs) -> acc + List.length locs) 0
+      in
+
       if predicate candidate 
-      then (ActionCounter.commit action_counter; candidate) 
-      else (ActionCounter.revert action_counter; warning (); model) 
+      then (
+        ActionCounter.commit action_counter; 
+        Printer.info printer "Reduced locations from %d to %d" nb_model_locations nb_candidate_locations;
+        candidate
+      ) 
+      else (
+        ActionCounter.revert action_counter; 
+        Printer.warn printer "Structural coalescing did not preserve the property; no locations were coalesced.";
+        model) 
   end
 
-  let coalesce ~predicate ~action_counter (model : parsed_model) = 
+  let coalesce ~predicate ~action_counter ~printer (model : parsed_model) = 
     let succ, pred = Graph.build_succ_pred model in
     let classify = Action.classifier model in
     let redirs =
@@ -219,11 +234,12 @@ module Structural = struct
           Coalesce.compute_redirections succ.(aid) pred.(aid) classify locs)
       |> Array.of_list
     in
-    Coalesce.apply ~redirs_per_automaton:redirs ~predicate model ~action_counter
+    Printer.with_section printer "Structural" @@ fun () ->
+    Coalesce.apply ~redirs_per_automaton:redirs ~predicate model ~action_counter ~printer
 end
 
 module Predicate = struct
-  let merge_pair (model : parsed_model) ~aid ~src ~dst = 
+  let merge_pair (model : parsed_model) ~aid ~src ~dst ~action_counter = 
     let succesful = ref false in
     let rewire ((g, code, sync, name) as transition) = 
       if name = src then (succesful := true; (g, code, sync, dst)) else transition in 
@@ -231,19 +247,37 @@ module Predicate = struct
         List.mapi (fun id (name, actions, locations) -> 
           let locations' = 
             if aid = id then 
+              let src_other_transitions = 
+                locations 
+                |> List.find (fun loc -> loc.name = src)
+                |> fun loc -> loc.transitions
+                |> List.filter (fun (_, _, _, dst_name) -> dst_name <> dst)
+              in
               locations 
               |> List.filter (fun loc -> loc.name <> src)
-              |> List.map (fun loc -> { loc with transitions = List.map rewire loc.transitions })
+              |> List.map (fun loc -> 
+                  let transitions = 
+                    if loc.name = dst then 
+                      loc.transitions @ src_other_transitions
+                    else 
+                      loc.transitions
+                  in
+                { loc with transitions = List.map rewire transitions }
+                )
             else
               locations 
           in 
-          (name, actions, locations')
+          let actions' = ActionCounter.filter_local_actions action_counter ~automaton_id:id actions in
+          (name, actions', locations')
         ) (model.automata) 
     in
     let aid_of_name = 
       let map = List.mapi(fun i (a_name, _, _) -> a_name, i) model.automata in
       fun name -> List.assoc name map
     in 
+
+    let controllable_actions = ActionCounter.filter_controllable_actions action_counter model.controllable_actions in 
+
 
     let init_definition' = 
       model.init_definition
@@ -252,9 +286,9 @@ module Predicate = struct
           Parsed_loc_assignment (a_name, dst)
         | p -> p) in 
 
-    {model with automata = automata'; init_definition = init_definition'}, !succesful
+    {model with automata = automata'; init_definition = init_definition'; controllable_actions}, !succesful
 
-  let one_coalescing_pass (model : parsed_model) ~predicate ~action_counter = 
+  let one_coalescing_pass (model : parsed_model) ~printer ~predicate ~action_counter = 
     let redirs = Array.init (List.length model.automata) (fun _ -> Hashtbl.create 32) in 
     let resolve aid name =
       let rec aux visited n =
@@ -268,7 +302,7 @@ module Predicate = struct
     in    
     let candidate, _, changed =
     model.automata
-    |> List.fold_left (fun (candidate, aid, changed) (_, _, locations) ->
+    |> List.fold_left (fun (candidate, aid, changed) (a_name, _, locations) ->
        locations
        |> List.fold_left (fun (candidate, aid, changed) location ->
           location.transitions
@@ -276,33 +310,47 @@ module Predicate = struct
           |> List.fold_left (fun (candidate, aid, changed) (_, _, sync, dst) -> 
              let src = resolve aid location.name in 
              let dst = resolve aid dst in 
-             if src = dst then (candidate, aid, changed) else 
-             let candidate', sucessful = merge_pair candidate ~aid ~src ~dst in
-             (match sync with 
-             | Sync label -> ActionCounter.remove_label action_counter ~automaton_id:aid label
-             | NoSync -> ());
+             if src = dst then (candidate, aid, changed) else (
+              (match sync with 
+              | Sync _ -> 
+                let labels_between_src_dst = 
+                  location.transitions
+                  |> List.filter_map (fun (_, _, sync, dst_name) -> 
+                    if dst_name = dst then 
+                      match sync with 
+                      | Sync label -> Some label
+                      | NoSync -> None
+                    else None)
+                in
+                List.iter (fun label ->
+                ActionCounter.remove_label action_counter ~automaton_id:aid label) labels_between_src_dst
+              | NoSync -> ());
+             let candidate', sucessful = merge_pair candidate ~aid ~src ~dst ~action_counter in
+
              if sucessful && predicate candidate' then 
               begin 
                 ActionCounter.commit action_counter;
                 Hashtbl.add redirs.(aid) location.name dst;
+                Printer.info printer "Coalesced locations `%s` and `%s` in automaton `%s`" location.name dst a_name;
                 (candidate', aid, true)
               end
              else 
               begin
                 ActionCounter.revert action_counter; 
                 (candidate, aid, changed)
-              end
+              end)
              ) (candidate, aid, changed)
           ) (candidate, aid + 1, changed) 
        ) (model, -1, false) in 
     candidate, changed
 
-  let coalesce ~predicate (model : parsed_model) ~action_counter =
+  let coalesce ~predicate (model : parsed_model) ~action_counter ~printer =
     let rec loop model =
-      let model', changed = one_coalescing_pass model ~predicate ~action_counter
+      let model', changed = one_coalescing_pass model ~printer ~predicate ~action_counter
       in
       if changed then loop model' else model'
     in
+    Printer.with_section printer "Predicate-guided" @@ fun () ->
     loop model
 end
 
@@ -310,5 +358,5 @@ let coalesce ~predicate model ~printer =
   Printer.with_section printer "Coalescing locations" @@ fun () ->
   let action_counter = ActionCounter.create model in 
   model
-  |> Structural.coalesce ~predicate ~action_counter
-  |> Predicate.coalesce ~predicate ~action_counter
+  |> Structural.coalesce ~predicate ~action_counter ~printer
+  |> Predicate.coalesce ~predicate ~action_counter ~printer
