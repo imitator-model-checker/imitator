@@ -1443,7 +1443,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		counter_kill_strategy#increment;
 
 		let strategy_index = Hashtbl.find state_space.strategies state_index in
-		Strategy.kill_strategy strategy_index;
+		Strategy.kill_strategy strategy_index false;
 
 
 	(* ATTENTION : A Utilise UNIQUEMENT en fin de calcul, pertube le Hash des stratégies*)
@@ -2026,7 +2026,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		let strategy_index = Hashtbl.find state_space.strategies state_index in
 		let strategy = Strategy.get_strategy strategy_index in
 
-		print_message Verbose_standard ("Strategy for source state #"^(string_of_int state_index)^":" );
+		print_message Verbose_standard ("Strategy for state #"^(string_of_int state_index)^":" );
 		print_message Verbose_experiments ("  (Strategy index " ^(string_of_int strategy_index) ^")");
 
 
@@ -2161,14 +2161,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			counter_compare_strategy_inclusive#stop;
 			true)
 		else 
-			let options = Input.get_options() in
-			if not options#memoized_strategies_inclusion then(
-				counter_compare_strategy_inclusive#stop;
-				false) 
-			else( 
-				let inc = Strategy.is_included candidate_idx container_idx in
-				counter_compare_strategy_inclusive#stop;
-				inc) 
+			false
 
 
 	method format_strategy_index
@@ -2185,7 +2178,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	let strategy_index = Hashtbl.find state_space.strategies state_index in
 	let strategy = Strategy.get_strategy strategy_index in
 
-	Buffer.add_string buffer (Printf.sprintf "Strategy for source state #%d:\n" state_index );
+	Buffer.add_string buffer (Printf.sprintf "Strategy for state #%d:\n" state_index );
 
 	(* Affiche la coalition avec les automates visibles *)
 	let coalition_str =

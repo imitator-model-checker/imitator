@@ -451,7 +451,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
 		in
 
-		options#set_memoized_strategies_inclusion;
 		options#deactivate_cumulative_pruning;
 
 		let nb_sync_action =

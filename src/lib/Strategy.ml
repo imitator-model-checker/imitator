@@ -14,8 +14,11 @@ type strategy_index = int
 let strategy_pool : (strategy_index, strategy) Hashtbl.t = Hashtbl.create 100
 let strategy_hash_map : (int, strategy_index list) Hashtbl.t = Hashtbl.create 100
 
+(* Track parent-child derivation relationships *)
+let derivation_parent : (strategy_index, strategy_index) Hashtbl.t = Hashtbl.create 100
+let derivation_children : (strategy_index, strategy_index list) Hashtbl.t = Hashtbl.create 100
+
 (* Memoization tables for strategy inclusion and killing *)
-let inclusion_pool : (strategy_index, strategy_index list) Hashtbl.t = Hashtbl.create 100
 let killed_strategies : strategy_index list ref = ref []
 
 let next_strategy_index = ref 0
@@ -24,7 +27,6 @@ let next_strategy_index = ref 0
 let fresh_strategy_index () =
   let idx = !next_strategy_index in
   incr next_strategy_index;
-  Hashtbl.add inclusion_pool idx [];
   idx
 
 (* Hash a strategy based on its array content *)
@@ -94,39 +96,8 @@ let included (s1 : strategy) (s2 : strategy) : bool =
   in
   loop 0 0
 
-(* Memoized public inclusion function *)
-(* inclusion_pool[super] contains all strategies strictly included in it *)
-let is_included (idx1 : strategy_index) (idx2 : strategy_index) : bool =
-  List.mem idx1 (Hashtbl.find inclusion_pool idx2)
 
-(* Efficiently fill the inclusion table by checking and propagating subset relations *)
-let fill_inclusion_table new_idx new_strategy =
-  let options = Input.get_options() in 
-  if not options#memoized_strategies_inclusion then () else
-  Hashtbl.iter (fun existing_idx existing_strategy ->
-    if new_idx <> existing_idx then (
-      (* Check if new ⊆ existing *)
-      if Array.length new_strategy <= Array.length existing_strategy then (
-        let incl = included new_strategy existing_strategy in
-        if incl then (
-          let current = Hashtbl.find inclusion_pool existing_idx in
-          if not (List.mem new_idx current) then
-            Hashtbl.replace inclusion_pool existing_idx (new_idx :: current);
-        )
-      );
-      (* Check if existing ⊆ new *)
-      if Array.length new_strategy >= Array.length existing_strategy then (
-        let incl = included existing_strategy new_strategy in
-        if incl then (
-          let current = Hashtbl.find inclusion_pool new_idx in
-          if not (List.mem existing_idx current) then
-            Hashtbl.replace inclusion_pool new_idx (existing_idx :: current);
-        )
-      )
-    )
-  ) strategy_pool
-
-(* Main insertion and retrieval function with memoization and inclusion update *)
+(* Main insertion and retrieval function with memoization *)
 let get_or_add_strategy (s : strategy) : strategy_index =
   let h = hash s in
   match Hashtbl.find_opt strategy_hash_map h with
@@ -137,15 +108,12 @@ let get_or_add_strategy (s : strategy) : strategy_index =
            let new_idx = fresh_strategy_index () in
            Hashtbl.add strategy_pool new_idx s;
            Hashtbl.replace strategy_hash_map h (new_idx :: candidates);
-           fill_inclusion_table new_idx s; 
            new_idx)
   | None ->
       let new_idx = fresh_strategy_index () in
       Hashtbl.add strategy_pool new_idx s;
       Hashtbl.add strategy_hash_map h [new_idx];
-      fill_inclusion_table new_idx s; 
       new_idx
-
 exception Conflicting_strategy
 
 (* Extend a strategy by adding a new (partial_view, action_index), handling conflicts *)
@@ -160,7 +128,14 @@ let create_strategy (strat_index_source : strategy_index)
   | None ->
       let new_s = add_in_order s pv a in
       let new_idx = get_or_add_strategy new_s in
-      new_idx 
+      
+      (* Track parent→child relationship (bidirectional) *)
+      if new_idx <> strat_index_source then (
+        Hashtbl.add derivation_parent new_idx strat_index_source;
+        let children = try Hashtbl.find derivation_children strat_index_source with Not_found -> [] in
+        Hashtbl.replace derivation_children strat_index_source (new_idx :: children)
+      );
+      new_idx
 
 let initialize_strategies (entries : (partial_view * action_index) list) : unit =
   (* Ensure the strategy pool is empty before initialization *)
@@ -177,20 +152,29 @@ let initialize_strategies (entries : (partial_view * action_index) list) : unit 
 
   Hashtbl.add strategy_pool new_idx strat;
   Hashtbl.add strategy_hash_map h [new_idx];
-  Hashtbl.replace inclusion_pool new_idx [];
-
-  (* No need to compute inclusion table — pool has only one element *)
   ()
 
 (* Retrieve a strategy by its index *)
 let get_strategy (idx : strategy_index) : strategy =
   Hashtbl.find strategy_pool idx
 
-(* Mark a strategy as killed *)
-let kill_strategy (idx : strategy_index) : unit =
-  if not (List.mem idx !killed_strategies) then(
-    print_message Verbose_experiments ("The strategy of index : "^ (string_of_int idx) ^" has been killed");
-    killed_strategies := idx :: !killed_strategies)
+(* Kill strategy with control over propagation direction *)
+let rec kill_strategy (idx : strategy_index) (from_propagate : bool) : unit =
+  if not (List.mem idx !killed_strategies) then (
+    print_message Verbose_experiments (Printf.sprintf "Killing strategy %d (from_propagate=%b)" idx from_propagate);
+    killed_strategies := idx :: !killed_strategies;
+    
+    (* If killed naturally (not from propagate), kill ALL descendants *)
+    if not from_propagate then (
+      print_message Verbose_experiments (Printf.sprintf "  -> Natural kill: propagating DOWN to descendants");
+      let children = try Hashtbl.find derivation_children idx with Not_found -> [] in
+      List.iter (fun child_idx ->
+        print_message Verbose_experiments (Printf.sprintf "     -> Killing descendant %d" child_idx);
+        kill_strategy child_idx false  (* Recursively kill descendants *)
+      ) children
+    )
+    (* If from propagate, we're going UP, don't touch children *)
+  )
 
 (* List all strategies that have not been killed *)
 let find_all_alive_strategies () : strategy_index list =
@@ -204,11 +188,21 @@ let find_all_alive_strategies () : strategy_index list =
 let is_dead (idx : strategy_index) : bool =
   List.mem idx !killed_strategies
 
-(* Propagate the effect of killed strategies to all strategies they include *)
+(* Propagate UP from killed strategies to ancestors *)
 let propagate_killed_strategy () : unit =
-  List.iter (fun strategy_index ->
-    let included_in = Hashtbl.find inclusion_pool strategy_index in
-    List.iter (fun strategy_index_included ->
-      kill_strategy strategy_index_included
-    ) included_in
-  ) !killed_strategies
+  
+  let rec kill_ancestors idx =
+    kill_strategy idx true;  (* Mark as killed from propagation *)
+    (* Recursively kill parent (going UP) *)
+    match Hashtbl.find_opt derivation_parent idx with
+    | Some parent_idx -> 
+        print_message Verbose_experiments (Printf.sprintf "  -> Propagating UP to parent %d" parent_idx);
+        kill_ancestors parent_idx
+    | None -> ()
+  in
+
+  (* Apply to all initially killed strategies *)
+  (* Note: we make a copy because killed_strategies will grow during iteration *)
+  let initial_killed = !killed_strategies in
+  List.iter kill_ancestors initial_killed
+

@@ -5353,11 +5353,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			in
 		  
 			(* if (List.length in_coalition) < ((model.nb_automata+1)/2) then ( *)
-			(match self#algorithm_name with
-			| "AGnot" -> 
-				options#set_memoized_strategies_inclusion;
-				options#deactivate_cumulative_pruning;
-			| _ -> options#deactivate_cumulative_pruning;);
+			options#deactivate_cumulative_pruning;
 		
 			
 			(* Le nombre de "vrais" actions *)

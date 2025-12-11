@@ -10,10 +10,9 @@ type strategy_index = int
 val get_or_add_strategy : strategy -> strategy_index
 val create_strategy : strategy_index -> partial_view -> action_index -> strategy_index 
 val initialize_strategies:  (partial_view * action_index) list -> unit 
-val is_included : strategy_index -> strategy_index -> bool (*Don't forget to check strat_index1=strat_index2 before using this function*)
 val get_strategy : strategy_index -> strategy
 (* Kill une stratégie (la marquer comme inactive) *)
-val kill_strategy : strategy_index -> unit
+val kill_strategy : strategy_index -> bool -> unit
 
 (** Renvoie toutes les stratégies encore actives *)
 val find_all_alive_strategies : unit -> strategy_index list
