@@ -3653,7 +3653,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		begin
 		  match parsed_property.property with
 		  | Parsed_Strategies (parsed_automaton_namelist, prop) ->
-			print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Positionnal strategy detected");
+				options#deactivate_cumulative_pruning;
+			  print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Positionnal strategy detected");
 			  let coalition =
 				List.map get_automaton_index parsed_automaton_namelist
 			  in
@@ -3664,6 +3665,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				)coalition;
 			  (Some updated_property, coalition, informations,true)
 			| Parsed_Large_Strategies (parsed_automaton_namelist_list, prop) ->
+				options#deactivate_cumulative_pruning;
 				print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Strategy detected");
 				let coalition, informations = make_large_positional_strategy parsed_automaton_namelist_list nb_automata get_automaton_index in 
 				let updated_property = { parsed_property with property = prop } in

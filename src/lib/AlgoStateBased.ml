@@ -5351,11 +5351,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			let in_coalition =
 			  List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
 			in
-		  
-			(* if (List.length in_coalition) < ((model.nb_automata+1)/2) then ( *)
-			options#deactivate_cumulative_pruning;
-		
-			
+
 			(* Le nombre de "vrais" actions *)
 			let nb_sync_action =
 				List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in

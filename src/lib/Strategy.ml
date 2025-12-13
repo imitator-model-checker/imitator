@@ -2,7 +2,14 @@ open Automaton
 open Exceptions
 open ImitatorUtilities
 
-(* A partial view consists of the automaton taking the action and the list of locations visible to the coalition *)
+(* INVARIANT: In partial_view = (main_automaton, seen_locations),
+   seen_locations is ordered by the automaton_index they represent (ascending order).
+   This ordering corresponds to the sorted union of informations[aut] 
+   for all coalition automata involved in the action.
+   
+   To reconstruct which automaton each location belongs to during display,
+   use StateSpace#reconstruct_seen_automata_for_action to get the sorted array
+   of automaton indices, then map with seen_locations by index. *)
 type partial_view = automaton_index * (location_index list)
 
 (* A strategy is a sorted array of (partial_view, action_index) pairs *)

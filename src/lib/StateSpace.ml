@@ -2000,6 +2000,30 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		()
 
+	(* Helper function to reconstruct seen_automata from an action *)
+	(* INVARIANT: Returns automata in sorted order (ascending automaton_index) *)
+	method private reconstruct_seen_automata_for_action (action : action_index) : automaton_index array =
+		(* Get automata involved in this action *)
+		let involved_automata = automata_per_action action in
+		
+		(* Filter to keep only coalition automata *)
+		let coalition_involved = 
+			List.filter (fun aut -> List.mem aut state_space.in_coalition) involved_automata
+		in
+		
+		(* Compute union of all automata seen by coalition members involved *)
+		let seen_automata =
+			List.fold_left (fun acc automaton ->
+				let seen = Array.to_list state_space.informations.(automaton) in
+				acc @ seen
+			) [] coalition_involved
+			|> List.sort_uniq compare
+			|> Array.of_list
+		in
+		
+		seen_automata
+
+
 	method display_strategy_constraint_index_list (state_index_list : state_index list)(automata_names : automaton_index -> automaton_name)(location_names : automaton_index -> location_index -> location_name)(action_names : action_index -> action_name)(variable_names : variable_index -> variable_name):unit=
 		
 		List.iter(fun idx ->
@@ -2026,9 +2050,8 @@ class stateSpace (guessed_nb_transitions : int) =
 		let strategy_index = Hashtbl.find state_space.strategies state_index in
 		let strategy = Strategy.get_strategy strategy_index in
 
-		print_message Verbose_standard ("Strategy for state #"^(string_of_int state_index)^":" );
+		print_highlighted_message Shell_result Verbose_standard ("Strategy for state #"^(string_of_int state_index)^":" );
 		print_message Verbose_experiments ("  (Strategy index " ^(string_of_int strategy_index) ^")");
-
 
 		(* Affiche la coalition avec les automates visibles *)
 		let coalition_str =
@@ -2044,18 +2067,50 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		(* Affiche les entrées de stratégie *)
 		Array.iter (fun ((main_automaton, seen_locations), action) ->
-			let view_str =
-			let seen_automata = state_space.informations.(main_automaton) in
-			let seen_pairs =
-				List.mapi (fun i loc ->
-				let seen_ai = seen_automata.(i) in
-				let name_ai = automata_names seen_ai in
-				let name_loc = location_names seen_ai loc in
-				Printf.sprintf "%s: %s" name_ai name_loc
-				) seen_locations
+			(* Reconstruct seen_automata from action using helper *)
+			let seen_automata = self#reconstruct_seen_automata_for_action action in
+			
+			(* Get involved automata in coalition *)
+			let involved_automata = automata_per_action action in
+			let coalition_involved = 
+				List.filter (fun aut -> List.mem aut state_space.in_coalition) involved_automata 
 			in
-			Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs)
-			in
+			
+			(* For each coalition automaton involved, extract ALL locations it sees *)
+			let views_per_automaton = List.map (fun aut ->
+				(* Get all automata seen by this automaton *)
+				let seen_by_aut = Array.to_list state_space.informations.(aut) in
+				
+				(* For each automaton seen by 'aut', find its location in seen_locations *)
+				let aut_view = List.map (fun seen_aut ->
+					(* Find the position of seen_aut in seen_automata array *)
+					let pos = ref (-1) in
+					for i = 0 to Array.length seen_automata - 1 do
+						if seen_automata.(i) = seen_aut then pos := i
+					done;
+					
+					if !pos = -1 then
+						raise (InternalError (Printf.sprintf "Automaton %d should be in seen_automata" seen_aut));
+					
+					(* Get the location at that position *)
+					let loc = List.nth seen_locations !pos in
+					(seen_aut, loc)
+				) seen_by_aut in
+				
+				(aut, aut_view)
+			) coalition_involved in
+			
+			(* Format the view string *)
+			let view_parts = List.map (fun (aut, aut_view) ->
+				let loc_strs = List.map (fun (seen_aut, loc) ->
+					Printf.sprintf "%s: %s" 
+						(automata_names seen_aut) 
+						(location_names seen_aut loc)
+				) aut_view in
+				Printf.sprintf "%s : [%s]" (automata_names aut) (String.concat ", " loc_strs)
+			) views_per_automaton in
+			
+			let view_str = String.concat ", " view_parts in
 			let action_str = action_names action in
 			print_message Verbose_standard ("  View: "^(view_str)^" → Action: "^(action_str)); 
 		) strategy;
@@ -2064,7 +2119,6 @@ class stateSpace (guessed_nb_transitions : int) =
 		let dead_entry = ((-1, [-1]), -1) in
 		if Array.exists (fun entry -> entry = dead_entry) strategy then
 			Printf.printf "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n"
-
 
 	(* Display the discrete values of the state at the given index *)
 	method private display_discrete (state : State.state)  : unit = 
@@ -2165,62 +2219,95 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	method format_strategy_index
-	(state_index : state_index)
-	(automata_names : automaton_index -> automaton_name)
-	(location_names : automaton_index -> location_index -> location_name)
-	(action_names : action_index -> action_name)
-	(variable_names : variable_index -> variable_name)
-	: string =
+		(state_index : state_index)
+		(automata_names : automaton_index -> automaton_name)
+		(location_names : automaton_index -> location_index -> location_name)
+		(action_names : action_index -> action_name)
+		(variable_names : variable_index -> variable_name)
+		: string =
 
-	let buffer = Buffer.create 500 in
+		let buffer = Buffer.create 500 in
 
-	let coalition = state_space.in_coalition in
-	let strategy_index = Hashtbl.find state_space.strategies state_index in
-	let strategy = Strategy.get_strategy strategy_index in
+		let coalition = state_space.in_coalition in
+		let strategy_index = Hashtbl.find state_space.strategies state_index in
+		let strategy = Strategy.get_strategy strategy_index in
 
-	Buffer.add_string buffer (Printf.sprintf "Strategy for state #%d:\n" state_index );
+		Buffer.add_string buffer (Printf.sprintf "Strategy for state #%d:\n" state_index );
 
-	(* Affiche la coalition avec les automates visibles *)
-	let coalition_str =
-		coalition
-		|> List.map (fun ai ->
-			let seen = state_space.informations.(ai) in
-			let seen_names = List.map automata_names (Array.to_list seen) in
-			Printf.sprintf "%s(%s)" (automata_names ai) (String.concat ", " seen_names)
-		)
-		|> String.concat ", "
-	in
-	Buffer.add_string buffer (Printf.sprintf "  Coalition : %s\n" coalition_str);
-
-	(* Affiche les entrées de stratégie *)
-	Array.iter (fun ((main_automaton, seen_locations), action) ->
-		let seen_automata = state_space.informations.(main_automaton) in
-		let seen_pairs =
-		List.mapi (fun i loc ->
-			let seen_ai = seen_automata.(i) in
-			let name_ai = automata_names seen_ai in
-			let name_loc = location_names seen_ai loc in
-			Printf.sprintf "%s: %s" name_ai name_loc
-		) seen_locations
+		(* Affiche la coalition avec les automates visibles *)
+		let coalition_str =
+			coalition
+			|> List.map (fun ai ->
+				let seen = state_space.informations.(ai) in
+				let seen_names = List.map automata_names (Array.to_list seen) in
+				Printf.sprintf "%s(%s)" (automata_names ai) (String.concat ", " seen_names)
+			)
+			|> String.concat ", "
 		in
-		let view_str = Printf.sprintf "%s : [%s]" (automata_names main_automaton) (String.concat ", " seen_pairs) in
-		let action_str = action_names action in
-		Buffer.add_string buffer (Printf.sprintf "  View: %s → Action: %s\n" view_str action_str)
-	) strategy;
+		Buffer.add_string buffer (Printf.sprintf "  Coalition : %s\n" coalition_str);
 
-	(* Cas spécial : stratégie morte *)
-	let dead_entry = ((-1, [-1]), -1) in
-	if Array.exists (fun entry -> entry = dead_entry) strategy then
-		Buffer.add_string buffer "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n";
+		(* Affiche les entrées de stratégie *)
+		Array.iter (fun ((main_automaton, seen_locations), action) ->
+			(* Reconstruct seen_automata from action using helper *)
+			let seen_automata = self#reconstruct_seen_automata_for_action action in
+			
+			(* Get involved automata in coalition *)
+			let involved_automata = automata_per_action action in
+			let coalition_involved = 
+				List.filter (fun aut -> List.mem aut state_space.in_coalition) involved_automata 
+			in
+			
+			(* For each coalition automaton involved, extract ALL locations it sees *)
+			let views_per_automaton = List.map (fun aut ->
+				(* Get all automata seen by this automaton *)
+				let seen_by_aut = Array.to_list state_space.informations.(aut) in
+				
+				(* For each automaton seen by 'aut', find its location in seen_locations *)
+				let aut_view = List.map (fun seen_aut ->
+					(* Find the position of seen_aut in seen_automata array *)
+					let pos = ref (-1) in
+					for i = 0 to Array.length seen_automata - 1 do
+						if seen_automata.(i) = seen_aut then pos := i
+					done;
+					
+					if !pos = -1 then
+						raise (InternalError (Printf.sprintf "Automaton %d should be in seen_automata" seen_aut));
+					
+					(* Get the location at that position *)
+					let loc = List.nth seen_locations !pos in
+					(seen_aut, loc)
+				) seen_by_aut in
+				
+				(aut, aut_view)
+			) coalition_involved in
+			
+			(* Format the view string *)
+			let view_parts = List.map (fun (aut, aut_view) ->
+				let loc_strs = List.map (fun (seen_aut, loc) ->
+					Printf.sprintf "%s: %s" 
+						(automata_names seen_aut) 
+						(location_names seen_aut loc)
+				) aut_view in
+				Printf.sprintf "%s : [%s]" (automata_names aut) (String.concat ", " loc_strs)
+			) views_per_automaton in
+			
+			let view_str = String.concat ", " view_parts in
+			let action_str = action_names action in
+			Buffer.add_string buffer (Printf.sprintf "  View: %s → Action: %s\n" view_str action_str);
+		) strategy;
 
-	(* Ajout de la contrainte associée à l’état *)
-	let constraint_val = (self#get_state state_index).px_constraint in
-	let constraint_without_clocks = LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse [] constraint_val in
-	let str_constraint = LinearConstraint.string_of_p_linear_constraint variable_names constraint_without_clocks in
-	Buffer.add_string buffer (Printf.sprintf "  Constraint:  %s\n\n" str_constraint);
+		(* Cas spécial : stratégie morte *)
+		let dead_entry = ((-1, [-1]), -1) in
+		if Array.exists (fun entry -> entry = dead_entry) strategy then
+			Buffer.add_string buffer "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n";
 
-	Buffer.contents buffer
+		(* Ajout de la contrainte associée à l'état *)
+		let constraint_val = (self#get_state state_index).px_constraint in
+		let constraint_without_clocks = LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse [] constraint_val in
+		let str_constraint = LinearConstraint.string_of_p_linear_constraint variable_names constraint_without_clocks in
+		Buffer.add_string buffer (Printf.sprintf "  Constraint:  %s\n\n" str_constraint);
 
+		Buffer.contents buffer
 
 
 	(************************************************************)

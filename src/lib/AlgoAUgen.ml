@@ -451,8 +451,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
 		in
 
-		options#deactivate_cumulative_pruning;
-
 		let nb_sync_action =
 			List.length (List.filter (fun a -> model.action_types a = Action_type_sync) model.actions) in
 
@@ -540,7 +538,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 			| NoAliveStrategy ->
 					(* No strategy survives after propagation — property cannot be guaranteed *)
 					self#print_algo_message Verbose_standard "No alive strategy can guarantee global safety."
-			| _ -> self#print_algo_message Verbose_standard "Unexpected Error in Strategic computation"  (* Ignore any other unexpected exceptions *)
+			(*| _ -> self#print_algo_message Verbose_standard "Unexpected Error in Strategic computation"*)  (* Ignore any other unexpected exceptions *)
 		);				
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
