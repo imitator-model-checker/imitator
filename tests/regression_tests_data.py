@@ -29411,31 +29411,21 @@ init = {
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_strategy1.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #19 (strategy index 8):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: a
-View: machine : [machine: etat, time: Etat2] → Action: b
-Constraint:   x >= 10
-
-Strategy for source state #18 (strategy index 5):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: b
-View: machine : [machine: etat, time: Etat2] → Action: a
-Constraint:   x >= 10
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
+ Strategy for state #19:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #18:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
 		"""
 			} # end result file
 			,
@@ -29453,9 +29443,7 @@ Constraint nature                       : good
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_strategy1.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
+ No alive strategy found.
 		"""
 			} # end result file
 			,
@@ -29474,25 +29462,21 @@ END CONSTRAINT
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_strategy1.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #15 (strategy index 8):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: a
-View: machine : [machine: etat, time: Etat2] → Action: b
-Constraint:   x >= 10
-
-Strategy for source state #14 (strategy index 5):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: b
-View: machine : [machine: etat, time: Etat2] → Action: a
-Constraint:   x >= 10
+ Strategy for state #13:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #16:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
 		"""
 			} # end result file
 			,
@@ -29511,26 +29495,21 @@ Constraint:   x >= 10
 		'options'    : '',
 		'expectations' : [
 			{'file': 'test_strategy1.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #8 (strategy index 4):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: a
-View: machine : [machine: etat, time: Etat2] → Action: b
-Constraint:   10 >= x
-& x >= 0
-
-Strategy for source state #15 (strategy index 5):
-Coalition : machine(machine, time)
-
-View: machine : [machine: etat, time: Etat1] → Action: b
-View: machine : [machine: etat, time: Etat2] → Action: a
-Constraint:   x >= 10
+ Strategy for state #8:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #15:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
 		"""
 			} # end result file
 			,
@@ -29549,67 +29528,47 @@ Constraint:   x >= 10
 		'options'    : '',
 		'expectations' : [
 			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #127 (strategy index 96):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
-
-Strategy for source state #125 (strategy index 94):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regm1
-View: voter1 : [voter1: m1] → Action: packm1
-View: voter1 : [voter1: rm1] → Action: vm11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 1
-& t >= x
-& x + 1 > t
-
-Strategy for source state #121 (strategy index 90):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regi2
-View: voter2 : [voter2: i2] → Action: packi2
-View: voter2 : [voter2: ri2] → Action: vi21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
-
-Strategy for source state #117 (strategy index 86):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regm1
-View: voter1 : [voter1: m1] → Action: packm1
-View: voter1 : [voter1: rm1] → Action: vm11
-View: voter2 : [voter2: v20] → Action: regi2
-View: voter2 : [voter2: i2] → Action: packi2
-View: voter2 : [voter2: ri2] → Action: vi21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #125:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #121:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Strategy for state #117:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Total alive strategies : 4
 		"""
 			} # end result file
 			,
@@ -29628,67 +29587,47 @@ Constraint:   8 >= t
 		'options'    : '',
 		'expectations' : [
 			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #127 (strategy index 96):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
-
-Strategy for source state #125 (strategy index 94):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regm1
-View: voter1 : [voter1: m1] → Action: packm1
-View: voter1 : [voter1: rm1] → Action: vm11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 1
-& t >= x
-& x + 1 > t
-
-Strategy for source state #121 (strategy index 90):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regi2
-View: voter2 : [voter2: i2] → Action: packi2
-View: voter2 : [voter2: ri2] → Action: vi21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
-
-Strategy for source state #117 (strategy index 86):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regm1
-View: voter1 : [voter1: m1] → Action: packm1
-View: voter1 : [voter1: rm1] → Action: vm11
-View: voter2 : [voter2: v20] → Action: regi2
-View: voter2 : [voter2: i2] → Action: packi2
-View: voter2 : [voter2: ri2] → Action: vi21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #125:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #121:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Strategy for state #117:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Total alive strategies : 4
 		"""
 			} # end result file
 			,
@@ -29707,25 +29646,18 @@ Constraint:   8 >= t
 		'options'    : '',
 		'expectations' : [
 			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #127 (strategy index 96):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
+   [EF] Algorithm completed after 0.112 second.
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Total alive strategies : 1
 		"""
 			} # end result file
 			,
@@ -29744,25 +29676,17 @@ Constraint:   8 >= t
 		'options'    : '',
 		'expectations' : [
 			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
-BEGIN CONSTRAINT
-True
-END CONSTRAINT
-
------------------------------------------------------------
-
-Strategy for source state #127 (strategy index 96):
-Coalition : voter1(voter1), voter2(voter2)
-
-View: voter1 : [voter1: v10] → Action: regi1
-View: voter1 : [voter1: i1] → Action: packi1
-View: voter1 : [voter1: ri1] → Action: vi11
-View: voter2 : [voter2: v20] → Action: regm2
-View: voter2 : [voter2: m2] → Action: packm2
-View: voter2 : [voter2: rm2] → Action: vm21
-Constraint:   8 >= t
-& t >= 6
-& t >= x
-& x + 6 > t
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Total alive strategies : 1
 		"""
 			} # end result file
 			,
