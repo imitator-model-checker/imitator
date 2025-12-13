@@ -521,25 +521,38 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
 
 
-		if LinearConstraint.p_nnconvex_constraint_is_false result && state_space#has_coalition then (
-			try
-				
+		if state_space#has_coalition then (				
 				(* Propagate the killed strategy from the given index *)
 				state_space#propagate_killed_strategy ;
-				let state_index_to_print: int list  = if (property.synthesis_type = Synthesis) then (state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) else ([state_space#find_last_alive_strategy])
-				in
-				state_space#display_strategy_constraint_index_list state_index_to_print model.automata_names model.location_names model.action_names model.variable_names;
+			let state_index_to_print: int list  = 
+					try 
+							if (property.synthesis_type = Synthesis) then 
+									(state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) 
+							else 
+									([state_space#find_last_alive_strategy])
+					with 
+					| NoAliveStrategy -> []
+			in
 
-				state_space#initialize_winning_states state_index_to_print;
-				let total = List.length state_index_to_print in
-				print_message Verbose_standard ("Total alive strategies : " ^ (string_of_int total));
+			state_space#initialize_winning_states state_index_to_print;
 
-			with
-			| NoAliveStrategy ->
-					(* No strategy survives after propagation — property cannot be guaranteed *)
-					self#print_algo_message Verbose_standard "No alive strategy can guarantee global safety."
+			Strategic_result 
+			{
+				(* Thes explored state_space *)
+				state_space			= state_space;
+
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+
+				(* Termination *)
+				termination			= termination_status;
+			}
+				(* let total = List.length state_index_to_print in
+				print_message Verbose_standard ("Total alive strategies : " ^ (string_of_int total)); *)
+
 			(*| _ -> self#print_algo_message Verbose_standard "Unexpected Error in Strategic computation"*)  (* Ignore any other unexpected exceptions *)
-		);				
+		)
+		else		
 
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** TODO: double check ***)

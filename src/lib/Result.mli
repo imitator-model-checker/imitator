@@ -341,6 +341,19 @@ type runs_exhibition_result = {
 	termination			: state_based_algorithm_termination;
 }
 
+(************************************************************)
+(** Strategic result *)
+(************************************************************)
+type strategic_result = {
+	(* The explored state_space (that contains the list of winning state_index)*)
+	state_space : StateSpace.stateSpace;
+
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: state_based_algorithm_termination;
+}
 
 
 (************************************************************)
@@ -380,4 +393,7 @@ type imitator_result =
 
 	(* Result for runs exhibition *)
 	| Runs_exhibition_result of runs_exhibition_result
+
+	(* Result for strategic algorithms *)
+	| Strategic_result of strategic_result
 

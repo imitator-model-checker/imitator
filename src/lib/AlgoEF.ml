@@ -57,31 +57,41 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 
+		(* Get the termination status *)
+		let termination_status = match termination_status with
+		| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
+		| Some status -> status
+	  in
+
 	if model.has_coalition then (
 		
 		(* Garder uniquement les plus grandes stratégies *)
-		let filtered_strategies = state_space#keep_different_winning_strategies winning_states_and_constraint in
-
-		(* Affichage des stratégies conservées *)
-		state_space#display_strategy_constraint_index_list filtered_strategies model.automata_names model.location_names model.action_names model.variable_names;
-
-		let long = List.length filtered_strategies in
-		print_highlighted_message Shell_result Verbose_standard ("Number of winning strategies : " ^ (string_of_int long) ^ ".");
+		let filtered_strategies = 
+			try 
+			state_space#keep_different_winning_strategies winning_states_and_constraint 
+		with | NoAliveStrategy -> []
+		in
 
 		state_space#initialize_winning_states filtered_strategies;
 
-	);
+		Strategic_result 
+		{
+			(* Thes explored state_space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= termination_status;
+		}
+
+	)else
 	
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 
 		(* Projecting onto some parameters if required by the property *)
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
-
-		(* Get the termination status *)
-		 let termination_status = match termination_status with
-			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
-			| Some status -> status
-		in
 
 		(* Branching between Witness/Synthesis and Exemplification *)
 		if property.synthesis_type = Exemplification then(

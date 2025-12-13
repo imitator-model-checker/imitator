@@ -95,34 +95,42 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 			);
 			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
 		);
-
-		(* managing strategic computation resutl here*)
-		if LinearConstraint.p_nnconvex_constraint_is_false result && state_space#has_coalition then (
-			try
-		
-				(* propagate the killed strategies, and keep one or all the biggest depending of synth/witness*)
-				state_space#propagate_killed_strategy ;
-				let state_index_to_print: int list  = if (property.synthesis_type = Synthesis) then (state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) else ([state_space#find_last_alive_strategy])
-				in
-
-				state_space#display_strategy_constraint_index_list state_index_to_print model.automata_names model.location_names model.action_names model.variable_names;
-
-				state_space#initialize_winning_states state_index_to_print;
-				let total = List.length state_index_to_print in
-				print_message Verbose_standard ("Total alive strategies : " ^ (string_of_int total));
-
-			with
-			| NoAliveStrategy ->
-					(* No strategy survives after propagation — property cannot be guaranteed *)
-					self#print_algo_message Verbose_standard "No alive strategy can guarantee global safety."
-			| _ -> ()  (* Ignore any other unexpected exceptions *)
-		);
-		
+				
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError ("Termination status not set in " ^ self#algorithm_name ^ ".compute_result"))
 			| Some status -> status
 		in
+
+		(* managing strategic computation resutl here*)
+		if state_space#has_coalition then (				
+				(* Propagate the killed strategy from the given index *)
+				state_space#propagate_killed_strategy ;
+			let state_index_to_print: int list  = 
+					try 
+							if (property.synthesis_type = Synthesis) then 
+									(state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) 
+							else 
+									([state_space#find_last_alive_strategy])
+					with 
+					| NoAliveStrategy -> []
+			in
+
+			state_space#initialize_winning_states state_index_to_print;
+
+			Strategic_result 
+			{
+				(* Thes explored state_space *)
+				state_space			= state_space;
+
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+
+				(* Termination *)
+				termination			= termination_status;
+			}
+		)else
+
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else(
