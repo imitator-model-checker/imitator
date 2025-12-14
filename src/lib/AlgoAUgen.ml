@@ -446,7 +446,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	
 		if model.has_coalition then (
 		
-		(* Construire la liste des automates dans la coalition *)
+		(* Build the coalition list *)
 		let in_coalition =
 			List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
 		in
@@ -547,10 +547,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 				(* Termination *)
 				termination			= termination_status;
 			}
-				(* let total = List.length state_index_to_print in
-				print_message Verbose_standard ("Total alive strategies : " ^ (string_of_int total)); *)
-
-			(*| _ -> self#print_algo_message Verbose_standard "Unexpected Error in Strategic computation"*)  (* Ignore any other unexpected exceptions *)
 		)
 		else		
 

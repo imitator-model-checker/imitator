@@ -5347,7 +5347,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 		if model.has_coalition then (
 
-			(* Construire la liste des automates dans la coalition *)
+			(* Create the coalition list*)
 			let in_coalition =
 			  List.init model.nb_automata (fun i -> i) |> List.filter model.is_in_coalition
 			in

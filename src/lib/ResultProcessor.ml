@@ -545,13 +545,6 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 
 	(* Handle the constraint nature separately *)
 	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint single_synthesis_result.result in
-
-	let strategy_str =
-	if model.has_coalition then
-		string_strategy model single_synthesis_result.state_space
-	else
-		""
-	in
 	
 
 	(* Prepare the string to write *)
@@ -569,10 +562,9 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 		^ "\n" ^ (property_information property algorithm_name)
 		^ "\n------------------------------------------------------------"
 
-		(* 4) The actual result with delimiters, and strategy is there is one *)
+		(* 4) The actual result with delimiters *)
 		^ (add_constraints_delimiters result_str)
 		^ "\n-----------------------------------------------------------\n\n"
-		^ (strategy_str)
 
 		(* 5) Statistics about result *)
 		^ "------------------------------------------------------------"

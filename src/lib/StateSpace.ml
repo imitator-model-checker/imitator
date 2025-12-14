@@ -2038,7 +2038,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		);
 		)state_index_list;
 
-	(* Affiche une stratégie à partir de son index *)
+	(* Display a strategy from its index *)
 	method private display_strategy_index
 		(state_index : state_index)
 		(automata_names : automaton_index -> automaton_name)
@@ -2053,7 +2053,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_highlighted_message Shell_result Verbose_standard ("Strategy for state #"^(string_of_int state_index)^":" );
 		print_message Verbose_experiments ("  (Strategy index " ^(string_of_int strategy_index) ^")");
 
-		(* Affiche la coalition avec les automates visibles *)
+		(* Display the coalition with visible automata *)
 		let coalition_str =
 			coalition
 			|> List.map (fun ai ->
@@ -2065,7 +2065,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 		print_message Verbose_standard ("  Coalition : "^ (coalition_str));
 
-		(* Affiche les entrées de stratégie *)
+		(* Display strategy entries *)
 		Array.iter (fun ((main_automaton, seen_locations), action) ->
 			(* Reconstruct seen_automata from action using helper *)
 			let seen_automata = self#reconstruct_seen_automata_for_action action in
@@ -2146,28 +2146,28 @@ class stateSpace (guessed_nb_transitions : int) =
 			Hashtbl.find state_space.strategies source_state_index
 		in
 
-		(* Automates impliqués dans l'action *)
+		(* Automaton involved in the action *)
 		let involved_automata = automata_per_action action in
 
-		(* Chercher le premier automate de la coalition impliqué dans l'action *)
+		(* Find the first automaton of the coalition involved in the action *)
 		let main_automaton_opt =
 			List.find_opt (fun aut -> List.mem aut involved_automata) state_space.in_coalition
 		in
 
 		match main_automaton_opt with
 		| None ->
-			(* Aucun automate de la coalition n'est impliqué *)
+			(* No automaton of the coalition is involved *)
 			counter_create_strategy#stop;
 			source_strategy_index
 		| Some main_automaton ->
 
-			(* Si l'action est locale, ou que ce n’est pas une action de la coalition, on ne fait rien *)
+			(* If the action is local, or not an action of the coalition, do nothing *)
 			if (action >= state_space.nb_sync_action) then (
 				counter_create_strategy#stop;
 				source_strategy_index
 			) else (
 
-				(* Récupération des localisations *)
+				(* Retrieve locations *)
 				let global_location_index =
 				(Hashtbl.find state_space.all_states source_state_index).global_location_index
 				in
@@ -2175,7 +2175,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				DiscreteState.get_locations (DynArray.get state_space.locations global_location_index)
 				in
 
-				(* Automates vus par les automates impliqués *)
+				(* Automata seen by the involved automata *)
 				let seen_automata =
 				List.fold_left (fun acc automaton ->
 					let seen = Array.to_list state_space.informations.(automaton) in
@@ -2189,7 +2189,7 @@ class stateSpace (guessed_nb_transitions : int) =
 				in
 				let partial_view : Strategy.partial_view = (main_automaton, seen_locations) in
 
-				(* Création de la nouvelle stratégie *)
+				(* Create the new strategy *)
 				let new_strategy_index =
 				Strategy.create_strategy source_strategy_index partial_view action
 				in
@@ -2234,7 +2234,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		Buffer.add_string buffer (Printf.sprintf "Strategy for state #%d:\n" state_index );
 
-		(* Affiche la coalition avec les automates visibles *)
+		(* Display the coalition with visible automata *)
 		let coalition_str =
 			coalition
 			|> List.map (fun ai ->
@@ -2246,7 +2246,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		in
 		Buffer.add_string buffer (Printf.sprintf "  Coalition : %s\n" coalition_str);
 
-		(* Affiche les entrées de stratégie *)
+		(* Display strategy entries *)
 		Array.iter (fun ((main_automaton, seen_locations), action) ->
 			(* Reconstruct seen_automata from action using helper *)
 			let seen_automata = self#reconstruct_seen_automata_for_action action in
@@ -2296,12 +2296,12 @@ class stateSpace (guessed_nb_transitions : int) =
 			Buffer.add_string buffer (Printf.sprintf "  View: %s → Action: %s\n" view_str action_str);
 		) strategy;
 
-		(* Cas spécial : stratégie morte *)
+		(* Special case: dead strategy *)
 		let dead_entry = ((-1, [-1]), -1) in
 		if Array.exists (fun entry -> entry = dead_entry) strategy then
 			Buffer.add_string buffer "⚠️ Strategy marked as dead (contains [(-1, [-1])] -> [-1])\n\n";
 
-		(* Ajout de la contrainte associée à l'état *)
+		(* Add the constraint associated with the state *)
 		let constraint_val = (self#get_state state_index).px_constraint in
 		let constraint_without_clocks = LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse [] constraint_val in
 		let str_constraint = LinearConstraint.string_of_p_linear_constraint variable_names constraint_without_clocks in

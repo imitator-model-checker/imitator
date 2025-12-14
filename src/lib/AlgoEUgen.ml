@@ -275,7 +275,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			
 				(*** NOTE: do NOT perform this test depending on the option ***)
 				if options#cumulative_pruning then(
-				(* if options#cumulative_pruning then(	 *)
 					(* Check whether new_state.px_constraint <= synthesized_constraint *)
 					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 						(* Print some information *)
@@ -315,7 +314,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* 2. If #witness mode, then we will throw an exception *)
 			if state_space#has_coalition then(
 				if property.synthesis_type = Witness then(
-					(* state_space#display_all_strategies (model.location_names); *)
 					self#terminate_if_witness_strategy property new_state_index;
 				);
 				if property.synthesis_type = Synthesis then(

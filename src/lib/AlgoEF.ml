@@ -65,7 +65,7 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 
 	if model.has_coalition then (
 		
-		(* Garder uniquement les plus grandes stratégies *)
+		(* Only keep the biggest strategies *)
 		let filtered_strategies = 
 			try 
 			state_space#keep_different_winning_strategies winning_states_and_constraint 
