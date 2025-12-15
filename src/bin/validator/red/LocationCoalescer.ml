@@ -3,360 +3,225 @@ open ParsingStructure
 
 module StringSet = Set.Make(String)
 
-let true_constraint = [Parsed_arithmetic_expr (Parsed_term (Parsed_factor (Parsed_constant (ParsedValue.Bool_value true))))]
-let is_true_formula f = (f = true_constraint)
+exception CoalescingException of string
 
-module Structural = struct
+type candidate = {pair : string * string; automaton_id: int}
+module CandidateSet = Set.Make(struct type t = candidate let compare = compare end)
 
-  type controllability = Controllable | Uncontrollable
-  type action_type = Internal | Synchronized
-  type action_classification = {controllability:controllability;action_type:action_type}
-
-  module Action = struct 
-    let classifier (model : parsed_model) = 
-      let controllability_of_name, tau_controllability = 
-        match model.controllable_actions with 
-        | Parsed_controllable_actions xs ->
-          let set = List.fold_left (fun acc x -> StringSet.add x acc) StringSet.empty xs in 
-          (fun name -> if StringSet.mem name set then Controllable else Uncontrollable), Uncontrollable
-        | Parsed_uncontrollable_actions xs ->
-          let set = List.fold_left (fun acc x -> StringSet.add x acc) StringSet.empty xs in 
-          (fun name -> if StringSet.mem name set then Uncontrollable else Controllable), Controllable
-        | Parsed_no_controllable_actions -> (fun _ -> Uncontrollable), Uncontrollable
-      in
-
-      let appearances = Hashtbl.create 32 in 
-
-      let incr_appeareance action = 
-        match Hashtbl.find_opt appearances action with 
-          | Some count -> Hashtbl.replace appearances action (count + 1)
-          | None -> Hashtbl.add appearances action 1
-      in
-      let classifier = Hashtbl.create 32 in 
-
-      List.iter (fun (_, actions, _) ->
-        List.iter incr_appeareance actions
-      ) model.automata;
-
-      List.iter (fun (_, actions, _) -> 
-        List.iter (fun action -> 
-          let controllability = controllability_of_name action in 
-          let action_type = if Hashtbl.find appearances action = 1 then Internal else Synchronized in 
-          Hashtbl.add classifier action {action_type;controllability}
-          ) actions
-      ) model.automata;
-      
-
-      function Sync name -> Hashtbl.find classifier name 
-            | NoSync -> {action_type = Internal; controllability = tau_controllability}
-  end
-
-  module Graph = struct 
-    let build_succ_pred (model : parsed_model) =
-      (* One successor table and one predecessor table per automaton *)
-      let nb_aut = List.length model.automata in
-      let succ =
-        Array.init nb_aut (fun _ -> Hashtbl.create 32)
-      in
-      let pred =
-        Array.init nb_aut (fun _ -> Hashtbl.create 32)
-      in
-
-      let add_pred tbl key v =
-        match Hashtbl.find_opt tbl key with
-        | Some xs -> Hashtbl.replace tbl key (v :: xs)
-        | None    -> Hashtbl.add tbl key [v]
-      in
-
-      List.iteri
-        (fun aid (_names, _actions, locations) ->
-          List.iter
-            (fun loc ->
-              (* For successors: map src.name -> its outgoing transitions (as-is) *)
-              Hashtbl.replace succ.(aid) loc.name loc.transitions;
-
-              (* For predecessors: for each edge src->dst, store (guard,code,sync,src) under key=dst *)
-              List.iter
-                (fun ((g, code, sync, dst) as _tr) ->
-                  add_pred pred.(aid) dst (g, code, sync, loc.name))
-                loc.transitions)
-            locations)
-        model.automata;
-
-      succ, pred
-  end 
-
-  module Coalesce = struct 
-    let location_is_simple loc =
-      loc.urgency = Parsed_location_nonurgent &&
-      loc.stopped = [] &&
-      loc.flow = [] &&
-      loc.cost = None &&
-      is_true_formula loc.invariant
-
-    let can_coalesce_pair
-      ~source:src_loc
-      ~target:tgt_loc
-      ~edge:(g,code,sync ,_)
-      ~target_successors
-      ~action_classifier = 
-
-      let action_classification = action_classifier sync in 
-      
-      (* location checks *)
-      src_loc.name <> tgt_loc.name &&
-      location_is_simple src_loc &&
-      location_is_simple tgt_loc &&
-      (src_loc.acceptance = tgt_loc.acceptance) &&
-
-      (* transition checks *)
-      is_true_formula g &&
-      code = [] &&
-
-      (* action checks *)
-      action_classification.action_type = Internal &&
-      List.for_all (fun (_, _, sync, _) -> 
-        action_classification.controllability = (action_classifier sync).controllability) 
-        target_successors
-
-
-    let compute_redirections 
-      (succ : (string, transition list) Hashtbl.t)
-      (pred : (string, transition list) Hashtbl.t) 
-      (action_classifier : sync -> action_classification)
-      (locations : parsed_location list) = 
-
-      
-      let redir = Hashtbl.create 32 in 
-      List.iter (fun src -> 
-        match Hashtbl.find_opt succ src.name with 
-        | Some [ (g,code,sync,dst) ] when List.length (Hashtbl.find pred dst) = 1 ->
-          let dst_succ = Option.default [] (Hashtbl.find_opt succ dst) in
-          (match List.find_opt (fun l -> l.name = dst) locations with
-          | Some tgt when can_coalesce_pair 
-                          ~source:src 
-                          ~target:tgt 
-                          ~edge:(g,code,sync,dst)
-                          ~action_classifier 
-                          ~target_successors:dst_succ ->
-            Hashtbl.add redir src.name dst
-          | _ -> ())
-        | _ -> ()
-      ) locations;
-      redir
-
-    let apply ~redirs_per_automaton ~predicate ~printer (model : parsed_model) ~action_counter = 
-      let resolve aid name =
-        let rec aux visited n =
-          match Hashtbl.find_opt redirs_per_automaton.(aid) n with
-          | None -> n
-          | Some s ->
-              if StringSet.mem s visited then n
-              else (aux (StringSet.add s visited) s)
-        in
-        aux (StringSet.singleton name) name 
-      in
-
-      let update_action_counter aid locations drop =
-        locations 
-        |> List.filter (fun loc -> StringSet.mem loc.name drop)
-        |> List.map (fun loc -> loc.transitions)
-        |> List.flatten
-        |> List.filter_map (fun (_ ,_, sync, _) -> match sync with Sync name -> Some name | _ -> None)
-        |> List.iter (ActionCounter.remove_label action_counter ~automaton_id:aid)
-      in
-
-      let automata = 
-        List.mapi (fun aid (name, actions, locations) -> 
-          let drop = Hashtbl.fold (fun k _ acc -> StringSet.add k acc) redirs_per_automaton.(aid) StringSet.empty in 
-          update_action_counter aid locations drop;
-          let locations' = 
-            locations 
-            |> List.filter (fun loc -> not (StringSet.mem loc.name drop))
-            |> List.map (fun loc ->
-                let trans' =
-                  List.map (fun (g,code,sync,dst) ->
-                    let dst' = resolve aid dst in
-                    (g,code,sync,dst')
-                  ) loc.transitions
-                in
-                { loc with transitions = trans' }
-              )
-          in 
-          let actions' = ActionCounter.filter_local_actions action_counter ~automaton_id:aid actions in  
-          (name, actions', locations')
-        ) (model.automata) 
-      in
-
-      let aid_of_name = 
-        let map = List.mapi(fun i (a_name, _, _) -> a_name, i) model.automata in
-        fun name -> List.assoc name map
-      in 
-
-      let init_definition = 
-        model.init_definition
-        |> List.map (function 
-          | Parsed_loc_assignment (a_name, loc_name) -> 
-            Parsed_loc_assignment (a_name, resolve (aid_of_name a_name) loc_name)
-          | p -> p) in 
-
-      let controllable_actions = ActionCounter.filter_controllable_actions action_counter model.controllable_actions in 
-
-      let candidate = {model with automata; init_definition; controllable_actions} in
-      
-      let nb_model_locations = 
-        model.automata 
-        |> List.fold_left (fun acc (_, _, locs) -> acc + List.length locs) 0
-      in
-      let nb_candidate_locations = 
-        candidate.automata 
-        |> List.fold_left (fun acc (_, _, locs) -> acc + List.length locs) 0
-      in
-
-      if predicate candidate 
-      then (
-        ActionCounter.commit action_counter; 
-        Printer.info printer "Reduced locations from %d to %d" nb_model_locations nb_candidate_locations;
-        candidate
-      ) 
-      else (
-        ActionCounter.revert action_counter; 
-        Printer.warn printer "Structural coalescing did not preserve the property; no locations were coalesced.";
-        model) 
-  end
-
-  let coalesce ~predicate ~action_counter ~printer (model : parsed_model) = 
-    let succ, pred = Graph.build_succ_pred model in
-    let classify = Action.classifier model in
-    let redirs =
-      model.automata
-      |> List.mapi (fun aid (_, _, locs) ->
-          Coalesce.compute_redirections succ.(aid) pred.(aid) classify locs)
-      |> Array.of_list
+module CoalescingInfo : sig
+  type t
+  type result = MERGE_LEFT | MERGE_RIGHT | MERGE_FAILED
+  val create : parsed_model -> t
+  val next_candidate : t -> candidate option
+  val apply : t -> result -> unit
+end = struct 
+  type result = MERGE_LEFT | MERGE_RIGHT | MERGE_FAILED
+  type direction = LEFT | RIGHT
+  type t = {mutable candidates: CandidateSet.t; mutable discarded: CandidateSet.t; mutable current_candidate: candidate option}
+  let create (parsed_model : parsed_model) = 
+    let candidate_of_transition automaton_id src (_, _, _, dst) =
+      if src = dst then 
+        CandidateSet.empty
+      else ( 
+        let pair = if src < dst then (src, dst) else (dst, src) in
+        CandidateSet.singleton {pair; automaton_id}
+      )
     in
-    Printer.with_section printer "Structural" @@ fun () ->
-    Coalesce.apply ~redirs_per_automaton:redirs ~predicate model ~action_counter ~printer
+    let candidates_of_location automaton_id location =
+      location.transitions
+      |> List.map (candidate_of_transition automaton_id location.name)
+      |> List.fold_left CandidateSet.union CandidateSet.empty
+    in
+    let candidates_of_automaton automaton_id (_, _, locations) = 
+      locations 
+      |> List.map (candidates_of_location automaton_id)
+      |> List.fold_left CandidateSet.union CandidateSet.empty
+    in 
+    let candidates = 
+      parsed_model.automata
+      |> List.mapi candidates_of_automaton
+      |> List.fold_left CandidateSet.union CandidateSet.empty
+    in 
+    {
+      candidates;
+      discarded = CandidateSet.empty;
+      current_candidate = None
+    }
+
+  (* Contract: After consumer gets a (not None) candidate, they must call `apply_result` before getting the next one *)
+  let next_candidate t = 
+    if t.current_candidate <> None then raise @@ CoalescingException 
+      "Illegal to start new coalescing before previous one has been finished";
+    match CandidateSet.choose_opt t.candidates with 
+    | Some candidate -> 
+      t.current_candidate <- Some candidate;
+      Some candidate
+    | None -> None
+
+  let apply_merge t candidate direction =
+    let {pair = (a,b); automaton_id} = candidate in 
+
+    let redirect_name name = 
+      match direction with 
+      | LEFT -> if name = b then a else name
+      | RIGHT -> if name = a then b else name
+    in
+
+    let redirect_candidate candidate =
+      let {pair = (name1, name2); automaton_id = automaton_id'} = candidate in  
+      if automaton_id <> automaton_id' then candidate else
+      let name1', name2' = redirect_name name1, redirect_name name2 in 
+      let pair = if name1' < name2' then (name1', name2') else (name2', name1') in  
+      {pair; automaton_id}
+    in
+
+    t.candidates <-
+      t.candidates
+      |> CandidateSet.union t.discarded 
+      |> CandidateSet.remove candidate
+      |> CandidateSet.map redirect_candidate;
+    
+    t.discarded <- CandidateSet.empty
+
+  let apply t result = 
+    let candidate = match t.current_candidate with 
+      | Some c -> c 
+      | None -> raise @@ CoalescingException "No current candidate to report result for" 
+    in
+    t.current_candidate <- None;
+    match result with  
+      | MERGE_LEFT -> 
+        apply_merge t candidate LEFT
+      | MERGE_RIGHT ->
+        apply_merge t candidate RIGHT
+      | MERGE_FAILED -> 
+        t.candidates <- CandidateSet.remove candidate t.candidates;
+        t.discarded <- CandidateSet.add candidate t.discarded
+
 end
 
-module Predicate = struct
-  let merge_pair (model : parsed_model) ~aid ~src ~dst ~action_counter = 
-    let succesful = ref false in
+let coalesce_two_locations ~action_counter (model : parsed_model) ~source ~target ~automaton_id = 
+
+  let coalesce_in_automaton automaton source target =
+    let (name, actions, locations) = automaton in 
+    
     let rewire ((g, code, sync, name) as transition) = 
-      if name = src then (succesful := true; (g, code, sync, dst)) else transition in 
-    let automata' = 
-        List.mapi (fun id (name, actions, locations) -> 
-          let locations' = 
-            if aid = id then 
-              let src_other_transitions = 
-                locations 
-                |> List.find (fun loc -> loc.name = src)
-                |> fun loc -> loc.transitions
-                |> List.filter (fun (_, _, _, dst_name) -> dst_name <> dst)
-              in
-              locations 
-              |> List.filter (fun loc -> loc.name <> src)
-              |> List.map (fun loc -> 
-                  let transitions = 
-                    if loc.name = dst then 
-                      loc.transitions @ src_other_transitions
-                    else 
-                      loc.transitions
-                  in
-                { loc with transitions = List.map rewire transitions }
-                )
-            else
-              locations 
-          in 
-          let actions' = ActionCounter.filter_local_actions action_counter ~automaton_id:id actions in
-          (name, actions', locations')
-        ) (model.automata) 
+      if name = source then (g, code, sync, target) else transition in 
+
+    (* Save the outgoing transitions of the location we are about to remove *)
+    let source_to_target_transitions, source_transitions_except_target = 
+      locations 
+      |> List.find (fun loc -> loc.name = source)
+      |> fun loc -> loc.transitions
+      |> List.partition (fun (_, _, _, dst_name) -> dst_name = target)
     in
+
+    let locations = 
+      locations
+      |> List.filter (fun loc -> loc.name <> source)
+      |> List.map (fun loc -> 
+        let transitions = 
+          if loc.name = target then 
+            let target_to_source_transitions, target_transitions_except_source = 
+              loc.transitions
+              |> List.partition (fun (_, _, _, dst_name) -> dst_name = source)
+            in
+
+            (* remove labels *)
+            target_to_source_transitions @ source_to_target_transitions
+            |> List.map (fun (_, _, sync, _) -> sync)
+            |> List.filter_map (function Sync label -> Some label | NoSync -> None)
+            |> List.iter (fun label -> ActionCounter.remove_label action_counter ~automaton_id label);
+
+            (* transplant source transitions on target while disallowing any transitions between them *)
+            target_transitions_except_source @ source_transitions_except_target
+          else 
+            loc.transitions
+        in
+        {loc with transitions = List.map rewire transitions }
+      ) 
+    in
+    
+    (name, actions, locations)
+  in
+  let automata = 
+    model.automata
+    |> List.mapi (fun i automaton -> 
+      if i = automaton_id then 
+        coalesce_in_automaton automaton source target 
+      else 
+        automaton)
+  in
+  let init_definition = 
     let aid_of_name = 
       let map = List.mapi(fun i (a_name, _, _) -> a_name, i) model.automata in
       fun name -> List.assoc name map
     in 
+    model.init_definition
+    |> List.map (function 
+      | Parsed_loc_assignment (a_name, loc_name) when loc_name = source && aid_of_name a_name = automaton_id -> 
+        Parsed_loc_assignment (a_name, target)
+      | p -> p) 
+  in 
 
-    let controllable_actions = ActionCounter.filter_controllable_actions action_counter model.controllable_actions in 
+  let controllable_actions = ActionCounter.filter_controllable_actions action_counter model.controllable_actions in 
+
+  {model with automata; init_definition; controllable_actions}
 
 
-    let init_definition' = 
-      model.init_definition
-      |> List.map (function 
-        | Parsed_loc_assignment (a_name, loc_name) when loc_name = src && aid_of_name a_name = aid -> 
-          Parsed_loc_assignment (a_name, dst)
-        | p -> p) in 
+let try_merge ~action_counter ~printer ~predicate ~source ~target ~automaton_id model =
+  Printer.info printer "Attempting to coalesce `%s` into `%s` in automaton %d" source target automaton_id;
 
-    {model with automata = automata'; init_definition = init_definition'; controllable_actions}, !succesful
+  let model' = coalesce_two_locations ~action_counter model ~source ~target ~automaton_id
+  in
 
-  let one_coalescing_pass (model : parsed_model) ~printer ~predicate ~action_counter = 
-    let redirs = Array.init (List.length model.automata) (fun _ -> Hashtbl.create 32) in 
-    let resolve aid name =
-      let rec aux visited n =
-        match Hashtbl.find_opt redirs.(aid) n with
-        | None -> n
-        | Some s ->
-            if StringSet.mem s visited then n
-            else (aux (StringSet.add s visited) s)
-      in
-      aux (StringSet.singleton name) name 
-    in    
-    let candidate, _, changed =
-    model.automata
-    |> List.fold_left (fun (candidate, aid, changed) (a_name, _, locations) ->
-       locations
-       |> List.fold_left (fun (candidate, aid, changed) location ->
-          location.transitions
-          |> List.filter (fun (_, _, _, dst) -> dst <> location.name)
-          |> List.fold_left (fun (candidate, aid, changed) (_, _, sync, dst) -> 
-             let src = resolve aid location.name in 
-             let dst = resolve aid dst in 
-             if src = dst then (candidate, aid, changed) else (
-              (match sync with 
-              | Sync _ -> 
-                let labels_between_src_dst = 
-                  location.transitions
-                  |> List.filter_map (fun (_, _, sync, dst_name) -> 
-                    if dst_name = dst then 
-                      match sync with 
-                      | Sync label -> Some label
-                      | NoSync -> None
-                    else None)
-                in
-                List.iter (fun label ->
-                ActionCounter.remove_label action_counter ~automaton_id:aid label) labels_between_src_dst
-              | NoSync -> ());
-             let candidate', sucessful = merge_pair candidate ~aid ~src ~dst ~action_counter in
+  if predicate model' then (
+    ActionCounter.commit action_counter;
+    Printer.info printer "Coalesced `%s` into `%s` in automaton %d" source target automaton_id;
+    Printer.end_live printer;
+    Printer.start_live printer;
+    Some model'
+  ) else (
+    ActionCounter.revert action_counter;
+    None
+  )
 
-             if sucessful && predicate candidate' then 
-              begin 
-                ActionCounter.commit action_counter;
-                Hashtbl.add redirs.(aid) location.name dst;
-                Printer.info printer "Coalesced locations `%s` and `%s` in automaton `%s`" location.name dst a_name;
-                (candidate', aid, true)
-              end
-             else 
-              begin
-                ActionCounter.revert action_counter; 
-                (candidate, aid, changed)
-              end)
-             ) (candidate, aid, changed)
-          ) (candidate, aid + 1, changed) 
-       ) (model, -1, false) in 
-    candidate, changed
+type direction = Left | Right
 
-  let coalesce ~predicate (model : parsed_model) ~action_counter ~printer =
-    let rec loop model =
-      let model', changed = one_coalescing_pass model ~printer ~predicate ~action_counter
-      in
-      if changed then loop model' else model'
-    in
-    Printer.with_section printer "Predicate-guided" @@ fun () ->
-    loop model
-end
+let endpoints = function
+  | Right -> (fun a b -> a, b)
+  | Left  -> (fun a b -> b, a)
+
 
 let coalesce ~predicate model ~printer =
   Printer.with_section printer "Coalescing locations" @@ fun () ->
+  Printer.start_live printer;
   let action_counter = ActionCounter.create model in 
-  model
-  |> Structural.coalesce ~predicate ~action_counter ~printer
-  |> Predicate.coalesce ~predicate ~action_counter ~printer
+  let coalescing_info = CoalescingInfo.create model in 
+
+  let rec fixpoint model =
+    match CoalescingInfo.next_candidate coalescing_info with 
+    | Some {pair = (a,b); automaton_id} -> 
+      let try_direction dir =
+        let source, target = endpoints dir a b in
+        try_merge ~action_counter ~printer ~predicate ~source ~target ~automaton_id model
+      in
+
+      let model', merge_result =
+        let open CoalescingInfo in 
+        match try_direction Right with
+        | Some m -> m, MERGE_RIGHT
+        | None ->
+          match try_direction Left with
+          | Some m -> m, MERGE_LEFT
+          | None -> model, MERGE_FAILED 
+      in
+
+      CoalescingInfo.apply coalescing_info merge_result;
+      fixpoint model'
+    | None -> model
+  in
+  
+  fixpoint model
+
+  
