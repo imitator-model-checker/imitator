@@ -3,21 +3,20 @@ open ParsingStructure
 
 module StringSet = Set.Make(String)
 
-exception CoalescingException of string
 
 type candidate = {pair : string * string; automaton_id: int}
 module CandidateSet = Set.Make(struct type t = candidate let compare = compare end)
 
-module CoalescingInfo : sig
+module CoalescingWorklist : sig
   type t
   type result = MERGE_LEFT | MERGE_RIGHT | MERGE_FAILED
   val create : parsed_model -> t
-  val next_candidate : t -> candidate option
-  val apply : t -> result -> unit
+  val step : t -> (candidate -> parsed_model * result) -> parsed_model option
+  
 end = struct 
   type result = MERGE_LEFT | MERGE_RIGHT | MERGE_FAILED
   type direction = LEFT | RIGHT
-  type t = {mutable candidates: CandidateSet.t; mutable discarded: CandidateSet.t; mutable current_candidate: candidate option}
+  type t = {mutable candidates: CandidateSet.t; mutable deferred: CandidateSet.t}
   let create (parsed_model : parsed_model) = 
     let candidate_of_transition automaton_id src (_, _, _, dst) =
       if src = dst then 
@@ -44,19 +43,8 @@ end = struct
     in 
     {
       candidates;
-      discarded = CandidateSet.empty;
-      current_candidate = None
+      deferred = CandidateSet.empty;
     }
-
-  (* Contract: After consumer gets a (not None) candidate, they must call `apply_result` before getting the next one *)
-  let next_candidate t = 
-    if t.current_candidate <> None then raise @@ CoalescingException 
-      "Illegal to start new coalescing before previous one has been finished";
-    match CandidateSet.choose_opt t.candidates with 
-    | Some candidate -> 
-      t.current_candidate <- Some candidate;
-      Some candidate
-    | None -> None
 
   let apply_merge t candidate direction =
     let {pair = (a,b); automaton_id} = candidate in 
@@ -75,20 +63,17 @@ end = struct
       {pair; automaton_id}
     in
 
+    (* Candidates that failed under the current naming but must be retried 
+       after a successful merge, since redirection may change feasibility. *)
     t.candidates <-
       t.candidates
-      |> CandidateSet.union t.discarded 
+      |> CandidateSet.union t.deferred 
       |> CandidateSet.remove candidate
-      |> CandidateSet.map redirect_candidate;
+      |> CandidateSet.map redirect_candidate; (* Note: map may collapse candidates after redirection *)
     
-    t.discarded <- CandidateSet.empty
+    t.deferred <- CandidateSet.empty
 
-  let apply t result = 
-    let candidate = match t.current_candidate with 
-      | Some c -> c 
-      | None -> raise @@ CoalescingException "No current candidate to report result for" 
-    in
-    t.current_candidate <- None;
+  let apply t candidate result = 
     match result with  
       | MERGE_LEFT -> 
         apply_merge t candidate LEFT
@@ -96,7 +81,16 @@ end = struct
         apply_merge t candidate RIGHT
       | MERGE_FAILED -> 
         (t.candidates <- CandidateSet.remove candidate t.candidates;
-        t.discarded <- CandidateSet.add candidate t.discarded)
+        t.deferred <- CandidateSet.add candidate t.deferred)
+  
+  let step t f = 
+    (* Picks an arbitrary remaining candidate; no ordering guarantees *)
+    match CandidateSet.choose_opt t.candidates with
+    | Some candidate -> 
+      let model', result = f candidate in 
+      apply t candidate result; 
+      Some model'
+    | None -> None
 
 end
 
@@ -182,6 +176,7 @@ let try_merge ~action_counter ~printer ~predicate ~source ~target ~automaton_id 
     Printer.start_live printer;
     Some model'
   ) else (
+    Printer.info printer "";
     ActionCounter.revert action_counter;
     None
   )
@@ -195,33 +190,28 @@ let endpoints = function
 
 let coalesce ~predicate model ~printer =
   Printer.with_section printer "Coalescing locations" @@ fun () ->
-  Printer.start_live printer;
+  Printer.with_live printer @@ fun () ->
   let action_counter = ActionCounter.create model in 
-  let coalescing_info = CoalescingInfo.create model in 
+  let wl = CoalescingWorklist.create model in 
 
-  let rec fixpoint model =
-    match CoalescingInfo.next_candidate coalescing_info with 
-    | Some {pair = (a,b); automaton_id} -> 
+  let rec loop model =
+    match CoalescingWorklist.step wl (fun {pair = (a,b); automaton_id} -> 
       let try_direction dir =
         let source, target = endpoints dir a b in
         try_merge ~action_counter ~printer ~predicate ~source ~target ~automaton_id model
       in
-
-      let model', merge_result =
-        let open CoalescingInfo in 
-        match try_direction Right with
-        | Some m -> m, MERGE_RIGHT
-        | None ->
-          match try_direction Left with
-          | Some m -> m, MERGE_LEFT
-          | None -> model, MERGE_FAILED 
-      in
-
-      CoalescingInfo.apply coalescing_info merge_result;
-      fixpoint model'
+      match try_direction Right with
+      | Some model' -> model', MERGE_RIGHT
+      | None ->
+        match try_direction Left with
+        | Some model' -> model', MERGE_LEFT
+        | None -> model, MERGE_FAILED 
+      
+    ) with 
+    | Some model' -> loop model'
     | None -> model
   in
   
-  fixpoint model
+  loop model
 
   
