@@ -1416,6 +1416,9 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 
 		print_strategic_result_on_screen model result;
 
+		(* Draw state space *)
+		draw_statespace_if_requested model property_option result.state_space;
+
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
