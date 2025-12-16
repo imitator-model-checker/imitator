@@ -95,8 +95,8 @@ end = struct
       | MERGE_RIGHT ->
         apply_merge t candidate RIGHT
       | MERGE_FAILED -> 
-        t.candidates <- CandidateSet.remove candidate t.candidates;
-        t.discarded <- CandidateSet.add candidate t.discarded
+        (t.candidates <- CandidateSet.remove candidate t.candidates;
+        t.discarded <- CandidateSet.add candidate t.discarded)
 
 end
 
@@ -128,7 +128,7 @@ let coalesce_two_locations ~action_counter (model : parsed_model) ~source ~targe
             in
 
             (* remove labels *)
-            target_to_source_transitions @ source_to_target_transitions
+            (target_to_source_transitions @ source_to_target_transitions)
             |> List.map (fun (_, _, sync, _) -> sync)
             |> List.filter_map (function Sync label -> Some label | NoSync -> None)
             |> List.iter (fun label -> ActionCounter.remove_label action_counter ~automaton_id label);
@@ -141,7 +141,8 @@ let coalesce_two_locations ~action_counter (model : parsed_model) ~source ~targe
         {loc with transitions = List.map rewire transitions }
       ) 
     in
-    
+
+    let actions = ActionCounter.filter_local_actions action_counter ~automaton_id actions in
     (name, actions, locations)
   in
   let automata = 
@@ -172,8 +173,7 @@ let coalesce_two_locations ~action_counter (model : parsed_model) ~source ~targe
 let try_merge ~action_counter ~printer ~predicate ~source ~target ~automaton_id model =
   Printer.info printer "Attempting to coalesce `%s` into `%s` in automaton %d" source target automaton_id;
 
-  let model' = coalesce_two_locations ~action_counter model ~source ~target ~automaton_id
-  in
+  let model' = coalesce_two_locations ~action_counter model ~source ~target ~automaton_id in
 
   if predicate model' then (
     ActionCounter.commit action_counter;
