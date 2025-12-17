@@ -675,17 +675,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 						List.fold_left (fun acc succ -> 
 						if state_space_ptg#passed_states#mem succ then 
 							(print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration" 
-							(string_of_state_index state_space model succ));
-							acc || not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
-							)
+							(string_of_state_index state_space model succ)))
 						else 
 							(
 							let item = EXPLORE succ in 	
 							waiting#add item;
 							state_space_ptg#passed_states#add succ;
 							if verbose_mode_greater Verbose_low then
-								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State");
-							acc)
+								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State")
+							);
+							acc || not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
 						) false successors
 					in 
 					if found_existing_state_with_non_empty_winning_zone then 
