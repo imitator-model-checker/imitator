@@ -1,6 +1,6 @@
 (library
  (name gen)
- (libraries lib crowbar)
+ (libraries lib crowbar validator_spec)
 )
 
 (env

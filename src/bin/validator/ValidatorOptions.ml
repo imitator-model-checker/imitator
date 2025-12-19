@@ -6,6 +6,7 @@ type mode =
   | Reduce of { model_file : string; config_file_a : string; config_file_b : string }
 
 type t = {
+  validator_file : string;
   mode : mode;
   output_folder_path : string;
   time_limit: float option;
@@ -19,8 +20,10 @@ let output_ref = ref default_output
 
 let time_limit_ref = ref None 
 
+let validator_file_ref : string option ref = ref None
+
 let usage_msg =
-  "Usage: validator [options]\n\
+  "Usage: validator -file <validator_file> [options]\n\
    Options are:"
 
 let fail_without_usage msg = 
@@ -43,8 +46,13 @@ let set_output s = output_ref := s
 
 let set_time_limit s = time_limit_ref := Some s
 
+let set_validator_file s = validator_file_ref := Some s
+
 let speclist : (string * Arg.spec * string) list =
   [
+    ( "-file",
+      Arg.String set_validator_file,
+      "Path to the validator specification file.");
     ( "-mode",
       Arg.String set_mode,
       "Select mode: \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\"." );
@@ -68,13 +76,17 @@ let fail_with_usage msg =
 
 let parse (args: string array) : t =
   Arg.parse_argv args speclist anon_fun usage_msg;
+  let validator_file = match !validator_file_ref with
+    | Some f -> f
+    | None -> fail_with_usage "Missing validator specification file."
+  in
   let mode =
     match !mode_ref with
     | Some m -> m
     | None ->
         fail_with_usage "-mode is required. Expected \"sample-pdf\", \"sample-nopdf\", \"compare:<config_file_a>:<config_file_b>\" or \"reduce:<model_file>:<config_file_a>:<config_file_b>\"."
   in
-  { mode; output_folder_path = !output_ref; time_limit = !time_limit_ref}
+  { validator_file; mode; output_folder_path = !output_ref; time_limit = !time_limit_ref}
 
 let arg_list : string list =
   List.map (fun (opt, _, _) -> opt) speclist

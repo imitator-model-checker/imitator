@@ -1,7 +1,7 @@
 (executable
  (name VALIDATOR)
  (modes exe)
- (libraries lib crowbar gen comp runner red)
+ (libraries lib crowbar gen comp runner red validator_spec)
  (link_flags
   (:include link_flags.%{system})
   (:standard

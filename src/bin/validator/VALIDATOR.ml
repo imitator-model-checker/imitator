@@ -3,6 +3,7 @@ open Gen
 open Comp
 open Runner
 open Red
+open Validator_spec
 
 module ImitatorOptions = Options
 
@@ -16,6 +17,8 @@ let validator_main () =
 
   let printer = Printer.create () in 
 
+  let spec = Parse.parse_file validator_options.validator_file  in
+
   match mode with 
   | SampleModelGenerator {draw_pdf} -> 
     
@@ -27,7 +30,7 @@ let validator_main () =
 
     let sample_number = ref 1 in 
     Printer.info printer "Sampling 10 models into %s/\n" validator_options.output_folder_path;
-    ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model -> 
+    ValidatorCrowbar.add_test [ModelGen.parsed_model spec] (fun parsed_model -> 
       let model, _ = ModelConverter.abstract_structures_of_parsing_structures options parsed_model None in
       let output_folder = Printf.sprintf "%s/samples" validator_options.output_folder_path in
       let file_name = Printf.sprintf "sampled_model_%d" !sample_number in 
@@ -50,7 +53,7 @@ let validator_main () =
     
     Printer.start_section printer "Searching for counter example";
     Printer.start_live printer;
-    ValidatorCrowbar.add_test [ModelGen.parsed_model] (fun parsed_model ->
+    ValidatorCrowbar.add_test [ModelGen.parsed_model spec] (fun parsed_model ->
 
       Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
       

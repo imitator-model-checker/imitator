@@ -1,0 +1,6 @@
+(library (name validator_spec)
+)
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

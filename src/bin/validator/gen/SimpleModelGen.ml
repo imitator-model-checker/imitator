@@ -1,5 +1,6 @@
 open Crowbar 
 open SimpleModel
+open Validator_spec
 
 module Expr = struct 
   let constant sampler = 
@@ -83,14 +84,24 @@ module Automaton = struct
     |> Array.map (Array.map (transition_of_edge sampler nb_clocks nb_parameters))
 end
 
+let sample_dist (sampler : Sampler.t) : Spec.dist -> int = function
+  | Exact n -> n
+  | Range (min, n) -> Sampler.next_int sampler ~min n
+   
+
 module Generator = struct 
-  let gen : t gen =
-    map [range ~min:1 1; range ~min:1 2; range ~min:1 2; bytes_fixed 128]
-      (fun nb_auto nb_clocks nb_parameters random_blob ->
+  let gen (spec : Spec.t) : t gen =
+    map [bytes_fixed 128]
+      (fun random_blob ->
         let sampler = Sampler.create ~seed:random_blob in
+
+        let nb_auto = sample_dist sampler spec.nb_automata in
         let nb_loc =
-          Array.init nb_auto (fun _ -> Sampler.next_int sampler ~min:10 5)
+          Array.init nb_auto (fun _ -> sample_dist sampler spec.nb_locations)
         in
+        let nb_clocks = sample_dist sampler spec.nb_clocks in
+        let nb_parameters = sample_dist sampler spec.nb_parameters in 
+
         let automata =
           List.init nb_auto (fun i ->
             Automaton.transition_matrix
