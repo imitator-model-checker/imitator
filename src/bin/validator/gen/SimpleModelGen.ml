@@ -3,6 +3,17 @@ open SimpleModel
 open Validator_spec
 
 module Expr = struct 
+
+  let cop_of_sop : Spec.constraint_type -> SimpleModel.cop = function
+  | S_EQ -> EQ
+  | S_LE -> LEQ
+  | S_LT -> L
+  | S_GE -> GEQ
+  | S_GT -> G
+
+  let cops_of_sops (sops : Spec.constraint_type list) : SimpleModel.cop list =
+    List.map cop_of_sop sops
+
   let constant sampler = 
   let sample = Sampler.next_int sampler 10 in 
   SConstant sample
@@ -36,8 +47,8 @@ module Transition = struct
     | n -> if should_add_reset () then compute_resets ((n - 1)  :: acc) (n - 1) else acc in 
     compute_resets [] nb_clocks
 
-  let transition sampler ~nb_clocks ~nb_parameters =
-    let guard = Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[EQ; GEQ; G; L; LEQ] in 
+  let transition sampler ~nb_clocks ~nb_parameters ~(spec : Spec.t) =
+    let guard = Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.guard_types) in 
     let controllable = Sampler.next_bool sampler ~prob:0.5 in 
     let resets = [] in
     {controllable; guard; resets}
@@ -69,18 +80,18 @@ module Automaton = struct
         accepting || forced_accepting 
       ))
 
-  let invariants ~nb_auto ~nb_loc_of_automaton ~sampler ~nb_clocks ~nb_parameters = 
+  let invariants ~nb_auto ~nb_loc_of_automaton ~sampler ~nb_clocks ~nb_parameters ~(spec : Spec.t) = 
     Array.init nb_auto (fun i -> 
       Array.init nb_loc_of_automaton.(i) (fun _ ->
-        Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
+        Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.invariant_types)
       ))
 
-  let transition_of_edges sampler nb_clocks nb_parameters nb_edges =
-    List.init nb_edges (fun _ -> Transition.transition sampler ~nb_clocks ~nb_parameters)
+  let transitions_of_edge sampler nb_clocks nb_parameters spec nb_edges =
+    List.init nb_edges (fun _ -> Transition.transition sampler ~nb_clocks ~nb_parameters ~spec)
 
   let transition_matrix ~sampler ~spec ~nb_clocks ~nb_parameters ~nb_locations =
     Adjacency.generate ~sampler ~nodes:nb_locations ~spec
-    |> Array.map (Array.map (transition_of_edges sampler nb_clocks nb_parameters))
+    |> Array.map (Array.map (transitions_of_edge sampler nb_clocks nb_parameters spec))
 end
 
    
@@ -112,7 +123,7 @@ module Generator = struct
         let invariants =
           Automaton.invariants
             ~nb_auto ~nb_loc_of_automaton:nb_loc
-            ~nb_clocks ~nb_parameters ~sampler
+            ~nb_clocks ~nb_parameters ~sampler ~spec
         in
         { automata; accepting; nb_clocks; nb_parameters; invariants })
 end

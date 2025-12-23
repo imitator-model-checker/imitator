@@ -20,7 +20,7 @@ type t = {
   transitions_per_location : dist;
 
   guard_types : constraint_type list;
-  invariants_types : constraint_type list;
+  invariant_types : constraint_type list;
 
   guard_probability : float;
   invariant_probability : float;

@@ -10,7 +10,7 @@ type partial = {
   nb_clocks     : dist option;
   nb_parameters : dist option;
   guard_types   : constraint_type list option;
-  invariants_types : constraint_type list option;
+  invariant_types : constraint_type list option;
   guard_probability : float option;
   invariant_probability : float option;
   reset_probability : float option;
@@ -24,7 +24,7 @@ let empty : partial = {
   nb_clocks     = None;
   nb_parameters = None;
   guard_types   = None;
-  invariants_types = None;
+  invariant_types = None;
   guard_probability = None;
   invariant_probability = None;
   reset_probability = None;
@@ -119,7 +119,7 @@ let parse_line (acc : partial) (line : string) : partial =
 
         | "invariant_types" ->
             { acc with
-              invariants_types =
+              invariant_types =
                 Some (parse_list value parse_constraint_type)
             }
 
@@ -171,8 +171,8 @@ let finalize (p : partial) : Spec.t =
     guard_types =
       optional p.guard_types ~default:all_constraint_types;
 
-    invariants_types =
-      optional p.invariants_types ~default:all_constraint_types;
+    invariant_types =
+      optional p.invariant_types ~default:all_constraint_types;
 
     guard_probability =
       optional p.guard_probability ~default:0.5;
