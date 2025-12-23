@@ -62,7 +62,11 @@ let parse_constraint_type (s : string) : constraint_type =
 
 
 let parse_list (s : string) (elem_parser : string -> 'a) : 'a list =
-  let items = String.split_on_char ',' s in
+  if not (String.get s 0 = '[' && String.get s (String.length s - 1) = ']') then  
+    raise (Parse_error ("invalid list - must start with `[` and end with `]`"))
+  else
+  let inner = String.sub s 1 (String.length s - 2) in 
+  let items = String.split_on_char ',' inner in
   List.map (fun item -> elem_parser (String.trim item)) items
 
 let parse_float s =
@@ -77,12 +81,21 @@ let parse_bool s =
 
 
 
+let split_on_first (c : char) (s : string) : (string * string) option =
+  match String.index_opt s c with
+  | None -> None
+  | Some i ->
+      let left = String.sub s 0 i in
+      let right = String.sub s (i + 1) (String.length s - i - 1) in
+      Some (left, right)
+
+
 let parse_line (acc : partial) (line : string) : partial =
   let line = String.trim line in
   if line = "" || line.[0] = '#' then acc
   else
-    match String.split_on_char '=' line with
-    | [key; value] ->
+    match split_on_first '=' line with
+    | Some (key, value) ->
         let key = String.trim key in
         let value = String.trim value in
         begin match key with
@@ -131,7 +144,7 @@ let parse_line (acc : partial) (line : string) : partial =
             raise (Parse_error ("unknown key: " ^ key))
         end
 
-    | _ ->
+    | None ->
         raise (Parse_error ("invalid line: " ^ line))
 
 

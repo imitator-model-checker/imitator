@@ -48,13 +48,10 @@ let transition_to_parsed a_id destination_id = function {controllable;guard;rese
 let location_to_parsed a_id location_id simple_transitions invariants accepting = 
   let transitions = ref [] in 
   Array.iteri (fun j transition_list ->
-    print_string (string_of_int (List.length transition_list) ^ " ");
-    flush_all ();
     List.iter (fun simple_transition -> 
       transitions := (transition_to_parsed a_id j simple_transition)::!transitions
     ) transition_list
   ) simple_transitions;
-  print_newline ();
   let invariant = List.map Expr.bool_expr invariants.(location_id) in 
   {
     name = Names.location location_id;
