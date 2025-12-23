@@ -15,7 +15,7 @@ type formula = bool_expr list
 type transition = {controllable : bool; guard : formula; resets: int list}
 
 type t = { 
-  automata : (transition option) array array list;
+  automata : (transition list) array array list;
   accepting : bool array array;
   invariants : formula array array;
   nb_clocks: int;

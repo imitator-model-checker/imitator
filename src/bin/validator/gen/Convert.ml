@@ -47,11 +47,14 @@ let transition_to_parsed a_id destination_id = function {controllable;guard;rese
 
 let location_to_parsed a_id location_id simple_transitions invariants accepting = 
   let transitions = ref [] in 
-  Array.iteri (fun j transition_option ->
-    Option.may (fun simple_transition -> 
+  Array.iteri (fun j transition_list ->
+    print_string (string_of_int (List.length transition_list) ^ " ");
+    flush_all ();
+    List.iter (fun simple_transition -> 
       transitions := (transition_to_parsed a_id j simple_transition)::!transitions
-    ) transition_option
+    ) transition_list
   ) simple_transitions;
+  print_newline ();
   let invariant = List.map Expr.bool_expr invariants.(location_id) in 
   {
     name = Names.location location_id;
@@ -64,7 +67,7 @@ let location_to_parsed a_id location_id simple_transitions invariants accepting 
     transitions = !transitions;
   }
 
-let automaton_to_parsed (a_id : int) (matrix : (transition option) array array) (accepting : bool array) (invariants : bool_expr list array): ParsingStructure.parsed_automaton =
+let automaton_to_parsed (a_id : int) (matrix : (transition list) array array) (accepting : bool array) (invariants : bool_expr list array): ParsingStructure.parsed_automaton =
   let locations =
     Array.mapi (fun i row -> 
       location_to_parsed a_id i row invariants accepting
@@ -93,10 +96,12 @@ let init_parameters nb_params =
        Linear_term (Constant (NumConst.zero)))))
 
 let controllable_actions sm =
-  List.filteri (fun i _ ->
-    Array.exists (Array.exists (function Some t -> t.controllable | None -> false))
+  Names.controllable_action
+  |> List.init (List.length sm.automata)
+  |> List.filteri (fun i _ ->
+      Array.exists (Array.exists (List.exists (fun t -> t.controllable)))
       (List.nth sm.automata i)
-  ) (List.init (List.length sm.automata) Names.controllable_action)
+  ) 
 
 let variable_declarations sm =
   let clocks = List.init sm.nb_clocks (fun i -> (Names.clock i, None)) in

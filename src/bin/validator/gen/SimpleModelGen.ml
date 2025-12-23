@@ -75,18 +75,14 @@ module Automaton = struct
         Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:[L; LEQ]
       ))
 
-  let transition_of_edge sampler nb_clocks nb_parameters has_edge =
-    if has_edge then Some (Transition.transition sampler ~nb_clocks ~nb_parameters)
-    else None
+  let transition_of_edges sampler nb_clocks nb_parameters nb_edges =
+    List.init nb_edges (fun _ -> Transition.transition sampler ~nb_clocks ~nb_parameters)
 
-  let transition_matrix ~sampler ~density ~nb_clocks ~nb_parameters ~nb_locations =
-    Adjacency.generate ~sampler ~nodes:nb_locations ~density
-    |> Array.map (Array.map (transition_of_edge sampler nb_clocks nb_parameters))
+  let transition_matrix ~sampler ~spec ~nb_clocks ~nb_parameters ~nb_locations =
+    Adjacency.generate ~sampler ~nodes:nb_locations ~spec
+    |> Array.map (Array.map (transition_of_edges sampler nb_clocks nb_parameters))
 end
 
-let sample_dist (sampler : Sampler.t) : Spec.dist -> int = function
-  | Exact n -> n
-  | Range (min, n) -> Sampler.next_int sampler ~min n
    
 
 module Generator = struct 
@@ -95,17 +91,17 @@ module Generator = struct
       (fun random_blob ->
         let sampler = Sampler.create ~seed:random_blob in
 
-        let nb_auto = sample_dist sampler spec.nb_automata in
+        let nb_auto = Sampler.sample_dist sampler spec.nb_automata in
         let nb_loc =
-          Array.init nb_auto (fun _ -> sample_dist sampler spec.nb_locations)
+          Array.init nb_auto (fun _ -> Sampler.sample_dist sampler spec.nb_locations)
         in
-        let nb_clocks = sample_dist sampler spec.nb_clocks in
-        let nb_parameters = sample_dist sampler spec.nb_parameters in 
+        let nb_clocks = Sampler.sample_dist sampler spec.nb_clocks in
+        let nb_parameters = Sampler.sample_dist sampler spec.nb_parameters in 
 
         let automata =
           List.init nb_auto (fun i ->
             Automaton.transition_matrix
-              ~nb_locations:nb_loc.(i) ~sampler ~density:0.1
+              ~nb_locations:nb_loc.(i) ~sampler ~spec
               ~nb_clocks ~nb_parameters)
         in
         let accepting =
