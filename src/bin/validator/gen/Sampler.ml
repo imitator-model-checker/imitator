@@ -24,7 +24,4 @@ let sample_uniform br ~from =
 let sample_dist t : Spec.dist -> int = function
   | Exact n -> n
   | Range (min, n) -> 
-    print_endline (Printf.sprintf "Sampling from range (%d, %d)" min n);
-    let n = next_int t ~min n in 
-    print_endline (Printf.sprintf "Sampled value: %d" n);
-    n
+    next_int t ~min n
