@@ -14,9 +14,8 @@ let next_bool br ~prob =
   next_byte br < threshold
 
 let next_int br ?(min = 0) range =
-  let max = min + range in 
-  assert (max <= 255);
-  (next_byte br mod max) + min
+  assert (range <= 255);
+  (next_byte br mod range) + min
 
 let sample_uniform br ~from =
   let idx = next_int br (List.length from) in 
@@ -24,4 +23,8 @@ let sample_uniform br ~from =
 
 let sample_dist t : Spec.dist -> int = function
   | Exact n -> n
-  | Range (min, n) -> next_int t ~min n
+  | Range (min, n) -> 
+    print_endline (Printf.sprintf "Sampling from range (%d, %d)" min n);
+    let n = next_int t ~min n in 
+    print_endline (Printf.sprintf "Sampled value: %d" n);
+    n
