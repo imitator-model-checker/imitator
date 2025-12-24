@@ -181,7 +181,7 @@ let finalize (p : partial) : Spec.t =
       optional p.invariant_probability ~default:0.5;
 
     reset_probability =
-      optional p.reset_probability ~default:0.5;
+      optional p.reset_probability ~default:0.2;
 
     all_reachable =
       optional p.all_reachable ~default:true;

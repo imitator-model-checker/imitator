@@ -39,18 +39,25 @@ module Expr = struct
 end
   
 module Transition = struct 
-  let resets sampler nb_clocks =
+  let resets sampler nb_clocks prob =
     (* each clock has an independent chance to be added to the list of resets *)
-    let should_add_reset () = Sampler.next_bool sampler ~prob:0.1 in
+    let should_add_reset () = Sampler.next_bool sampler ~prob in
     let rec compute_resets acc = function
     | 0 -> acc
     | n -> if should_add_reset () then compute_resets ((n - 1)  :: acc) (n - 1) else acc in 
     compute_resets [] nb_clocks
 
   let transition sampler ~nb_clocks ~nb_parameters ~(spec : Spec.t) =
-    let guard = Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.guard_types) in 
+
+    let guard = 
+      let prob = spec.guard_probability in 
+      let is_guard = Sampler.next_bool sampler ~prob in 
+      if not is_guard then 
+        []
+      else
+        Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.guard_types) in 
     let controllable = Sampler.next_bool sampler ~prob:0.5 in 
-    let resets = [] in
+    let resets = resets sampler nb_clocks spec.reset_probability in
     {controllable; guard; resets}
 end
 
@@ -83,7 +90,12 @@ module Automaton = struct
   let invariants ~nb_auto ~nb_loc_of_automaton ~sampler ~nb_clocks ~nb_parameters ~(spec : Spec.t) = 
     Array.init nb_auto (fun i -> 
       Array.init nb_loc_of_automaton.(i) (fun _ ->
-        Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.invariant_types)
+        let prob = spec.invariant_probability in 
+        let is_invariant = Sampler.next_bool sampler ~prob in 
+        if not is_invariant then 
+          []
+        else
+          Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.invariant_types)
       ))
 
   let transitions_of_edge sampler nb_clocks nb_parameters spec nb_edges =
