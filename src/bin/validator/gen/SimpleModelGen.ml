@@ -56,7 +56,7 @@ module Transition = struct
         []
       else
         Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.guard_types) in 
-    let controllable = Sampler.next_bool sampler ~prob:0.5 in 
+    let controllable = Sampler.next_bool sampler ~prob:spec.controllability_ratio in 
     let resets = resets sampler nb_clocks spec.reset_probability in
     {controllable; guard; resets}
 end

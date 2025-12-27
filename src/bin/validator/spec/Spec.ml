@@ -27,4 +27,6 @@ type t = {
   reset_probability : float;
 
   cycles : bool;
+
+  controllability_ratio : float;
 }

@@ -113,10 +113,10 @@ let parsed_model_of_simple_model sm =
       automaton_to_parsed i matrix sm.accepting.(i) sm.invariants.(i))
     sm.automata
   in
+  let controllable_actions = controllable_actions sm in
   {
     automata;
-    controllable_actions =
-      Parsed_controllable_actions (controllable_actions sm);
+    controllable_actions = if controllable_actions = [] then Parsed_no_controllable_actions else Parsed_controllable_actions controllable_actions;
     variable_declarations = variable_declarations sm;
     fun_definitions = [];
     init_definition =
