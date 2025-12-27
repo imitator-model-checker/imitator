@@ -25,4 +25,6 @@ type t = {
   guard_probability : float;
   invariant_probability : float;
   reset_probability : float;
+
+  cycles : bool;
 }

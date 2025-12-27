@@ -4,6 +4,7 @@ exception Parse_error of string
 
 let all_constraint_types = [S_LE; S_LT; S_GE; S_GT; S_EQ]
 
+
 type partial = {
   nb_automata   : dist option;
   nb_locations  : dist option;
@@ -16,6 +17,7 @@ type partial = {
   reset_probability : float option;
   all_reachable : bool option;
   transitions_per_location : dist option;
+  cycles : bool option
 }
 
 let empty : partial = {
@@ -30,6 +32,7 @@ let empty : partial = {
   reset_probability = None;
   all_reachable = None;
   transitions_per_location = None;
+  cycles = None;
 }
 
 
@@ -140,6 +143,9 @@ let parse_line (acc : partial) (line : string) : partial =
               transitions_per_location = Some (parse_dist value)
             }
 
+        | "cycles" ->
+            { acc with cycles = Some (parse_bool value) }
+
         | _ ->
             raise (Parse_error ("unknown key: " ^ key))
         end
@@ -188,6 +194,9 @@ let finalize (p : partial) : Spec.t =
 
     transitions_per_location =
       optional p.transitions_per_location ~default:(Exact 1);
+
+    cycles =
+      optional p.cycles ~default:true;
   }
 
 
