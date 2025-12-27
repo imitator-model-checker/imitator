@@ -14,6 +14,9 @@ module Expr = struct
   let cops_of_sops (sops : Spec.constraint_type list) : SimpleModel.cop list =
     List.map cop_of_sop sops
 
+  let remove_lower_bounds ops = 
+    List.filter (fun op -> op <> L && op <> LEQ && op <> EQ) ops
+  
   let constant sampler = 
   let sample = Sampler.next_int sampler 10 in 
   SConstant sample
@@ -95,7 +98,15 @@ module Automaton = struct
         if not is_invariant then 
           []
         else
-          Expr.formula sampler ~nb_clocks ~nb_parameters ~opers:(Expr.cops_of_sops spec.invariant_types)
+          let opers = if i = 0 then 
+            Expr.remove_lower_bounds (Expr.cops_of_sops spec.invariant_types) 
+          else 
+            Expr.cops_of_sops spec.invariant_types 
+          in
+          if opers = [] then 
+            []
+          else
+            Expr.formula sampler ~nb_clocks ~nb_parameters ~opers
       ))
 
   let transitions_of_edge sampler nb_clocks nb_parameters spec nb_edges =

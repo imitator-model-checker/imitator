@@ -29,4 +29,7 @@ type t = {
   cycles : bool;
 
   controllability_ratio : float;
+
+
+  initial_constraint_satisfiable : bool;
 }

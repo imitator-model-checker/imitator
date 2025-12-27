@@ -18,7 +18,8 @@ type partial = {
   all_reachable : bool option;
   transitions_per_location : dist option;
   cycles : bool option;
-  controllability_ratio : float option
+  controllability_ratio : float option;
+  initial_constraint_satisfiable : bool option;
 }
 
 let empty : partial = {
@@ -35,6 +36,7 @@ let empty : partial = {
   transitions_per_location = None;
   cycles = None;
   controllability_ratio = None;
+  initial_constraint_satisfiable = None;
 }
 
 
@@ -148,6 +150,8 @@ let parse_line (acc : partial) (line : string) : partial =
             { acc with cycles = Some (parse_bool value) }
         | "controllability_ratio" ->
             { acc with controllability_ratio = Some (parse_float value) }
+        | "initial_constraint_satisfiable" ->
+            { acc with initial_constraint_satisfiable = Some (parse_bool value) }
         | _ ->
             raise (Parse_error ("unknown key: " ^ key))
         end
@@ -201,7 +205,10 @@ let finalize (p : partial) : Spec.t =
       optional p.cycles ~default:true;
 
     controllability_ratio =
-      optional p.controllability_ratio ~default:0.0
+      optional p.controllability_ratio ~default:0.0;
+
+    initial_constraint_satisfiable =
+      optional p.initial_constraint_satisfiable ~default:true
   }
 
 
