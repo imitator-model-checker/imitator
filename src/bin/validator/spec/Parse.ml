@@ -44,7 +44,7 @@ let empty : partial = {
 let range_from_bounds lo hi =
   if lo > hi then
     invalid_arg "range_from_bounds: lo > hi";
-  Range (lo, (hi - lo) + 1)
+  Range (lo, hi)
 
 let parse_dist (s : string) : dist =
   let s = String.trim s in

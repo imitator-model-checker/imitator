@@ -1,6 +1,6 @@
 (library
  (name comp)
- (libraries lib crowbar)
+ (libraries lib)
 )
 
 (env

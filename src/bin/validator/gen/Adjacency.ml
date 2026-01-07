@@ -1,62 +1,80 @@
 open Validator_spec
+open QCheck2.Gen 
 
 module IntSet = Set.Make(Int)
 
-let generate ~sampler ~nodes ~(spec : Spec.t)  =
-  let matrix : int array array = Array.make_matrix nodes nodes 0 in 
+let gen_of_dist : Spec.dist -> int t = function 
+  | Exact n -> pure n
+  | Range (min, max) -> int_range min max
 
-  let edge_count = Array.make nodes 0 in 
-  let max_edges_count = match spec.transitions_per_location with 
-  | Range (min,range) -> min + range - 1
+let spanning_tree ~nb_locations ~current_edge_count ~ancestors ~max_edge_count = 
+  let eligible_parents parents =
+    parents
+    |> List.filter (fun i -> current_edge_count.(i) < max_edge_count)
+  in
+
+  let m = Array.make_matrix nb_locations nb_locations 0 in
+
+  let rec loop i parents  =
+    if i >= nb_locations then return ()
+    else
+      let eligible = eligible_parents parents in
+      let* parent = oneofl eligible in
+
+      m.(parent).(i) <- m.(parent).(i) + 1;
+      current_edge_count.(parent) <- current_edge_count.(parent) + 1;
+      ancestors.(i) <- IntSet.add i ancestors.(parent);
+      loop (i + 1) (i :: parents)
+  in
+
+  let* () = loop 1 [0] in
+  return m
+
+let generate ~nb_locations ~(spec : Spec.t)  =
+
+  let current_edge_count = Array.make nb_locations 0 in 
+  let max_edge_count = match spec.transitions_per_location with 
+  | Range (_,max) -> max
   | Exact n -> n
   in
 
-  let ancestors = Array.make nodes IntSet.empty in
+  let ancestors = Array.make nb_locations IntSet.empty in
   ancestors.(0) <- IntSet.singleton 0;
 
-  let eligible_parents parents =
-    parents
-    |> List.filter (fun i -> edge_count.(i) < max_edges_count)
+  let* base_matrix = match spec.all_reachable with
+    | true -> spanning_tree ~nb_locations ~current_edge_count ~ancestors ~max_edge_count
+    | false -> return (Array.make_matrix nb_locations nb_locations 0)
   in
 
-  (* Spanning tree *)
-  if spec.all_reachable then 
-    (let parents = ref [0] in
-    for i = 1 to nodes - 1 do 
-      let eligible_parents = eligible_parents !parents in 
-      let parent = Sampler.sample_uniform sampler ~from:eligible_parents in
-      matrix.(parent).(i) <- 1;
-      edge_count.(parent) <- edge_count.(parent) + 1;
-      ancestors.(i) <- IntSet.add i (ancestors.(parent));
-      parents := i::!parents
-    done);
 
-  let legal_edge i j  = if spec.cycles then
-      true
-    else
-      not (IntSet.mem j (ancestors.(i)))
-  in
+  let legal_edge i j  = if spec.cycles then true else not (IntSet.mem j (ancestors.(i))) in
+
   let add_edge_to_row row i =
     Array.mapi (fun j curr -> if i = j then curr + 1 else curr) row
   in
 
   let add_random_edges_to_row = fun i row ->
-    let nb_edges_to_add = Sampler.sample_dist sampler spec.transitions_per_location - edge_count.(i) in 
+    let* nb_transitions = gen_of_dist spec.transitions_per_location in 
+    let nb_edges_to_add = nb_transitions - current_edge_count.(i) in 
     if nb_edges_to_add > 0 then
-      let all_nodes = (List.init nodes (fun x -> x)) in 
-      let selected_edge_indices = List.init nb_edges_to_add (fun _ -> 
-        let available_nodes = (List.filter (fun j -> legal_edge i j) all_nodes) in
-        match available_nodes with
-        | [] -> None
-        | nodes ->
-          let j = Sampler.sample_uniform sampler ~from:nodes in
-          ancestors.(j) <- IntSet.union ancestors.(j) ancestors.(i);
-          Some j) 
+      (let all_nodes = (List.init nb_locations (fun x -> x)) in 
+
+      let rec select_edges edges_left remaining_nodes acc = 
+         let available_nodes = List.filter (fun j -> legal_edge i j) remaining_nodes in 
+         if available_nodes = [] || edges_left = 0 then return acc
+         else (
+           let* j = oneofl available_nodes in
+           ancestors.(j) <- IntSet.union ancestors.(j) ancestors.(i);
+           select_edges (edges_left - 1) available_nodes (j::acc)
+           )
       in
-      selected_edge_indices
-      |> List.filter_map (fun x -> x)
-      |> List.fold_left (fun acc -> add_edge_to_row acc) row 
+
+      let+ selected_edges = select_edges nb_edges_to_add all_nodes [] in
+      List.fold_left (fun acc -> add_edge_to_row acc) row selected_edges)
     else
-      row
+      return row
   in
-  Array.mapi add_random_edges_to_row matrix
+
+  base_matrix
+  |> Array.mapi add_random_edges_to_row 
+  |> flatten_a

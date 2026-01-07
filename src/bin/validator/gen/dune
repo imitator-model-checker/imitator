@@ -1,6 +1,6 @@
 (library
- (name gen)
- (libraries lib crowbar validator_spec)
+ (name model_gen)
+ (libraries lib qcheck-core validator_spec)
 )
 
 (env

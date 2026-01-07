@@ -1,2 +1,2 @@
 open Validator_spec
-val gen : Spec.t -> SimpleModel.t Crowbar.gen
+val gen : Spec.t -> SimpleModel.t QCheck2.Gen.t
