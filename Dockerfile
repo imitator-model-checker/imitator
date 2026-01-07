@@ -7,6 +7,9 @@ ENV DOCKER_RUNNING=true
 # Copying files for build imitator
 COPY . /imitator/
 
+# Copy examples separately (documentation / usage)
+COPY examples /imitator/examples
+
 # Compiling imitator
 RUN cd /imitator && bash .github/scripts/build.sh && rm -rf .github
 

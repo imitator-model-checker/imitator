@@ -1,0 +1,120 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Treasure Hunters example
+ *
+ * Description     : Agents strategies for the treasure hunter,
+ *					 with 2 agents: bandits and police
+ * Author          : Laure Petrucci
+ *
+ * Created         : 2025/12/11
+ * Last modified   : 
+ *
+ * IMITATOR version: 3.4
+ ************************************************************)
+
+var
+(* constants *)
+	init_cost_f = 100, init_cost_b = 500, init_cost_h = 500,
+	init_cost_e = 0, init_cost_p = 1000, init_cost_ST = 0
+		: int;
+	init_time_f = 120, init_time_b = 60, init_time_h = 3,
+	init_time_e = 10, init_time_ST = 2
+		: rational;
+(* discrete variables *)
+	cost_ST, cost_GA, cost_TF
+		: int;
+(* clocks *)
+	alarm, robbery, action_time
+		: clock;
+(* parameters *)
+	(* init_time_p = 7 : rational; *)
+	init_time_p : parameter;
+	(* init_time_p = 13 : rational; *)
+	(* init_time_p = 3 : rational; *)
+
+(******************)
+automaton bandits
+(******************)
+actions : b_ok, b_nok, f_ok, f_nok, ST_ok, ST_nok,
+	h_ok, e_ok, he_nok,
+	TF_ok, p_quick, p_late;
+
+loc startRob: invariant True
+	when action_time >= init_time_b sync b_ok
+		do {action_time := 0} goto b_done;
+	when True sync b_nok goto failRob;
+	when action_time >= init_time_f sync f_ok
+		do {action_time := 0} goto f_done;
+	when True sync f_nok goto failRob;
+
+loc b_done: invariant True
+	when action_time >= init_time_f sync f_ok
+		do {action_time := 0, alarm :=0} goto Steal;
+	when True sync f_nok goto failRob;
+
+loc f_done: invariant True
+	when action_time >= init_time_b sync b_ok
+		do {action_time := 0, alarm:= 0} goto Steal;
+	when True sync b_nok goto failRob;
+
+loc Steal: invariant True
+	when action_time >= init_time_ST sync ST_ok
+		do {action_time := 0,
+			cost_ST := init_cost_ST + init_cost_b + init_cost_f}
+			goto ST_done;
+	when True sync ST_nok goto failRob;
+
+loc ST_done: invariant True
+	when action_time >= init_time_h sync h_ok
+		do {action_time := 0,
+			cost_GA := init_cost_h}
+			goto GA_done;
+	when action_time >= init_time_e sync e_ok
+		do {action_time := 0,
+			cost_GA := init_cost_e}
+			goto GA_done;
+	when True sync he_nok goto failRob;
+
+loc GA_done: invariant True
+	when True sync TF_ok
+		do {cost_TF := cost_ST + cost_GA}
+		goto TF_done;
+
+loc TF_done: invariant True
+	when alarm >= init_time_p sync p_quick goto failRob;
+	when alarm < init_time_p sync p_late goto successRob;
+
+loc failRob : invariant True
+loc successRob : invariant True
+end
+
+
+(******************)
+automaton police
+(******************)
+actions : p_quick, p_late;
+
+loc p0 : invariant True
+	when True sync p_quick goto p_done;
+	when True sync p_late goto p_done;
+
+loc p_done : invariant True
+end
+
+(*****************)
+(* initial state *)
+(*****************)
+init := 
+	(* location *)
+	loc[bandits] = startRob & loc[police] = p0
+	(* discrete variables *)
+&	cost_ST = 0 & cost_GA = 0 & cost_TF = 0
+	(* clocks *)
+&	alarm >= 0 & robbery = 0 & action_time = 0
+	(* parameters *)
+&	init_time_p > 0
+;
+
+end
+
