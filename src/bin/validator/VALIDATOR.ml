@@ -51,7 +51,7 @@ let () =
       
       Printer.start_section printer "Searching for counter example";
       Printer.start_live printer;
-      let cell = QCheck2.Test.make_cell ~count:1000 (ModelGen.parsed_model spec) (fun parsed_model ->
+      let cell = QCheck2.Test.make_cell ~count:validator_options.repetitions (ModelGen.parsed_model spec) (fun parsed_model ->
 
         Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
         incr i;
