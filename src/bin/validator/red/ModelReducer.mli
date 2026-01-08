@@ -2,8 +2,5 @@ open Lib
 
 val reduce : ParsingStructure.parsed_model -> 
              printer:Printer.t ->
-             options_a:Options.imitator_options ->
-             options_b:Options.imitator_options ->
-             parsed_property_option_a:ParsingStructure.parsed_property option ->
-             parsed_property_option_b:ParsingStructure.parsed_property option ->
+             options_and_properties:(Options.imitator_options * ParsingStructure.parsed_property option) list  ->
              ParsingStructure.parsed_model

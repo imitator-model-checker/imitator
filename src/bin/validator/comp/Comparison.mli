@@ -9,3 +9,4 @@ type result =
   | Error
 
 val eq_result : Result.imitator_result -> Result.imitator_result -> result
+val eq_results : Result.imitator_result list -> result

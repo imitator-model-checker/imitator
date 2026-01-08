@@ -30,3 +30,10 @@ let eq_result (a : Result.imitator_result) (b : Result.imitator_result) : result
   | Error_result _, _ | _, Error_result _ -> 
     Error
   | _ -> Not_supported
+
+let eq_results (imitator_results : Result.imitator_result list) : result =
+  List.fold_left (fun acc res ->
+    match acc with 
+    | Equal -> eq_result (List.hd imitator_results) res
+    | _ -> acc
+  ) Equal imitator_results

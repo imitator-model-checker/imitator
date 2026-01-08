@@ -1,9 +1,8 @@
-let reduce parsed_model ~printer ~options_a ~options_b ~parsed_property_option_a ~parsed_property_option_b = 
+let reduce parsed_model ~printer ~options_and_properties = 
   Printer.with_section printer "Reducer" @@ fun () ->
   let predicate =
     Checker.counter_example_predicate
-      ~options_a ~options_b
-      ~parsed_property_option_a ~parsed_property_option_b
+      ~options_and_properties
   in
 
   if not (predicate parsed_model) then begin

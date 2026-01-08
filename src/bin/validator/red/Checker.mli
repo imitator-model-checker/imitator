@@ -2,6 +2,5 @@ open Lib
 open ParsingStructure
 open Options
 
-val counter_example_predicate : options_a:imitator_options -> options_b:imitator_options -> 
-    parsed_property_option_a:parsed_property option -> parsed_property_option_b:parsed_property option -> parsed_model ->
+val counter_example_predicate : options_and_properties:(Options.imitator_options * ParsingStructure.parsed_property option) list -> parsed_model ->
     bool
