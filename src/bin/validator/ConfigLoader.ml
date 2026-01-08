@@ -1,26 +1,25 @@
 open Lib
 module ImitatorOptions = Options
 
-let build_imitator_options_and_property ?model_file imitator_args_file ~(validator_options : ValidatorOptions.t)   = 
+let build_imitator_options_and_property ?model_path imitator_args_array ~(validator_options : ValidatorOptions.t)   = 
 (* append empty string in beginning to please argument parser *)
   let time_limit_arg = match validator_options.time_limit with 
     | Some t -> [|Printf.sprintf "-time-limit=%f" t|] 
     | None -> [||] 
   in 
-  let model_file_arg = match model_file with 
+  let model_file_arg = match model_path with 
     | Some model_file -> [|model_file|]
     | None -> [||]
   in
 
   let default_args = Array.concat [[|" "; "-verbose=mute"|]; time_limit_arg; model_file_arg] in
                     
-  let arg_array = Array.append default_args @@ Arg.read_arg imitator_args_file in
+  let arg_array = Array.append default_args imitator_args_array in
   let options = new ImitatorOptions.imitator_options in
-  let skip_model = Option.is_none model_file in 
+  let skip_model = Option.is_none model_path in 
 
-  options#parse ~from_arg_list:(Some arg_array) ~skip_model ();
-  (* Reset for arg parsing again *)
   Arg.current := 0;
+  options#parse ~from_arg_list:(Some arg_array) ~skip_model ();
 
   let unexpanded_parsed_property_option = ParsingUtility.compile_unexpanded_parsed_property options in 
     (* Assumption: The property is simple and doesn't include variables. 

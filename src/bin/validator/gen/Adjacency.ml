@@ -1,4 +1,4 @@
-open Validator_spec
+open Validator_config
 open QCheck2.Gen 
 
 module IntSet = Set.Make(Int)

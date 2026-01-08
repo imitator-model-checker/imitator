@@ -1,7 +1,7 @@
 (executable
  (name VALIDATOR)
  (modes exe)
- (libraries lib qcheck-core model_gen comp runner red validator_spec)
+ (libraries lib qcheck-core model_gen comp runner red validator_config)
  (link_flags
   (:include link_flags.%{system})
   (:standard

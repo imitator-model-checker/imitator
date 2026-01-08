@@ -1,6 +1,6 @@
 open QCheck2
 open SimpleModel
-open Validator_spec
+open Validator_config
 
 let gen_of_dist : Spec.dist -> int Gen.t = function 
   | Exact n -> Gen.pure n

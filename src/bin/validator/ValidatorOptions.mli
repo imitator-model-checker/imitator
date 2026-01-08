@@ -10,6 +10,4 @@ type t = {
   time_limit: float option;
 }
 
-val parse : string array -> t
-
-val arg_list : string list
+val parse : unit -> t

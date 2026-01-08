@@ -1,6 +1,6 @@
 (library
  (name model_gen)
- (libraries lib qcheck-core validator_spec)
+ (libraries lib qcheck-core validator_config)
 )
 
 (env
