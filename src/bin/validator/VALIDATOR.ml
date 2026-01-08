@@ -37,12 +37,14 @@ let () =
 
   let {spec;mode} : Config.t = Parser.parse_file validator_options.validator_file  in
 
+  let random = Random.State.make_self_init () in
+
   match mode with 
   | SampleGenerator {pdf; samples} -> 
     let options = default_options () in
     let sample_number = ref 1 in 
     Printer.info printer "Sampling %d model(s) into %s/" samples validator_options.output_folder_path;
-    let samples = QCheck2.Gen.generate ~n:samples (ModelGen.parsed_model spec) in
+    let samples = QCheck2.Gen.generate ~rand:random ~n:samples (ModelGen.parsed_model spec) in
     List.iter 
       (fun parsed_model -> 
         let model, _ = ModelConverter.abstract_structures_of_parsing_structures options parsed_model None in
@@ -96,7 +98,7 @@ let () =
         Printer.error printer "ERROR: This type of comparison is not supported yet! You can implement it in `Comparison.ml`"; exit 1
     ) in 
 
-    let result = QCheck2.Test.check_cell cell in 
+    let result = QCheck2.Test.check_cell ~rand:random cell in 
     let state = QCheck2.TestResult.get_state result in 
     match state with 
     | Success -> ()
