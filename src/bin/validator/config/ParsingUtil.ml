@@ -75,6 +75,7 @@ let optional ~default = Option.value ~default
 
 let argv_of_string (s : string) : string array =
   s
+  |> String.map (fun c -> if c = '\n' || c = '\t' then ' ' else c)
   |> String.trim
   |> String.split_on_char ' '
   |> List.filter (fun x -> x <> "")
