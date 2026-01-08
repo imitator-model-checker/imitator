@@ -55,13 +55,13 @@ module SpecParser = struct
     | "guard_types" ->
         { acc with
           guard_types =
-            Some (parse_list value parse_constraint_type)
+            Some (value  |> parse_string_list_semicolon |> List.map parse_constraint_type)
         }
 
     | "invariant_types" ->
         { acc with
           invariant_types =
-            Some (parse_list value parse_constraint_type)
+            Some (value  |> parse_string_list_semicolon |> List.map parse_constraint_type)
         }
 
     | "guard_probability" ->

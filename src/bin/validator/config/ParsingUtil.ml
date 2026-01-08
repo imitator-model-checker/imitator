@@ -29,16 +29,6 @@ let parse_constraint_type (s : string) : constraint_type =
   | "="  -> S_EQ
   | _    -> raise (Parse_error ("invalid constraint type: " ^ s))
 
-
-let parse_list (s : string) (elem_parser : string -> 'a) : 'a list =
-  if not (String.get s 0 = '[' && String.get s (String.length s - 1) = ']') then  
-    raise (Parse_error ("invalid list - must start with `[` and end with `]`"))
-  else
-  let inner = String.sub s 1 (String.length s - 2) in 
-  let items = String.split_on_char ',' inner in
-  List.map (fun item -> elem_parser (String.trim item)) items
-
-
 let parse_string_list_semicolon (s : string) : string list =
   let s = String.trim s in
   let len = String.length s in
