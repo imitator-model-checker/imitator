@@ -25,7 +25,7 @@ module ExprGen = struct
     List.map cop_of_sop sops
 
   let remove_lower_bounds ops = 
-    List.filter (fun op -> op <> L && op <> LEQ && op <> EQ) ops
+    List.filter (fun op -> op <> G && op <> GEQ && op <> EQ) ops
   
   let term_constant = 
     let+ n =  small_nat in 
@@ -112,12 +112,13 @@ module Automaton = struct
   let invariants ~nb_auto ~nb_loc_of_automaton ~nb_clocks ~nb_parameters ~(spec : Spec.t) = 
     flatten_a @@
     Array.init nb_auto (fun i -> 
-      array_repeat nb_loc_of_automaton.(i) (
+      flatten_a @@
+      Array.init nb_loc_of_automaton.(i) (fun j ->
         let* has_invariant = bool_of_ratio spec.invariant_probability in 
         if not has_invariant then 
           pure []
         else
-          let opers = if i = 0 then 
+          let opers = if j = 0 then 
             ExprGen.remove_lower_bounds (ExprGen.cops_of_sops spec.invariant_types) 
           else 
             ExprGen.cops_of_sops spec.invariant_types 

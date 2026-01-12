@@ -11,7 +11,9 @@ let default_options () =
   let options = new ImitatorOptions.imitator_options in 
   Arg.current := 0;
   options#parse ~skip_model:true ~from_arg_list:(Some [|"";"-verbose=mute"|]) ();
+  Input.set_options options;
   options
+
 
 let nb_transitions (parsed_model : ParsingStructure.parsed_model) = 
   parsed_model.automata

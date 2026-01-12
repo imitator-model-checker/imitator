@@ -30,6 +30,31 @@ let spanning_tree ~nb_locations ~current_edge_count ~ancestors ~max_edge_count =
   let* () = loop 1 [0] in
   return m
 
+
+let reachable_nodes matrix src =
+  let n = Array.length matrix in
+
+  let neighbors u =
+    let acc = ref IntSet.empty in
+    for v = 0 to n - 1 do
+      if matrix.(u).(v) > 0 then acc := IntSet.add v !acc
+    done;
+    !acc
+  in
+
+  let rec dfs stack visited =
+    match stack with
+    | [] -> visited
+    | u :: rest ->
+      if IntSet.mem u visited then
+        dfs rest visited
+      else
+        let visited' = IntSet.add u visited in
+        let stack' = IntSet.fold (fun v st -> v :: st) (neighbors u) rest in
+        dfs stack' visited'
+  in
+  dfs [src] IntSet.empty
+
 let generate ~nb_locations ~(spec : Spec.t)  =
 
   let current_edge_count = Array.make nb_locations 0 in 
@@ -41,13 +66,14 @@ let generate ~nb_locations ~(spec : Spec.t)  =
   let ancestors = Array.make nb_locations IntSet.empty in
   ancestors.(0) <- IntSet.singleton 0;
 
-  let* base_matrix = match spec.all_reachable with
+  let* matrix = match spec.all_reachable with
     | true -> spanning_tree ~nb_locations ~current_edge_count ~ancestors ~max_edge_count
     | false -> return (Array.make_matrix nb_locations nb_locations 0)
   in
 
 
-  let legal_edge i j  = if spec.cycles then true else not (IntSet.mem j (ancestors.(i))) in
+  let legal_edge i j  = if spec.cycles then true else 
+    not (IntSet.mem i (reachable_nodes matrix j)) in
 
   let add_edge_to_row row i =
     Array.mapi (fun j curr -> if i = j then curr + 1 else curr) row
@@ -64,7 +90,6 @@ let generate ~nb_locations ~(spec : Spec.t)  =
          if available_nodes = [] || edges_left = 0 then return acc
          else (
            let* j = oneofl available_nodes in
-           ancestors.(j) <- IntSet.union ancestors.(j) ancestors.(i);
            select_edges (edges_left - 1) available_nodes (j::acc)
            )
       in
@@ -75,6 +100,13 @@ let generate ~nb_locations ~(spec : Spec.t)  =
       return row
   in
 
-  base_matrix
-  |> Array.mapi add_random_edges_to_row 
-  |> flatten_a
+  let rec loop i =
+    if i >= nb_locations then return ()
+    else
+      (let* row = add_random_edges_to_row i matrix.(i) in
+      matrix.(i) <- row;
+      loop (i + 1))
+  in
+
+  let+ () = loop 0 in
+  matrix
