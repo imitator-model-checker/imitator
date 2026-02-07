@@ -11,45 +11,6 @@ let bool_of_ratio ratio =
     let+ roll = float_bound_inclusive 1. in 
     roll <= ratio
   )
-
-module ExprGen = struct 
-  open Gen
-  let cop_of_sop : Spec.constraint_type -> SimpleModel.cop = function
-  | S_EQ -> EQ
-  | S_LE -> LEQ
-  | S_LT -> L
-  | S_GE -> GEQ
-  | S_GT -> G
-
-  let cops_of_sops (sops : Spec.constraint_type list) : SimpleModel.cop list =
-    List.map cop_of_sop sops
-
-  let remove_lower_bounds ops = 
-    List.filter (fun op -> op <> G && op <> GEQ && op <> EQ) ops
-  
-  let term_constant = 
-    let+ n =  small_nat in 
-    SConstant n 
-
-  let term_variable ~nb_clocks ~nb_parameters = 
-    let* coinflip = bool in
-    if nb_parameters = 0 || coinflip then 
-      let+ sample = int_range 0 (nb_clocks - 1) in 
-      SClock sample
-    else
-      let+ sample = int_range 0 (nb_parameters - 1) in 
-      SParam sample
-
-  let bool_expr ~nb_clocks ~nb_parameters ~opers = 
-    let+ clock = term_variable ~nb_clocks ~nb_parameters
-    and+ constant = term_constant
-    and+ oper = oneofl opers in 
-    SComp (clock, oper, constant)
-
-  let formula ~nb_clocks ~nb_parameters ~opers = 
-    let comparison = bool_expr ~nb_clocks ~nb_parameters ~opers in
-    flatten_l [comparison]
-end
   
 module Transition = struct 
   open Gen
@@ -72,7 +33,7 @@ module Transition = struct
       if not is_guard then 
         return []
       else
-        ExprGen.formula ~nb_clocks ~nb_parameters ~opers:(ExprGen.cops_of_sops spec.guard_types) in 
+        FormulaGen.formula ~nb_clocks ~nb_parameters ~opers:spec.guard_types in 
     let* controllable = bool_of_ratio spec.controllability_ratio in 
     let+ resets = resets nb_clocks spec.reset_probability in
     {controllable; guard; resets}
@@ -119,14 +80,14 @@ module Automaton = struct
           pure []
         else
           let opers = if j = 0 then 
-            ExprGen.remove_lower_bounds (ExprGen.cops_of_sops spec.invariant_types) 
+            List.filter (fun op -> let open Spec in op <> S_GT && op <> S_GE && op <> S_EQ) spec.invariant_types
           else 
-            ExprGen.cops_of_sops spec.invariant_types 
+            spec.invariant_types 
           in
           if opers = [] then 
             pure []
           else
-            ExprGen.formula ~nb_clocks ~nb_parameters ~opers
+            FormulaGen.formula ~nb_clocks ~nb_parameters ~opers
       ))
 
   let transitions_of_edge nb_clocks nb_parameters spec nb_edges =
