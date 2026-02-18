@@ -130,7 +130,7 @@ eval $(opam env)
 
 information "Installing opam and OCaml libraries..."
 
-opam install -y extlib fileutils oasis alcotest menhir &>$err || {
+opam install -y extlib fileutils oasis alcotest menhir qcheck-core &>$err || {
   error "An issue has occured while installing opam and OCaml libraries. Please check the error log."
   exit 1
 }
