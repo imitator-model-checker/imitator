@@ -12,33 +12,67 @@ module Names = struct
   let actions a_id = [controllable_action a_id; uncontrollable_action a_id]
 end
 
-module Expr = struct 
-  let term = function
-    | SConstant i -> Parsed_term (Parsed_factor (Parsed_constant (Int_value (Int32.of_int i))))
-    | SClock i    -> Parsed_term (Parsed_factor (Parsed_variable (Names.clock i, 0)))
-    | SParam i    -> Parsed_term (Parsed_factor (Parsed_variable (Names.parameter i, 0)))
+module PZoneConv = struct 
+  open PZone
+  let param i = Parsed_term (Parsed_factor (Parsed_variable (Names.parameter i, 0)))
+  let clock i = Parsed_term (Parsed_factor (Parsed_variable (Names.clock i, 0)))
+  let constant i = Parsed_term (Parsed_factor (Parsed_constant (Int_value (Int32.of_int i))))
 
-  let op = function
-  | EQ -> PARSED_OP_EQ
-  | L  -> PARSED_OP_L
-  | LEQ -> PARSED_OP_LEQ
-  | G  -> PARSED_OP_G
-  | GEQ -> PARSED_OP_GEQ
+  let comp l op r = Parsed_comparison (Parsed_arithmetic_expr l, op, Parsed_arithmetic_expr r)
 
-  let bool_expr = function
-    | SComp (t1, op_, t2) ->
-        Parsed_comparison
-          (Parsed_arithmetic_expr (term t1), op op_, Parsed_arithmetic_expr (term t2))
+  let comps_of_interval v ({ub;lb} : Interval.t) = 
+    match ub with 
+    | Some (s,b) ->   
+      let op = if s = Strict then PARSED_OP_L else PARSED_OP_LEQ in 
+      [comp v op @@ constant b]
+    | None -> []
+    @
+    match lb with 
+    | Some (s,b) ->   
+      let op = if s = Strict then PARSED_OP_G else PARSED_OP_GEQ in 
+      [comp v op @@ constant b]
+    | None -> []
+    
 
-  let reset i =
-    let zero = Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero))) in
-    let value = Parsed_discrete_bool_expr (Parsed_arithmetic_expr zero) in
-    Parsed_assignment (Parsed_scalar_update (Names.clock i, 0), value)
+
+
+  let comps_of_box var_conv (box : Box.t) = 
+    box
+    |> Array.to_list
+    |> List.mapi (fun i x -> (i, x))
+    |> List.concat_map (fun (i, interval) -> comps_of_interval (var_conv i) interval)
+  
+  let comps_of_coupling (coupling : Coupling.t) = 
+    coupling 
+    |> Array.to_list
+    |> List.mapi (fun i  -> function 
+        | ParamBound.Upper (s, p) -> 
+          let op = if s = Strict then PARSED_OP_L else PARSED_OP_LEQ in 
+          Some (comp (clock i) op (param p))
+        | ParamBound.Lower (s, p) -> 
+          let op = if s = Strict then PARSED_OP_G else PARSED_OP_GEQ in 
+          Some (comp (clock i) op (param p))
+        | ParamBound.NoBound -> None
+        )
+    |> List.filter_map Fun.id
+     
+      
+  let convert pz = 
+    let clock_comps = comps_of_box clock pz.clocks in 
+    let param_comps = comps_of_box param pz.params in 
+    let coupling_comps = comps_of_coupling pz.coupling in 
+    clock_comps @ param_comps @ coupling_comps
 end 
 
+let reset i =
+  let zero = Parsed_term (Parsed_factor (Parsed_constant (Rat_value NumConst.zero))) in
+  let value = Parsed_discrete_bool_expr (Parsed_arithmetic_expr zero) in
+  Parsed_assignment (Parsed_scalar_update (Names.clock i, 0), value)
+
+
 let transition_to_parsed a_id destination_id = function {controllable;guard;resets} ->
-  let guard = List.map Expr.bool_expr guard in
-  let parsed_seq_code_bloc = List.map Expr.reset resets in
+  let guard = PZoneConv.convert guard in
+  let parsed_seq_code_bloc = List.map reset resets in
   let label =
     if controllable then Names.controllable_action a_id
     else Names.uncontrollable_action a_id 
@@ -52,7 +86,7 @@ let location_to_parsed a_id location_id simple_transitions invariants accepting 
       transitions := (transition_to_parsed a_id j simple_transition)::!transitions
     ) transition_list
   ) simple_transitions;
-  let invariant = List.map Expr.bool_expr invariants.(location_id) in 
+  let invariant = PZoneConv.convert invariants.(location_id) in 
   {
     name = Names.location location_id;
     urgency = Parsed_location_nonurgent;
@@ -64,7 +98,7 @@ let location_to_parsed a_id location_id simple_transitions invariants accepting 
     transitions = !transitions;
   }
 
-let automaton_to_parsed (a_id : int) (matrix : (transition list) array array) (accepting : bool array) (invariants : bool_expr list array): ParsingStructure.parsed_automaton =
+let automaton_to_parsed (a_id : int) (matrix : (transition list) array array) (accepting : bool array) (invariants : PZone.t array): ParsingStructure.parsed_automaton =
   let locations =
     Array.mapi (fun i row -> 
       location_to_parsed a_id i row invariants accepting

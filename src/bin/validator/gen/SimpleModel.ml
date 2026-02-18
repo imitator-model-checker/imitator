@@ -1,23 +1,9 @@
-
-type cop = 
-| EQ | L | LEQ | G | GEQ
-
-type term = 
-| SConstant of int 
-| SClock of int
-| SParam of int
-
-type bool_expr = 
-| SComp of term * cop * term
-
-type formula = bool_expr list 
-
-type transition = {controllable : bool; guard : formula; resets: int list}
+type transition = {controllable : bool; guard : PZone.t; resets: int list}
 
 type t = { 
   automata : (transition list) array array list;
   accepting : bool array array;
-  invariants : formula array array;
+  invariants : PZone.t array array;
   nb_clocks: int;
   nb_parameters : int;
 }

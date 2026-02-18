@@ -26,14 +26,14 @@ module Transition = struct
     in 
     compute_resets [] nb_clocks
 
-  let transition ~nb_clocks ~nb_parameters ~(spec : Spec.t) =
+  let transition ~nb_clocks ~nb_parameters ~invariant ~(spec : Spec.t) =
 
     let* guard =  
       let* is_guard = bool_of_ratio spec.guard_probability in 
       if not is_guard then 
-        return []
+        return @@ PZone.top ~nb_clocks ~nb_parameters
       else
-        FormulaGen.formula ~nb_clocks ~nb_parameters ~opers:spec.guard_types in 
+        PZoneGen.gen ~nb_clocks ~nb_parameters ~seed:invariant in 
     let* controllable = bool_of_ratio spec.controllability_ratio in 
     let+ resets = resets nb_clocks spec.reset_probability in
     {controllable; guard; resets}
@@ -77,34 +77,31 @@ module Automaton = struct
       Array.init nb_loc_of_automaton.(i) (fun j ->
         let* has_invariant = bool_of_ratio spec.invariant_probability in 
         if not has_invariant then 
-          pure []
+          pure @@ PZone.top ~nb_clocks ~nb_parameters
         else
-          let opers = if j = 0 then 
-            List.filter (fun op -> let open Spec in op <> S_GT && op <> S_GE && op <> S_EQ) spec.invariant_types
+          let seed = if j = 0 then 
+            PZone.zero_clock ~nb_clocks ~nb_parameters
           else 
-            spec.invariant_types 
+            PZone.top ~nb_clocks ~nb_parameters 
           in
-          if opers = [] then 
-            pure []
-          else
-            FormulaGen.formula ~nb_clocks ~nb_parameters ~opers
+          PZoneGen.gen ~nb_clocks ~nb_parameters ~seed
       ))
 
-  let transitions_of_edge nb_clocks nb_parameters spec nb_edges =
-    flatten_l @@ List.init nb_edges (fun _ -> Transition.transition ~nb_clocks ~nb_parameters ~spec)
+  let transitions_of_edge nb_clocks nb_parameters invariant spec nb_edges =
+    flatten_l @@ List.init nb_edges (fun _ -> Transition.transition ~nb_clocks ~nb_parameters ~invariant ~spec)
 
-  let transition_matrix_of_adjacency_matrix nb_clocks nb_parameters spec adj = 
+  let transition_matrix_of_adjacency_matrix nb_clocks nb_parameters invariants spec adj = 
     adj
-    |> Array.map (fun row -> 
+    |> Array.mapi (fun i row -> 
       row 
-      |> Array.map (fun edges -> transitions_of_edge nb_clocks nb_parameters spec edges)
+      |> Array.map @@ transitions_of_edge nb_clocks nb_parameters invariants.(i) spec
       |> flatten_a
     )
     |> flatten_a
 
-  let transition_matrix ~spec ~nb_clocks ~nb_parameters ~nb_locations =
+  let transition_matrix ~spec ~nb_clocks ~nb_parameters ~nb_locations ~(invariants : PZone.t array) =
     Adjacency.generate ~nb_locations ~spec
-    >>= transition_matrix_of_adjacency_matrix nb_clocks nb_parameters spec
+    >>= transition_matrix_of_adjacency_matrix nb_clocks nb_parameters invariants spec
 
 end
 
@@ -112,25 +109,27 @@ module Generator = struct
   open Gen
   let gen (spec : Spec.t)  =
     let* nb_auto = (gen_of_dist spec.nb_automata) in
-    let* nb_loc_per_automaton = array_repeat nb_auto (gen_of_dist spec.nb_locations) in
 
-    let* nb_clocks = (gen_of_dist spec.nb_clocks)
+    let* nb_loc_per_automaton = array_repeat nb_auto (gen_of_dist spec.nb_locations)
+    and* nb_clocks = (gen_of_dist spec.nb_clocks)
     and* nb_parameters = (gen_of_dist spec.nb_parameters) in 
 
+    let* invariants =
+      Automaton.invariants
+        ~nb_auto ~nb_loc_of_automaton:nb_loc_per_automaton
+        ~nb_clocks ~nb_parameters ~spec
+    in
     let+ automata =
       flatten_l @@
       List.init nb_auto (fun i ->
         Automaton.transition_matrix
           ~nb_locations:nb_loc_per_automaton.(i) ~spec
+          ~invariants:invariants.(i)
           ~nb_clocks ~nb_parameters)
     and+ accepting =
       Automaton.accepting_locations
         ~nb_auto ~nb_loc_of_automaton:nb_loc_per_automaton
         ~guarantee_accepting:true
-    and+ invariants =
-      Automaton.invariants
-        ~nb_auto ~nb_loc_of_automaton:nb_loc_per_automaton
-        ~nb_clocks ~nb_parameters ~spec
     in
     { automata; accepting; nb_clocks; nb_parameters; invariants }
 end
