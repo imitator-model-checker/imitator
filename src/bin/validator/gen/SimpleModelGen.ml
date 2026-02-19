@@ -6,35 +6,27 @@ let gen_of_dist : Spec.dist -> int Gen.t = function
   | Exact n -> Gen.pure n
   | Range (min, max) -> Gen.int_range ~origin:min min max
 
-let bool_of_ratio ratio = 
-  Gen.(
-    let+ roll = float_bound_inclusive 1. in 
-    roll <= ratio
-  )
+
   
 module Transition = struct 
   open Gen
   let resets nb_clocks prob =
-    (* each clock has an independent chance to be added to the list of resets *)
-    let rec compute_resets acc = function
-    | 0 -> return acc
-    | n -> 
-      let* should_add_reset = bool_of_ratio prob in
-      if should_add_reset then 
-        compute_resets ((n - 1)  :: acc) (n - 1) 
-      else return acc 
-    in 
-    compute_resets [] nb_clocks
+    let* add_reset = BasicGens.bool_of_ratio prob in
+    if not add_reset then return []
+    else 
+      let* reset_amount = BasicGens.bounded_geo ~bound:nb_clocks prob in
+      let* reset_clocks = BasicGens.choose_k_array reset_amount (Array.init nb_clocks Fun.id) in
+      return (Array.to_list reset_clocks)
 
   let transition ~nb_clocks ~nb_parameters ~invariant ~(spec : Spec.t) =
 
     let* guard =  
-      let* is_guard = bool_of_ratio spec.guard_probability in 
+      let* is_guard = BasicGens.bool_of_ratio spec.guard_probability in 
       if not is_guard then 
         return @@ PZone.top ~nb_clocks ~nb_parameters
       else
         PZoneGen.gen ~nb_clocks ~nb_parameters ~seed:invariant in 
-    let* controllable = bool_of_ratio spec.controllability_ratio in 
+    let* controllable = BasicGens.bool_of_ratio spec.controllability_ratio in 
     let+ resets = resets nb_clocks spec.reset_probability in
     {controllable; guard; resets}
 end
@@ -64,7 +56,7 @@ module Automaton = struct
       flatten_a @@
       Array.init nb_loc_of_automaton.(i) (fun j ->
         let prob = prob_accepting (nb_loc_of_automaton.(i)) j in
-        let+ accepting = bool_of_ratio prob in 
+        let+ accepting = BasicGens.bool_of_ratio prob in 
         if accepting then accepting_loc_exists := true;
         let forced_accepting =  j = nb_loc_of_automaton.(i) - 1 && not !accepting_loc_exists && guarantee_accepting in
         accepting || forced_accepting 
@@ -75,7 +67,7 @@ module Automaton = struct
     Array.init nb_auto (fun i -> 
       flatten_a @@
       Array.init nb_loc_of_automaton.(i) (fun j ->
-        let* has_invariant = bool_of_ratio spec.invariant_probability in 
+        let* has_invariant = BasicGens.bool_of_ratio spec.invariant_probability in 
         if not has_invariant then 
           pure @@ PZone.top ~nb_clocks ~nb_parameters
         else

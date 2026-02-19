@@ -2,6 +2,12 @@ open QCheck2
 open Gen
 
 
+let bool_of_ratio ratio = 
+  Gen.(
+    let+ roll = float_bound_inclusive 1. in 
+    roll <= ratio
+  )
+
 let bounded_geo ?bound p = 
   let rec aux r =
     let* roll = float_bound_inclusive 1. in 
