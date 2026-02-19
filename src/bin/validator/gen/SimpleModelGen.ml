@@ -25,7 +25,7 @@ module Transition = struct
       if not is_guard then 
         return @@ PZone.top ~nb_clocks ~nb_parameters
       else
-        PZoneGen.gen ~nb_clocks ~nb_parameters ~seed:invariant in 
+        PZoneGen.gen ~nb_clocks ~nb_parameters ~max_constant:spec.max_constant ~seed:invariant in 
     let* controllable = BasicGens.bool_of_ratio spec.controllability_ratio in 
     let+ resets = resets nb_clocks spec.reset_probability in
     {controllable; guard; resets}
@@ -76,7 +76,7 @@ module Automaton = struct
           else 
             PZone.top ~nb_clocks ~nb_parameters 
           in
-          PZoneGen.gen ~nb_clocks ~nb_parameters ~seed
+          PZoneGen.gen ~nb_clocks ~nb_parameters ~seed ~max_constant:spec.max_constant
       ))
 
   let transitions_of_edge nb_clocks nb_parameters invariant spec nb_edges =

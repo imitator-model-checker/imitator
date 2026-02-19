@@ -20,15 +20,6 @@ let parse_dist (s : string) : dist =
   | _ ->
       raise (Parse_error ("invalid dist: " ^ s))
 
-let parse_constraint_type (s : string) : constraint_type =
-  match String.trim s with
-  | "<=" -> S_LE
-  | "<"  -> S_LT
-  | ">=" -> S_GE
-  | ">"  -> S_GT
-  | "="  -> S_EQ
-  | _    -> raise (Parse_error ("invalid constraint type: " ^ s))
-
 let parse_string_list_semicolon (s : string) : string list =
   let s = String.trim s in
   let len = String.length s in

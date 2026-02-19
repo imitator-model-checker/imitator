@@ -61,8 +61,7 @@ let thin k pz =
   chosen_indices;
   thinned
 
-let gen ~nb_clocks ~nb_parameters ~seed = 
-  let max_constant = 10 in
+let gen ~nb_clocks ~nb_parameters ~max_constant ~seed = 
   let n = nb_clocks + nb_parameters in 
   let witness = PZone.witness seed ~max_constant in
 

@@ -2,15 +2,11 @@ open Spec
 open ParsingUtil
 
 module SpecParser = struct 
-  let all_constraint_types = [S_LE; S_LT; S_GE; S_GT; S_EQ]
-
   type partial = {
     nb_automata   : dist option;
     nb_locations  : dist option;
     nb_clocks     : dist option;
     nb_parameters : dist option;
-    guard_types   : constraint_type list option;
-    invariant_types : constraint_type list option;
     guard_probability : float option;
     invariant_probability : float option;
     reset_probability : float option;
@@ -19,6 +15,7 @@ module SpecParser = struct
     cycles : bool option;
     controllability_ratio : float option;
     initial_constraint_satisfiable : bool option;
+    max_constant : int option;
   }
 
   let empty : partial = {
@@ -26,8 +23,6 @@ module SpecParser = struct
     nb_locations  = None;
     nb_clocks     = None;
     nb_parameters = None;
-    guard_types   = None;
-    invariant_types = None;
     guard_probability = None;
     invariant_probability = None;
     reset_probability = None;
@@ -36,6 +31,7 @@ module SpecParser = struct
     cycles = None;
     controllability_ratio = None;
     initial_constraint_satisfiable = None;
+    max_constant = None;
   }
 
   let parse_kv (acc : partial) ~key ~value : partial =
@@ -52,17 +48,8 @@ module SpecParser = struct
     | "nb_parameters" ->
         { acc with nb_parameters = Some (parse_dist value) }
 
-    | "guard_types" ->
-        { acc with
-          guard_types =
-            Some (value  |> parse_string_list_semicolon |> List.map parse_constraint_type)
-        }
-
-    | "invariant_types" ->
-        { acc with
-          invariant_types =
-            Some (value  |> parse_string_list_semicolon |> List.map parse_constraint_type)
-        }
+    | "max_constant" ->
+        { acc with max_constant = Some (parse_int value) }
 
     | "guard_probability" ->
         { acc with guard_probability = Some (parse_float value) }
@@ -103,12 +90,8 @@ module SpecParser = struct
 
     nb_parameters =
       require "nb_parameters" p.nb_parameters;
-
-    guard_types =
-      optional p.guard_types ~default:all_constraint_types;
-
-    invariant_types =
-      optional p.invariant_types ~default:all_constraint_types;
+    max_constant =
+      optional p.max_constant ~default:10;
 
     guard_probability =
       optional p.guard_probability ~default:0.5;

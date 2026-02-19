@@ -1,1 +1,1 @@
-val gen : nb_clocks:int -> nb_parameters:int -> seed:PZone.t -> PZone.t QCheck2.Gen.t
+val gen : nb_clocks:int -> nb_parameters:int -> max_constant:int -> seed:PZone.t -> PZone.t QCheck2.Gen.t
