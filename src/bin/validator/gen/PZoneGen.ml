@@ -16,6 +16,8 @@ let box_around valuation max_constant =
 
 let couple_around c_valuation p_valuation =
   let nb_parameters = Array.length p_valuation in 
+  let nb_clocks = Array.length c_valuation in
+  if nb_parameters = 0 then pure (Array.init  nb_clocks (fun _ -> ParamBound.NoBound)) else
   flatten_a @@
   Array.map (fun v_c ->
     let open ParamBound in

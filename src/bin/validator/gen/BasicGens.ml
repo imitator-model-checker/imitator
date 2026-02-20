@@ -9,6 +9,7 @@ let bool_of_ratio ratio =
   )
 
 let bounded_geo ?bound p = 
+  if bound = Some 0 then pure 0 else
   let rec aux r =
     let* roll = float_bound_inclusive 1. in 
     let hit_bound = match bound with Some k -> r >= k | None -> false in 
