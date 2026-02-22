@@ -164,6 +164,16 @@ let parser_lexer_gen (model_or_property : model_or_property) (options : Options.
 	parsing_structure
 
 
+let parser_lexer_from_string (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer the_string =
+	(* Lexing *)
+	let lexbuf = try (Lexing.from_string the_string) with
+		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1)
+	in
+	(* Function to convert a in_channel to a string (in case of parsing error) *)
+	let string_of_input () = the_string in
+	(* Generic function *)
+	parser_lexer_gen model_or_property options the_parser the_lexer lexbuf string_of_input "input string"
+
 (* Parse a file and return the abstract structure *)
 let parser_lexer_from_file (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer file_name =
 	(* Open file *)
@@ -242,6 +252,22 @@ let compile_unexpanded_parsed_property options =
 	)else(
 		None
 	)
+
+let compile_unexpanded_parsed_property_from_string options the_string =
+	(* Statistics *)
+	parsing_counter#start;
+
+	print_message Verbose_low ("Parsing property from string…");
+	
+	(* Parsing the property *)
+	let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_string Property options PropertyParser.main PropertyLexer.token the_string in
+
+	(* Statistics *)
+	parsing_counter#stop;
+
+	print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
+	
+	parsed_property
 
 
 (************************************************************)

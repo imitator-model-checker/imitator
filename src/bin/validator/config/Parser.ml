@@ -121,7 +121,7 @@ module SpecParser = struct
 end
 
 module ModeParser = struct
-  type kind = SampleGenerator | Reduce | Compare
+  type kind = SampleGenerator | Reduce | Compare | PropertyWitness
 
   type partial = {
     kind : kind option;
@@ -129,17 +129,19 @@ module ModeParser = struct
     samples : int option;
 
     configs : string list option;
+    property : string option;
     model_path : string option;
   }
 
   let empty : partial =
-    { kind=None; pdf=None; samples=None; configs=None; model_path=None }
+    { kind=None; pdf=None; samples=None; configs=None; property=None; model_path=None }
 
   let parse_kind (s : string) : kind =
     match String.trim s |> String.lowercase_ascii with
     | "sample" -> SampleGenerator
     | "reduce" -> Reduce
     | "compare" -> Compare
+    | "property-witness" -> PropertyWitness
     | _ -> raise (Parse_error ("invalid mode kind: " ^ s))
 
   let parse_kv (acc : partial) ~key ~value : partial =
@@ -158,6 +160,9 @@ module ModeParser = struct
 
     | "configs" ->
         { acc with configs = Some (parse_string_list_semicolon value) }
+
+    | "property" ->
+        { acc with property = Some (String.trim value) }
 
     | _ ->
         raise (Parse_error ("unknown mode key: " ^ key))
@@ -183,6 +188,9 @@ module ModeParser = struct
         Mode.Compare {
           configs = argv_list_of_configs configs;
         }
+    | PropertyWitness ->
+        let property = require "property" p.property in
+        Mode.PropertyWitness { property }
 end
 
 let read_logical_line ic (first : string) =

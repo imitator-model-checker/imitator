@@ -69,7 +69,7 @@ let () =
     let options_and_properties = 
       List.map 
         (fun config -> 
-          ConfigLoader.build_imitator_options_and_property config ~validator_options
+          ConfigLoader.build_imitator_options_and_property_from_args config ~validator_options
         ) configs
     in
 
@@ -127,11 +127,47 @@ let () =
       Printer.info printer "Saving reduced counter example as %s/%s.imi" output_folder file_name; 
       ModelOutput.output_model ~file_name ~output_folder default_options reduced_model
     | _ -> ())
+  | PropertyWitness {property} -> (
+    let i = ref 0 in 
+    let time_outs = ref 0 in 
+    let default_options = default_options () in
+
+    let options, property = ConfigLoader.build_imitator_options_and_property_from_property_string property ~validator_options in
+    Printer.start_section printer "Searching for witness";
+    Printer.start_live printer;
+    let cell = QCheck2.Test.make_cell ~count:validator_options.repetitions (ModelGen.parsed_model spec) (fun parsed_model ->
+
+      Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
+      incr i;
+
+      let result, _ = ModelRunner.run options parsed_model property in
+      not @@ Predicates.result_is_witness result
+    ) in 
+
+    let result = QCheck2.Test.check_cell ~rand:random cell in 
+    let state = QCheck2.TestResult.get_state result in 
+    match state with 
+    | Success -> ()
+    | Failed {instances} -> 
+      let counter_example = List.hd instances in 
+      let parsed_model = counter_example.instance in 
+      let nb_locations = nb_locations parsed_model in
+      let nb_transitions = nb_transitions parsed_model in
+
+      let output_folder = Printf.sprintf "%s/counter_examples" validator_options.output_folder_path in
+      let base_file_name = Printf.sprintf "counter_example_%d" !i in 
+
+      Printer.end_live printer;
+      Printer.info printer "Found witness with %d locations and %d transitions" nb_locations nb_transitions;
+      let abstract_model, _ = ModelConverter.abstract_structures_of_parsing_structures default_options parsed_model None in 
+      Printer.info printer "Saving full witness as %s/%s.imi" output_folder base_file_name; 
+      ModelOutput.output_model ~file_name:base_file_name ~output_folder default_options abstract_model;
+    | _ -> ())
   | Reduce {model_path;configs} ->
     let options_and_properties = 
       List.map 
         (fun config -> 
-          ConfigLoader.build_imitator_options_and_property config ~validator_options ~model_path
+          ConfigLoader.build_imitator_options_and_property_from_args config ~validator_options ~model_path
         ) configs
     in
 

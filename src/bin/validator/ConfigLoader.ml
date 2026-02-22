@@ -1,7 +1,29 @@
 open Lib
 module ImitatorOptions = Options
 
-let build_imitator_options_and_property ?model_path imitator_args_array ~(validator_options : ValidatorOptions.t)   = 
+let build_imitator_options_and_property_from_property_string property_string ~(validator_options : ValidatorOptions.t) = 
+  (* append empty string in beginning to please argument parser *)
+  let time_limit_arg = match validator_options.time_limit with 
+    | Some t -> [|Printf.sprintf "-time-limit=%f" t|] 
+    | None -> [||] 
+  in 
+
+  let default_args = Array.concat [[|"dummy"; "dummy"; "-verbose=mute"|]; time_limit_arg] in
+                
+  let options = new ImitatorOptions.imitator_options in
+
+  Arg.current := 0;
+  options#parse ~from_arg_list:(Some default_args) ~skip_model:true ();
+
+
+  let unexpanded_parsed_property_option = ParsingUtility.compile_unexpanded_parsed_property_from_string options property_string in 
+    (* Assumption: The property is simple and doesn't include variables. 
+     Variables in properties do not make sense when models are randomly generated
+     TODO: Throw error if a parsed property has variables *)
+  let parsed_property_option = Option.map (fun property -> Templates.expand_property [] property) (Some unexpanded_parsed_property_option) in
+  options, parsed_property_option
+
+let build_imitator_options_and_property_from_args ?model_path imitator_args_array ~(validator_options : ValidatorOptions.t)   = 
 (* append empty string in beginning to please argument parser *)
   let time_limit_arg = match validator_options.time_limit with 
     | Some t -> [|Printf.sprintf "-time-limit=%f" t|] 
