@@ -1,6 +1,6 @@
 open Lib
 
 val reduce : ParsingStructure.parsed_model -> 
+             predicate:(ParsingStructure.parsed_model -> bool) ->
              printer:Printer.t ->
-             options_and_properties:(Options.imitator_options * ParsingStructure.parsed_property option) list  ->
              ParsingStructure.parsed_model

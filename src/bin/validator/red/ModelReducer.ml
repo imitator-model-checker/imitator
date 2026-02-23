@@ -1,12 +1,8 @@
-let reduce parsed_model ~printer ~options_and_properties = 
+let reduce parsed_model ~predicate ~printer = 
   Printer.with_section printer "Reducer" @@ fun () ->
-  let predicate =
-    Checker.counter_example_predicate
-      ~options_and_properties
-  in
 
   if not (predicate parsed_model) then begin
-    Printer.error printer "Initial model is not a valid counterexample.@, Aborting@,";
+    Printer.error printer "Initial model does not satisfy predicate.@, Aborting@,";
     exit 1
   end;
   

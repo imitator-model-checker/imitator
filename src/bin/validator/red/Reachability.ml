@@ -22,6 +22,8 @@ let remove_islands_from_automaton ~printer (name, actions, locations) =
   let indeg = Array.make n false in
   let outdeg = Array.make n false in
 
+  indeg.(0) <- true; 
+
   Array.iteri (fun i row ->
     Array.iteri (fun j edge ->
       if edge then begin
