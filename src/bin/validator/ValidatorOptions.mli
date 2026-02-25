@@ -4,6 +4,7 @@ type t = {
   time_limit: float option;
   repetitions: int;
   seed : int option;
+  results_file : string option;
 }
 
 val parse : unit -> t

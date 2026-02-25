@@ -27,6 +27,14 @@ type counter_example =
   | CounterExample of {full_parsed_model : ParsingStructure.parsed_model; reduced_parsed_model : ParsingStructure.parsed_model option}
   | No_CounterExample
 
+type run_stats = {
+  total_runs_completed : int;
+  run_found : int option;
+  time_to_find_seconds : float option;
+  initial_locations : int option;
+  initial_transitions : int option;
+}
+
 type predicate = ParsingStructure.parsed_model -> predicate_result
 
 let find ~predicate ~printer ~reduce (spec : Spec.t) (options : ValidatorOptions.t) =
@@ -37,6 +45,10 @@ let find ~predicate ~printer ~reduce (spec : Spec.t) (options : ValidatorOptions
   in
   let i = ref 0 in
   let time_outs = ref 0 in
+  let start_time = Unix.gettimeofday () in
+  let found_at_run = ref None in
+  let time_to_find = ref None in
+  let initial_size = ref None in
   Printer.start_live printer;
   let cell = QCheck2.Test.make_cell ~count:options.repetitions (ModelGen.parsed_model spec) (fun parsed_model ->
     Printer.info printer "[%d | TO: %d]" (!i + 1) !time_outs;
@@ -45,11 +57,24 @@ let find ~predicate ~printer ~reduce (spec : Spec.t) (options : ValidatorOptions
     let result = predicate parsed_model in
     match result with
     | True -> true
-    | False -> false
+    | False ->
+      if !found_at_run = None then begin
+        found_at_run := Some !i;
+        time_to_find := Some (Unix.gettimeofday () -. start_time);
+        initial_size := Some (nb_locations parsed_model, nb_transitions parsed_model)
+      end;
+      false
     | Time_out -> incr time_outs; true
   ) in
   let result = QCheck2.Test.check_cell ~rand:random cell in
   let state = QCheck2.TestResult.get_state result in
+  let stats = {
+    total_runs_completed = !i;
+    run_found = !found_at_run;
+    time_to_find_seconds = !time_to_find;
+    initial_locations = Option.map fst !initial_size;
+    initial_transitions = Option.map snd !initial_size;
+  } in
   match state with
     | Failed {instances} -> (
       let counter_example = List.hd instances in
@@ -69,8 +94,8 @@ let find ~predicate ~printer ~reduce (spec : Spec.t) (options : ValidatorOptions
         let reduced_nb_locations = nb_locations reduced_parsed_model in
         let reduced_nb_transitions = nb_transitions reduced_parsed_model in
         Printer.info printer "Reduced model to %d locations and %d transitions" reduced_nb_locations reduced_nb_transitions;
-        CounterExample {full_parsed_model = parsed_model; reduced_parsed_model = Some reduced_parsed_model}
+        CounterExample {full_parsed_model = parsed_model; reduced_parsed_model = Some reduced_parsed_model}, stats
       )
       else
-        CounterExample {full_parsed_model = parsed_model; reduced_parsed_model = None})
-    | _ -> No_CounterExample
+        CounterExample {full_parsed_model = parsed_model; reduced_parsed_model = None}, stats)
+    | _ -> No_CounterExample, stats

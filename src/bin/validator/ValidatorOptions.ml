@@ -4,6 +4,7 @@ type t = {
   time_limit : float option;
   repetitions : int;
   seed : int option;
+  results_file : string option;
 }
 
 let default_output = "validator-output"
@@ -20,6 +21,7 @@ let parse () : t =
   let time_limit_ref : float option ref = ref None in
   let repeititons_ref : int option ref = ref None in
   let seed_ref : int option ref = ref None in
+  let results_file_ref : string option ref = ref None in
 
   let usage_msg =
     "Usage: validator <validator_file> [options]\n\
@@ -42,6 +44,9 @@ let parse () : t =
       ( "-seed",
         Arg.Int (fun s -> seed_ref := Some s),
         "Random seed (integer) to use for model generation" );
+      ( "-results-file",
+        Arg.String (fun s -> results_file_ref := Some s),
+        "Path to write a JSON results summary after all runs complete" );
     ]
   in
 
@@ -72,4 +77,4 @@ let parse () : t =
   in
 
   { validator_file; output_folder_path = !output_ref; time_limit = !time_limit_ref;
-    repetitions; seed = !seed_ref }
+    repetitions; seed = !seed_ref; results_file = !results_file_ref }
