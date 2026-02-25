@@ -129,12 +129,19 @@ module ModeParser = struct
     samples : int option;
 
     configs : string list option;
-    property : string option;
+    properties : Mode.property list;
     model_path : string option;
   }
 
   let empty : partial =
-    { kind=None; pdf=None; samples=None; configs=None; property=None; model_path=None }
+    { kind=None; pdf=None; samples=None; configs=None; properties=[]; model_path=None }
+
+
+  let parse_property (s : string) : Mode.property =
+    let s = String.trim s in
+    let negated = String.length s >= 2 && String.sub s 0 2 = "! " in
+    let property = if negated then String.sub s 2 (String.length s - 2) else s in
+    { property; negated }
 
   let parse_kind (s : string) : kind =
     match String.trim s |> String.lowercase_ascii with
@@ -161,9 +168,8 @@ module ModeParser = struct
     | "configs" ->
         { acc with configs = Some (parse_string_list_semicolon value) }
 
-    | "property" ->
-        { acc with property = Some (String.trim value) }
-
+    | "properties" ->
+        { acc with properties =  List.map parse_property (parse_string_list_semicolon value) }
     | _ ->
         raise (Parse_error ("unknown mode key: " ^ key))
 
@@ -189,8 +195,7 @@ module ModeParser = struct
           configs = argv_list_of_configs configs;
         }
     | PropertyGuided ->
-        let property = require "property" p.property in
-        Mode.PropertyGuided { property }
+        Mode.PropertyGuided p.properties
 end
 
 let read_logical_line ic (first : string) =

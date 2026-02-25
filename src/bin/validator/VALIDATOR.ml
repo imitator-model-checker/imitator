@@ -94,34 +94,46 @@ let () =
       Printer.info printer "Saving reduced counter example as %s/%s.imi" output_folder red_file_name; 
       ModelOutput.output_model ~file_name:red_file_name ~output_folder default_options reduced_model
     | No_CounterExample -> ())
-  | PropertyGuided {property} -> (
+  | PropertyGuided properties -> (
 
     let default_options = default_options () in
 
-
-    (* Remove "property :=" if it starts with it, remove # if it contains. Make space into _. Remove trailing ; *)
-    let property_string_sanitized = 
-      property 
+    let property_string_sanitized property negate = 
+      (if negate then "not_" else "") ^
+      (property 
       |> String.trim
       |> (fun s -> if String.starts_with ~prefix:"property :=" s then String.sub s 11 (String.length s - 11) else s)
       |> (fun s -> if String.contains s '#' then String.sub s (String.index s '#'+1) (String.length s - String.index s '#' - 1) else s)
       |> String.map (fun c -> if c = ' ' then '_' else c)
-      |> (fun s -> if String.ends_with ~suffix:";" s then String.sub s 0 (String.length s - 1) else s)
+      |> (fun s -> if String.ends_with ~suffix:";" s then String.sub s 0 (String.length s - 1) else s))
     in
 
-    let options, property = ConfigLoader.build_imitator_options_and_property_from_property_string property ~validator_options in
+    let properties_as_string = 
+      properties 
+      |> List.map (fun (p : Mode.property) -> property_string_sanitized p.property p.negated) 
+      |> String.concat "__and__"
+    in
+
+
+
     Printer.start_section printer "Searching for a PTA with non-empty witness set for the property";
 
     let predicate parsed_model : CounterExampleFinder.predicate_result = 
-      let result, _ = ModelRunner.run options parsed_model property in 
-      Predicates.result_is_empty result
+      properties
+      |> List.map (fun (p : Mode.property) -> 
+        let options, property = ConfigLoader.build_imitator_options_and_property_from_property_string p.property ~validator_options in
+        let result, _ = ModelRunner.run options parsed_model property in 
+        result, p.negated
+      )
+      |> Predicates.results_intersect 
+      |> Predicates.negate
     in
     let result = CounterExampleFinder.find ~predicate ~printer ~reduce:true spec validator_options in
 
     match result with 
     | CounterExample {full_parsed_model; reduced_parsed_model} ->
       let output_folder = Printf.sprintf "%s/property_guided" validator_options.output_folder_path in
-      let base_file_name = Printf.sprintf "property_guided_%s" @@ property_string_sanitized in 
+      let base_file_name = Printf.sprintf "%s" @@ properties_as_string in 
 
       let abstract_model, _ = ModelConverter.abstract_structures_of_parsing_structures default_options full_parsed_model None in 
       Printer.info printer "Saving full property guided PTA as %s/%s.imi" output_folder base_file_name; 
@@ -129,7 +141,7 @@ let () =
 
       let reduced_parsed_model = match reduced_parsed_model with Some m -> m | None -> full_parsed_model in
       let reduced_model, _ = ModelConverter.abstract_structures_of_parsing_structures default_options reduced_parsed_model None in 
-      let red_file_name = Printf.sprintf "%s_reduced" base_file_name in
+      let red_file_name = Printf.sprintf "%s_REDUCED" base_file_name in
       Printer.info printer "Saving reduced property guided PTA as %s/%s.imi" output_folder red_file_name; 
       ModelOutput.output_model ~file_name:red_file_name ~output_folder default_options reduced_model
     | No_CounterExample -> ())
