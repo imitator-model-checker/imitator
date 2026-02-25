@@ -2,7 +2,8 @@ type t = {
   validator_file : string;
   output_folder_path : string;
   time_limit: float option;
-  repetitions: int
+  repetitions: int;
+  seed : int option;
 }
 
 val parse : unit -> t

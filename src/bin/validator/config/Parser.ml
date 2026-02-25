@@ -115,7 +115,7 @@ module SpecParser = struct
       optional p.controllability_ratio ~default:0.0;
 
     initial_constraint_satisfiable =
-      optional p.initial_constraint_satisfiable ~default:true
+      optional p.initial_constraint_satisfiable ~default:true;
   }
 
 end
