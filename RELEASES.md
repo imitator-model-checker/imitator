@@ -1,17 +1,42 @@
 # Releases
 
 *******************************************************
+## future release (202x-xx-xx) Cheese Durian
+
+### Major features
+* implement the integer hull [JLR15] to ensure termination of IM and EF over bounded parameter domains (work in progress)
+
+### Internal
+* Better detections of division by 0 in model
+* Replace ocamlyacc with Menhir
+
+
+*******************************************************
+## release 3.4-alpha2 (2024-09-18) Cheese Durian
+
+### Major features
+* implement the integer hull [JLR15] to ensure termination of IM over bounded parameter domains (work in progress)
+
+### New options
+* Add a new option `-imi2imiprop` to regenerate the property to a file
+
+### Syntax improvement
+* Assignment can now be written using either `:=` (as before) or `<-` (new).
+
+*******************************************************
 ## release 3.4-alpha (2024-03-21) Cheese Durian
 
 ### Major features
 * Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
 * New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
-* New AG ("global invariant") algorithm
+* New AG ("global invariant") algorithm, implemented as the negation of EF
 * New EU ("Exists … until") algorithm
+* New EW ("exists … weak until") algorithm
 * New AF ("always eventually") algorithm, and variants:
 	- AR ("always … release")
 	- AU ("always … until")
 	- AW ("always … weak until")
+	- EG ("exists globally"), implemented as the negation of AF
 * New timed variants of EF, EU, AF, AR, AU, AW
 
 ### Syntax improvement

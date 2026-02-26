@@ -1,0 +1,28 @@
+
+controllable actions: c_0;
+
+var
+	x : clock;
+
+
+automaton ptg
+
+actions: u_0, c_0;
+
+
+loc Init: invariant x<=5		(* fail *)
+	when True sync u_0 goto Goal;
+	when True sync c_0 goto Other;
+
+loc Other: True 
+
+accepting loc Goal: invariant True		(* safe *)
+
+end
+
+init :=
+	& loc[ptg] = Init
+	& x = 0
+;
+
+end

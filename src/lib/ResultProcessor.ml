@@ -827,7 +827,7 @@ let export_to_file_runs_exhibition_result (model : AbstractModel.abstract_model)
 
 			(* 3) Run *)
 			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
-			^ "\n\n Run:"
+(* 			^ "\n\n Run:" *)
 			^ "\n" ^ (let str = match run with
 				| Concrete_run concrete_run -> ModelPrinter.json_of_concrete_run model concrete_run
 				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.json_of_impossible_concrete_run model impossible_concrete_run

@@ -3659,6 +3659,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Only controllable action indexes *)
 		(*** WARNING (ÉA, 2022/11): might create problems for controllable actions in this setting! ***)
 		controllable_actions = model.controllable_actions;
+		(*** WARNING (ÉA, 2025/01): might create problems for controllable actions in this setting! ***)
+		has_controllable_or_uncontrollable_actions = model.has_controllable_or_uncontrollable_actions;
 		(* Action names *)
 		action_names = new_action_names;
 		(* The type of actions *)

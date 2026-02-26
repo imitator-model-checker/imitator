@@ -1,0 +1,29 @@
+
+controllable actions: ;
+
+var
+	x : clock;
+
+
+automaton ForcedTest
+
+actions: u_0, c_0;
+
+
+loc id2: invariant True
+	when True sync c_0 goto id0;
+
+urgent loc id0: invariant True	(* fail *)
+	when True sync u_0 goto goal;
+
+
+accepting loc goal: invariant True		(* safe *)
+
+end
+
+init :=
+	& loc[ForcedTest] = id2
+	& x = 0
+;
+
+end

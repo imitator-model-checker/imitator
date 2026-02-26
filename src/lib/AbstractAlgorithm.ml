@@ -22,15 +22,16 @@
 (************************************************************)
 
 type translation =
+	| DOT
 	| HyTech
 	| IMI
-	| DOT
+	| ImiProp
+	| JaniSpec
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
-  | JaniSpec
 
 
 (************************************************************)
@@ -124,11 +125,27 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Level of detail in graphical translations **)
+type graphics_detail = 
+	| Full
+	| Minimal
+
 (** Controller mode for AlgoPTG **)
 type ptg_controller_mode = 
 	| No_Generation
 	| Draw
 	| No_Draw
+
+
+(** Waiting list strategy for AlgoPTG **)
+type waitingListStrategy =
+	| SingleQueue
+	| Frontier of {init: int; step:  int; update: int}
+
+type ptg_abstraction = 
+	| Location
+	| Convex_Hull
+	| No_Abstraction
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1
@@ -235,8 +252,6 @@ type state_comparison_operator =
 	| Double_inclusion_check
 
 
-
-
 (************************************************************)
 (* Predicates on mode *)
 (************************************************************)
@@ -273,15 +288,16 @@ let cartography_drawing_possible = function
 (************************************************************)
 
 let string_of_translation = function
-	| HyTech -> "HyTech"
-	| IMI    -> "IMITATOR"
-	| DOT    -> "DOT"
-	| JPG    -> "JPG"
-	| PDF    -> "PDF"
-	| PNG    -> "PNG"
-	| TikZ   -> "TikZ"
-	| Uppaal -> "Uppaal"
-  | JaniSpec -> "JaniSpec"
+	| DOT      -> "DOT"
+	| HyTech   -> "HyTech"
+	| IMI      -> "IMITATOR"
+	| ImiProp  -> "IMITATOR property"
+	| JaniSpec -> "JaniSpec"
+	| JPG      -> "JPG"
+	| PDF      -> "PDF"
+	| PNG      -> "PNG"
+	| TikZ     -> "TikZ"
+	| Uppaal   -> "Uppaal"
 
 
 let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mode with
@@ -334,8 +350,6 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
-
-
 
 let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
 	| Merge_candidates_ordered	-> "ordered"

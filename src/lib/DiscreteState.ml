@@ -20,6 +20,7 @@
 (************************************************************)
 open OCamlUtilities
 open Automaton
+open ImitatorUtilities
 
 
 
@@ -171,7 +172,7 @@ let make_global_location_and_local_variables (global_location : global_location)
 
 (* We have to copy discrete values of arrays and stacks *)
 (* Because of array and stack are references in OCaml, if we don't copy their content *)
-(* discrete values stay the same between previous location and new location leading to a misbehavior. *)
+(* discrete values stay the same between previous location and new location leading to a misbehaviour. *)
 (* This is due to the fact that the update in-place of their values or their content will update old and new location *)
 (* as it was the same references. *)
 (* As it was possible to update content of array in IMITATOR via a[i] = x, or stack by stack_push(x, s) *)
@@ -180,7 +181,16 @@ let copy_discrete_values_at_location (location : global_location) =
 	(* Get discrete variables *)
 	let discrete_values = get_discrete location in
 	(* Copy discrete variables *)
-	let cpy_discrete_values = Array.map AbstractValue.deep_copy discrete_values in
+	let cpy_discrete_values = Array.map (fun (discrete_value : AbstractValue.abstract_value) ->
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Copying " ^ (AbstractValue.string_of_value discrete_value) ^ "…");
+		);
+		let copied_value = AbstractValue.deep_copy discrete_value in
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("    …into " ^ (AbstractValue.string_of_value copied_value) ^ "…");
+		);
+		copied_value
+	) discrete_values in
 	(* Copy array of discrete variables *)
 	cpy_discrete_values
 

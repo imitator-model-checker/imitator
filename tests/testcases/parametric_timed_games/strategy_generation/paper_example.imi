@@ -1,0 +1,37 @@
+(* Mikael, Aarhus, Nov 11, 2024
+
+*)
+
+controllable actions: c_1, c_2, c_3;
+
+var
+    p : parameter;
+ 	x : clock;
+
+automaton ptg
+
+actions: c_1, c_2, c_3, u_1, u_2;
+
+loc L0: invariant True
+	when x >= 2 sync c_1 goto Win;
+    when True sync u_1 goto L1;
+
+loc L1: invariant True 
+    when 1 < x && x <= 2 sync c_2 goto L2;
+
+
+loc L2: invariant True 
+    when x >= p do {x:=0} sync u_2 goto L1;
+    when True sync c_3 goto Win;
+
+accepting loc Win: invariant True
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = L0
+	& x = 0
+    & p >= 0
+;
+
+end

@@ -1,0 +1,1 @@
+property := #synth E (i = 0) W (i = 1);

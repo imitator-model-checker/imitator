@@ -93,7 +93,16 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 
 			(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 			(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-			let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+			let soundness = if termination_status = Regular_termination then Constraint_exact else(
+				(* Check if the set of valuations is the entire set of possible valuations *)
+
+				(* Retrieve the initial parameter constraint *)
+				let initial_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property (self#get_initial_p_nnconvex_constraint_or_die) in
+
+				(* Check equality *)
+				if LinearConstraint.p_nnconvex_constraint_is_equal initial_p_nnconvex_constraint result then Constraint_exact
+				else Constraint_maybe_under
+			) in
 
 			(* Return the result *)
 			Single_synthesis_result

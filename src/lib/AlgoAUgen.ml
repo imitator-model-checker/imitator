@@ -39,8 +39,6 @@ open Result
 )*)
 
 
-let print_debug_messages = false
-
 
 (************************************************************)
 (************************************************************)
@@ -78,15 +76,13 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** State space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
+	val state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Set of explored state indexes, i.e., we computed their successors *)
+	val computed_successors = new State.stateIndexSet
+
 	(** Hash table for caching known results of AF *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	val mutable cache_result_AF : (State.state_index, LinearConstraint.p_nnconvex_constraint) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
-
-	val mutable debug_nb_AF_calls : int = 0
-	val mutable debug_nb_instructions : int = 0
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -98,6 +94,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(* Convex parameter constraint ensuring all parameters are compatible with the initial p_constraint (constant object used as a shortcut, as it is often used in the algorithm) *)
 	val mutable parameters_consistent_with_init : LinearConstraint.p_linear_constraint = LinearConstraint.p_false_constraint () (* Dummy initialization *)
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** For debug/testing efficiency *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	val mutable nb_of_calls_to_AF_per_state_index : (State.state_index, int) Hashtbl.t = Hashtbl.create Constants.guessed_nb_states_for_hashtable
+
 
 	(************************************************************)
 	(* Class methods *)
@@ -108,61 +109,32 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Compute the successors of a symbolic state and computes AF on this branch, recursively calling the same method *)
-	method private au_rec (state_index : State.state_index) (passed : State.state_index list) : LinearConstraint.p_nnconvex_constraint =
+	method private au_rec (state_index : State.state_index) (passed : State.state_index list) (depth_AU : int) : LinearConstraint.p_nnconvex_constraint =
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_AF_calls <- debug_nb_AF_calls + 1;
-		print_string ("\nDepth = " ^ (string_of_int (List.length passed)));
-		print_string ("\nCalls to AF = " ^ (string_of_int debug_nb_AF_calls));
-		print_newline();
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
+		(*** NOTE/DEBUG: check multiple calls to AF with same state index ***)
+		if Hashtbl.mem nb_of_calls_to_AF_per_state_index state_index then(
+			Hashtbl.replace nb_of_calls_to_AF_per_state_index state_index ((Hashtbl.find nb_of_calls_to_AF_per_state_index state_index) + 1);
+		)else(
+			Hashtbl.add nb_of_calls_to_AF_per_state_index state_index 1
+		);
+
+		(* Print some information *)
+		self#print_algo_message Verbose_medium ("Entering au_ref with depth " ^ (string_of_int depth_AU));
+
 		(* First check limits, which may raise exceptions *)
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		(* First check whether the result of AF(state_index) is known from the cache *)
-		if (*Hashtbl.mem cache_result_AF state_index*)false then(
+		if options#cache_in_AF && Hashtbl.mem cache_result_AF state_index then(
 			LinearConstraint.p_nnconvex_copy (Hashtbl.find cache_result_AF state_index)
 		)else(
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		(* Get state *)
 		let symbolic_state : State.state = state_space#get_state state_index in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		(* Useful shortcut *)
 		let state_px_constraint = LinearConstraint.px_copy (symbolic_state.px_constraint) in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		let af_result =
 
 		(* Case 0 (timed version): Cut branch if we went too far time-wise *)
@@ -171,22 +143,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		| Some timed_interval_upper_bound_constraint ->
 			let checking_time_went_too_far : LinearConstraint.px_linear_constraint = LinearConstraint.px_intersection [state_px_constraint; timed_interval_upper_bound_constraint] in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 			(* Unsatisfiable: cut branch! *)
 			if LinearConstraint.px_is_false checking_time_went_too_far then(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					self#print_algo_message Verbose_medium "Cut branch as the state constraint:";
@@ -194,109 +152,39 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					self#print_algo_message Verbose_medium "is beyond the timed operator:";
 					print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint model.variable_names timed_interval_upper_bound_constraint);
 				);
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				true
 			)else false
 
 		| None -> false
 		in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		if time_went_too_far then(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 			(* Return false *)
 			LinearConstraint.false_p_nnconvex_constraint ()
 		)else(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 			(* Case 1: target state found: return the associated constraint *)
 			if State.match_state_predicate_and_timed_constraint model state_predicate_psi timed_interval_constraint_option symbolic_state  then(
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					self#print_algo_message Verbose_low ("Target state found");
 					self#print_algo_message Verbose_medium (ModelPrinter.string_of_state model symbolic_state);
 				);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				(* If timed version: first add the timed_interval_constraint_option to the resulting state *)
 				let state_constraint_for_projection : LinearConstraint.px_linear_constraint = AlgoStateBased.intersect_with_timed_interval_constraint_option model timed_interval_constraint_option state_px_constraint in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				(* Return the constraint projected onto the parameters *)
 				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_constraint_for_projection)
 			)else(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 				(* Case 1b: For AU, if the state does not satisfy phi, then false *)
 				let falsified_phi = match state_predicate_phi_option with
 					(* AF: no phi, no reason to return False *)
 					| None -> false
 					(* AU: some phi *)
 					| Some state_predicate_phi ->
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* If unsatisfied: return false *)
 						let unsatisfied = not (State.match_state_predicate model state_predicate_phi symbolic_state) in
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if unsatisfied && verbose_mode_greater Verbose_low then(
 							self#print_algo_message Verbose_low ("The state does not match phi: discard!");
@@ -305,219 +193,107 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						unsatisfied
 				in
 				if falsified_phi then(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* Return false *)
 					LinearConstraint.false_p_nnconvex_constraint ()
 				)
 				(* Case 2: state already met *)
 				else if List.mem state_index passed then(
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* If weak version: loop (necessarily over phi) => found good valuations! *)
 					(*** NOTE: this is a loop because state_index is met twice on the *same* path, i.e., of the form (state_index , …, state_index) ***)
 					if weak then(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_low then(
 							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Return the state constraint *)
 						LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse state_px_constraint)
 
 					(* Normal version: a loop means False *)
 					)else(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_medium then(
 							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-
 						(* Return false *)
 						LinearConstraint.false_p_nnconvex_constraint ()
 					)
 				)else(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-
 					(* Valuate local variables *)
-					let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.p_copy model.initial_p_constraint) in
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
+					let k		: LinearConstraint.p_nnconvex_constraint  = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (model.initial_p_constraint) in
 					let k_live	: LinearConstraint.px_nnconvex_constraint = LinearConstraint.false_px_nnconvex_constraint () in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-					(* Compute all successors via all possible outgoing transitions *)
-					let transitions_and_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
+					(* Compute all successors via all possible outgoing transitions: the list is made of transitions and state index; if the current state was not met before, we compute successors and add them to the state space immediately. Otherwise, we simply get everything from the state space. *)
+					let transitions_and_successors_list : (StateSpace.combined_transition * State.state_index) list =
+						(* Only compute the successors from scratch if the state was not explored before *)
+						if computed_successors#mem state_index then
+							state_space#get_successors_with_combined_transitions state_index
+						(* Else: state never met before, compute its successors for real *)
+						else(
+							let successors =
+							(* Compute all successors for real *)
+							let transitions_and_concrete_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
+							(* Add the successors one by one *)
+							(*** BADPROG: map with side effets ***)
+							List.map (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
+								(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+								state_space#increment_nb_gen_states;
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
+								(* Add or get the state_index of the successor *)
+								(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
+								let addition_result = state_space#add_state Equality_check None successor in
+								let successor_state_index = match addition_result with
+								| New_state some_state_index
+								| State_already_present some_state_index
+								| State_replacing some_state_index
+									-> some_state_index
+								in
+
+								(* Add the transition to the state space *)
+								state_space#add_transition (state_index, combined_transition, successor_state_index);
+
+								(* Convert the state to its state index *)
+								combined_transition , successor_state_index
+							) transitions_and_concrete_successors_list
+
+							in
+							(* Add to the set of explored states *)
+							computed_successors#add state_index;
+
+							(* Return the previously computed successors *)
+							successors
+						)
+					in
 
 					(* For each successor *)
-					List.iter (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
-						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
-						state_space#increment_nb_gen_states;
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-						(* Add or get the state_index of the successor *)
-						(*** NOTE/TODO: so far, in AF, we compare using Equality_check ***)
-						let addition_result = state_space#add_state Equality_check None successor in
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-						let successor_state_index = match addition_result with
-						| New_state state_index
-						| State_already_present state_index
-						| State_replacing state_index
-							-> state_index
-						in
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
+					List.iter (fun ((combined_transition , successor_state_index) : (StateSpace.combined_transition * State.state_index)) ->
+						(* Just needed once, but let us still precompute *)
+						let successor = state_space#get_state successor_state_index in
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-						(* Add the transition to the state space *)
-						state_space#add_transition (state_index, combined_transition, successor_state_index);
-
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message_newline Verbose_high ("Calling recursively AU(" ^ (string_of_int successor_state_index) ^ ")…");
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Recursive call to AF on the successor *)
-						let k_good : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy(self#au_rec successor_state_index (state_index :: passed)) in
+						let k_good : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_copy(self#au_rec successor_state_index (state_index :: passed) (depth_AU + 1)) in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message_newline Verbose_high ("Result of AU(" ^ (string_of_int successor_state_index) ^ "):");
 							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* k_block <- T \ successor|_P *)
 						let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
 						LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message_newline Verbose_high ("Blocking constraint:");
@@ -525,76 +301,20 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						);
 
 						(* K <- K ^ (k_good U k_block) *)
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						if verbose_mode_greater Verbose_total then(
 							self#print_algo_message_newline Verbose_total ("About to compute k_good <- k_good U k_block:");
 							self#print_algo_message Verbose_total ("k_good = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good));
 							self#print_algo_message Verbose_total ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-						print_string ("\nDim k_good = " ^ (string_of_int (LinearConstraint.p_nnconvex_constraint_get_nb_dimensions k_good)) ^  " / Dim k_block = " ^ (string_of_int (LinearConstraint.p_nnconvex_constraint_get_nb_dimensions k_block)) );
-						print_newline();
-
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-
-		print_string ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
-(* !!! NOTE : de-BUG !!! *)
-);
-
 						LinearConstraint.p_nnconvex_union_assign k_good (LinearConstraint.p_nnconvex_copy k_block);
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		print_string ("k_block = " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_block));
-(* !!! NOTE : de-BUG !!! *)
-);
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						LinearConstraint.p_nnconvex_intersection_assign k k_good;
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message Verbose_high ("k:");
 							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 						);
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 
 						(* k_live <- k_live U (C ^ g)\past *)
 						let eventually_exiting_valuations : LinearConstraint.px_linear_constraint = LinearConstraint.px_copy ( DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index) in
@@ -602,149 +322,50 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
 	(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message Verbose_high ("Eventually exiting valuations:");
 							self#print_algo_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names eventually_exiting_valuations);
 						);
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						LinearConstraint.px_nnconvex_px_union_assign k_live eventually_exiting_valuations;
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							self#print_algo_message Verbose_high ("k_live after adding exiting valuations:");
 							self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names k_live);
 						);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						()
 					) transitions_and_successors_list;
 					(* End for each successor *)
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
 						self#print_algo_message_newline Verbose_high ("Finalizing the result of AU(" ^ (string_of_int state_index) ^ ")…");
 					);
-
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* k <- k \ (C \ k_live)|_P *)
 					let not_k_live : LinearConstraint.px_nnconvex_constraint = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (LinearConstraint.px_copy state_px_constraint) in
 					LinearConstraint.px_nnconvex_difference_assign not_k_live k_live;
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					let p_not_k_live : LinearConstraint.p_nnconvex_constraint = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse not_k_live in
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					LinearConstraint.p_nnconvex_difference_assign k p_not_k_live;
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* Print some information *)
 					if verbose_mode_greater Verbose_high then(
 						self#print_algo_message Verbose_high ("Negation of k_live");
 						self#print_algo_message Verbose_high (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names not_k_live);
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						self#print_algo_message Verbose_high ("Projection of not(k_live)");
 						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_not_k_live);
 					);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* Intersect with initial parameter domain *)
 					LinearConstraint.p_nnconvex_p_intersection_assign k parameters_consistent_with_init;
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 						self#print_algo_message_newline Verbose_medium ("Final constraint in AU(" ^ (string_of_int state_index) ^ ")…");
 						self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 					);
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 					(* return k *)
 					k
 				)
@@ -752,16 +373,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		) (* end elseif time went too far *)
 		in
 
-		if print_debug_messages then(
-(* !!! NOTE : de-BUG !!! *)
-		debug_nb_instructions <- debug_nb_instructions + 1;
-		print_string ("\nNumber of instructions in AF = " ^ (string_of_int debug_nb_instructions));
-		print_newline();
-(* !!! NOTE : de-BUG !!! *)
-);
 		(* Cache the result *)
 		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future ***)
-(* 		Hashtbl.add cache_result_AF state_index (LinearConstraint.p_nnconvex_copy af_result); *)
+		if options#cache_in_AF then(
+			Hashtbl.add cache_result_AF state_index (*(LinearConstraint.p_nnconvex_copy*) af_result ;
+		);
 
 		(* Return result *)
 		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future as the result of AF ***)
@@ -778,9 +394,14 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 		start_time <- Unix.gettimeofday();
 
-(* !!! NOTE : de-BUG !!! *)
-		print_warning "There is an unstability in AF, AU, AW and AR algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem.";
-(* !!! NOTE : de-BUG !!! *)
+(* 		print_warning "There is an instability in AF, AU, AW, AR and EG algorithms (presumably due to PPL) for sufficiently complex models and constraints. The analysis might crash with segmentation fault but, if it does not, then there is most probably no problem."; *)
+
+		(* Recall whether the cache is used *)
+		if options#cache_in_AF then(
+			self#print_algo_message Verbose_high "Cache system will be used in AF.";
+		)else(
+			self#print_algo_message Verbose_standard "Cache system is disabled for AF.";
+		);
 
 		(* Build initial state *)
 		let initial_state : State.state = AlgoStateBased.create_initial_state options model true (* abort_if_unsatisfiable_initial_state *) in
@@ -810,7 +431,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Main call to the AF dedicated function *)
 		begin
 		try(
-			synthesized_constraint <- self#au_rec init_state_index [];
+			synthesized_constraint <- self#au_rec init_state_index [] 0;
 		) with AlgoStateBased.LimitDetectedException reason ->
 			begin
 			match reason with
@@ -828,10 +449,21 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 				| Keep_going
 				| Witness_found
-					-> raise (InternalError "Keep_going or Witness_found cannot be passed as exception in AlgoAU")
+					-> raise (InternalError ("Keep_going or Witness_found cannot be passed as exception in " ^ self#algorithm_name))
 			end;
 			ResultProcessor.print_warnings_of_termination_status termination_status;
 		end;
+
+		(*** NOTE/DEBUG: check multiple calls to AF with same state index ***)
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "Number of calls to AF";
+			let total_nb_calls = ref 0 in
+			Hashtbl.iter (fun state_index nb ->
+				self#print_algo_message Verbose_high ("State " ^ (string_of_int state_index) ^ " -> " ^ (string_of_int nb));
+				total_nb_calls := !total_nb_calls + nb;
+			) nb_of_calls_to_AF_per_state_index;
+			self#print_algo_message Verbose_high ("In total: " ^ (string_of_int !total_nb_calls) ^ " call" ^ (OCamlUtilities.s_of_int !total_nb_calls) ^ " to AF");
+		);
 
 		(* Return the result *)
 		self#compute_result;
@@ -905,6 +537,85 @@ class algoAF (model : AbstractModel.abstract_model) (property : AbstractProperty
 end;;
 (************************************************************)
 (************************************************************)
+
+(************************************************************)
+(************************************************************)
+(* Class definition: EG *)
+(************************************************************)
+(************************************************************)
+(*** NOTE: EG is implemented as the negation of the result of AF called on the **negation** of the state predicate ***)
+class algoEG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoAUgen model property options false None (State_predicate_term (State_predicate_factor (State_predicate_factor_NOT (State_predicate state_predicate)))) None (*as super*)
+
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Name of the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method algorithm_name = "EG"
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Method packaging the result output by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method! private compute_result =
+		(* Print some information *)
+		self#print_algo_message_newline Verbose_standard (
+			"Algorithm completed " ^ (after_seconds ()) ^ "."
+		);
+
+		(* Perform result = initial_state|P \ synthesized_constraint *)
+
+		(* Retrieve and copy the initial parameter constraint *)
+		let result : LinearConstraint.p_nnconvex_constraint = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint parameters_consistent_with_init in
+
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "As a reminder, the initial constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
+			self#print_algo_message Verbose_medium "As a reminder, the result constraint is:";
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
+
+		(* Perform the difference *)
+		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
+
+		(* Projecting onto some parameters if required by the property *)
+		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property result in
+
+		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+		(*** TODO: double check ***)
+		let soundness = if property.synthesis_type = Synthesis && termination_status = Regular_termination then Constraint_exact else Constraint_maybe_invalid in
+
+		(* Return the result *)
+		Single_synthesis_result
+		{
+			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
+			result				= Good_constraint (result, soundness);
+
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing " ^ self#algorithm_name;
+
+			(* Explored state space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= termination_status;
+		}
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
 
 
 (************************************************************)

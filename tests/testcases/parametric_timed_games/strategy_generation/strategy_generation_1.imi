@@ -1,0 +1,40 @@
+(* Mikael & Baptiste, Aarhus, May 14, 2024 
+	Strategy generation example, non-trivial
+    Expected constraint: 
+*)
+
+uncontrollable actions: u_1, u_2;
+
+var
+ 	x : clock;
+
+automaton ptg
+
+actions: c_1, c_2, c_3, c_4, c_5, u_1, u_2;
+
+loc l1: invariant True
+	when True sync u_1 goto l2;
+    when x > 10 sync c_5 goto goal;
+
+loc l2: invariant True
+    when 2 <= x & x <= 4 do {x:=0} sync u_2 goto l2;
+    when 1 < x & x < 2 sync c_2 goto temp1;
+    when x > 9 sync c_1 goto goal;
+	
+loc temp1: invariant True
+    when True sync c_3 goto temp2;
+
+loc temp2: invariant True
+    when True sync c_4 goto goal;
+
+accepting loc goal: invariant True
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+;
+
+end

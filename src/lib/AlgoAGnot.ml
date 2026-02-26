@@ -82,38 +82,6 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 		);
 
-(*
-
-		(* Projecting onto SOME parameters if required *)
-		let result =
-		match property.projection with
-		(* No projection: copy the initial p constraint *)
-		| None -> LinearConstraint.p_nnconvex_copy initial_p_nnconvex_constraint
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "Projecting the initial constraint onto some of the parameters.";
-				self#print_algo_message Verbose_medium "Before projection:";
-				self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names initial_p_nnconvex_constraint);
-			);
-
-			(*** TODO! do only once for all… ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters initial_p_nnconvex_constraint in
-
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "After projection:";
-				self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
-			);
-			
-			(* Return *)
-			projected_init_p_nnconvex_constraint
-		in*)
-		
 		(* Perform the difference *)
 		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
 		
@@ -135,8 +103,15 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 		in
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
+		let soundness = if termination_status = Regular_termination then Constraint_exact else(
+				(* Check if the set of valuations is empty *)
+
+				(* If the constraint is false: then exact *)
+				if LinearConstraint.p_nnconvex_constraint_is_false result then Constraint_exact
+
+				(* Otherwise: over-approximation *)
+				else Constraint_maybe_over
+		) in
 
 		(* Return the result *)
 		Single_synthesis_result

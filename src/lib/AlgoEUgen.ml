@@ -242,7 +242,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		
 		(* Reset the mini-cache (for the p-constraint) *)
 		self#reset_minicache;
-		
+
 		(* Try to add the new state to the state space *)
 		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
 		
@@ -285,7 +285,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
 				new_states_indexes <- new_state_index :: new_states_indexes;
-			
 		end (* end if new state *)
 		;
 		

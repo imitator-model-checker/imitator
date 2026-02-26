@@ -1,4 +1,6 @@
-(lang dune 3.6)
+(lang dune 3.8)
+
+(using menhir 2.1)
 
 (name IMITATOR)
 
@@ -9,22 +11,24 @@
 (source
  (github imitator-model-checker/imitator))
 
-(authors "\195\137tienne Andr\195\169 et al.")
+(authors "Étienne André et al.")
 
-(maintainers "\195\137tienne Andr\195\169 et al.")
+(maintainers "Étienne André et al.")
 
 (license "GPL-3.0")
 
 (package
  (name IMITATOR)
- (synopsis "A parametric timed model checker performing synthesis of timing parameters for distributed real-time systems")
- (description "IMITATOR is a software tool for parametric verification and robustness analysis of real-time systems with parameters. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features.")
+ (synopsis
+  "A parametric timed model checker performing synthesis of timing parameters for distributed real-time systems")
+ (description
+  "IMITATOR is a software tool for parametric verification and robustness analysis of real-time systems with parameters. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features.")
  (depends
   (alcotest :with-test)
   (ocaml
    (>= 4.08))
   dune
-  oasis
+  menhir
   mlgmp
   ppl
   extlib

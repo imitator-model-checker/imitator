@@ -1,4 +1,3 @@
-
 (************************************************************
  *
  *                       IMITATOR
@@ -694,8 +693,19 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 	time_polyhedron
 
 
-
-
+let apply_time_shift_no_stopwatch (direction : LinearConstraint.time_direction) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
+		let time_polyhedron =
+			(* Choose the right variable depending on time direction *)
+			let appropriate_variable = match direction with
+				| LinearConstraint.Time_forward	-> !time_elapsing_polyhedron
+				| LinearConstraint.Time_backward	-> !time_past_polyhedron
+			in
+			match appropriate_variable with
+			| Some polyedron -> polyedron
+			| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift_no_stopwatch`.")
+		in
+		(* Apply time elapsing *)
+		LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint
 
 let apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 	(* If urgent: no time elapsing *)
@@ -752,6 +762,18 @@ let apply_time_elapsing = apply_time_shift LinearConstraint.Time_forward
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 let apply_time_past = apply_time_shift LinearConstraint.Time_backward
+
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_forward
+
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+let apply_time_past_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_backward
 
 
 
@@ -861,13 +883,27 @@ let compute_new_location_guards_updates (model : AbstractModel.abstract_model) (
         model.transitions_description transition_index
     in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total "Entering compute_new_location_guards_updates…";
+	);
+
+
     (*** BEGIN code with local variables ***)
 
     (* Create a fresh copy of the local variables table *)
     let local_variables_table : DiscreteState.local_variables_table = Hashtbl.copy model.local_variables_table in
 
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copying location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display source_location));
+	);
+
 	(* Create an extended location *)
 	let copied_location : DiscreteState.global_location = DiscreteState.copy_location source_location in
+
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Copied location: " ^ (DiscreteState.string_of_location model.automata_names model.location_names model.variable_names DiscreteState.Exact_display copied_location));
+	);
+
 	let global_location_and_local_variables : DiscreteState.global_location_and_local_variables = DiscreteState.make_global_location_and_local_variables copied_location local_variables_table in
 
     (* Get functions that enable reading / writing global variables at a given location *)
@@ -1189,7 +1225,7 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
 				(*** TODO: check if this test is really worth it ***)
 					let is_possible = State.is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint guard in
-					if not is_possible then (
+				if not is_possible then (
 						(* Statistics *)
 						counter_nb_early_unsatisfiable#increment;
 						print_message Verbose_medium "** early skip transition (constraint+guard unsatisfiable) **"
@@ -1223,7 +1259,29 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 		true
 	) with Unsat_exception -> false
 
+(*------------------------------------------------------------*)
+(** (Re)compute the time elapsing/past polyhedrons with respect to the input model  *)
+(*------------------------------------------------------------*)
+(*** NOTE: Only used in AlgoPTGStrategyGenerator to extend dimensions of generated controller model ***)
+let compute_static_time_polyhedrons (model : AbstractModel.abstract_model) = 
+	let variables_elapse		= model.clocks in
+	let variables_constant		= model.parameters_and_discrete in
+	let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
+	let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
 
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high "Computed the static time elapsing polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+		print_message Verbose_high "";
+		print_message Verbose_high "Computed the static time past polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+		print_message Verbose_high "";
+	);
+
+	(* Save them *)
+	time_elapsing_polyhedron	:= Some time_el_polyhedron;
+	time_past_polyhedron 		:= Some time_pa_polyhedron
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing *)
@@ -1233,25 +1291,7 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
 	if not model.has_non_1rate_clocks then(
-		let variables_elapse		= model.clocks in
-		let variables_constant		= model.parameters_and_discrete in
-		let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
-		let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high "Computed the static time elapsing polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
-			print_message Verbose_high "";
-			print_message Verbose_high "Computed the static time past polyhedron:";
-			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
-			print_message Verbose_high "";
-		);
-
-		(* Save them *)
-		time_elapsing_polyhedron	:= Some time_el_polyhedron;
-		time_past_polyhedron 		:= Some time_pa_polyhedron;
-
+		compute_static_time_polyhedrons model;
 	);
 
 	(* Get the declared init state with initial constraint C_0(X) *)
@@ -1297,10 +1337,18 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 
-		(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-		print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
-		let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
-		(* Print some information *)
+		let current_constraint = 
+			match options#ptg_abstraction with 
+			| Location -> 
+				(* Perform intersection of I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [invariant ; discrete_constraint]
+			| _ ->
+				(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)]
+		in
+			(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
@@ -1422,8 +1470,16 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
-
+		let new_constraint = 
+			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+			(* Expand to entire invariant if this abstraction is turned on *)
+			if options#ptg_abstraction = Location then 
+				Option.map 
+				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
+				k
+			else k
+		in
+				
 		(* Check the satisfiability *)
 		match new_constraint with
 			| None ->
@@ -4898,7 +4954,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
                     )
                 | Merge_reconstruct
                 | Merge_onthefly ->
-                    queue := state_space#merge !queue;
+                    queue := state_space#merge !queue (fun _ _ -> ());
                     (match options#exploration_order with
                         | Exploration_queue_BFS_RS -> hashtbl_filter (state_space#test_state_index) rank_hashtable
                         | _ -> ();
@@ -4967,7 +5023,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		print_message Verbose_standard (
 			let nb_states = state_space#nb_states in
 			let nb_transitions = state_space#nb_transitions in
-			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Verification completed" in
 			"\n" ^ fixpoint_str ^ (*" at a depth of "
 			^ (string_of_int bfs_current_depth) ^ ""
 			^ *)": "
@@ -5035,7 +5091,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				(* Count the states for verbose purpose: *)
+				((* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 
 				(* Perform the post *)
@@ -5049,7 +5105,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 				(* Return the concatenation of the new states *)
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
-				List.rev_append current_post_n_plus_1 new_states
+				List.rev_append current_post_n_plus_1 new_states)
 			) [] !post_n
 			)
 			with TerminateAnalysis ->(
@@ -5086,7 +5142,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
             match options#merge_algorithm with
             | Merge_reconstruct
             | Merge_onthefly    ->
-                new_states_after_merging := state_space#merge !new_states_after_merging;
+                new_states_after_merging := state_space#merge !new_states_after_merging (fun _ _ -> ());
             | Merge_212 ->
                 let eaten_states = state_space#merge212 !new_states_after_merging in
                 new_states_after_merging := list_diff !new_states_after_merging eaten_states;

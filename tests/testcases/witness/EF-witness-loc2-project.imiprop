@@ -1,0 +1,2 @@
+property := #witness EF(loc[pta] = l2);
+projectresult(p1);

@@ -1,0 +1,103 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test EW
+ * Description      : Test EW
+ * Correctness      : EW
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/05/03
+ * Last modified    : 2024/05/03
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+
+(* Discrete *)
+	i,
+		: int;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+	when p = 1 goto l1;
+	when p = 2 goto l2;
+	when p = 3 do {i := 1} goto l3;
+	when p = 4 goto l4;
+	when p = 4 goto l5;
+	when p = 6 goto l6;
+
+loc l2: invariant True
+	when True goto l2;
+
+loc l3: invariant True
+
+loc l4: invariant True
+
+loc l5: invariant True
+	when True goto l4;
+
+loc l6: invariant True
+	when True goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i := 0,
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

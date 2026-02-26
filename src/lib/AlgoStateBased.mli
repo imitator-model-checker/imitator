@@ -107,6 +107,16 @@ val apply_time_past : AbstractModel.abstract_model -> DiscreteState.global_locat
 
 
 (*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (Answer might not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+val apply_time_elapsing_no_stopwatch : LinearConstraint.pxd_linear_constraint -> unit
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (Answer might not be correct if PTA has stopwatches) *)
+(*------------------------------------------------------------*)
+val apply_time_past_no_stopwatch : LinearConstraint.pxd_linear_constraint -> unit
+
+(*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 val apply_time_elapsing_to_concrete_valuation : AbstractModel.abstract_model -> DiscreteState.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
@@ -118,6 +128,11 @@ val apply_time_elapsing_to_concrete_valuation : AbstractModel.abstract_model -> 
 (*** NOTE (ÉA, 2023/06/05): new class-independent version copied from method `post_from_one_state` from class `AlgoStateBased`, but with no dependency with anything, notably the state space ***)
 val combined_transitions_and_states_from_one_state_functional : Options.imitator_options -> AbstractModel.abstract_model -> State.state -> (StateSpace.combined_transition * State.state) list
 
+(*------------------------------------------------------------*)
+(** (Re)compute the time elapsing/past polyhedrons with respect to the input model  *)
+(*------------------------------------------------------------*)
+(*** NOTE: Only used in AlgoPTGStrategyGenerator to extend dimensions of generated controller model ***)
+val compute_static_time_polyhedrons : AbstractModel.abstract_model -> unit
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing; takes a boolean denoting whether we should abort whenever the initial state is unsatisfiable *)

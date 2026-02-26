@@ -16,78 +16,98 @@
 
 %{
 open ParsingStructure;;
+open ParsingStructureUtilities;;
 open Exceptions;;
 open ImitatorUtilities;;
 open DiscreteType;;
 
 
-let parse_error _ =
-	let symbol_start = symbol_start () in
-	let symbol_end = symbol_end () in
-	raise (ParsingError (symbol_start, symbol_end))
-;;
-
+(*** TODO (Jaime): What is symbol_start ? ***)
+(* let parse_error _ = *)
+(* 	let symbol_start = symbol_start () in *)
+(* 	let symbol_end = symbol_end () in *)
+(* 	raise (ParsingError (symbol_start, symbol_end)) *)
+(* ;; *)
 
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
-	let merged_controllable_actions : ParsingStructure.parsed_controllable_actions = match parsed_model.model.controllable_actions, parsed_model_list.model.controllable_actions with
-			| Parsed_no_controllable_actions, Parsed_no_controllable_actions
-				-> Parsed_no_controllable_actions
-
-			| Parsed_no_controllable_actions, Parsed_controllable_actions action_names
-			| Parsed_controllable_actions action_names, Parsed_no_controllable_actions
-				-> Parsed_controllable_actions action_names
-
-			| Parsed_controllable_actions action_names_1, Parsed_controllable_actions action_names_2
-				-> Parsed_controllable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Parsed_uncontrollable_actions action_names_1, Parsed_uncontrollable_actions action_names_2
-				-> Parsed_uncontrollable_actions (OCamlUtilities.list_append action_names_1 action_names_2)
-
-			| Parsed_no_controllable_actions, Parsed_uncontrollable_actions action_names
-			| Parsed_uncontrollable_actions action_names, Parsed_no_controllable_actions
-				-> Parsed_uncontrollable_actions action_names
-
-			| Parsed_uncontrollable_actions u_action_names, Parsed_controllable_actions c_action_names
-			| Parsed_controllable_actions c_action_names, Parsed_uncontrollable_actions u_action_names
-				->
-				(*** WARNING (2023/07/10): should be an error ***)
-				print_warning ("The submodels define contradictory controllable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " c_action_names) ^ ") AND uncontrollable list of actions (" ^ (OCamlUtilities.string_of_list_of_string_with_sep ", " u_action_names) ^ "); the model is ill-formed and its behavior is unspecified!");
-				Parsed_controllable_actions c_action_names
+let add_parsed_model_to_parsed_model_list parsed_model_list (parsed_model : unexpanded_parsed_model) =
+  let merged_controllable_actions :
+      ParsingStructure.unexpanded_parsed_controllable_actions =
+    match
+      ( parsed_model.unexpanded_controllable_actions,
+        parsed_model_list.unexpanded_controllable_actions )
+    with
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_no_controllable_actions
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_controllable_actions action_names )
+    | ( Unexpanded_parsed_controllable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_controllable_actions action_names
+    | ( Unexpanded_parsed_controllable_actions action_names_1,
+        Unexpanded_parsed_controllable_actions action_names_2 ) ->
+        Unexpanded_parsed_controllable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_uncontrollable_actions action_names_1,
+        Unexpanded_parsed_uncontrollable_actions action_names_2 ) ->
+        Unexpanded_parsed_uncontrollable_actions
+          (OCamlUtilities.list_append action_names_1 action_names_2)
+    | ( Unexpanded_parsed_no_controllable_actions,
+        Unexpanded_parsed_uncontrollable_actions action_names )
+    | ( Unexpanded_parsed_uncontrollable_actions action_names,
+        Unexpanded_parsed_no_controllable_actions ) ->
+        Unexpanded_parsed_uncontrollable_actions action_names
+    | ( Unexpanded_parsed_uncontrollable_actions u_action_names,
+        Unexpanded_parsed_controllable_actions c_action_names )
+    | ( Unexpanded_parsed_controllable_actions c_action_names,
+        Unexpanded_parsed_uncontrollable_actions u_action_names ) ->
+        (*** WARNING (2023/07/10): should be an error ***)
+        print_warning
+          ("The submodels define contradictory controllable list of actions ("
+          ^ string_of_list_of_name_or_access_with_sep ", " c_action_names
+          ^ ") AND uncontrollable list of actions ("
+          ^ string_of_list_of_name_or_access_with_sep ", " u_action_names
+          ^ "); the model is ill-formed and its behavior is unspecified!");
+        Unexpanded_parsed_controllable_actions c_action_names
 		in
-
 	{
-                model =
-                {
-                        controllable_actions  = merged_controllable_actions;
-                        variable_declarations = List.append parsed_model.model.variable_declarations parsed_model_list.model.variable_declarations;
-                        fun_definitions       = List.append parsed_model.model.fun_definitions parsed_model_list.model.fun_definitions;
-                        automata              = List.append parsed_model.model.automata parsed_model_list.model.automata;
-                        init_definition       = List.append parsed_model.model.init_definition parsed_model_list.model.init_definition;
-                };
-                template_definitions  = List.append parsed_model.template_definitions parsed_model_list.template_definitions;
-                template_calls        = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                unexpanded_controllable_actions  = merged_controllable_actions;
+                unexpanded_variable_declarations = List.append parsed_model.unexpanded_variable_declarations parsed_model_list.unexpanded_variable_declarations;
+                unexpanded_fun_definitions       = List.append parsed_model.unexpanded_fun_definitions parsed_model_list.unexpanded_fun_definitions;
+                templates_and_ptas               = List.append parsed_model.templates_and_ptas parsed_model_list.templates_and_ptas;
+                unexpanded_init_definition       = List.append parsed_model.unexpanded_init_definition parsed_model_list.unexpanded_init_definition;
+                template_calls                   = List.append parsed_model.template_calls parsed_model_list.template_calls;
+                forall_template_calls            = List.append parsed_model.forall_template_calls parsed_model_list.forall_template_calls;
+                synt_declarations                = List.append parsed_model.synt_declarations parsed_model_list.synt_declarations;
 	}
 ;;
 
 let unzip l = List.fold_left
 	add_parsed_model_to_parsed_model_list
 	{
-                model =
-                {
-                        controllable_actions  = Parsed_no_controllable_actions;
-                        variable_declarations = [];
-                        fun_definitions       = [];
-                        automata              = [];
-                        init_definition       = [];
-                };
-                template_definitions  = [];
-                template_calls        = [];
+		unexpanded_controllable_actions  = Unexpanded_parsed_no_controllable_actions;
+		unexpanded_variable_declarations = [];
+		unexpanded_fun_definitions       = [];
+    templates_and_ptas               = [];
+		unexpanded_init_definition       = [];
+		template_calls                   = [];
+		synt_declarations                = [];
+		forall_template_calls            = [];
 	}
 	(List.rev l)
 ;;
+
+(* Check whether n1/n2 is defined and, if not (i.e., if n2 = 0), raises an exception *)
+let check_absence_of_division_by_0_or_abort (n1 : NumConst.t) (n2 : NumConst.t) : unit =
+	if NumConst.equal n1 NumConst.zero then(
+(* 		print_error ("Division by 0 (" ^ (NumConst.string_of_numconst n1) ^ "/" ^ (NumConst.string_of_numconst n2) ^ ") spotted during the parsing!"); *)
+		raise (Static_division_by_0 ("" ^ (NumConst.string_of_numconst n1) ^ "/" ^ (NumConst.string_of_numconst n2) ^ ""))
+	);
+	()
+
 
 %}
 
@@ -96,35 +116,35 @@ let unzip l = List.fold_left
 %token <string> BINARYWORD
 %token <string> NAME
 /* %token <string> STRING */
-%token <ParsingStructure.parsed_model_with_templates> INCLUDE
+%token <ParsingStructure.unexpanded_parsed_model> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token APOSTROPHE COLON COMMA DOUBLEDOT OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
+%token APOSTROPHE COLON COMMA /*DOUBLEDOT */OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-  CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
+	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
 	CT_ELSE CT_END
-	CT_FALSE CT_FLOW CT_FOR CT_FROM CT_FUN
+	CT_FALSE CT_FLOW CT_FOR CT_FORALL CT_FROM CT_FUN
 	CT_GOTO
-	CT_IF CT_IN CT_INFINITY CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
+	CT_IF CT_IN  CT_INIT CT_INSIDE CT_INSTANTIATE CT_INT CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NOT
 	CT_PARAMETER
 	CT_RATIONAL CT_RETURN
-	CT_STOP CT_SYNC CT_SYNCLABS
+	CT_STOP CT_SYNC CT_SYNCLABS CT_SYNT_VAR
 	CT_TEMPLATE CT_THEN CT_TO CT_TRUE
 	CT_UNCONTROLLABLE CT_URGENT
 	CT_VAR CT_VOID
 	CT_WAIT CT_WHEN CT_WHILE
 	/*** NOTE: just to forbid their use in the input model and property ***/
-	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
-    CT_BUILTIN_FUNC_RATIONAL_OF_INT /* CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
+	CT_INFINITY CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
+    /* CT_BUILTIN_FUNC_RATIONAL_OF_INT  CT_POW CT_SHIFT_LEFT CT_SHIFT_RIGHT CT_FILL_LEFT CT_FILL_RIGHT
     CT_LOG_AND CT_LOG_OR CT_LOG_XOR CT_LOG_NOT CT_ARRAY_CONCAT CT_LIST_CONS */ CT_LIST CT_STACK CT_QUEUE
 
 
@@ -136,7 +156,7 @@ let unzip l = List.fold_left
 %left OP_IMPLIES           /* lowest precedence */
 %left OP_DISJUNCTION /* CT_OR */
 %left OP_CONJUNCTION       /* medium precedence */
-%left DOUBLEDOT            /* high precedence */
+/*%left DOUBLEDOT      */      /* high precedence */
 %nonassoc CT_NOT           /* highest precedence */
 
 %left OP_PLUS OP_MINUS     /* lowest precedence */
@@ -144,34 +164,33 @@ let unzip l = List.fold_left
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsed_model_with_templates> main
+%type <ParsingStructure.unexpanded_parsed_model> main
 %%
 
 /************************************************************/
 main:
-	controllable_actions_option include_file_list variables_declarations decl_fun_lists template_defs automata template_calls init_definition_option
+	controllable_actions_option include_file_list variables_declarations synt_var_decls decl_fun_lists templates_and_automata template_calls forall_template_calls init_definition_option
 	end_opt EOF
 	{
-		let controllable_actions = $1 in
-		let declarations         = $3 in
-		let fun_definitions      = $4 in
-		let template_definitions = $5 in
-		let automata             = $6 in
-		let template_calls       = $7 in
-		let init_definition      = $8 in
+		let controllable_actions  = $1 in
+		let declarations          = $3 in
+    let synt_declarations     = $4 in
+		let fun_definitions       = $5 in
+    let templates_and_ptas    = $6 in
+		let template_calls        = $7 in
+    let forall_template_calls = $8 in
+		let init_definition       = $9 in
 
 		let main_model =
-		{
-                        model =
-                        {
-                                controllable_actions  = controllable_actions;
-                                variable_declarations = declarations;
-                                fun_definitions       = fun_definitions;
-                                automata              = automata;
-                                init_definition       = init_definition;
-                        };
-                        template_definitions  = template_definitions;
-                        template_calls        = template_calls;
+{
+                        unexpanded_controllable_actions  = controllable_actions;
+                        unexpanded_variable_declarations = declarations;
+                        synt_declarations                = synt_declarations;
+                        unexpanded_fun_definitions       = fun_definitions;
+                        templates_and_ptas               = templates_and_ptas;
+                        unexpanded_init_definition       = init_definition;
+                        template_calls                   = template_calls;
+                        forall_template_calls            = forall_template_calls;
 		}
 		in
 		let included_model = unzip !include_list in
@@ -193,11 +212,37 @@ end_opt:
   CONTROLLABLE ACTIONS
 ************************************************************/
 controllable_actions_option:
-	| CT_CONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Parsed_controllable_actions $4 }
-	| CT_UNCONTROLLABLE CT_ACTIONS COLON name_list SEMICOLON { Parsed_uncontrollable_actions $4 }
-	| { Parsed_no_controllable_actions }
+	| CT_CONTROLLABLE CT_ACTIONS COLON name_or_array_access_list SEMICOLON { Unexpanded_parsed_controllable_actions $4 }
+	| CT_UNCONTROLLABLE CT_ACTIONS COLON name_or_array_access_list SEMICOLON { Unexpanded_parsed_uncontrollable_actions $4 }
+	| { Unexpanded_parsed_no_controllable_actions }
 ;
 
+/************************************************************
+  VARIABLE DECLARATIONS
+************************************************************/
+
+/************************************************************/
+
+synt_var_decls:
+  | CT_SYNT_VAR synt_var_lists { $2 }
+  | { [] }
+;
+
+synt_var_lists:
+  | synt_var_list COLON synt_var_type SEMICOLON synt_var_lists { ($3, $1) :: $5 }
+  | { [] }
+;
+
+synt_var_list:
+  | checked_name_decl comma_opt { [$1] }
+  | checked_name_decl COMMA synt_var_list { $1 :: $3 }
+;
+
+synt_var_type:
+  | CT_CLOCK CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Clock_synt_array }
+  | CT_ACTION CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Action_synt_array }
+  | CT_PARAMETER CT_ARRAY LPAREN arithmetic_expression RPAREN { $4, Param_synt_array }
+;
 
 /************************************************************
   VARIABLE DECLARATIONS
@@ -207,7 +252,7 @@ controllable_actions_option:
 
 variables_declarations:
 	| CT_VAR decl_var_lists { $2 }
-	| { []}
+	| { [] }
 ;
 
 
@@ -236,12 +281,15 @@ decl_var_lists:
 /************************************************************/
 
 decl_var_list:
-	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
+	| checked_name_decl comma_opt { [($1, None)] }
+	| checked_name_decl OP_EQ boolean_expression comma_opt { [($1, Some $3)] }
 
-	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| checked_name_decl COMMA decl_var_list { ($1, None) :: $3 }
+	| checked_name_decl OP_EQ boolean_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
+
+/************************************************************/
+
 
 /************************************************************/
 
@@ -351,7 +399,7 @@ semicolon_or_comma_opt:
 
 instruction:
   /* local declaration */
-  | CT_VAR NAME COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
+  | CT_VAR checked_name_decl COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */
@@ -398,10 +446,13 @@ loop_dir:
 
 /************************************************************/
 
-template_defs:
-  | template_def template_defs { $1 :: $2 }
-  | { [] }
-;
+templates_and_automata:
+  | template_def templates_and_automata { (Template $1) :: $2 }
+  | automaton templates_and_automata { (PTA $1) :: $2 }
+  | include_file templates_and_automata { include_list := $1 :: !include_list; $2 }
+  | /* EMPTY */ { [] }
+
+/************************************************************/
 
 /************************************************************/
 
@@ -437,7 +488,6 @@ template_calls:
   | { [] }
 ;
 
-/************************************************************/
 
 template_call:
 	| CT_INSTANTIATE NAME OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
@@ -445,6 +495,29 @@ template_call:
 		($2, $4, List.rev $6)
 	}
 ;
+
+/************************************************************/
+
+forall_template_calls:
+  | forall_template_call forall_template_calls { $1 :: $2 }
+  | { [] }
+
+/* forall i in [1, N]: instantiate a[i] := p(i); */
+forall_template_call:
+  | forall_common_prefix CT_INSTANTIATE NAME LSQBRA NAME RSQBRA OP_ASSIGN NAME LPAREN template_args_list RPAREN SEMICOLON
+  {
+    if $1.forall_index_name <> $5 then failwith
+     "[parser]: index of automaton in forall should be exactly the variable created by the forall."
+    else {
+      forall_index_data = $1;
+      forall_aut_name   = $3;
+      forall_template   = $8;
+      forall_args       = $10;
+    }
+  }
+;
+
+/************************************************************/
 
 template_args_list:
   | { [] }
@@ -472,12 +545,6 @@ template_args_elem:
 
 /************************************************************/
 
-automata:
-	| automaton automata { $1 :: $2 }
-	| include_file automata { include_list := $1 :: !include_list; $2 }
-	| { [] }
-;
-
 /************************************************************/
 
 automaton:
@@ -500,25 +567,42 @@ prolog:
 /************************************************************/
 
 actions_declarations:
-	| CT_ACTIONS COLON name_list SEMICOLON { $3 }
+	| CT_ACTIONS COLON action_declarations_list_opt SEMICOLON { $3 }
 	/** NOTE: deprecated since 3.4 */
-	| CT_SYNCLABS COLON name_list SEMICOLON {
+	| CT_SYNCLABS COLON action_declarations_list_opt SEMICOLON {
 			print_warning ("The syntax `synclabs` is deprecated since version 3.4; please use `actions` instead.");
 	$3 }
 ;
 
 /************************************************************/
 
-name_list:
-	| name_nonempty_list { $1 }
+
+action_declarations_list_opt:
+	| action_declarations_list { $1 }
 	| { [] }
 ;
 
 /************************************************************/
 
-name_nonempty_list:
-	NAME COMMA name_nonempty_list { $1 :: $3}
-	| NAME comma_opt { [$1] }
+action_declarations_list:
+  | name_or_array_access COMMA action_declarations_list { (Single_action $1) :: $3 }
+  | name_or_array_access comma_opt { [Single_action $1] }
+  | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA COMMA action_declarations_list { Multiple_actions ($1, $2, $4) :: $7 }
+  | forall_common_prefix NAME LSQBRA arithmetic_expression RSQBRA comma_opt { [Multiple_actions ($1, $2, $4)] }
+;
+
+/************************************************************/
+
+name_or_array_access_list:
+	| name_or_array_access_nonempty_list { $1 }
+	| { [] }
+;
+
+/************************************************************/
+
+name_or_array_access_nonempty_list:
+	| name_or_array_access COMMA name_or_array_access_nonempty_list { $1 :: $3 }
+	| name_or_array_access comma_opt { [$1] }
 ;
 
 /************************************************************/
@@ -538,21 +622,21 @@ location:
 		let stopwatches, flow = $6 in
 		{
 			(* Name *)
-			name		= name;
+			unexpanded_name		= name;
 			(* Urgent or not? *)
-			urgency		= urgency;
+			unexpanded_urgency		= urgency;
 			(* Accepting or not? *)
-			acceptance	= accepting;
+			unexpanded_acceptance	= accepting;
 			(* Cost *)
-			cost		= cost;
+			unexpanded_cost		= cost;
 			(* Invariant *)
-			invariant	= $5;
+			unexpanded_invariant	= $5;
 			(* List of stopped clocks *)
-			stopped		= stopwatches;
+			unexpanded_stopped		= stopwatches;
 			(* Flow of clocks *)
-			flow		= flow;
+			unexpanded_flow		= flow;
 			(* Transitions starting from this location *)
-			transitions = $8;
+			unexpanded_transitions = $8;
 		}
 	}
 ;
@@ -631,19 +715,13 @@ flow_nonempty_list:
 /************************************************************/
 
 single_flow:
-	| NAME APOSTROPHE OP_EQ flow_value { ($1, $4) }
+	| name_or_array_access APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 ;
 
 /************************************************************/
 
-flow_value:
-        | rational_linear_expression { Flow_rat_value $1 }
-        | NAME { Flow_var $1 }
-
-/************************************************************/
-
 stopwatches:
-	| CT_STOP LBRACE name_list RBRACE { $3 }
+	| CT_STOP LBRACE name_or_array_access_list RBRACE { $3 }
 ;
 
 /************************************************************/
@@ -667,11 +745,11 @@ transition:
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
-	| { [], NoSync }
-	| updates { $1, NoSync }
-	| sync_action { [], (Sync $1) }
-	| updates sync_action { $1, (Sync $2) }
-	| sync_action updates { $2, (Sync $1) }
+	| { [], UnexpandedNoSync }
+	| updates { $1, UnexpandedNoSync }
+	| sync_action { [], (UnexpandedSync $1) }
+	| updates sync_action { $1, (UnexpandedSync $2) }
+	| sync_action updates { $2, (UnexpandedSync $1) }
 ;
 
 /************************************************************/
@@ -683,10 +761,15 @@ updates:
 /************************************************************/
 
 sync_action:
-	CT_SYNC NAME { $2 }
+	CT_SYNC name_or_array_access { $2 }
 ;
 
+/************************************************************/
 
+name_or_array_access:
+  | NAME { Var_name $1 }
+  | NAME LSQBRA arithmetic_expression RSQBRA { Var_array_access ($1, $3) }
+;
 
 /************************************************************/
 /** INIT DEFINITION */
@@ -726,8 +809,8 @@ old_init_expression_fol:
 
 /* Used in the init definition */
 old_init_state_predicate:
-	| old_init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+	| old_init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
 ;
 
 old_init_loc_predicate:
@@ -745,7 +828,10 @@ old_init_loc_predicate:
 /************************************************************/
 
 init_definition:
+	/* FROM 3.1 to 3.4 */
 	| CT_INIT OP_ASSIGN LBRACE init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
+	/* FROM 3.4: equality as in discrete/concrete init sections */
+	| CT_INIT OP_EQ LBRACE init_discrete_continuous_definition RBRACE semicolon_opt { $4 }
 ;
 
 init_discrete_continuous_definition:
@@ -756,6 +842,7 @@ init_discrete_continuous_definition:
 ;
 
 init_discrete_definition:
+	/** WARNING: CT_RATIONAL means here… 'discrete'! ***/
     | CT_RATIONAL OP_EQ init_discrete_expression SEMICOLON { $3 }
 ;
 
@@ -775,9 +862,13 @@ init_discrete_expression_nonempty_list :
 ;
 
 init_discrete_state_predicate:
-	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| init_loc_predicate { let a,b = $1 in (Unexpanded_parsed_loc_assignment (a,b)) }
+  | forall_init_loc_predicate {
+      let forall_data, aut_name, aut_index, loc_name = $1 in
+      Unexpanded_parsed_forall_loc_assignment (forall_data, aut_name, aut_index, loc_name)
+  }
 	| LPAREN init_discrete_state_predicate  RPAREN { $2 }
-	| NAME OP_ASSIGN boolean_expression { Parsed_discrete_predicate ($1, $3) }
+	| NAME OP_ASSIGN boolean_expression { Unexpanded_parsed_discrete_predicate ($1, $3) }
 ;
 
 init_continuous_expression:
@@ -788,21 +879,34 @@ init_continuous_expression:
 init_continuous_expression_nonempty_list :
 	| init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list  { $1 :: $3 }
 	| init_continuous_state_predicate ampersand_opt { [ $1 ] }
+	| forall_init_continuous_state_predicate OP_CONJUNCTION init_continuous_expression_nonempty_list { $1 :: $3 }
+	| forall_init_continuous_state_predicate ampersand_opt { [ $1 ] }
 ;
 
 init_continuous_state_predicate:
     | LPAREN init_continuous_state_predicate RPAREN { $2 }
-    | init_linear_constraint { Parsed_linear_predicate $1 }
+    | init_linear_constraint { Unexpanded_parsed_linear_predicate $1 }
+;
+
+forall_init_continuous_state_predicate:
+  | LPAREN forall_common_prefix init_linear_constraint RPAREN  { Unexpanded_parsed_forall_linear_predicate ($2, $3) }
+  | forall_common_prefix init_linear_constraint  { Unexpanded_parsed_forall_linear_predicate ($1, $2) }
 ;
 
 init_loc_predicate:
-	/* loc[my_pta] = my_loc */
+	/* loc[my_pta] := my_loc */
 	| CT_LOC LSQBRA NAME RSQBRA OP_ASSIGN NAME { ($3, $6) }
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
-
+forall_init_loc_predicate:
+  /* forall i in [1, N]: loc[p[i]] = L */
+  | forall_common_prefix CT_LOC LSQBRA NAME LSQBRA arithmetic_expression RSQBRA RSQBRA OP_ASSIGN NAME
+  {
+    ($1, $4, $6, $10)
+  }
+;
 
 /************************************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -823,11 +927,40 @@ arithmetic_term:
 	| arithmetic_factor { Parsed_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
 	| number NAME { Parsed_product_quotient (Parsed_factor (Parsed_constant ($1)), Parsed_variable ($2, 0), Parsed_mul) }
-	| arithmetic_term product_quotient arithmetic_factor { Parsed_product_quotient ($1, $3, $2) }
-	| OP_MINUS arithmetic_factor { Parsed_factor(Parsed_unary_min $2) }
+
+	| arithmetic_term op_mul_or_div arithmetic_factor {
+		(* Try to simplify whenever possible, and detect division by zero (i.e., two numbers of the same type) *)
+		match $1, $3 with
+		| Parsed_factor (Parsed_constant (ParsedValue.Weak_number_value n1)) , Parsed_constant (ParsedValue.Weak_number_value n2) ->
+			if $2 = Parsed_mul then
+			Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.mul n1 n2)))
+			else(
+			(* Check division by 0 *)
+			check_absence_of_division_by_0_or_abort n1 n2;
+			Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.div n1 n2)))
+			)
+
+		| Parsed_factor (Parsed_constant (ParsedValue.Rat_value n1)) , Parsed_constant (ParsedValue.Rat_value n2) ->
+			if $2 = Parsed_mul then
+			Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.mul n1 n2)))
+			else(
+			(* Check division by 0 *)
+			check_absence_of_division_by_0_or_abort n1 n2;
+			Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.div n1 n2)))
+			)
+
+		| _ -> Parsed_product_quotient ($1, $3, $2)
+		}
+
+	| OP_MINUS arithmetic_factor {
+		(* Try to simplify whenever possible (i.e., two numbers of the same type) *)
+		match $2 with
+		| Parsed_constant (ParsedValue.Weak_number_value n) -> Parsed_factor(Parsed_constant (ParsedValue.Weak_number_value (NumConst.neg n)))
+		| Parsed_constant (ParsedValue.Rat_value n) -> Parsed_factor(Parsed_constant (ParsedValue.Rat_value (NumConst.neg n)))
+		| _ -> Parsed_factor(Parsed_unary_min $2) }
 ;
 
-product_quotient:
+op_mul_or_div:
   | OP_MUL { Parsed_mul }
   | OP_DIV { Parsed_div }
 ;
@@ -887,31 +1020,32 @@ binary_word:
 /************************************************************/
 
 init_linear_constraint:
-	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
-	| CT_TRUE { Parsed_true_constraint }
-	| CT_FALSE { Parsed_false_constraint }
+	| linear_expression relop linear_expression { Unexpanded_parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Unexpanded_parsed_true_constraint }
+	| CT_FALSE { Unexpanded_parsed_false_constraint }
 ;
 
 /* Linear expression over variables and rationals */
 linear_expression:
-	| linear_term { Linear_term $1 }
-	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
+	| linear_term { Unexpanded_linear_term $1 }
+	| linear_expression OP_PLUS linear_term { Unexpanded_linear_plus_expression ($1, $3) }
+	| linear_expression OP_MINUS linear_term { Unexpanded_linear_minus_expression ($1, $3) }
 ;
 
 /* Linear term over variables and rationals (no recursion, no division) */
 linear_term:
-	| rational { Constant $1 }
-	| rational NAME { Variable ($1, $2) }
-	| rational OP_MUL NAME { Variable ($1, $3) }
-	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
-	| NAME { Variable (NumConst.one, $1) }
+	| rational { Unexpanded_constant $1 }
+	| rational name_or_array_access { Unexpanded_variable ($1, $2) }
+	| rational OP_MUL name_or_array_access { Unexpanded_variable ($1, $3) }
+	| OP_MINUS name_or_array_access { Unexpanded_variable (NumConst.minus_one, $2) }
+	| name_or_array_access { Unexpanded_variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
 
+/** WARNING: unused rules => disabled 2024/11/08 */
 /* Linear expression over rationals only */
-rational_linear_expression:
+/*rational_linear_expression:
 	| rational_linear_term { $1 }
 	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
 	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
@@ -922,15 +1056,15 @@ rational_linear_expression:
 		)else
 			NumConst.div $1 $3
 		}
-	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
+	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } / * linear_term a la deuxieme place * /
 ;
 
-/* Linear term over rationals only */
+/ * Linear term over rationals only  * /
 rational_linear_term:
 	| rational { $1 }
 	| OP_MINUS rational_linear_term { NumConst.neg $2 }
 	| LPAREN rational_linear_expression RPAREN { $2 }
-;
+;*/
 
 /************************************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
@@ -988,11 +1122,8 @@ rational:
 	| integer { $1 }
 	| float { $1 }
 	| integer OP_DIV pos_integer {
-		if NumConst.equal $3 NumConst.zero then(
-			print_error "Division by 0 spotted during the parsing!";
-			raise (InvalidModel)
-		)else
-			NumConst.div $1 $3
+		check_absence_of_division_by_0_or_abort $1 $3;
+		NumConst.div $1 $3
 	}
 ;
 
@@ -1019,6 +1150,26 @@ pos_float:
 /************************************************************/
 /** MISC. */
 /************************************************************/
+
+forall_common_prefix:
+  | CT_FORALL NAME CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA COLON
+  {
+    { forall_index_name = $2; forall_lb = $5; forall_ub = $7}
+  }
+;
+
+checked_name_decl:
+  | NAME {
+	(* Stupid April fool feature for 1st April 2024 *)
+	if $1 = "April1st" then (raise Exceptions.April1st)
+
+	(* Normal mode: return variable name *)
+	else (if contains $1 "___" then
+      failwith
+        "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
+    else $1)
+  }
+;
 
 semicolon_or_comma:
   | SEMICOLON {}

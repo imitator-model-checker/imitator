@@ -7,12 +7,12 @@
 
 def write_bc(station, bc, last):
 	bcmax = pow (2 , (bc+1))
-	print "\n(* Considering case with bc = " + str(bc) + ", hence from 0 to " + str(bcmax - 1) + " (i.e., 2^(bc+1) - 1) *)"
+	print("\n(* Considering case with bc = " + str(bc) + ", hence from 0 to " + str(bcmax - 1) + " (i.e., 2^(bc+1) - 1) *)")
 	
-	print "loc Collide" + str(station) + "_" + str(bc) + ": invariant x" + str(station) + " <= 0"
+	print("loc Collide" + str(station) + "_" + str(bc) + ": invariant x" + str(station) + " <= 0")
 
 	for x in range(0, bcmax):
-		print "\twhen True sync prob" + str(station) + " goto Wait" + str(station) + "_" + str(bc) + "_" + str(x) + ";"
+		print("\twhen True sync prob" + str(station) + " goto Wait" + str(station) + "_" + str(bc) + "_" + str(x) + ";")
 		
 	next_bc = bc + 1
 	if last:
@@ -20,23 +20,24 @@ def write_bc(station, bc, last):
 	next_loc = "Collide" + str(station) + "_" + str(next_bc)
 	
 	for x in range(0, bcmax):
-		print "\nloc Wait" + str(station) + "_" + str(bc) + "_" + str(x) + ": invariant x" + str(station) + " <= " + str(x) + " timeslot"
-		print "\twhen x" + str(station) + " = " + str(x) + " timeslot sync busy" + str(station) + " do {x" + str(station) + " := 0} goto " + next_loc + ";"
-		print "\twhen x" + str(station) + " = " + str(x) + " timeslot sync send" + str(station) + " do {x" + str(station) + " := 0} goto Transmit" + str(station) + ";"
+		print("\nloc Wait" + str(station) + "_" + str(bc) + "_" + str(x) + ": invariant x" + str(station) + " <= " + str(x) + " timeslot")
+		print("\twhen x" + str(station) + " = " + str(x) + " timeslot sync busy" + str(station) + " do {x" + str(station) + " := 0} goto " + next_loc + ";")
+		print("\twhen x" + str(station) + " = " + str(x) + " timeslot sync send" + str(station) + " do {x" + str(station) + " := 0} goto Transmit" + str(station) + ";")
 
 
 def write_program_for_station(station, bcmax):
-	print "\n\n\n(* STARTING AUTOMATED PROGRAM FOR CSMA/CD FOR STATION " + str(station) + " WITH BCMAX = " + str(bcmax) + " *)"
+	print("\n\n\n(* STARTING AUTOMATED PROGRAM FOR CSMA/CD FOR STATION " + str(station) + " WITH BCMAX = " + str(bcmax) + " *)")
 	# All cases but the last one
 	for bc in range(1, bcmax):
 		write_bc(station, bc, False)
 	# Last case
 	write_bc(station, bcmax, True)
-	print "\n(* END OF AUTOMATED PROGRAM FOR CSMA/CD *)\n"
+	print("\n(* END OF AUTOMATED PROGRAM FOR CSMA/CD *)\n")
 
 
 def write_program(bcmax):
 	write_program_for_station(1, bcmax)
 	write_program_for_station(2, bcmax)
 
-write_program(10)
+# Change value here for max backoff
+write_program(4)

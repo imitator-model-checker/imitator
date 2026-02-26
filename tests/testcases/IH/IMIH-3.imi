@@ -1,0 +1,97 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy example to test IM with IH
+ * Description      : Toy example to test IM with IH, avoiding an infinite loop (actually not specific to IM)
+ * Correctness      :
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/09/17
+ * Last modified    : 2024/09/17
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: int;
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: ;
+
+loc l1: invariant True
+	when x >= 1 goto l2;
+	(* We cheat with non-integer comparisons to ease the test of IH *)
+	when x >= 0.5 goto l1bis;
+
+loc l1bis: invariant True
+	when x >= 0.5 goto l2;
+
+loc l2: invariant True
+	when x = 0.5 goto infiniteLoop;
+
+loc infiniteLoop: invariant i >= 0
+	when True do {i <- i + 1} goto infiniteLoop;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init = {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] <- l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i <- 0,
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+		& p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

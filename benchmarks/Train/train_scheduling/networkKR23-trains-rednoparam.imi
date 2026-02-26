@@ -1,0 +1,98 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Some alternative modeling for Figure 1 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations"
+ * Description      : Some alternative modeling for Figure 1 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan
+ * Correctness      : Satisfiable schedule
+ * Scalable         : ?
+ * Generated        : no
+ * Categories       : train
+ * Source           : "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan. Formal Methods 2023. DOI: https://doi.org/10.1007/978-3-031-27481-7_5
+ * bibkey           : [KR23]
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/04/23
+ * Last modified    : 2024/07/05
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+(************************************************************)
+  automaton train_Red
+(************************************************************)
+(*** Connection: [D,A] ***)
+actions: done_Red;
+
+loc node_D: invariant True
+	when segment_11_free do {x_Red := 0; segment_11_free := False} goto segment_11;
+	when segment_10_free do {x_Red := 0; segment_10_free := False} goto segment_10;
+
+loc segment_11: invariant x_Red <= DURATION_SEGMENT_11
+	when x_Red = DURATION_SEGMENT_11 & segment_6_free do {x_Red := 0; segment_6_free := False} goto segment_11_6;
+
+(* Train station 3 *)
+loc segment_11_6: invariant x_Red <= DURATION_SEGMENT_6_11
+	(*** Not part of the connection: no stop ***)
+	when x_Red = DURATION_SEGMENT_6_11 do {x_Red := 0; segment_11_free := True} goto segment_6;
+
+loc segment_10: invariant x_Red <= DURATION_SEGMENT_10
+	when x_Red = DURATION_SEGMENT_10 & segment_8_free do {x_Red := 0; segment_8_free := False} goto segment_10_8;
+	when x_Red = DURATION_SEGMENT_10 & segment_7_free do {x_Red := 0; segment_7_free := False} goto segment_10_7;
+
+loc segment_10_8: invariant x_Red <= DURATION_SEGMENT_8_10
+	when x_Red = DURATION_SEGMENT_8_10 do {x_Red := 0; segment_10_free := True} goto segment_8;
+
+loc segment_10_7: invariant x_Red <= DURATION_SEGMENT_7_10
+	when x_Red = DURATION_SEGMENT_7_10 do {x_Red := 0; segment_10_free := True} goto segment_7;
+
+loc segment_8: invariant x_Red <= DURATION_SEGMENT_8
+	when x_Red = DURATION_SEGMENT_8 & segment_4_free do {x_Red := 0; segment_4_free := False} goto segment_8_4;
+
+(* Train station 2 *)
+loc segment_8_4: invariant x_Red <= DURATION_SEGMENT_4_8
+	(*** Not part of the connection: no stop ***)
+	when x_Red = DURATION_SEGMENT_4_8 do {x_Red := 0; segment_8_free := True} goto segment_4;
+
+loc segment_7: invariant x_Red <= DURATION_SEGMENT_7
+	when x_Red = DURATION_SEGMENT_7 & segment_2_free do {x_Red := 0; segment_2_free := False} goto segment_7_2;
+
+(* Train station 1 *)
+loc segment_7_2: invariant x_Red <= DURATION_SEGMENT_2_7
+	(*** Not part of the connection: no stop ***)
+	when x_Red = DURATION_SEGMENT_2_7 do {x_Red := 0; segment_7_free := True} goto segment_2;
+
+loc segment_6: invariant x_Red <= DURATION_SEGMENT_6
+	when x_Red = DURATION_SEGMENT_6 & segment_2_free do {x_Red := 0; segment_2_free := False} goto segment_6_2;
+
+loc segment_6_2: invariant x_Red <= DURATION_SEGMENT_2_6
+	when x_Red = DURATION_SEGMENT_2_6 do {x_Red := 0; segment_6_free := True} goto segment_2;
+
+loc segment_4: invariant x_Red <= DURATION_SEGMENT_4
+	when x_Red = DURATION_SEGMENT_4 & segment_3_free do {x_Red := 0; segment_3_free := False} goto segment_4_3;
+
+loc segment_4_3: invariant x_Red <= DURATION_SEGMENT_3_4
+	when x_Red = DURATION_SEGMENT_3_4 do {x_Red := 0; segment_4_free := True} goto segment_3;
+
+loc segment_3: invariant x_Red <= DURATION_SEGMENT_3
+	when x_Red = DURATION_SEGMENT_3 & segment_1_free do {x_Red := 0; segment_1_free := False} goto segment_3_1;
+
+loc segment_3_1: invariant x_Red <= DURATION_SEGMENT_1_3
+	when x_Red = DURATION_SEGMENT_1_3 do {x_Red := 0; segment_3_free := True} goto segment_1;
+
+loc segment_2: invariant x_Red <= DURATION_SEGMENT_2
+	when x_Red = DURATION_SEGMENT_2 & segment_1_free do {x_Red := 0; segment_1_free := False} goto segment_2_1;
+
+loc segment_2_1: invariant x_Red <= DURATION_SEGMENT_1_2
+	when x_Red = DURATION_SEGMENT_1_2 do {x_Red := 0; segment_2_free := True} goto segment_1;
+
+(* Terminal, success *)
+loc segment_1: invariant x_Red <= DURATION_SEGMENT_1
+	when x_Red = DURATION_SEGMENT_1 do {x_Red := 0; segment_1_free := True} sync done_Red goto node_A;
+
+loc node_A: invariant True stop{x_Red}
+
+end (* pta *)

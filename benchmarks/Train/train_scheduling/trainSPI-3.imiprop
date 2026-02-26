@@ -1,0 +1,1 @@
+property := #synth EF(forall i in [0, NB - 1]: loc[train[i]] = node_E);

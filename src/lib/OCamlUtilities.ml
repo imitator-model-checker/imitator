@@ -81,7 +81,7 @@ let second_of_triplet (_, x, _) = x
 let third_of_triplet (_, _, x) = x
 
 (************************************************************)
-(** Useful functions on lists *)
+(* Useful functions on lists *)
 (************************************************************)
 
 (** Check if a list is empty *)
@@ -410,7 +410,22 @@ let dynArray_exists p a =
 		false
 	) with Exceptions.Found -> true
 
-	
+(************************************************************)
+(* Useful functions on queues *)
+(************************************************************)
+
+(** Transform a list into a queue *)
+let queue_of_list l =
+	let queue = Queue.create() in
+	(* Add all elements from l *)
+	List.iter (fun elem -> Queue.add elem queue) l;
+	(* Return the queue *)
+	queue
+
+(** Transform a queue into a list *)
+let list_of_queue queue =
+	List.rev (Queue.fold (fun current_list elem -> elem :: current_list) [] queue)
+
 
 (************************************************************)
 (* Useful functions on hash tables *)

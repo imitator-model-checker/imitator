@@ -146,6 +146,8 @@ let string_of_true		= "True"
 let string_of_false		= "False"
 let string_of_accepting	= "accepting"
 
+(* let update_symbol		= ":=" *)
+let update_symbol		= "<-"
 
 
 (************************************************************)
@@ -260,7 +262,7 @@ let footer = "\n"
 
 (* Controllable actions *)
 let string_of_controllable_actions (model : AbstractModel.abstract_model) : string =
-	if model.controllable_actions = [] then "" else(
+	if not model.has_controllable_or_uncontrollable_actions then "" else(
 		"\ncontrollable actions: " ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names model.controllable_actions)) ^ ";\n"
 	)
 
@@ -395,7 +397,7 @@ let string_of_seq_code_bloc model level ?(sep=" ") (* seq_code_bloc *) =
             let clock_name = model.variable_names clock_index in
             tabs
             ^ clock_name
-            ^ " := "
+            ^ " " ^ update_symbol ^ " "
             ^ DiscreteExpressions.string_of_rational_arithmetic_expression model.variable_names expr
             ^ ";"
     in
@@ -525,10 +527,10 @@ let string_of_actions_declaration model automaton_index =
 	^ ";"
 
 
-(* Convert the invariant of a location into a string *)
-let string_of_invariant model automaton_index location_index =
+(** Convert the invariant and stopwatches and flows of a location into a string *)
+let string_of_invariant_and_flows model automaton_index location_index =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_invariant(" ^ (model.automata_names automaton_index) ^ ", " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_invariant_and_flows(" ^ (model.automata_names automaton_index) ^ ", " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
 	
 	(* Invariant *)
 	"invariant "
@@ -536,23 +538,28 @@ let string_of_invariant model automaton_index location_index =
 
 	(* Handle stopwatches *)
 	^
-	let stopped = model.stopwatches automaton_index location_index in
+	(let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
 	if stopped = [] then ""
 	(* Case 2: some clocks stopped *)
-	else
+	else(
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}"
+	)
+	)
 
 	(* Handle flow *)
 	^
+	(
 	let flow = model.flow automaton_index location_index in
 	(* Case 1: no explicit flow *)
 	if flow = [] then ""
 	(* Case 2: some flow *)
-	else
-	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
+	else(
+	let flow_str = string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
 	" flow{" ^ flow_str ^ "}"
+	)
+	)
 
 
 (* Convert an action into a string *)
@@ -753,7 +760,7 @@ let string_of_transitions model automaton_index location_index =
 	)
 
 
-(* Convert a location of an automaton into a string *)
+(** Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	(* Print some information *)
 (* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_location(" ^ (model.automata_names automaton_index) ^ ": " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
@@ -768,7 +775,7 @@ let string_of_location model automaton_index location_index =
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
 	)
 	^ ": "
-	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
+	^ (string_of_invariant_and_flows model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 
 
@@ -827,7 +834,7 @@ let string_of_new_initial_locations ?indent_level:(i=1) model =
 		let initial_location = DiscreteState.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] := " ^ (model.location_names automaton_index initial_location)
+		tabulations ^ "loc[" ^ (model.automata_names automaton_index) ^ "] " ^ update_symbol ^ " " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
 	in string_of_list_of_string_with_sep ", \n" initial_automata
 
@@ -839,7 +846,7 @@ let string_of_new_initial_discretes ?indent_level:(i=1) model =
 		let initial_value = DiscreteState.get_discrete_value model.initial_location discrete_index in
 		(* '& var = val' *)
 		let tabulations = string_n_times i "\t" in
-		tabulations ^ (model.variable_names discrete_index) ^ " := " ^ (AbstractValue.string_of_value initial_value)
+		tabulations ^ (model.variable_names discrete_index) ^ " " ^ update_symbol ^ " " ^ (AbstractValue.string_of_value initial_value)
 	) model.discrete
 	in string_of_list_of_string_with_sep ", \n" initial_discrete
 
@@ -853,7 +860,7 @@ let string_of_initial_state model =
 	^ "\n" ^ "(* Initial state *)"
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ ""
-	^ "\n" ^ "init := {"
+	^ "\n" ^ "init = {"
     ^ "\n"
 	(* Discrete zone *)
     ^ "\n" ^ "\tdiscrete = "
@@ -995,6 +1002,10 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 	)
 	
 	^
+
+	" "
+
+	^
 	
 	(
 	(* Handle the actual property *)
@@ -1025,6 +1036,9 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 
 		(* Global invariant *)
 		| AG state_predicate -> "AG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		(* Exists globally *)
+		| EG state_predicate -> "EG(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
 		(* Exists release *)
 		| ER (state_predicate_phi, state_predicate_psi) -> "E(" ^ (string_of_state_predicate model state_predicate_phi) ^ ")R(" ^ (string_of_state_predicate model state_predicate_psi) ^ ")"
@@ -1174,6 +1188,8 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 		| Win state_predicate -> "Win(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
 
+				(* Parametric timed game: reachability condition *)
+		| WinAvoid (state_predicate1, state_predicate2) -> "WinAvoid(" ^ (string_of_state_predicate model state_predicate1) ^ ", " ^ (string_of_state_predicate model state_predicate2) ^")"
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)
 	)
@@ -1187,6 +1203,9 @@ let string_of_abstract_property (model : AbstractModel.abstract_model) property 
 	
 	(* Add the projection, if any *)
 	(string_of_projection model property)
+
+	(* Final new line *)
+	^ "\n"
 
 
 (************************************************************)

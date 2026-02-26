@@ -184,6 +184,17 @@ val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 (** exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 
+(************************************************************)
+(* Useful functions on queues *)
+(************************************************************)
+
+(** Transform a list into a queue *)
+val queue_of_list : 'a list -> 'a Queue.t
+
+
+(** Transform a queue into a list *)
+val list_of_queue : 'a Queue.t -> 'a list
+
 
 (************************************************************)
 (* Useful functions on hash tables *)

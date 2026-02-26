@@ -65,6 +65,28 @@ end
 
 
 (************************************************************)
+(* Class definition: EG *)
+(************************************************************)
+class algoEG : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
+	object inherit algoAUgen
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+
+end
+
+
+(************************************************************)
 (* Class definition: AF (timed) *)
 (************************************************************)
 class algoAFtimed : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval ->

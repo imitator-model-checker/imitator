@@ -54,6 +54,9 @@ let default_state_comparison (property : AbstractProperty.abstract_property) : A
 
 		-> Inclusion_check
 
+	(* Exists globally *)
+	| EG _
+
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
 	| ER _
@@ -207,7 +210,7 @@ let default_state_comparison (property : AbstractProperty.abstract_property) : A
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> Inclusion_check
+	| Win _ | WinAvoid _ -> Inclusion_check
 
 
 
@@ -237,6 +240,9 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	| EU _
 		(* All comparison operators preserve correctness *)
 		-> true
+
+	(* Exists globally *)
+	| EG _
 
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
@@ -400,7 +406,7 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _
+	| Win _ | WinAvoid _
 		(* No reversed inclusion allowed *)
 		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check || state_comparison_operator = Inclusion_check
 
@@ -435,6 +441,9 @@ let merge_needed (property : AbstractProperty.abstract_property) : bool =
 	(* Exists until *)
 	| EU _
 		-> true
+
+	(* Exists globally *)
+	| EG _
 
 	(*** TODO: decide heuristics ***)
 	(* Exists release *)
@@ -588,7 +597,7 @@ let merge_needed (property : AbstractProperty.abstract_property) : bool =
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> false
+	| Win _ | WinAvoid _ -> false
 
 (*------------------------------------------------------------*)
 (** Returns whether the property requires a global clock measuring the absolute time *)
@@ -600,6 +609,7 @@ let needs_global_clock (property : AbstractProperty.abstract_property) : bool =
 	| EF _
 	| AGnot _
 	| AG _
+	| EG _
 	| EU _
 	| ER _
 	| EW _
@@ -625,7 +635,8 @@ let needs_global_clock (property : AbstractProperty.abstract_property) : bool =
 	| Random_cartography _
 	| RandomSeq_cartography _
 	| PRPC _
-	| Win _
+	| Win _ 
+	| WinAvoid _
 		-> false
 
 	| EFtmin _
@@ -782,6 +793,9 @@ let supports_witness (property : AbstractProperty.abstract_property) : bool =
 
 		-> true
 	
+	(* Exists release *)
+	| EG _
+
 	(*** TODO (2024/02): should probably be easy! ***)
 	(* Exists release *)
 	| ER _
@@ -925,7 +939,7 @@ let supports_witness (property : AbstractProperty.abstract_property) : bool =
 	(*------------------------------------------------------------*)
 
 	(* Parametric timed game: reachability condition *)
-	| Win _ -> true
+	| Win _ | WinAvoid _ -> true
 
 
 (*------------------------------------------------------------*)
@@ -947,6 +961,8 @@ let supports_cumulative_pruning (property : AbstractProperty.abstract_property) 
 	| AG _
 	| EU _
 		-> true
+
+	| EG _
 
 	(*** TODO (2024/02): should probably be easy! ***)
 	| ER _
@@ -1042,7 +1058,7 @@ let supports_cumulative_pruning (property : AbstractProperty.abstract_property) 
 
 	(* Parametric timed game: reachability condition *)
 	(*** TODO: double check ***)
-	| Win _ -> true
+	| Win _ | WinAvoid _ -> true
 
 
 (*------------------------------------------------------------*)
@@ -1143,6 +1159,9 @@ let text_of_property (property : AbstractProperty.abstract_property) : string =
 	
 	(* Global invariant *)
 	| AG _ -> "global invariant " ^ synthesis_or_witness
+
+	(* Exists globally *)
+	| EG _ -> "exists globally " ^ synthesis_or_witness
 
 	(* Exists release *)
 	| ER _ -> "exists release " ^ synthesis_or_witness
@@ -1283,7 +1302,8 @@ let text_of_property (property : AbstractProperty.abstract_property) : string =
 
 	(* Parametric timed game: reachability condition *)
 	| Win _ -> "parametric timed game with reachability condition (" ^ synthesis_or_witness ^ ")"
-
+	
+	| WinAvoid _ -> "parametric timed game with reachability condition and avoid condition (" ^ synthesis_or_witness ^ ")"
 
 (************************************************************)
 (** Get the v0 of a property, if any *)
@@ -1295,6 +1315,7 @@ let v0_option_of_property (property : AbstractProperty.abstract_property) : Abst
 	| EF _
 	| AGnot _
 	| AG _
+	| EG _
 	| ER _
 	| EU _
 	| EW _
@@ -1325,7 +1346,7 @@ let v0_option_of_property (property : AbstractProperty.abstract_property) : Abst
 	| IMK _
 	| IMunion _
 
-	| Win _
+	| Win _ | WinAvoid _
 		-> None
 
 	| Cover_cartography (v0, _)
@@ -1406,6 +1427,7 @@ let accepting_state_predicates_of_property (property : AbstractProperty.abstract
 	| AGnot state_predicate
 	| AG state_predicate
 	| AF state_predicate
+	| EG state_predicate
 	| EFpmin (state_predicate , _)
 	| EFpmax (state_predicate , _)
 	| EFtmin state_predicate
@@ -1414,7 +1436,7 @@ let accepting_state_predicates_of_property (property : AbstractProperty.abstract
 
 	| Cycle_through state_predicate
 	| PRP (state_predicate, _)
-	| Win (state_predicate)
+	| Win (state_predicate) | WinAvoid (state_predicate , _)
 		-> [state_predicate]
 
 	| ER (_, state_predicate_2)

@@ -163,3 +163,9 @@ val abort_program : unit -> unit
 
 (* Terminate program *)
 val terminate_program : unit -> unit
+
+(************************************************************)
+(* Misc *)
+(************************************************************)
+
+val contains : string -> string -> bool

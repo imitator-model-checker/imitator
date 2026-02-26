@@ -33,15 +33,6 @@ type variable_ref = variable_name * variable_id
 
 type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ | PARSED_OP_GEQ | PARSED_OP_G
 
-
-(****************************************************************)
-(** Controllable actions *)
-(****************************************************************)
-type parsed_controllable_actions =
-	| Parsed_controllable_actions of action_name list
-	| Parsed_uncontrollable_actions of action_name list
-	| Parsed_no_controllable_actions
-
 (****************************************************************)
 (* Declarations *)
 (****************************************************************)
@@ -105,6 +96,26 @@ and parsed_discrete_factor =
 	| Parsed_function_call of variable_name (* name *) * parsed_boolean_expression list (* arguments *)
 
 
+(****************************************************************)
+(* Name or access used in syntatic arrays *)
+(****************************************************************)
+
+type name_or_access =
+  | Var_name of variable_name
+  | Var_array_access of variable_name * parsed_discrete_arithmetic_expression;;
+
+(****************************************************************)
+(** Controllable actions *)
+(****************************************************************)
+type parsed_controllable_actions =
+	| Parsed_controllable_actions of action_name list
+	| Parsed_uncontrollable_actions of action_name list
+	| Parsed_no_controllable_actions
+
+type unexpanded_parsed_controllable_actions =
+	| Unexpanded_parsed_controllable_actions of name_or_access list
+	| Unexpanded_parsed_uncontrollable_actions of name_or_access list
+	| Unexpanded_parsed_no_controllable_actions
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = DiscreteType.var_type * (variable_name * parsed_boolean_expression option) list
@@ -120,17 +131,29 @@ type linear_term =
 	| Constant of  NumConst.t
 	| Variable of  NumConst.t * variable_name
 
-
 type linear_expression =
 	| Linear_term of linear_term
 	| Linear_plus_expression of linear_expression * linear_term
 	| Linear_minus_expression of linear_expression * linear_term
 
-
 type linear_constraint =
 	| Parsed_true_constraint (** True *)
 	| Parsed_false_constraint (** False *)
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
+
+type unexpanded_linear_term =
+	| Unexpanded_constant of  NumConst.t
+	| Unexpanded_variable of  NumConst.t * name_or_access
+
+type unexpanded_linear_expression =
+	| Unexpanded_linear_term of unexpanded_linear_term
+	| Unexpanded_linear_plus_expression of unexpanded_linear_expression * unexpanded_linear_term
+	| Unexpanded_linear_minus_expression of unexpanded_linear_expression * unexpanded_linear_term
+
+type unexpanded_linear_constraint =
+	| Unexpanded_parsed_true_constraint
+	| Unexpanded_parsed_false_constraint
+	| Unexpanded_parsed_linear_constraint of unexpanded_linear_expression * parsed_relop * unexpanded_linear_expression
 
 (** Non-linear expressions *)
 type nonlinear_constraint = parsed_discrete_boolean_expression
@@ -211,12 +234,14 @@ type parsed_fun_definition_list = parsed_fun_definition list
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 
-type flow_value =
-        | Flow_rat_value of NumConst.t
-        | Flow_var of variable_name
+type unexpanded_sync =
+	| UnexpandedSync of name_or_access
+	| UnexpandedNoSync
 
 (** A list of pairs (clock, rational) *)
-type parsed_flow = (variable_name * flow_value) list
+type parsed_flow = (variable_name * NumConst.t) list
+
+type unexpanded_parsed_flow = (name_or_access * parsed_discrete_arithmetic_expression) list
 
 (** Transition = Guard * update list * sync label * destination location *)
 type transition = guard * parsed_seq_code_bloc * sync * location_name
@@ -234,21 +259,44 @@ type parsed_location = {
 	(* Invariant *)
 	invariant   : invariant;
 	(* List of stopped clocks *)
-	stopped     : (variable_name list);
+	stopped     : variable_name list;
 	(* Flow of clocks *)
 	flow        : parsed_flow;
 	(* Transitions starting from this location *)
 	transitions : transition list;
 }
 
+type unexpanded_transition = guard * parsed_seq_code_bloc * unexpanded_sync * location_name
+
+type unexpanded_parsed_location = {
+	unexpanded_name        : location_name;
+	unexpanded_urgency     : parsed_urgency;
+	unexpanded_acceptance  : parsed_acceptance;
+	unexpanded_cost        : unexpanded_linear_expression option;
+	unexpanded_invariant   : invariant;
+	unexpanded_stopped     : name_or_access list;
+	unexpanded_flow        : unexpanded_parsed_flow;
+	unexpanded_transitions : unexpanded_transition list;
+}
+
+type forall_index_data = {
+  forall_index_name : variable_name;
+  forall_lb         : parsed_discrete_arithmetic_expression;
+  forall_ub         : parsed_discrete_arithmetic_expression;
+}
 
 type parsed_automaton = automaton_name * action_name list * parsed_location list
 
+type action_declaration =
+  | Single_action of name_or_access
+  | Multiple_actions of forall_index_data * variable_name * parsed_discrete_arithmetic_expression
+
+type unexpanded_parsed_automaton = automaton_name * action_declaration list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;
     template_parameters : (variable_name * DiscreteType.template_var_type) list;
-    template_body       : action_name list * parsed_location list
+    template_body       : action_declaration list * unexpanded_parsed_location list
 }
 
 type parsed_template_arg =
@@ -261,11 +309,30 @@ type parsed_template_call =
  (* name             template used   parameters passed to template *)
     automaton_name * template_name * (parsed_template_arg list)
 
+type parsed_forall_template_call = {
+  forall_index_data : forall_index_data;
+  forall_aut_name   : automaton_name;
+  forall_template   : template_name;
+  forall_args       : parsed_template_arg list; (* Notice that these are shared between the calls *)
+}
+
 (****************************************************************)
 (* Init definition *)
 (****************************************************************)
 
 (** State predicates *)
+
+type unexpanded_parsed_init_state_predicate =
+	| Unexpanded_parsed_loc_assignment of automaton_name * location_name
+  | Unexpanded_parsed_forall_loc_assignment of
+  (*  index info          array name      array index                             location *)
+      forall_index_data * variable_name * parsed_discrete_arithmetic_expression * location_name
+	| Unexpanded_parsed_linear_predicate of unexpanded_linear_constraint
+	| Unexpanded_parsed_forall_linear_predicate of
+		forall_index_data * unexpanded_linear_constraint
+	| Unexpanded_parsed_discrete_predicate of variable_name * parsed_boolean_expression
+
+type unexpanded_init_definition = unexpanded_parsed_init_state_predicate list
 
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
@@ -287,6 +354,19 @@ type parsed_duration = linear_expression
 
 type parsed_projection = (variable_name list) option
 
+(****************************************************************)
+(** Syntatic Variables *)
+(****************************************************************)
+
+type synt_var_kind =
+  | Clock_synt_array
+  | Action_synt_array
+  | Param_synt_array
+
+type synt_var_type = parsed_discrete_arithmetic_expression * synt_var_kind
+
+type parsed_synt_var_decl =
+  synt_var_type * variable_name list
 
 (****************************************************************)
 (** Input model *)
@@ -300,10 +380,20 @@ type parsed_model = {
 	init_definition       : init_definition;
 }
 
-type parsed_model_with_templates = {
-        model                : parsed_model;
-        template_definitions : parsed_template_definition list;
-        template_calls       : parsed_template_call list;
+type templateOrPTA =
+  Template of parsed_template_definition
+| PTA of unexpanded_parsed_automaton
+
+type unexpanded_parsed_model = {
+    (* added prefix to avoid crashing type inference *)
+    unexpanded_controllable_actions : unexpanded_parsed_controllable_actions;
+    unexpanded_variable_declarations : variable_declarations;
+    unexpanded_fun_definitions : parsed_fun_definition_list;
+    unexpanded_init_definition : unexpanded_init_definition;
+    templates_and_ptas : templateOrPTA list;
+    template_calls : parsed_template_call list;
+    forall_template_calls : parsed_forall_template_call list;
+    synt_declarations : parsed_synt_var_decl list;
 }
 
 (****************************************************************)
@@ -323,6 +413,10 @@ type parsed_loc_predicate =
 	| Parsed_loc_predicate_EQ of automaton_name * location_name
 	| Parsed_loc_predicate_NEQ of automaton_name * location_name
 
+type unexpanded_parsed_loc_predicate =
+	| Unexpanded_Parsed_loc_predicate_EQ of name_or_access * location_name
+	| Unexpanded_Parsed_loc_predicate_NEQ of name_or_access * location_name
+
 
 type parsed_simple_predicate =
 	| Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
@@ -330,6 +424,13 @@ type parsed_simple_predicate =
 	| Parsed_state_predicate_true
 	| Parsed_state_predicate_false
 	| Parsed_state_predicate_accepting
+
+type unexpanded_parsed_simple_predicate =
+	| Unexpanded_Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
+	| Unexpanded_Parsed_loc_predicate of unexpanded_parsed_loc_predicate
+	| Unexpanded_Parsed_state_predicate_true
+	| Unexpanded_Parsed_state_predicate_false
+	| Unexpanded_Parsed_state_predicate_accepting
 
 type parsed_state_predicate_factor =
 	| Parsed_state_predicate_factor_NOT of parsed_state_predicate_factor
@@ -343,6 +444,24 @@ and parsed_state_predicate_term =
 and parsed_state_predicate =
 	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
 	| Parsed_state_predicate_term of parsed_state_predicate_term
+
+type unexpanded_parsed_state_predicate_factor =
+	| Unexpanded_Parsed_state_predicate_factor_NOT of unexpanded_parsed_state_predicate_factor
+	| Unexpanded_Parsed_simple_predicate of unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_state_predicate of unexpanded_parsed_state_predicate
+	(* The forall is in this level so we can use it on both sides of `AND` and `OR` *)
+	| Unexpanded_Parsed_forall_simple_predicate of forall_index_data * unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_forall_state_predicate of forall_index_data * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_exists_simple_predicate of forall_index_data * unexpanded_parsed_simple_predicate
+	| Unexpanded_Parsed_exists_state_predicate of forall_index_data * unexpanded_parsed_state_predicate
+
+and unexpanded_parsed_state_predicate_term =
+	| Unexpanded_Parsed_state_predicate_term_AND of unexpanded_parsed_state_predicate_term * unexpanded_parsed_state_predicate_term
+	| Unexpanded_Parsed_state_predicate_factor of unexpanded_parsed_state_predicate_factor
+
+and unexpanded_parsed_state_predicate =
+	| Unexpanded_Parsed_state_predicate_OR of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_state_predicate_term of unexpanded_parsed_state_predicate_term
 
 	
 (****************************************************************)
@@ -420,6 +539,9 @@ type parsed_property_type =
 	
 	(* Global invariant *)
 	| Parsed_AG of parsed_state_predicate
+
+	(* Exists globally *)
+	| Parsed_EG of parsed_state_predicate
 
 	(* Exists release *)
 	| Parsed_ER of parsed_state_predicate * parsed_state_predicate
@@ -572,7 +694,51 @@ type parsed_property_type =
 	(* Parametric timed game: reachability condition *)
 	| Parsed_Win of parsed_state_predicate
 
+	| Parsed_WinAvoid of parsed_state_predicate * parsed_state_predicate
 
+type unexpanded_parsed_property_type =
+	| Unexpanded_Parsed_Valid
+	| Unexpanded_Parsed_EF of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AGnot of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AG of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EG of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_ER of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EU of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EW of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AF of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AR of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AU of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AW of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EF_timed of parsed_interval * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_ER_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EU_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EW_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AF_timed of parsed_interval * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AR_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AU_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_AW_timed of parsed_interval * unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_EFpmin of unexpanded_parsed_state_predicate * variable_name
+	| Unexpanded_Parsed_EFpmax of unexpanded_parsed_state_predicate * variable_name
+	| Unexpanded_Parsed_EFtmin of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_Cycle_Through of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_Cycle_Through_generalized of unexpanded_parsed_state_predicate list
+	| Unexpanded_Parsed_NZ_Cycle
+	| Unexpanded_Parsed_Deadlock_Freeness
+	| Unexpanded_Parsed_IM of parsed_pval
+	| Unexpanded_Parsed_ConvexIM of parsed_pval
+	| Unexpanded_Parsed_PRP of unexpanded_parsed_state_predicate * parsed_pval
+	| Unexpanded_Parsed_IMK of parsed_pval
+	| Unexpanded_Parsed_IMunion of parsed_pval
+	| Unexpanded_Parsed_Cover_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Learning_cartography of unexpanded_parsed_state_predicate * parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Shuffle_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Border_cartography of parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_Random_cartography of parsed_pdomain * int * NumConst.t
+	| Unexpanded_Parsed_RandomSeq_cartography of parsed_pdomain * int * NumConst.t
+	| Unexpanded_Parsed_PRPC of unexpanded_parsed_state_predicate * parsed_pdomain * NumConst.t
+	| Unexpanded_Parsed_pattern of parsed_pattern
+	| Unexpanded_Parsed_Win of unexpanded_parsed_state_predicate
+	| Unexpanded_Parsed_WinAvoid of unexpanded_parsed_state_predicate * unexpanded_parsed_state_predicate
 
 type parsed_property = {
 	(* Emptiness or synthesis *)
@@ -581,6 +747,12 @@ type parsed_property = {
 	property		: parsed_property_type;
 	(* Projection *)
 	projection		: parsed_projection;
+}
+
+type unexpanded_parsed_property = {
+	unexpanded_synthesis_type	: parsed_synthesis_type;
+	unexpanded_property		: unexpanded_parsed_property_type;
+	unexpanded_projection		: parsed_projection;
 }
 
 type declarations_info = {

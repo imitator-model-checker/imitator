@@ -18,15 +18,16 @@
 (************************************************************)
 
 type translation =
+	| DOT
 	| HyTech
 	| IMI
-	| DOT
+	| ImiProp
+	| JaniSpec
 	| JPG
 	| PDF
 	| PNG
 	| TikZ
 	| Uppaal
-  | JaniSpec
 
 
 (************************************************************)
@@ -121,11 +122,26 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Level of detail in graphical translations **)
+type graphics_detail = 
+	| Full
+	| Minimal
+	
 (** Controller mode for AlgoPTG **)
 type ptg_controller_mode = 
 	| No_Generation
 	| Draw
 	| No_Draw
+
+(** Waiting list strategy for AlgoPTG **)
+type waitingListStrategy =
+	| SingleQueue
+	| Frontier of {init: int; step:  int; update: int}
+
+type ptg_abstraction = 
+	| Location
+	| Convex_Hull
+	| No_Abstraction
 
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int

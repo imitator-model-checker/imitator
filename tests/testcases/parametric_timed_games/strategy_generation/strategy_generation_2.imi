@@ -1,0 +1,34 @@
+(* Mikael & Baptiste, Aarhus, May 29, 2024 
+	Strategy generation example, non-trivial
+    Expected constraint: 
+*)
+
+controllable actions: c_1;
+
+var
+ 	x,
+    y : clock;
+
+automaton ptg
+
+actions: c_1, u_1, u_2, u_reset_x, u_reset_y;
+
+loc l0: invariant True
+	when 1 <= x & x <= 4 & 1 <= y & y <= 4 sync c_1 goto win;
+    when 1 <= x & x <= 3 & 2 <= y & y <= 4 sync u_1 goto lose;
+    when 2 <= x & x <= 4 & 1 <= y & y <= 3 sync u_2 goto lose;
+
+loc lose : invariant True 
+
+accepting loc win: invariant True
+
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l0
+	& x = 0
+    & y = 0
+;
+
+end

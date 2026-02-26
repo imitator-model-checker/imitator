@@ -1,0 +1,48 @@
+(* Mikael, Aarhus, Oct 12, 2023 
+	Coffee machine
+*)
+
+controllable actions: sugar_added, serve_coffee;
+
+var
+ 	x,
+    y,
+        : clock;
+
+    p2,
+    p4,
+    p1,
+    p3,
+        : parameter;
+
+automaton ptg
+
+actions: sugar_added, serve_coffee, ask_coffee, ask_sugar, take_coffee;
+
+loc idle: invariant True
+	when True do {y:=0} sync ask_coffee goto preparing_coffee;
+
+
+loc preparing_coffee : invariant True
+    when y < p1 do {x:=0} sync ask_sugar goto adding_sugar;
+    when p3 <= y & y <= p4 sync serve_coffee goto coffee_served;
+
+loc adding_sugar : invariant True
+    when x = p2 sync sugar_added goto preparing_coffee; 
+
+accepting loc coffee_served : invariant True
+    when True sync take_coffee goto idle;
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = preparing_coffee
+    & x = 0
+    & y = 0
+    & p1 = 50
+    & p2 >= 0
+    & p3 = 0
+    & p4 >= 0
+;
+
+end

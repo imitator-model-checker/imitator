@@ -239,6 +239,8 @@ type abstract_model = {
 	actions : action_index list;
 	(* Only controllable action indexes *)
 	controllable_actions : action_index list;
+	(* Has the model a defined list of (un)controllable actions? This is different from the aforementioned list, as the user can define an empty list of (un)controllable actions, in which case this flag still evaluates to true *)
+	has_controllable_or_uncontrollable_actions : bool;
 	(* Action names *)
 	action_names : action_index -> action_name;
 	(* The type of actions *)

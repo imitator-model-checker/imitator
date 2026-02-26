@@ -484,7 +484,7 @@ class algoEFtminQueue (model : AbstractModel.abstract_model) (property : Abstrac
 			    match options#merge_algorithm with
                     | Merge_reconstruct
                     | Merge_onthefly    ->
-                        state_space#merge list_pq;
+                        state_space#merge list_pq (fun _ _ -> ());
                     | Merge_212 ->
                         let eaten_states = state_space#merge212 list_pq in
                         list_diff list_pq eaten_states;

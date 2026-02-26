@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "3.4-alpha"
+let version_string = "3.4-alpha2"
 
 let version_name = "Cheese Durian"
 
@@ -245,7 +245,7 @@ let global_default_string = {
     arithmetic_string = default_arithmetic_string;
     boolean_string = default_string;
     array_string = default_array_string;
-    assign_op = " := ";
+    assign_op = " <- ";
     binary_word_representation = Binary_word_representation_standard;
 }
 
@@ -254,3 +254,20 @@ let list_string = "list"
 let stack_string = "stack"
 let queue_string = "queue"
 let void_string = "void"
+
+
+(** April fool 2024 *)
+(* Fish author: David Riley
+ * source: https://ascii.co.uk/art/fish
+ *)
+let fish = "
+     o   o
+                   /^^^^^7
+     '  '     ,oO))))))))Oo,
+            ,'))))))))))))))), /{
+       '  ,'o  ))))))))))))))))={    ~  ~ ~    Poisson
+          >    ))))))))))))))))={      ~       d'avril
+          `,   ))))))\\ \\)))))))={    ~  ~ ~ ~     !
+            ',))))))))\\/)))))' \\{
+              '*O))))))))O*'
+"

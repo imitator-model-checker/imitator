@@ -137,9 +137,9 @@ This model is given in graphical form in \cref{figure:fischer}.\footnote{%
 Let us comment this case model by starting with the header.
 First, text in comments gives generalities about the model (author, date, description, etc.).
 The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
-	An empty model template with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
+	An example of an almost-empty model with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
 
-	\url{https://github.com/imitator-model-checker/imitator/blob/master/benchmarks/template.imi}.
+	\url{https://github.com/imitator-model-checker/imitator/blob/master/benchmarks/example.imi}.
 }
 
 \paragraph{Variable declarations}
@@ -204,7 +204,7 @@ A graphical representation of the \IPTA{} \styleIMI{observer} is given in \cref{
 
 \paragraph{Initial state definition}
 
-The initial state is defined by the part of the file following ``\styleIMI{init :=}''.
+The initial state is defined by the part of the file following ``\styleIMI{init =}''.
 
 % Since \imitator{} 3.1,
 The initial state section is split between the \emph{discrete} initialization and the \emph{continuous} initialization (the latter being given in the form of a set of constraints).
@@ -214,13 +214,13 @@ The initial state section is split between the \emph{discrete} initialization an
 % Note the difference between constraints initializations and discrete variables initializations.
 % Disrete are initialized in the \styleIMI{continuous} part while other are initialized in the \styleIMI{discrete} part.
 The discrete initialization (introduced by the \styleIMI{discrete} keyword) assigns an initial value to each discrete (global) variable, and sets the initial location for each automaton.
-Note that the assignment operator \styleIMI{:=} is used (in contrast with unification operator \styleIMI{=} used for constraints).
+Note that the assignment operator is \styleIMI{<-} (with backward-compatibility accepting \styleIMI{:=}), in contrast with unification operator \styleIMI{=} used for constraints.
 % As all discrete variables are independent, the initializations are separated with a comma.
 %
 % As discrete variables are syntactic sugar for locations, you can see that locations are initialized in the same manner as discrete variables in the \styleIMI{discrete} part. Except this particular elements, this new init state follow the same rules and behavior than the previous init state.
 %
 % Init \styleIMI{discrete} part must contain the initial location of each \IPTA{}.
-For example, \styleIMI{loc[proc1] := idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
+For example, \styleIMI{loc[proc1] <- idle1} states that \styleIMI{proc1} is initially in location \styleIMI{idle1}.
 The initial definition should assign a constant value to each discrete variable:
 here \styleIMI{turn} is initially assigned to \styleIMI{IDLE}, and \styleIMI{counter} is initially assigned to~0.
 
@@ -651,7 +651,7 @@ x1 + x2 <= 2 p1 + 0.5 p2 - i
 
 However, all discrete variables must be initialized to a \emph{constant} compatible with their type.
 See \cref{ss:initial} for details.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i := ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an assignment of the form \styleIMI{i <- ...} followed by a constant (or a linear term over~$\LTermR$, for rational variables), then \imitator{} will assume that \styleIMI{i} is initially set to a default value, and will issue a warning.
 
 
 
@@ -704,7 +704,7 @@ Limited linear expressions over rationals can be used in the definition of a (ra
 
 %------------------------------------------------------------
 \begin{hint}
-	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
+	Note that a parameter can be turned to a constant as follows in the definition of the parameters:
 
 \begin{IMITATORmodel}
 p = 2: parameter;
@@ -725,7 +725,7 @@ p = 2: parameter;
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Types}
+\subsection{Primitive types}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Discrete, global variables are syntactic sugar for a potentially unbounded number of locations.
@@ -889,7 +889,7 @@ The opposite function (int of rational) is \emph{not} allowed, as an overflow ca
 Binary word variables are sequences of bits of fixed length---the maximum size of a binary word is $2^{16}$.
 Bitwise operations can be defined on these variables (on same length).
 
-For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 := 0b1010} and \styleIMI{bw2 := 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
+For example, defining two binary words \styleIMI{bw1} and \styleIMI{bw2} both of size~4 (type : \styleIMI{binary(4)}), such that initially \styleIMI{bw1 <- 0b1010} and \styleIMI{bw2 <- 0b1011}, we can use a guard \styleIMI{logor(bw1, bw2) <> bw1} that checks whether the result of the bitwise (logical) ``or'' operation on both variables differs from \styleIMI{bw1}.
 Then, if this check is true, one may want to shift the bits of \styleIMI{b1} by 2~positions, and set \styleIMI{bw2} to the result of the bitwise ``and'' operation on~\styleIMI{bw1} and~\styleIMI{bw2}.
 %
 A transition featuring such a guard and such updates would be written as follows in \imitator{} syntax:
@@ -897,7 +897,7 @@ A transition featuring such a guard and such updates would be written as follows
 %------------------------------------------------------------
 \begin{IMITATORmodel}
 (* before: bw1 = 0b1010 and bw2 = 0b1011 *)
-when logor(bw1, bw2) <> bw1 sync a do {bw1 := shift_left(bw1, 2), bw2 := logand(bw1, bw2)} goto l1;
+when logor(bw1, bw2) <> bw1 sync a do {bw1 <- shift_left(bw1, 2); bw2 <- logand(bw1, bw2)} goto l1;
 (* after: bw1 = 0b1000 and bw2 = 0b1010 *)
 \end{IMITATORmodel}
 %------------------------------------------------------------
@@ -951,9 +951,12 @@ when lognot(0b010110 )            = 0b101001    goto l1;
 \end{example}
 %------------------------------------------------------------
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Composite types}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
-\subsubsection{Arrays}
+\subsubsection{Arrays}\label{sss:arrays}
 %------------------------------------------------------------
 
 Arrays are fixed-length collections of indexed elements.
@@ -987,7 +990,7 @@ Following a convention used, \eg{} in OCaml, we denote by \styleIMI{'a array} an
 The same notation applies to subsequent types (lists, etc.).
 
 Array functions are never subject to side effects, \ie{} they do not modify the array passed as arguments.
-However, an array can be indirectly modified through one of its elements, using the (usual) syntax, \eg{} \styleIMI{myArray[1] := 32;}.
+However, an array can be indirectly modified through one of its elements, using the (usual) syntax, \eg{} \styleIMI{myArray[1] <- 32;}.
 
 \begin{itemize}
 	\item \styleIMI{a[i:int]:'a} -- Returns the element of array \styleIMI{a} at index \styleIMI{i}
@@ -1161,8 +1164,8 @@ loc l0: invariant True
 	when True do {
 		stack_push(1, s);
 		stack_push(2, s);
-		i := stack_top(s);
-		j := stack_pop(s);
+		i <- stack_top(s);
+		j <- stack_pop(s);
 	}
 	goto l1;
 
@@ -1245,8 +1248,8 @@ loc l0: invariant True
 	when True do {
 		queue_push(1, q);
 		queue_push(2, q);
-		i := queue_top(q);
-		j := queue_pop(q);
+		i <- queue_top(q);
+		j <- queue_pop(q);
 	} goto l1;
 
 loc l1: invariant
@@ -1461,11 +1464,11 @@ var
 actions: a, b;
 
 loc l1: invariant x = 0
-	when x = 0 do {r := 3; x := r; i := 2} sync a goto l2;
-	when True do {i := i + 2} sync b goto l2;
+	when x = 0 do {r <- 3; x <- r; i <- 2} sync a goto l2;
+	when True do {i <- i + 2} sync b goto l2;
 
 loc l2: invariant i >= 2
-	when True do {i := i * i} sync b goto l2;
+	when True do {i <- i * i} sync b goto l2;
 end (* A1 *)
 
 (************************************************************)
@@ -1474,7 +1477,7 @@ end (* A1 *)
 actions: b;
 
 loc l1: invariant True
-	when x <= 3r do {r := r*r; x := x+1; i := i - 2} sync b goto l2;
+	when x <= 3r do {r <- r*r; x <- x+1; i <- i - 2} sync b goto l2;
 
 loc l2: invariant True
 end (* A2 *)
@@ -1486,7 +1489,7 @@ end (* A2 *)
 actions: a;
 
 loc l1: invariant True
-	when True do {x := 2x; i := pow(i, 3)} sync a goto l2;
+	when True do {x <- 2x; i <- pow(i, 3)} sync a goto l2;
 
 loc l2: invariant True
 end (* A3 *)
@@ -1545,11 +1548,11 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	do {
 % 		seq
 % 			stack_push(0, s);
-% 			i := 1;
+% 			i <- 1;
 % 		then
 % 			(* r1 = 1 and x = 2, because all seq updates in all IPTA are made before *)
-% 			r1 := stack_top(s),
-% 			x := i
+% 			r1 <- stack_top(s),
+% 			x <- i
 % 		end
 % 	}
 % 	sync a goto lend;
@@ -1567,11 +1570,11 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	& True
 % 	do {
 % 		seq
-% 			i := 2;
+% 			i <- 2;
 % 			stack_push(1, s);
 % 		then
 % 			(* r2 = 1, because all seq updates in all IPTA are made before *)
-% 			r2 := stack_top(s)
+% 			r2 <- stack_top(s)
 % 		end
 % 	}
 % 	sync a goto lend;
@@ -1589,7 +1592,7 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 % 	& True
 % 	do {
 % 		(* r3 = 1, because all seq updates in all IPTA are made before *)
-% 		r3 := stack_top(s)
+% 		r3 <- stack_top(s)
 % 	}
 % 	sync a goto lend;
 %
@@ -1604,7 +1607,7 @@ The full parametric zone graph of this example is given in \cref{example:sync-mo
 %------------------------------------------------------------
 
 Runtime errors can be encountered during updates.
-For a example, during an update, a division by zero can be encountered: \eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0.
+For a example, during an update, a division by zero can be encountered: \eg{} in an update \styleIMI{i <- 2 / i}, when the current value of~\styleIMI{i} is~0.
 
 When a runtime error is encountered, an exception is raised and \imitator{} terminates with an error.
 
@@ -1759,7 +1762,7 @@ loc l1: invariant True
 	when add(1, two()) = 3                                         goto l2;
 	when lerp(0, 5, 1 / 2) = 2.5                                   goto l2;
 	(* The update below yields i=6 *)
-	when True do {i := add(add_one(last(list([1,2,3]))), two()); } goto l2;
+	when True do {i <- add(add_one(last(list([1,2,3]))), two()); } goto l2;
 
 loc l2: invariant True
 end
@@ -1811,10 +1814,10 @@ end
 % 	var i : int = 1;
 %
 % 	for i from 0 to 10 do
-% 		j := j + i; (* `i` here is the `i` from for *)
+% 		j <- j + i; (* `i` here is the `i` from for *)
 % 	done
 %
-% 	j := j + i; (* `i` here is the local declared variable *)
+% 	j <- j + i; (* `i` here is the local declared variable *)
 %
 % 	return j;
 % end
@@ -1843,12 +1846,12 @@ Put it differently, it is not allowed to \emph{replace} an argument with another
 function f(i : int, t : int array(4), s : int stack) : void
 begin
 	(* Forbidden *)
- 	i := 4;
+ 	i <- 4;
 	(* Forbidden *)
- 	t := [1,2,3,4];
+ 	t <- [1,2,3,4];
 
 	(* Allowed *)
-	t[0] := 9;
+	t[0] <- 9;
 	(* Allowed *)
 	stack_clear(s);
 	stack_push(i, s);
@@ -1885,8 +1888,8 @@ var
 function side_effect(i : int, j : int) : int
 begin
 	(* Modify some global variables *)
-	my_global_i := i * 2;
-	my_global_j := j * my_global_i;
+	my_global_i <- i * 2;
+	my_global_j <- j * my_global_i;
 	return my_global_i + my_global_j
 end
 
@@ -1915,14 +1918,14 @@ We give below some more examples of definitions of user-defined functions with s
 (* This function modifies a global variable: it is side-effect *)
 function modif_global() : int
 begin
-	my_global_i := 0;
+	my_global_i <- 0;
 	return 0
 end
 
 (* This function modifies the content of an array passed as an argument: it is side-effect  *)
 function modif_array(a : int array(2)) : int
 begin
-	a[1] := 0;
+	a[1] <- 0;
 	return a[0]
 end
 \end{IMITATORmodel}
@@ -1944,11 +1947,11 @@ end
 % 	function modify_clock_param_arg() : int
 % 	begin
 % 		(* Modification of a clock is forbidden, an error will be raised *)
-% 		x := 0;
+% 		x <- 0;
 % 		(* Modification of a parameter is forbidden, an error will be raised *)
-% 		p1 := 0;
+% 		p1 <- 0;
 % 		(* Modification of a function argument is forbidden, an error will be raised *)
-% 		i := 0;
+% 		i <- 0;
 % 		return 0
 % 	end
 %
@@ -1958,13 +1961,10 @@ end
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Blocks and lexical scope}\label{section:variable_scope}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Blocks and lexical scope}\label{section:variable_scope}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-% \subsection{Blocks and lexical scope}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Structures such as \styleIMI{function}, \styleIMI{for}, \styleIMI{while}, \styleIMI{if} work as blocks.
 Each block defines a lexical scope containing all the variables defined within it.
@@ -1997,17 +1997,17 @@ begin
 		(* We have access to current scope containing `k` *)
 
 		var k : int = 1;
-		j := i + 1;
+		j <- i + 1;
 		if True then
 			(* In this block: *)
 			(* We have access to higher level lexical scope containing: `i`, `j`, `k` *)
-			j := j + i + k;
+			j <- j + i + k;
 		end
 	else
 		(* In this block: *)
 		(* We have access to higher level lexical scope containing: `i`, `j` *)
 		(* We do not have access to variable `k` because it was defined in another separated block *)
-		j := 2 * i;
+		j <- 2 * i;
 	end
 
 	return j;
@@ -2026,6 +2026,134 @@ See an example of variable shadowing in \cref{example:shadowing}.
 
 %%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model templates}\label{section:templates}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Since \imitator{}~3.4, it is possible to define automata instantiated from model \emph{templates}.
+This means the ability to create a number of almost identical \IPTA{}s in parallel.
+
+Note that templates are a purely syntactic feature; \imitator{} does not implement algorithms to handle a parameterized number of automata (unlike techniques such as~\cite{ADRST16}).
+In practice, a simple preprocessing step translates the templates into standard \IPTA{}s.
+
+
+\paragraph{Defining templates}
+In order to define a new template, the user should use the keyword \styleIMI{template}, followed by the name and all its arguments and the corresponding types separated by commas.
+The arguments can be \styleIMI{int}, \styleIMI{rational}, \styleIMI{bool}, \styleIMI{clock}, \styleIMI{action} and \styleIMI{parameter}.
+%
+After that, the user should enter the body of the template, which is exactly the same as the body of a regular \IPTA{}, except that it can use the variables declared as arguments for the template.
+
+In addition, arrays of actions, clocks and parameters can be defined.
+These are not ``real'' arrays (as in \cref{sss:arrays}), in the sense that they are just syntactic sugar for multiple declarations of
+variables.
+In order to distinguish them from ``real'' arrays, the specific keyword \styleIMI{synt\_var} is used to declare them.
+
+\paragraph{Template instantiation}
+Finally, the user can instantiate the template with the keyword \styleIMI{instantiate}, followed by the name of the automaton that will be created, the assignment operator (\styleIMI{<-}) and an invocation of the desired template, with the corresponding arguments.
+
+We also introduced the \styleIMI{forall} keyword, which allows one to do many instantiations or declare many constraints in the init definition with a single statement.
+
+Currently, it is necessary to first declare all templates, then declare all regular (non-template) \IPTA{}s and, lastly, apply all desired instantiations.
+Similarly, declarations of syntactic variables must come after declarations of regular variables.
+
+
+\paragraph{Type checking}
+Note that, currently, no type checking is done during this preprocessing phase.
+But if a user tries to use a value with an incompatible type, the next phases of compilation will catch that and reject the model.
+The user can pass either variables or literal values as arguments to the template.
+If a variable is passed, then this is done by reference.
+
+
+
+\begin{example}
+All these constructions are exemplified in the following snippet:
+\begin{IMITATORmodel}
+var
+    id        : int;
+    k = 2     : constant;
+    IDLE = -1 : int;
+    N = 10    : int;
+
+synt_var
+    x : clock array (N);
+
+template p(i : int)
+
+loc A: invariant True
+  when id = IDLE do { x[i] <- 0 } goto req;
+
+loc req: invariant x[i] <= k
+  when x[i] <= k do { x[i] <- 0; id <- i } goto waiting;
+
+loc waiting: invariant True
+  when id = IDLE do { x[i] <- 0 } goto req;
+  when id = i & x[i] > k goto cs;
+
+loc cs: invariant True
+  when True do { id <- IDLE } goto A;
+
+end
+
+forall i in [0, N - 1]: instantiate p[i] <- p(i);
+
+init = {
+
+    discrete =
+        forall i in [0, N - 1]: loc[p[i]] <- A,
+        id <- IDLE,
+    ;
+
+    continuous =
+        forall i in [0, N - 1]: x[i] = 0
+    ;
+}
+
+end
+\end{IMITATORmodel}
+\end{example}
+
+\paragraph{Templates in properties}
+
+The \styleIMI{forall} construction can also be used in properties. We also added the analogous \styleIMI{exists} construct,
+which creates a disjunction instead of a conjunction. The user can nest \styleIMI{forall} and \styleIMI{exists}
+in any way they want.
+The syntax is exactly the same as for the models. but it has
+lower precedence in comparison to all the other logical operators.
+This means that, unless the user encloses the predicate inside the \styleIMI{forall} with parenthesis, only the first statement will be considered as part of the \styleIMI{forall}/\styleIMI{exists}.
+
+
+\begin{example}
+	Below is an example of property using such a syntax (unrelated to the former model example). It clarifies the precedence and what can be done with nesting.
+	Note that \styleIMI{NB} is a constant defined in the model, leading to an easy specification of properties.
+
+	\begin{IMITATORproperty}
+	(* True || False is outside of the forall *)
+	property := #synth AGnot(forall i in [0, N - 1]: loc[p[i]] <> cs && True || False)
+
+	(* True || False is inside of the forall *)
+	property := #synth AGnot(forall i in [0, N - 1]: (loc[p[i]] <> cs && True || False))
+
+	(* Nesting *)
+	property := #synth AGnot(exists i in [0, N - 1]: (forall i in [0, N - 1]: loc[p[i]] <> cs) && True || False)
+	\end{IMITATORproperty}
+\end{example}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Submodel inclusion}\label{section:include}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+It is possible to include some submodels from different files.
+The syntax is as follows:
+
+\begin{IMITATORmodel}
+#include "some-file.imi";
+\end{IMITATORmodel}
+
+\noindent{} where \stylePath{some-file.imi} is a partial \imitator{} file.
+
+% TODO: make precise what can be included, and in what part of the model the inclusion can take place
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2284,6 +2412,19 @@ property := #synth A (state_predicate) W (state_predicate);
 These algorithms work recursively using a depth-first search (DFS), as formalized in~\cite{JLR15}.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exists-globally synthesis: \styleTCTL{EG}}\label{section:algorithm:EG}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The property syntax is as follows:
+
+\begin{IMITATORproperty}
+property := #synth EG (state_predicate);
+\end{IMITATORproperty}
+
+\styleTCTL{EG} is implemented exactly as the negation of the result of \styleTCTL{AF} called on the negation of the state predicate.
+See \cref{section:algorithm:AF}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Timed CTL}\label{section:algorithm:timedCTL}
@@ -2307,6 +2448,10 @@ property := #synth A (state_predicate) W_[-p, p] (state_predicate);
 \end{IMITATORproperty}
 
 
+For algorithms using \styleTCTL{AU} (\ie{} \styleTCTL{AF}, \styleTCTL{AU}, \styleTCTL{AR}, \styleTCTL{AW}, \styleTCTL{EG}), together with their timed extension, an option \styleOption{-no-cache-in-AF} might be useful, that disables a caching system consisting in keeping in memory the result of \styleTCTL{AU} on a node, at the cost of more memory.
+Disabling it using option \styleOption{-no-cache-in-AF} may result in less memory at the price of a slower analysis.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parameter synthesis using patterns}\label{section:algorithm:patterns}
@@ -2322,7 +2467,7 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 
 % TODO: add example illustrating the issue with livelocks e.g. by Adrien Jaillet (2022/07/01):
 % loc l0: invariant True
-% 	when True sync a do {x := 0} goto l1;
+% 	when True sync a do {x <- 0} goto l1;
 %
 % loc l1: invariant x < 1 + v
 % 	when True goto l10;
@@ -2757,7 +2902,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric Timed Game parameter synthesis}\label{section:algorithm:ptg}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Given a Parametric Timed Game (PTA enriched with controllable/uncontrollable actions) synthesizes a parameter constraint such that, for any parameter valuation in that constraint, a winning strategy exists for the controllable player. Based on the algorithm on Timed Games described in~\cite{DBLP:conf/concur/CassezDFLL05} and further extended for Parametric Timed Games in \cite{DBLP:conf/wodes/JovanovicFLR12}.
+Given a Parametric Timed Game (PTA enriched with controllable/uncontrollable actions) synthesizes a parameter constraint such that, for any parameter valuation in that constraint, a winning strategy exists for the controllable player~\cite{DBLP:conf/tacas/DahlsenJensenFPP24}. Based on the algorithm on Timed Games described in~\cite{DBLP:conf/concur/CassezDFLL05} and further extended for Parametric Timed Games in \cite{DBLP:conf/wodes/JovanovicFLR12}.
 
 The property syntax is of the following form:
 
@@ -2765,6 +2910,18 @@ The property syntax is of the following form:
 property := #synth Win(state_predicate);
 \end{IMITATORproperty}
 
+This synthesizes a parameter constraint guaranteeing a winning strategy for any parameter valuation within it. A winning strategy dictates when to take controllable actions (or wait, forcing the environment to act) such that - regardless of uncontrollable actions - the state predicate is eventually satisfied (e.g., reaching an accepting location).
+
+\subsection{Strategy Generation}\label{section:algorithm:ptg:strategy}
+During execution, the algorithm constructs a winning strategy, which is output as a textual representation upon termination. This strategy guarantees that the state predicate is eventually satisfied for all runs starting from parameter valuations within the synthesized constraint. To disable strategy output, use \styleOption{-PTG-no-strategy-printing}. To disable construction of a winning strategy entirely see \cref{section:algorithm:ptg:no-strategy}.
+
+\subsection{Controller Generation}\label{section:algorithm:ptg:controller}  
+After the main algorithm terminates (and strategy output completes, unless disabled), the controller generation procedure begins. This step converts the winning strategy into a timed automaton controller, saved as an \imitator file. When composed in parallel with the original game, this controller enforces the strategy, guaranteeing that the state predicate is eventually satisfied in all runs.
+
+
+
+\subsection{Disabling Strategy Generation}\label{section:algorithm:ptg:no-strategy}
+To disable strategy generation entirely (including computation, printing, and controller conversion), use \styleOption{-PTG-no-strategy-generation}. This significantly accelerates the algorithm on larger examples when only the parameter constraint synthesis is needed.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2958,6 +3115,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			Unavoidability                 & \styleIMI{A(sp\_1)R(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)U(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 			Unavoidability                 & \styleIMI{A(sp\_1)W(sp\_2)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
+			Exists-globally                & \styleIMI{EG(state\_predicate)}               & \cellYes{} & \cellNo{}  & \cellNo{} \\
 
 			% Cycles
 
@@ -3066,6 +3224,7 @@ Whenever merging is enabled (cell \cellYes{}), the following options are used by
 			Unavoidability           & \styleIMI{A(sp\_1)R(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)U(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
 			Unavoidability           & \styleIMI{A(sp\_1)W(sp\_2)}                  & \cellNo{} & \styleOption{equality} \\
+			Exists globally          & \styleIMI{EG(state\_predicate)}                  & \cellNo{} & \styleOption{equality} \\
 
 			% Cycles
 
@@ -3228,9 +3387,9 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the property file:
 
-\begin{IMITATORmodel}
+\begin{IMITATORproperty}
 projectresult(param1, ..., paramn);
-\end{IMITATORmodel}
+\end{IMITATORproperty}
 
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
@@ -3449,8 +3608,8 @@ Our translation tries to preserve \imitator{} semantics, using the following sch
 	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
 	      \begin{itemize}
 		      \item all invariants contain \styleFileContent{nb\_\_a = n}
-		      \item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
-		      \item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
+		      \item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a <- 1};
+		      \item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a <- nb\_\_a + 1}.
 	      \end{itemize}
 	      From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
 	      (This construction was suggested by Jiří~Srba.)
@@ -3514,15 +3673,15 @@ We review some points in the following.
 In order to provide a similar behavior, the translation is performed as follow.
 
 \begin{IMITATORmodel}
-if (x=1) then (x:=2, y:=3) else (x:=4)
+if (x=1) then (x<-2; y<-3) else (x<-4)
 \end{IMITATORmodel}
 
 \noindent{}is transformed (and, subsequently, written in \jani{} format) into
 
 \begin{IMITATORmodel}
-x := (if (x=1) then 2 else x);
-y := (if (x=1) then 3 else y);
-x := (if (x=1) then x else 4);
+x <- (if (x=1) then 2 else x);
+y <- (if (x=1) then 3 else y);
+x <- (if (x=1) then x else 4);
 \end{IMITATORmodel}
 
 
@@ -3741,7 +3900,7 @@ If an expression mixes different types, a type error is risen before the start o
 The types of literal numbers are automatically resolved during the semantic analysis and more precisely during the type checking step.
 Once an expression type is resolved, all literal numbers within this expression are automatically typed as the numerical type held by the expression.
 
-For example, in the following update expression \styleIMI{b := True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as an~\styleIMI{int}.
+For example, in the following update expression \styleIMI{b <- True \& i < 3 + 1} with \styleIMI{i : int}, literal numbers \styleIMI{3} and \styleIMI{1} will be automatically typed as an~\styleIMI{int}.
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Type conversion}
@@ -3750,7 +3909,7 @@ For example, in the following update expression \styleIMI{b := True \& i < 3 + 1
 \imitator{} does not support implicit conversion.
 All expressions hold exactly one type and cannot mix different types.
 In other words, \styleIMI{r + i + 3}, where \styleIMI{r} is a rational and \styleIMI{i} is an \styleIMI{int}, is not allowed.
-Neither is allowed \styleIMI{r := i}.
+Neither is allowed \styleIMI{r <- i}.
 
 However, it is possible to convert an expression to another type using built-in conversion functions;
 so far, the only such function is \styleIMI{rational\_of\_int}, converting an integer to a rational:
@@ -3876,7 +4035,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 This explains why this option, while preserving the correctness, is not default for reachability algorithms.
 \end{description}
 
-In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}) and for unavoidability (\cref{section:algorithm:AF}, \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+In reachability algorithms (\cref{section:algorithm:EFsynth,section:algorithm:AGnot,section:algorithm:AG,section:algorithm:EFmin,section:algorithm:EFmax,section:algorithm:EFopt,section:algorithm:EU,section:algorithm:patterns,section:algorithm:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{section:algorithm:LoopSynth,section:algorithm:Zeno}) and for unavoidability (\cref{section:algorithm:AF,section:algorithm:EG}, \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
 %
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
@@ -4113,6 +4272,11 @@ See \cref{section:hytech} for details.
 Regenerates the model into an \imitator{} model, and exits.
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-imi2imiprop} (default: disabled)}
+%------------------------------------------------------------
+Regenerates the property into an \imitator{} property, and exits.
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-imi2JPG} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
@@ -4250,6 +4414,12 @@ The possible values for this option are:
 %------------------------------------------------------------
 For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
 do not put accepting states at the head of the successors list.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-cache-in-AF} (default: disabled, \ie{} cache is used)}
+%------------------------------------------------------------
+For algorithms using \styleTCTL{AU} (\ie{} \styleTCTL{AF}, \styleTCTL{AU}, \styleTCTL{AR}, \styleTCTL{AW}, \styleTCTL{EG}), together with their timed extension, this option disables a caching system consisting in keeping in memory the result of \styleTCTL{AU} on a node, at the cost of more memory.
+Disabling the cache using this option may result in less memory at the price of a slower analysis.
 
 
 %------------------------------------------------------------
@@ -4964,15 +5134,9 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{<name>} \styleIMI{:=} \nt{global\_expression} \\
+	$|$ & \styleIMI{<name>} \nt{update\_sign} \nt{global\_expression} \\
 \end{longtable}
 
-% \smallskip
-%
-% NOTE: hidden for sake of simplicity
-% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
-%
-% \smallskip
 
 %------------------------------------------------------------
 \regleGrammaire{normal\_update\_list}
@@ -5388,7 +5552,7 @@ We define each of those two components below.
 % %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{init} \styleIMI{:= \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
+	$|$ & \styleIMI{init} \styleIMI{\nt{update\_sign} \{} \nt{init\_discrete\_continuous\_definition} \styleIMI{\}} \\
 % 	$|$ & \emptystring                                                       \\
 \end{longtable}
 
@@ -5435,7 +5599,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{<name> :=} \nt{global\_expression} \\
+	$|$ & \styleIMI{<name>} \nt{update\_sign} \nt{global\_expression} \\
 	$|$ & \nt{init\_discrete\_loc\_predicate} \\
 	$|$ & \styleIMI{(}                                                      \nt{init\_discrete\_state\_predicate} \styleIMI{)}                                                      \\
 \end{longtable}
@@ -5445,7 +5609,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{longtable}{p{1em} p{.88\textwidth}}
 
-	$|$ & \styleIMI{loc[ <name> ] := <name>} \\
+	$|$ & \styleIMI{loc[ <name> ] \nt{update\_sign} <name>} \\
 	$|$ & \styleIMI{<name> is in <name>} \\
 \end{longtable}
 
@@ -5563,6 +5727,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{AG} \nt{state\_predicate}                                                                               \\
 	$|$ & \styleIMI{E} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{E} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{W} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 
 	% Optimized reachability
 
@@ -5573,8 +5738,12 @@ We define each of those two components below.
 	% AF
 
 	$|$ & \styleIMI{AF} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{R} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{U} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 	$|$ & \styleIMI{A} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \styleIMI{W} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	$|$ & \styleIMI{EG} \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+
+	% TODO: add supported timed CTL operators
 
 	% Cycles
 
@@ -5626,7 +5795,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}    \\
 
 	% PTG
-	$|$ & \styleIMI{Win(} \nt{state\_predicate} \styleIMI{)}    																\\ 
+	$|$ & \styleIMI{Win(} \nt{state\_predicate} \styleIMI{)}    																\\
 
 	% Observer pattern
 	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                 \\
@@ -5950,6 +6119,22 @@ We define each of those two components below.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%------------------------------------------------------------
+\regleGrammaire{update\_sign}
+%------------------------------------------------------------
+\begin{longtable}{p{1em} p{.88\textwidth}}
+
+	$|$ & \styleIMI{:=}  \\
+	$|$ & \styleIMI{<-}  \\
+\end{longtable}
+
+% \smallskip
+%
+% NOTE: hidden for sake of simplicity
+% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
+%
+% \smallskip
+
 
 %------------------------------------------------------------
 \regleGrammaire{step\_opt}
@@ -6042,6 +6227,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{controllable} \\
 	\styleIMI{discrete} \\
 	\styleIMI{do} \\
+	\styleIMI{done} \\
 	\styleIMI{else} \\
 	\styleIMI{end} \\
 	\styleIMI{eventually} \\
@@ -6051,6 +6237,8 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{fill\_right} \\
 	\styleIMI{flow} \\
 	\styleIMI{fn} \\
+	\styleIMI{for} \\
+	\styleIMI{forall} \\
 	\styleIMI{function} \\
 	\styleIMI{goto} \\
 	\styleIMI{happened} \\
@@ -6060,6 +6248,7 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{inf} \\
 	\styleIMI{infinity} \\
 	\styleIMI{init} \\
+	\styleIMI{instantiate} \\
 	\styleIMI{int\_div} \\
 	\styleIMI{invariant} \\
 	\styleIMI{is} \\
@@ -6107,6 +6296,8 @@ The following words are reserved keywords and cannot be used as names for automa
 	\styleIMI{stop} \\
 	\styleIMI{sync} \\
 	\styleIMI{synclabs} \\
+	\styleIMI{synt\_var} \\
+	\styleIMI{template} \\
 	\styleIMI{then} \\
 	\styleIMI{True} \\
 	\styleIMI{urgent} \\
@@ -6143,12 +6334,13 @@ This is not supported by \imitator{}. %, and we do not see a way to simulate it 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameterized models}
+\section{Parameterized verification}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Parameterized models are understood here as models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$ processes), that would be instantiated (\eg{} $n = 15$) before performing the analysis.
-\imitator{} does not currently support such parameterized models, and one should use copy/paste utilities to instantiate $n$ models.
-For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on the \imitator{} project on \GitHubIMI{}).
+Parameterized verification~\cite{AD16} is understood as the verification of models with an arbitrary number of components (\eg{} Fischer's mutual exclusion protocol with $n$~processes, for an arbitrary~$n$).
+While \imitator{} supports since version~3.4 \emph{templates} allowing to duplicate an automaton for a (constant, fixed) number of automata (see \cref{section:templates}), these templates are only purely syntactic sugar for a (constant, fixed) number of automata in parallel; there is currently no algorithm in \imitator{} to reason \emph{symbolically} over an arbitrary number of processes.
+
+% For complicated models with many processes, we usually write short scripts to generate the model (a script \stylePath{CSMACDgenerator.py} to model the varying part of parameterized models for the CSMA/CD case study is available on the \imitator{} project on \GitHubIMI{}).
 
 
 
@@ -6292,6 +6484,7 @@ The following people contributed to the development of \imitator{}.
 	Ulrich Kühne         & 2010 & -- & 2011 \\
 	Benjamin Loillier    & 2021 & -- & 2023 \\
 	Dylan Marinho        & 2021 & -- &      \\
+	Tomaz Mascarenhas    & 2023 & -- & 2024 \\
 	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
 	Laure Petrucci       & 2019 & -- &      \\
 	Jaco van de Pol      & 2019 & -- &      \\

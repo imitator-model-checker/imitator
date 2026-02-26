@@ -21,7 +21,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition: EU (virtual) *)
 (************************************************************)
-class virtual algoEUgenBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> bool -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate ->
+class virtual algoEUgenBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> bool -> AbstractProperty.state_predicate option -> AbstractProperty.state_predicate -> AbstractProperty.timed_interval option ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
@@ -56,10 +56,73 @@ class algoEFBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_prop
 		(*------------------------------------------------------------*)
 		method algorithm_name : string
 
+end
 
+
+(************************************************************)
+(* Class definition: EU *)
+(************************************************************)
+class algoEUBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
 		(************************************************************)
-		(* Class methods *)
+		(* Class variables *)
 		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
 
 end
 
+
+(************************************************************)
+(* Class definition: EW *)
+(************************************************************)
+class algoEWBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+end
+
+
+
+(************************************************************)
+(* Class definition: AGnot *)
+(************************************************************)
+class algoAGnotBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+end
+
+
+(************************************************************)
+(* Class definition: AGnot *)
+(************************************************************)
+class algoAGBFS : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate ->
+	object inherit algoEUgenBFS
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(*------------------------------------------------------------*)
+		(** Name of the algorithm *)
+		(*------------------------------------------------------------*)
+		method algorithm_name : string
+
+end

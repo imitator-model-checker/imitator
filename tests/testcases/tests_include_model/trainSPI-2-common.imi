@@ -1,0 +1,182 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Some alternative modeling for Figure 4 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations"
+ * Description      : Some alternative modeling for Figure 4 in "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan, i.e., serial-parallel infrastructure, with N_S = N_P = 2
+ * Correctness      : Satisfiable schedule
+ * Scalable         : yes
+ * Generated        : no
+ * Categories       : train
+ * Source           : "Railway Scheduling Using Boolean Satisfiability Modulo Simulations" by Tomáš Kolárik and Stefan Ratschan. Formal Methods 2023. DOI: https://doi.org/10.1007/978-3-031-27481-7_5
+ * bibkey           : [KR23]
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/05/02
+ * Last modified    : 2024/07/05
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-alpha
+ ************************************************************)
+
+var
+
+(* Clocks *)
+
+	clock_abs : clock;
+
+(* Discrete *)
+	segment_S_S1_free,
+
+	segment_S1_P1_A_free,
+	segment_S1_P1_B_free,
+	segment_S1_P2_A_free,
+	segment_S1_P2_B_free,
+
+	segment_S1_S2_free,
+
+	segment_S2_P1_A_free,
+	segment_S2_P1_B_free,
+	segment_S2_P2_A_free,
+	segment_S2_P2_B_free,
+
+	segment_S2_E_free,
+		: bool;
+
+(* Parameters *)
+	MAX_DURATION,
+		: parameter;
+
+(* Durations *)
+	DURATION_SEGMENT_S_S1		= 8,
+
+	DURATION_SEGMENT_S1_ENTER	= 2,
+	DURATION_SEGMENT_S1_P1_A	= 7,
+	DURATION_SEGMENT_S1_P1		= 2,
+	DURATION_SEGMENT_S1_P1_B	= 8,
+	DURATION_SEGMENT_S1_P2_A	= 7,
+	DURATION_SEGMENT_S1_P2		= 2,
+	DURATION_SEGMENT_S1_P2_B	= 8,
+	DURATION_SEGMENT_S1_EXIT	= 1,
+
+	DURATION_SEGMENT_S1_S2		= 9,
+
+	DURATION_SEGMENT_S2_ENTER	= 2,
+	DURATION_SEGMENT_S2_P1_A	= 7,
+	DURATION_SEGMENT_S2_P1		= 2,
+	DURATION_SEGMENT_S2_P1_B	= 8,
+	DURATION_SEGMENT_S2_P2_A	= 7,
+	DURATION_SEGMENT_S2_P2		= 2,
+	DURATION_SEGMENT_S2_P2_B	= 8,
+	DURATION_SEGMENT_S2_EXIT	= 1,
+
+	DURATION_SEGMENT_S2_E		= 6,
+		: rational;
+
+	(* For last scenario *)
+	x_last : clock;
+	bound_last : parameter;
+
+synt_var
+ 	x_array     : clock  array(NB);
+ 	start_array : action array(NB);
+ 	done_array  : action array(NB);
+
+
+
+(************************************************************)
+  template train(i : int)
+(************************************************************)
+actions: start_array[i], done_array[i];
+
+loc node_S: invariant True
+	when segment_S_S1_free sync start_array[i] do {x_array[i] := 0; segment_S_S1_free := False} goto segment_S_S1;
+
+(* Common segment *)
+
+loc segment_S_S1: invariant x_array[i] <= DURATION_SEGMENT_S_S1
+	when x_array[i] = DURATION_SEGMENT_S_S1 & segment_S1_P1_A_free do {x_array[i] := 0; segment_S1_P1_A_free := False} goto segment_S1_Enter_P1;
+	when x_array[i] = DURATION_SEGMENT_S_S1 & segment_S1_P2_A_free do {x_array[i] := 0; segment_S1_P2_A_free := False} goto segment_S1_Enter_P2;
+
+(* S1 : P1 *)
+loc segment_S1_Enter_P1: invariant x_array[i] <= DURATION_SEGMENT_S1_ENTER
+	when x_array[i] = DURATION_SEGMENT_S1_ENTER do {x_array[i] := 0; segment_S_S1_free := True} goto segment_S1_P1_A;
+
+loc segment_S1_P1_A: invariant x_array[i] <= DURATION_SEGMENT_S1_P1_A
+	when x_array[i] = DURATION_SEGMENT_S1_P1_A & segment_S1_P1_B_free do {x_array[i] := 0; segment_S1_P1_B_free := False} goto segment_S1_P1;
+
+loc segment_S1_P1: invariant x_array[i] <= DURATION_SEGMENT_S1_P1
+	when x_array[i] = DURATION_SEGMENT_S1_P1 do {x_array[i] := 0; segment_S1_P1_A_free := True} goto segment_S1_P1_B;
+
+loc segment_S1_P1_B: invariant x_array[i] <= DURATION_SEGMENT_S1_P1_B
+	when x_array[i] = DURATION_SEGMENT_S1_P1_B & segment_S1_S2_free do {x_array[i] := 0; segment_S1_S2_free := False} goto segment_S1_Exit_P1;
+
+loc segment_S1_Exit_P1: invariant x_array[i] <= DURATION_SEGMENT_S1_EXIT
+	when x_array[i] = DURATION_SEGMENT_S1_EXIT do {x_array[i] := 0; segment_S1_P1_B_free := True} goto segment_S1_S2;
+
+(* S1 : P2 *)
+loc segment_S1_Enter_P2: invariant x_array[i] <= DURATION_SEGMENT_S1_ENTER
+	when x_array[i] = DURATION_SEGMENT_S1_ENTER do {x_array[i] := 0; segment_S_S1_free := True} goto segment_S1_P2_A;
+
+loc segment_S1_P2_A: invariant x_array[i] <= DURATION_SEGMENT_S1_P2_A
+	when x_array[i] = DURATION_SEGMENT_S1_P2_A & segment_S1_P2_B_free do {x_array[i] := 0; segment_S1_P2_B_free := False} goto segment_S1_P2;
+
+loc segment_S1_P2: invariant x_array[i] <= DURATION_SEGMENT_S1_P2
+	when x_array[i] = DURATION_SEGMENT_S1_P2 do {x_array[i] := 0; segment_S1_P2_A_free := True} goto segment_S1_P2_B;
+
+loc segment_S1_P2_B: invariant x_array[i] <= DURATION_SEGMENT_S1_P2_B
+	when x_array[i] = DURATION_SEGMENT_S1_P2_B & segment_S1_S2_free do {x_array[i] := 0; segment_S1_S2_free := False} goto segment_S1_Exit_P2;
+
+loc segment_S1_Exit_P2: invariant x_array[i] <= DURATION_SEGMENT_S1_EXIT
+	when x_array[i] = DURATION_SEGMENT_S1_EXIT do {x_array[i] := 0; segment_S1_P2_B_free := True} goto segment_S1_S2;
+
+
+(* Common segment *)
+
+loc segment_S1_S2: invariant x_array[i] <= DURATION_SEGMENT_S1_S2
+	when x_array[i] = DURATION_SEGMENT_S1_S2 & segment_S2_P1_A_free do {x_array[i] := 0; segment_S2_P1_A_free := False} goto segment_S2_Enter_P1;
+	when x_array[i] = DURATION_SEGMENT_S1_S2 & segment_S2_P2_A_free do {x_array[i] := 0; segment_S2_P2_A_free := False} goto segment_S2_Enter_P2;
+
+(* S2 : P1 *)
+loc segment_S2_Enter_P1: invariant x_array[i] <= DURATION_SEGMENT_S2_ENTER
+	when x_array[i] = DURATION_SEGMENT_S2_ENTER do {x_array[i] := 0; segment_S1_S2_free := True} goto segment_S2_P1_A;
+
+loc segment_S2_P1_A: invariant x_array[i] <= DURATION_SEGMENT_S2_P1_A
+	when x_array[i] = DURATION_SEGMENT_S2_P1_A & segment_S2_P1_B_free do {x_array[i] := 0; segment_S2_P1_B_free := False} goto segment_S2_P1;
+
+loc segment_S2_P1: invariant x_array[i] <= DURATION_SEGMENT_S2_P1
+	when x_array[i] = DURATION_SEGMENT_S2_P1 do {x_array[i] := 0; segment_S2_P1_A_free := True} goto segment_S2_P1_B;
+
+loc segment_S2_P1_B: invariant x_array[i] <= DURATION_SEGMENT_S2_P1_B
+	when x_array[i] = DURATION_SEGMENT_S2_P1_B & segment_S2_E_free do {x_array[i] := 0; segment_S2_E_free := False} goto segment_S2_Exit_P1;
+
+loc segment_S2_Exit_P1: invariant x_array[i] <= DURATION_SEGMENT_S2_EXIT
+	when x_array[i] = DURATION_SEGMENT_S2_EXIT do {x_array[i] := 0; segment_S2_P1_B_free := True} goto segment_S2_E;
+
+(* S2 : P2 *)
+loc segment_S2_Enter_P2: invariant x_array[i] <= DURATION_SEGMENT_S2_ENTER
+	when x_array[i] = DURATION_SEGMENT_S2_ENTER do {x_array[i] := 0; segment_S1_S2_free := True} goto segment_S2_P2_A;
+
+loc segment_S2_P2_A: invariant x_array[i] <= DURATION_SEGMENT_S2_P2_A
+	when x_array[i] = DURATION_SEGMENT_S2_P2_A & segment_S2_P2_B_free do {x_array[i] := 0; segment_S2_P2_B_free := False} goto segment_S2_P2;
+
+loc segment_S2_P2: invariant x_array[i] <= DURATION_SEGMENT_S2_P2
+	when x_array[i] = DURATION_SEGMENT_S2_P2 do {x_array[i] := 0; segment_S2_P2_A_free := True} goto segment_S2_P2_B;
+
+loc segment_S2_P2_B: invariant x_array[i] <= DURATION_SEGMENT_S2_P2_B
+	when x_array[i] = DURATION_SEGMENT_S2_P2_B & segment_S2_E_free do {x_array[i] := 0; segment_S2_E_free := False} goto segment_S2_Exit_P2;
+
+loc segment_S2_Exit_P2: invariant x_array[i] <= DURATION_SEGMENT_S2_EXIT
+	when x_array[i] = DURATION_SEGMENT_S2_EXIT do {x_array[i] := 0; segment_S2_P2_B_free := True} goto segment_S2_E;
+
+(* Common segment *)
+
+loc segment_S2_E: invariant x_array[i] <= DURATION_SEGMENT_S2_E
+	when x_array[i] = DURATION_SEGMENT_S2_E & clock_abs <= MAX_DURATION do {x_array[i] := 0; segment_S2_E_free := True} sync done_array[i] goto node_E;
+
+loc node_E: invariant True stop{x_array[i]}
+
+end (* pta *)
+
