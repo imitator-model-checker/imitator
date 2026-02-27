@@ -51,18 +51,43 @@ class virtual algoEU_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
+				(* Get the termination status *)
+		 let termination_status = match termination_status with
+			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
+			| Some status -> status
+		in
+
+	(* Managing the strategic result here*)
+	if model.has_coalition then (
 		
+		(* Only keep the biggest strategies *)
+		let filtered_strategies = 
+			try 
+			state_space#keep_different_winning_strategies winning_states_and_constraint 
+		with | NoAliveStrategy -> []
+		in
+
+		state_space#initialize_winning_states filtered_strategies;
+
+		Strategic_result 
+		{
+			(* Thes explored state_space *)
+			state_space			= state_space;
+
+			(* Total computation time of the algorithm *)
+			computation_time	= time_from start_time;
+
+			(* Termination *)
+			termination			= termination_status;
+		}
+
+	)else
 		
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 		
 		(* Projecting onto some parameters if required by the property *)
 		let result = AlgoStateBased.project_p_nnconvex_constraint_if_requested model property synthesized_constraint in
 		
-		(* Get the termination status *)
-		 let termination_status = match termination_status with
-			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
-			| Some status -> status
-		in
 
 		(* Branching between Witness/Synthesis and Exemplification *)
 		if property.synthesis_type = Exemplification then(

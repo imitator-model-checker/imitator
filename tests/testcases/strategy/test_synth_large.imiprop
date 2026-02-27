@@ -1,0 +1,6 @@
+(* IMITATOR file automatically generated with *)
+(* ./a.out -v 2 -c 2 -p 2  *)
+(* Created: Wed Jun  4 13:47:10 2025 *)
+
+property := #synth <<voter1(voter1),voter2(voter2)>>EF(loc[voter1] = voted11 & loc[voter2] = voted21);
+

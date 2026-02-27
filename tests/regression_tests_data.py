@@ -29395,5 +29395,304 @@ init = {
         }]
     }
     ,
+	#------------------------------------------------------------
+    ####               Test strategic models                 ####
+    #------------------------------------------------------------
+    
+
+    #------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: EF',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+ Strategy for state #19:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #18:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: EF_2',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_EF_2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+ No alive strategy found.
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: AGnot',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_AGnot.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+ Strategy for state #13:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #16:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: AF',
+		'input_files': ['strategy/test_strategy1.imi', 'strategy/test_large_AF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'test_strategy1.res' , 'content' : """
+ Strategy for state #8:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: a
+   View: machine : [machine: etat, time: Etat2] → Action: b
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Strategy for state #15:
+   Coalition : machine(machine, time)
+   View: machine : [machine: etat, time: Etat1] → Action: b
+   View: machine : [machine: etat, time: Etat2] → Action: a
+  Discrete values: [True; True]
+   Constraint: True
+  
+ Total alive strategies : 2
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with large strategies and synth (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_synth_large.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #125:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #121:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Strategy for state #117:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Total alive strategies : 4
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with strategies and synth (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_synth.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #125:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Strategy for state #121:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Strategy for state #117:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regm1
+   View: voter1 : [voter1: m1] → Action: packm1
+   View: voter1 : [voter1: rm1] → Action: vm11
+   View: voter2 : [voter2: v20] → Action: regi2
+   View: voter2 : [voter2: i2] → Action: packi2
+   View: voter2 : [voter2: ri2] → Action: vi21
+   Constraint: True
+  
+ Total alive strategies : 4
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with large strategies and witness (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_witness_large.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+   [EF] Algorithm completed after 0.112 second.
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Total alive strategies : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+    ,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2025/12/04
+		# Last modified            : 2025/12/04
+		# Test for IMITATOR version: ?
+		'purpose'    : 'Test_strategic_models: voters, with strategies and witness (EF)',
+		'input_files': ['strategy/2voter2candStrat2lpagents.imi', 'strategy/test_witness.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': '2voter2candStrat2lpagents.res' , 'content' : """
+ Strategy for state #127:
+   Coalition : voter1(voter1), voter2(voter2)
+   View: voter1 : [voter1: v10] → Action: regi1
+   View: voter1 : [voter1: i1] → Action: packi1
+   View: voter1 : [voter1: ri1] → Action: vi11
+   View: voter2 : [voter2: v20] → Action: regm2
+   View: voter2 : [voter2: m2] → Action: packm2
+   View: voter2 : [voter2: rm2] → Action: vm21
+   Constraint: True
+  
+ Total alive strategies : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
 ### THE END
 ]

@@ -839,7 +839,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state None None in
 		
 		begin
 		match addition_result with

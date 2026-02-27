@@ -415,6 +415,9 @@ let all_components_used_in_property_option parsed_property_option =
 
 		(* Validity *)
 		| Parsed_Valid -> ()
+        | Parsed_Strategies _ -> ()
+        | Parsed_Large_Strategies _ -> ()
+
 
 
 		(*------------------------------------------------------------*)

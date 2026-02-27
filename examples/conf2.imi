@@ -1,0 +1,56 @@
+var epid, open, closed, cancel: bool;
+
+(************************************************************)
+  automaton oc
+(************************************************************)
+actions: proceed,onsite,online,handle,idle;
+
+loc oc0: invariant True
+	when True sync proceed do {} goto oc1;
+
+loc oc1: invariant True
+	when True sync onsite do {epid:=True} goto oc2;
+	when True sync online do {} goto oc3;
+
+loc oc2: invariant True
+	when True sync handle do {closed:=True} goto oc4;
+
+loc oc3: invariant True
+	when True sync handle do {closed:=True} goto oc4;
+
+loc oc4: invariant True
+	when True sync idle do {} goto oc4;
+	
+end
+
+(************************************************************)
+  automaton sc
+(************************************************************)
+actions: organize,giveup,proceed;
+
+loc sc0: invariant True
+	when True sync organize do {} goto sc1;
+	when True sync giveup do {cancel:=True} goto sc2;
+
+loc sc1: invariant True
+	when True sync proceed do {} goto sc1;
+
+loc sc2: invariant True
+	when True sync giveup do {} goto sc2;
+	
+end
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[oc] = oc0 & loc[sc] = sc0;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

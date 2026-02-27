@@ -1,0 +1,154 @@
+var t, x: clock; (* global time and delay *)
+(* The authority *)
+automaton authority
+synclabs:	regm1, regi1, regp1,
+	packm1, packi1, packp1,
+	vm11, vi11, vp11,
+	vm12, vi12, vp12,
+	regm2, regi2, regp2,
+	packm2, packi2, packp2,
+	vm21, vi21, vp21,
+	vm22, vi22, vp22,
+	close;
+
+loc a0: invariant t <= 11
+(* start by registering a modality for a voter *)
+	(* voter 1 *)
+	when t < 1
+		sync regm1 do {x:=0} goto m1;
+	when t < 6
+		sync regi1 do {x:=0} goto i1;
+	when t < 10
+		sync regp1 do {x:=0} goto p1;
+	(* voter 2 *)
+	when t < 1
+		sync regm2 do {x:=0} goto m2;
+	when t < 6
+		sync regi2 do {x:=0} goto i2;
+	when t < 10
+		sync regp2 do {x:=0} goto p2;
+(* receive votes *)
+	(* voter 1 *)
+	when 1 <= t & t < 7 sync vm11 goto a0;
+	when 6 <= t & t < 9 sync vi11 goto a0;
+	when 10 <= t & t < 11 sync vp11 goto a0;
+	when 1 <= t & t < 7 sync vm12 goto a0;
+	when 6 <= t & t < 9 sync vi12 goto a0;
+	when 10 <= t & t < 11 sync vp12 goto a0;
+	(* voter 2 *)
+	when 1 <= t & t < 7 sync vm21 goto a0;
+	when 6 <= t & t < 9 sync vi21 goto a0;
+	when 10 <= t & t < 11 sync vp21 goto a0;
+	when 1 <= t & t < 7 sync vm22 goto a0;
+	when 6 <= t & t < 9 sync vi22 goto a0;
+	when 10 <= t & t < 11 sync vp22 goto a0;
+(* close the vote *)
+	when t = 11 sync close goto closed;
+(* send the voting package *)
+(* voter 1 *)
+loc m1: invariant x<=0
+	when x=0 sync packm1 goto a0;
+loc i1: invariant x<=0
+	when x=0 sync packi1 goto a0;
+loc p1: invariant x<=0
+	when x=0 sync packp1 goto a0;
+(* voter 2 *)
+loc m2: invariant x<=0
+	when x=0 sync packm2 goto a0;
+loc i2: invariant x<=0
+	when x=0 sync packi2 goto a0;
+loc p2: invariant x<=0
+	when x=0 sync packp2 goto a0;
+(* the vote is closed *)
+loc closed: invariant True
+end
+
+(* Voter 1 *)
+automaton voter1
+synclabs: regm1, regi1, regp1,
+	packm1, packi1, packp1,
+	vm11, vi11, vp11,
+	vm12, vi12, vp12;
+
+(* start by registering a modality *)
+loc v10: invariant True
+	when True
+		sync regm1 goto m1; (* vote by postal mail *)
+	when True
+		sync regi1 goto i1; (* vote by internet *)
+	when True
+		sync regp1 goto p1; (* vote at polling station *)
+(* wait for voting package *)
+loc m1: invariant True
+	when True sync packm1 goto rm1;
+loc i1: invariant True
+	when True sync packi1 goto ri1;
+loc p1: invariant True
+	when True sync packp1 goto rp1;
+(* vote for a candidate *)
+loc rm1: invariant True
+	when True sync vm11 goto voted11;
+	when True sync vm12 goto voted12;
+loc ri1: invariant True
+	when True sync vi11 goto voted11;
+	when True sync vi12 goto voted12;
+loc rp1: invariant True
+	when True sync vp11 goto voted11;
+	when True sync vp12 goto voted12;
+(* finished vote *)
+loc voted11: invariant t<=8
+loc voted12: invariant t<=8
+end
+
+(* Voter 2 *)
+automaton voter2
+synclabs: regm2, regi2, regp2,
+	packm2, packi2, packp2,
+	vm21, vi21, vp21,
+	vm22, vi22, vp22;
+
+(* start by registering a modality *)
+loc v20: invariant True
+	when True
+		sync regm2 goto m2; (* vote by postal mail *)
+	when True
+		sync regi2 goto i2; (* vote by internet *)
+	when True
+		sync regp2 goto p2; (* vote at polling station *)
+(* wait for voting package *)
+loc m2: invariant True
+	when True sync packm2 goto rm2;
+loc i2: invariant True
+	when True sync packi2 goto ri2;
+loc p2: invariant True
+	when True sync packp2 goto rp2;
+(* vote for a candidate *)
+loc rm2: invariant True
+	when True sync vm21 goto voted21;
+	when True sync vm22 goto voted22;
+loc ri2: invariant True
+	when True sync vi21 goto voted21;
+	when True sync vi22 goto voted22;
+loc rp2: invariant True
+	when True sync vp21 goto voted21;
+	when True sync vp22 goto voted22;
+(* finished vote *)
+loc voted21: invariant t<=8
+loc voted22: invariant t<=8
+end
+
+
+(*****************)
+(* initial state *)
+(*****************)
+init := {
+	discrete =
+		loc[authority] := a0,
+		loc[voter1] := v10,
+		loc[voter2] := v20;
+	continuous =
+		(* clocks *)
+		x >= 0 & t = 0
+	;
+}
+end

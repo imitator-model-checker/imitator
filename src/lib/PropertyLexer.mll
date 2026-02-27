@@ -124,7 +124,8 @@ rule token = parse
 	| "list"           { CT_LIST }
 	| "stack"          { CT_STACK }
 	| "queue"          { CT_QUEUE }
-
+	| "<<"		   	   { CT_BEG_COALITION }
+	| ">>"			   { CT_END_COALITION }
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }

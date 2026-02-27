@@ -1,0 +1,2 @@
+property := #synth <<oc,sc>>AF(epid=False && closed=True);
+

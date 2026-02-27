@@ -1,0 +1,3 @@
+(* property := #synth <<police>> AGnot(loc[TS]=lok); *)
+
+property := #synth <<bandits>> AF(loc[bandits]=successRob);

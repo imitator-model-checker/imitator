@@ -25,7 +25,7 @@ open AbstractProperty
 open AlgoStateBased
 open Statistics
 open State
-
+open Exceptions
 
 
 
@@ -234,6 +234,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Statistics *)
 		counter_add_a_new_state#increment;
 		counter_add_a_new_state#start;
+
+		try(
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
@@ -243,9 +245,11 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(* Reset the mini-cache (for the p-constraint) *)
 		self#reset_minicache;
 
-		(* Try to add the new state to the state space *)
-		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state in
+		let action_index = StateSpace.get_action_from_combined_transition model combined_transition in 
 		
+		(* Try to add the new state to the state space *)
+		let addition_result = state_space#add_state options#comparison_operator model.global_time_clock new_state (Some source_state_index) (Some action_index) in
+
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in
 		
@@ -287,13 +291,14 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 				new_states_indexes <- new_state_index :: new_states_indexes;
 		end (* end if new state *)
 		;
-		
+
 		(*** TODO: move the two following statements to a higher level function? (post_from_one_state?) ***)
+		
 		
 		(* Retrieve the new state index *)
 		(*** HACK ***)
 		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
-		
+			
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
 
@@ -307,7 +312,15 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			);
 			
 			(* 2. If #witness mode, then we will throw an exception *)
-			self#terminate_if_witness property;
+			if state_space#has_coalition then(
+				if property.synthesis_type = Witness then(
+					self#terminate_if_witness_strategy property new_state_index;
+				);
+				if property.synthesis_type = Synthesis then(
+					self#synthesis_strategy property new_state_index;
+				);
+			) else(
+			self#terminate_if_witness property; )
 		); (* end if target *)
 
 
@@ -316,7 +329,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		counter_add_a_new_state#stop;
 
 		(* The state is kept in any case *)
-		true
+		true)
+with _ -> counter_add_a_new_state#stop; false
 (*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
 	
 

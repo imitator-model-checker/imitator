@@ -95,12 +95,42 @@ class algoAGnot (model : AbstractModel.abstract_model) (property : AbstractPrope
 			);
 			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
 		);
-		
+				
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError ("Termination status not set in " ^ self#algorithm_name ^ ".compute_result"))
 			| Some status -> status
 		in
+
+		(* managing strategic computation resutl here*)
+		if state_space#has_coalition then (				
+				(* Propagate the killed strategy from the given index *)
+				state_space#propagate_killed_strategy ;
+			let state_index_to_print: int list  = 
+					try 
+							if (property.synthesis_type = Synthesis) then 
+									(state_space#keep_biggest_strategies (state_space#find_all_alive_strategies)) 
+							else 
+									([state_space#find_last_alive_strategy])
+					with 
+					| NoAliveStrategy -> []
+			in
+
+			state_space#initialize_winning_states state_index_to_print;
+
+			Strategic_result 
+			{
+				(* Thes explored state_space *)
+				state_space			= state_space;
+
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+
+				(* Termination *)
+				termination			= termination_status;
+			}
+		)else
+
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as it is the negation of a possible under-approximation of the bad constraint) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else(

@@ -99,7 +99,8 @@ val get_locations : global_location -> location_index array
 
 (** Get the location associated to some automaton *)
 val get_location : global_location -> automaton_index -> location_index
-
+(** Get the array of the AbstractValue. Used in the strategical computation**)
+val get_discrete : global_location -> AbstractValue.abstract_value array
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> discrete_index -> AbstractValue.abstract_value
 

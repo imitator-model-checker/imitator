@@ -295,6 +295,7 @@ class imitator_options =
 		val mutable time_limit						= None
 
 
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
@@ -447,6 +448,11 @@ class imitator_options =
 		(*** NOTE: this set method is only used for the CUB NZ algorithms ***)
 		method set_no_time_elapsing =
 			no_time_elapsing <- true
+
+		method deactivate_cumulative_pruning = 
+			print_warning "The cumulative_pruning option has been de-activated because strategic_computation doesn't support it";
+			cumulative_pruning <- false
+
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1206,7 +1212,6 @@ class imitator_options =
 					print_newline();
 					exit 0), " Print version number and exit.
 				");
-
 			] in
 
 			(* function for parsing arguments *)

@@ -267,6 +267,28 @@ let add_custom_details _ =
     else
         ""
 
+(* Used to convert the list of winning strategies into string*)
+let string_strategy (model : AbstractModel.abstract_model) (state_space : StateSpace.stateSpace) : string =
+  let winning_states = state_space#get_winning_states in
+	if winning_states = [] then
+		"No winning strategy found.\n"
+	else
+  let buffer = Buffer.create (List.length winning_states * 500) in
+
+  List.iter (fun state_idx ->
+    let formatted = state_space#format_strategy_index
+      state_idx
+      model.automata_names
+      model.location_names
+      model.action_names
+      model.variable_names
+    in
+    Buffer.add_string buffer formatted
+  ) winning_states;
+
+  Buffer.contents buffer
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Print warning(s) if the limit of an exploration has been reached *)
@@ -523,6 +545,7 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 
 	(* Handle the constraint nature separately *)
 	let constraint_nature_str = string_constraint_nature_of_good_or_bad_constraint single_synthesis_result.result in
+	
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -541,9 +564,10 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 
 		(* 4) The actual result with delimiters *)
 		^ (add_constraints_delimiters result_str)
+		^ "\n-----------------------------------------------------------\n\n"
 
 		(* 5) Statistics about result *)
-		^ "\n------------------------------------------------------------"
+		^ "------------------------------------------------------------"
 		^ "\n" ^ (result_nature_statistics soundness_str single_synthesis_result.termination constraint_nature_str)
 		
 		(* 6) Statistics about state space *)
@@ -552,6 +576,52 @@ let export_to_file_single_synthesis_result (model : AbstractModel.abstract_model
 		^ "\n------------------------------------------------------------"
 		
 		(* 7) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+let export_to_file_strategic_result (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (algorithm_name : string) (file_name : string) (result : Result.strategic_result): unit =
+	(* Start counter *)
+	counter#start;
+
+	(* Convert the resulting constraint to a string *)
+	let result_str : string =  string_strategy model result.state_space in
+
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics model)
+		^ "\n------------------------------------------------------------"
+
+		(* 3) Property *)
+		^ "\n\n------------------------------------------------------------"
+		^ "\n" ^ (property_information property algorithm_name)
+		^ "\n------------------------------------------------------------"
+
+		(* 4) The actual result with delimiters*)
+		^ "\n BEGIN STRATEGIC RESULT \n\n" ^(result_str) ^ "END STRATEGIC RESULT \n"
+
+		(* 5) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics result.state_space result.computation_time)
+		^ "\n------------------------------------------------------------"
+		
+		(* 6) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 	in
@@ -1016,6 +1086,29 @@ let process_single_synthesis_or_point_based_result (model : AbstractModel.abstra
 	(* The end *)
 	()
 
+let print_strategic_result_on_screen (model : AbstractModel.abstract_model) (result : strategic_result) =
+	let options = Input.get_options () in
+
+	let winning_states = result.state_space#get_winning_states in
+	if winning_states = [] then
+		print_highlighted_message Shell_result Verbose_standard "No alive strategy found."
+	else(
+	result.state_space#display_strategy_constraint_index_list winning_states model.automata_names model.location_names model.action_names model.variable_names; 
+
+	let total = List.length winning_states in
+	print_highlighted_message Shell_result Verbose_standard ("Total alive strategies : " ^ (string_of_int total)););
+
+	print_message Verbose_low (
+			"Computation time: "
+			^ (string_of_seconds result.computation_time) ^ "."
+		);
+
+	(* Print memory information *)
+	if options#statistics || verbose_mode_greater Verbose_experiments then(
+		print_newline();
+		print_message Verbose_standard (memory_used ());
+	);
+	()
 
 (************************************************************)
 (* Main function to process IMITATOR result *)
@@ -1311,6 +1404,31 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 			);
 		
 		) result.runs;
+		
+		(* The end *)
+		()
+	| Strategic_result result ->
+		(* The model must be defined at this point *)
+		let model : AbstractModel.abstract_model = get_model_from_model_option model_option in
+		let property : AbstractProperty.abstract_property = get_property_from_property_option property_option in
+
+		(* First print the result on the terminal *)
+
+		print_strategic_result_on_screen model result;
+
+		(* Draw state space *)
+		draw_statespace_if_requested model property_option result.state_space;
+
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			export_to_file_strategic_result model property algorithm_name file_name result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+		
+		(* Print statistics *)
+		print_memory_statistics ();
 		
 		(* The end *)
 		()

@@ -980,6 +980,34 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   (* Return the array *)
   locations_per_automaton
 
+let make_large_positional_strategy parsed_automaton_namelist_list nb_automata get_automaton_index=
+
+	(* Initialize with the empty coalition *)
+	let coalition = ref [] in
+
+	(* Initialize informations: array of empty arrays *)
+	let informations = Array.make nb_automata [||] in
+
+	(* Iterate over the elements of parsed_automaton_namelist_list *)
+	List.iter (fun (automaton_name, visible_names) ->
+		let automaton_index = get_automaton_index automaton_name in
+
+		(* Add to the coalition *)
+		coalition := automaton_index :: !coalition;
+
+		(* Convert the list of visible automata names into indices *)
+		let visible_indices = 
+			List.map get_automaton_index visible_names
+			|> Array.of_list
+		in
+
+		(* Update informations *)
+		informations.(automaton_index) <- visible_indices
+
+	) parsed_automaton_namelist_list;
+
+	(!coalition, informations)	
+
 
 (*------------------------------------------------------------*)
 (** Get all the possible actions for every location of every automaton *)
@@ -2174,6 +2202,14 @@ let check_property_option (useful_parsing_model_information : useful_parsing_mod
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1)
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2)
+
+		(*------------------------------------------------------------*)
+		(* Strategy *)
+		(*------------------------------------------------------------*)
+
+		| Parsed_Strategies (_, _)-> true  (* Modify it later*)
+		| Parsed_Large_Strategies (_,_) -> true
+
 		end
 
 
@@ -3595,6 +3631,69 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	(* We may need to create additional structures for the observer, if any *)
 	
+(* Strategy detection *)
+(* Helper function to get automaton index from its name *)
+let get_automaton_index name =
+    try
+      Hashtbl.find index_of_automata name
+    with Not_found ->
+      (* Error message if automaton name is not found *)
+      Printf.printf "[ERREUR] Automate inconnu : %s\n" name;
+      Printf.printf "Contenu actuel de la table index_of_automata :\n";
+      Hashtbl.iter
+        (fun k v ->
+           Printf.printf "  - %s -> %d\n" k v)
+        index_of_automata;
+      raise Not_found
+  in
+  
+(* Calculate total number of locations across all automata *)
+let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
+
+(* Parse the property to detect strategy operators and extract coalition information *)
+let parsed_property_option, list_coalition, informations, has_coalition =
+match parsed_property_option with
+| Some parsed_property ->
+    begin
+      match parsed_property.property with
+      (* Case 1: Positional strategy detected *)
+      | Parsed_Strategies (parsed_automaton_namelist, prop) ->
+            (* Deactivate cumulative pruning for strategy computation *)
+            options#deactivate_cumulative_pruning;
+          print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Positionnal strategy detected");
+          (* Convert automaton names to indices to build the coalition *)
+          let coalition =
+            List.map get_automaton_index parsed_automaton_namelist
+          in
+          (* Update property by removing the strategy wrapper *)
+          let updated_property = { parsed_property with property = prop } in
+            (* Initialize information array: each automaton in coalition sees only itself *)
+            let informations = Array.make nb_automata [||] in
+            List.iter(fun idx ->
+                informations.(idx) <- [|idx|];
+            )coalition;
+          (Some updated_property, coalition, informations, true)
+        (* Case 2: Large positional strategy with visibility information detected *)
+        | Parsed_Large_Strategies (parsed_automaton_namelist_list, prop) ->
+            (* Deactivate cumulative pruning for strategy computation *)
+            options#deactivate_cumulative_pruning;
+            print_highlighted_message Shell_bright_green Verbose_standard ("Strategy : Strategy detected");
+            (* Build coalition and visibility information from nested automaton lists *)
+            let coalition, informations = make_large_positional_strategy parsed_automaton_namelist_list nb_automata get_automaton_index in 
+            (* Update property by removing the strategy wrapper *)
+            let updated_property = { parsed_property with property = prop } in
+            (Some updated_property, coalition, informations, true)
+      (* Case 3: No strategy operator, regular property *)
+      | _ -> (Some parsed_property, [], [| [||] |], false)
+    end
+(* No property defined *)
+| None -> (None, [], [| [||] |], false )
+in
+
+	(* Construction de la stratégie positionnelle *)
+	let is_in_coalition k = List.mem k list_coalition in
+
+
 	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information nb_actions observer_automaton_index_option observer_nosync_index_option parsed_property_option in
 	
 	(* Convert some variables to catch up with older code below *)
@@ -4519,6 +4618,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
 
+	(* Is in coalition*)
+	is_in_coalition = is_in_coalition;	
+	(* Has a coalition *)
+	has_coalition = has_coalition;
+
+	informations = informations	
 	}
 
 	,
