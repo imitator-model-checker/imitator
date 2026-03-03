@@ -42,6 +42,7 @@ module ParamBound : sig
   | NoBound
 
   val instantiate : zval -> t -> Interval.t
+  val to_string : t -> string
 end
 
 module Box : sig 
@@ -71,8 +72,8 @@ val to_string : t -> string
 
 val instantiate : zval -> t -> Box.t
 
-val propagate : t -> t
+val propagate : t -> max_constant:int -> t
 
-val witness : t -> max_constant:int -> Valuation.t
+val witness : t -> max_constant:int -> Valuation.t QCheck2.Gen.t
 
 val membership : Valuation.t -> t -> bool

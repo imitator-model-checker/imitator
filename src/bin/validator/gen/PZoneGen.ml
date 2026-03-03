@@ -65,7 +65,7 @@ let thin k pz =
 
 let gen ~nb_clocks ~nb_parameters ~max_constant ~seed = 
   let n = nb_clocks + nb_parameters in 
-  let witness = PZone.witness seed ~max_constant in
+  let* witness = PZone.witness seed ~max_constant in
 
   let* atom_amount = BasicGens.bounded_geo ~bound:n 0.5
   and* clocks : Box.t = box_around witness.clocks max_constant
@@ -78,7 +78,7 @@ let gen ~nb_clocks ~nb_parameters ~max_constant ~seed =
     coupling
   } in
 
-  let max_prop = PZone.propagate max in 
+  let max_prop = PZone.propagate max ~max_constant in 
 
   assert (PZone.membership witness max_prop);
 

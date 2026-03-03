@@ -59,12 +59,26 @@ module ConstBound = struct
     | Some _, None -> a
     | None, Some _ -> b
     | _ -> if compare a b >= 0 then a else b
+
+  (* For lower-bound intersection: same value → Strict wins (x > c is tighter than x >= c).
+     The existing [compare] orders Strict < NonStrict (designed for ub semantics), so [max]
+     would incorrectly pick NonStrict when values are equal. This function fixes that. *)
+  let max_lb a b =
+    match a, b with
+    | Some _, None -> a
+    | None, Some _ -> b
+    | None, None -> None
+    | Some (s1, c1), Some (_s2, c2) ->
+      let cv = Int.compare c1 c2 in
+      if cv > 0 then a
+      else if cv < 0 then b
+      else if s1 = Strictness.Strict then a else b
 end
 
 module Interval = struct
   type t = { lb : ConstBound.t; ub : ConstBound.t }
   let top = { lb = None; ub = None }
-  let intersect a b = { lb = ConstBound.max a.lb b.lb; ub = ConstBound.min a.ub b.ub }
+  let intersect a b = { lb = ConstBound.max_lb a.lb b.lb; ub = ConstBound.min a.ub b.ub }
   let make_point n = { lb = ConstBound.make Strictness.NonStrict n; ub = ConstBound.make Strictness.NonStrict n}
 
   let to_string {ub;lb} = 
@@ -162,7 +176,7 @@ let instantiate (pi : zval) (pz : t) : Box.t =
   )
   pz.coupling pz.clocks
 
-let propagate (pz : t) : t =
+let propagate (pz : t) ~max_constant : t =
   let nb_parameters = Array.length pz.params in
   let nb_clocks = Array.length pz.clocks in 
   let implied_params : Box.t = Box.top nb_parameters in
@@ -192,6 +206,12 @@ let propagate (pz : t) : t =
     | None -> (NonStrict, 0)
     | Some r -> r
   in
+  (* Symmetric: clocks/params are implicitly bounded above by max_constant *)
+  let with_implicit_ub (ub : ConstBound.t) : Strictness.t * Const.t =
+    match ConstBound.min ub (ConstBound.make NonStrict max_constant) with
+    | None -> assert false  (* min with Some always returns Some *)
+    | Some r -> r
+  in
 
   (* Strengthen params as much as possible (several clocks may strenghten a parameter) *) 
   Array.iter2
@@ -205,12 +225,9 @@ let propagate (pz : t) : t =
           add_param_lb p s_p k_lb
 
       | ParamBound.Lower (s_low, p) ->
-          begin match clock_bound.ub with
-          | None -> ()
-          | Some (s_ub, k_ub) ->
-              let s_p = Strictness.min s_ub s_low in
-              add_param_ub p s_p k_ub
-          end
+          let (s_ub, k_ub) = with_implicit_ub clock_bound.ub in
+          let s_p = Strictness.min s_ub s_low in
+          add_param_ub p s_p k_ub
     )
     pz.coupling pz.clocks;
 
@@ -227,17 +244,15 @@ let propagate (pz : t) : t =
 
 
       | ParamBound.Upper (s_up, p) ->
-          begin match pz.params.(p).ub with
-          | None -> ()
-          | Some (s_ub, k_ub) ->
-              let s_p = Strictness.min s_ub s_up in
-              add_clock_ub clock_id s_p k_ub
-          end
+          let (s_ub, k_ub) = with_implicit_ub pz.params.(p).ub in
+          let s_p = Strictness.min s_ub s_up in
+          add_clock_ub clock_id s_p k_ub
     ) pz.coupling;
 
   {pz with clocks = Box.intersect pz.clocks implied_clocks; params = Box.intersect pz.params implied_params}
 
-let sample_valuation_from_zone (z : Box.t) ~(max_constant:int) : zval  =
+let sample_valuation_from_zone (z : Box.t) ~(max_constant:int) : zval QCheck2.Gen.t =
+  QCheck2.Gen.flatten_a @@
   Array.map
     (fun (vb : Interval.t) ->
       let lb =
@@ -252,18 +267,19 @@ let sample_valuation_from_zone (z : Box.t) ~(max_constant:int) : zval  =
         | Some (Strict, c) -> c - 1
         | Some (NonStrict, c) -> c
       in
-       if lb > ub then
-         invalid_arg "sample_valuation_from_zone: empty bound";
-       (lb + ub) / 2 (* midpoint *)
+      if lb > ub then
+        invalid_arg "sample_valuation_from_zone: empty bound";
+      QCheck2.Gen.int_range lb ub
     )
     z
-  
-let witness (pz : t) ~max_constant : Valuation.t =
-  let pz' = propagate pz in 
-  let pi : zval = sample_valuation_from_zone pz'.params ~max_constant in
+
+let witness (pz : t) ~max_constant : Valuation.t QCheck2.Gen.t =
+  let open QCheck2.Gen in
+  let pz' = propagate pz ~max_constant in
+  let* pi = sample_valuation_from_zone pz'.params ~max_constant in
   let z : Box.t = instantiate pi { pz with params = pz'.params } in
-  let nu : zval = sample_valuation_from_zone z ~max_constant in
-  { params = pi; clocks = nu }
+  let+ nu = sample_valuation_from_zone z ~max_constant in
+  { Valuation.params = pi; clocks = nu }
 
 
 let membership (v : Valuation.t) (pz : t) : bool =
