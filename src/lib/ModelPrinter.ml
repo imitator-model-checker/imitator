@@ -523,7 +523,7 @@ let string_of_actions_declaration model automaton_index =
 			, false
 		(* Case nosync: do not declare *)
 		| Action_type_nosync -> (synclabs, first)
-	) ("", true) (model.actions_per_automaton automaton_index)) in synclabs)
+	) ("", true) (List.rev @@ model.actions_per_automaton automaton_index)) in synclabs)
 	^ ";"
 
 
@@ -746,7 +746,7 @@ let string_of_transitions model automaton_index location_index =
 (* 		print_message Verbose_total ("Retrieving transitions via `" ^ (string_of_action model action_index) ^ "`…"); *)
 
 		(* Get the list of transitions *)
-		let transitions = model.transitions automaton_index location_index action_index in
+		let transitions = List.rev @@ model.transitions automaton_index location_index action_index in
 		
 		(* Print some information *)
 (* 		print_message Verbose_total ("Transitions retrieved."); *)
