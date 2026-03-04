@@ -201,14 +201,26 @@ let propagate (pz : t) ~max_constant : t =
     implied_clocks.(c) <- Interval.intersect cur { Interval.top with ub = ConstBound.make s k }
   in
 
+  (* Normalize strict bounds to integer-equivalent non-strict before propagating:
+     x > k  (Strict lb k)  ≡  x >= k+1  (NonStrict lb k+1) for integers.
+     Without this, propagating x > 0 and x < p only derives p > 0 (i.e. p >= 1),
+     but integer feasibility requires p >= 2. *)
   let clock_lb_with_implicit (lb : ConstBound.t) : Strictness.t * Const.t =
-    match ConstBound.max lb (ConstBound.make NonStrict 0) with
+    let lb' = match lb with
+      | Some (Strict, c) -> ConstBound.make NonStrict (c + 1)
+      | _ -> lb
+    in
+    match ConstBound.max lb' (ConstBound.make NonStrict 0) with
     | None -> (NonStrict, 0)
     | Some r -> r
   in
-  (* Symmetric: clocks/params are implicitly bounded above by max_constant *)
+  (* Symmetric: x < k  (Strict ub k)  ≡  x <= k-1  (NonStrict ub k-1) for integers. *)
   let with_implicit_ub (ub : ConstBound.t) : Strictness.t * Const.t =
-    match ConstBound.min ub (ConstBound.make NonStrict max_constant) with
+    let ub' = match ub with
+      | Some (Strict, c) -> ConstBound.make NonStrict (c - 1)
+      | _ -> ub
+    in
+    match ConstBound.min ub' (ConstBound.make NonStrict max_constant) with
     | None -> assert false  (* min with Some always returns Some *)
     | Some r -> r
   in

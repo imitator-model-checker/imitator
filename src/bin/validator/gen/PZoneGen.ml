@@ -5,14 +5,18 @@ open PZone
 
 let box_around valuation max_constant =
   flatten_a @@
-  Array.map (fun v -> 
-    let+ l = int_range 0 v
-    and+ u = int_range v max_constant in 
-    let lb = ConstBound.make Strictness.NonStrict l in 
-    let ub = ConstBound.make Strictness.NonStrict u in 
-    ({lb; ub} : Interval.t)
-    ) 
-  valuation 
+  Array.map (fun v ->
+    let* l = int_range 0 v
+    and* u = int_range v max_constant
+    and* flip_lb = bool
+    and* flip_ub = bool in
+    let lb_s = if l < v && flip_lb then Strictness.Strict else Strictness.NonStrict in
+    let ub_s = if u > v && flip_ub then Strictness.Strict else Strictness.NonStrict in
+    let lb = ConstBound.make lb_s l in
+    let ub = ConstBound.make ub_s u in
+    pure ({lb; ub} : Interval.t)
+  )
+  valuation
 
 let couple_around c_valuation p_valuation =
   let nb_parameters = Array.length p_valuation in 
