@@ -39,36 +39,48 @@ let couple_around c_valuation p_valuation =
     )
   c_valuation
 
-type atom = Clock of int | Param of int | Coupling of int
+type atom =
+  | Clock_lb of int | Clock_ub of int
+  | Param_lb of int | Param_ub of int
+  | Coupling of int
 
 
-let thin k pz = 
-  let nb_clocks = Array.length pz.clocks in 
-  let nb_parameters = Array.length pz.params in 
-  let nb_coupling = Array.length pz.coupling in 
-  let nb_atoms = nb_clocks + nb_parameters + nb_coupling in 
-  let atom_indices = Array.init nb_atoms Fun.id in 
-  let+ chosen_indices = BasicGens.choose_k_array k atom_indices in 
+let thin k pz =
+  let nb_clocks    = Array.length pz.clocks in
+  let nb_parameters = Array.length pz.params in
+  let nb_coupling  = Array.length pz.coupling in
+  let nb_atoms = 2 * nb_clocks + 2 * nb_parameters + nb_coupling in
+  let atom_indices = Array.init nb_atoms Fun.id in
+  let+ chosen_indices = BasicGens.choose_k_array k atom_indices in
 
-  let atom_type_of_index id = 
-    if id < nb_clocks then Clock id
-    else if id < nb_clocks + nb_parameters then Param (id - nb_clocks)
-    else Coupling (id - (nb_clocks + nb_parameters))
+  let atom_type_of_index id =
+    if id < nb_clocks then Clock_lb id
+    else if id < 2 * nb_clocks then Clock_ub (id - nb_clocks)
+    else if id < 2 * nb_clocks + nb_parameters then Param_lb (id - 2 * nb_clocks)
+    else if id < 2 * nb_clocks + 2 * nb_parameters then Param_ub (id - (2 * nb_clocks + nb_parameters))
+    else Coupling (id - (2 * nb_clocks + 2 * nb_parameters))
   in
 
-  let thinned = PZone.top ~nb_clocks ~nb_parameters in 
-  Array.iter 
-    (fun i -> 
+  let thinned = PZone.top ~nb_clocks ~nb_parameters in
+  Array.iter
+    (fun i ->
       match atom_type_of_index i with
-      | Clock x -> thinned.clocks.(x) <- pz.clocks.(x)
-      | Param p -> thinned.params.(p) <- pz.params.(p)
-      | Coupling c -> thinned.coupling.(c) <- pz.coupling.(c)
-      )
-  chosen_indices;
+      | Clock_lb x ->
+          thinned.clocks.(x) <- { thinned.clocks.(x) with lb = pz.clocks.(x).lb }
+      | Clock_ub x ->
+          thinned.clocks.(x) <- { thinned.clocks.(x) with ub = pz.clocks.(x).ub }
+      | Param_lb p ->
+          thinned.params.(p) <- { thinned.params.(p) with lb = pz.params.(p).lb }
+      | Param_ub p ->
+          thinned.params.(p) <- { thinned.params.(p) with ub = pz.params.(p).ub }
+      | Coupling c ->
+          thinned.coupling.(c) <- pz.coupling.(c)
+    )
+    chosen_indices;
   thinned
 
 let gen ~nb_clocks ~nb_parameters ~max_constant ~seed = 
-  let n = nb_clocks + nb_parameters in 
+  let n = 3 * nb_clocks + 2 * nb_parameters in (* 2*clocks + 2*params + nb_coupling (=nb_clocks) *)
   let* witness = PZone.witness seed ~max_constant in
 
   let* atom_amount = BasicGens.bounded_geo ~bound:n 0.5
