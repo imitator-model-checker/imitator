@@ -194,6 +194,27 @@ let () =
       | Some path ->
         write_results_json path validator_options stats
           ~found:false ~final_locations:None ~final_transitions:None ~counterexample_file:None))
+  | Coverage ->
+    let gen_of_dist (d : Spec.dist) =
+      let open QCheck2.Gen in
+      match d with
+      | Exact n -> pure n
+      | Range (min, max) -> int_range ~origin:min min max
+    in
+    let guard_gen =
+      let open QCheck2.Gen in
+      let* nb_clocks = gen_of_dist spec.nb_clocks
+      and* nb_parameters = gen_of_dist spec.nb_parameters in
+      let seed = PZone.top ~nb_clocks ~nb_parameters in
+      PZoneGen.gen ~nb_clocks ~nb_parameters ~max_constant:spec.max_constant ~seed
+    in
+    let state = CoverageAnalyzer.create () in
+    for _ = 1 to validator_options.repetitions do
+      let guard = QCheck2.Gen.generate1 ~rand:random guard_gen in
+      CoverageAnalyzer.update state guard
+    done;
+    CoverageAnalyzer.report state ~results_file:validator_options.results_file
+
   | Reduce {model_path;configs} ->
     let options_and_properties =
       List.map
@@ -220,9 +241,9 @@ let () =
       in
 
       match Comparison.eq_results results with
-      | Equal -> true
-      | Time_out -> true
-      | Not_Equal -> false
+      | Equal -> false
+      | Time_out -> false
+      | Not_Equal -> true
       | Incomparable -> Printer.error printer "ERROR: Incomparable constraint types"; exit 1
       | Error -> Printer.error printer "ERROR: One or more imitator runs resulted in an error"; exit 1
       | Not_supported -> Printer.error printer "ERROR: This type of comparison is not supported yet! You can implement it in `Comparison.ml`"; exit 1

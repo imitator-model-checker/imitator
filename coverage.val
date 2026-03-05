@@ -1,0 +1,9 @@
+[mode]
+kind = coverage
+
+[model]
+nb_automata = 1
+nb_clocks = 2
+nb_parameters = 2
+nb_locations = 2
+max_constant = 10

@@ -121,7 +121,7 @@ module SpecParser = struct
 end
 
 module ModeParser = struct
-  type kind = SampleGenerator | Reduce | Compare | PropertyGuided
+  type kind = SampleGenerator | Reduce | Compare | PropertyGuided | Coverage
 
   type partial = {
     kind : kind option;
@@ -149,6 +149,7 @@ module ModeParser = struct
     | "reduce" -> Reduce
     | "compare" -> Compare
     | "property-guided" -> PropertyGuided
+    | "coverage" -> Coverage
     | _ -> raise (Parse_error ("invalid mode kind: " ^ s))
 
   let parse_kv (acc : partial) ~key ~value : partial =
@@ -196,6 +197,8 @@ module ModeParser = struct
         }
     | PropertyGuided ->
         Mode.PropertyGuided p.properties
+    | Coverage ->
+        Mode.Coverage
 end
 
 let read_logical_line ic (first : string) =
