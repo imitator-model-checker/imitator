@@ -110,14 +110,14 @@ class timeStampMap =
 [state_index, int] defaultHashTable
 (fun _ -> 0)
 
-(* State in or out of state space *)
-type ptg_state = 
+(* Successor is either cached in the state space (InSP) or a transient re-explored state (NotInSP) *)
+type ptg_state =
 | InSP of state_index
-| NotInSP of State.state
+| NotInSP of DiscreteState.global_location * LinearConstraint.px_linear_constraint
 
-let zone_of_ptg_state state_space = function
-	| InSP state_index -> let state : State.state = (state_space#get_state state_index) in state.px_constraint
-	| NotInSP state -> state.px_constraint
+let zone_of_ptg_state (state_space : StateSpace.stateSpace) = function
+	| InSP state_index -> (state_space#get_state state_index).px_constraint
+	| NotInSP (_, px) -> px
 
 let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback =
 	List.filter_map (fun (transition, s) ->
@@ -183,23 +183,29 @@ class stateSpacePTG model options = object(self)
 	method compute_symbolic_successors source_state_index =
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
 
+	(* Recompute successors of a state invalidated by an including check.
+	   Returns NotInSP edges computed from the current (shrunk) zone; does NOT add them to the state space,
+	   since they are only needed transiently for predecessor computation during backpropagation. *)
+	method private get_partitioned_edges_reexplore state_index =
+		reexploration_counter#increment;
+		reexploration_counter#start;
+		invalidated#remove state_index;
+		if verbose_mode_greater Verbose_low then
+			print_message Verbose_low (Printf.sprintf "\tReexploring state %s due to successful including check" (string_of_state_index state_space model state_index));
+		let state = state_space#get_state state_index in
+		let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
+		let edges = List.partition_map (fun (transition, (state : state)) ->
+			print_message Verbose_low (Printf.sprintf "\t\tFound successor with constraints: %s" (state.px_constraint |> string_of_zone model.variable_names));
+			let edge = transition, NotInSP (state.global_location, state.px_constraint) in
+			let action = StateSpace.get_action_from_combined_transition model transition in
+			if model.is_controllable_action action then Left edge else Right edge)
+		successors in
+		reexploration_counter#stop;
+		edges
+
 	method get_partitioned_edges state_index =
 		if including_check && invalidated#mem state_index then
-			(reexploration_counter#increment;
-			reexploration_counter#start;
-			invalidated#remove state_index;
-			if verbose_mode_greater Verbose_low then
-				print_message Verbose_low (Printf.sprintf "\tReexploring state %s due to successful including check" (string_of_state_index state_space model state_index));
-			let state = state_space#get_state state_index in
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			let edges = List.partition_map (fun (transition, (state : state)) ->
-				print_message Verbose_low (Printf.sprintf "\t\tFound successor with constraints: %s" (state.px_constraint |> string_of_zone model.variable_names));
-				let edge = transition, NotInSP state in
-				let action = StateSpace.get_action_from_combined_transition model transition in
-				if model.is_controllable_action action then Left edge else Right edge)
-			successors in
-			reexploration_counter#stop;
-			edges)
+			self#get_partitioned_edges_reexplore state_index
 		else
 			let successors = self#compute_symbolic_successors_with_transitions state_index in
 			List.partition_map (fun (transition, state_index) ->
@@ -694,13 +700,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy *)
 	method private backtrack_single_controllable_edge (transition, (dst : ptg_state)) src bad_zone =
-		let winning_move, dst_global_location = match dst with 
-			| NotInSP {global_location;px_constraint} ->
-				let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+		let winning_move, dst_global_location = match dst with
+			| NotInSP (global_location, px_constraint) ->
+				let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in
 				LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
 				self#predecessor_nnconvex transition src target_zone, global_location
-			| InSP state_index -> 
-				let target_zone = winningZone#find state_index in 
+			| InSP state_index ->
+				let target_zone = winningZone#find state_index in
 				self#predecessor_nnconvex transition src target_zone, (state_space#get_state state_index).global_location
 			
 		in
@@ -733,13 +739,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let uncontrollable_part = compute_moves_to_succesors 
 			(LinearConstraint.false_px_nnconvex_constraint ())
 			uncontrollable_edges
-			(function 
-				| InSP state_index -> 
-					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (self#constr_of_state_index state_index) in 
+			(function
+				| InSP state_index ->
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (self#constr_of_state_index state_index) in
 					LinearConstraint.px_nnconvex_difference_assign target_zone (winningZone#find state_index);
 					target_zone
-				| NotInSP {global_location;px_constraint} -> 
-					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+				| NotInSP (global_location, px_constraint) ->
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in
 					LinearConstraint.px_nnconvex_difference_assign target_zone (locationWinningZone#find global_location);
 					target_zone
 			)
@@ -755,7 +761,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				controllable_edges
 				(function 
 					| InSP state_index -> winningZone#find state_index
-					| NotInSP {global_location;px_constraint} -> 
+					| NotInSP (global_location, px_constraint) -> 
 						let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
 						LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
 						target_zone
