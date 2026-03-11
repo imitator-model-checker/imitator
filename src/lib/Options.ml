@@ -260,9 +260,6 @@ class imitator_options =
 		(* Options for controller generation in PTG *)
 		val mutable ptg_controller_mode = AbstractAlgorithm.No_Generation
 
-		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		val mutable ptg_notonthefly					= false
-
 		(* In game algorithms: propagate losing states *)
 		val mutable ptg_propagate_losing_states		= false
 
@@ -404,8 +401,7 @@ class imitator_options =
 		method property_file_name					= property_file_name
 
 		method ptg_controller_mode = ptg_controller_mode
-		method ptg_notonthefly						= ptg_notonthefly
-		method ptg_propagate_losing_states			= ptg_propagate_losing_states
+method ptg_propagate_losing_states			= ptg_propagate_losing_states
 		method ptg_no_forced_uncontrollables = ptg_no_forced_uncontrollables
 		method ptg_no_strategy_generation = ptg_no_strategy_generation
 		method ptg_no_strategy_printing = ptg_no_strategy_printing
@@ -1135,10 +1131,7 @@ class imitator_options =
        	Use value `draw` to also generate a graphical representation of the controller.
 				");
 
-				("-PTG-no-onthefly", Unit (fun _ -> ptg_notonthefly <- true), " In game algorithms: do not perform the algorithm on-the-fly, but rather first build the state space, and then synthesize. Default: false, i.e., algorithm computes on-the-fly.
-				");
-
-				("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
+("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
 				");
 
 				("-PTG-no-forced-uncontrollables", Unit (fun _ -> ptg_no_forced_uncontrollables <- true), "In game algorithms: use classic semantics where the environment cannot be forced to take an action even if not doing so violates an invarant. Default: false, i.e. use new semantics");

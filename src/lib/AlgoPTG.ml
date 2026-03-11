@@ -119,26 +119,15 @@ let zone_of_ptg_state state_space = function
 	| InSP state_index -> let state : State.state = (state_space#get_state state_index) in state.px_constraint
 	| NotInSP state -> state.px_constraint
 
-class virtual stateSpacePTG  = object(self)
-	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
-	method state_space = state_space
-	method virtual initialize_state_space : unit -> unit
-	method virtual compute_symbolic_successors : state_index -> state_index list
-	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
-	method virtual unexplored_successors : int
-	method virtual passed_states : State.stateIndexSet
-	initializer 
-		self#initialize_state_space ()
-end
-
-let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback = 
-	List.filter_map (fun (transition, s) -> 
-		let addition_result =  state_space#add_state comparison_operator None s in 
+let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback =
+	List.filter_map (fun (transition, s) ->
+		let addition_result = state_space#add_state comparison_operator None s in
 		callback addition_result transition
 	) transitions_and_states
 
-class stateSpacePTG_OTF model options = object(self)
-	inherit stateSpacePTG
+class stateSpacePTG model options = object(self)
+	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
+	method state_space = state_space
 	method unexplored_successors = 0
 	val including_check = 
 	options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || 
@@ -147,125 +136,79 @@ class stateSpacePTG_OTF model options = object(self)
 
 	val reexploration_counter = Statistics.create_hybrid_counter_and_register "PTG Total reexplorations: " Statistics.States_counter Verbose_experiments
 
-	
-	(* Explored: Internal set keeping track of states have had their successors computed *)
+	(* Explored: Internal set keeping track of states that have had their successors computed *)
 	val explored_states = new State.stateIndexSet
-	
-	(* Passed: Exposed to and modified by algorithm. Things in here might not be explored but they have been queued for exploration
+
+	(* Passed: Exposed to and modified by algorithm. Things in here might not be explored but they have been queued for exploration.
 		Modified by state space in case of successful including checks *)
 	val passed_states = new State.stateIndexSet
 	method passed_states = passed_states
 
-	(* Optimization: Only recompute successors in updates IF an included check has succeeded *)
-	val recompute_successors = new State.stateIndexSet 
-	method initialize_state_space () = 		
+	(* Optimization: Only recompute successors in updates IF an including check has succeeded *)
+	val recompute_successors = new State.stateIndexSet
+
+	method private initialize_state_space () =
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
-	method private compute_symbolic_successors_with_transitions source_state_index = 
-		if explored_states#mem source_state_index then 
+
+	initializer self#initialize_state_space ()
+
+	method private compute_symbolic_successors_with_transitions source_state_index =
+		if explored_states#mem source_state_index then
 			state_space#get_successors_with_combined_transitions source_state_index
-		else 
+		else
 		begin
 			explored_states#add source_state_index;
-			let state = state_space#get_state source_state_index in 
+			let state = state_space#get_state source_state_index in
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
-			(fun addition_result transition -> 
-				match addition_result with 
+			add_transitions_and_states_to_state_space state_space successors options#comparison_operator
+			(fun addition_result transition ->
+				match addition_result with
 				(* Including check *)
 				| State_replacing state_index ->
 					state_space#add_transition (source_state_index, transition, state_index);
-				  recompute_successors#add state_index;
+					recompute_successors#add state_index;
 					explored_states#remove_or_do_nothing state_index;
 					passed_states#remove_or_do_nothing state_index;
 					Some (transition, state_index)
-					
 				| New_state state_index
 				(* Inclusion check *)
-				| State_already_present state_index -> 
+				| State_already_present state_index ->
 					state_space#add_transition (source_state_index, transition, state_index);
 					Some (transition, state_index)
 			)
 		end
-	method compute_symbolic_successors source_state_index = 
+
+	method compute_symbolic_successors source_state_index =
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
-	method get_partioned_edges state_index = 
-		if including_check && recompute_successors#mem state_index then 
+
+	method get_partioned_edges state_index =
+		if including_check && recompute_successors#mem state_index then
 			(reexploration_counter#increment;
 			reexploration_counter#start;
 			recompute_successors#remove state_index;
-			let state = state_space#get_state state_index in 
+			if verbose_mode_greater Verbose_low then
+				print_message Verbose_low (Printf.sprintf "\tReexploring state %s due to successful including check" (string_of_state_index state_space model state_index));
+			let state = state_space#get_state state_index in
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			let edges = (List.partition_map (fun (transition, state) -> 
-				let edge = transition, NotInSP state in 
-				let action = StateSpace.get_action_from_combined_transition model transition in 
+			let edges = List.partition_map (fun (transition, (state : state)) ->
+				print_message Verbose_low (Printf.sprintf "\t\tFound successor with constraints: %s" (state.px_constraint |> string_of_zone model.variable_names));
+				let edge = transition, NotInSP state in
+				let action = StateSpace.get_action_from_combined_transition model transition in
 				if model.is_controllable_action action then Left edge else Right edge)
-			successors) in 
+			successors in
 			reexploration_counter#stop;
 			edges)
 		else
-			(let successors = self#compute_symbolic_successors_with_transitions state_index in			
-			List.partition_map (fun (transition, state_index) -> 
-			let edge = transition, InSP state_index in 
-			let action = StateSpace.get_action_from_combined_transition model transition in 
-			if model.is_controllable_action action then Left edge else Right edge)
-			successors)
-end
+			let successors = self#compute_symbolic_successors_with_transitions state_index in
+			List.partition_map (fun (transition, state_index) ->
+				let edge = transition, InSP state_index in
+				let action = StateSpace.get_action_from_combined_transition model transition in
+				if model.is_controllable_action action then Left edge else Right edge)
+			successors
 
-class stateSpacePTG_full model options = object
-	inherit stateSpacePTG
-	val explored_states = new State.stateIndexSet
-	val passed_states = new State.stateIndexSet
-	method passed_states = passed_states
-	val mutable unexplored_successors = 0
-	method unexplored_successors = unexplored_successors
-	method initialize_state_space () = 		
-		let state = AlgoStateBased.create_initial_state options model false in
-		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
-		let process_successors_from_state_index source_state_index = 
-			let state = state_space#get_state source_state_index in 
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
-			(fun addition_result transition -> 
-				match addition_result with 
-				| New_state new_state_index
-				| State_replacing new_state_index
-				| State_already_present new_state_index -> 
-					state_space#add_transition (source_state_index, transition, new_state_index);
-					if explored_states#mem new_state_index then 
-						None
-					else 
-					(explored_states#add new_state_index;
-					Some new_state_index)
-			)
-		in
+end (* class stateSpacePTG *)
 
-		let depth_limit = match options#depth_limit with
-			| Some d -> d
-			| None -> -1
-		in 
-
-		let rec bfs unexplored_state_indices depth = 
-			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
-				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
-			if depth = depth_limit then
-				unexplored_successors <- List.length unexplored_state_indices' 
-			else if unexplored_state_indices' = [] then () else bfs unexplored_state_indices' (depth+1)
-		in
-		let initial_state_index = state_space#get_initial_state_index in 
-		explored_states#add initial_state_index;
-		bfs [initial_state_index] 1;
-
-	method compute_symbolic_successors source_state_index = 
-		state_space#get_successors_with_combined_transitions source_state_index |> List.map snd
-	method get_partioned_edges state_index =
-		let successors_with_transitions = state_space#get_successors_with_combined_transitions state_index in 
-		List.partition_map (fun (transition, state_index) -> 
-			let edge = transition, InSP state_index in 
-			let action = StateSpace.get_action_from_combined_transition model transition in 
-			if model.is_controllable_action action then Left edge else Right edge)
-		successors_with_transitions
-end
 
 type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap; forcedMoves : stateUnionZoneMap}
 
@@ -400,9 +343,10 @@ end
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) ?state_predicate_avoid (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_predicate_avoid : AbstractProperty.state_predicate option) =
+	let state_space_ptg = new stateSpacePTG model options in
 	object (self) inherit algoGeneric model options (*as super*)
-	
+
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
@@ -535,6 +479,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
 		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
+		(* print amount  of edges found *)
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low (Printf.sprintf "\tFound %d uncontrollable edges and %d controllable edges" (List.length uncontrollable_edges) (List.length controllable_edges));
 		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
 			fun (transition, succ_ptg_state) -> 
 				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
@@ -556,6 +503,9 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let global_location = (state_space#get_state state_index).global_location in
 
 		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in 
+		(* print invariant verbose low *)
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low (Printf.sprintf "\tINV: %s" @@ yellow (LinearConstraint.string_of_px_linear_constraint model.variable_names invariant));
 
 		(* forced moves are different if location is urgent! *)
 		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with 
@@ -578,7 +528,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					(yellow @@ string_of_zone model.variable_names invariant)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
-					); 
+					);  
 
 
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
@@ -614,8 +564,11 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			
 		forcedMoves#replace state_index forced_moves;
 		if verbose_mode_greater Verbose_low then 
-			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves))
-		
+			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves));
+		(* print forced moves projected onto parameters *)
+		let forced_moves_proj = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse forced_moves in
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low (Printf.sprintf "\tFM projected on parameters: %s" @@ yellow (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names forced_moves_proj))
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 

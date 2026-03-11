@@ -133,9 +133,6 @@ class imitator_options :
 		(* In game algorithms: set the mode for generation of controller *)
 		method ptg_controller_mode			: ptg_controller_mode
 
-		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		method ptg_notonthefly				: bool
-
 		(* In game algorithms: propagate losing states *)
 		method ptg_propagate_losing_states	: bool
 		
