@@ -421,14 +421,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val init_winning_zone_changed = ref false
 
-	(* Negate a zone within a state (corresponds to taking the complement) *)
-	method private negate_zone zone state_index = 
-			let complete_zone = nn_of_lin (self#constr_of_state_index state_index) in 
-			LinearConstraint.px_nnconvex_difference_assign complete_zone zone;
-			complete_zone
-		
-	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
-	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
+	(* Initial constraint of the automata — returns a fresh copy each time to avoid mutation *)
+	method private initial_constraint () = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint
 		
 
 	method private backward (state_index : state_index) (px_linear : LinearConstraint.px_linear_constraint) = 
@@ -622,30 +616,30 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					coverage_pruning_counter#increment;
 					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
-					(let successors = state_space_ptg#compute_symbolic_successors state_index in
+					let successors = state_space_ptg#compute_symbolic_successors state_index in
 					List.iter (fun s -> (depends#find s)#add state_index) successors;
-					let found_existing_state_with_non_empty_winning_zone = 
-						List.fold_left (fun acc succ -> 
-						if state_space_ptg#passed_states#mem succ then 
-							(print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration" 
-							(string_of_state_index state_space model succ)))
-						else 
-							(
-							let item = EXPLORE succ in 	
+					(* Pass 1: enqueue unexplored successors *)
+					List.iter (fun succ ->
+						if state_space_ptg#passed_states#mem succ then
+							print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration"
+							(string_of_state_index state_space model succ))
+						else begin
+							let item = EXPLORE succ in
 							waiting#add item;
 							state_space_ptg#passed_states#add succ;
 							if verbose_mode_greater Verbose_low then
 								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State")
-							);
-							acc || not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
-						) false successors
-					in 
-					if found_existing_state_with_non_empty_winning_zone then 
-						let item = UPDATE {state_index; timestamp = fresh_timestamp ()} in 
+						end
+					) successors;
+					(* Pass 2: if any successor already has a non-empty winning zone, trigger an immediate update *)
+					if List.exists (fun succ ->
+						not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
+					) successors then begin
+						let item = UPDATE {state_index; timestamp = fresh_timestamp ()} in
 						waiting#add item;
 						if verbose_mode_greater Verbose_low then
-								self#print_delta_list_with_reason [item] (bold @@ magenta "Transition to partially winning state");
-					)
+							self#print_delta_list_with_reason [item] (bold @@ magenta "Transition to partially winning state")
+					end
 			)
 
 
