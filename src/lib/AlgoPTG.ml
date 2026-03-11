@@ -136,16 +136,17 @@ class stateSpacePTG model options = object(self)
 
 	val reexploration_counter = Statistics.create_hybrid_counter_and_register "PTG Total reexplorations: " Statistics.States_counter Verbose_experiments
 
-	(* Explored: Internal set keeping track of states that have had their successors computed *)
-	val explored_states = new State.stateIndexSet
+	(* Internal set: states whose successors have been computed and cached in the state space *)
+	val expanded = new State.stateIndexSet
 
-	(* Passed: Exposed to and modified by algorithm. Things in here might not be explored but they have been queued for exploration.
-		Modified by state space in case of successful including checks *)
+	(* States queued for EXPLORE by algoPTG. Also cleared here on State_replacing. *)
 	val passed_states = new State.stateIndexSet
-	method passed_states = passed_states
+	method is_queued si = passed_states#mem si
+	method mark_queued si = passed_states#add si
 
-	(* Optimization: Only recompute successors in updates IF an including check has succeeded *)
-	val recompute_successors = new State.stateIndexSet
+	(* States invalidated by a successful including check; their successors must be recomputed
+	   from the current (shrunk) zone on next call to get_partitioned_edges *)
+	val invalidated = new State.stateIndexSet
 
 	method private initialize_state_space () =
 		let state = AlgoStateBased.create_initial_state options model false in
@@ -154,11 +155,11 @@ class stateSpacePTG model options = object(self)
 	initializer self#initialize_state_space ()
 
 	method private compute_symbolic_successors_with_transitions source_state_index =
-		if explored_states#mem source_state_index then
+		if expanded#mem source_state_index then
 			state_space#get_successors_with_combined_transitions source_state_index
 		else
 		begin
-			explored_states#add source_state_index;
+			expanded#add source_state_index;
 			let state = state_space#get_state source_state_index in
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
 			add_transitions_and_states_to_state_space state_space successors options#comparison_operator
@@ -167,8 +168,8 @@ class stateSpacePTG model options = object(self)
 				(* Including check *)
 				| State_replacing state_index ->
 					state_space#add_transition (source_state_index, transition, state_index);
-					recompute_successors#add state_index;
-					explored_states#remove_or_do_nothing state_index;
+					invalidated#add state_index;
+					expanded#remove_or_do_nothing state_index;
 					passed_states#remove_or_do_nothing state_index;
 					Some (transition, state_index)
 				| New_state state_index
@@ -182,11 +183,11 @@ class stateSpacePTG model options = object(self)
 	method compute_symbolic_successors source_state_index =
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
 
-	method get_partioned_edges state_index =
-		if including_check && recompute_successors#mem state_index then
+	method get_partitioned_edges state_index =
+		if including_check && invalidated#mem state_index then
 			(reexploration_counter#increment;
 			reexploration_counter#start;
-			recompute_successors#remove state_index;
+			invalidated#remove state_index;
 			if verbose_mode_greater Verbose_low then
 				print_message Verbose_low (Printf.sprintf "\tReexploring state %s due to successful including check" (string_of_state_index state_space model state_index));
 			let state = state_space#get_state state_index in
@@ -472,7 +473,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	
 	(* Compute the forced moves of a state *)
 	method private save_forced_moves state_index = 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in 
 		(* print amount  of edges found *)
 		if verbose_mode_greater Verbose_low then 
 			print_message Verbose_low (Printf.sprintf "\tFound %d uncontrollable edges and %d controllable edges" (List.length uncontrollable_edges) (List.length controllable_edges));
@@ -620,13 +621,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					List.iter (fun s -> (depends#find s)#add state_index) successors;
 					(* Pass 1: enqueue unexplored successors *)
 					List.iter (fun succ ->
-						if state_space_ptg#passed_states#mem succ then
+						if state_space_ptg#is_queued succ then
 							print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration"
 							(string_of_state_index state_space model succ))
 						else begin
 							let item = EXPLORE succ in
 							waiting#add item;
-							state_space_ptg#passed_states#add succ;
+							state_space_ptg#mark_queued succ;
 							if verbose_mode_greater Verbose_low then
 								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State")
 						end
@@ -727,7 +728,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			init
 		in 
 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in
 
 		let uncontrollable_part = compute_moves_to_succesors 
 			(LinearConstraint.false_px_nnconvex_constraint ())
@@ -852,7 +853,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let initial_state_index = state_space#get_initial_state_index in 
 		
 		waiting#add (EXPLORE initial_state_index);
-		state_space_ptg#passed_states#add initial_state_index;
+		state_space_ptg#mark_queued initial_state_index;
 
 		let initial_state = state_space#get_state initial_state_index in 
 
