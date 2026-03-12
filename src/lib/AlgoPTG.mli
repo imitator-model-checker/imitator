@@ -18,10 +18,10 @@
 open AlgoGeneric
 open State
 
-(* State in or out of state space *)
+(* Successor is either cached in the state space (InSP) or a transient re-explored state (NotInSP) *)
 type ptg_state =
 | InSP of state_index
-| NotInSP of State.state
+| NotInSP of DiscreteState.global_location * LinearConstraint.px_linear_constraint
 
 (************************************************************)
 (* Class definition *)
