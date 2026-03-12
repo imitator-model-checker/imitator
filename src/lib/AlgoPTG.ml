@@ -217,7 +217,7 @@ class stateSpacePTG model options = object(self)
 end (* class stateSpacePTG *)
 
 
-type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap; forcedMoves : stateUnionZoneMap}
+type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap}
 
 class virtual ['a] nextItem = object
 	method virtual add : 'a -> unit
@@ -262,7 +262,7 @@ class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options
 	method add e = match e with 
 	| EXPLORE _ -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
 	| UPDATE _ -> update' <- e::update'
-	method extract {lastUpdate; depends; winningZone; forcedMoves} = 
+	method extract {lastUpdate; depends; winningZone} =
 		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
 		(List.length explore) (List.length explore') (List.length update) (List.length update') 
 		(match phase with Initial -> depth - explore_depth + init_depth | _ -> depth)
@@ -286,7 +286,6 @@ class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options
 				
 				(* Merge all table datastructures *)
 				winningZone#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
-				forcedMoves#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
 				depends#merge_keys merge_mapping (fun a b -> a#union b; a);
 				lastUpdate#merge_keys merge_mapping min;
 
@@ -385,7 +384,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val mutable termination_status = Regular_termination
 
 	val winningZone = new stateUnionZoneMap
-	val forcedMoves = new stateUnionZoneMap
+	val locationForcedMoves = new locationUnionZoneMap
 	val depends = new dependsMap
 	val lastUpdate = new timeStampMap
 
@@ -477,50 +476,60 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		result 
 
 	
-	(* Compute the forced moves of a state *)
-	method private save_forced_moves state_index = 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in 
-		(* print amount  of edges found *)
-		if verbose_mode_greater Verbose_low then 
-			print_message Verbose_low (Printf.sprintf "\tFound %d uncontrollable edges and %d controllable edges" (List.length uncontrollable_edges) (List.length controllable_edges));
-		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, succ_ptg_state) -> 
-				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
-				uncontrollable_edges in 
-		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, succ_ptg_state) ->
-				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
-				controllable_edges
-		in 
-		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
-			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone 
-		in
-		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
-			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone 
-		in
-
+	(* Compute and cache forced moves for the location of state_index.
+	   Forced moves depend only on model structure (invariants, guards, resets),
+	   not on the specific state zone — so they are computed once per location. *)
+	method private save_forced_moves state_index =
 		let global_location = (state_space#get_state state_index).global_location in
-
-		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in 
+		(* Skip if already computed for this location *)
+		if locationForcedMoves#mem global_location then () else
+		begin
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in
+		(* print amount  of edges found *)
+		if verbose_mode_greater Verbose_low then
+			print_message Verbose_low (Printf.sprintf "\tFound %d uncontrollable edges and %d controllable edges" (List.length uncontrollable_edges) (List.length controllable_edges));
+		(* Use the source location invariant as pred_zone and target location invariants as current_zone *)
+		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in
+		let target_invariant succ_ptg_state =
+			let target_loc = match succ_ptg_state with
+				| InSP si -> (state_space#get_state si).global_location
+				| NotInSP (loc, _) -> loc
+			in
+			LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_loc
+		in
+		let loc_predecessor_linear transition succ =
+			let guard = state_space#get_guard model state_index transition in
+			self#predecessor_linear_general transition state_index guard invariant (target_invariant succ)
+		in
+		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map (fun (transition, succ) -> loc_predecessor_linear transition succ) uncontrollable_edges in
+		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map (fun (transition, succ) -> loc_predecessor_linear transition succ) controllable_edges in
+		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone
+		in
+		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone
+		in
 		(* print invariant verbose low *)
-		if verbose_mode_greater Verbose_low then 
+		if verbose_mode_greater Verbose_low then
 			print_message Verbose_low (Printf.sprintf "\tINV: %s" @@ yellow (LinearConstraint.string_of_px_linear_constraint model.variable_names invariant));
 
 		(* forced moves are different if location is urgent! *)
-		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with 
-			| true -> 
+		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with
+			| true ->
 				let forced_moves = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint invariant in
 
 				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_zone;
 				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_zone;
 				forced_moves
 			| false ->
-				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
-				
-				if verbose_mode_greater Verbose_low then 
-					print_message Verbose_low 
+				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in
+
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
 					(Printf.sprintf "\tFM Computation:\n\t\tunctrl: %s\n\t\tunctrl_closed: %s\n\t\tctrl: %s\n\t\tctrl_closed: %s\n\t\tinv: %s\n\t\tinv_bound_in: %s\n\t\tinv_bound_out: %s"
 					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone)
 					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone_closed)
@@ -529,47 +538,45 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					(yellow @@ string_of_zone model.variable_names invariant)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
-					);  
-
+					);
 
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_zone_closed;
 
-				if verbose_mode_greater Verbose_low then 
-					print_message Verbose_low 
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
 					(Printf.sprintf "\t\tinv_bound_in ∩ unctrl: %s\n\t\tinv_bound_out ∩ unctrl_closed: %s"
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
-					); 
+					);
 
 				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_zone;
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed; 
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed;
 
-
-				if verbose_mode_greater Verbose_low then 
-					print_message Verbose_low 
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
 					(Printf.sprintf "\t\t(inv_bound_in ∩ unctrl) ∖ ctrl: %s\n\t\t(inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed: %s"
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
-					); 
-
+					);
 
 				LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
-				if verbose_mode_greater Verbose_low then 
-					print_message Verbose_low 
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
 					(Printf.sprintf "\t\t((inv_bound_in ∩ unctrl) ∖ ctrl) ∪ ((inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed): %s"
 					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
-					); 
+					);
 				inv_bound_in
 		in
-			
-		forcedMoves#replace state_index forced_moves;
-		if verbose_mode_greater Verbose_low then 
+
+		locationForcedMoves#replace global_location forced_moves;
+		if verbose_mode_greater Verbose_low then
 			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves));
 		(* print forced moves projected onto parameters *)
 		let forced_moves_proj = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse forced_moves in
-		if verbose_mode_greater Verbose_low then 
+		if verbose_mode_greater Verbose_low then
 			print_message Verbose_low (Printf.sprintf "\tFM projected on parameters: %s" @@ yellow (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names forced_moves_proj))
+		end
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 
@@ -752,7 +759,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		in
 
 		let orig_winning_zone = LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index in 
-		self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index);
+		let src_location = (state_space#get_state state_index).global_location in
+		self#process_forced_move state_index uncontrollable_part (locationForcedMoves#find src_location);
 		if options#ptg_no_strategy_generation then 
 			let {global_location;px_constraint} = (state_space#get_state state_index) in 
 
@@ -875,7 +883,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				(print_message Verbose_low (yellow @@ bold @@ Printf.sprintf "- Main algorithm loop iteration %d -" !iter);
 				print_message Verbose_low ("\tQ=" ^ item_list_to_str waiting#to_list model state_space);
 				incr iter);
-			let item = waiting#extract {lastUpdate;depends;winningZone;forcedMoves} in 			
+			let item = waiting#extract {lastUpdate;depends;winningZone} in 			
 			if verbose_mode_greater Verbose_low then 
 				print_message Verbose_low ("\t" ^ item_to_str model state_space item ~include_zone:true);
 			match item with 

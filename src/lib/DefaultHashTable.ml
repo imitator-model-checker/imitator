@@ -23,6 +23,7 @@ class ['a, 'b] defaultHashTable (default : 'a -> 'b) = object
   method fold : 'c. ('a -> 'b -> 'c -> 'c) -> 'c -> 'c = 
     fun f init -> Hashtbl.fold f internal_tbl init
   method is_empty = Hashtbl.length internal_tbl = 0
+  method mem key = Hashtbl.mem internal_tbl key
   (* Merges keys according to a mapping (mergee -> merger) 
       along with a function describing how to merge their value (for example list concatenation if values are lists) *)
   method merge_keys (key_mapping : 'a -> 'a) (merge_values : 'b -> 'b -> 'b) = 
