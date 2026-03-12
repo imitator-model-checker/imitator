@@ -190,12 +190,9 @@ class stateSpacePTG model options = object(self)
 		reexploration_counter#increment;
 		reexploration_counter#start;
 		invalidated#remove state_index;
-		if verbose_mode_greater Verbose_low then
-			print_message Verbose_low (Printf.sprintf "\tReexploring state %s due to successful including check" (string_of_state_index state_space model state_index));
 		let state = state_space#get_state state_index in
 		let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
 		let edges = List.partition_map (fun (transition, (state : state)) ->
-			print_message Verbose_low (Printf.sprintf "\t\tFound successor with constraints: %s" (state.px_constraint |> string_of_zone model.variable_names));
 			let edge = transition, NotInSP (state.global_location, state.px_constraint) in
 			let action = StateSpace.get_action_from_combined_transition model transition in
 			if model.is_controllable_action action then Left edge else Right edge)
@@ -484,27 +481,27 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		(* Skip if already computed for this location *)
 		if locationForcedMoves#mem global_location then () else
 		begin
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in
-		(* print amount  of edges found *)
-		if verbose_mode_greater Verbose_low then
-			print_message Verbose_low (Printf.sprintf "\tFound %d uncontrollable edges and %d controllable edges" (List.length uncontrollable_edges) (List.length controllable_edges));
-		(* Use the source location invariant as pred_zone and target location invariants as current_zone *)
+		(* Use source location invariant as zone — ensures all model-level transitions
+		   are found, not just those enabled from this specific state's zone *)
 		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in
-		let target_invariant succ_ptg_state =
-			let target_loc = match succ_ptg_state with
-				| InSP si -> (state_space#get_state si).global_location
-				| NotInSP (loc, _) -> loc
-			in
+		let synthetic_state : State.state = {global_location; px_constraint = invariant} in
+		let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model synthetic_state in
+		let controllable_edges, uncontrollable_edges = List.partition_map (fun (transition, (succ : State.state)) ->
+			let edge = transition, succ.global_location in
+			let action = StateSpace.get_action_from_combined_transition model transition in
+			if model.is_controllable_action action then Left edge else Right edge
+		) successors in
+		let target_invariant target_loc =
 			LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_loc
 		in
-		let loc_predecessor_linear transition succ =
+		let loc_predecessor_linear transition target_loc =
 			let guard = state_space#get_guard model state_index transition in
-			self#predecessor_linear_general transition state_index guard invariant (target_invariant succ)
+			self#predecessor_linear_general transition state_index guard invariant (target_invariant target_loc)
 		in
 		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
-			List.map (fun (transition, succ) -> loc_predecessor_linear transition succ) uncontrollable_edges in
+			List.map (fun (transition, target_loc) -> loc_predecessor_linear transition target_loc) uncontrollable_edges in
 		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
-			List.map (fun (transition, succ) -> loc_predecessor_linear transition succ) controllable_edges in
+			List.map (fun (transition, target_loc) -> loc_predecessor_linear transition target_loc) controllable_edges in
 		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
 			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone
@@ -513,10 +510,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
 			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone
 		in
-		(* print invariant verbose low *)
-		if verbose_mode_greater Verbose_low then
-			print_message Verbose_low (Printf.sprintf "\tINV: %s" @@ yellow (LinearConstraint.string_of_px_linear_constraint model.variable_names invariant));
-
+		
 		(* forced moves are different if location is urgent! *)
 		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with
 			| true ->
@@ -571,11 +565,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		locationForcedMoves#replace global_location forced_moves;
 		if verbose_mode_greater Verbose_low then
-			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves));
-		(* print forced moves projected onto parameters *)
-		let forced_moves_proj = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse forced_moves in
-		if verbose_mode_greater Verbose_low then
-			print_message Verbose_low (Printf.sprintf "\tFM projected on parameters: %s" @@ yellow (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names forced_moves_proj))
+			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves))
 		end
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
