@@ -616,6 +616,9 @@ val close_lower_clocks_px_linear_constraint : px_linear_constraint -> px_linear_
 (* val p_ih  : p_linear_constraint  -> p_linear_constraint *)
 val px_ih : px_linear_constraint -> px_linear_constraint
 
+(** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
+val px_simplify_via_generators : px_linear_constraint -> px_linear_constraint
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* {3 Conversion between types of constraints } *)

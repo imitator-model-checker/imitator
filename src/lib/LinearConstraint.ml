@@ -133,6 +133,8 @@ let cHECK_ASSERT_DIMENSIONS = true
 
 	let ppl_tcounter_copy = create_hybrid_counter_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
 
+	let ppl_tcounter_new_from_generators = create_hybrid_counter_and_register "NNC_Polyhedron_from_generators" PPL_counter Verbose_low
+
 	let ppl_nncc_tcounter_space_dimension = create_hybrid_counter_and_register "nncc_tcounter_space_dimension" PPL_counter Verbose_low
 
 	let ppl_nncc_false_constraint = create_hybrid_counter_and_register "nncc_false_constraint" PPL_counter Verbose_low
@@ -389,6 +391,9 @@ let ippl_get_generators poly =
 
 let ippl_get_minimized_generators poly =
 	ippl_generic (fun () -> ppl_Polyhedron_get_minimized_generators poly) ppl_tcounter_get_minimized_generators
+
+let ippl_new_from_generators (generator_system : ppl_linear_generator list) : linear_constraint =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_generators generator_system) ppl_tcounter_new_from_generators
 
 let ippl_intersection_assign x =
 	ippl_generic (fun () -> ppl_Polyhedron_intersection_assign x) ppl_tcounter_intersection_assign
@@ -4519,6 +4524,11 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 (* let p_ih  = ih *)
 let px_ih = ih
+
+(** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
+let px_simplify_via_generators (c : px_linear_constraint) : px_linear_constraint =
+	let generators = ippl_get_minimized_generators c in
+	ippl_new_from_generators generators
 
 
 (************************************************************)
