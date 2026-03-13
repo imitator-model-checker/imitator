@@ -4527,8 +4527,25 @@ let px_ih = ih
 
 (** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
 let px_simplify_via_generators (c : px_linear_constraint) : px_linear_constraint =
+	let dim = ippl_space_dimension c in
 	let generators = ippl_get_minimized_generators c in
-	ippl_new_from_generators generators
+	let res = ippl_new_from_generators generators in
+	let res_dim = ippl_space_dimension res in
+	(* Restore the original space dimension: ppl_new_NNC_Polyhedron_from_generators
+	   infers the dimension from the generators, which may be smaller than the
+	   original if some variables were unconstrained. A dimension absent from all
+	   generators is one that equals 0 for every point in the polyhedron (its
+	   coefficient is 0 in every generator expression), so we embed it back and
+	   immediately re-add the equality v_k = 0. *)
+	if res_dim < dim then (
+		ippl_add_dimensions (dim - res_dim) res;
+		(* Re-add v_k = 0 for each restored dimension *)
+		let equalities = List.map (fun k ->
+			make_px_linear_inequality (make_linear_term [(NumConst.one, k)] NumConst.zero) Op_eq
+		) (list_of_interval res_dim (dim - 1)) in
+		ippl_add_constraints res equalities
+	);
+	res
 
 
 (************************************************************)

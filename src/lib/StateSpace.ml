@@ -1459,6 +1459,8 @@ class stateSpace (guessed_nb_transitions : int) =
 					Some (State_already_present representative)
 				else
 				(LinearConstraint.px_hull_assign representative_state.px_constraint state_to_look_for.px_constraint;
+				let simplified = LinearConstraint.px_simplify_via_generators representative_state.px_constraint in
+				self#replace_constraint representative simplified;
 				Some (State_replacing representative))
 				
 		
