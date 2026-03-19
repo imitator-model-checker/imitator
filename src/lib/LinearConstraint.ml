@@ -135,6 +135,10 @@ let cHECK_ASSERT_DIMENSIONS = true
 
 	let ppl_tcounter_new_from_generators = create_hybrid_counter_and_register "NNC_Polyhedron_from_generators" PPL_counter Verbose_low
 
+	let ppl_tcounter_octagonal_from_nnc    = create_hybrid_counter_and_register "Octagonal_Shape_mpq_class_from_NNC_Polyhedron" PPL_counter Verbose_low
+	let ppl_tcounter_octagonal_upper_bound = create_hybrid_counter_and_register "Octagonal_Shape_mpq_class_upper_bound_assign" PPL_counter Verbose_low
+	let ppl_tcounter_nnc_from_octagonal    = create_hybrid_counter_and_register "NNC_Polyhedron_from_Octagonal_Shape_mpq_class" PPL_counter Verbose_low
+
 	let ppl_nncc_tcounter_space_dimension = create_hybrid_counter_and_register "nncc_tcounter_space_dimension" PPL_counter Verbose_low
 
 	let ppl_nncc_false_constraint = create_hybrid_counter_and_register "nncc_false_constraint" PPL_counter Verbose_low
@@ -450,6 +454,15 @@ let ippl_bounds_from_above =
 
 let ippl_copy_linear_constraint linear_constraint =
 	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint) ppl_tcounter_copy
+
+let ippl_octagonal_from_nnc poly =
+	ippl_generic (fun () -> ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron poly) ppl_tcounter_octagonal_from_nnc
+
+let ippl_octagonal_upper_bound_assign a b =
+	ippl_generic (fun () -> ppl_Octagonal_Shape_mpq_class_upper_bound_assign a b) ppl_tcounter_octagonal_upper_bound
+
+let ippl_nnc_from_octagonal oct =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class oct) ppl_tcounter_nnc_from_octagonal
 
 (** Perform the hull (version with side effect) *)
 let ippl_hull_assign linear_constraint1 linear_constraint2 =
@@ -2041,6 +2054,10 @@ let p_nb_inequalities (p_linear_constraint : p_linear_constraint) : int =
 	let list_of_inequalities : p_linear_inequality list = p_get_minimized_inequalities p_linear_constraint in
 	List.length list_of_inequalities
 
+(** Get the number of inequalities (minimized H-representation) of a px_linear_constraint *)
+let px_nb_constraints (c : px_linear_constraint) : int =
+	List.length (px_get_minimized_inequalities c)
+
 
 (** Return true if the variable is constrained in a linear_constraint *)
 let is_constrained     = ippl_is_constrained
@@ -2375,7 +2392,7 @@ let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersec
 	
 let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 
-let px_hull_assign = ippl_hull_assign
+let px_convex_hull_assign = ippl_hull_assign
 
 (*------------------------------------------------------------*)
 (* Convex negation *)
@@ -2852,6 +2869,71 @@ let compute_bounds linear_constraint dimension : (((coef * bool) option) * ((coe
 
 
 let p_compute_bounds = compute_bounds
+
+(** Over-approximate the union of a list of px_linear_constraints with the smallest
+    axis-aligned box: for each variable xi, take the global infimum across all inputs
+    as the lower bound and the global supremum as the upper bound. Unbounded dimensions
+    produce no constraint on that side. Does NOT compute the exact convex hull. *)
+let px_box_hull (constraints : px_linear_constraint list) : px_linear_constraint =
+	match constraints with
+	| [] -> px_false_constraint ()
+	| first :: rest ->
+		let nb_dims = !px_dim in
+		let inequalities = ref [] in
+		for dim = 0 to nb_dims - 1 do
+			(* Start accumulator from the first polyhedron's bounds *)
+			let init = compute_bounds first dim in
+			let (global_lb, global_ub) = List.fold_left (fun (lb_acc, ub_acc) c ->
+				let lb_opt, ub_opt = compute_bounds c dim in
+				(* Lower: take minimum value; None (unconstrained) if either side is unbounded below *)
+				let new_lb = match lb_acc, lb_opt with
+					| None, _ | _, None -> None
+					| Some (av, at), Some (bv, bt) ->
+						if NumConst.l bv av      then Some (bv, bt)       (* b < a: b is the new min *)
+						else if NumConst.g bv av then Some (av, at)       (* a < b: keep a *)
+						else Some (av, at || bt)                          (* equal: non-strict wins *)
+				in
+				(* Upper: take maximum value; None (unconstrained) if either side is unbounded above *)
+				let new_ub = match ub_acc, ub_opt with
+					| None, _ | _, None -> None
+					| Some (av, at), Some (bv, bt) ->
+						if NumConst.g bv av      then Some (bv, bt)       (* b > a: b is the new max *)
+						else if NumConst.l bv av then Some (av, at)       (* a > b: keep a *)
+						else Some (av, at || bt)                          (* equal: non-strict wins *)
+				in
+				(new_lb, new_ub)
+			) init rest
+			in
+			(* Lower bound: xi - lb op 0, i.e. xi >= lb (or xi > lb for strict infimum) *)
+			(match global_lb with
+			| None -> ()
+			| Some (lb, is_min) ->
+				let op = if is_min then Op_ge else Op_g in
+				let term = make_linear_term [(NumConst.one, dim)] (NumConst.neg lb) in
+				inequalities := make_px_linear_inequality term op :: !inequalities
+			);
+			(* Upper bound: xi - ub op 0, i.e. xi <= ub (or xi < ub for strict supremum) *)
+			(match global_ub with
+			| None -> ()
+			| Some (ub, is_max) ->
+				let op = if is_max then Op_le else Op_l in
+				let term = make_linear_term [(NumConst.one, dim)] (NumConst.neg ub) in
+				inequalities := make_px_linear_inequality term op :: !inequalities
+			);
+		done;
+		make_px_constraint !inequalities
+
+
+let px_octagonal_hull (constraints : px_linear_constraint list) : px_linear_constraint =
+	match constraints with
+	| [] -> px_false_constraint ()
+	| first :: rest ->
+		let oct = ippl_octagonal_from_nnc first in
+		List.iter (fun c ->
+			let oct2 = ippl_octagonal_from_nnc c in
+			ippl_octagonal_upper_bound_assign oct oct2
+		) rest;
+		ippl_nnc_from_octagonal oct
 
 
 (*------------------------------------------------------------*)
@@ -4524,6 +4606,11 @@ let ih (px_linear_constraint : px_linear_constraint) =
 
 (* let p_ih  = ih *)
 let px_ih = ih
+
+(** Simplify a px_linear_constraint by rebuilding it from its minimized constraint representation *)
+let px_simplify_via_constraints (c : px_linear_constraint) : px_linear_constraint =
+	let constraints = ippl_get_minimized_inequalities c in
+	make_px_constraint constraints
 
 (** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
 let px_simplify_via_generators (c : px_linear_constraint) : px_linear_constraint =

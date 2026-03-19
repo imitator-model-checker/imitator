@@ -142,10 +142,22 @@ type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
 
-type ptg_abstraction = 
+type ptg_abstraction =
 	| Location
 	| Convex_Hull
 	| No_Abstraction
+
+type hull_method =
+	| Hull_convex_only       (* exact convex hull; optional simplify *)
+	| Hull_box_only          (* box hull of both inputs directly; no convex hull step *)
+	| Hull_octagonal_only    (* octagonal hull of both inputs directly; no convex hull step *)
+	| Hull_box_hybrid        (* convex hull first; box-approximate if above threshold *)
+	| Hull_octagonal_hybrid  (* convex hull first; octagonal-approximate if above threshold *)
+
+type hull_simplify_mode =
+	| Hull_simplify_none         (* no simplification step *)
+	| Hull_simplify_constraints  (* rebuild from minimized H-rep (cheap) *)
+	| Hull_simplify_generators   (* rebuild from minimized V-rep (more aggressive, more expensive) *)
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1

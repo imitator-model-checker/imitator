@@ -357,6 +357,9 @@ val pxd_get_dimensions_list : pxd_linear_constraint -> variable list
 (** Get the number of inequalities of a constraint *)
 val p_nb_inequalities : p_linear_constraint -> int
 
+(** Get the number of constraints (minimized H-representation) of a px_linear_constraint *)
+val px_nb_constraints : px_linear_constraint -> int
+
 (** Get the linear inequalities of a constraint *)
 val p_get_inequalities   : p_linear_constraint   -> p_linear_inequality list
 val pxd_get_inequalities : pxd_linear_constraint -> pxd_linear_inequality list
@@ -505,12 +508,23 @@ val pxd_intersection_assign : pxd_linear_constraint -> pxd_linear_constraint lis
 val px_intersection_assign_p : px_linear_constraint -> p_linear_constraint list -> unit
 val px_intersection_assign_x : px_linear_constraint -> x_linear_constraint list -> unit
 
-(** Perform the hull assignation *)
-val px_hull_assign : px_linear_constraint -> px_linear_constraint -> unit
+(** Perform the convex hull assignation (in-place) *)
+val px_convex_hull_assign : px_linear_constraint -> px_linear_constraint -> unit
 
 (** Perform convex hull, if the result is exact  *)
 (* val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool *)
 val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bool
+
+(** Over-approximate the union of a list of px_linear_constraints with the smallest
+    axis-aligned box (conjunction of unary interval bounds per variable).
+    No exact hull is computed; bounds are queried directly from the input polyhedra.
+    Returns the false constraint for an empty list. *)
+val px_box_hull : px_linear_constraint list -> px_linear_constraint
+
+(** Over-approximate the union of a list of px constraints using the octagonal abstraction
+    (tighter than box hull, cheaper than exact convex hull).
+    Returns the false constraint for an empty list. *)
+val px_octagonal_hull : px_linear_constraint list -> px_linear_constraint
 
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 val px_hide_nonparameters_and_collapse : px_linear_constraint -> p_linear_constraint
@@ -615,6 +629,9 @@ val close_lower_clocks_px_linear_constraint : px_linear_constraint -> px_linear_
 (*------------------------------------------------------------*)
 (* val p_ih  : p_linear_constraint  -> p_linear_constraint *)
 val px_ih : px_linear_constraint -> px_linear_constraint
+
+(** Simplify a px_linear_constraint by rebuilding it from its minimized constraint representation *)
+val px_simplify_via_constraints : px_linear_constraint -> px_linear_constraint
 
 (** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
 val px_simplify_via_generators : px_linear_constraint -> px_linear_constraint

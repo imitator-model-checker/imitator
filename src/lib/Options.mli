@@ -148,6 +148,11 @@ class imitator_options :
 
 		method ptg_abstraction : AbstractAlgorithm.ptg_abstraction
 
+		method hull_method                : AbstractAlgorithm.hull_method
+		method hull_simplify_mode         : AbstractAlgorithm.hull_simplify_mode
+		method hull_simplify_period       : int
+		method hull_abstraction_threshold : int
+
 		method pi_compatible				: bool
 		method precomputepi0				: bool
 		method property_file_name			: string option

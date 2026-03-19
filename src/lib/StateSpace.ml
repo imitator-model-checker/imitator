@@ -420,6 +420,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	(************************************************************)
 	val mutable state_space = initial_state_space
+	val hull_policy : Hull.t = Hull.create ()
 
 
 	(************************************************************)
@@ -1458,9 +1459,13 @@ class stateSpace (guessed_nb_transitions : int) =
 				if State.state_included_in state_to_look_for representative_state [] then 
 					Some (State_already_present representative)
 				else
-				(LinearConstraint.px_hull_assign representative_state.px_constraint state_to_look_for.px_constraint;
-				let simplified = LinearConstraint.px_simplify_via_generators representative_state.px_constraint in
-				self#replace_constraint representative simplified;
+				(let new_repr = Hull.apply hull_policy
+					~options
+					~location_index
+					~representative:representative_state.px_constraint
+					~incoming:state_to_look_for.px_constraint
+				in
+				self#replace_constraint representative new_repr;
 				Some (State_replacing representative))
 				
 		

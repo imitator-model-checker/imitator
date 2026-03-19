@@ -276,6 +276,11 @@ class imitator_options =
 
 		val mutable ptg_abstraction = AbstractAlgorithm.No_Abstraction
 
+		val mutable hull_method                : AbstractAlgorithm.hull_method       = AbstractAlgorithm.Hull_octagonal_hybrid
+		val mutable hull_simplify_mode         : AbstractAlgorithm.hull_simplify_mode = AbstractAlgorithm.Hull_simplify_constraints
+		val mutable hull_simplify_period       : int = 10
+		val mutable hull_abstraction_threshold : int = 20
+
 		(* process again green states *)
 		val mutable recompute_green					= false
 
@@ -407,6 +412,11 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 		method ptg_no_strategy_printing = ptg_no_strategy_printing
 		method ptg_picking_strategy = ptg_picking_strategy
 		method ptg_abstraction = ptg_abstraction
+
+		method hull_method                = hull_method
+		method hull_simplify_mode         = hull_simplify_mode
+		method hull_simplify_period       = hull_simplify_period
+		method hull_abstraction_threshold = hull_abstraction_threshold
 
 		method states_limit							= states_limit
 		method statistics							= statistics
@@ -794,16 +804,40 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 			and set_ptg_abstraction abstraction =
 				if abstraction = "location" then
 					ptg_abstraction <- AbstractAlgorithm.Location
-				else if abstraction = "ch" then 
+				else if abstraction = "ch" then
 					ptg_abstraction <- AbstractAlgorithm.Convex_Hull
-				else if abstraction = "none" then 
-					ptg_abstraction <- AbstractAlgorithm.No_Abstraction 
+				else if abstraction = "none" then
+					ptg_abstraction <- AbstractAlgorithm.No_Abstraction
 				else(
 				print_error ("The value of `-PTG-abstraction` `" ^ abstraction ^ "` is not valid.");
 				Arg.usage speclist usage_msg;
 				abort_program ();
 				exit(1);
 				)
+
+			and set_hull_method s =
+				hull_method <- (match s with
+					| "convex"           -> AbstractAlgorithm.Hull_convex_only
+					| "box"              -> AbstractAlgorithm.Hull_box_only
+					| "octagonal"        -> AbstractAlgorithm.Hull_octagonal_only
+					| "box-hybrid"       -> AbstractAlgorithm.Hull_box_hybrid
+					| "octagonal-hybrid" -> AbstractAlgorithm.Hull_octagonal_hybrid
+					| _ ->
+						print_error ("The value of `-hull-method` `" ^ s ^ "` is not valid.");
+						Arg.usage speclist usage_msg;
+						abort_program ();
+						exit(1))
+
+			and set_hull_simplify s =
+				hull_simplify_mode <- (match s with
+					| "none"        -> AbstractAlgorithm.Hull_simplify_none
+					| "constraints" -> AbstractAlgorithm.Hull_simplify_constraints
+					| "generators"  -> AbstractAlgorithm.Hull_simplify_generators
+					| _ ->
+						print_error ("The value of `-hull-simplify` `" ^ s ^ "` is not valid.");
+						Arg.usage speclist usage_msg;
+						abort_program ();
+						exit(1))
 
 
 			and set_ptg_waiting_list_frontier_param_init init =
@@ -1154,6 +1188,18 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				Use value `location` for the coarsest abstraction that identifies any two states with the same location.
 				Use value `ch` for the using the convex hull of reachable zones.
 				Use value `none` for using no abstractions (Default)");
+
+				("-hull-method", String(set_hull_method),
+					"Hull method for PTG convex-hull abstraction: convex|box|octagonal|box-hybrid|octagonal-hybrid. Default: octagonal-hybrid");
+
+				("-hull-simplify", String(set_hull_simplify),
+					"Simplification after hull: none|constraints|generators. Default: constraints");
+
+				("-hull-simplify-period", Int (fun n -> hull_simplify_period <- n),
+					"Apply hull simplification every N convex hull operations per location (default: 10, 0 = disabled)");
+
+				("-hull-abstraction-threshold", Int (fun n -> hull_abstraction_threshold <- n),
+					"Constraint count above which box/octagonal hull is applied in hybrid modes (default: 20)");
 
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]
