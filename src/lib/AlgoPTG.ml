@@ -131,8 +131,7 @@ class stateSpacePTG model options = object(self)
 	method unexplored_successors = 0
 	val including_check = 
 	options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || 
-	options#comparison_operator = AbstractAlgorithm.Including_check || 
-	options#ptg_abstraction = AbstractAlgorithm.Convex_Hull
+	options#comparison_operator = AbstractAlgorithm.Including_check
 
 	val reexploration_counter = Statistics.create_hybrid_counter_and_register "PTG Total reexplorations: " Statistics.States_counter Verbose_experiments
 
@@ -145,7 +144,7 @@ class stateSpacePTG model options = object(self)
 	method mark_queued si = passed_states#add si
 
 	(* States invalidated by a successful including check; their successors must be recomputed
-	   from the current (shrunk) zone on next call to get_partitioned_edges *)
+	   from the current (bigger) zone on next call to get_partitioned_edges *)
 	val invalidated = new State.stateIndexSet
 
 	method private initialize_state_space () =
