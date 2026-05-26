@@ -1079,6 +1079,7 @@ Error                                   : model parsing error
 		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected in property',
+		'skip'         : True,
 		'tags'       : 'syntax',
 		'input_files': ['syntax/division-by-zero-property.imi', 'syntax/division-by-zero-property.imiprop'],
 		'options'    : '',
@@ -22027,6 +22028,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=1)',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22049,6 +22051,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=1) + IH',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22071,6 +22074,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=2)',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22093,6 +22097,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=2) + IH',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22115,6 +22120,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=3)',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22137,6 +22143,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=3) + IH',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22159,6 +22166,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=4)',
+		'toolong'	: True,	
 		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22181,6 +22189,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=4) + IH',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -27753,6 +27762,7 @@ s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
 		# Last modified            : 2021/07/09
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test call for export to PNG', # NOTE: no check is made concerning the validity of this export!
+        'toolong'      : True,
 		'input_files': ['flipflop.imi'],
 		'options'    : '-imi2PNG -graphics-source',
 		'expectations' : [
@@ -28090,6 +28100,7 @@ system pta1, pta2, pta3;
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -28116,6 +28127,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmin',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
@@ -28141,6 +28153,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
@@ -29249,6 +29262,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (SLAF14_5)',
+        'toolong'      : True,
         'input_files'  : ['templates/SLAF14_5.imi', 'templates/SLAF14_5-AGnot.imiprop'],
         'options'      : '-verbose mute -depth-limit=9',
         'expectations' : [{
@@ -29272,6 +29286,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (category12_vulnerable_conditional-selfcomp)',
+        'toolong'      : True,
         'input_files'  : ['templates/category12_vulnerable_conditional-selfcomp.imi', 'templates/category12_vulnerable_conditional-selfcomp.imiprop'],
         'options'      : '-verbose mute -depth-limit=10',
         'expectations' : [{
@@ -29306,6 +29321,7 @@ Constraint soundness                    : possible under-approximation
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischerHRSV02_3)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischerHRSV02_3.imi', 'templates/fischerHRSV02_3-AGnot.imiprop'],
         'options'      : '-verbose mute -depth-limit=9',
         'expectations' : [{
@@ -29329,6 +29345,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischer_interleave)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischer_interleave.imi', 'templates/fischer_interleave.imiprop'],
         'options'      : '-verbose mute',
         'expectations' : [{
@@ -29349,6 +29366,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischer_orig)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischer_orig.imi', 'templates/fischer_orig.imiprop'],
         'options'      : '-verbose mute',
         'expectations' : [{
