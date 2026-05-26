@@ -204,7 +204,45 @@ All pull requests require at least one approval from a maintainer before merging
 - Ensure your branch is up-to-date before merge
 - After merge, delete your feature branch
 
-## Development Setup
+## Development Setup (Docker)
+
+You can develop and test IMITATOR using Docker, which provides a consistent environment and eliminates dependency issues.
+
+#### Building the Docker Image
+
+1. From the repository root:
+   ```bash
+   docker build -t imitator:latest .
+   ```
+
+2. Verify the build:
+   ```bash
+   docker run --rm imitator:latest --help
+   ```
+
+#### Running IMITATOR in Docker
+
+**Basic usage** (run IMITATOR with input files):
+```bash
+docker run --rm -v $(pwd):/workspace imitator:latest /workspace/path/to/model.imi
+```
+
+**With options**:
+```bash
+docker run --rm -v $(pwd):/workspace imitator:latest /workspace/model.imi -mode statespace
+```
+
+**Interactive shell** (to explore the container):
+```bash
+docker run --rm -it --entrypoint bash -v $(pwd):/workspace imitator:latest
+```
+
+#### Docker Notes
+
+- Use `-v $(pwd):/workspace` to mount your current directory into the container
+- All model files and benchmarks should be accessible from the mounted volume
+- Output files will be created in the mounted directory and accessible from your host machine
+- The container runs the `imitator` binary by default, but you can override it with `bash` for interactive use
 
 ## Questions?
 
