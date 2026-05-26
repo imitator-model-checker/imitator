@@ -758,6 +758,74 @@ Error                                   : invalid model
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions syntax is still checked (with -no-var-autoremove)',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-invalid-syntax.imi'],
+		'options'    : '-mode checksyntax -no-var-autoremove',
+		'expectations' : [
+			{'file': 'unused-function-invalid-syntax.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions with valid syntax pass',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-valid-syntax.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'unused-function-valid-syntax.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions with valid syntax pass and -no-var-autoremove',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-valid-syntax.imi'],
+		'options'    : '-mode checksyntax -no-var-autoremove',
+		'expectations' : [
+			{'file': 'unused-function-valid-syntax.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
 		# Test since               : 2023/08/22
 		# Last modified            : 2023/08/22
 		# Test for IMITATOR version: 3.4-beta

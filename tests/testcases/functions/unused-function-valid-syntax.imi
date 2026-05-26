@@ -1,0 +1,66 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Check unusued function
+ * Description      : Check unusued function has no negative impact
+ * Correctness      : True
+ * Scalable         : No
+ * Generated        : No
+ * Categories       : Functions, Autoremove
+ * Source           :
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2026/05/26
+ * Last modified    : 2026/05/26
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+var
+
+function unused_f(a : int, b : int) : rational
+begin 
+  return rational_of_int(a * b);
+end 
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+actions : a;
+loc l1: invariant True
+  when True sync a goto lend;
+(*   when unused_f(0, 0) = unused_f(0, 0) sync a goto lend; *)
+
+
+accepting loc lend: invariant True
+
+ end (* pta *)
+(************************************************************)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+
+init := {
+
+    continuous =
+      True
+    ;
+
+    discrete =
+      loc[pta1] <- l1
+    ;
+
+}
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
