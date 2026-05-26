@@ -3391,24 +3391,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     (* Get user functions metadata from parsed functions *)
     (* Get only used user functions definition *)
     let used_function_names = ParsingStructureGraph.used_functions_of_model dependency_graph in
-    let used_function_definitions =
-        (*
-        if options#no_variable_autoremove then
-            parsed_model.fun_definitions
-        else
-        *)
-            List.filter (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
+	(* We keep unused_functions_definitions_before_removed_assignments mostly for syntactic checks, even though unused *)
+    let used_function_definitions_before_removed_assignments, unused_functions_definitions_before_removed_assignments =
+        List.partition (fun (fun_def : parsed_fun_definition) -> StringSet.mem fun_def.name used_function_names) parsed_model.fun_definitions
     in
 
-(*    let used_function_definitions = parsed_model.fun_definitions in*)
-
-    let used_function_definitions =
+    let used_functions_definitions, unused_functions_definitions =
         if options#no_variable_autoremove then
             (* No variable auto remove, keep all instructions in function *)
-            used_function_definitions
+            used_function_definitions_before_removed_assignments, unused_functions_definitions_before_removed_assignments
         else
-            (* If variable auto remove, remove unused clock assignments *)
-            List.map (ParsingStructureGraph.remove_unused_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions
+            (* If variable auto remove, remove unused assignments *)
+            List.map (ParsingStructureGraph.remove_unused_assignments_in_fun_def declarations_info dependency_graph) used_function_definitions_before_removed_assignments
+			,
+            List.map (ParsingStructureGraph.remove_unused_assignments_in_fun_def declarations_info dependency_graph) unused_functions_definitions_before_removed_assignments
     in
 
 
@@ -3435,35 +3431,102 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         raise InvalidModel
     );
 
+	(* Create functions tables and make some checks *)
+	(*** NOTE: we make it a function to also apply it to *unused* functions, and benefit from the checks ***)
+	(*** WARNING: there are some hidden checks there! ***)
+	let create_functions_tables_and_make_some_checks functions_definitions =
+		(* Create table of user function definitions *)
+		print_message Verbose_total ("***** Function definitions checks: creating definition table…");
+		let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) functions_definitions |> OCamlUtilities.hashtbl_of_tuples in
 
-    (* Create table of user function definitions *)
-    let user_function_definitions_table = List.map (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def) used_function_definitions |> OCamlUtilities.hashtbl_of_tuples in
+		(* Get metadata of these functions *)
+		print_message Verbose_total ("***** Function definitions checks: getting metadata…");
+		let user_functions_metadata = List.map (Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table) functions_definitions in
+		(* Concat builtin & user functions *)
+		let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions_metadata in
+		(* Create function table that associate function name to function metadata *)
+		let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> OCamlUtilities.hashtbl_of_tuples in
 
-    (* Get metadata of these functions *)
-    let user_functions_metadata = List.map (Functions.metadata_of_parsed_function_definition Functions.builtin_functions_metadata_table user_function_definitions_table) used_function_definitions in
-    (* Concat builtin & user functions *)
-    let all_functions_metadata = user_functions_metadata @ Functions.builtin_functions_metadata in
-    (* Create function table that associate function name to function metadata *)
-    let functions_metadata_table = (List.map (fun (fun_def : ParsingStructure.function_metadata) -> fun_def.name, fun_def) all_functions_metadata) |> OCamlUtilities.hashtbl_of_tuples in
+		(* Print some info on side effects resolution *)
+		print_message Verbose_total ("***** Function definitions checks: side effects resolution…");
+		let str_fun_side_effects = lazy (
+			let str_fun_side_effects_info_list = List.map (fun (fm : function_metadata) ->
+				"  `" ^ fm.name ^ "`: " ^ string_of_bool fm.side_effect
+			) all_functions_metadata
+			in
+			"\n*** Functions side effects:\n\n"
+			^ OCamlUtilities.string_of_list_of_string_with_sep "\n" str_fun_side_effects_info_list
+		) in
 
-    (* Print some info on side effects resolution *)
-    let str_fun_side_effects = lazy (
-        let str_fun_side_effects_info_list = List.map (fun (fm : function_metadata) ->
-            "  `" ^ fm.name ^ "`: " ^ string_of_bool fm.side_effect
-        ) all_functions_metadata
-        in
-        "\n*** Functions side effects:\n\n"
-        ^ OCamlUtilities.string_of_list_of_string_with_sep "\n" str_fun_side_effects_info_list
-    ) in
+		print_message_lazy Verbose_high str_fun_side_effects;
 
-    print_message_lazy Verbose_high str_fun_side_effects;
+		(* Function metas to json *)
+		print_message Verbose_total ("***** Function definitions checks: preparing json for results…");
+		let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
+		(* Create json array *)
+		let json_array_function_metas = Json_array json_function_metas in
+		(* Add new property to details *)
+		Logger.add_custom_detail_property "function_metas" json_array_function_metas;
+		(* Return functions metadata table *)
+		functions_metadata_table, user_function_definitions_table
+	in
 
-    (* Function metas to json *)
-    let json_function_metas = List.map ParsingStructureUtilities.json_of_function_metadata all_functions_metadata in
-    (* Create json array *)
-    let json_array_function_metas = Json_array json_function_metas in
-    (* Add new property to details *)
-    Logger.add_custom_detail_property "function_metas" json_array_function_metas;
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check unused functions first *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	if List.length unused_functions_definitions > 0 then(
+
+		print_message Verbose_total ("*** Checking unused user functions definitions…");
+
+		(* We benefit from the hidden checks first *)
+		let _ = create_functions_tables_and_make_some_checks unused_functions_definitions in
+
+		(* Then we build a "fake" variable info, only used to test the unused functions *)
+		(*** WARNING: this function will be called a second time later "for real" with only the used functions ***)
+		let functions_metadata_table_for_unused_functions, _ = create_functions_tables_and_make_some_checks (used_functions_definitions @ unused_functions_definitions) in
+
+
+    	let variable_infos_for_unused_functions = {
+			constants					= constants;
+			discrete					= discrete;
+			index_of_variables			= index_of_variables;
+			type_of_variables			= type_of_variables;
+			variables					= variables;
+			variable_names				= variable_names;
+			removed_variable_names		= removed_variable_names;
+			variable_refs             = variable_refs;
+			fun_meta                   = functions_metadata_table_for_unused_functions;
+		}
+		in
+
+		(* Print errors for ill-formed unused functions *)
+		let ill_formed_unused_functions =
+		List.fold_left (fun acc (parsed_fun_def : parsed_fun_definition) ->
+			print_message Verbose_total ("Checking unused function definition `" ^ parsed_fun_def.name ^ "`…");
+			if not (DiscreteExpressionConverter.check_fun_definition variable_infos_for_unused_functions parsed_fun_def) then(
+				print_error ("Function `" ^ parsed_fun_def.name ^ "` is declared but never used in the model, and is ill-formed. Use option `-no-var-autoremove` to keep it and see the errors.");
+				(* Mark as ill formed *)
+				true
+			)
+			(* If no error, the function is well formed, we can remove it *)
+			else acc
+			 ) false unused_functions_definitions
+		in
+
+		if ill_formed_unused_functions then(
+			print_error ("Some unused user functions definitions are ill-formed.");
+			raise InvalidModel;
+		)
+		else(
+			print_message Verbose_low ("All " ^ (string_of_int (List.length unused_functions_definitions)) ^ " unused user functions definitions are well-formed, and can be safely removed from the model. You can use option `-no-var-autoremove` to keep them.");
+		)
+	);
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Now convert used functions *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let functions_metadata_table, user_function_definitions_table = create_functions_tables_and_make_some_checks used_functions_definitions in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
@@ -3504,12 +3567,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	print_message Verbose_high ("*** Checking user functions definitions…");
 
+	(* print_message Verbose_total ("*** Checking and converting used user functions definitions…"); *)
     (* Try to convert (only used) function definition from parsing structure to abstract model into sequence of tuple (name * fun_def) *)
     let user_functions_list = List.map (fun (parsed_fun_def : parsed_fun_definition) ->
         (* Convert fun def from parsing structure to abstract model *)
         let fun_def = DiscreteExpressionConverter.convert_fun_definition variable_infos parsed_fun_def in
         fun_def.name, fun_def
-    ) used_function_definitions
+    ) used_functions_definitions
     in
     (* Get builtin functions implementations as associative list *)
     let builtin_functions_list = List.map (fun (fun_def : fun_definition) -> fun_def.name, fun_def) Functions.builtin_function_bodies in

@@ -338,7 +338,7 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
     is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined
 
 (* Check if user function definition is well formed *)
-let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+let check_fun_definition variable_infos (fun_def : parsed_fun_definition) : bool =
 
     (* Get code bloc and return expression of the function *)
     let code_bloc, return_expr_opt = fun_def.body in
