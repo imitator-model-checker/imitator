@@ -16,6 +16,9 @@
 *.pyc
 *.txt
 
+# Temporary files
+*.*~
+
 # MAC users
 .DS_Store
 =
@@ -100,7 +103,7 @@ doc/classDiagramSimplified.png
 
 # IDE
 .vscode
-.code-workspace
+*.code-workspace
 *kate-swp
 
 # Dune
