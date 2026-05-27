@@ -19,6 +19,7 @@ open CustomModules
 open ImitatorUtilities
 open OCamlUtilities
 
+open Exceptions
 
 
 type automaton_name = string
@@ -849,11 +850,17 @@ let unused_functions_of_model dependency_graph =
 
 
 (* Remove all unused clock assignments in sequential code bloc *)
-let remove_unused_assignments_in_parsed_seq_code_bloc _(*declarations_info*) dependency_graph (* parsed_seq_code_bloc *) =
+let remove_unused_assignments_in_parsed_seq_code_bloc (_ : declarations_info) (dependency_graph : dependency_graph) =
 
     (* Get global variables used in model *)
     let used_global_variables = used_global_variables_of_model dependency_graph in
     let used_global_variables_list = string_set_to_list used_global_variables in
+
+    (*** NOTE: a bit a HACK, and also computed at every call! ***)
+    let unused_global_variables = unused_global_variables_of_model dependency_graph in
+    let unused_global_variables_list = string_set_to_list unused_global_variables in
+
+
 
     let rec remove_unused_assignments_in_parsed_seq_code_bloc_rec parsed_seq_code_bloc =
         List.filter_map remove_unused_assignment_instruction parsed_seq_code_bloc
@@ -865,6 +872,12 @@ let remove_unused_assignments_in_parsed_seq_code_bloc _(*declarations_info*) dep
             let is_not_used = not (List.mem variable_name used_global_variables_list) && VariableInfo.is_global variable_ref in
 
             if is_not_used then (
+                (* Error if the variable is not only not used, but also not defined at all *)
+                (*** TODO: this should have been tested before! ***)
+                if not (List.mem variable_name unused_global_variables_list) then(
+                    print_error ("Variable `" ^ variable_name ^ "` is assigned in an update but never defined in the model.");
+                raise InvalidModel
+                );
                 None
             )
             else
@@ -903,7 +916,7 @@ let remove_unused_assignments_in_updates declarations_info dependency_graph (* p
     remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph (* parsed_seq_code_bloc *)
 
 (* Remove all unused assignments in function definition *)
-let remove_unused_assignments_in_fun_def declarations_info dependency_graph (fun_def : parsed_fun_definition) =
+let remove_unused_assignments_in_fun_def (declarations_info : declarations_info) (dependency_graph : dependency_graph) (fun_def : parsed_fun_definition) =
     (* Get code bloc and return expr *)
     let code_bloc, return_expr_opt = fun_def.body in
     { fun_def with body = remove_unused_assignments_in_parsed_seq_code_bloc declarations_info dependency_graph code_bloc, return_expr_opt }

@@ -18,6 +18,10 @@ open DiscreteType
 open VariableInfo
 open Exceptions
 
+open ImitatorUtilities
+open Exceptions
+
+
 
 (** Utils **)
 
@@ -78,6 +82,8 @@ let is_linear_constant variable_infos = function
 let is_variable_defined_with_callback variable_infos variable_not_defined_callback_opt = function
     | Leaf_variable ((variable_name, _) as variable_ref) ->
 
+        (* print_message Verbose_total ("Checking variable " ^ variable_name ^ " on update…"); *)
+
         let is_defined = is_variable_or_constant_declared variable_infos variable_ref in
 
         if not is_defined then (
@@ -92,6 +98,8 @@ let is_variable_defined_with_callback variable_infos variable_not_defined_callba
 
 let is_variable_defined_on_update_with_callback variable_infos variable_not_defined_callback_opt = function
         | Leaf_update_variable ((variable_name, _) as variable_ref, _, _) ->
+
+        (* print_message Verbose_total ("Checking variable " ^ variable_name ^ " on update…"); *)
 
         let is_defined = is_variable_or_constant_declared variable_infos variable_ref in
 
@@ -329,14 +337,16 @@ let all_variables_defined_in_parsed_discrete_arithmetic_expression variable_info
     for_all_in_parsed_discrete_arithmetic_expression (is_variable_defined_with_callback variable_infos callback) expr
 
 (* Check that all variables in a parsed normal update are effectively be defined *)
-let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback expr =
+(* let all_variables_defined_in_parsed_normal_update variable_infos undefined_variable_callback expr =
+    print_message Verbose_total ("Checking all variables in updates…");
     for_all_in_parsed_normal_update
         (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)
-        expr
+        expr *)
 
 (* Check that all variables in a parsed sequential code bloc are effectively be defined *)
 let all_variables_defined_in_parsed_seq_code_bloc variable_infos undefined_variable_callback seq_code_bloc =
+    print_message Verbose_total ("Checking all variables in a sequential code block of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
     ParsingStructureUtilities.for_all_in_parsed_seq_code_bloc
         (is_variable_defined_on_update_with_callback variable_infos undefined_variable_callback)
         (is_variable_defined_with_callback variable_infos undefined_variable_callback)

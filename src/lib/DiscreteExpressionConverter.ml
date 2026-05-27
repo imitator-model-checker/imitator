@@ -284,6 +284,8 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
+    print_message Verbose_total ("Checking sequential code block " ^ code_bloc_name ^ " of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
+
     (* If code bloc is named, we put name of location in messages *)
     let str_location =  "in " ^ code_bloc_name ^ "" in
 
@@ -756,7 +758,7 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
 
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
 let convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
-    print_message Verbose_total ("Checking sequential code block…");
+    print_message Verbose_total ("Checking sequential code block of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
 
     (* Some checks *)
     let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
