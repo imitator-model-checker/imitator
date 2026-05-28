@@ -47,9 +47,6 @@ type addition_result =
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
 
-	(* The new state replaced a several former states (because the newer is larger), returns the first old state index and a list of removed states *)
-	| State_replacing_several of (state_index * state_index list)
-
 (************************************************************)
 (* Transitions *)
 (************************************************************)
@@ -423,6 +420,7 @@ class stateSpace (guessed_nb_transitions : int) =
 	(************************************************************)
 	(************************************************************)
 	val mutable state_space = initial_state_space
+	val hull_policy : Hull.t = Hull.create ()
 
 
 	(************************************************************)
@@ -1351,8 +1349,8 @@ class stateSpace (guessed_nb_transitions : int) =
 
 
 	(* Return a new location_index for a given location, unless it is already stored in the location indexes hashtable *)
-	method private new_location_index (location : DiscreteState.global_location) : location_index =
-		let new_index = try (
+	method private new_location_index (location : DiscreteState.global_location) : location_index * bool =
+		let new_index, is_new = try (
 (*			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total ("Trying to find global location index in `index_of_locations`");
 				print_message Verbose_total ("Current state space:");
@@ -1365,7 +1363,7 @@ class stateSpace (guessed_nb_transitions : int) =
 (* 			print_message Verbose_total ("Global location index " ^ (string_of_int location_index) ^ " found in `index_of_locations`"); *)
 
 			(* Return *)
-			location_index
+			location_index, false
 		) with Not_found -> (
 (* 			print_message Verbose_total ("Global location index not found in `index_of_locations`"); *)
 			(* If not found: add it *)
@@ -1378,10 +1376,10 @@ class stateSpace (guessed_nb_transitions : int) =
 			(* Check length (COULD BE REMOVED) *)
 			(* if DynArray.length state_space.locations <> Hashtbl.length state_space.index_of_locations then(
 				raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
-				new_index;
+				new_index, true;
 		) in
 		(* Return new index *)
-		new_index
+		new_index, is_new
 
 	(** Perform the insertion of a new state in a state space *)
 	method private insert_state location_index (new_state : state) =
@@ -1434,7 +1432,44 @@ class stateSpace (guessed_nb_transitions : int) =
 	method private find_state_index (state_comparison : AbstractAlgorithm.state_comparison_operator) (global_time_clock_option : Automaton.clock_index option) (state_to_look_for : State.state) : addition_result option =
 		let result : addition_result option =
 
-		let location_index = self#new_location_index state_to_look_for.global_location in
+		let location_index, is_new = self#new_location_index state_to_look_for.global_location in
+
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+		
+		
+		match options#ptg_abstraction with 
+		| Location | Convex_Hull -> 
+			(* There is only one symbolic state per location in these abstraction levels *)
+			let get_representative_state_index location_index = 
+				(* Exactly one binding per existing location *)
+				Hashtbl.find state_space.states_for_comparison location_index
+			in 
+				
+			if is_new then 
+				None
+			else if options#ptg_abstraction = Location then
+				let representative = get_representative_state_index location_index in 
+				Some (State_already_present representative)
+			else 
+				(* Convex Hull case *) 
+				let representative = get_representative_state_index location_index in 
+				let representative_state = self#get_state representative in 
+				
+				if State.state_included_in state_to_look_for representative_state [] then 
+					Some (State_already_present representative)
+				else
+				(let new_repr = Hull.apply hull_policy
+					~options
+					~location_index
+					~representative:representative_state.px_constraint
+					~incoming:state_to_look_for.px_constraint
+				in
+				self#replace_constraint representative new_repr;
+				Some (State_replacing representative))
+				
+		
+		| No_Abstraction ->
 
 		(* Shortcut: If no check requested: does not test anything *)
 		if state_comparison = No_check then (
@@ -1463,8 +1498,7 @@ class stateSpace (guessed_nb_transitions : int) =
 			);
 
 			(* Prepare the removal of `global_time_clock` in comparisons, if needed *)
-			(* Retrieve the input options *)
-			let options = Input.get_options () in
+
 			let clocks_to_remove_in_comparisons = if options#no_global_time_in_comparison then(
 				match global_time_clock_option with
 				(* Nothing to do *)
@@ -1488,10 +1522,6 @@ class stateSpace (guessed_nb_transitions : int) =
 					px_constraint = LinearConstraint.px_ih px_constraint;
 				}
 			)else state_to_look_for in
-
-			(* For strong including check *)
-			let eaten_state_indices = ref [] in 
-			let representative_state_index_option = ref None in 
 
 			(* Iterate on each state *)
 			List.iter (fun (state_index : State.state_index) ->
@@ -1584,58 +1614,9 @@ class stateSpace (guessed_nb_transitions : int) =
 							(* Stop looking for states *)
 							raise (Found_new state_index)
 						))
-					| Strong_Double_Inclusion_check -> 
-						(* First check: new <= old *)
-						(* Invariant (to be confirmed): IF Strong double inclusion check is selected and new <= old, 
-							then there exists no state old' in the state space such that old' <= new. 
-							Proof sketch: If that was the case then old' <= old, so old would already have eaten old' by previous inclusion OR strong including check
-							depending on the order of addition *)
-						statespace_dcounter_nb_state_comparisons#increment;
-						if State.state_included_in state_to_look_for state clocks_to_remove_in_comparisons then(
-							(* Statistics *)
-							statespace_dcounter_nb_states_included#increment;
-							(* Because of the above invariant we can safely stop now *)
-							raise (Found_old state_index)
-						)
-						(* Second check: old <= new *)
-						else(
-						statespace_dcounter_nb_state_comparisons#increment;
-						if State.state_included_in state state_to_look_for clocks_to_remove_in_comparisons then (
-							(* Print some information *)
-							print_message Verbose_medium ("Found an old state < the new state");
-
-							match !representative_state_index_option with 
-							| Some _ -> 
-							  eaten_state_indices := state_index :: !eaten_state_indices
-							| None -> 
-							  (* Replace old with new *)
-							  self#replace_constraint state_index state_to_look_for.px_constraint;
-							  (* The representative for future merges has been found *)
-							  representative_state_index_option := Some state_index;
-
-							(* Statistics *)
-							statespace_dcounter_nb_states_including#increment;	
-						))
-
 			) old_states;
-			(* If states have been eaten then a Strong including check has taken place *)
-			match !representative_state_index_option with 
-			| Some representative_state_index -> 
-				if !eaten_state_indices = [] then 
-					(* If no states were eaten, then we can simply signal a normal including check has happened *)
-					Some (State_replacing representative_state_index)
-				else
-					(* Merge all included states into the representative index *)
-					(self#merge_states_and_transitions representative_state_index !eaten_state_indices;
-
-					(* Print information *)
-					print_message Verbose_medium (Printf.sprintf "Strong including check merging %s into %s" 
-					(string_of_list_of_string (List.map string_of_state_index !eaten_state_indices))
-					(string_of_state_index representative_state_index));
-
-					Some (State_replacing_several (representative_state_index, !eaten_state_indices)))
-			| None -> None
-
+			(* Not found! *)
+			None
 		)	with
 			| Found_old state_index -> Some (State_already_present state_index)
 			| Found_new state_index -> Some (State_replacing state_index)
@@ -1655,9 +1636,6 @@ class stateSpace (guessed_nb_transitions : int) =
 		| Some (State_replacing _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `State_replacing` denotes that the state space may have been defined in a function presumably without side-effects")
 		(* Impossible situation: this does not happen *)
 		| Some (New_state _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `New_state` cannot happen as find_state_index does not create new states")
-		(* Impossible situation: this does not happen *)
-		| Some (State_replacing_several _) -> raise (InternalError "Impossible situation in StateSpace#state_exists: `State_replacing_several` denotes that the state space may have been defined in a function presumably without side-effects")
-
 
 
 
@@ -1674,7 +1652,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		match self#find_state_index state_comparison global_time_clock_option new_state with
 		(* Not found: insert state *)
 		| None ->
-			let location_index = self#new_location_index new_state.global_location in
+			let location_index, _ = self#new_location_index new_state.global_location in
 			let new_state_index = self#insert_state location_index new_state in
 
 			(* Print some information *)
@@ -1802,7 +1780,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_message Verbose_high "Merging: update hash table";
 		let the_state = self#get_state merger_state_index in
 		let l = the_state.global_location in
-		let li = self#new_location_index l in
+		let li, _ = self#new_location_index l in
 		(* Get all states with that hash *)
 
 		let bucket = Hashtbl.find_all state_space.states_for_comparison li in
@@ -1841,7 +1819,7 @@ class stateSpace (guessed_nb_transitions : int) =
 
 		let s = self#get_state si in
 		let l = s.global_location in
-		let location_index = self#new_location_index l in
+		let location_index, _ = self#new_location_index l in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 
@@ -1862,7 +1840,7 @@ class stateSpace (guessed_nb_transitions : int) =
 		print_message Verbose_medium("Get siblings of state " ^ string_of_int si);
 		let s = self#get_state si in
 		let location = s.global_location in
-		let location_index = self#new_location_index location in
+		let location_index, _ = self#new_location_index location in
 
 		let sibs = Hashtbl.find_all state_space.states_for_comparison location_index in
 

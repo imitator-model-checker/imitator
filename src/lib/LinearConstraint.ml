@@ -119,6 +119,8 @@ let cHECK_ASSERT_DIMENSIONS = true
 	
 	let ppl_tcounter_hull_assign_if_exact = create_hybrid_counter_and_register "hull_assign_if_exact" PPL_counter Verbose_low
 
+	let ppl_tcounter_hull_assign = create_hybrid_counter_and_register "hull_assign" PPL_counter Verbose_low
+
 	let ppl_tcounter_intersection_assign = create_hybrid_counter_and_register "intersection_assign" PPL_counter Verbose_low
 
 	let ppl_tcounter_unconstrain = create_hybrid_counter_and_register "unconstrain" PPL_counter Verbose_low
@@ -130,6 +132,16 @@ let cHECK_ASSERT_DIMENSIONS = true
 	let ppl_time_elapse_assign = create_hybrid_counter_and_register "time_elapse_assign" PPL_counter Verbose_low
 
 	let ppl_tcounter_copy = create_hybrid_counter_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
+
+	let ppl_tcounter_new_from_generators = create_hybrid_counter_and_register "NNC_Polyhedron_from_generators" PPL_counter Verbose_low
+
+	let ppl_tcounter_octagonal_from_nnc    = create_hybrid_counter_and_register "Octagonal_Shape_mpq_class_from_NNC_Polyhedron" PPL_counter Verbose_low
+	let ppl_tcounter_octagonal_upper_bound = create_hybrid_counter_and_register "Octagonal_Shape_mpq_class_upper_bound_assign" PPL_counter Verbose_low
+	let ppl_tcounter_nnc_from_octagonal    = create_hybrid_counter_and_register "NNC_Polyhedron_from_Octagonal_Shape_mpq_class" PPL_counter Verbose_low
+
+	let ppl_tcounter_rational_box_from_nnc    = create_hybrid_counter_and_register "Rational_Box_from_NNC_Polyhedron" PPL_counter Verbose_low
+	let ppl_tcounter_rational_box_upper_bound = create_hybrid_counter_and_register "Rational_Box_upper_bound_assign" PPL_counter Verbose_low
+	let ppl_tcounter_nnc_from_rational_box    = create_hybrid_counter_and_register "NNC_Polyhedron_from_Rational_Box" PPL_counter Verbose_low
 
 	let ppl_nncc_tcounter_space_dimension = create_hybrid_counter_and_register "nncc_tcounter_space_dimension" PPL_counter Verbose_low
 
@@ -388,6 +400,9 @@ let ippl_get_generators poly =
 let ippl_get_minimized_generators poly =
 	ippl_generic (fun () -> ppl_Polyhedron_get_minimized_generators poly) ppl_tcounter_get_minimized_generators
 
+let ippl_new_from_generators (generator_system : ppl_linear_generator list) : linear_constraint =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_generators generator_system) ppl_tcounter_new_from_generators
+
 let ippl_intersection_assign x =
 	ippl_generic (fun () -> ppl_Polyhedron_intersection_assign x) ppl_tcounter_intersection_assign
 
@@ -444,11 +459,27 @@ let ippl_bounds_from_above =
 let ippl_copy_linear_constraint linear_constraint =
 	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_NNC_Polyhedron linear_constraint) ppl_tcounter_copy
 
-(*
+let ippl_octagonal_from_nnc poly =
+	ippl_generic (fun () -> ppl_new_Octagonal_Shape_mpq_class_from_NNC_Polyhedron poly) ppl_tcounter_octagonal_from_nnc
+
+let ippl_octagonal_upper_bound_assign a b =
+	ippl_generic (fun () -> ppl_Octagonal_Shape_mpq_class_upper_bound_assign a b) ppl_tcounter_octagonal_upper_bound
+
+let ippl_nnc_from_octagonal oct =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_Octagonal_Shape_mpq_class oct) ppl_tcounter_nnc_from_octagonal
+
+let ippl_rational_box_from_nnc poly =
+	ippl_generic (fun () -> ppl_new_Rational_Box_from_NNC_Polyhedron poly) ppl_tcounter_rational_box_from_nnc
+
+let ippl_rational_box_upper_bound_assign a b =
+	ippl_generic (fun () -> ppl_Rational_Box_upper_bound_assign a b) ppl_tcounter_rational_box_upper_bound
+
+let ippl_nnc_from_rational_box box =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_Rational_Box box) ppl_tcounter_nnc_from_rational_box
+
 (** Perform the hull (version with side effect) *)
 let ippl_hull_assign linear_constraint1 linear_constraint2 =
 	ippl_generic (fun () -> ppl_Polyhedron_poly_hull_assign linear_constraint1 linear_constraint2) ppl_tcounter_hull_assign
-*)
 
 (** Perform the hull if the result is exact (version with side effect) *)
 let ippl_hull_assign_if_exact linear_constraint1 linear_constraint2 =
@@ -2036,6 +2067,10 @@ let p_nb_inequalities (p_linear_constraint : p_linear_constraint) : int =
 	let list_of_inequalities : p_linear_inequality list = p_get_minimized_inequalities p_linear_constraint in
 	List.length list_of_inequalities
 
+(** Get the number of inequalities (minimized H-representation) of a px_linear_constraint *)
+let px_nb_constraints (c : px_linear_constraint) : int =
+	List.length (px_get_minimized_inequalities c)
+
 
 (** Return true if the variable is constrained in a linear_constraint *)
 let is_constrained     = ippl_is_constrained
@@ -2370,6 +2405,7 @@ let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersec
 	
 let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 
+let px_convex_hull_assign = ippl_hull_assign
 
 (*------------------------------------------------------------*)
 (* Convex negation *)
@@ -2846,6 +2882,30 @@ let compute_bounds linear_constraint dimension : (((coef * bool) option) * ((coe
 
 
 let p_compute_bounds = compute_bounds
+
+(** Over-approximate the union of a list of px_linear_constraints with the smallest axis-aligned box. *)
+let px_box_hull (constraints : px_linear_constraint list) : px_linear_constraint =
+	match constraints with
+	| [] -> px_false_constraint ()
+	| first :: rest ->
+		let box = ippl_rational_box_from_nnc first in
+		List.iter (fun c ->
+			let box2 = ippl_rational_box_from_nnc c in
+			ippl_rational_box_upper_bound_assign box box2
+		) rest;
+		ippl_nnc_from_rational_box box
+
+
+let px_octagonal_hull (constraints : px_linear_constraint list) : px_linear_constraint =
+	match constraints with
+	| [] -> px_false_constraint ()
+	| first :: rest ->
+		let oct = ippl_octagonal_from_nnc first in
+		List.iter (fun c ->
+			let oct2 = ippl_octagonal_from_nnc c in
+			ippl_octagonal_upper_bound_assign oct oct2
+		) rest;
+		ippl_nnc_from_octagonal oct
 
 
 (*------------------------------------------------------------*)
@@ -4519,6 +4579,33 @@ let ih (px_linear_constraint : px_linear_constraint) =
 (* let p_ih  = ih *)
 let px_ih = ih
 
+(** Simplify a px_linear_constraint by rebuilding it from its minimized constraint representation *)
+let px_simplify_via_constraints (c : px_linear_constraint) : px_linear_constraint =
+	let constraints = ippl_get_minimized_inequalities c in
+	make_px_constraint constraints
+
+(** Simplify a px_linear_constraint by rebuilding it from its minimized generator representation *)
+let px_simplify_via_generators (c : px_linear_constraint) : px_linear_constraint =
+	let dim = ippl_space_dimension c in
+	let generators = ippl_get_minimized_generators c in
+	let res = ippl_new_from_generators generators in
+	let res_dim = ippl_space_dimension res in
+	(* Restore the original space dimension: ppl_new_NNC_Polyhedron_from_generators
+	   infers the dimension from the generators, which may be smaller than the
+	   original if some variables were unconstrained. A dimension absent from all
+	   generators is one that equals 0 for every point in the polyhedron (its
+	   coefficient is 0 in every generator expression), so we embed it back and
+	   immediately re-add the equality v_k = 0. *)
+	if res_dim < dim then (
+		ippl_add_dimensions (dim - res_dim) res;
+		(* Re-add v_k = 0 for each restored dimension *)
+		let equalities = List.map (fun k ->
+			make_px_linear_inequality (make_linear_term [(NumConst.one, k)] NumConst.zero) Op_eq
+		) (list_of_interval res_dim (dim - 1)) in
+		ippl_add_constraints res equalities
+	);
+	res
+
 
 (************************************************************)
 (* {2 Non-necessarily convex linear Constraints} *)
@@ -4548,6 +4635,10 @@ let px_nnconvex_copy = nnconvex_copy
 
 (** Get the list of p_linear_constraint the disjunction of which makes a p_nnconvex_constraint *)
 let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
+
+	(* Helper to keep x alive *)
+	let keep_alive (x : 'a) = ignore (Sys.opaque_identity x) in 
+
 	(* Increment discrete counter *)
 	ppl_nncc_get_disjuncts#increment;
 
@@ -4567,10 +4658,14 @@ let get_disjuncts (p_nnconvex_constraint : p_nnconvex_constraint) =
 	while not (ippl_nncc_equals_iterator iterator end_iterator) do
 		(* Get the current disjunct *)
 		let disjunct = ippl_nncc_get_disjunct iterator in
+		(* We use a copy in accordance with PPL guidelines - otherwise segfaults occur *)
+		let disjunct_copy = copy disjunct in 
+
+		(* VERY IMPORTANT LINE: Makes sure input constraint is alive (not finalized) any time we copy *)
+		keep_alive p_nnconvex_constraint;
 
 		(* Add it to the list of disjuncts *)
-		(*** NOTE: seems necessary to copy the disjunct first! (otherwise we get some strange segmentation fault) ***)
-		disjuncts := disjunct :: !disjuncts;
+		disjuncts := disjunct_copy :: !disjuncts;
 
 		(* Increment the iterator *)
 		ippl_nncc_increment_iterator iterator;
@@ -5169,7 +5264,12 @@ let generic_close_clocks_px_linear_constraint bound_type (k : px_linear_constrai
 					| Lower -> Less_Or_Equal (x,y))
 				| _ -> inequality
 			end 
-		|_ -> inequality
+		| Equal(x, y) -> 
+				let x_sign = get_clock_sign_from_term x in 
+				let y_sign = get_clock_sign_from_term y in 
+				match x_sign, y_sign with 
+				| Some _, None | None, Some _ -> Less_Than (x, x) (* false*)
+				| _ -> inequality
 	in
 	(* Get the list of inequalities *)
 	let inequality_list = px_get_minimized_inequalities k in
@@ -5235,6 +5335,15 @@ let generic_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_l
 	px_nnconvex_constraint_of_px_linear_constraints bounds_in, (* IN - bounds inside of input *)
 	px_nnconvex_constraint_of_px_linear_constraints bounds_out (* OUT - bounds outside of input *)
 
+let generic_epsilon_temporal_bound_px_linear_constraint bound_type bound_shape (k : px_linear_constraint) = 
+	let inequality_list = px_get_minimized_inequalities k in 
+	inequality_list 
+	|> List.filter_map @@ extract_parametric_bound bound_type bound_shape
+	|> List.map fst
+	|> List.map (fun equality -> make_px_constraint (equality::inequality_list))
+	|> px_nnconvex_constraint_of_px_linear_constraints
+	
+
 (* Computes the 'face' of a px_linear constraint - either the upper or lower *)
 let precise_temporal_upper_bound_px_linear_constraint = 
 	generic_temporal_bound_px_linear_constraint Upper (fun _ x y -> Equal(x,y))
@@ -5249,7 +5358,7 @@ let epsilon_temporal_upper_bound_px_linear_constraint (epsilon_parameter : varia
 	 | P -> Greater_Or_Equal (clock_term, Minus(plt_term, epsilon))
 	 | M -> Less_Or_Equal (clock_term, Plus(plt_term, epsilon))
 	in 
-	generic_temporal_bound_px_linear_constraint Upper bound_shape
+	generic_epsilon_temporal_bound_px_linear_constraint Upper bound_shape
 
 let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : variable) =
 	let epsilon = Variable(epsilon_parameter) in 
@@ -5257,7 +5366,7 @@ let epsilon_temporal_lower_bound_px_linear_constraint (epsilon_parameter : varia
 	| P -> Less_Or_Equal (clocK_term, Plus(plt_term, epsilon))
 	| M -> Greater_Or_Equal (clocK_term, Minus(plt_term, epsilon))
  in
-	generic_temporal_bound_px_linear_constraint Lower bound_shape
+	generic_epsilon_temporal_bound_px_linear_constraint Lower bound_shape
 
 (* Returns true if the linear constraint has an upper bound on a clock (parametric or constant), false otherwise *)
 let is_px_linear_upper_bounded (k : px_linear_constraint) = 

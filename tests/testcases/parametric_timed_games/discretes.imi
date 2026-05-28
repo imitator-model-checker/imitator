@@ -1,0 +1,39 @@
+(* Mikael, Aarhus, Nov 18, 2024 
+	Simple PTG with discretes
+    Expected constraint: p > 0
+*)
+
+controllable actions: c_1;
+
+var
+ 	x : clock;
+	p : parameter;
+    d,e : discrete;
+	TEST = 5 : rational;
+
+automaton ptg
+
+actions: u_1, c_1;
+
+loc l1: invariant x <= p
+	when x = TEST do {d:=1; e:=6} sync c_1 goto l3;
+    when x >= p sync u_1 goto l2;
+
+loc l2: invariant True
+
+loc l3: invariant True 
+    when d <= x && x <= e sync c_1 goto Goal;
+
+accepting loc Goal: invariant True
+
+end (* ptg *)
+
+init :=
+	& loc[ptg] = l1
+	& x = 0
+	& p >= 0
+    & d = 1
+    & e = 0
+;
+
+end

@@ -193,26 +193,6 @@ class transitionManager = object
 end
 
 
-let location_name_of_global_location (model : abstract_model) (global_location : DiscreteState.global_location) =
-  let string_of_location_list (model : abstract_model) location_list = 
-    let location_names = List.mapi model.location_names location_list in 
-    let location_list_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") location_names) in
-    String.sub location_list_string 0 (String.length location_list_string-1)
-  in
-
-  let string_of_discrete_mapping_list (model : abstract_model) discrete_mapping_list = 
-    if List.length discrete_mapping_list = 0 then 
-      ""
-    else
-      let discrete_valuation_strings = List.map (fun (index, value) -> Printf.sprintf "%s_is_%s" (model.variable_names index) (string_of_value value)) discrete_mapping_list in  
-      let discrete_valuations_string = (List.fold_left (fun acc str -> Printf.sprintf "%s%s_" acc str) ("") discrete_valuation_strings) in 
-      String.sub discrete_valuations_string 0 (String.length discrete_valuations_string-1)
-  in
-  let location_list, discrete_mapping_list = locations_and_discrete_of_global_location model global_location in  
-  Printf.sprintf "%s__%s" (string_of_location_list model location_list) (string_of_discrete_mapping_list model discrete_mapping_list)
-
-
-
 let controller_synthesis (system_model : AbstractModel.abstract_model) (state_space : stateSpace) (options : Options.imitator_options) (strategy : locationStrategyMap) ~callback =
   let fresh_action, get_nb_actions, action_types, action_names, actions = 
      let nb_actions = ref 0 in 
@@ -398,21 +378,19 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
             else
               [ActionEntry {e with prioritized_winning_zone = intersection}]
           in
-
-          let bound_in, bound_out = LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint epsilon_param winning_move in
-          LinearConstraint.px_nnconvex_union_assign bound_in bound_out;
-          bound_in |>
-          LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint |>
-          List.fold_left (
-            fun acc k ->
-              let pxd_past =  LinearConstraint.pxd_of_px_constraint k in  
-              AlgoStateBased.apply_time_past_no_stopwatch pxd_past; (* TODO: use normal time past function ?*)
-              let px_past = LinearConstraint.pxd_hide_discrete_and_collapse pxd_past in 
-              let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
-              LinearConstraint.px_nnconvex_px_intersection_assign intersection px_past;
-              let new_entry = ActionEntry {e with winning_move = k; prioritized_winning_zone = intersection}  in 
-              new_entry::acc
-          ) init
+          winning_move
+          |> LinearConstraint.epsilon_temporal_lower_bound_px_linear_constraint epsilon_param
+          |> LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint
+          |> List.fold_left (
+              fun acc k ->
+                let pxd_past =  LinearConstraint.pxd_of_px_constraint k in  
+                AlgoStateBased.apply_time_past_no_stopwatch pxd_past; (* TODO: use normal time past function ?*)
+                let px_past = LinearConstraint.pxd_hide_discrete_and_collapse pxd_past in 
+                let intersection = LinearConstraint.px_nnconvex_copy prioritized_winning_zone in 
+                LinearConstraint.px_nnconvex_px_intersection_assign intersection px_past;
+                let new_entry = ActionEntry {e with winning_move = k; prioritized_winning_zone = intersection}  in 
+                new_entry::acc
+            ) init
         | _ -> [entry]
       ) |>
       List.flatten 

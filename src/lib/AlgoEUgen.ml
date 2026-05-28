@@ -285,46 +285,6 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
 				new_states_indexes <- new_state_index :: new_states_indexes;
-			
-		
-		| StateSpace.State_replacing_several (state_index, eaten_states) ->
-			
-			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			(*** NOTE: if the answer is false, then the new state is a target state ***)
-			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
-			let is_to_be_added, is_a_target = self#process_state new_state in
-			let to_be_added = ref is_to_be_added in
-			
-			(* Update the target flag *)
-			is_target := is_a_target;
-			
-			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
-			if !to_be_added then(
-			
-				(*** NOTE: do NOT perform this test depending on the option ***)
-				if options#cumulative_pruning then(
-					(* Check whether new_state.px_constraint <= synthesized_constraint *)
-					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
-						(* Print some information *)
-						self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
-
-						(* Do NOT compute its successors; cut the branch *)
-						to_be_added := false;
-					);
-				);
-			);
-		
-			
-			self#print_algo_message Verbose_standard (Printf.sprintf "Ate states: %s." 
-			(OCamlUtilities.string_of_list_of_int eaten_states));
-			state_indices_removed_by_strong_double_inclusion <- List.rev_append state_indices_removed_by_strong_double_inclusion eaten_states;
-
-			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-
-			new_states_indexes <- state_index :: new_states_indexes;
-		
-
-			
 		end (* end if new state *)
 		;
 		
@@ -332,7 +292,7 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 		
 		(* Retrieve the new state index *)
 		(*** HACK ***)
-		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index | StateSpace.State_replacing_several (new_state_index, _) -> new_state_index in
+		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
 		
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;

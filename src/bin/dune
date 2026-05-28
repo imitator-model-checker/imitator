@@ -16,10 +16,9 @@
    -cclib
    -lgmpxx)))
 
-
 (install
  (section bin)
- (files imitator))
+ (files IMITATOR.exe))
 
 (rule
  (with-stdout-to

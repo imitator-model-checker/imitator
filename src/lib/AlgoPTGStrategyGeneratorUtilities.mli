@@ -1,6 +1,5 @@
 open AbstractModel
 open Automaton
-open State
 
 type simple_abstract_model = {
 	(* General information **)

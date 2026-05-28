@@ -32,7 +32,7 @@ parser.add_argument("--filter", help="Filter tests to execute", nargs="?", defau
 args = parser.parse_args()
 
 # To output colored text
-Colors = namedtuple("Colors", "ERROR, BOLD, GOOD, NORMAL, WARNING")
+Colors = namedtuple("Colors", "ERROR, BOLD, GOOD, NORMAL, WARNING, SKIPPED")
 
 bcolors = Colors(
     ERROR="\033[1;37;41m",
@@ -40,6 +40,7 @@ bcolors = Colors(
     GOOD="\033[1;32;40m",
     NORMAL="\033[0m",
     WARNING="\033[93;40m",
+    SKIPPED="\033[1;37;43m",
 )
 
 # ************************************************************
@@ -64,6 +65,15 @@ LOGFILE = os.path.join(TEST_PATH, "tests.log")
 DISTRIBUTED_BINARY_NAME = "patator"
 # Log file for the distributed binary
 DISTRIBUTED_LOGFILE = os.path.join(TEST_PATH, "testsdistr.log")
+
+# Include long benchmarks in the tests (can be long to execute, but can be useful to check for regressions on long benchmarks)
+INCLUDE_LONG_BENCHMARKS = False
+# INCLUDE_LONG_BENCHMARKS = True
+
+# Include skipped benchmarks in the tests (can be useful to check for regressions on benchmarks that are currently skipped, but can fail for reasons that are not fixed yet)
+INCLUDE_SKIPPED_BENCHMARKS = False
+# INCLUDE_SKIPPED_BENCHMARKS = True
+
 
 # ************************************************************
 # BY DEFAULT: ALL TO LOG FILE
@@ -174,15 +184,29 @@ def test(binary_name, tests, logfile, logfile_name):
     # Id for benchmarks
     benchmark_id = 1
     # Number of passed benchmarks
-    passed_benchmarks = 0
+    nb_passed_benchmarks = 0
+    # Number of skipped benchmarks
+    nb_skipped_benchmarks = 0
+    nb_toolong_benchmarks = 0
 
     # Id for test case
     test_case_id = 1
     # Number of passed test cases
-    passed_test_cases = 0
+    nb_passed_test_cases = 0
 
     stopwatch_start = time.time()
     for test_case in tests:
+
+        if test_case.get("skip", False) and not INCLUDE_SKIPPED_BENCHMARKS:
+            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "Skipped!" + bcolors.NORMAL)
+            nb_skipped_benchmarks += 1
+            continue
+
+        if test_case.get("toolong", False) and not INCLUDE_LONG_BENCHMARKS:
+            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "Skipped! (too long)" + bcolors.NORMAL)
+            nb_toolong_benchmarks += 1
+            continue
+
         # Initially everything is ok
         passed = True
 
@@ -218,11 +242,14 @@ def test(binary_name, tests, logfile, logfile_name):
         # Print the command
         print_to_log(" command : " + " ".join(cmd))
 
+        # Measure the computation time of the command
+        start_time = time.time()
         # Launch!
         # NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
         logfile.flush()
         subprocess.call(cmd, stdout=logfile, stderr=logfile)
         logfile.flush()
+        end_time = time.time()
 
         # Files to remove
         files_to_remove = set()
@@ -251,7 +278,7 @@ def test(binary_name, tests, logfile, logfile_name):
 
                 if file_extension == ".png":
                     print_to_log(" Test %s passed." % test_expectation_id)
-                    passed_test_cases += 1
+                    nb_passed_test_cases += 1
                 else:
                     # Read file
                     with open(output_file, "r") as my_file:
@@ -268,7 +295,7 @@ def test(binary_name, tests, logfile, logfile_name):
 
                         if position >= 0:
                             print_to_log(" Test %s passed." % test_expectation_id)
-                            passed_test_cases += 1
+                            nb_passed_test_cases += 1
                         else:
                             passed = False
                             print_to_log(
@@ -286,12 +313,20 @@ def test(binary_name, tests, logfile, logfile_name):
         for my_file in files_to_remove:
             os.remove(my_file)
 
+        # Print the computation time for this benchmark, rounded to 3 decimal places
+        # Highlight the computation time in WARNING if > 0.1 s, in ERROR if > 1 s
+        computation_time = " ({} s)".format(str(end_time - start_time)[:5])
+        if end_time - start_time > 1:
+            computation_time = bcolors.ERROR + computation_time + bcolors.NORMAL
+        elif end_time - start_time > 0.1:
+            computation_time = bcolors.WARNING + computation_time + bcolors.NORMAL
+
         # If all test cases passed, increment the number of passed benchmarks
         if passed:
-            passed_benchmarks += 1
-            print_to_screen(" " + bcolors.GOOD + "PASSED!" + bcolors.NORMAL)
+            nb_passed_benchmarks += 1
+            print_to_screen(computation_time + " " + bcolors.GOOD + "PASSED!" + bcolors.NORMAL)
         else:
-            print_to_screen(" " + bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
+            print_to_screen(computation_time + " " + bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
 
         # Increment the benchmark id
         benchmark_id += 1
@@ -301,24 +336,26 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     stopwatch_end = time.time()
 
+    # Print the summary of the tests
     print_to_log("\n\n############################################################")
 
+    # Display total time, rounded to 3 decimal places   
     print_to_screen_and_log(
-        "Total time: {} s".format(str(stopwatch_end - stopwatch_start))
+        "Total time: {} s".format(str(stopwatch_end - stopwatch_start)[:5])
     )
     # NOTE: ugly…
     total_benchmarks = benchmark_id - 1
     total_test_cases = test_case_id - 1
 
-    if total_benchmarks == passed_benchmarks and total_test_cases == passed_test_cases:
+    if total_benchmarks == nb_passed_benchmarks and total_test_cases == nb_passed_test_cases:
         print_to_screen_and_log(
             "All benchmarks ({}/{}) passed successfully.".format(
-                passed_benchmarks, total_benchmarks
+                nb_passed_benchmarks, total_benchmarks
             )
         )
         print_to_screen_and_log(
             "All test cases ({}/{}) passed successfully.".format(
-                passed_test_cases, total_test_cases
+                nb_passed_test_cases, total_test_cases
             )
         )
     else:
@@ -327,80 +364,89 @@ def test(binary_name, tests, logfile, logfile_name):
         )
         print_to_log("WARNING! Some tests failed.")
 
-        if passed_benchmarks == total_benchmarks:
+        if nb_passed_benchmarks == total_benchmarks:
             print_to_screen(
                 "{2.GOOD}{0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
-                    passed_benchmarks, total_benchmarks, bcolors
+                    nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
         else:
             print_to_screen(
                 "{2.WARNING}{0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
-                    passed_benchmarks, total_benchmarks, bcolors
+                    nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
 
         print_to_log(
             "{}/{} benchmarks passed successfully.".format(
-                passed_benchmarks, total_benchmarks
+                nb_passed_benchmarks, total_benchmarks
             )
         )
 
-        if passed_benchmarks < total_benchmarks:
+        if nb_passed_benchmarks < total_benchmarks:
             print_to_screen(
                 "{2.ERROR}{0}/{1} benchmarks failed.{2.NORMAL}".format(
-                    total_benchmarks - passed_benchmarks, total_benchmarks, bcolors
+                    total_benchmarks - nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
         else:
             print_to_screen(
                 "{}/{} benchmarks failed.".format(
-                    total_benchmarks - passed_benchmarks, total_benchmarks
+                    total_benchmarks - nb_passed_benchmarks, total_benchmarks
                 )
             )
 
         print_to_log(
             "{}/{} benchmarks failed.".format(
-                total_benchmarks - passed_benchmarks, total_benchmarks
+                total_benchmarks - nb_passed_benchmarks, total_benchmarks
             )
         )
 
-        if passed_test_cases == total_test_cases:
+        if nb_passed_test_cases == total_test_cases:
             print_to_screen(
                 "{2.GOOD}{0}/{1} test cases passed successfully.{2.NORMAL}".format(
-                    passed_test_cases, total_test_cases, bcolors
+                    nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
         else:
             print_to_screen(
                 "{2.WARNING}{0}/{1} test cases passed successfully.{2.NORMAL}".format(
-                    passed_test_cases, total_test_cases, bcolors
+                    nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
 
         print_to_log(
             "{}/{} test cases passed successfully.".format(
-                passed_test_cases, total_test_cases
+                nb_passed_test_cases, total_test_cases
             )
         )
 
-        if passed_test_cases < total_test_cases:
+        if nb_passed_test_cases < total_test_cases:
             print_to_screen(
                 "{2.ERROR}{0}/{1} test cases failed.{2.NORMAL}".format(
-                    total_test_cases - passed_test_cases, total_test_cases, bcolors
+                    total_test_cases - nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
         else:
             print_to_screen(
                 "{}/{} test cases failed.".format(
-                    total_test_cases - passed_test_cases, total_test_cases
+                    total_test_cases - nb_passed_test_cases, total_test_cases
                 )
             )
 
         print_to_log(
             "{}/{} test cases failed.".format(
-                total_test_cases - passed_test_cases, total_test_cases
+                total_test_cases - nb_passed_test_cases, total_test_cases
             )
+        )
+
+    if nb_skipped_benchmarks > 0:
+        print_to_screen_and_log(
+            "\n{1.SKIPPED}{0} benchmarks were skipped (marked as to skip).{1.NORMAL}".format(nb_skipped_benchmarks, bcolors)
+        )
+    if nb_toolong_benchmarks > 0:
+        print_to_screen_and_log(
+            "{1.SKIPPED}{0} benchmarks were skipped (marked as too long).{1.NORMAL}".format(nb_toolong_benchmarks, bcolors)
         )
 
     print_to_screen("(See %s for details.)" % logfile_name)

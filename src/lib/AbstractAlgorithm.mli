@@ -122,6 +122,11 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Level of detail in graphical translations **)
+type graphics_detail = 
+	| Full
+	| Minimal
+	
 (** Controller mode for AlgoPTG **)
 type ptg_controller_mode = 
 	| No_Generation
@@ -132,6 +137,23 @@ type ptg_controller_mode =
 type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
+
+type ptg_abstraction =
+	| Location
+	| Convex_Hull
+	| No_Abstraction
+
+type hull_method =
+	| Hull_convex_only
+	| Hull_box_only
+	| Hull_octagonal_only
+	| Hull_box_hybrid
+	| Hull_octagonal_hybrid
+
+type hull_simplify_mode =
+	| Hull_simplify_none
+	| Hull_simplify_constraints
+	| Hull_simplify_generators
 
 (** Undefined value for n1/n2 merge heuristics *)
 val undefined_merge_n : int
@@ -238,12 +260,6 @@ type state_comparison_operator =
 	| Including_check
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
-
-	(* STRONGER VERSION OF DOUBLE INCLUSION by Mikael *)
-	(* Does not add the new state if it is included in another state, or if other states are included into the current state,
-	   in which case the new state replaces the first old one in the state space as well as removing the rest of the included states.
-	   Might reduce the state space size (side effect) *)
-	| Strong_Double_Inclusion_check
 
 
 

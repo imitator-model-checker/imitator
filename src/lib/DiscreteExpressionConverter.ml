@@ -284,8 +284,10 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
+    print_message Verbose_total ("Checking sequential code block " ^ code_bloc_name ^ " of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
+
     (* If code bloc is named, we put name of location in messages *)
-    let str_location =  "in `" ^ code_bloc_name ^ "`" in
+    let str_location =  "in " ^ code_bloc_name ^ "" in
 
     (* Check if all variables in function definition are defined *)
     let is_all_variables_defined =
@@ -329,16 +331,40 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
             "The function `rational_of_int` (used " ^ str_location ^ ") transforms an `int` (with a 32-bit limit) into a `rational` (encoded exactly, i.e., without any approximation nor overflow). Be aware that, if your `int` is subject to an overflow prior to its conversion into a `rational`, then the result may be wrong."
         );
 
-    (* Check whether there is only discrete in following control structures: if / while condition, for, etc. *)
-    let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
-    (* Check that assignments are well-formed following some rules *)
-    let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+    print_message Verbose_total ("Performing checks…");
+
+    (*** NOTE: We need to perform the checks sequentially, otherwise a failing check may lead to an internal error in the next check ***)
+    if(not is_all_functions_defined)then(
+        print_message Verbose_total ("Some functions are not defined " ^ str_location ^ ", skipping other checks.");
+        false
+    ) else if (not is_all_variables_defined) then (
+        print_message Verbose_total ("Some variables are not defined " ^ str_location ^ ", skipping other checks.");
+        false
+    )else (
+        (* Check whether there is only discrete in following control structures: if / while condition, for, etc. *)
+        let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
+        if(not only_discrete_in_control_structures) then (
+            print_message Verbose_total ("Some non-discrete variables are used in control structures " ^ str_location ^ ", skipping other checks.");
+            false
+        )else(
+            (* Check that assignments are well-formed following some rules *)
+            let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+            if not is_assignments_well_formed then (
+                print_message Verbose_total ("Some assignments are not well-formed " ^ str_location ^ ".");
+                false
+            ) else(
+                print_message Verbose_total ("All checks passed for sequential code block " ^ str_location ^ ".");
+                true
+            )
+        )
+    )
 
     (* Return *)
-    is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined
+    (* is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined *)
+    (* is_all_functions_defined && is_all_variables_defined && is_assignments_well_formed && only_discrete_in_control_structures *)
 
 (* Check if user function definition is well formed *)
-let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+let check_fun_definition variable_infos (fun_def : parsed_fun_definition) : bool =
 
     (* Get code bloc and return expression of the function *)
     let code_bloc, return_expr_opt = fun_def.body in
@@ -732,8 +758,12 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
 
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
 let convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
+    print_message Verbose_total ("Checking sequential code block of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
+
     (* Some checks *)
     let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
+
+    print_message Verbose_total ("Sequential code block checked: "  ^ (if well_formed_user_function then "well-formed" else "not well-formed"));
 
     (* Not well formed, raise an error *)
     if not well_formed_user_function then

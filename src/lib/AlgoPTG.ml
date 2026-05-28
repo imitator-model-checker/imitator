@@ -39,24 +39,60 @@ type strategy_action =
   | Wait
   | Action of {action_index: Automaton.action_index; transition: StateSpace.combined_transition; dst: DiscreteState.global_location}
 
+(* Pretty printing *)
+let wrap code s =
+  Printf.sprintf "\027[%sm%s\027[0m" code s
 
-let string_of_state_index state_space model state_index = 
-	let location = Array.get (DiscreteState.get_locations ((state_space#get_state state_index).global_location)) 0 in
+let red    = wrap "91"
+let green  = wrap "92"
+let yellow = wrap "93"
+let blue   = wrap "94"
+let magenta = wrap "95"
+let cyan   = wrap "96"
+
+let bold = wrap "1"
+
+let format_zone_string (string : string) = 
+  let b = Buffer.create 10 in
+  String.iter (fun c -> if c == '\n' then Buffer.add_char b ' ' else Buffer.add_char b c) string;
+  String.trim @@ Buffer.contents b
+let string_of_zone variable_names px_constraint = 
+	px_constraint |>
+	LinearConstraint.string_of_px_linear_constraint variable_names |>
+	format_zone_string
+
+let string_of_nnc_zone variable_names px_constraint = 
+	px_constraint |>
+	LinearConstraint.string_of_px_nnconvex_constraint variable_names |>
+	format_zone_string
+
+let string_of_state_index ?(include_zone = false) state_space model state_index  = 
+	let state = (state_space#get_state state_index) in 
+	let location = Array.get (DiscreteState.get_locations (state.global_location)) 0 in
 	let location_name = model.location_names 0 location in
-	Printf.sprintf "s%d/loc %s" state_index location_name
+	if include_zone then 
+		Printf.sprintf "s%d = loc %s | %s" state_index location_name 
+		(string_of_zone model.variable_names state.px_constraint)
+	else Printf.sprintf "s%d/loc %s" state_index location_name
 
-let item_to_str = fun model state_space item -> 
+let item_to_str = fun ?(include_zone = false) model state_space item -> 
+	let explore : ('a, 'b, 'c) format = if include_zone then "[EXPLORE] %s" else "EXPLORE(%s)" in 
+	let update : ('a, 'b, 'c) format = if include_zone then "[UPDATE] %s" else "UPDATE(%s)" in 
 	match item with 
 	| EXPLORE state_index -> 
-		Printf.sprintf "EXPLORE(%s)" (string_of_state_index state_space model state_index)
+		blue @@ Printf.sprintf explore (string_of_state_index state_space model state_index ~include_zone)
 	| UPDATE {state_index;_} ->
-		Printf.sprintf "UPDATE(%s)" (string_of_state_index state_space model state_index)
+		magenta @@ Printf.sprintf update (string_of_state_index state_space model state_index ~include_zone)
 	
-	
-
-
 let item_list_to_str list model state_space = 
 	"[" ^ OCamlUtilities.string_of_list_of_string_with_sep ", " (List.map (item_to_str model state_space) list) ^ "]"
+
+let print_delta_list_with_reason model state_space items reason = 
+	if items <> [] then
+	print_message Verbose_low (Printf.sprintf "\tQ+=%s\n\tReason: %s" 
+	(item_list_to_str items model state_space) @@ reason);
+
+
 
 class stateUnionZoneMap = 
 [state_index,  LinearConstraint.px_nnconvex_constraint] defaultHashTable 
@@ -74,185 +110,110 @@ class timeStampMap =
 [state_index, int] defaultHashTable
 (fun _ -> 0)
 
-(* State in or out of state space *)
-type ptg_state = 
+(* Successor is either cached in the state space (InSP) or a transient re-explored state (NotInSP) *)
+type ptg_state =
 | InSP of state_index
-| NotInSP of State.state
+| NotInSP of DiscreteState.global_location * LinearConstraint.px_linear_constraint
 
-class virtual stateSpacePTG  = object(self)
-	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
-	method state_space = state_space
-	method virtual initialize_state_space : unit -> unit
-	method virtual compute_symbolic_successors : state_index -> state_index list
-	method virtual get_partioned_edges : state_index -> (StateSpace.combined_transition * ptg_state) list * (StateSpace.combined_transition * ptg_state) list
-	method virtual unexplored_successors : int
-	method virtual merge_mapping : state_index -> state_index
-	method virtual merge_occured : bool
-	method virtual passed_states : State.stateIndexSet
-	initializer 
-		self#initialize_state_space ()
-end
+let zone_of_ptg_state (state_space : StateSpace.stateSpace) = function
+	| InSP state_index -> (state_space#get_state state_index).px_constraint
+	| NotInSP (_, px) -> px
 
-let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback = 
-	List.filter_map (fun (transition, s) -> 
-		let addition_result =  state_space#add_state comparison_operator None s in 
+let add_transitions_and_states_to_state_space state_space transitions_and_states comparison_operator callback =
+	List.filter_map (fun (transition, s) ->
+		let addition_result = state_space#add_state comparison_operator None s in
 		callback addition_result transition
 	) transitions_and_states
 
-class stateSpacePTG_OTF model options = object(self)
-	inherit stateSpacePTG
+class stateSpacePTG model options = object(self)
+	val mutable state_space : StateSpace.stateSpace = new StateSpace.stateSpace 0
+	method state_space = state_space
 	method unexplored_successors = 0
 	val including_check = 
 	options#comparison_operator = AbstractAlgorithm.Double_inclusion_check || 
-	options#comparison_operator = AbstractAlgorithm.Including_check ||
-	options#comparison_operator = AbstractAlgorithm.Strong_Double_Inclusion_check
-	
-	(* Explored: Internal set keeping track of states have had their successors computed *)
-	val explored_states = new State.stateIndexSet
-	
-	(* Passed: Exposed to and modified by algorithm. Things in here might not be explored but they have been queued for exploration
-		Modified by state space in case of successful including checks *)
+	options#comparison_operator = AbstractAlgorithm.Including_check
+
+	val reexploration_counter = Statistics.create_hybrid_counter_and_register "PTG Total reexplorations: " Statistics.States_counter Verbose_experiments
+
+	(* Internal set: states whose successors have been computed and cached in the state space *)
+	val expanded = new State.stateIndexSet
+
+	(* States queued for EXPLORE by algoPTG. Also cleared here on State_replacing. *)
 	val passed_states = new State.stateIndexSet
-	method passed_states = passed_states
+	method is_queued si = passed_states#mem si
+	method mark_queued si = passed_states#add si
 
-	(* Merge mapping: Mapping from states removed by merging (strong including check) to their representative state *)
-	val merge_mapping = Hashtbl.create 20
-	method merge_mapping state_index = try Hashtbl.find merge_mapping state_index with Not_found -> state_index
+	(* States invalidated by a successful including check; their successors must be recomputed
+	   from the current (bigger) zone on next call to get_partitioned_edges *)
+	val invalidated = new State.stateIndexSet
 
-	(* Merge occured: Only true if a merge by including check has happened in the last state space expansion *)
-	val mutable merge_occured = false
-	method merge_occured = if merge_occured then (merge_occured <- false; true) else false
-
-	(* Optimization: Only recompute successors in updates IF an included check has succeeded *)
-	val recompute_successors = new State.stateIndexSet 
-	method initialize_state_space () = 		
+	method private initialize_state_space () =
 		let state = AlgoStateBased.create_initial_state options model false in
 		let _ = state_space#add_state AbstractAlgorithm.No_check None state in ()
-	method private compute_symbolic_successors_with_transitions source_state_index = 
-		if explored_states#mem source_state_index then 
+
+	initializer self#initialize_state_space ()
+
+	method private compute_symbolic_successors_with_transitions source_state_index =
+		if expanded#mem source_state_index then
 			state_space#get_successors_with_combined_transitions source_state_index
-		else 
+		else
 		begin
-			explored_states#add source_state_index;
-			let state = state_space#get_state source_state_index in 
+			expanded#add source_state_index;
+			let state = state_space#get_state source_state_index in
 			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
-			(fun addition_result transition -> 
-				match addition_result with 
+			add_transitions_and_states_to_state_space state_space successors options#comparison_operator
+			(fun addition_result transition ->
+				match addition_result with
 				(* Including check *)
 				| State_replacing state_index ->
 					state_space#add_transition (source_state_index, transition, state_index);
-				  recompute_successors#add state_index;
-					explored_states#remove_or_do_nothing state_index;
+					invalidated#add state_index;
+					expanded#remove_or_do_nothing state_index;
 					passed_states#remove_or_do_nothing state_index;
 					Some (transition, state_index)
-					
 				| New_state state_index
 				(* Inclusion check *)
-				| State_already_present state_index -> 
+				| State_already_present state_index ->
 					state_space#add_transition (source_state_index, transition, state_index);
-					Some (transition, state_index)
-
-				(* Strong including check *)
-				| State_replacing_several (state_index, eaten_states) -> 
-					state_space#add_transition (source_state_index, transition, state_index);
-					recompute_successors#add state_index;
-					explored_states#remove_or_do_nothing state_index;
-					passed_states#remove_or_do_nothing state_index;
-					merge_occured <- true;
-
-					List.iter (fun x -> Hashtbl.add merge_mapping x state_index) eaten_states; 
-					if verbose_mode_greater Verbose_low then 
-						print_message Verbose_low (Printf.sprintf "STRONG INCLUSION HAPPENED: ate %d states" @@ List.length eaten_states);
 					Some (transition, state_index)
 			)
 		end
-	method compute_symbolic_successors source_state_index = 
+
+	method compute_symbolic_successors source_state_index =
 		List.map snd (self#compute_symbolic_successors_with_transitions source_state_index)
-	method get_partioned_edges state_index = 
-		if including_check && recompute_successors#mem state_index then 
-			(recompute_successors#remove state_index;
-			let state = state_space#get_state state_index in 
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			(List.partition_map (fun (transition, state) -> 
-				let edge = transition, NotInSP state in 
-				let action = StateSpace.get_action_from_combined_transition model transition in 
-				if model.is_controllable_action action then Left edge else Right edge)
-			successors))
+
+	(* Recompute successors of a state invalidated by an including check.
+	   Returns NotInSP edges computed from the current (shrunk) zone; does NOT add them to the state space,
+	   since they are only needed transiently for predecessor computation during backpropagation. *)
+	method private get_partitioned_edges_reexplore state_index =
+		reexploration_counter#increment;
+		reexploration_counter#start;
+		invalidated#remove state_index;
+		let state = state_space#get_state state_index in
+		let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
+		let edges = List.partition_map (fun (transition, (state : state)) ->
+			let edge = transition, NotInSP (state.global_location, state.px_constraint) in
+			let action = StateSpace.get_action_from_combined_transition model transition in
+			if model.is_controllable_action action then Left edge else Right edge)
+		successors in
+		reexploration_counter#stop;
+		edges
+
+	method get_partitioned_edges state_index =
+		if including_check && invalidated#mem state_index then
+			self#get_partitioned_edges_reexplore state_index
 		else
-			(let successors = self#compute_symbolic_successors_with_transitions state_index in			
-			List.partition_map (fun (transition, state_index) -> 
-			let edge = transition, InSP state_index in 
-			let action = StateSpace.get_action_from_combined_transition model transition in 
-			if model.is_controllable_action action then Left edge else Right edge)
-			successors)
-end
+			let successors = self#compute_symbolic_successors_with_transitions state_index in
+			List.partition_map (fun (transition, state_index) ->
+				let edge = transition, InSP state_index in
+				let action = StateSpace.get_action_from_combined_transition model transition in
+				if model.is_controllable_action action then Left edge else Right edge)
+			successors
 
-class stateSpacePTG_full model options = object(self)
-	inherit stateSpacePTG
-	val explored_states = new State.stateIndexSet
-	val passed_states = new State.stateIndexSet
-	method passed_states = passed_states
-	val mutable unexplored_successors = 0
-	method merge_mapping x = x
-	method merge_occured = false
-	method unexplored_successors = unexplored_successors
-	method initialize_state_space () = 		
-		let state = AlgoStateBased.create_initial_state options model false in
-		let _ = state_space#add_state AbstractAlgorithm.No_check None state in
-		let process_successors_from_state_index source_state_index = 
-			let state = state_space#get_state source_state_index in 
-			let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model state in
-			add_transitions_and_states_to_state_space state_space successors options#comparison_operator 
-			(fun addition_result transition -> 
-				match addition_result with 
-				| New_state new_state_index
-				| State_replacing new_state_index
-				| State_already_present new_state_index -> 
-					state_space#add_transition (source_state_index, transition, new_state_index);
-					if explored_states#mem new_state_index then 
-						None
-					else 
-					(explored_states#add new_state_index;
-					Some new_state_index)
-				| State_replacing_several (state_index, _) -> 
-					state_space#add_transition (source_state_index, transition, state_index);
-					if explored_states#mem state_index then 
-						None
-					else 
-					(explored_states#add state_index;
-					Some state_index)
-			)
-		in
+end (* class stateSpacePTG *)
 
-		let depth_limit = match options#depth_limit with
-			| Some d -> d
-			| None -> -1
-		in 
 
-		let rec bfs unexplored_state_indices depth = 
-			let unexplored_state_indices' = List.fold_left (fun acc state_index -> 
-				(process_successors_from_state_index state_index) @ acc) [] unexplored_state_indices in 
-			if depth = depth_limit then
-				unexplored_successors <- List.length unexplored_state_indices' 
-			else if unexplored_state_indices' = [] then () else bfs unexplored_state_indices' (depth+1)
-		in
-		let initial_state_index = state_space#get_initial_state_index in 
-		explored_states#add initial_state_index;
-		bfs [initial_state_index] 1;
-
-	method compute_symbolic_successors source_state_index = 
-		state_space#get_successors_with_combined_transitions source_state_index |> List.map snd
-	method get_partioned_edges state_index =
-		let successors_with_transitions = state_space#get_successors_with_combined_transitions state_index in 
-		List.partition_map (fun (transition, state_index) -> 
-			let edge = transition, InSP state_index in 
-			let action = StateSpace.get_action_from_combined_transition model transition in 
-			if model.is_controllable_action action then Left edge else Right edge)
-		successors_with_transitions
-end
-
-type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap; forcedMoves : stateUnionZoneMap}
+type merge_dependant_datastructures = {lastUpdate : timeStampMap; depends : dependsMap; winningZone : stateUnionZoneMap}
 
 class virtual ['a] nextItem = object
 	method virtual add : 'a -> unit
@@ -262,7 +223,6 @@ class virtual ['a] nextItem = object
 	method virtual length : int
 	method virtual add_all : 'a list -> unit
 	method virtual unexplored_successors : int
-	method virtual apply_merge : (state_index -> state_index) -> unit
 end
 
 
@@ -282,30 +242,6 @@ class nextItem_single_queue = object
 	method length = Queue.length queue
 	method add_all list = List.iter (fun e -> Queue.add e queue) list
 	method unexplored_successors = 0
-	method apply_merge merge_mapping = 
-		let new_queue = Queue.create () in 
-		let represented_explore = new State.stateIndexSet in
-		let represented_update = new State.stateIndexSet in
-		Seq.iter (fun item -> 
-			match item with 
-			| EXPLORE state_index -> 
-				let merger_state_index = lookup_merge_map merge_mapping state_index in
-				if merger_state_index = state_index then 
-					Queue.add item new_queue
-				else if not (represented_explore#mem merger_state_index) then
-					(Queue.add (EXPLORE merger_state_index) new_queue;
-					represented_explore#add merger_state_index)
-			| UPDATE {state_index;timestamp} -> 
-				let merger_state_index = lookup_merge_map merge_mapping state_index in
-				if merger_state_index = state_index then 
-					Queue.add item new_queue
-				else if not (represented_update#mem merger_state_index) then 
-					Queue.add (UPDATE {state_index = merger_state_index; timestamp}) new_queue;
-					represented_update#add merger_state_index
-				
-		)
-		(Queue.to_seq queue);
-		queue <- new_queue
 end
 
 type phase = Initial | Exploring | Updating
@@ -322,7 +258,7 @@ class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options
 	method add e = match e with 
 	| EXPLORE _ -> if total_depth != total_depth_limit then explore' <- e::explore' else unexplored_successors <- unexplored_successors + 1
 	| UPDATE _ -> update' <- e::update'
-	method extract {lastUpdate; depends; winningZone; forcedMoves} = 
+	method extract {lastUpdate; depends; winningZone} =
 		print_message Verbose_experiments (Printf.sprintf "Explore: %d\tExplore': %d\tUpdate: %d\tUpdate': %d\t Frontier depth: %d\t Phase: %s\tTotal exploration depth: %d" 
 		(List.length explore) (List.length explore') (List.length update) (List.length update') 
 		(match phase with Initial -> depth - explore_depth + init_depth | _ -> depth)
@@ -346,7 +282,6 @@ class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options
 				
 				(* Merge all table datastructures *)
 				winningZone#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
-				forcedMoves#merge_keys merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
 				depends#merge_keys merge_mapping (fun a b -> a#union b; a);
 				lastUpdate#merge_keys merge_mapping min;
 
@@ -403,7 +338,6 @@ class nextItem_frontier (state_space : StateSpace.stateSpace) (options : Options
 	method length = List.length update + List.length update' + List.length explore + List.length explore'
 	method add_all list = List.iter self#add list
 	method unexplored_successors = unexplored_successors
-	method apply_merge _ = ()
 end
 
 (************************************************************)
@@ -411,9 +345,10 @@ end
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) ?state_predicate_avoid (state_space_ptg : stateSpacePTG)=
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_predicate_avoid : AbstractProperty.state_predicate option) =
+	let state_space_ptg = new stateSpacePTG model options in
 	object (self) inherit algoGeneric model options (*as super*)
-	
+
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
@@ -445,13 +380,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	val mutable termination_status = Regular_termination
 
 	val winningZone = new stateUnionZoneMap
-	val forcedMoves = new stateUnionZoneMap
+	val locationForcedMoves = new locationUnionZoneMap
 	val depends = new dependsMap
 	val lastUpdate = new timeStampMap
 
 	val locationWinningZone = new locationUnionZoneMap
 	val locationStrategy = new AlgoPTGStrategyGenerator.locationStrategyMap
 
+	method private print_delta_list_with_reason = print_delta_list_with_reason model state_space
 
 	val waiting : item nextItem = 
 		let depth_limit = match options#depth_limit with Some d -> d | None -> -1 in
@@ -487,14 +423,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	val init_winning_zone_changed = ref false
 
-	(* Negate a zone within a state (corresponds to taking the complement) *)
-	method private negate_zone zone state_index = 
-			let complete_zone = nn_of_lin (self#constr_of_state_index state_index) in 
-			LinearConstraint.px_nnconvex_difference_assign complete_zone zone;
-			complete_zone
-		
-	(* Initial constraint of the automata as a lambda - to reuse it multiple times without mutation *)
-	method private initial_constraint = fun _ -> LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint 
+	(* Initial constraint of the automata — returns a fresh copy each time to avoid mutation *)
+	method private initial_constraint () = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint model.initial_constraint
 		
 
 	method private backward (state_index : state_index) (px_linear : LinearConstraint.px_linear_constraint) = 
@@ -542,55 +472,100 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		result 
 
 	
-	(* Compute the forced moves of a state *)
-	method private save_forced_moves state_index = 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in 
-		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, succ_ptg_state) -> 
-				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
-				uncontrollable_edges in 
-		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ List.map (
-			fun (transition, succ_ptg_state) ->
-				self#predecessor_linear transition state_index @@ zone_of_ptg_state state_space succ_ptg_state) 
-				controllable_edges
-		in 
-		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
-			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone 
-		in
-		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@ 
-			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@ 
-			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone 
-		in
-
-		let invariant = self#constr_of_state_index state_index in
+	(* Compute and cache forced moves for the location of state_index.
+	   Forced moves depend only on model structure (invariants, guards, resets),
+	   not on the specific state zone — so they are computed once per location. *)
+	method private save_forced_moves state_index =
 		let global_location = (state_space#get_state state_index).global_location in
-
+		(* Skip if already computed for this location *)
+		if locationForcedMoves#mem global_location then () else
+		begin
+		(* Use source location invariant as zone — ensures all model-level transitions
+		   are found, not just those enabled from this specific state's zone *)
+		let invariant = LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model global_location in
+		let synthetic_state : State.state = {global_location; px_constraint = invariant} in
+		let successors = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model synthetic_state in
+		let controllable_edges, uncontrollable_edges = List.partition_map (fun (transition, (succ : State.state)) ->
+			let edge = transition, succ.global_location in
+			let action = StateSpace.get_action_from_combined_transition model transition in
+			if model.is_controllable_action action then Left edge else Right edge
+		) successors in
+		let target_invariant target_loc =
+			LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_loc
+		in
+		let loc_predecessor_linear transition target_loc =
+			let guard = state_space#get_guard model state_index transition in
+			self#predecessor_linear_general transition state_index guard invariant (target_invariant target_loc)
+		in
+		let uncontrollable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map (fun (transition, target_loc) -> loc_predecessor_linear transition target_loc) uncontrollable_edges in
+		let controllable_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map (fun (transition, target_loc) -> loc_predecessor_linear transition target_loc) controllable_edges in
+		let uncontrollable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint uncontrollable_zone
+		in
+		let controllable_zone_closed = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraints @@
+			List.map LinearConstraint.close_upper_clocks_px_linear_constraint @@
+			LinearConstraint.px_linear_constraint_list_of_px_nnconvex_constraint controllable_zone
+		in
+		
 		(* forced moves are different if location is urgent! *)
-		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with 
-			| true -> 
+		let forced_moves = match AbstractModelUtilities.is_global_location_urgent model global_location with
+			| true ->
 				let forced_moves = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint invariant in
 
 				LinearConstraint.px_nnconvex_intersection_assign forced_moves uncontrollable_zone;
 				LinearConstraint.px_nnconvex_difference_assign forced_moves controllable_zone;
 				forced_moves
 			| false ->
-				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in 
-				
+				let inv_bound_in, inv_bound_out = LinearConstraint.precise_temporal_upper_bound_px_linear_constraint invariant in
+
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
+					(Printf.sprintf "\tFM Computation:\n\t\tunctrl: %s\n\t\tunctrl_closed: %s\n\t\tctrl: %s\n\t\tctrl_closed: %s\n\t\tinv: %s\n\t\tinv_bound_in: %s\n\t\tinv_bound_out: %s"
+					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone)
+					(red @@ string_of_nnc_zone model.variable_names uncontrollable_zone_closed)
+					(green @@ string_of_nnc_zone model.variable_names controllable_zone)
+					(green @@ string_of_nnc_zone model.variable_names controllable_zone_closed)
+					(yellow @@ string_of_zone model.variable_names invariant)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					);
+
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_in uncontrollable_zone;
 				LinearConstraint.px_nnconvex_intersection_assign inv_bound_out uncontrollable_zone_closed;
 
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
+					(Printf.sprintf "\t\tinv_bound_in ∩ unctrl: %s\n\t\tinv_bound_out ∩ unctrl_closed: %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					);
+
 				LinearConstraint.px_nnconvex_difference_assign inv_bound_in controllable_zone;
-				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed; 
+				LinearConstraint.px_nnconvex_difference_assign inv_bound_out controllable_zone_closed;
+
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
+					(Printf.sprintf "\t\t(inv_bound_in ∩ unctrl) ∖ ctrl: %s\n\t\t(inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed: %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_out)
+					);
 
 				LinearConstraint.px_nnconvex_union_assign inv_bound_in inv_bound_out;
+				if verbose_mode_greater Verbose_low then
+					print_message Verbose_low
+					(Printf.sprintf "\t\t((inv_bound_in ∩ unctrl) ∖ ctrl) ∪ ((inv_bound_out ∩ unctrl_closed) ∖ ctrl_closed): %s"
+					(yellow @@ string_of_nnc_zone model.variable_names inv_bound_in)
+					);
 				inv_bound_in
 		in
-			
-		forcedMoves#replace state_index forced_moves;
-		if verbose_mode_greater Verbose_medium then 
-			print_message Verbose_low (Printf.sprintf "Computed forced moves for state %d: %s" state_index (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names forced_moves))
-		
+
+		locationForcedMoves#replace global_location forced_moves;
+		if verbose_mode_greater Verbose_low then
+			print_message Verbose_low (Printf.sprintf "\tFM: %s" @@ yellow (string_of_nnc_zone model.variable_names forced_moves))
+		end
 
 	(* Takes a state index and decides whether to prune (stop exploration of ) its succesors based on the global parameter constraint *)
 	method private global_constraint_pruning state_index = 
@@ -629,42 +604,45 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 					let location = (state_space#get_state state_index).global_location in 
 					let winning_zone_loc = locationWinningZone#find location in 
 					LinearConstraint.px_nnconvex_px_union_assign winning_zone_loc (self#constr_of_state_index state_index); 
-					waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+					let update_items = self#state_set_to_update_items (depends#find state_index) in 
+					waiting#add_all update_items;
+					if verbose_mode_greater Verbose_low then 
+						self#print_delta_list_with_reason update_items (bold @@ cyan "Target state");
 				end;
 
 			let coverage_pruning = is_goal_state && options#coverage_pruning in 
 			match self#global_constraint_pruning state_index, coverage_pruning with 
 				|	true, _ -> 
 					cumulative_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
+					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (cumulative)" state_index)
 				| _, true -> 
 					coverage_pruning_counter#increment;
-					print_message Verbose_low (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
+					print_message Verbose_medium (Printf.sprintf "\n\tNot adding sucessors of state %d due to pruning (coverage)" state_index)
 				| _ ->
-					(let successors = state_space_ptg#compute_symbolic_successors state_index in
+					let successors = state_space_ptg#compute_symbolic_successors state_index in
 					List.iter (fun s -> (depends#find s)#add state_index) successors;
-					let found_existing_state = 
-						List.fold_left (fun acc succ -> 
-						if state_space_ptg#passed_states#mem succ then 
-							(print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration" 
-							(string_of_state_index state_space model succ));
-							true)
-						else 
-							(waiting#add (EXPLORE succ);
-							state_space_ptg#passed_states#add succ;
-							acc)
-						) false successors
-					in 
-					if found_existing_state then 
-						waiting#add (UPDATE {state_index; timestamp = fresh_timestamp ()});
-					if state_space_ptg#merge_occured then 
-						(waiting#apply_merge (state_space_ptg#merge_mapping);
-						winningZone#merge_keys state_space_ptg#merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
-						forcedMoves#merge_keys state_space_ptg#merge_mapping (fun a b -> LinearConstraint.px_nnconvex_union_assign a b; a);
-						depends#merge_keys state_space_ptg#merge_mapping (fun a b -> a#union b; a);
-						lastUpdate#merge_keys state_space_ptg#merge_mapping min);
-					if verbose_mode_greater Verbose_medium then 
-						print_message Verbose_medium ("\n\tAdding successor edges to waiting list. New waiting list: " ^ item_list_to_str waiting#to_list model state_space))
+					(* Pass 1: enqueue unexplored successors *)
+					List.iter (fun succ ->
+						if state_space_ptg#is_queued succ then
+							print_message Verbose_medium (Printf.sprintf "Already passed state %s before - not adding for exploration"
+							(string_of_state_index state_space model succ))
+						else begin
+							let item = EXPLORE succ in
+							waiting#add item;
+							state_space_ptg#mark_queued succ;
+							if verbose_mode_greater Verbose_low then
+								self#print_delta_list_with_reason [item] (bold @@ red "(Partially) Unexplored State")
+						end
+					) successors;
+					(* Pass 2: if any successor already has a non-empty winning zone, trigger an immediate update *)
+					if List.exists (fun succ ->
+						not @@ LinearConstraint.px_nnconvex_constraint_is_false @@ winningZone#find succ
+					) successors then begin
+						let item = UPDATE {state_index; timestamp = fresh_timestamp ()} in
+						waiting#add item;
+						if verbose_mode_greater Verbose_low then
+							self#print_delta_list_with_reason [item] (bold @@ magenta "Transition to partially winning state")
+					end
 			)
 
 
@@ -718,13 +696,13 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 	(* Handle backtracking for a single edge, updating the winning zone and the associated strategy *)
 	method private backtrack_single_controllable_edge (transition, (dst : ptg_state)) src bad_zone =
-		let winning_move, dst_global_location = match dst with 
-			| NotInSP {global_location;px_constraint} ->
-				let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+		let winning_move, dst_global_location = match dst with
+			| NotInSP (global_location, px_constraint) ->
+				let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in
 				LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
 				self#predecessor_nnconvex transition src target_zone, global_location
-			| InSP state_index -> 
-				let target_zone = winningZone#find state_index in 
+			| InSP state_index ->
+				let target_zone = winningZone#find state_index in
 				self#predecessor_nnconvex transition src target_zone, (state_space#get_state state_index).global_location
 			
 		in
@@ -752,25 +730,26 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			init
 		in 
 
-		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partioned_edges state_index in
+		let controllable_edges, uncontrollable_edges = state_space_ptg#get_partitioned_edges state_index in
 
 		let uncontrollable_part = compute_moves_to_succesors 
 			(LinearConstraint.false_px_nnconvex_constraint ())
 			uncontrollable_edges
-			(function 
-				| InSP state_index -> 
-					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (self#constr_of_state_index state_index) in 
+			(function
+				| InSP state_index ->
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint (self#constr_of_state_index state_index) in
 					LinearConstraint.px_nnconvex_difference_assign target_zone (winningZone#find state_index);
 					target_zone
-				| NotInSP {global_location;px_constraint} -> 
-					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
+				| NotInSP (global_location, px_constraint) ->
+					let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in
 					LinearConstraint.px_nnconvex_difference_assign target_zone (locationWinningZone#find global_location);
 					target_zone
 			)
 		in
 
 		let orig_winning_zone = LinearConstraint.px_nnconvex_copy @@ winningZone#find state_index in 
-		self#process_forced_move state_index uncontrollable_part (forcedMoves#find state_index);
+		let src_location = (state_space#get_state state_index).global_location in
+		self#process_forced_move state_index uncontrollable_part (locationForcedMoves#find src_location);
 		if options#ptg_no_strategy_generation then 
 			let {global_location;px_constraint} = (state_space#get_state state_index) in 
 
@@ -779,7 +758,7 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 				controllable_edges
 				(function 
 					| InSP state_index -> winningZone#find state_index
-					| NotInSP {global_location;px_constraint} -> 
+					| NotInSP (global_location, px_constraint) -> 
 						let target_zone = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_constraint in 
 						LinearConstraint.px_nnconvex_intersection_assign target_zone (locationWinningZone#find global_location);
 						target_zone
@@ -795,7 +774,16 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 		let winning_zone_changed = not (LinearConstraint.px_nnconvex_constraint_is_equal (winningZone#find state_index) orig_winning_zone) in 
 		if winning_zone_changed then 
 		begin
-			waiting#add_all (self#state_set_to_update_items (depends#find state_index));
+			let update_items = self#state_set_to_update_items (depends#find state_index) in 
+			if verbose_mode_greater Verbose_low then 
+				print_message Verbose_low (Printf.sprintf "\t%s: %s %s %s" 
+				(string_of_state_index state_space model state_index)
+				(green @@ string_of_nnc_zone model.variable_names orig_winning_zone)
+				(bold "→")
+				(bold @@ green @@ string_of_nnc_zone model.variable_names @@ winningZone#find state_index));
+				if verbose_mode_greater Verbose_low then 
+					self#print_delta_list_with_reason update_items (bold @@ green @@ "Winning zone changed");
+			waiting#add_all update_items;
 			if state_index = state_space#get_initial_state_index then init_winning_zone_changed := true
 		end
 
@@ -807,9 +795,19 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	(* Initial state is exact if winning zone covers initial zone  *)
 	method private init_is_exact init = 
 		init_winning_zone_changed := false;
-		let init_zone_nn = nn_of_lin @@ self#constr_of_state_index init in 
 		let winning_zone_nn = LinearConstraint.px_nnconvex_copy @@ winningZone#find init in 
-		LinearConstraint.px_nnconvex_constraint_is_leq init_zone_nn winning_zone_nn
+		let initial_constraint = self#initial_constraint () in  
+
+		let included = LinearConstraint.px_nnconvex_constraint_is_leq initial_constraint winning_zone_nn in
+		if verbose_mode_greater Verbose_low then 
+			print_message Verbose_low @@ bold @@ yellow "\tInitial winning zone has changed (checking initial constraint coverage)";
+			let symbol = bold @@ if included then "⊆" else "⊄" in
+			print_message Verbose_low (Printf.sprintf "\t%s %s %s" 
+			(bold @@ blue @@ string_of_nnc_zone model.variable_names initial_constraint)
+			symbol
+			(bold @@ green @@ string_of_nnc_zone model.variable_names winning_zone_nn));
+			
+		included
 	
 	(* Returns true if the algorithm should terminate, depending on the criteria for termination *)
 	method private termination_criteria init = 
@@ -836,7 +834,14 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 
 		if time_out then termination_status <- Time_limit (Result.Number state_space#nb_states);
 
-		queue_empty ||	init_exact || init_has_winning_witness || time_out
+		let terminate = queue_empty ||	init_exact || init_has_winning_witness || time_out in 
+		if verbose_mode_greater Verbose_low && terminate then 
+			print_message Verbose_low @@ bold @@ yellow @@ (Printf.sprintf "Termination reason: %s"
+			(if queue_empty then "Fixed point" 
+			else if init_exact then "Initial state winning" 
+			else if init_has_winning_witness then "Winning witness found"
+			else "Timed out"));
+		terminate
 
 	method private is_update_relevant state_index timestamp =
 		if timestamp > lastUpdate#find state_index then 
@@ -849,28 +854,27 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 	method private compute_PTG = 
 		(* === ALGORITHM INITIALIZATION === *)
 		let initial_state_index = state_space#get_initial_state_index in 
-
-		if not options#ptg_no_forced_uncontrollables then
-			self#save_forced_moves initial_state_index;
 		
 		waiting#add (EXPLORE initial_state_index);
-		state_space_ptg#passed_states#add initial_state_index;
+		state_space_ptg#mark_queued initial_state_index;
 
 		let initial_state = state_space#get_state initial_state_index in 
 
 		(* If goal is init then initial winning zone is it's own constraint*)
 		if State.match_state_predicate model state_predicate initial_state then
-			winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
-			init_winning_zone_changed := true;
+			(winningZone#replace initial_state_index (nn_of_lin (self#constr_of_state_index initial_state_index));
+			init_winning_zone_changed := true);
 
-
+		let iter = ref 1 in 
 		(* === ALGORITHM MAIN LOOP === *)
 		while (not @@ self#termination_criteria initial_state_index) do
-			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium ("\nEntering main loop with waiting list: " ^ item_list_to_str waiting#to_list model state_space);
-			let item = waiting#extract {lastUpdate;depends;winningZone;forcedMoves} in 			
-			if verbose_mode_greater Verbose_medium then 
-				print_message Verbose_medium (Printf.sprintf "Processing item: \027[92m %s \027[0m" (item_to_str model state_space item));
+			if verbose_mode_greater Verbose_low then 
+				(print_message Verbose_low (yellow @@ bold @@ Printf.sprintf "- Main algorithm loop iteration %d -" !iter);
+				print_message Verbose_low ("\tQ=" ^ item_list_to_str waiting#to_list model state_space);
+				incr iter);
+			let item = waiting#extract {lastUpdate;depends;winningZone} in 			
+			if verbose_mode_greater Verbose_low then 
+				print_message Verbose_low ("\t" ^ item_to_str model state_space item ~include_zone:true);
 			match item with 
 				| EXPLORE state_index -> 
 					self#explore state_index

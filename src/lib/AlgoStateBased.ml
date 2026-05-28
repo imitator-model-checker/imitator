@@ -1337,10 +1337,18 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
 
-		(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
-		print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");
-		let current_constraint = LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)] in
-		(* Print some information *)
+		let current_constraint = 
+			match options#ptg_abstraction with 
+			| Location -> 
+				(* Perform intersection of I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [invariant ; discrete_constraint]
+			| _ ->
+				(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+				print_message Verbose_high ("Performing intersection of C0(X) and I_l0(X) and D_i = d_i");	
+				LinearConstraint.pxd_intersection [initial_constraint ; invariant ; discrete_constraint (*** TO OPTIMIZE: could be removed ***)]
+		in
+			(* Print some information *)
 		if verbose_mode_greater Verbose_total then
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 
@@ -1462,8 +1470,16 @@ let post_from_one_state_via_one_transition (options : Options.imitator_options) 
         )else(
 
 		(* Compute the new constraint for the current transition *)
-		let new_constraint = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
-
+		let new_constraint = 
+			let k = compute_new_constraint options model source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+			(* Expand to entire invariant if this abstraction is turned on *)
+			if options#ptg_abstraction = Location then 
+				Option.map 
+				(fun _ -> LinearConstraint.pxd_hide_discrete_and_collapse @@ State.compute_invariant model target_location)
+				k
+			else k
+		in
+				
 		(* Check the satisfiability *)
 		match new_constraint with
 			| None ->
@@ -2823,8 +2839,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(** The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
-	val mutable state_indices_removed_by_strong_double_inclusion : State.state_index list = []
-
 	(** Variable to remind of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
@@ -3415,7 +3429,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				| StateSpace.New_state _ -> "NEW STATE"
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
-				| StateSpace.State_replacing_several _ -> "BIGGER STATE than several former states"
 			 in
 			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action `" ^ (model.action_names (StateSpace.get_action_from_combined_transition model combined_transition)) ^ "`: ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
@@ -5078,8 +5091,6 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
-				if List.mem source_state_index state_indices_removed_by_strong_double_inclusion then 
-					current_post_n_plus_1 else
 				((* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 

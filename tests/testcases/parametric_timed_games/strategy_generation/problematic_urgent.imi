@@ -1,0 +1,31 @@
+uncontrollable actions: ;
+
+var 
+    x_p : clock;
+
+automaton plate
+
+actions: takeP2, leaveB;
+
+loc Press : invariant True
+    when True sync takeP2 goto TakenB;
+
+urgent loc TakenB : invariant True
+    when x_p >= 8 sync leaveB goto Safe;
+
+accepting loc Safe : invariant True
+
+end 
+
+
+
+init := {
+    discrete = 
+        loc[plate] <- Press,
+    ;
+    continuous = 
+        & x_p = 0
+    ;
+}
+
+end
