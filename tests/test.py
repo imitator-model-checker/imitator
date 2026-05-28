@@ -32,7 +32,7 @@ parser.add_argument("--filter", help="Filter tests to execute", nargs="?", defau
 args = parser.parse_args()
 
 # To output colored text
-Colors = namedtuple("Colors", "ERROR, BOLD, GOOD, NORMAL, WARNING, SKIPPED")
+Colors = namedtuple("Colors", "ERROR, BOLD, GOOD, NORMAL, WARNING, SKIPPED, PATH_COLOR")
 
 bcolors = Colors(
     ERROR="\033[1;37;41m",
@@ -41,6 +41,7 @@ bcolors = Colors(
     NORMAL="\033[0m",
     WARNING="\033[93;40m",
     SKIPPED="\033[1;37;43m",
+    PATH_COLOR="\033[1;34;40m",
 )
 
 # ************************************************************
@@ -176,7 +177,7 @@ def test(binary_name, tests, logfile, logfile_name):
         fail_with("Binary `%s` does not exist" % binary)
 
     print_to_screen(
-        "\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}".format(
+        "\n{c.BOLD}# TESTING BINARY {c.PATH_COLOR}{name}{c.NORMAL}…".format(
             c=bcolors, name=binary_name
         )
     )
@@ -461,7 +462,7 @@ def test(binary_name, tests, logfile, logfile_name):
             "{1.SKIPPED}{0} benchmarks were skipped (marked as too long).{1.NORMAL}".format(nb_toolong_benchmarks, bcolors)
         )
 
-    print_to_screen("(See %s for details.)" % logfile_name)
+    print_to_screen("(See " + bcolors.PATH_COLOR + ("`%s`" % logfile_name) + bcolors.NORMAL + " for details.)")
 
 
 # ************************************************************
@@ -475,9 +476,9 @@ print_to_screen(
         bcolors
     )
 )
-print_to_log(" TESTATOR                                              v0.1")
+print_to_log(" TESTATOR                                              v0.2")
 print_to_screen_and_log("")
-print_to_screen_and_log(" Étienne André")
+print_to_screen_and_log(" Étienne André et al.")
 print_to_screen_and_log(" Université Sorbonne Paris Nord, LIPN, CNRS, France")
 print_to_screen_and_log(" Université de Lorraine, CNRS, Inria, LORIA, Nancy, France")
 print_to_screen_and_log("############################################################")
@@ -523,6 +524,6 @@ test(BINARY_NAME, tests, logfile, LOGFILE)
 # THE END
 # ************************************************************
 
-print_to_screen_and_log("\n…The end of TESTATOR!")
+print_to_screen_and_log("\n…The end of TESTATOR! 👋")
 
 sys.exit(0)
