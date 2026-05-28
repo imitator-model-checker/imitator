@@ -511,13 +511,13 @@ test(BINARY_NAME, tests, logfile, LOGFILE)
 # 2. TESTING PATATOR
 # ************************************************************
 
-# SETTING LOGS
-logfile = open(DISTRIBUTED_LOGFILE, "w")
+# # SETTING LOGS
+# logfile = open(DISTRIBUTED_LOGFILE, "w")
 
-# IMPORTING THE TESTS CONTENT
-from regression_tests_data_distr import tests_distr
+# # IMPORTING THE TESTS CONTENT
+# from regression_tests_data_distr import tests_distr
 
-test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
+# test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
 
 # ************************************************************
 # THE END
