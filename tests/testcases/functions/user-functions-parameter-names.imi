@@ -1,0 +1,54 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test that identical parameter names do not interfere
+ * Description      : Test that identical parameter names do not interfere
+ * Correctness      : No error
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2026/05/28
+ * Last modified    : 2026/05/28
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+
+
+fn plus_one(my_variable : rat) : rat
+begin
+  return my_variable + 1
+end
+
+(* my own not using not *)
+fn my_not(my_variable : bool) : bool
+begin
+  return not(my_variable)
+end
+
+
+automaton P
+
+  loc l0: invariant True
+
+  when my_not(True) & plus_one(4.98) = plus_one(4.98) goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init := {
+    discrete =
+      loc[P] := l0,
+    ;
+}

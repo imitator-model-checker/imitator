@@ -6149,6 +6149,31 @@ Error                                   : invalid model
 
     ,
 
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2026/05/28
+      ## Last modified            : 2026/05/28
+      'author': 'Étienne André',
+      'purpose'    : 'Test that identical parameter names in different functions do not interfere with each other',
+      'input_files': ['functions/user-functions-parameter-names.imi'],
+      'tags': 'behavior, function',
+      'imitator-version': '3.4',
+      'options'    : '-mode checksyntax',
+      'expectations' : [
+        {'file': 'user-functions-parameter-names.res' , 'content' : """
+Number of IPTAs                         : 1
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	# NOTE: reason for failure is (at least) the same as the above test
     #------------------------------------------------------------
     {
       ## Test version             : 1
