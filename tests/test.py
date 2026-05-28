@@ -231,9 +231,6 @@ def test(binary_name, tests, logfile, logfile_name):
             "",
         )
 
-        # Add the path to all input files
-        # TODO: test for existence of files (just in case)
-
         # Test existence of each input file
         if test_case.get("bypass_files_existence_check", False):
             print_warning("Bypassing existence check for input files for this test case.")
@@ -242,6 +239,7 @@ def test(binary_name, tests, logfile, logfile_name):
                 if not os.path.exists(make_file(each_file)):
                     fail_with("Input file `{}` does not exist".format(each_file))
 
+        # Add the path to all input files
         cmd_inputs = [make_file(each_file) for each_file in test_case["input_files"]]
 
         # ------------------------------------------------------------
