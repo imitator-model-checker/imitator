@@ -99,13 +99,16 @@ def make_output_file(file_name):
 
 
 def fail_with(text):
-    print_to_log("Fatal error!")
-    print_to_log(text)
+    print_to_screen(bcolors.ERROR)
+    print_to_log(" *** Fatal error: %s" % text)
+    print_to_screen("Fatal error!")
+    print_to_screen(text + bcolors.NORMAL)
     sys.exit(1)
 
 
 def print_warning(text):
     print_to_log(" *** Warning: %s" % text)
+    print_to_screen(bcolors.WARNING + "Warning: " + text + bcolors.NORMAL)
 
 
 def print_error(text):
@@ -170,7 +173,7 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     binary = make_binary(binary_name)
     if not os.path.exists(binary):
-        fail_with("Binary %s does not exist" % binary)
+        fail_with("Binary `%s` does not exist" % binary)
 
     print_to_screen(
         "\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}".format(
@@ -229,6 +232,15 @@ def test(binary_name, tests, logfile, logfile_name):
 
         # Add the path to all input files
         # TODO: test for existence of files (just in case)
+
+        # Test existence of each input file
+        if test_case.get("bypass_files_existence_check", False):
+            print_warning("Bypassing existence check for input files for this test case.")
+        else:
+            for each_file in test_case["input_files"]:
+                if not os.path.exists(make_file(each_file)):
+                    fail_with("Input file `{}` does not exist".format(each_file))
+
         cmd_inputs = [make_file(each_file) for each_file in test_case["input_files"]]
 
         # ------------------------------------------------------------

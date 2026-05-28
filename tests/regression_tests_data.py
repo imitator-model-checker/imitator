@@ -61,6 +61,7 @@ tests = [
 		# Last modified            : 2021/01/22
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the absence of model',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['thisfiledoesnotexist.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -82,6 +83,7 @@ Error                                   : model file not found
 		# Last modified            : 2021/01/22
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the absence of property',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['testL.imi', 'thisfiledoesnotexist.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -178,6 +180,7 @@ L/U subclass                            : L-PTA
 		# Last modified            : 2021/06/25
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test model syntax check even when a (non-existing) property is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['testL.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -878,6 +881,7 @@ Error                                   : unsatisfiable initial conditions
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test state space (unsatisfiable initial conditions) even when a (useless, and non-existing) property is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode statespace',
 		'expectations' : [
@@ -27656,6 +27660,7 @@ init := True
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test translation to HyTech even when a (useless, non-existing) property file is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['flipflop.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-imi2HyTech',
 		'expectations' : [
