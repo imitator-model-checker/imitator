@@ -6208,6 +6208,41 @@ Number of IPTAs                         : 1
 
     ,
 
+	# NOTE: same test as above, but using different parameter names in functions to avoid interference
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2026/05/28
+      ## Last modified            : 2026/05/28
+      'author': 'Étienne André',
+      'purpose'    : 'Test some behaviors on user functions (simplified version)',
+      'input_files': ['functions/user-function-1-simplified.imi'],
+      'tags': 'behavior, function',
+      'imitator-version': '3.4',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'user-function-1-simplified-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  P: l0, r_result = 0, lerp_result = 0, r_global = 0, r1 = 1, top_stack = 0, top_queue = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], i_global = 0, bin = 0b1011, q = queue(), s = stack(), i1 = 1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
+&True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
     #------------------------------------------------------------
     {
       ## Test version             : 1
