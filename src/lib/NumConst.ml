@@ -101,7 +101,7 @@ open Gmp.Q.Infixes
 type t = Gmp.Q.t
 
 exception Unknown_numconst of string
-
+exception Cast_to_int_exception of string
 
 (**************************************************)
 (* Global constants (for random generator) *)
@@ -393,7 +393,7 @@ let to_int n =
 	(* First check that it is an int *)
 	if not (is_int n) then (
 		(* Abort with Failure exception *)
-		failwith ("Trying to cast a NumConst " ^ (string_of_numconst n) ^ " to an int." )
+		raise (Cast_to_int_exception ("Trying to cast a NumConst " ^ (string_of_numconst n) ^ " to an int." ))
 	)else(
 		(* Convert to int *)
 		raw_to_int n
