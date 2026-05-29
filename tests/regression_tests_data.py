@@ -4428,7 +4428,7 @@ True
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
-		'input_files': ['array_expressions/array.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'input_files': ['array_expressions/array.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
