@@ -102,6 +102,7 @@ type t = Gmp.Q.t
 
 exception Unknown_numconst of string
 exception Cast_to_int_exception of string
+exception Max_int_exception of string
 
 (**************************************************)
 (* Global constants (for random generator) *)
@@ -388,21 +389,22 @@ let is_int n =
 (**************************************************)
 (** {2 Conversion Functions} *)
 (**************************************************)
-(* Converts to int; raise Failure in case of impossible cast *)
+(* Converts to int; raise Cast_to_int_exception in case of impossible cast *)
 let to_int n =
 	(* First check that it is an int *)
 	if not (is_int n) then (
-		(* Abort with Failure exception *)
-		raise (Cast_to_int_exception ("Trying to cast a NumConst " ^ (string_of_numconst n) ^ " to an int." ))
+		(* Abort with Cast_to_int_exception exception *)
+		raise (Cast_to_int_exception ("Trying to cast a NumConst " ^ (string_of_numconst n) ^ " to an int" ))
 	)else(
 		(* Convert to int *)
 		raw_to_int n
 	)
 
+	(* Convert to a bounded integer; raise Max_int_exception or Cast_to_int_exception in case of impossible cast *)
 let to_bounded_int n =
     let int_n = to_int n in
     if int_n > 65536 then
-        failwith ("Max size of collection exceeded: " ^ string_of_int int_n ^ ", collection size is limited to 65536")
+        raise (Max_int_exception ("Max size of collection exceeded: " ^ string_of_int int_n ^ ", collection size is limited to 65536"))
     else
         int_n
 

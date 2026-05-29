@@ -89,6 +89,7 @@ type t = Gmp.Q.t
 (* {2 Exception} *)
 (**************************************************)
 exception Cast_to_int_exception of string
+exception Max_int_exception of string
 
 (**************************************************)
 (* Functions *)
