@@ -2789,7 +2789,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
-  (* Instantiate the template calls and expand syntatic variables *)
+  (* Instantiate the template calls and expand synctatic variables *)
   let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
   let parsed_model = expand_model parsed_model in
 
@@ -2874,6 +2874,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
     (* Evaluate the constants init expressions *)
     let evaluated_constants = List.map (fun (name, expr, var_type) ->
+
+				print_message Verbose_total ("\n*** Evaluating constant `" ^ name ^ "` with value " ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) ^ " and with type " ^ (DiscreteType.string_of_var_type var_type) ^ "…");	
 
         (* Create variable infos containing only initialized constants *)
         let current_variable_infos = { variable_infos with constants = initialized_constants } in

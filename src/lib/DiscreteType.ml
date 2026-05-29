@@ -12,6 +12,11 @@
  ************************************************************)
 
 (************************************************************)
+(* Modules  *)
+(************************************************************)
+open ImitatorUtilities
+
+(************************************************************)
 (* Types  *)
 (************************************************************)
 
@@ -191,6 +196,7 @@ let is_discrete_type_number_compatibles type_number_a type_number_b =
 
 (* Check if two discrete types are compatible *)
 let rec is_discrete_type_compatibles var_type expr_type =
+    print_message Verbose_total ("Checking compatibility between variable type " ^ string_of_var_type_discrete var_type ^ " and expression type " ^ string_of_var_type_discrete expr_type ^ "…");
     match var_type, expr_type with
     (* Any var type with weak type is ok *)
     | _, Dt_weak

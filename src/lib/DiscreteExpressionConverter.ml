@@ -623,7 +623,11 @@ let convert_discrete_init variable_infos variable_name expr =
     (* Print *)
 
     (* Convert *)
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
+    try
+        ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
+    with
+    | NumConst.Cast_to_int_exception msg -> raise (TypeError ("Invalid discrete initialisation for constant `" ^ variable_name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) ^ "`: " ^ msg ^ ". Cannot cast to int."))
+    | NumConst.Max_int_exception msg -> raise (TypeError ("Invalid discrete initialisation for constant `" ^ variable_name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) ^ "`: " ^ msg ^ ". Max size of collection exceeded."))
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_constant_init initialized_constants (name, expr, var_type) =
@@ -645,10 +649,14 @@ let convert_constant_init initialized_constants (name, expr, var_type) =
     (* Get constant init typed expression *)
     let typed_expr = ExpressionConverter.TypeChecker.check_constant_expression dummy_variable_infos (name, expr, var_type) in
     (* Convert *)
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression dummy_variable_infos typed_expr
+    try
+        ExpressionConverter.Convert.global_expression_of_typed_boolean_expression dummy_variable_infos typed_expr
+    with
+    | NumConst.Cast_to_int_exception msg -> raise (TypeError ("Invalid constant initializer for constant `" ^ name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression dummy_variable_infos expr) ^ "`: " ^ msg ^ ". Cannot cast to int."))
+    | NumConst.Max_int_exception msg -> raise (TypeError ("Invalid constant initializer for constant `" ^ name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression dummy_variable_infos expr) ^ "`: " ^ msg ^ ". Max size of collection exceeded."))
 
 (** Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
-let convert_guard variable_infos guard_convex_predicate =
+let convert_guard variable_infos (guard_convex_predicate : parsed_discrete_boolean_expression list) =
 
     (* Function that split a convex_predicate into two lists *)
     (* One only contain discrete expression to nonlinear_constraint *)
@@ -739,8 +747,21 @@ let convert_guard variable_infos guard_convex_predicate =
             }
 
     (* If some false construct found: false guard *)
-    ) with False_exception -> False_guard
-
+    ) with
+    (* If some false construct found: false guard *)
+    | False_exception -> False_guard
+    (* Also handle type errors *)
+    (*** NOTE: very violent try-catch; it should have been properly checked earlier! ***)
+    | NumConst.Cast_to_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in the guard convex predicate: " ^ (ParsingStructureUtilities.string_of_parsed_discrete_boolean_expressions variable_infos guard_convex_predicate));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ "."))
+        )
+    | NumConst.Max_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_discrete_boolean_expressions variable_infos guard_convex_predicate));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ ". Max size of collection exceeded."))
+        )
 (* Convert a parsed function definition to function definition for abstract model *)
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
 
@@ -775,7 +796,20 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
-    (* Convert clock updates to linear terms *)
-    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
-    (* Convert sequential code bloc *)
-    ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
+    (*** NOTE: very violent try-catch; it should have been properly checked earlier! ***)
+    try
+        (* Convert clock updates to linear terms *)
+        ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
+        (* Convert sequential code bloc *)
+        ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
+        with
+    | NumConst.Cast_to_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_seq_code_bloc variable_infos seq_code_bloc));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ "."))
+        )
+    | NumConst.Max_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_seq_code_bloc variable_infos seq_code_bloc));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ ". Max size of collection exceeded."))
+        )
