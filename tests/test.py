@@ -104,14 +104,14 @@ def make_output_file(file_name):
 def fail_with(text):
     print_to_screen(bcolors.ERROR)
     print_to_log(" *** Fatal error: %s" % text)
-    print_to_screen("Fatal error!")
+    print_to_screen("☠️ Fatal error!")
     print_to_screen(text + bcolors.NORMAL)
     sys.exit(1)
 
 
 def print_warning(text):
     print_to_log(" *** Warning: %s" % text)
-    print_to_screen(bcolors.WARNING + "Warning: " + text + bcolors.NORMAL)
+    print_to_screen(bcolors.WARNING + "⚠️  Warning: " + text + bcolors.NORMAL)
 
 
 def print_error(text):
@@ -205,12 +205,12 @@ def test(binary_name, tests, logfile, logfile_name):
     for test_case in tests:
 
         if test_case.get("skip", False) and not INCLUDE_SKIPPED_BENCHMARKS:
-            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "Skipped!" + bcolors.NORMAL)
+            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "⏩️ Skipped!" + bcolors.NORMAL)
             nb_skipped_benchmarks += 1
             continue
 
         if test_case.get("toolong", False) and not INCLUDE_LONG_BENCHMARKS:
-            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "Skipped! (too long)" + bcolors.NORMAL)
+            print_to_screen(" Benchmark {} ".format(test_case["purpose"]) + bcolors.SKIPPED + "⏳️ Skipped! (marked as too long)" + bcolors.NORMAL)
             nb_toolong_benchmarks += 1
             continue
 
@@ -286,7 +286,7 @@ def test(binary_name, tests, logfile, logfile_name):
                     # Check existence of the output file
                     if not os.path.exists(output_file):
                         print_to_log(
-                            " File {} does not exist! Test {} failed.".format(
+                            "❌️ File {} does not exist! Test {} failed.".format(
                                 output_file, test_expectation_id
                             )
                         )
@@ -342,9 +342,9 @@ def test(binary_name, tests, logfile, logfile_name):
         # If all test cases passed, increment the number of passed benchmarks
         if passed:
             nb_passed_benchmarks += 1
-            print_to_screen(computation_time + " " + bcolors.GOOD + "PASSED!" + bcolors.NORMAL)
+            print_to_screen(computation_time + " " + bcolors.GOOD + "✅️ PASSED!" + bcolors.NORMAL)
         else:
-            print_to_screen(computation_time + " " + bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
+            print_to_screen(computation_time + " " + bcolors.ERROR + "❌️ FAILED!" + bcolors.NORMAL)
 
         # Increment the benchmark id
         benchmark_id += 1
@@ -367,7 +367,7 @@ def test(binary_name, tests, logfile, logfile_name):
 
     if total_benchmarks == nb_passed_benchmarks and total_test_cases == nb_passed_test_cases:
         print_to_screen_and_log(
-            "All benchmarks ({}/{}) passed successfully.".format(
+            "✅️ All benchmarks ({}/{}) passed successfully.".format(
                 nb_passed_benchmarks, total_benchmarks
             )
         )
@@ -377,40 +377,37 @@ def test(binary_name, tests, logfile, logfile_name):
             )
         )
     else:
-        print_to_screen(
-            bcolors.WARNING + "WARNING! Some tests failed." + bcolors.NORMAL
-        )
-        print_to_log("WARNING! Some tests failed.")
+        print_warning("Some tests failed.")
 
         if nb_passed_benchmarks == total_benchmarks:
             print_to_screen(
-                "{2.GOOD}{0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
+                "{2.GOOD}✅️ {0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
                     nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
         else:
             print_to_screen(
-                "{2.WARNING}{0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
+                "{2.WARNING}✅️ {0}/{1} benchmarks passed successfully.{2.NORMAL}".format(
                     nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
 
         print_to_log(
-            "{}/{} benchmarks passed successfully.".format(
+            "✅️ {}/{} benchmarks passed successfully.".format(
                 nb_passed_benchmarks, total_benchmarks
             )
         )
 
         if nb_passed_benchmarks < total_benchmarks:
             print_to_screen(
-                "{2.ERROR}{0}/{1} benchmarks failed.{2.NORMAL}".format(
+                "{2.ERROR}❌️ {0}/{1} benchmarks failed.{2.NORMAL}".format(
                     total_benchmarks - nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
         else:
             print_to_screen(
-                "{}/{} benchmarks failed.".format(
-                    total_benchmarks - nb_passed_benchmarks, total_benchmarks
+                "{2.ERROR}❌️ {0}/{1} benchmarks failed.{2.NORMAL}".format(
+                    total_benchmarks - nb_passed_benchmarks, total_benchmarks, bcolors
                 )
             )
 
@@ -422,13 +419,13 @@ def test(binary_name, tests, logfile, logfile_name):
 
         if nb_passed_test_cases == total_test_cases:
             print_to_screen(
-                "{2.GOOD}{0}/{1} test cases passed successfully.{2.NORMAL}".format(
+                "{2.GOOD}✅️ {0}/{1} test cases passed successfully.{2.NORMAL}".format(
                     nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
         else:
             print_to_screen(
-                "{2.WARNING}{0}/{1} test cases passed successfully.{2.NORMAL}".format(
+                "{2.WARNING}✅️ {0}/{1} test cases passed successfully.{2.NORMAL}".format(
                     nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
@@ -441,14 +438,14 @@ def test(binary_name, tests, logfile, logfile_name):
 
         if nb_passed_test_cases < total_test_cases:
             print_to_screen(
-                "{2.ERROR}{0}/{1} test cases failed.{2.NORMAL}".format(
+                "{2.ERROR}❌️ {0}/{1} test cases failed.{2.NORMAL}".format(
                     total_test_cases - nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
         else:
             print_to_screen(
-                "{}/{} test cases failed.".format(
-                    total_test_cases - nb_passed_test_cases, total_test_cases
+                "{2.ERROR}❌️ {0}/{1} test cases failed.{2.NORMAL}".format(
+                    total_test_cases - nb_passed_test_cases, total_test_cases, bcolors
                 )
             )
 
@@ -460,14 +457,14 @@ def test(binary_name, tests, logfile, logfile_name):
 
     if nb_skipped_benchmarks > 0:
         print_to_screen_and_log(
-            "\n{1.SKIPPED}{0} benchmarks were skipped (marked as to skip).{1.NORMAL}".format(nb_skipped_benchmarks, bcolors)
+            "\n{1.SKIPPED}⏩️ {0} benchmarks were skipped (marked as to skip).{1.NORMAL}".format(nb_skipped_benchmarks, bcolors)
         )
     if nb_toolong_benchmarks > 0:
         print_to_screen_and_log(
-            "{1.SKIPPED}{0} benchmarks were skipped (marked as too long).{1.NORMAL}".format(nb_toolong_benchmarks, bcolors)
+            "{1.SKIPPED}{0}⏳️ benchmarks were skipped (marked as too long).{1.NORMAL}".format(nb_toolong_benchmarks, bcolors)
         )
 
-    print_to_screen("(See " + bcolors.PATH_COLOR + ("`%s`" % logfile_name) + bcolors.NORMAL + " for details.)")
+    print_to_screen("(📃 See " + bcolors.PATH_COLOR + ("`%s`" % logfile_name) + bcolors.NORMAL + " for details.)")
 
 
 # ************************************************************
@@ -519,11 +516,8 @@ test(BINARY_NAME, tests, logfile, ABSOLUTE_LOGFILE_PATH)
 
 # Only run the distributed tests if the distributed binary exists, to avoid running tests that are not relevant if the distributed binary does not exist
 if not os.path.exists(make_binary(DISTRIBUTED_BINARY_NAME)):
-    print_to_screen_and_log(
-        "\n{c.WARNING}Distributed binary `{name}` does not exist, skipping distributed tests.{c.NORMAL}".format(
-            c=bcolors, name=DISTRIBUTED_BINARY_NAME
-        )
-    )
+    print_warning("Distributed binary `{name}` does not exist, skipping distributed tests.".format(name=DISTRIBUTED_BINARY_NAME))
+
     print_to_screen_and_log(
         "(To run distributed tests, make sure to build the distributed binary `{name}`.)".format(
             name=DISTRIBUTED_BINARY_NAME
