@@ -1166,7 +1166,7 @@ checked_name_decl:
 	(* Normal mode: return variable name *)
 	else (if contains $1 "___" then
       failwith
-        "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntatic arrays."
+        "Identifiers with 3 consecutive '_' should not be defined to avoid clashing with expansion of syntactic arrays."
     else $1)
   }
 ;

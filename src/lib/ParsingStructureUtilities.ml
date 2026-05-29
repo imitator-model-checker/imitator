@@ -1067,7 +1067,7 @@ let link_variables_in_parsed_model parsed_model =
         fun_definitions = link_variables_in_fun_defs parsed_model.fun_definitions;
     } , local_variables_accumulator
 
-(* Convert a syntatic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
+(* Convert a syntactic array access (`x[i]`) into the identifier following our convention (`x___i`) *)
 let gen_access_id arr_name index = arr_name ^ "___" ^ (Int.to_string index)
 
 let rec pp_arith_expr = function

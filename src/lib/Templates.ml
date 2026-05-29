@@ -4,7 +4,7 @@ open ImitatorUtilities;;
 
 (* Utilities *)
 
-(* The names and the corresponding array lengths of all syntatic variables in the problem *)
+(* The names and the corresponding array lengths of all syntactic variables in the problem *)
 type synt_vars_data = (variable_name * synt_var_kind * int) list
 
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
@@ -58,7 +58,7 @@ let gen_var_from_access g_decls def gen_var_from_name arr_name index synt_arrays
         if index_c < len then
           let var_name = gen_access_id arr_name index_c in
           gen_var_from_name var_name
-        else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntatic array."
+        else failwith "[expand_parsed_discrete_factor]: Index is greater or equal to length of syntactic array."
 
 let instantiate_leaf (param_map : var_map) : parsing_structure_leaf_modifier =
   fun leaf -> match leaf with
@@ -301,7 +301,7 @@ let instantiate_automata (templates : parsed_template_definition list) (insts : 
   List.map (instantiate_automaton templates) insts
 
 (*****************************************************************************)
-(* Expansion of syntatic arrays *)
+(* Expansion of syntactic arrays *)
 (*****************************************************************************)
 
 let expand_synt_decls (synt_decls : synt_vars_data) : variable_declarations =
@@ -348,7 +348,7 @@ and expand_linear_constraint g_decls = function
       let e2' = expand_linear_expression g_decls e2 in
       Parsed_linear_constraint (e1', relop, e2')
 
-(* Expand syntatic arrays - unfortunatelly this can't be implemented just with a map_parsed_boolean_expression *)
+(* Expand syntactic arrays - unfortunatelly this can't be implemented just with a map_parsed_boolean_expression *)
 let rec expand_parsed_boolean_expression g_decls synt_arrays = function
   | Parsed_conj_dis (e1, e2, c) ->
       let e1' = expand_parsed_boolean_expression g_decls synt_arrays e1 in
@@ -388,7 +388,7 @@ and expand_parsed_discrete_term g_decls synt_arrays = function
 and expand_parsed_discrete_factor g_decls synt_arrays = fun factor ->
   let get_name_of_factor = function
     | Parsed_variable (name, _) -> name
-    | _ -> failwith "[expand_parsed_discrete_factor]: Name of syntatic array was not a variable name."
+    | _ -> failwith "[expand_parsed_discrete_factor]: Name of syntactic array was not a variable name."
   in
   match factor with
     | Parsed_access (factor', index) ->

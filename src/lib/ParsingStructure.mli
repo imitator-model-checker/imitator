@@ -97,7 +97,7 @@ and parsed_discrete_factor =
 
 
 (****************************************************************)
-(* Name or access used in syntatic arrays *)
+(* Name or access used in syntactic arrays *)
 (****************************************************************)
 
 type name_or_access =
@@ -355,7 +355,7 @@ type parsed_duration = linear_expression
 type parsed_projection = (variable_name list) option
 
 (****************************************************************)
-(** Syntatic Variables *)
+(** Syntactic Variables *)
 (****************************************************************)
 
 type synt_var_kind =

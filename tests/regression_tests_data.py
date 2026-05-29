@@ -29452,11 +29452,11 @@ Constraint nature                       : good
     }
     ,
     {
-        'purpose'      : 'Test each syntatic expansion implemented (templates, syntatic arrays, etc.)',
-        'input_files'  : ['templates/syntatic_test.imi'],
+        'purpose'      : 'Test each syntactic expansion implemented (templates, syntactic arrays, etc.)',
+        'input_files'  : ['templates/syntactic_test.imi'],
         'options'      : '-verbose mute -imi2IMI',
         'expectations' : [{
-            'file'   : 'syntatic_test-regenerated.imi',
+            'file'   : 'syntactic_test-regenerated.imi',
             'content': """
 var 
 	x___0, x___1
