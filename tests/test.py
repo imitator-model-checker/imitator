@@ -25,6 +25,7 @@ import subprocess
 import sys
 from collections import namedtuple
 import argparse
+import tempfile
 
 # Parse arguments
 parser = argparse.ArgumentParser()
@@ -49,23 +50,23 @@ bcolors = Colors(
 # ************************************************************
 
 # Path to the tests directory
-TEST_PATH = os.path.dirname(os.path.abspath(__file__))
+ABSOLUTE_TEST_PATH = os.path.dirname(os.path.abspath(__file__))
 # Root path to the main IMITATOR root directory
-IMITATOR_PATH = os.path.dirname(TEST_PATH)
+ABSOLUTE_IMITATOR_PATH = os.path.dirname(ABSOLUTE_TEST_PATH)
 # Path to the example directory
-EXAMPLE_PATH = os.path.join(TEST_PATH, "testcases/")
+ABSOLUTE_EXAMPLE_PATH = os.path.join(ABSOLUTE_TEST_PATH, "testcases/")
 # Path to the binary directory
-BINARY_PATH = os.path.join(IMITATOR_PATH, "bin/")
+ABSOLUTE_BINARY_PATH = os.path.join(ABSOLUTE_IMITATOR_PATH, "bin/")
 
 # Name for the non-distributed binary to test
 BINARY_NAME = "imitator"
 # Log file for the non-distributed binary
-LOGFILE = os.path.join(TEST_PATH, "tests.log")
+ABSOLUTE_LOGFILE_PATH = os.path.join(ABSOLUTE_TEST_PATH, "tests.log")
 
 # Name for the distributed binary to test
 DISTRIBUTED_BINARY_NAME = "patator"
 # Log file for the distributed binary
-DISTRIBUTED_LOGFILE = os.path.join(TEST_PATH, "testsdistr.log")
+ABSOLUTE_DISTRIBUTED_LOGFILE_PATH = os.path.join(ABSOLUTE_TEST_PATH, "testsdistr.log")
 
 # Include long benchmarks in the tests (can be long to execute, but can be useful to check for regressions on long benchmarks)
 INCLUDE_LONG_BENCHMARKS = False
@@ -80,19 +81,20 @@ INCLUDE_SKIPPED_BENCHMARKS = False
 # BY DEFAULT: ALL TO LOG FILE
 # ************************************************************
 orig_stdout = sys.stdout
-logfile = open(LOGFILE, "w")
+logfile = open(ABSOLUTE_LOGFILE_PATH, "w")
 sys.stdout = logfile
 
 
 # ************************************************************
 # FUNCTIONS
 # ************************************************************
+# Return the absolute path to a binary in the binary directory
 def make_binary(binary):
-    return os.path.join(BINARY_PATH, binary)
+    return os.path.join(ABSOLUTE_BINARY_PATH, binary)
 
-
+# Return the absolute path to a file in the example directory
 def make_file(file_name):
-    return os.path.join(EXAMPLE_PATH, file_name)
+    return os.path.join(ABSOLUTE_EXAMPLE_PATH, file_name)
 
 
 def make_output_file(file_name):
@@ -172,6 +174,7 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # CHECK FOR THE EXISTENCE OF BINARIES
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
     binary = make_binary(binary_name)
     if not os.path.exists(binary):
         fail_with("Binary `%s` does not exist" % binary)
@@ -255,74 +258,78 @@ def test(binary_name, tests, logfile, logfile_name):
 
         # Measure the computation time of the command
         start_time = time.time()
-        # Launch!
-        # NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
-        logfile.flush()
-        subprocess.call(cmd, stdout=logfile, stderr=logfile)
-        logfile.flush()
-        end_time = time.time()
 
-        # Files to remove
-        files_to_remove = set()
+        # Backup the original working directory to be able to come back to it after the test case, and avoid polluting the repository with output files
+        original_working_directory = os.getcwd()
 
-        # Check the expectations
-        for expectation_id, expectation in enumerate(test_case["expectations"]):
-            # Build file
-            output_file = make_output_file(expectation["file"])
+        # Create a temporary directory for the output files, to avoid mixing with other test cases and polluting the repository
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Change the current working directory to the temporary directory
+            os.chdir(temp_dir)
 
-            test_expectation_id = "{}.{}".format(benchmark_id, expectation_id)
+            try:
 
-            # Check existence of the output file
-            if not os.path.exists(output_file):
-                print_to_log(
-                    " File {} does not exist! Test {} failed.".format(
-                        output_file, test_expectation_id
-                    )
-                )
-                passed = False
-            else:
-                # Add file to list of files to remove
-                files_to_remove.add(output_file)
+                # Run!
+                # NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
+                logfile.flush()
+                subprocess.call(cmd, stdout=logfile, stderr=logfile)
+                logfile.flush()
+                end_time = time.time()
 
-                # Get extension of file
-                _, file_extension = os.path.splitext(output_file)
+                # Check the expectations
+                for expectation_id, expectation in enumerate(test_case["expectations"]):
+                    # Build file
+                    output_file = make_output_file(expectation["file"])
 
-                if file_extension == ".png":
-                    print_to_log(" Test %s passed." % test_expectation_id)
-                    nb_passed_test_cases += 1
-                else:
-                    # Read file
-                    with open(output_file, "r") as my_file:
-                        # Get the content
-                        original_content = my_file.read()
-                        # Replace all whitespace characters (space, tab, newline, and so on) with a single space
-                        content = " ".join(original_content.split())
+                    test_expectation_id = "{}.{}".format(benchmark_id, expectation_id)
 
-                        # Replace all whitespace characters (space, tab, newline, and so on) with a single space
-                        expected_content = " ".join(expectation["content"].split())
+                    # Check existence of the output file
+                    if not os.path.exists(output_file):
+                        print_to_log(
+                            " File {} does not exist! Test {} failed.".format(
+                                output_file, test_expectation_id
+                            )
+                        )
+                        passed = False
+                    else:
+                        # Get extension of file
+                        _, file_extension = os.path.splitext(output_file)
 
-                        # Look for the expected content
-                        position = content.find(expected_content)
-
-                        if position >= 0:
+                        if file_extension == ".png":
                             print_to_log(" Test %s passed." % test_expectation_id)
                             nb_passed_test_cases += 1
                         else:
-                            passed = False
-                            print_to_log(
-                                test_fmt.format(
-                                    expectation_id=test_expectation_id,
-                                    expected_content=expectation["content"],
-                                    original_content=original_content,
-                                )
-                            )
+                            # Read file
+                            with open(output_file, "r") as my_file:
+                                # Get the content
+                                original_content = my_file.read()
+                                # Replace all whitespace characters (space, tab, newline, and so on) with a single space
+                                content = " ".join(original_content.split())
+
+                                # Replace all whitespace characters (space, tab, newline, and so on) with a single space
+                                expected_content = " ".join(expectation["content"].split())
+
+                                # Look for the expected content
+                                position = content.find(expected_content)
+
+                                if position >= 0:
+                                    print_to_log(" Test %s passed." % test_expectation_id)
+                                    nb_passed_test_cases += 1
+                                else:
+                                    passed = False
+                                    print_to_log(
+                                        test_fmt.format(
+                                            expectation_id=test_expectation_id,
+                                            expected_content=expectation["content"],
+                                            original_content=original_content,
+                                        )
+                                    )
+            finally:
+                # Come back to the original working directory, to avoid polluting the repository with output files of this test case
+                os.chdir(original_working_directory)
 
         # Update number of test cases
         test_case_id += len(test_case["expectations"])
-
-        # Remove all output files
-        for my_file in files_to_remove:
-            os.remove(my_file)
 
         # Print the computation time for this benchmark, rounded to 3 decimal places
         # Highlight the computation time in WARNING if > 0.1 s, in ERROR if > 1 s
@@ -504,19 +511,32 @@ if args.filter:
     ]
 
 
-test(BINARY_NAME, tests, logfile, LOGFILE)
+test(BINARY_NAME, tests, logfile, ABSOLUTE_LOGFILE_PATH)
 
 # ************************************************************
 # 2. TESTING PATATOR
 # ************************************************************
 
-# # SETTING LOGS
-# logfile = open(DISTRIBUTED_LOGFILE, "w")
+# Only run the distributed tests if the distributed binary exists, to avoid running tests that are not relevant if the distributed binary does not exist
+if not os.path.exists(make_binary(DISTRIBUTED_BINARY_NAME)):
+    print_to_screen_and_log(
+        "\n{c.WARNING}Distributed binary `{name}` does not exist, skipping distributed tests.{c.NORMAL}".format(
+            c=bcolors, name=DISTRIBUTED_BINARY_NAME
+        )
+    )
+    print_to_screen_and_log(
+        "(To run distributed tests, make sure to build the distributed binary `{name}`.)".format(
+            name=DISTRIBUTED_BINARY_NAME
+        )
+    )
+else:
+    # SETTING LOGS
+    logfile = open(ABSOLUTE_DISTRIBUTED_LOGFILE_PATH, "w")
 
-# # IMPORTING THE TESTS CONTENT
-# from regression_tests_data_distr import tests_distr
+    # IMPORTING THE TESTS CONTENT
+    from regression_tests_data_distr import tests_distr
 
-# test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
+    test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, ABSOLUTE_DISTRIBUTED_LOGFILE_PATH)
 
 # ************************************************************
 # THE END
