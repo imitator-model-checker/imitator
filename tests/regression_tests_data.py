@@ -5801,6 +5801,30 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
+		## Test since               : 2026/05/29
+		## Last modified            : 2026/05/29
+		## Test for IMITATOR version: 3.4-beta
+		## Author 					: Étienne André
+		'author'     : 'Étienne André',
+		'purpose'    : 'Check that an int variable is not compared to a rational in a guard',
+		'input_files': ['type_checking/guards/rational-and-int-type-error.imi'],
+		'tags'		 :'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-and-int-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
 		## Test since               : 2021/06/07
 		## Last modified            : 2021/06/07
 		## Test for IMITATOR version: 3.1.0
