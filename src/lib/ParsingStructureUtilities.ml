@@ -627,6 +627,10 @@ and string_of_parsed_discrete_boolean_expression variable_infos = function
     | Parsed_not expr ->
             "not (" ^ (string_of_parsed_boolean_expression variable_infos expr) ^ ")"
 
+and string_of_parsed_discrete_boolean_expressions variable_infos expr_list =
+    let str_expr_list = List.map (string_of_parsed_discrete_boolean_expression variable_infos) expr_list in
+    OCamlUtilities.string_of_list_of_string_with_sep " and " str_expr_list
+
 and string_of_parsed_seq_code_bloc variable_infos parsed_seq_code_bloc =
     let str_instructions = List.map (string_of_parsed_instruction variable_infos) parsed_seq_code_bloc in
     OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions

@@ -187,6 +187,7 @@ val string_of_let_in : string -> string -> string -> string
 
 val string_of_parsed_boolean_expression : variable_infos -> parsed_boolean_expression -> string
 val string_of_parsed_discrete_boolean_expression : variable_infos -> parsed_discrete_boolean_expression -> string
+val string_of_parsed_discrete_boolean_expressions : variable_infos -> parsed_discrete_boolean_expression list -> string
 val string_of_parsed_arithmetic_expression : variable_infos -> parsed_discrete_arithmetic_expression -> string
 val string_of_parsed_term : variable_infos -> parsed_discrete_term -> string
 val string_of_parsed_factor : variable_infos -> parsed_discrete_factor -> string
