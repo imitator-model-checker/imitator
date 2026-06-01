@@ -5910,7 +5910,7 @@ Error                                   : invalid model
 		## Test for IMITATOR version: 3.4-beta
 		## Author 					: Étienne André
 		'author'     : 'Étienne André',
-		'purpose'    : 'Check that an int variable is not compared to a rational in a guard',
+		'purpose'    : 'Test that an int variable is not compared to a rational in a guard',
 		'input_files': ['type_checking/guards/rational-and-int-type-error.imi'],
 		'tags'		 :'type checking',
 		'options'    : '',
@@ -6450,7 +6450,7 @@ STATE 1:
       ## Test since               : 2023/01/24
       ## Last modified            : 2023/01/24
       'author': 'lbinria',
-      'purpose'    : 'Check that returning clock is forbidden',
+      'purpose'    : 'Test that returning clock is forbidden',
       'input_files': ['functions/return-clock.imi'],
       'tags': 'function, clock, return',
       'imitator-version': '3.4',
@@ -6496,7 +6496,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/24
       ## Last modified            : 2023/01/24
       'author': 'lbinria',
-      'purpose'    : 'Check that returning parameter is forbidden',
+      'purpose'    : 'Test that returning parameter is forbidden',
       'input_files': ['functions/return-param.imi'],
       'tags': 'function, parameter, return',
       'imitator-version': '3.4',
@@ -6519,7 +6519,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/25
       ## Last modified            : 2023/01/25
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a constant is forbidden',
+      'purpose'    : 'Test that updating a constant is forbidden',
       'input_files': ['functions/seq-code-bloc-update-constant.imi'],
       'tags': 'code, bloc, constant, update',
       'imitator-version': '3.4',
@@ -6542,7 +6542,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a parameter is forbidden',
+      'purpose'    : 'Test that updating a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6565,7 +6565,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a discrete to a parameter is forbidden',
+      'purpose'    : 'Test that updating a discrete to a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6588,7 +6588,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a discrete with a clock is forbidden',
+      'purpose'    : 'Test that updating a discrete with a clock is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-clock.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6605,13 +6605,14 @@ Error                                   : invalid model
 
     ,
 
+
     #------------------------------------------------------------
     {
       ## Test version             : 1
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that nonlinear expressions over clocks of parameters are forbidden',
+      'purpose'    : 'Test that nonlinear expressions over clocks of parameters are forbidden',
       'input_files': ['functions/seq-code-bloc-nonlinear-op-continuous.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6628,12 +6629,35 @@ Error                                   : invalid model
 
     ,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+        'skip' 		: True, # NOTE: this test is currently failing, but this is not extremely critical, so we skip it for now; see issue #218 for more details
+		'purpose'    : 'Test that a local variable name is treated differently as a function argument and a global variable',
+		'input_files': ['functions/side-effects-samename.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'side-effects-samename-statespace.states' , 'content' : """
+pta: l2, i = 0, j = 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/03/13
-		# Last modified            : 2023/03/13
+		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test functions: with/without side-effects, and clock updates allowed in functions',
 		'input_files': ['functions/side-effects.imi'],
@@ -6652,6 +6676,7 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
 
 	#------------------------------------------------------------
 	{
