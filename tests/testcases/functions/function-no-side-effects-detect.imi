@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2023/08/23
- * Last modified    : 2023/08/23
+ * Last modified    : 2026/06/01
  * Model version    : 0.1
  *
  * IMITATOR version : 3.4-beta
@@ -30,8 +30,6 @@ var
 (* Discrete *)
 	i,
 		: int;
-	r,
-		: rational;
 	q,
 		: int queue;
 
@@ -47,7 +45,7 @@ var
 function return_true() : bool
 begin
 	var i2 : int = i;
-	i2 := i + 1;
+	i2 <- i + 1;
 	return True
 end
 
@@ -66,7 +64,7 @@ begin
 	(* Iterate on the copied queue *)
 	while not (queue_is_empty(q_copy)) do
 		var e : int = queue_pop(q_copy);
-		if e > highest then highest := e end
+		if e > highest then highest <- e end
 	done
 	return highest
 end
@@ -78,7 +76,7 @@ end
 actions: a;
 
 loc l1: invariant return_true()
-	when x = 1 & highest_element_in_queue(q) >= 0 sync a do {x := p/2; i := i+1; r := r*r; queue_push(4, q); queue_push(2, q); queue_push(99, q); queue_push(1, q); i := highest_element_in_queue(q)} goto l2;
+	when x = 1 & highest_element_in_queue(q) >= 0 sync a do {x <- p/2; i <- i+1; queue_push(4, q); queue_push(2, q); queue_push(99, q); queue_push(1, q); i <- highest_element_in_queue(q)} goto l2;
 
 loc l2: invariant return_true_queue()
 
@@ -90,20 +88,19 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init := {
+init <- {
 	
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] := l1,
+		loc[pta] <- l1,
 
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		r := 1/2,
-		i := 0,
-		q := queue(),
+		i <- 0,
+		q <- queue(),
 
     ;
 
