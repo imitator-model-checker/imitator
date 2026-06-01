@@ -4425,6 +4425,85 @@ True
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 1-D int array',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-1D-simple-OK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-1D-simple-OK.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 1-D int array (variant)',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-1D-simple-NOK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-1D-simple-NOK.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		# WARNING/NOTE: this test has never been working! It has been added to exhibit a bug on 2D-arrays
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 2-D int array',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-2D-simple-OK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-2D-simple-OK.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
