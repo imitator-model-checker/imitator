@@ -80,7 +80,7 @@ init <- {
 		& p <= c1
 		& p = c1
 		(* Check that constants can be at the left-side of the equation *)
-		& c1 = p
+		& c1 <= p
 	;
 }
 

@@ -5358,17 +5358,42 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test author              : Étienne André
 		# Test since               : 2023/08/22
-		# Last modified            : 2023/08/22
+		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4-beta
-		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
+        'skip': True, # This test is currently skipped because of a bug in the handling of constants in continuous inits (see issue #216)
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities (with =)',
 		'tags'       : 'syntax,init',
 		'input_files': ['init_state/constants-in-init.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'constants-in-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4-beta
+        'skip': True, # This test is currently skipped because of a bug in the handling of constants in continuous inits (see issue #216)
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities (with <=)',
+		'tags'       : 'syntax,init',
+		'input_files': ['init_state/constants-in-init-leq.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'constants-in-init-leq.res' , 'content' : """
 Number of IPTAs                         : 1
 		"""
 			} # end result file
