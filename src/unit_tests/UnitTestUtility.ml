@@ -1,4 +1,5 @@
 open Lib
+open Parsing
 
 (* Utility class for generating unit tests to avoid cluttering the main unit test class*)
 

@@ -1,0 +1,40 @@
+(library
+ (name parsing)
+ (wrapped true)
+ (libraries gmp extlib fileutils str unix threads)
+ (modules_without_implementation automaton parsingStructure))
+
+(ocamllex
+ (modules ModelLexer PropertyLexer))
+
+(menhir
+ (flags --dump --explain)
+ (modules ModelParser PropertyParser))
+
+(rule
+ (targets ModelParser.conflicts)
+ (deps ModelParser.mly)
+ (action
+  (progn
+   (run menhir --table --dump --explain --base ModelParserConflictReport %{deps})
+   (run cp ModelParserConflictReport.conflicts ModelParser.conflicts))))
+
+(rule
+ (targets PropertyParser.conflicts)
+ (deps PropertyParser.mly)
+ (action
+  (progn
+   (run menhir --table --dump --explain --base PropertyParserConflictReport %{deps})
+   (run cp PropertyParserConflictReport.conflicts PropertyParser.conflicts))))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
+
+(rule
+ (targets BuildInfo.ml BuildInfo.mli)
+ (deps
+  (:gen ../../gen_build_info.py))
+ (action
+  (run python %{gen} BuildInfo.ml BuildInfo.mli)))

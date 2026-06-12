@@ -1,6 +1,6 @@
 (tests
  (names imitatorUnitTests)
- (libraries alcotest lib)
+ (libraries alcotest lib parsing)
  (action (run %{test} -e))
   (link_flags
   (:standard

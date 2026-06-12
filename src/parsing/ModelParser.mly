@@ -375,8 +375,8 @@ fun_parameter_list:
 
 /* Function parameters list (separated by whitespace) */
 fun_parameter_nonempty_list:
-  | NAME COLON var_type_discrete { [(($1, Parsing.symbol_start ()), $3)] }
-  | fun_parameter_nonempty_list COMMA NAME COLON var_type_discrete { (($3, Parsing.symbol_start ()), $5) :: $1 }
+  | NAME COLON var_type_discrete { [(($1, $startofs), $3)] }
+  | fun_parameter_nonempty_list COMMA NAME COLON var_type_discrete { (($3, $startofs), $5) :: $1 }
 ;
 
 seq_code_bloc:
@@ -399,7 +399,7 @@ semicolon_or_comma_opt:
 
 instruction:
   /* local declaration */
-  | CT_VAR checked_name_decl COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, Parsing.symbol_start ()), $4, $6) }
+  | CT_VAR checked_name_decl COLON var_type_discrete OP_EQ boolean_expression { Parsed_local_decl (($2, $startofs), $4, $6) }
   /* assignment */
   | update_without_deprecated { (Parsed_assignment $1) }
   /* instruction without return */
@@ -423,7 +423,7 @@ parsed_scalar_or_index_update_type:
 
 control_structure:
   /* for loop */
-  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE { Parsed_for_loop (($2, Parsing.symbol_start ()), $4, $6, $5, $8) }
+  | CT_FOR NAME CT_FROM arithmetic_expression loop_dir arithmetic_expression CT_DO seq_code_bloc CT_DONE { Parsed_for_loop (($2, $startofs), $4, $6, $5, $8) }
   /* while loop */
   | CT_WHILE boolean_expression CT_DO seq_code_bloc CT_DONE { Parsed_while_loop ($2, $4) }
   /* conditional */
