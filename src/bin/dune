@@ -45,3 +45,7 @@
    (copy %{dep:IMITATOR.exe} %{target})
    (run chmod u+w %{target})
    (run strip %{target}))))
+
+(alias
+ (name default)
+ (deps imitator))

@@ -167,7 +167,7 @@ dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build
+dune build --stop-on-first-error
 
 # TODO: uncomment when bugs are fixed
 # dune build &>$err || {
