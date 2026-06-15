@@ -677,6 +677,9 @@ let declared_components_of_model parsed_model =
 (* Get a dependency graph as a list of relations between variables and functions *)
 (* Each relation is a pair representing a ref to a variable / function using another variable / function *)
 let dependency_graph ?(no_var_autoremove=false) declarations_info parsed_model parsed_property_opt =
+    (* The option is consumed later by ModelConverter when deciding whether to
+       remove unused variables/functions. Keep the argument for API clarity. *)
+    ignore no_var_autoremove;
 
     (* Function that return all component relations of a given function definition *)
     let function_relations (fun_def : parsed_fun_definition) =

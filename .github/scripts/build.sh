@@ -140,7 +140,8 @@ opam install -y extlib fileutils oasis alcotest menhir &>$err || {
 # install mlgmp
 information "Installing mlgmp..."
 
-if [ ! -d "$(opam var lib)/gmp" ]; then
+gmp_lib_dir="$(opam var lib)/gmp"
+if [ ! -d "$gmp_lib_dir" ] || ! find "$gmp_lib_dir" -maxdepth 1 -type f -name 'gmp*.cmx' | grep -q .; then
   bash "${SCRIPT_FOLDER}/install-mlgmp.sh" &>$err || {
     error "An issue has occured while installing mlgmp. Please check the error log."
     exit 1
@@ -152,7 +153,8 @@ fi
 # instal ppl
 information "Installing PPL..."
 
-if [ ! -d "$(opam var lib)/ppl" ]; then
+ppl_lib_dir="$(opam var lib)/ppl"
+if [ ! -d "$ppl_lib_dir" ] || ! find "$ppl_lib_dir" -maxdepth 1 -type f -name 'ppl_ocaml*.cmx' | grep -q .; then
   bash "${SCRIPT_FOLDER}/install-ppl.sh" &>$err || {
     error "An issue has occured while installing plp. Please check the error log."
     exit 1
@@ -167,13 +169,15 @@ dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build
+dune build --stop-on-first-error || {
+  error "An issue has occurred while building IMITATOR."
+  exit 1
+}
 
-# TODO: uncomment when bugs are fixed
-# dune build &>$err || {
-#   error "An issue has occured while building IMITATOR. Please check the error log."
-#   exit 1
-# }
+if [ ! -x "bin/imitator" ]; then
+  error "Binary 'bin/imitator' does not exist after dune build."
+  exit 1
+fi
 
 rm -f $err
 success "IMITATOR has been built successfully."
