@@ -20,7 +20,6 @@
 (************************************************************)
 open Lib
 open Exporter
-open Parsing
 open Exceptions
 open OCamlUtilities
 
