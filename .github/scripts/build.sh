@@ -167,13 +167,15 @@ dune clean
 
 # Build IMITATOR
 information "Building IMITATOR..."
-dune build --stop-on-first-error
+dune build --stop-on-first-error || {
+  error "An issue has occurred while building IMITATOR."
+  exit 1
+}
 
-# TODO: uncomment when bugs are fixed
-# dune build &>$err || {
-#   error "An issue has occured while building IMITATOR. Please check the error log."
-#   exit 1
-# }
+if [ ! -x "bin/imitator" ]; then
+  error "Binary 'bin/imitator' does not exist after dune build."
+  exit 1
+fi
 
 rm -f $err
 success "IMITATOR has been built successfully."

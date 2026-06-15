@@ -7,7 +7,17 @@
   (run %{test} -e))
  (link_flags
   (:include link_flags.%{system})
-  (:standard -cclib -lppl -cclib -lstdc++)))
+  (:standard
+   -cclib
+   -lppl
+   -cclib
+   -lppl_ocaml
+   -cclib
+   -lstdc++
+   -cclib
+   -lgmp
+   -cclib
+   -lgmpxx)))
 
 (rule
  (with-stdout-to
