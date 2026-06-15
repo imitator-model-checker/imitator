@@ -72,5 +72,5 @@ if [ ! -z "${GITHUB_WORKSPACE}" ]; then
     cd bin
     platform=$(echo "${RUNNER_OS}" | awk '{print tolower($1)}')
     tag="${GITHUB_REF_NAME##*/}"
-    mv "imitator" "imitator-${tag}-${platform}-amd64"
+    cp "imitator" "imitator-${tag}-${platform}-amd64"
 fi
