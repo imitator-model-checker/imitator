@@ -20,14 +20,19 @@ from __future__ import print_function
 
 import os
 import subprocess
+import sys
 from time import gmtime, strftime
 
 # ************************************************************
 # CONSTANTS
 # ************************************************************
-folder = "" if (os.path.basename(os.getcwd()) == "lib") else "src/lib/"
-ml_file_name = folder + "BuildInfo.ml"
-mli_file_name = folder + "BuildInfo.mli"
+if len(sys.argv) == 3:
+    ml_file_name = sys.argv[1]
+    mli_file_name = sys.argv[2]
+else:
+    raise SystemExit(
+        "Usage: {} [ML_OUTPUT MLI_OUTPUT]".format(os.path.basename(sys.argv[0]))
+    )
 
 print("Python is now handling build information…")
 

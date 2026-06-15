@@ -1,40 +1,14 @@
 (library
  (name lib)
- (libraries gmp ppl extlib fileutils str unix threads)
+ (libraries parsing gmp ppl extlib fileutils str unix threads)
+ (flags
+  (:standard -open Parsing))
  (modules_without_implementation
   abstractModel
   abstractProperty
-  automaton
-  parsingStructure
   result))
-
-(ocamllex
- (modules ModelLexer PropertyLexer))
-
-(menhir
- (flags --dump --explain)
- (modules ModelParser PropertyParser))
-
-(rule
- (targets ModelParser.conflicts)
- (deps ModelParser.mly)
- (action
-  (run menhir --dump --explain %{deps})))
-
-(rule
- (targets PropertyParser.conflicts)
- (deps PropertyParser.mly)
- (action
-  (run menhir --dump --explain %{deps})))
 
 (env
  (dev
   (flags
    (:standard -warn-error -A))))
-
-(rule
- (targets BuildInfo.ml BuildInfo.mli)
- (deps
-  (:gen ../../gen_build_info.py))
- (action
-  (run python %{gen})))

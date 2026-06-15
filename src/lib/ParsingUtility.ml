@@ -6,7 +6,10 @@
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Parsing functions for input elements
+ * Module description: Parsing functions for input elements.
+ * Note: this module is a wrapper around the `parsing` library. It is in charge
+ * of error reporting (options, result processing) and of the conversion of the
+ * parsing structures into abstract structures.
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
@@ -40,7 +43,7 @@ let converting_counter = create_time_counter_and_register "model converting" Par
 let print_error_and_abort (options : Options.imitator_options) (error_message : string) (error_type : Result.error_type) =
 	(* Print the error *)
 	print_error error_message;
-	
+
 	(* Force output result if not set *)
 	if not options#is_set_output_result then(
 		options#set_output_result true;
@@ -48,7 +51,7 @@ let print_error_and_abort (options : Options.imitator_options) (error_message : 
 
 	(* Process result (including file export, if possible) and fail *)
 	ResultProcessor.process_result_and_abort error_type "unset algorithm" None ((*** HACK ***)converting_counter);
-	
+
 	(* Safety *)
 	exit(1)
 
@@ -71,141 +74,18 @@ let filenotfound_error_of model_or_property = match model_or_property with
 (* Local parsing function *)
 (************************************************************)
 
-(* Generic parser that returns the abstract structure *)
-let parser_lexer_gen (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer lexbuf string_of_input file_name =
-	(* Parsing *)
-	print_message Verbose_total ("Preparing actual parsing…");
-	let parsing_structure = try (
-		let absolute_filename = FilePath.make_absolute (FileUtil.pwd ()) file_name in
-		print_message Verbose_total ("Created absolute file name `" ^ absolute_filename ^ "`.");
-		
-		print_message Verbose_total ("Assigning lex_curr_p…");
-		lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
-		
-		print_message Verbose_total ("Assigning lex_start_p…");
-		lexbuf.Lexing.lex_start_p <- { lexbuf.Lexing.lex_start_p with Lexing.pos_fname = absolute_filename };
-
-		print_message Verbose_total ("Starting actual parsing of `" ^ absolute_filename ^ "`…");
-		
-		let parsing_structure = the_parser the_lexer lexbuf in
-		print_message Verbose_total ("Parsing structure created");
-		parsing_structure
+(* Call a parsing function of the `parsing` library, and abort properly (using the options) in case of error *)
+let parse_or_abort (model_or_property : model_or_property) (options : Options.imitator_options) (parsing_function : string -> 'parsing_structure) (file_name : string) : 'parsing_structure =
+	try(
+		parsing_function file_name
 	) with
-		| ParsingError (symbol_start, symbol_end) ->
-			print_message Verbose_total ("Parsing error detected. Processing…");
-			
-			(* Convert the in_channel into a string *)
-			let file_string = string_of_input () in
-			(* Create the error message *)
-			let error_message =
-				if symbol_start >= 0 && symbol_end >= symbol_start then (
-					(* Get the symbol *)
-					let error_symbol = (String.sub file_string symbol_start (symbol_end - symbol_start)) in
-					(* Resize it if too big *)
-					let error_symbol =
-						if (String.length error_symbol > 25) then
-							"…" ^ (String.sub error_symbol (String.length error_symbol - 25) 25)
-						else error_symbol
-					in
-					(* Get the line *)
-					let beginning_of_the_file = String.sub file_string 0 symbol_end in
-					let lines = Str.split (Str.regexp "\n") beginning_of_the_file in
-					let line = List.length lines in
-					(* Make the message *)
-					"near `" ^ error_symbol ^ "` at line " ^ (string_of_int line) ^ ".")
-				else "somewhere in the file, most probably in the very beginning."
-			in
+		| ParsingDriver.ParsingFailure failure_message ->
 			(* Abort properly *)
-			let failure_message = "Parsing error in file `" ^ file_name ^ "` " ^ error_message in
 			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
 
-		| UnexpectedToken c ->
-			(* Print some information *)
-			print_message Verbose_total ("Parsing error detected `UnexpectedToken`. Processing…");
+		| ParsingDriver.InputFileNotFound failure_message ->
 			(* Abort properly *)
-			let failure_message = "Parsing error in file `" ^ file_name ^ "`: unexpected token `" ^ (Char.escaped c) ^ "`." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
-		
-		(*** HACK: added because of some mysterious exception raised during parsing (2020/04/16) ***)
-		| Invalid_argument (*"index out of bounds"*)_ ->
-			(* Print some information *)
-			print_message Verbose_total ("Parsing error detected `index out of bounds`. Processing…");
-			(* Abort properly *)
-			let failure_message = "Mysterious parsing error in file `" ^ file_name ^ "`, maybe at the very beginning." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-		
-		| Failure f ->
-			(* Print some information *)
-			print_message Verbose_total ("Parsing error detected `Failure`. Processing…");
-			(* Abort properly *)
-			let failure_message = "Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
-		(* Static division by 0 *)
-		| Static_division_by_0 error_message ->
-			(* Abort properly *)
-			let failure_message = "Division by 0 (" ^ error_message ^ ") spotted during the parsing!" in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
-		(* Problem with an included file *)
-		| IncludeFileNotFound included_file ->
-			(* Abort properly *)
-			let failure_message = "File `" ^ included_file ^ "` (included by `" ^ file_name ^ "`) not found." in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-
-		(* April 1st *)
-		| April1st ->
-			print_message Verbose_standard Constants.fish;
-			terminate_program();
-			(* Necessary to make the program compile (even though this line won't be executed) *)
-			exit(0)
-	in
-	parsing_structure
-
-
-(* Parse a file and return the abstract structure *)
-let parser_lexer_from_file (model_or_property : model_or_property) (options : Options.imitator_options) the_parser the_lexer file_name =
-	(* Open file *)
-	print_message Verbose_total ("Opening in_channel…");
-	let in_channel = try (open_in file_name) with
-		| Sys_error e ->
-			(* Abort properly *)
-			let failure_message = "The file `" ^ file_name ^ "` could not be opened.\n" ^ e in
 			print_error_and_abort options failure_message (filenotfound_error_of model_or_property)
-	in
-	(* Lexing *)
-	print_message Verbose_total ("Lexing…");
-	let lexbuf = try (Lexing.from_channel in_channel) with
-		(* Failure during parsing *)
-		| Failure f ->
-			(* Abort properly *)
-			let failure_message = "Lexing error in file `" ^ file_name ^ "`: " ^ f in
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
-	in
-	(* Function to convert a in_channel to a string (in case of parsing error) *)
-	let string_of_input () =
-		(* Convert the file into a string *)
-		let extlib_input = IO.input_channel (open_in file_name) in
-			IO.read_all extlib_input
-	in
-	(* Generic function *)
-	print_message Verbose_total ("Calling parser lexer…");
-	parser_lexer_gen model_or_property options the_parser the_lexer lexbuf string_of_input file_name
-
-
-(*(* Parse a string and return the abstract structure *)
-let parser_lexer_from_string the_parser the_lexer the_string =
-	(* Lexing *)
-	let lexbuf = try (Lexing.from_string the_string) with
-		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1)
-(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1) *)
-	in
-	(* Function to convert a in_channel to a string (in case of parsing error) *)
-	let string_of_input () = the_string in
-	(* Generic function *)
-	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
-
 
 
 (************************************************************)
@@ -222,13 +102,13 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
-	let parsed_model : ParsingStructure.unexpanded_parsed_model = parser_lexer_from_file Model options ModelParser.main ModelLexer.token options#model_file_name in
+	let parsed_model : ParsingStructure.unexpanded_parsed_model = parse_or_abort Model options ParsingDriver.parse_model_from_file options#model_file_name in
 
 	(* Statistics *)
 	parsing_counter#stop;
 
 	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
-	
+
 	(*** USELESS, even increases memory x-( ***)
 	(* Gc.major (); *)
 
@@ -236,7 +116,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
+
 	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
 	let property_parsing =
 		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
@@ -254,23 +134,23 @@ let compile_model_and_property (options : Options.imitator_options) =
 			| Some property_file_name -> property_file_name
 			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
 		in
-		
+
 		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
-		
+
 		(* Parsing the property *)
-		let parsed_property : ParsingStructure.unexpanded_parsed_property = parser_lexer_from_file Property options PropertyParser.main PropertyLexer.token property_file_name in
+		let parsed_property : ParsingStructure.unexpanded_parsed_property = parse_or_abort Property options ParsingDriver.parse_property_from_file property_file_name in
 
 		(* Statistics *)
 		parsing_counter#stop;
 
 		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
-		
+
 		Some parsed_property
 	)else(
 		None
 	)
 	in
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Conversion to abstract structures *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

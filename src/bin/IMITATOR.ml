@@ -19,6 +19,7 @@
 (* Internal modules *)
 (************************************************************)
 open Lib
+open Parsing
 open Exceptions
 open OCamlUtilities
 
