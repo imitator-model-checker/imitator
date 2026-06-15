@@ -42,7 +42,7 @@ rule token = parse
 				open_in absolute_filename
 			)with
 				(* Lib.ModelParser.MenhirBasics.Error *)
-				| Error _
+				| Error
 				| Sys_error _ ->
 					(* Abort properly *)
 (* 					print_error(e); *)

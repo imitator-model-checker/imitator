@@ -528,7 +528,7 @@ let random_integer min max =
 	let nb = get_num nb in
 
 	(* Compute random *)
-	let random_number : gmpz = Gmp.Z.urandomm (random_generator()) nb in
+	let random_number : gmpz = Gmp.Z.urandomm ~state:(random_generator()) ~n:nb in
 
 	(* 	let plouf = Gmp.Q.mpz_urandomm in *)
 

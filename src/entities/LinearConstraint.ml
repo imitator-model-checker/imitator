@@ -338,7 +338,7 @@ let debug_variable_names = fun v -> "v_" ^ (string_of_int v)
 
 (* For verbose print *)
 let debug_string_of_valuation_gen nb_dimensions valuation : string = "<" ^ (string_of_list_of_string_with_sep " , " (List.map (fun variable -> NumConst.string_of_numconst (valuation variable)) (list_of_interval 0 (nb_dimensions - 1)))) ^ ">"
-let debug_string_of_p_valuation valuation   = debug_string_of_valuation_gen !nb_parameters valuation
+let _debug_string_of_p_valuation valuation  = debug_string_of_valuation_gen !nb_parameters valuation
 let debug_string_of_px_valuation valuation  = debug_string_of_valuation_gen (!nb_parameters + !nb_clocks) valuation
 
 
@@ -2632,7 +2632,7 @@ let pxd_remove_dimensions = remove_dimensions
 
 
 (** Keep the lowest nb_dimensions in a linear_constraint *)
-let keep_lowest_dimensions nb_dimensions linear_constraint =
+let _keep_lowest_dimensions nb_dimensions linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("Function `keep_lowest_dimensions`: keep " ^ (string_of_int nb_dimensions) ^ ".");
@@ -6240,4 +6240,3 @@ let test_IH() =
 
 ;;
  test_IH() *)
-

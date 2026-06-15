@@ -468,7 +468,7 @@ let only_assignment_in_update seq_code_bloc =
 
 (* Convert sequential code bloc into UPPAAL strings *)
 let rec string_of_seq_code_bloc ?(sep=";") variable_names seq_code_bloc =
-    let str_instructions = List.map (string_of_instruction variable_names) seq_code_bloc in
+    let str_instructions = List.map (string_of_instruction ~sep:sep variable_names) seq_code_bloc in
     OCamlUtilities.string_of_list_of_string_with_sep "\n" str_instructions
 
 (* Convert an instruction into UPPAAL string *)

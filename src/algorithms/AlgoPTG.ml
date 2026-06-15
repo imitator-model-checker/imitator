@@ -115,7 +115,7 @@ type ptg_state =
 | InSP of state_index
 | NotInSP of DiscreteState.global_location * LinearConstraint.px_linear_constraint
 
-let zone_of_ptg_state (state_space : StateSpace.stateSpace) = function
+let _zone_of_ptg_state (state_space : StateSpace.stateSpace) = function
 	| InSP state_index -> (state_space#get_state state_index).px_constraint
 	| NotInSP (_, px) -> px
 
