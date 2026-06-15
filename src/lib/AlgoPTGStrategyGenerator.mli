@@ -28,4 +28,4 @@ class locationStrategyMap : [location_strategy_key, location_strategy ref] Defau
 
 val print_strategy : abstract_model -> strategy:locationStrategyMap -> unit
 
-val controller_synthesis : abstract_model -> stateSpace -> Options.imitator_options -> locationStrategyMap -> callback:(unit -> unit) -> unit
+val controller_synthesis : abstract_model -> stateSpace -> Options.imitator_options -> locationStrategyMap -> callback:(unit -> unit) -> export_controller:(abstract_model -> unit) -> unit

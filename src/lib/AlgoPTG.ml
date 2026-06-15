@@ -345,7 +345,7 @@ end
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_predicate_avoid : AbstractProperty.state_predicate option) =
+class algoPTG (model : AbstractModel.abstract_model) (property : AbstractProperty.abstract_property) (options : Options.imitator_options) (state_predicate : AbstractProperty.state_predicate) (state_predicate_avoid : AbstractProperty.state_predicate option) (export_controller : AbstractModel.abstract_model -> unit) =
 	let state_space_ptg = new stateSpacePTG model options in
 	object (self) inherit algoGeneric model options (*as super*)
 
@@ -914,7 +914,8 @@ class algoPTG (model : AbstractModel.abstract_model) (property : AbstractPropert
 			options
 			locationStrategy
 			~callback:(fun () -> 
-				self#print_algo_message_newline Verbose_experiments ("Strategy -> Controller algorithm completed " ^ after_seconds () ^ "."));
+				self#print_algo_message_newline Verbose_experiments ("Strategy -> Controller algorithm completed " ^ after_seconds () ^ "."))
+			~export_controller;
 
 		end;
 

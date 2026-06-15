@@ -32,6 +32,7 @@ open Result
 open Options
 open Statistics
 
+
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT
 - (*** BADPROG ***)
@@ -43,7 +44,22 @@ TAGS USED THROUGHOUT THIS PROJECT
 - (*** WARNING ***)
 **************************************************)
 
+(* Output handling for a synthesised PTG controller. *)
+let export_ptg_controller (options : Options.imitator_options) (controller_model : AbstractModel.abstract_model) : unit =
+	(* Write controller to file *)
+	let imi_file_name = options#files_prefix ^ "-controller.imi" in
+	write_to_file imi_file_name (ModelPrinter.string_of_model controller_model);
+	print_highlighted_message Shell_result Verbose_standard ("Controller model `" ^ imi_file_name ^ "` succesfully created.");
 
+	(* Generate graphical representation of controller *)
+	if options#ptg_controller_mode == AbstractAlgorithm.Draw then begin
+		print_message Verbose_medium ("Translating generated controller model to a graphics…");
+		let translated_model = PTA2dot.string_of_model options controller_model in
+		let dot_created_file_option = Graphics.dot "pdf" (options#files_prefix ^ "-controller") translated_model in
+		match dot_created_file_option with
+		| None -> print_error "Oops…! Something went wrong with dot."
+		| Some created_file -> print_highlighted_message Shell_result Verbose_standard ("Graphical representation of controller `" ^ created_file ^ "` successfully created.")
+	end
 ;;
 
 
@@ -177,9 +193,9 @@ if not options#is_set_output_result then(
 (* Get value depending on the algorithm *)
 begin match property_option, options#imitator_mode with
 	| Some property, _ ->
-		
+
 		(* New merge options as of 3.3 *)
-		
+
 		(* Update if not yet set *)
         if not options#is_set_merge_algorithm then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
@@ -196,7 +212,7 @@ begin match property_option, options#imitator_mode with
 				options#set_merge_algorithm Merge_none;
 			);
         );
-        
+
 		(* Update if not yet set AND if merge is enabled *)
         if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
             (* Print some information *)
@@ -229,14 +245,14 @@ begin match property_option, options#imitator_mode with
 
             options#set_merge_restart(false);
         );
-		
+
 
 
 	| _, State_space_computation
 	| None, _
 		->
 		(* New merge options as of 3.3 *)
-		
+
 		(* Update if not yet set *)
         if not options#is_set_merge_algorithm then (
             (* Print some information *)
@@ -244,7 +260,7 @@ begin match property_option, options#imitator_mode with
 
             options#set_merge_algorithm(Merge_none);
         );
-        
+
 		(* Update if not yet set AND if merge is enabled *)
         if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
             (* Print some information *)
@@ -1199,10 +1215,10 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate None in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate None (export_ptg_controller options) in myalgo
 
 			| WinAvoid (state_predicate_reach, state_predicate_avoid) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate_reach (Some state_predicate_avoid) in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate_reach (Some state_predicate_avoid) (export_ptg_controller options) in myalgo
 
 			(************************************************************)
 			(* Begin distributed cartography *)

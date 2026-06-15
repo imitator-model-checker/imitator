@@ -26,7 +26,7 @@ type ptg_state =
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoPTG : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate option ->
+class algoPTG : AbstractModel.abstract_model -> AbstractProperty.abstract_property -> Options.imitator_options -> AbstractProperty.state_predicate -> AbstractProperty.state_predicate option -> (AbstractModel.abstract_model -> unit) ->
 	object inherit algoGeneric
 
 		(************************************************************)
