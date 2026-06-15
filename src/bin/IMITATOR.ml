@@ -19,6 +19,7 @@
 (* Internal modules *)
 (************************************************************)
 open Lib
+open Exporter
 open Parsing
 open Exceptions
 open OCamlUtilities
@@ -30,7 +31,6 @@ open AbstractProperty
 open Result
 open Options
 open Statistics
-
 
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT
@@ -599,42 +599,17 @@ match options#imitator_mode with
 	(*------------------------------------------------------------*)
 	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation JaniSpec | Translation DOT ->
 
-		(*** NOTE: not super nice… ***)
-		let printer = match options#imitator_mode with
-			| Translation DOT       -> PTA2dot.string_of_model options
-			| Translation HyTech	-> PTA2HyTech.string_of_model options
-			| Translation IMI		-> ModelPrinter.string_of_model
-			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
-			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model options
-			| Translation Uppaal	-> PTA2Uppaal.string_of_model options
-			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+		let target = match options#imitator_mode with
+			| Translation translation -> translation
+			| _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
-		(*** NOTE: not super nice… ***)
-		let suffix = match options#imitator_mode with
-			| Translation DOT       -> ".dot"
-			| Translation HyTech	-> ".hy"
-			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
-			| Translation JaniSpec	-> ".jani"
-			| Translation TikZ		-> ".tex"
-			| Translation Uppaal	-> "-uppaal.xml"
-			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
-		in
-
-		print_message Verbose_standard ("Regenerating the input model to a new model.");
-		let translated_model = printer model in
-		let target_language_file = options#files_prefix ^ suffix in
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-		);
-		(* Write *)
-		write_to_file target_language_file translated_model;
-		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
+		(* Select the exporter, render the model and write the output file.
+		   All of selection/naming/writing now lives in ExportDriver. *)
+		let _target_language_file = ExportDriver.export_and_write options model target in
 
 		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
-			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
-			)) ) None;
+		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
 
 		terminate_program()
 
