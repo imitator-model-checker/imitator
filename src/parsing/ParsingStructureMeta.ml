@@ -16,7 +16,6 @@ open ParsingStructureUtilities
 open CustomModules
 open DiscreteType
 open VariableInfo
-open Exceptions
 
 open ImitatorUtilities
 open Exceptions
@@ -869,4 +868,3 @@ and nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos =
 	    nonlinear_operation_on_continuous_in_parsed_discrete_arithmetic_expression variable_infos expr
 	| Parsed_unary_min factor ->
 	    nonlinear_operation_on_continuous_in_parsed_discrete_factor variable_infos factor
-
