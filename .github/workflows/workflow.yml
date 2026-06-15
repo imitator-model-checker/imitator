@@ -11,6 +11,8 @@ jobs:
           - ubuntu-22.04
           - macos-latest
     runs-on: ${{ matrix.os }}
+    env:
+      MAX_ALLOWED_TEST_FAILURES: 4
     steps:
       # setup repository
       - name: Checkout
@@ -21,9 +23,22 @@ jobs:
         run: .github/scripts/build.sh
         shell: bash
 
+      # run tests
+      - name: Run and check tests
+        run: |
+          python tests/test.py
+          python .github/scripts/check_test_results.py \
+            --max-failures "$MAX_ALLOWED_TEST_FAILURES"
+        shell: bash
+
       # build documentation
       - name: Documentation
         run: .github/scripts/documentation.sh
+        shell: bash
+
+      # prepare artifacts
+      - name: Prepare artifact
+        run: .github/scripts/prepare-artifact.sh
         shell: bash
 
       # upload artifacts
