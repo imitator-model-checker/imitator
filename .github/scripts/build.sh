@@ -175,15 +175,6 @@ dune build
 #   exit 1
 # }
 
-# rename artefact
-if [ ! -z "${GITHUB_WORKSPACE}" ]; then
-  information "Renaming artefact..."
-  cd bin
-  platform=$(echo "${RUNNER_OS}" | awk '{print tolower($1)}')
-  tag="${GITHUB_REF_NAME##*/}"
-  mv "imitator" "imitator-${tag}-${platform}-amd64"
-fi
-
 rm -f $err
 success "IMITATOR has been built successfully."
 
