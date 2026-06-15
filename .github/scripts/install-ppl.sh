@@ -55,6 +55,24 @@ make install &>$err || {
     exit 1
 }
 
+information "Installing PPL-${PPL_VERSION} OCaml native metadata..."
+PPL_OCAML_LIB_DIR="$(opam var lib)/ppl"
+PPL_OCAML_CMX_FILES=$(find . -type f -name 'ppl_ocaml*.cmx')
+
+if [ -z "${PPL_OCAML_CMX_FILES}" ]; then
+    error "PPL-${PPL_VERSION} OCaml native metadata files (*.cmx) were not found."
+    cd ../
+    rm -rf ppl-${PPL_VERSION}* $(opam var lib)/ppl
+    exit 1
+fi
+
+find . -type f -name 'ppl_ocaml*.cmx' -exec cp {} "${PPL_OCAML_LIB_DIR}" \; &>$err || {
+    error "An issue has occured while installing PPL-${PPL_VERSION} OCaml native metadata."
+    cd ../
+    rm -rf ppl-${PPL_VERSION}* $(opam var lib)/ppl
+    exit 1
+}
+
 cd ../
 rm -rf ppl-${PPL_VERSION}* $(opam var lib)/libppl.*
 

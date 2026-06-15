@@ -29,6 +29,24 @@ make install -s &>$err || {
     exit 1
 }
 
+information "Installing mlgmp OCaml native metadata..."
+GMP_OCAML_LIB_DIR="$(opam var lib)/gmp"
+GMP_OCAML_CMX_FILES=$(find . -type f -name 'gmp*.cmx')
+
+if [ -z "${GMP_OCAML_CMX_FILES}" ]; then
+    error "mlgmp OCaml native metadata files (*.cmx) were not found."
+    cd ..
+    rm -rf mlgmp
+    exit 1
+fi
+
+find . -type f -name 'gmp*.cmx' -exec cp {} "${GMP_OCAML_LIB_DIR}" \; &>$err || {
+    error "An issue has occured while installing mlgmp OCaml native metadata."
+    cd ..
+    rm -rf mlgmp
+    exit 1
+}
+
 cd ..
 rm -rf mlgmp
 
