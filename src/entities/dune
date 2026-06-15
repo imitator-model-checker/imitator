@@ -1,0 +1,14 @@
+(library
+ (name entities)
+ (libraries utils gmp ppl extlib fileutils str unix threads)
+ (flags
+  (:standard -open Utils))
+ (modules_without_implementation
+  automaton
+  abstractModel
+  abstractProperty))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

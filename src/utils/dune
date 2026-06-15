@@ -1,0 +1,15 @@
+(library
+ (name utils)
+ (libraries gmp extlib fileutils str unix threads))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
+
+(rule
+ (targets BuildInfo.ml BuildInfo.mli)
+ (deps
+  (:gen ../../gen_build_info.py))
+ (action
+  (run python %{gen} BuildInfo.ml BuildInfo.mli)))

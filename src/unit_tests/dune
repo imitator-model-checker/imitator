@@ -1,6 +1,8 @@
 (tests
  (names imitatorUnitTests)
- (libraries alcotest lib parsing)
+ (libraries alcotest lib parsing entities utils)
+ (flags
+  (:standard -open Utils -open Entities))
  (action (run %{test} -e))
   (link_flags
   (:standard

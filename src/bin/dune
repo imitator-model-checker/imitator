@@ -1,7 +1,9 @@
 (executable
  (name IMITATOR)
  (modes byte exe)
- (libraries exporter lib parsing)
+ (libraries exporter lib parsing entities utils)
+ (flags
+  (:standard -open Utils -open Entities))
  (link_flags
   (:include link_flags.%{system})
   (:standard

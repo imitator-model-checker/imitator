@@ -1,8 +1,8 @@
 (library
  (name exporter)
- (libraries parsing lib gmp ppl extlib fileutils str unix threads)
+ (libraries utils entities parsing lib gmp ppl extlib fileutils str unix threads)
  (flags
-  (:standard -open Parsing -open Lib))
+  (:standard -open Utils -open Entities -open Parsing -open Lib))
  (modules_without_implementation
   modelExporter))
 

@@ -1,8 +1,10 @@
 (library
  (name parsing)
  (wrapped true)
- (libraries gmp extlib fileutils str unix threads)
- (modules_without_implementation automaton parsingStructure))
+ (libraries utils entities gmp extlib fileutils str unix threads)
+ (flags
+  (:standard -open Utils -open Entities))
+ (modules_without_implementation parsingStructure))
 
 (ocamllex
  (modules ModelLexer PropertyLexer))
@@ -31,10 +33,3 @@
  (dev
   (flags
    (:standard -warn-error -A))))
-
-(rule
- (targets BuildInfo.ml BuildInfo.mli)
- (deps
-  (:gen ../../gen_build_info.py))
- (action
-  (run python %{gen} BuildInfo.ml BuildInfo.mli)))
