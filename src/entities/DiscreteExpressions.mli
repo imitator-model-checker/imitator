@@ -14,9 +14,9 @@
 (** arithmetic and Boolean expressions on discrete variables. *)
 
 
-(** Name of a variable. *)
+(* Name of a variable. *)
 type variable_name = string
-(** Lookup of a variable name from its index. *)
+(* Lookup of a variable name from its index. *)
 type variable_name_table = Automaton.variable_index -> variable_name
 
 (************************************************************)
@@ -63,7 +63,7 @@ type update_scope =
 
 
 (****************************************************************)
-(** Global expression *)
+(* Global expression *)
 (****************************************************************)
 (** Top-level discrete expression of any type (arithmetic, Boolean, binary word, array, list, stack or queue). *)
 type global_expression =
@@ -83,7 +83,7 @@ and discrete_arithmetic_expression =
     | Int_arithmetic_expression of int_arithmetic_expression
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(* Arithmetic expressions for discrete variables *)
 (****************************************************************)
 (** Rational-valued arithmetic expression (sums and differences of terms). *)
 and rational_arithmetic_expression =
@@ -106,7 +106,7 @@ and rational_factor =
     | Rational_function_call of variable_name * Automaton.variable_ref list * global_expression list
 
 (************************************************************)
-(** Int arithmetic expressions for discrete variables *)
+(* Int arithmetic expressions for discrete variables *)
 (************************************************************)
 (** Integer-valued arithmetic expression (sums and differences of terms). *)
 and int_arithmetic_expression =
@@ -255,9 +255,9 @@ type fun_type =
     (* User function are function defined in a model by user *)
     | Fun_user of seq_code_bloc * global_expression option
 
-(** Index of a clock. *)
+(* Index of a clock. *)
 type clock_index = int
-(** A clock to be updated. *)
+(* A clock to be updated. *)
 type clock_update = clock_index
 
 (* Potential clock update type (clock update that can be arise, but not necessary *)

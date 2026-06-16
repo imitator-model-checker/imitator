@@ -24,14 +24,14 @@ open Automaton
 
 
 (************************************************************)
-(** Reference parameter valuations *)
+(* Reference parameter valuations *)
 (************************************************************)
 (** Reference parameter domain (a hyper-rectangle) used by the cartography algorithms. *)
 type v0 = HyperRectangle.hyper_rectangle
 
 
 (************************************************************)
-(** Actions *)
+(* Actions *)
 (************************************************************)
 
 (** Type of sync actions *)
@@ -43,7 +43,7 @@ type action_type =
 
 
 (************************************************************)
-(** Locations *)
+(* Locations *)
 (************************************************************)
 
 (** Accepting location type *)
@@ -65,7 +65,7 @@ type flow = (clock_index * NumConst.t)
 
 
 (************************************************************)
-(** Transitions *)
+(* Transitions *)
 (************************************************************)
 
 (** update: variable_index := linear_term *)
@@ -82,18 +82,17 @@ type clock_updates =
 	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
 	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
-(** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
-
+(* Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables. *)
 type discrete_guard = DiscreteExpressions.nonlinear_constraint
-(** Continuous (linear) part of a guard, over clocks, parameters and discrete variables. *)
+(* Continuous (linear) part of a guard, over clocks, parameters and discrete variables. *)
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
-(** Guard combining a discrete (non-linear) part and a continuous (linear) part. *)
+(* Guard combining a discrete (non-linear) part and a continuous (linear) part. *)
 type discrete_continuous_guard = {
 	discrete_guard   : discrete_guard;
 	continuous_guard : continuous_guard;
 }
-(** Transition or invariant guard: true, false, discrete, continuous, or a combination of both. *)
+(* Transition or invariant guard: true, false, discrete, continuous, or a combination of both. *)
 type guard =
 	| True_guard
 	| False_guard
@@ -117,7 +116,7 @@ type transition = {
 type transition_index = int
 
 (************************************************************)
-(** Declared functions *)
+(* Declared functions *)
 (************************************************************)
 (** Definition of a user-defined function: name, parameters, signature, body and side-effect flag. *)
 type fun_definition = {
@@ -129,7 +128,7 @@ type fun_definition = {
 }
 
 (************************************************************)
-(** Bounds for the parameters *)
+(* Bounds for the parameters *)
 (************************************************************)
 (** Bound on a parameter: unbounded, or a finite (closed or strict) bound. *)
 type bound =
@@ -145,7 +144,7 @@ type bounds = {
 
 
 (************************************************************)
-(** Subclass of the model *)
+(* Subclass of the model *)
 (************************************************************)
 (** Sub-class of the model w.r.t. the L/U-PTA classification (general, L/U-, L- or U-PTA). *)
 type lu_status =
@@ -163,7 +162,7 @@ type lu_status =
 
 
 (************************************************************)
-(** The abstract model *)
+(* The abstract model *)
 (************************************************************)
 (** The abstract model: the fully type-checked, ready-to-analyse representation of an IMITATOR model. *)
 type abstract_model = {

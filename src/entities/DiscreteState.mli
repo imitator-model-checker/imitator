@@ -42,15 +42,15 @@ type global_location_and_local_variables
 
 
 
-(** Read access to the value of a discrete variable. *)
+(* Read access to the value of a discrete variable. *)
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
-(** Write access to the value of a discrete variable. *)
+(* Write access to the value of a discrete variable. *)
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
-(** Read access to the value of a local (scoped) discrete variable. *)
+(* Read access to the value of a local (scoped) discrete variable. *)
 type local_discrete_valuation = variable_ref -> AbstractValue.abstract_value
-(** Write access to the value of a local (scoped) discrete variable. *)
+(* Write access to the value of a local (scoped) discrete variable. *)
 type local_discrete_setter = variable_ref -> AbstractValue.abstract_value -> unit
-(** Paired read/write access to the discrete variables of a state. *)
+(* Paired read/write access to the discrete variables of a state. *)
 type discrete_access = discrete_valuation * discrete_setter * local_discrete_valuation * local_discrete_setter
 
 (** Should the float be displayed using exact rationals or (possibly approximated) floats? *)

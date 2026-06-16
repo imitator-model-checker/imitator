@@ -51,11 +51,11 @@ exception EmptyConstraint
 (* {2 Variables and coefficients} *)
 (************************************************************)
 
-(** Internal PPL variable index. *)
+(* Internal PPL variable index. *)
 type variable = int
-(** Name of a variable, used when printing constraints. *)
+(* Name of a variable, used when printing constraints. *)
 type variable_name = string
-(** A coefficient (exact rational) in a linear term. *)
+(* A coefficient (exact rational) in a linear term. *)
 type coef = NumConst.t
 
 (** Internal representation of a linear term (variables, coefficients and +/-/* combinations). *)
@@ -70,15 +70,15 @@ type internal_linear_term =
 (* {2 Valuations} *)
 (************************************************************)
 
-(** Valuation assigning a value to every parameter. *)
+(* Valuation assigning a value to every parameter. *)
 type p_valuation   = (variable -> coef)
-(** Valuation assigning a value to every clock. *)
+(* Valuation assigning a value to every clock. *)
 type x_valuation   = (variable -> coef)
-(** Valuation over parameters and clocks. *)
+(* Valuation over parameters and clocks. *)
 type px_valuation  = (variable -> coef)
-(** Valuation over parameters, clocks and discrete variables. *)
+(* Valuation over parameters, clocks and discrete variables. *)
 type pxd_valuation = (variable -> coef)
-(** Valuation over discrete variables. *)
+(* Valuation over discrete variables. *)
 type d_valuation   = (variable -> coef)
 
 
@@ -90,11 +90,11 @@ type d_valuation   = (variable -> coef)
 (* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Type linear_term *)
+(* Linear term over parameters (abstract type). *)
 type p_linear_term
-(** Linear term over parameters and clocks (abstract type). *)
+(* Linear term over parameters and clocks (abstract type). *)
 type px_linear_term
-(** Linear term over parameters, clocks and discrete variables. *)
+(* Linear term over parameters, clocks and discrete variables. *)
 type pxd_linear_term = internal_linear_term
 
 
@@ -190,11 +190,11 @@ val reverse_op : comparison_op -> comparison_op
 (* Convert a comparison_op to string *)
 val string_of_op : comparison_op -> string
 
-(** Type linear_inequality *)
+(* Linear inequality over parameters (abstract type). *)
 type p_linear_inequality
-(** Linear inequality over parameters and clocks (abstract type). *)
+(* Linear inequality over parameters and clocks (abstract type). *)
 type px_linear_inequality
-(** Linear inequality over parameters, clocks and discrete variables (abstract type). *)
+(* Linear inequality over parameters, clocks and discrete variables (abstract type). *)
 type pxd_linear_inequality
 
 
@@ -729,11 +729,11 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 (* {3 Type} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
+(* Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
 type p_nnconvex_constraint
-(** Non-necessarily-convex constraint over clocks (a finite union of convex constraints). *)
+(* Non-necessarily-convex constraint over clocks (a finite union of convex constraints). *)
 type x_nnconvex_constraint
-(** Non-necessarily-convex constraint over parameters and clocks. *)
+(* Non-necessarily-convex constraint over parameters and clocks. *)
 type px_nnconvex_constraint
 
 
@@ -956,4 +956,3 @@ type smaller_term =
 (*for linear term*)
 (*val isSmaller : p_linear_term -> p_linear_term -> (bool*smaller_term)*)
 val isSmaller : p_linear_term -> p_linear_term -> smaller_term
-
