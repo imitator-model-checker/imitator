@@ -19,7 +19,7 @@ open DiscreteType
 
 type variable_scope = Global | Local
 
-(* Variable kind type represent a variable or a constant kind *)
+(** Variable kind type represent a variable or a constant kind *)
 type variable_kind =
     | Variable_kind
     | Constant_kind of AbstractValue.abstract_value

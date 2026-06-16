@@ -21,7 +21,7 @@ type automaton_name = string
 type variable_name = string
 type fun_name = string
 
-(* Reference to a program component *)
+(** Reference to a program component *)
 type component =
     | System_component
     | Automaton_component of automaton_name

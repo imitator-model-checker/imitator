@@ -20,13 +20,13 @@ open DiscreteType
 (**)
 type variable_callback = (variable_name -> unit) option
 
-(* Leaves of parsing structure *)
+(** Leaves of parsing structure *)
 type parsing_structure_leaf =
     | Leaf_variable of variable_ref
     | Leaf_constant of ParsedValue.parsed_value
     | Leaf_fun of variable_name
 
-(* Leaves of parsed bloc *)
+(** Leaves of parsed bloc *)
 type parsed_seq_code_bloc_leaf =
     | Leaf_update_variable of variable_ref * parsed_boolean_expression * update_mode
 
@@ -41,7 +41,7 @@ type linear_expression_leaf =
 type init_state_predicate_leaf =
     | Leaf_loc_assignment of automaton_name * location_name
 
-(* Leaf of state predicate *)
+(** Leaf of state predicate *)
 type state_predicate_leaf =
     | Leaf_predicate_true
     | Leaf_predicate_false

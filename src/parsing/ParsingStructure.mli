@@ -123,7 +123,7 @@ type unexpanded_parsed_controllable_actions =
 	| Unexpanded_parsed_uncontrollable_actions of name_or_access list
 	| Unexpanded_parsed_no_controllable_actions
 
-(* We allow for some variables (i.e., parameters and constants) a value *)
+(** We allow for some variables (i.e., parameters and constants) a value *)
 type variable_declaration = DiscreteType.var_type * (variable_name * parsed_boolean_expression option) list
 type variable_declarations = variable_declaration list
 
@@ -186,7 +186,7 @@ type sync =
 type guard = convex_predicate
 type invariant = convex_predicate
 
-(* Variable name or variable access (x or x[index]) *)
+(** Variable name or variable access (x or x[index]) *)
 type parsed_scalar_or_index_update_type =
     | Parsed_scalar_update of variable_ref
     | Parsed_indexed_update of parsed_scalar_or_index_update_type * parsed_discrete_arithmetic_expression
@@ -236,7 +236,7 @@ type parsed_fun_definition = {
 (** Parsed function definition list *)
 type parsed_fun_definition_list = parsed_fun_definition list
 
-(* Shortcuts to hash table types *)
+(** Shortcuts to hash table types *)
 type functions_meta_table = (string, function_metadata) Hashtbl.t
 type parsed_functions_table = (string, parsed_fun_definition) Hashtbl.t
 

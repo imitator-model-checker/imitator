@@ -18,24 +18,24 @@
 open ParsedValue
 open DiscreteType
 
-(* Number values *)
+(** Number values *)
 type abstract_number_value =
     | Abstract_rat_value of NumConst.t
     | Abstract_int_value of Int32.t
 
-(* Scalar values (no composed values) *)
+(** Scalar values (no composed values) *)
 type abstract_scalar_value =
     | Abstract_number_value of abstract_number_value
     | Abstract_bool_value of bool
     | Abstract_bin_value of BinaryWord.t
 
-(* Values *)
+(** Values *)
 type abstract_value =
     | Abstract_void_value
     | Abstract_scalar_value of abstract_scalar_value
     | Abstract_container_value of abstract_container_value
 
-(* Container values (values that contains another value(s)) *)
+(** Container values (values that contains another value(s)) *)
 and abstract_container_value =
     | Abstract_array_value of abstract_value array
     | Abstract_list_value of abstract_value list

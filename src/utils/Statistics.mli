@@ -26,6 +26,7 @@
 (************************************************************)
 (************************************************************)
 
+(** Category a counter belongs to (algorithm, cache, graphics, parsing, PPL, states, …), used to group statistics. *)
 type counterCategory =
 	(* Algorithm functions *)
 	| Algorithm_counter

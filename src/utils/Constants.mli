@@ -160,6 +160,7 @@ type customized_array_string = {
     array_access_delimiter : string * string;
 }
 
+(** How binary words are rendered when printing (standard bit string, or as an integer). *)
 type customized_binary_word_representation =
     | Binary_word_representation_standard
     | Binary_word_representation_int

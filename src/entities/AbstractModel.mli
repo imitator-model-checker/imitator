@@ -26,6 +26,7 @@ open Automaton
 (************************************************************)
 (** Reference parameter valuations *)
 (************************************************************)
+(** Reference parameter domain (a hyper-rectangle) used by the cartography algorithms. *)
 type v0 = HyperRectangle.hyper_rectangle
 
 
@@ -71,6 +72,7 @@ type flow = (clock_index * NumConst.t)
 type clock_update = clock_index
 
 (* TODO benjamin NOT USED anymore ? *)
+(** Clock updates performed by a transition: none, resets to 0, or updates to arbitrary linear terms. *)
 type clock_updates =
 	(* No update at all *)
 	| No_update
@@ -83,12 +85,15 @@ type clock_updates =
 (** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
 type discrete_guard = DiscreteExpressions.nonlinear_constraint
+(** Continuous (linear) part of a guard, over clocks, parameters and discrete variables. *)
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
+(** Guard combining a discrete (non-linear) part and a continuous (linear) part. *)
 type discrete_continuous_guard = {
 	discrete_guard   : discrete_guard;
 	continuous_guard : continuous_guard;
 }
+(** Transition or invariant guard: true, false, discrete, continuous, or a combination of both. *)
 type guard =
 	| True_guard
 	| False_guard
@@ -108,11 +113,13 @@ type transition = {
     target : location_index;
 }
 
+(** Index uniquely identifying a transition. *)
 type transition_index = int
 
 (************************************************************)
 (** Declared functions *)
 (************************************************************)
+(** Definition of a user-defined function: name, parameters, signature, body and side-effect flag. *)
 type fun_definition = {
     name : variable_name;
     parameter_refs : Automaton.variable_ref list;
@@ -124,11 +131,13 @@ type fun_definition = {
 (************************************************************)
 (** Bounds for the parameters *)
 (************************************************************)
+(** Bound on a parameter: unbounded, or a finite (closed or strict) bound. *)
 type bound =
 	| Unbounded
 	(* A finite bound is a pair NumConst.t and a Boolean true iff it is closed (i.e., closed inequality, and not strict) *)
 	| Bounded of NumConst.t * bool
 
+(** Lower and upper {!bound} on a parameter. *)
 type bounds = {
 	lower	: bound;
 	upper	: bound;
@@ -138,6 +147,7 @@ type bounds = {
 (************************************************************)
 (** Subclass of the model *)
 (************************************************************)
+(** Sub-class of the model w.r.t. the L/U-PTA classification (general, L/U-, L- or U-PTA). *)
 type lu_status =
 	(* General PTA *)
 	| PTA_notLU
@@ -155,6 +165,7 @@ type lu_status =
 (************************************************************)
 (** The abstract model *)
 (************************************************************)
+(** The abstract model: the fully type-checked, ready-to-analyse representation of an IMITATOR model. *)
 type abstract_model = {
 	(* General information **)
 	(* Cardinality *)

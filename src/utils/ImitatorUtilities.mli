@@ -51,6 +51,7 @@ val imitator_url : string
 (** Verbosity modes *)
 (************************************************************)
 
+(** Verbosity level controlling how much information IMITATOR prints. *)
 type verbose_mode =
 	| Verbose_mute
 	| Verbose_warnings
@@ -121,6 +122,7 @@ val memory_used : unit -> string
 (** Messages *)
 (************************************************************)
 
+(** Style used to colour or format a piece of terminal output. *)
 type shell_highlighting_type =
 	| Shell_bold
 	| Shell_bright_green

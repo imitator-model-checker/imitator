@@ -25,16 +25,16 @@ open AbstractModel
 open Automaton
 open DiscreteState
 
-(* Table of variable name by index *)
+(** Table of variable name by index *)
 type variable_name_table = variable_index -> variable_name
-(* Table of function (name, definition) *)
+(** Table of function (name, definition) *)
 type functions_table = (variable_name, fun_definition) Hashtbl.t
-(* Table of clock updates in (no order) *)
+(** Table of clock updates in (no order) *)
 type clock_updates_table = (clock_index, pxd_linear_term) Hashtbl.t
-(* Queue of ordered clock updates *)
+(** Queue of ordered clock updates *)
 type clock_updates_history = (clock_index * pxd_linear_term) Queue.t
 
-(* Record that contains context (current location, current local variables) for evaluating an expression *)
+(** Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
     (* Valuation of global variables at the context (current location) *)
     discrete_valuation : discrete_valuation;

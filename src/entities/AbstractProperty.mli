@@ -27,11 +27,13 @@ open DiscreteExpressions
 (** Predicates for properties *)
 (****************************************************************)
 
+(** Atomic predicate on the location of one automaton (equality or inequality). *)
 type loc_predicate =
 	| Loc_predicate_EQ of automaton_index * location_index
 	| Loc_predicate_NEQ of automaton_index * location_index
 
 
+(** Atomic state predicate: a Boolean discrete expression, a location predicate, true, false, or "accepting". *)
 type simple_predicate =
 	| State_predicate_discrete_boolean_expression of discrete_boolean_expression
 	| Loc_predicate of loc_predicate
@@ -40,15 +42,18 @@ type simple_predicate =
 	| State_predicate_accepting
 
 
+(** Factor of a state predicate: a negation, a simple predicate, or a parenthesised state predicate. *)
 type state_predicate_factor =
 	| State_predicate_factor_NOT of state_predicate_factor
 	| Simple_predicate of simple_predicate
 	| State_predicate of state_predicate
 
+(** Conjunction (AND) of state-predicate factors. *)
 and state_predicate_term =
 	| State_predicate_term_AND of state_predicate_term * state_predicate_term
 	| State_predicate_factor of state_predicate_factor
 
+(** Disjunction (OR) of state-predicate terms; the general form of a state predicate. *)
 and state_predicate =
 	| State_predicate_OR of state_predicate * state_predicate
 	| State_predicate_term of state_predicate_term
@@ -58,8 +63,10 @@ and state_predicate =
 (** Definition of property *)
 (************************************************************)
 
+(** A duration, expressed as a linear term over the parameters. *)
 type duration = LinearConstraint.p_linear_term
 
+(** Time interval (with open/closed/infinite bounds) used by the timed properties. *)
 type timed_interval =
 	| Zero_closed_interval of duration
 	| Zero_open_interval of duration
@@ -71,6 +78,7 @@ type timed_interval =
 	| Open_infinity_interval of duration
 
 
+(** The property to be analysed (reachability, safety, liveness, optimisation, cartography, …). *)
 type property =
 
 	(*------------------------------------------------------------*)
@@ -245,6 +253,7 @@ type property =
 
 
 
+(** Whether the analysis performs synthesis or mere witness/satisfiability checking. *)
 type synthesis_type =
 	(* (tentative) exemplification of concrete runs *)
 	| Exemplification
@@ -254,6 +263,7 @@ type synthesis_type =
 	| Witness
 
 
+(** Optional projection of the result onto a subset of the parameters. *)
 type projection = (parameter_index list) option
 
   
@@ -261,6 +271,7 @@ type projection = (parameter_index list) option
 (** The actual property *)
 (************************************************************)
 
+(** The fully type-checked property together with its analysis options (synthesis type, projection, …). *)
 type abstract_property = {
 	(* Emptiness or synthesis *)
 	synthesis_type	: synthesis_type;

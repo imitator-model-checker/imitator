@@ -14,6 +14,7 @@
 (** This module helps to format Json documents. *)
 
 
+(** A JSON value (object, array, string, Boolean, int, float, null, or raw text). *)
 type json_element =
     | Json_struct of json_property list
     | Json_array of json_element list
@@ -24,6 +25,7 @@ type json_element =
     | Json_null
     | Json_raw of string
 
+(** A key/value pair inside a JSON object. *)
 and json_property = string * json_element
 
 (* Get Json string of a given Json structure *)

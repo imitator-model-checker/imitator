@@ -240,7 +240,7 @@ type nz_method =
 
 
 
-(* Type of extrapolation *)
+(** Type of extrapolation *)
 type extrapolation =
 	| No_extrapolation
 	| M

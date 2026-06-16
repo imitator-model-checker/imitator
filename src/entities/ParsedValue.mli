@@ -23,6 +23,7 @@ open DiscreteType
 
 (* Discrete value of different specific types *)
 
+(** A literal discrete value produced by the parser, of any supported type (rational, int, Boolean, binary word, array, list, stack, queue). *)
 type parsed_value =
     | Weak_number_value of NumConst.t
     | Rat_value of NumConst.t

@@ -37,14 +37,20 @@ type global_location
 
 (* Extended global location: location for each automaton + value of the discrete and local variables *)
 (*** NOTE (ÉA, 2013/04/14): might be one day deleted with the local variables table made independent ***)
+(** A global location together with the values of the local variables currently in scope. *)
 type global_location_and_local_variables
 
 
 
+(** Read access to the value of a discrete variable. *)
 type discrete_valuation = Automaton.discrete_index -> AbstractValue.abstract_value
+(** Write access to the value of a discrete variable. *)
 type discrete_setter = Automaton.discrete_index -> AbstractValue.abstract_value -> unit
+(** Read access to the value of a local (scoped) discrete variable. *)
 type local_discrete_valuation = variable_ref -> AbstractValue.abstract_value
+(** Write access to the value of a local (scoped) discrete variable. *)
 type local_discrete_setter = variable_ref -> AbstractValue.abstract_value -> unit
+(** Paired read/write access to the discrete variables of a state. *)
 type discrete_access = discrete_valuation * discrete_setter * local_discrete_valuation * local_discrete_setter
 
 (** Should the float be displayed using exact rationals or (possibly approximated) floats? *)
@@ -52,7 +58,7 @@ type rational_display =
 	| Exact_display
 	| Float_display
 
-(* Local variables table type *)
+(** Local variables table type *)
 type local_variables_table = (variable_ref, AbstractValue.abstract_value) Hashtbl.t
 
 (************************************************************)

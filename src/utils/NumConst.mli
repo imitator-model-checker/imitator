@@ -24,6 +24,7 @@
 (**************************************************)
 (* Type definition *)
 (**************************************************)
+(** An arbitrary-precision integer (GMP). *)
 type gmpz = Gmp.Z.t
 
 (**************************************************)
@@ -86,6 +87,7 @@ val gmpz_is_one : gmpz -> bool
 (* Type definition *)
 (**************************************************)
 
+(** An arbitrary-precision exact rational number (GMP). *)
 type t = Gmp.Q.t
 
 (**************************************************)

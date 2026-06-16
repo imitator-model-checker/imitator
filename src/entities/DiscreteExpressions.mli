@@ -14,7 +14,9 @@
 (** arithmetic and Boolean expressions on discrete variables. *)
 
 
+(** Name of a variable. *)
 type variable_name = string
+(** Lookup of a variable name from its index. *)
 type variable_name_table = Automaton.variable_index -> variable_name
 
 (************************************************************)
@@ -39,22 +41,22 @@ type conj_dis =
     | And
     | Or
 
-(* Sum / Diff operators *)
+(** Sum / Diff operators *)
 type sum_diff =
     | Plus
     | Minus
 
-(* Product / Quotient operators *)
+(** Product / Quotient operators *)
 type product_quotient =
     | Mul
     | Div
 
-(* For loop direction *)
+(** For loop direction *)
 type loop_dir =
     | Loop_up
     | Loop_down
 
-(* Global or Local update *)
+(** Global or Local update *)
 type update_scope =
     | Global_update of Automaton.discrete_index
     | Local_update of Automaton.variable_ref
@@ -63,6 +65,7 @@ type update_scope =
 (****************************************************************)
 (** Global expression *)
 (****************************************************************)
+(** Top-level discrete expression of any type (arithmetic, Boolean, binary word, array, list, stack or queue). *)
 type global_expression =
     (* A typed expression *)
     | Void_expression of void_expression
@@ -74,7 +77,7 @@ type global_expression =
     | Stack_expression of stack_expression
     | Queue_expression of queue_expression
 
-(* Arithmetic expression *)
+(** Arithmetic expression *)
 and discrete_arithmetic_expression =
     | Rational_arithmetic_expression of rational_arithmetic_expression
     | Int_arithmetic_expression of int_arithmetic_expression
@@ -82,14 +85,17 @@ and discrete_arithmetic_expression =
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
+(** Rational-valued arithmetic expression (sums and differences of terms). *)
 and rational_arithmetic_expression =
     | Rational_sum_diff of rational_arithmetic_expression * rational_term * sum_diff
 	| Rational_term of rational_term
 
+(** Term of a rational arithmetic expression (products and quotients of factors). *)
 and rational_term =
 	| Rational_product_quotient of rational_term * rational_factor * product_quotient
 	| Rational_factor of rational_factor
 
+(** Factor of a rational arithmetic expression: variable, constant, nested expression, function call, etc. *)
 and rational_factor =
 	| Rational_variable of Automaton.variable_index
 	| Rational_local_variable of Automaton.variable_ref
@@ -102,14 +108,17 @@ and rational_factor =
 (************************************************************)
 (** Int arithmetic expressions for discrete variables *)
 (************************************************************)
+(** Integer-valued arithmetic expression (sums and differences of terms). *)
 and int_arithmetic_expression =
     | Int_sum_diff  of int_arithmetic_expression * int_term * sum_diff
 	| Int_term of int_term
 
+(** Term of an integer arithmetic expression (products and quotients of factors). *)
 and int_term =
 	| Int_product_quotient of int_term * int_factor * product_quotient
 	| Int_factor of int_factor
 
+(** Factor of an integer arithmetic expression: variable, constant, nested expression, function call, etc. *)
 and int_factor =
 	| Int_variable of Automaton.variable_index
 	| Int_local_variable of Automaton.variable_ref
@@ -130,6 +139,7 @@ and boolean_expression =
     | Conj_dis of boolean_expression * boolean_expression * conj_dis
 	| Discrete_boolean_expression of discrete_boolean_expression
 
+(** Boolean expression built from comparisons of discrete expressions. *)
 and discrete_boolean_expression =
 	(* Discrete arithmetic expression of the form Expr ~ Expr *)
 	(* TODO create another type regrouping all comparisons ? *)
@@ -215,7 +225,7 @@ and access_type =
     | Array_access of array_expression
     | List_access of list_expression
 
-(* Bloc of sequential code *)
+(** Bloc of sequential code *)
 and instruction =
     | Local_decl of Automaton.variable_ref * DiscreteType.var_type_discrete * global_expression (* init expr *)
     | Assignment of discrete_update
@@ -225,37 +235,39 @@ and instruction =
     | While_loop of boolean_expression (* condition *) * seq_code_bloc (* inner bloc *)
     | If of boolean_expression (* condition *) * seq_code_bloc (* then bloc *) * seq_code_bloc option (* else bloc *)
 
-(* A bloc of sequential code *)
+(** A bloc of sequential code *)
 and seq_code_bloc = instruction list
 
-(* Update expression *)
+(** Update expression *)
 and discrete_update = scalar_or_index_update_type * global_expression
 
-(* Update type *)
+(** Update type *)
 and scalar_or_index_update_type =
     (* Variable update, ie: x := 1 *)
     | Scalar_update of update_scope
     (* Indexed element update, ie: x[i] = 1 or x[i][j] = 2 *)
     | Indexed_update of scalar_or_index_update_type * int_arithmetic_expression
 
-(* Type of function *)
+(** Type of function *)
 type fun_type =
     (* Built-in are IMITATOR internal function *)
     | Fun_builtin of (string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value)
     (* User function are function defined in a model by user *)
     | Fun_user of seq_code_bloc * global_expression option
 
+(** Index of a clock. *)
 type clock_index = int
+(** A clock to be updated. *)
 type clock_update = clock_index
 
 (* Potential clock update type (clock update that can be arise, but not necessary *)
-(* e.g: if False then x:=0 else y:=1 end, in previous expression x, y can be update but only y will be updated effectively *)
+(** E.g: if False then x:=0 else y:=1 end, in previous expression x, y can be update but only y will be updated effectively *)
 type potential_clock_updates =
     | No_potential_update
     | Potential_resets of clock_update list
     | Potential_updates of (clock_update * rational_arithmetic_expression) list
 
-(* A non linear constraint (list of predicates => list of discrete boolean expression *)
+(** A non linear constraint (list of predicates => list of discrete boolean expression *)
 type nonlinear_constraint = discrete_boolean_expression list
 
 (* --- Useful functions --- *)

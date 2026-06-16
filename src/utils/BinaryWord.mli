@@ -14,7 +14,7 @@
 (** This module hold Binary Word type for IMITATOR. *)
 
 
-(* Binary word type *)
+(** Binary word type *)
 type t = int * bool array
 
 (* Get a zero binary word of length l *)

@@ -18,13 +18,13 @@
 (** Types  *)
 (************************************************************)
 
-(* Specific type of number *)
+(** Specific type of number *)
 type var_type_discrete_number =
     | Dt_rat
     | Dt_int
     | Dt_weak_number
 
-(* Specific type of discrete variables *)
+(** Specific type of discrete variables *)
 type var_type_discrete =
     | Dt_weak
     | Dt_void
@@ -36,12 +36,13 @@ type var_type_discrete =
     | Dt_stack of var_type_discrete
     | Dt_queue of var_type_discrete
 
-(* Type of variable in declarations *)
+(** Type of variable in declarations *)
 type var_type =
 	| Var_type_clock
 	| Var_type_discrete of var_type_discrete
 	| Var_type_parameter
 
+(** Type of a variable in a template, before instantiation. *)
 type template_var_type =
   | Regular_type of var_type
   | Template_action_var
