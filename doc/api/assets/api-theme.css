@@ -1,0 +1,440 @@
+/* IMITATOR API documentation theme.
+   This file is appended to odoc.css by doc/scripts/build-api-reference.sh. */
+
+:root {
+  --imitator-bg: #fbfcfe;
+  --imitator-surface: #ffffff;
+  --imitator-surface-muted: #f5f7fa;
+  --imitator-ink: #1f2937;
+  --imitator-muted: #667085;
+  --imitator-line: #e3e7ee;
+  --imitator-accent: #227487;
+  --imitator-accent-dark: #185767;
+  --imitator-accent-soft: #edf7f9;
+  --imitator-code-bg: #f7f9fc;
+  --imitator-code-ink: #263244;
+  --imitator-radius: 8px;
+  --imitator-shadow: 0 10px 28px rgba(31, 41, 55, 0.08);
+  --code-background: var(--imitator-code-bg);
+  --code-color: var(--imitator-code-ink);
+  --hljs-bg: var(--imitator-code-bg);
+  --li-code-background: var(--imitator-code-bg);
+  --li-code-color: var(--imitator-code-ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--imitator-bg);
+}
+
+body {
+  color: var(--imitator-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--imitator-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--imitator-accent-dark);
+}
+
+code,
+pre {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/* Generated odoc pages */
+
+body.odoc {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 28px 56px;
+  background: var(--imitator-bg);
+}
+
+.odoc-nav {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 18px;
+  padding: 0;
+  color: var(--imitator-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.odoc-nav a {
+  color: var(--imitator-accent-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.odoc-nav a:hover {
+  color: var(--imitator-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.odoc-preamble,
+.odoc-content {
+  background: var(--imitator-surface);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  box-shadow: 0 8px 22px rgba(31, 41, 55, 0.05);
+}
+
+.odoc-preamble {
+  padding: 34px 40px;
+  margin-bottom: 18px;
+}
+
+.odoc-content {
+  padding: 34px 40px 44px;
+}
+
+.odoc-tocs {
+  margin: 18px 0;
+}
+
+.odoc-toc {
+  background: var(--imitator-surface);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.04);
+}
+
+.odoc h1,
+.odoc h2,
+.odoc h3,
+.odoc h4 {
+  color: var(--imitator-ink);
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.odoc h1 {
+  font-size: clamp(2rem, 3vw, 3rem);
+  margin: 0 0 16px;
+  padding-bottom: 0.18em;
+}
+
+.odoc h2 {
+  margin-top: 34px;
+  padding-top: 8px;
+  border-top: 1px solid var(--imitator-line);
+}
+
+.odoc-preamble p,
+.odoc-content p,
+.odoc-content li {
+  color: var(--imitator-muted);
+}
+
+.odoc pre {
+  padding: 16px 18px;
+  color: var(--imitator-code-ink);
+  background: var(--imitator-code-bg);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  overflow-x: auto;
+}
+
+.odoc code,
+.odoc p code,
+.odoc li code,
+.odoc p a > code,
+.odoc li a > code {
+  color: #334155;
+  background: var(--imitator-code-bg);
+  background-color: var(--imitator-code-bg);
+  border: 1px solid #e8ecf2;
+  border-radius: 5px;
+  padding: 0.12em 0.34em;
+}
+
+.odoc h1 code,
+.odoc h2 code,
+.odoc h3 code,
+.odoc h4 code {
+  color: inherit;
+  background: transparent;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 0.95em;
+  line-height: inherit;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.odoc pre code {
+  color: inherit;
+  background: transparent;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.odoc .hljs {
+  color: var(--imitator-code-ink);
+  background: transparent;
+}
+
+.odoc table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.odoc th,
+.odoc td {
+  border: 1px solid var(--imitator-line);
+  padding: 10px 12px;
+}
+
+.odoc th {
+  background: var(--imitator-surface-muted);
+}
+
+/* Custom landing page */
+
+body.api-home {
+  margin: 0;
+  background: var(--imitator-bg);
+}
+
+.api-shell {
+  min-height: 100vh;
+}
+
+.api-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px 28px;
+}
+
+.api-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--imitator-ink);
+  font-weight: 700;
+}
+
+.api-logo {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.api-hero {
+  background: var(--imitator-surface);
+}
+
+.api-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+  gap: 48px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 28px;
+}
+
+.api-kicker {
+  margin: 0 0 16px;
+  color: var(--imitator-accent-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.api-hero h1 {
+  max-width: 780px;
+  margin: 0;
+  color: var(--imitator-ink);
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  line-height: 1.06;
+}
+
+.api-panel {
+  align-self: start;
+  padding: 24px;
+  background: var(--imitator-surface);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  box-shadow: var(--imitator-shadow);
+}
+
+.api-panel h2 {
+  margin: 0 0 14px;
+  font-size: 1.05rem;
+}
+
+.api-command {
+  display: block;
+  margin: 0;
+  padding: 16px;
+  color: var(--imitator-code-ink);
+  background: var(--imitator-code-bg);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.api-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.api-meta div {
+  padding: 12px;
+  background: var(--imitator-surface-muted);
+  border-radius: var(--imitator-radius);
+}
+
+.api-meta span {
+  display: block;
+  color: var(--imitator-muted);
+  font-size: 0.78rem;
+}
+
+.api-meta strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--imitator-ink);
+}
+
+.api-section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 56px 28px;
+}
+
+.api-section-header {
+  max-width: 760px;
+  margin-bottom: 26px;
+}
+
+.api-section-header h2 {
+  margin: 0;
+  color: var(--imitator-ink);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.api-section-header p {
+  margin: 12px 0 0;
+  color: var(--imitator-muted);
+}
+
+.api-library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.api-library-card {
+  display: block;
+  min-height: 174px;
+  padding: 22px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--imitator-surface);
+  border: 1px solid var(--imitator-line);
+  border-radius: var(--imitator-radius);
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.04);
+}
+
+.api-library-card:hover {
+  border-color: rgba(15, 111, 159, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(31, 41, 55, 0.08);
+}
+
+.api-library-card span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 9px;
+  color: var(--imitator-accent-dark);
+  background: var(--imitator-accent-soft);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.api-library-card h3 {
+  margin: 18px 0 8px;
+  color: var(--imitator-ink);
+  font-size: 1.15rem;
+}
+
+.api-library-card p {
+  margin: 0;
+  color: var(--imitator-muted);
+}
+
+.api-footer {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px;
+  color: var(--imitator-muted);
+  border-top: 1px solid var(--imitator-line);
+}
+
+@media (max-width: 880px) {
+  body.odoc {
+    padding: 18px 14px 40px;
+  }
+
+  .odoc-preamble,
+  .odoc-content {
+    padding: 24px 20px;
+  }
+
+  .api-topbar,
+  .api-hero-inner,
+  .api-section,
+  .api-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .api-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .api-library-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 881px) and (max-width: 1100px) {
+  .api-library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

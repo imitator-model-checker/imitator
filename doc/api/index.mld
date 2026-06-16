@@ -17,8 +17,8 @@ From the repository root:
 ]}
 
 The HTML is generated under [_build/default/_doc/_html/] and bundled under
-[doc/api/html/]; open [doc/api/html/index.html] to browse it. This root page
-redirects directly to the IMITATOR package page.
+[doc/api/html/]; open [doc/api/html/index.html] to browse the custom landing
+page and jump into the odoc-generated package reference.
 
 {2 Why [@doc-private]?}
 
