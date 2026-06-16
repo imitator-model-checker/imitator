@@ -179,27 +179,42 @@ opam install ocamlformat
 
 ### Before Submitting
 
-1. **Ensure your code passes all tests**:
+1. **Build the project**:
    ```bash
    dune build
    ```
 
-2. **Format OCaml files** with the repository helper:
+2. **Run the Dune test target**:
+   ```bash
+   dune runtest
+   ```
+
+3. **Run the regression test suite**:
+   ```bash
+   python tests/test.py
+   ```
+
+4. **Check OCaml formatting** with the repository helper:
+   ```bash
+   scripts/format.sh --check
+   ```
+
+   To format changed OCaml files automatically, run:
    ```bash
    scripts/format.sh
    ```
 
-3. **Verify commit messages** follow Conventional Commits format
+5. **Verify commit messages** follow Conventional Commits format
 
-4. **Keep commits logically organized** — each commit should represent a single, coherent change
+6. **Keep commits logically organized** — each commit should represent a single, coherent change
 
-5. **Rebase on `develop`** to maintain a clean history:
+7. **Rebase on `develop`** to maintain a clean history:
    ```bash
    git fetch upstream
    git rebase upstream/develop
    ```
 
-6. **Force push if needed** (only to your own fork):
+8. **Force push if needed** (only to your own fork):
    ```bash
    git push origin feature/your-feature --force-with-lease
    ```
@@ -214,9 +229,10 @@ opam install ocamlformat
 ### PR Checklist
 
 - [ ] Commits follow Conventional Commits format
-- [ ] OCaml files formatted with `scripts/format.sh`
+- [ ] OCaml formatting checked with `scripts/format.sh --check`
 - [ ] Code builds without errors
-- [ ] All tests pass
+- [ ] Dune tests pass with `dune runtest`
+- [ ] Regression tests pass with `python tests/test.py`
 - [ ] Documentation updated (if applicable)
 - [ ] No unnecessary changes included
 - [ ] Rebased on latest `develop`
@@ -293,6 +309,7 @@ Inside the interactive shell, the `imitator` opam switch is loaded from `/root/.
 
 ```bash
 dune build
+dune runtest
 ```
 
 You can also run the test suite from the mounted repository:
