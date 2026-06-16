@@ -1,0 +1,39 @@
+{0 IMITATOR API reference}
+
+This is the {e internal} API reference for IMITATOR, generated from the
+documentation comments in the source code with {{:https://ocaml.github.io/odoc/}odoc}.
+
+It is aimed at {b contributors and developers} working on IMITATOR itself.
+End users should instead read the user guide (see [doc/user-guide]), and
+contributors may also want the developer manual (see [doc/developer-manual]).
+
+{1 Building this reference}
+
+From the repository root:
+
+{[
+  opam install odoc
+  doc/scripts/build-api-reference.sh
+]}
+
+The HTML is generated under [_build/default/_doc/_html/] and bundled under
+[doc/api/html/]; open [doc/api/html/index.html] to browse it. This root page
+redirects directly to the IMITATOR package page.
+
+{2 Why [@doc-private]?}
+
+IMITATOR is built as a set of {e private} libraries (they have no
+[public_name]), so the public [@doc] alias would document almost nothing.
+The [@doc-private] alias documents the internal libraries and their modules.
+
+{1 Libraries}
+
+The code is organised into the following libraries, each documented through
+its top-level wrapped module:
+
+- {{:../utils@75a864dae907/Utils/index.html}utils} — general-purpose helpers
+- {{:../parsing@75a864dae907/Parsing/index.html}parsing} — model and property parsers
+- {{:../entities@75a864dae907/Entities/index.html}entities} — core data types
+- {{:../lib@75a864dae907/Lib/index.html}lib} — shared model-checking infrastructure
+- {{:../algorithms@75a864dae907/Algorithms/index.html}algorithms} — the synthesis and verification algorithms
+- {{:../exporter@75a864dae907/Exporter/index.html}exporter} — output and export back-ends

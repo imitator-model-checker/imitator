@@ -80,7 +80,6 @@ bin/imitator
 bin/patator
 
 # documentation
-doc/build
 doc/*.aux
 doc/*.bbl
 doc/*.bcf
@@ -90,13 +89,6 @@ doc/*.log
 doc/*.run.xml
 doc/*.synctex.gz
 doc/*.toc
-doc/IMITATOR-not-developer-manual.out
-doc/IMITATOR-not-developer-manual.pdf
-doc/IMITATOR-user-manual.pdf
-doc/classDiagramFull.dot
-doc/classDiagramFull.png
-doc/classDiagramSimplified.dot
-doc/classDiagramSimplified.png
 
 # IDE
 .vscode
