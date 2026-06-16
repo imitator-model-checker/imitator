@@ -167,7 +167,7 @@ val true_indexes : bool array -> int list
 (* Shuffle an array *)
 (* val shuffle_array : 'a array -> unit *)
 
-(** exists p {a1; ...; an} checks if at least one element of the Array satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
+(** exists p [a1; ...; an] checks if at least one element of the Array satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val array_exists : ('a -> bool) -> 'a array -> bool
 
 (** Shuffles the values of an array *)
@@ -181,7 +181,7 @@ val sub_array : NumConst.t array -> NumConst.t array -> NumConst.t array
 (* Useful functions on dynamic arrays *)
 (************************************************************)
 
-(** exists p {a1; ...; an} checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
+(** exists p [a1; ...; an] checks if at least one element of the DynArray satisfies the predicate p. That is, it returns (p a1) || (p a2) || ... || (p an). *)
 val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 
 (************************************************************)

@@ -8,6 +8,7 @@ Thank you for considering contributing to IMITATOR! This document provides guide
 - [Getting Started](#getting-started)
 - [Git Workflow](#git-workflow)
 - [Commit Messages](#commit-messages)
+- [Code Formatting](#code-formatting)
 - [Pull Requests](#pull-requests)
 - [Development Setup](#development-setup)
 
@@ -149,6 +150,31 @@ Fixes #42
 docs: update installation instructions for macOS
 ```
 
+## Code Formatting
+
+IMITATOR uses `ocamlformat` for OCaml source files. The repository provides a helper script that reads the project configuration from `.ocamlformat` and automatically honours `.ocamlformat-ignore`.
+
+Before committing OCaml changes, run:
+
+```bash
+scripts/format.sh
+```
+
+By default, this formats only modified or newly added `.ml` and `.mli` files. Useful options include:
+
+```bash
+scripts/format.sh --staged        # format files staged for commit
+scripts/format.sh --base develop  # format files changed relative to develop
+scripts/format.sh --all           # format every tracked .ml/.mli file
+scripts/format.sh --check         # check formatting without modifying files
+```
+
+If `ocamlformat` is missing, install it with:
+
+```bash
+opam install ocamlformat
+```
+
 ## Pull Requests
 
 ### Before Submitting
@@ -158,17 +184,22 @@ docs: update installation instructions for macOS
    dune build
    ```
 
-2. **Verify commit messages** follow Conventional Commits format
+2. **Format OCaml files** with the repository helper:
+   ```bash
+   scripts/format.sh
+   ```
 
-3. **Keep commits logically organized** — each commit should represent a single, coherent change
+3. **Verify commit messages** follow Conventional Commits format
 
-4. **Rebase on `develop`** to maintain a clean history:
+4. **Keep commits logically organized** — each commit should represent a single, coherent change
+
+5. **Rebase on `develop`** to maintain a clean history:
    ```bash
    git fetch upstream
    git rebase upstream/develop
    ```
 
-5. **Force push if needed** (only to your own fork):
+6. **Force push if needed** (only to your own fork):
    ```bash
    git push origin feature/your-feature --force-with-lease
    ```
@@ -183,6 +214,7 @@ docs: update installation instructions for macOS
 ### PR Checklist
 
 - [ ] Commits follow Conventional Commits format
+- [ ] OCaml files formatted with `scripts/format.sh`
 - [ ] Code builds without errors
 - [ ] All tests pass
 - [ ] Documentation updated (if applicable)
