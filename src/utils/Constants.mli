@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Global constants of IMITATOR: program name and version, file-name extensions, default option values and output settings. *)
+
+
  
 (************************************************************)
 (************************************************************)

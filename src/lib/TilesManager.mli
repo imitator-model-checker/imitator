@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Abstract tiles manager class to manage the tiles received in the cartography algorithms. *)
+
+
 
 (************************************************************)
 (* Modules *)

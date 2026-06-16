@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Class for parameter valuation. *)
+
+
 
  (** Global function: set the number of dimensions for ALL parameter valuations; must be called (once and only once) before creating any object *)
 val set_dimensions : int -> unit

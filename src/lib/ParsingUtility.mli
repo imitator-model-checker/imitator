@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Parsing functions for input elements. *)
+
+
 (*(** Compile the concrete model and convert it into an abstract model *)
 val compile_model: Options.imitator_options -> bool -> AbstractModel.abstract_model * AbstractModel.useful_parsing_model_information
 

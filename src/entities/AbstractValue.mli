@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module helps to log to res file. *)
+
+
 (* Parsing structure module *)
 open ParsedValue
 open DiscreteType

@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module helps to log custom details as JSON format to res file. *)
+
+
 (* Utils modules *)
 open JsonFormatter
 

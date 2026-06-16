@@ -14,6 +14,9 @@
  *
  ************************************************************)
 
+(** Adapters turning each concrete renderer (PTA2HyTech, PTA2JaniSpec, PTA2TikZ, PTA2dot, PTA2Uppaal and the IMITATOR re-printer) into a uniform {!ModelExporter.MODEL_EXPORTER}. *)
+
+
 module HyTech : ModelExporter.MODEL_EXPORTER = struct
 	let file_suffix = ".hy"
 	let string_of_model = PTA2HyTech.string_of_model

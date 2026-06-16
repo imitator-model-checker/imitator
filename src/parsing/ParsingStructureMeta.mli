@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Functions that extract useful information on parsing structure (get variables, is expression is constant ?...) *)
+
+
 open ParsingStructure
 open ParsingStructureUtilities
 open CustomModules

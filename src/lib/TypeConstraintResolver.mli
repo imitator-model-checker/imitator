@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Resolution of type and length constraints when type-checking the signatures of IMITATOR functions. *)
+
+
 (* Parsing structure modules *)
 
 (* *)

@@ -12,6 +12,10 @@
  *
  ************************************************************)
 
+(** Maps a textual {!Lib.AbstractAlgorithm.translation} target to the exporter
+    module that implements it. *)
+
+
 (** Raised when a translation target has no associated textual exporter
     (e.g. the graphics targets JPG/PDF/PNG, or the property target ImiProp,
     which are handled by dedicated pipelines). *)

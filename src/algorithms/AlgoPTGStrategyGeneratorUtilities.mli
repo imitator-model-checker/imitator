@@ -1,3 +1,6 @@
+
+(** Helper types and functions for PTG controller-strategy generation, including a compact simplified view of the abstract model. *)
+
 open AbstractModel
 open Automaton
 

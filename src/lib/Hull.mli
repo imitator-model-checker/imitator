@@ -3,6 +3,9 @@
  * Hull heuristic policy for PTG convex-hull abstraction.
  ************************************************************)
 
+(** Hull heuristic policy for the convex-hull abstraction used in parametric timed games (PTG). *)
+
+
 (** Opaque policy object holding per-location state. *)
 type t
 

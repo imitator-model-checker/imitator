@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Dependency graph of the parsed model (variables / functions, etc.) *)
+
+
 open ParsingStructure
 open CustomModules
 

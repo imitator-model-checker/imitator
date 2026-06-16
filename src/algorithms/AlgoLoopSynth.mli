@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA) *)
+
+
 
 (************************************************************)
 (* Modules *)

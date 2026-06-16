@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Helpers to classify parsed variables and constants by scope (global/local) and kind (variable/constant). *)
+
+
 open ParsingStructure
 open DiscreteType
 

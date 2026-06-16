@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Description of a state_index, a symbolic state and sets of states indexes. *)
+
+
 
 (************************************************************)
 (* Modules *)

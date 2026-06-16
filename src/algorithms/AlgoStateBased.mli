@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. *)
+
+
 
 (**************************************************************)
 (* Modules *)

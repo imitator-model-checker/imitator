@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Contain all types and functions for operations onto parsed discrete value. *)
+
+
 (* Utils modules *)
 open Constants
 

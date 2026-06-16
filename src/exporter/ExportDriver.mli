@@ -14,6 +14,9 @@
  *
  ************************************************************)
 
+(** Orchestrates a model translation: select the right exporter (via {!ExporterRegistry}), render the model and write the result to the conventional output file. *)
+
+
 (** [string_of_model options model target] renders [model] to the textual
     format designated by [target].
     @raise ExporterRegistry.No_textual_exporter for non-textual targets. *)

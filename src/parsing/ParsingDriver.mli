@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Generic lexing/parsing driver for input files. *)
+
+
 (** Exception raised when the input file cannot be opened; the argument is a human-readable error message *)
 exception InputFileNotFound of string
 

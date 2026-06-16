@@ -12,6 +12,13 @@
  *
  ************************************************************)
 
+(** Definitions of IMITATOR's built-in functions.
+
+    Exposes the metadata, signatures and implementations of the built-in
+    functions. To define a new function, add its signature here together with
+    a tag stating whether it is subject to side effects. *)
+
+
 (* Parsing structure modules *)
 open ParsingStructure
 

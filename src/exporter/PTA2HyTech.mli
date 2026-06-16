@@ -14,6 +14,9 @@
  *
  ************************************************************)
 
+(** Convert an input IMITATOR file to a file readable by HyTech. *)
+
+
 
 
 (* Convert a model into a string in the HyTech format *)

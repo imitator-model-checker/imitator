@@ -15,6 +15,13 @@
  *
  ************************************************************)
 
+(** Common interface implemented by every model exporter (HyTech, JaniSpec, TikZ, dot, Uppaal, IMITATOR…).
+
+    Centralising the contract here is what lets the rest of the code depend
+    on the *abstraction* `MODEL_EXPORTER` rather than on any concrete
+    target. *)
+
+
 module type MODEL_EXPORTER = sig
 	(** File extension (including the leading dot, e.g. ".hy") associated with
 	    the produced representation. *)

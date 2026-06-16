@@ -12,7 +12,12 @@
  *
  ************************************************************)
 
- 
+(** General-purpose OCaml helpers used throughout IMITATOR.
+
+    Utilities on integers, floats, options, tuples, lists, arrays, hash tables,
+    strings and files; provider-agnostic, with no IMITATOR-specific semantics. *)
+
+
 (************************************************************)
 (* Useful functions on integers *)
 (************************************************************)

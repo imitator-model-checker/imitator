@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module hold Binary Word type for IMITATOR. *)
+
+
 (* Binary word type *)
 type t = int * bool array
 

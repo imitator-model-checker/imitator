@@ -11,6 +11,11 @@
  *
  ************************************************************)
 
+(** root of the class hierarchy of algorithms.
+
+    Only most basic functions are defined. *)
+
+
 
 (**************************************************************)
 (* Modules *)

@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module aims to convert a parsed expression to a abstract typed expression. *)
+
+
 (* Parsing structure modules *)
 open ParsingStructure
 open DiscreteType

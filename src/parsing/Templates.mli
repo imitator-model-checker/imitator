@@ -1,3 +1,6 @@
+
+(** Expansion of parameterised PTA templates into a plain parsed model and property. *)
+
 open ParsingStructure
 
 val expand_model : unexpanded_parsed_model -> parsed_model

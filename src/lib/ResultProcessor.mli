@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** process the result of IMITATOR: print results, creates files, generates graphics, etc. *)
+
+
 (** Convert a Result.good_or_bad_constraint into a string *)
 val string_of_good_or_bad_constraint : (int -> string) -> Result.good_or_bad_constraint -> string
 

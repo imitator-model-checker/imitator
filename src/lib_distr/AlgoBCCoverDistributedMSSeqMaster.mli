@@ -13,6 +13,12 @@
  *
  ************************************************************)
 
+(** Classical Behavioral Cartography with exhaustive coverage of integer points [AF10].
+
+    Distribution mode: master-worker with sequential distribution of
+    points. [ACE14] Master algorithm *)
+
+
 
 (************************************************************)
 (* Modules *)

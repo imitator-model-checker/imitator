@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module allows to evaluate guards, invariants, user defined functions and update code blocs. *)
+
+
 (* Utils modules *)
 
 (* Abstract model modules *)

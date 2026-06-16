@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Checks whether a PTA is a CUB-PTA. *)
+
+
 (*** NOTE/HACK: duplicate function in ModelConverter and StateSpace ***)
 val continuous_part_of_guard : AbstractModel.guard -> LinearConstraint.pxd_linear_constraint
 

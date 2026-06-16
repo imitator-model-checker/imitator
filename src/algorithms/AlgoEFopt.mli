@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19] *)
+
+
 
 (************************************************************)
 (* Modules *)

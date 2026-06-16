@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** "EF max" algorithm: maximization of a parameter valuation for which there exists a run leading to some states [ABPP19] *)
+
+
 
 (************************************************************)
 (* Modules *)

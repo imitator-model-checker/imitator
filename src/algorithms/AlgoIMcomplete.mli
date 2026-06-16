@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** IM algorithm with complete result, i.e., possibly non-convex and without random selection [AM15] *)
+
+
 
 (************************************************************)
 (* Modules *)

@@ -12,6 +12,11 @@
  *
  ************************************************************)
 
+(** Classical Behavioral Cartography with exhaustive coverage of integer points [AF10].
+
+    Shuffled version, used for the distributed cartography. [ACN15] *)
+
+
 
 (************************************************************)
 (* Modules *)

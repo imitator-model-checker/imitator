@@ -11,6 +11,12 @@
  *
  ****************************************************************)
 
+(** Abstract syntax tree of a parsed IMITATOR model and property.
+
+    These are the types produced directly by the lexer and parser, before
+    conversion to the abstract model. *)
+
+
 (****************************************************************)
 (* Names *)
 (****************************************************************)

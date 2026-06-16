@@ -15,6 +15,11 @@
  *
  ************************************************************)
 
+(** Timed counter, that depends on a level of verbosity (the counter will only update when the global verbose_mode is larger or equal to that of the counter).
+
+    Also maintains a list of all counters, for obtaining statistics easily. *)
+
+
 (************************************************************)
 (************************************************************)
 (* Type *)

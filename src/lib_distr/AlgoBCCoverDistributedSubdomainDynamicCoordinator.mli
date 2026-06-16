@@ -13,6 +13,11 @@
  *
  ************************************************************)
 
+(** Classical Behavioral Cartography with exhaustive coverage of integer points [AF10].
+
+    Distribution mode: subdomain. [ACN15] Coordinator algorithm *)
+
+
 
 (************************************************************)
 (* Modules *)

@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting cycle in the PTA) *)
+
+
 
 (************************************************************)
 (* Modules *)

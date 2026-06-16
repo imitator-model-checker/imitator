@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Dynamic elimination of clocks not used in the future [Andre13, FSFMA] *)
+
+
 
 
  

@@ -11,6 +11,9 @@
  * Created           : 2019/03/01
  *
  ************************************************************)
+
+(** Translater to Uppaal. *)
+
  
 (** Convert a model into a string in the Uppaal XML format *)
 val string_of_model : Options.imitator_options -> AbstractModel.abstract_model -> string

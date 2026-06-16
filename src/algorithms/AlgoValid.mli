@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** validity synthesis, i.e., return the set of valuations for which the initial state is defined. *)
+
+
 
 (************************************************************)
 (* Modules *)

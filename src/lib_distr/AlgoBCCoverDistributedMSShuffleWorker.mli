@@ -13,6 +13,12 @@
  *
  ************************************************************)
 
+(** Classical Behavioral Cartography with exhaustive coverage of integer points [AF10].
+
+    Distribution mode: master-worker with shuffle distribution of points.
+    [ACN15] Worker algorithm *)
+
+
 
 	
 (************************************************************)

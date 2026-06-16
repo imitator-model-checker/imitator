@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Module that aims to reduce and simplify parsed expressions, this module is only used to reduce clock updates. *)
+
+
 open ParsingStructure
 
 (** Module that aims to reduce parsed rational arithmetic expressions *)

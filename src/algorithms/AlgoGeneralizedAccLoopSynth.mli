@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** GeneralizedAccLoopSynth algorithm (synthesizes valuations for which there exists an accepting cycle in the PTA verifying a generalized condition given in the form of a *set* of state predicates) *)
+
+
 
 (************************************************************)
 (* Modules *)

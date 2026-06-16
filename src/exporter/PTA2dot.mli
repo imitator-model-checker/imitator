@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Convert an IMITATOR model to a dot file. *)
+
+
 
 (** Convert a model into a string to be then converted into graphics using dot *)
 val string_of_model : Options.imitator_options -> AbstractModel.abstract_model -> string

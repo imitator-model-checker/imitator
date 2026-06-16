@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** General functions for map, filter, traverse, evaluating, etc. parsing structure tree. *)
+
+
 open ParsingStructure
 open DiscreteType
 

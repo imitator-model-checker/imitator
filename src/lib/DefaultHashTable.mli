@@ -13,6 +13,12 @@
  *
  ************************************************************)
 
+(** A polymorphic hash table object that supports default elements.
+
+    Expects a function that generates a default element. Values can be
+    objects/references and it works as expected. *)
+
+
 class ['a, 'b] defaultHashTable : 
  ('a -> 'b) ->
   object 

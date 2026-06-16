@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Classical Behavioral Cartography with exhaustive coverage of integer points [AF10] *)
+
+
 
 (************************************************************)
 (* Modules *)

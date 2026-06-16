@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module helps to format Json documents. *)
+
+
 type json_element =
     | Json_struct of json_property list
     | Json_array of json_element list

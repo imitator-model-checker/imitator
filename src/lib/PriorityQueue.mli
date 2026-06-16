@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Priority Queue (Smallest element has highest priority!) Implemented using a Leftist Heap. *)
+
+
 type comparison = Equal | GreaterThan | LessThan
 
 module type OrderedSig =

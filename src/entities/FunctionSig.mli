@@ -14,6 +14,14 @@
  *
  ************************************************************)
 
+(** Signature templates for IMITATOR's built-in functions.
+
+    A template such as [list_cons : 'a -> 'a list -> 'a list] is later resolved
+    against the actual argument types of a call: for instance
+    [list_cons(r, lr)] with [r : rat] resolves to
+    [rat -> rat list -> rat list]. *)
+
+
 (* Parsing structure modules *)
 open DiscreteType
 

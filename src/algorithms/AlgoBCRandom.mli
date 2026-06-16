@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Random Behavioral Cartography with a maximum number of consecutive failed attempts to find a non-integer point not covered by any tile [AF10] *)
+
+
 
 (************************************************************)
 (* Modules *)

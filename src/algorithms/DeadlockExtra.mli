@@ -9,6 +9,9 @@
  *
  ************************************************************)
 
+(** utilities for deadlock checking. *)
+
+
  (* JvdP: add some auxiliary code for deadlock checking, Paris July 2022 *)
 
 open LinearConstraint

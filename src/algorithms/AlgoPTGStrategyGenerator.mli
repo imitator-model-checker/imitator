@@ -1,3 +1,6 @@
+
+(** Controller-strategy synthesis and export for parametric timed games (PTG). *)
+
 open AbstractModel
 open Automaton
 open StateSpace

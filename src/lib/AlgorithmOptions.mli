@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** Describes some of the options associated with algorithms. *)
+
+
 
 val default_state_comparison	: AbstractProperty.abstract_property -> AbstractAlgorithm.state_comparison_operator
 

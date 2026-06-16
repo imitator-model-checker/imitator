@@ -12,6 +12,11 @@
  *
  ************************************************************)
 
+(** "EF optimized" algorithm: minimization of a parameter valuation for which there exists a run leading to some states.
+
+    Algorithm with a priority queue. [ABPP19] *)
+
+
 
 (************************************************************)
 (* Modules *)

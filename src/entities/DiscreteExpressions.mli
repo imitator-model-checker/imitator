@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** arithmetic and Boolean expressions on discrete variables. *)
+
+
 type variable_name = string
 type variable_name_table = Automaton.variable_index -> variable_name
 

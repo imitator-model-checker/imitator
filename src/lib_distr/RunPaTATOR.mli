@@ -11,5 +11,8 @@
  *
  ****************************************************************) 
 
+(** Entry point that launches PaTATOR, the distributed (MPI) execution engine of IMITATOR. *)
+
+
  val run : unit -> unit
  
