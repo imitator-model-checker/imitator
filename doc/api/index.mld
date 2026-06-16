@@ -32,6 +32,7 @@ The code is organised into the following libraries, each documented through
 its top-level wrapped module:
 
 - {{:../utils@75a864dae907/Utils/index.html}utils} — general-purpose helpers
+- {{:../data_structures@75a864dae907/Data_structures/index.html}data_structures} — reusable data structures and caches
 - {{:../parsing@75a864dae907/Parsing/index.html}parsing} — model and property parsers
 - {{:../entities@75a864dae907/Entities/index.html}entities} — core data types
 - {{:../lib@75a864dae907/Lib/index.html}lib} — shared model-checking infrastructure
