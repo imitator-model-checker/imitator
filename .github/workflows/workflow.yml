@@ -2,6 +2,10 @@ name: workflow
 
 on:
   push:
+    branches:
+      - develop
+    tags:
+      - '*'
   pull_request:
   workflow_dispatch:
 
