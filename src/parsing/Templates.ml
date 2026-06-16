@@ -1,7 +1,6 @@
 open ParsingStructure;;
 open ParsingStructureUtilities;;
 open ImitatorUtilities;;
-open OCamlUtilities;;
 
 (* Utilities *)
 
@@ -387,37 +386,15 @@ and expand_parsed_discrete_term g_decls synt_arrays = function
   | Parsed_factor f -> Parsed_factor (expand_parsed_discrete_factor g_decls synt_arrays f)
 
 and expand_parsed_discrete_factor g_decls synt_arrays = fun factor ->
-  let get_name_of_factor = function
-    | Parsed_variable (name, _) -> name
-    | _ ->
-      (* Failed attempt to print more information *)
-        
-        (* First print the factor for better debugging, then raise the error *)
-        print_error "Error while expanding syntactic arrays: the name of the array should be a variable name, but got the following factor:";
-        let dummy_variable_infos : ParsingStructure.variable_infos = {
-          constants = Hashtbl.create 0;
-          variables = Array.of_list([]);
-          variable_names = [];
-          index_of_variables = Hashtbl.create 0;
-          type_of_variables = (fun _ -> failwith "This function should not be called since the variable infos are only used for type checking, and we do type checking after expanding syntactic arrays.");
-          removed_variable_names = [];
-          discrete = [];
-          variable_refs = Hashtbl.create 0;
-          fun_meta = Hashtbl.create 0;
-           } in
-        print_error (string_of_parsed_factor dummy_variable_infos factor ^ ".");
-        
-
-        (* Convert the synt_arrays into a list of strings *)
-        let synt_arrays_str = string_of_list_of_string_with_sep ", " (List.map (fun (name, kind, len) -> name ^ " (length: " ^ string_of_int len ^ ", kind: " ^ (match kind with Clock_synt_array -> "clock" | Param_synt_array -> "parameter" | Action_synt_array -> "action") ^ ")") synt_arrays) in
-        print_error ("synt_arrays_str = " ^ synt_arrays_str);
-      failwith "[expand_parsed_discrete_factor]: Name of syntactic array was not a variable name."
-  in
   match factor with
-    | Parsed_access (factor', index) ->
-        let arr_name = get_name_of_factor factor' in
+    | Parsed_access (Parsed_variable (arr_name, _), index) ->
+        let index' = expand_parsed_discrete_arithmetic_expression g_decls synt_arrays index in
         let gen_var_from_name name = Parsed_variable (name, 0) in
-        gen_var_from_access g_decls factor gen_var_from_name arr_name index synt_arrays
+        gen_var_from_access g_decls (Parsed_access (Parsed_variable (arr_name, 0), index')) gen_var_from_name arr_name index' synt_arrays
+    | Parsed_access (factor', index) ->
+        let factor'' = expand_parsed_discrete_factor g_decls synt_arrays factor' in
+        let index' = expand_parsed_discrete_arithmetic_expression g_decls synt_arrays index in
+        Parsed_access (factor'', index')
     | _ -> factor
 
 let expand_sync (g_decls : variable_declarations) : unexpanded_sync -> sync = function
