@@ -31,7 +31,12 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # what is excluded), then compile IMITATOR and promote the stripped binary.
 COPY . .
 
-RUN bash .github/scripts/build.sh
+ARG IMITATOR_GIT_HASH
+ARG IMITATOR_GIT_BRANCH
+
+RUN IMITATOR_GIT_HASH="$IMITATOR_GIT_HASH" \
+  IMITATOR_GIT_BRANCH="$IMITATOR_GIT_BRANCH" \
+  bash .github/scripts/build.sh
 
 # Make the opam switch available by default in interactive dev shells.
 RUN echo 'eval "$(opam env --switch=imitator)"' >> /root/.bashrc

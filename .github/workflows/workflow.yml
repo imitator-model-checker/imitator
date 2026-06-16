@@ -146,6 +146,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            IMITATOR_GIT_HASH=${{ github.sha }}
+            IMITATOR_GIT_BRANCH=${{ github.ref_name }}
           cache-from: |
             type=gha,scope=docker-${{ hashFiles('Dockerfile', '.github/scripts/install-deps.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh', '.github/patches/**') }}
             type=gha

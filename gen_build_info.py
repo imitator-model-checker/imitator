@@ -51,6 +51,21 @@ ocaml_fmt = 'Some "{}"'
 git_fmt = "Retrieved git {}: {}"
 
 
+def ocaml_string(value):
+    """Escapes a Python string for a generated OCaml string literal."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def env_info(info):
+    """Returns git information provided by the build environment, if any."""
+    if info == "hash":
+        return os.environ.get("IMITATOR_GIT_HASH") or os.environ.get("GITHUB_SHA")
+    elif info == "branch":
+        return os.environ.get("IMITATOR_GIT_BRANCH") or os.environ.get("GITHUB_REF_NAME")
+    else:
+        raise NotImplementedError
+
+
 def get_ocaml_info(info):
     """Method that gets specific information from git and returns a typed value for Ocaml"""
     if info == "hash":  # NOTE: command is 'git rev-parse HEAD'
@@ -62,15 +77,18 @@ def get_ocaml_info(info):
 
     try:
         git_info = (subprocess.check_output(git_command)).rstrip().decode("utf-8")
-    except:  # Case: exception with problem (typically return code <> 1)
-        print("Error with git: give up git information")
-        # nothing
-        git_info = "?????"
+    except Exception:  # Case: exception with problem (typically return code <> 1)
+        git_info = env_info(info)
+        if git_info:
+            print("Error with git: using {} from build environment".format(info))
+        else:
+            print("Error with git: give up git information")
+            git_info = "?????"
 
     print(git_fmt.format(info, git_info))
 
     # Handle what to print in Ocaml
-    git_ocaml = ocaml_fmt.format(git_info)
+    git_ocaml = ocaml_fmt.format(ocaml_string(git_info))
     if git_info == "":
         git_ocaml = "None"
 
