@@ -11,6 +11,7 @@
   "dateModified": "2026-06-16",
   "license": "https://spdx.org/licenses/GPL-3.0-only",
   "url": "https://www.imitator.fr",
+  "sameAs": "https://www.imitator.fr",
   "codeRepository": "https://github.com/imitator-model-checker/imitator",
   "issueTracker": "https://github.com/imitator-model-checker/imitator/issues",
   "readme": "https://github.com/imitator-model-checker/imitator/blob/master/README.md",
@@ -23,8 +24,7 @@
   "runtimePlatform": "OCaml >= 4.08",
   "operatingSystem": [
     "Linux",
-    "macOS",
-    "Windows"
+    "macOS"
   ],
   "applicationCategory": "Formal verification",
   "developmentStatus": "active",
@@ -68,6 +68,16 @@
   "softwareRequirements": [
     {
       "@type": "SoftwareApplication",
+      "identifier": "ocaml",
+      "name": "OCaml"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "opam",
+      "name": "opam"
+    },
+    {
+      "@type": "SoftwareApplication",
       "identifier": "menhir",
       "name": "menhir"
     },
@@ -95,6 +105,16 @@
       "@type": "SoftwareApplication",
       "identifier": "dune",
       "name": "dune"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "graphviz",
+      "name": "Graphviz"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "plotutils",
+      "name": "GNU plotutils"
     }
   ],
   "referencePublication": {
