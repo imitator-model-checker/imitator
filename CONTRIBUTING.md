@@ -238,9 +238,14 @@ All pull requests require at least one approval from a maintainer before merging
 
 ## Development Setup (Docker)
 
-You can develop and test IMITATOR using Docker, which provides a consistent environment and eliminates dependency issues.
+You can build, run, and develop IMITATOR using Docker. The Dockerfile has two stages:
 
-#### Building the Docker Image
+- `runtime`: the default final image, containing only the compiled `imitator` binary and runtime tools such as Graphviz and Plotutils.
+- `builder`: a development image with the Ubuntu packages, opam switch, OCaml libraries, mlgmp, PPL, and build tools needed to compile IMITATOR.
+
+Docker BuildKit is required for the cache mounts used by the Dockerfile. These mounts reuse apt and opam downloads across builds without copying those caches into the final image.
+
+#### Building the Runtime Image
 
 1. From the repository root:
    ```bash
@@ -249,32 +254,69 @@ You can develop and test IMITATOR using Docker, which provides a consistent envi
 
 2. Verify the build:
    ```bash
-   docker run --rm imitator:latest --help
+   docker run --rm imitator:latest -help
    ```
 
 #### Running IMITATOR in Docker
 
 **Basic usage** (run IMITATOR with input files):
 ```bash
-docker run --rm -v $(pwd):/workspace imitator:latest /workspace/path/to/model.imi
+docker run --rm -v "$(pwd):/workspace" imitator:latest path/to/model.imi
 ```
 
 **With options**:
 ```bash
-docker run --rm -v $(pwd):/workspace imitator:latest /workspace/model.imi -mode statespace
+docker run --rm -v "$(pwd):/workspace" imitator:latest model.imi -mode statespace
 ```
 
-**Interactive shell** (to explore the container):
+The runtime image starts in `/workspace` as an unprivileged `imitator` user. Mount the directory containing your models there so generated output files are written back to your host.
+
+#### Building the Development Image
+
+Build the `builder` stage when you want a container with the full compilation environment:
+
 ```bash
-docker run --rm -it --entrypoint bash -v $(pwd):/workspace imitator:latest
+docker build --target builder -t imitator-dev .
+```
+
+Start an interactive development shell with the repository mounted:
+
+```bash
+docker run --rm -it \
+  -v "$(pwd):/workspace" \
+  -w /workspace \
+  --entrypoint bash \
+  imitator-dev
+```
+
+Inside the interactive shell, the `imitator` opam switch is loaded from `/root/.bashrc`, so you can run OCaml tooling directly:
+
+```bash
+dune build
+```
+
+You can also run the test suite from the mounted repository:
+
+```bash
+python tests/test.py
+```
+
+Install optional contributor tools in the dev container when needed:
+
+```bash
+opam install -y ocamlformat
+scripts/format.sh --check
 ```
 
 #### Docker Notes
 
-- Use `-v $(pwd):/workspace` to mount your current directory into the container
+- Use `-v "$(pwd):/workspace"` to mount your current directory into the container
 - All model files and benchmarks should be accessible from the mounted volume
 - Output files will be created in the mounted directory and accessible from your host machine
-- The container runs the `imitator` binary by default, but you can override it with `bash` for interactive use
+- The default image is for running IMITATOR, not for compiling it
+- Use `imitator-dev` for development commands such as `dune build`, formatting checks, and tests
+- The builder image also contains a copy of the source tree at `/imitator`; use `/workspace` when you want to work on your mounted checkout
+- For non-interactive dev commands, run through Bash so `/root/.bashrc` is loaded, for example: `docker run --rm -v "$(pwd):/workspace" -w /workspace imitator-dev bash -ic 'dune build'`
 
 ## Questions?
 

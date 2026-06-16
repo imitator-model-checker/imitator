@@ -1,6 +1,9 @@
 .travis
 .dockerignore
 .git
+_build
+bin/imitator
+doc/api/html
 _oasis
 comparator
 scripts
