@@ -1,6 +1,16 @@
 name: workflow
 
-on: push
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -16,7 +26,7 @@ jobs:
     steps:
       # setup repository
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # cache the opam root (compiler switch + OCaml libs + mlgmp/PPL bindings)
       - name: Cache opam
@@ -30,6 +40,13 @@ jobs:
       # install dependencies
       - name: Run build
         run: .github/scripts/build.sh
+        shell: bash
+
+      # run dune tests
+      - name: Run dune tests
+        run: |
+          eval "$(opam env --switch=imitator)"
+          dune runtest
         shell: bash
 
       # run tests
@@ -47,23 +64,29 @@ jobs:
 
       # prepare artifacts
       - name: Prepare artifact
+        if: github.event_name == 'push'
         run: .github/scripts/prepare-artifact.sh
         shell: bash
 
       # upload artifacts
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
         with:
           name: imitator-${{ matrix.os }}
+          if-no-files-found: error
+          retention-days: 7
           path: |
             bin/*
             doc/user-guide/IMITATOR-user-manual.pdf
             doc/developer-manual/IMITATOR-developer-manual.pdf
 
   deploy:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     name: Publish - Github Release
     runs-on: ubuntu-22.04
     needs: build
+    permissions:
+      contents: write
     steps:
       # retrieve information
       - name: Retrieve artifacts
@@ -71,7 +94,7 @@ jobs:
 
       # deploy
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           release_name: ${{ github.ref_name }}
@@ -84,28 +107,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   docker:
-    if: startsWith(github.ref, 'refs/tags/') || (github.ref == 'refs/heads/develop')
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/develop')
     name: Publish - Docker Hub
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: imitator/imitator
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
