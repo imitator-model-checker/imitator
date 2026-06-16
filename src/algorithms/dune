@@ -1,8 +1,8 @@
 (library
  (name algorithms)
- (libraries utils entities parsing lib gmp ppl extlib fileutils str unix threads)
+ (libraries data_structures utils entities parsing lib gmp ppl extlib fileutils str unix threads)
  (flags
-  (:standard -open Utils -open Entities -open Parsing -open Lib)))
+  (:standard -open Utils -open Entities -open Parsing -open Data_structures -open Lib)))
 
 (env
  (dev
