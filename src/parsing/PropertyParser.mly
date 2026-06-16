@@ -500,12 +500,12 @@ loc_predicate:
 	/* loc[my_pta] = my_loc */
 	| CT_LOC LSQBRA name_or_array_access RSQBRA OP_EQ NAME { Unexpanded_Parsed_loc_predicate_EQ ($3, $6) }
 	/* my_pta IS IN my_loc */
-	| name_or_array_access CT_IS CT_IN NAME { Unexpanded_Parsed_loc_predicate_EQ ($1, $4) }
+	| NAME CT_IS CT_IN NAME { Unexpanded_Parsed_loc_predicate_EQ (Var_name $1, $4) }
 
 	/* loc[my_pta] <> my_loc */
 	| CT_LOC LSQBRA name_or_array_access RSQBRA OP_NEQ NAME { Unexpanded_Parsed_loc_predicate_NEQ ($3, $6) }
 	/* my_pta IS NOT IN my_loc */
-	| name_or_array_access CT_IS CT_NOT CT_IN NAME { Unexpanded_Parsed_loc_predicate_NEQ ($1, $5) }
+	| NAME CT_IS CT_NOT CT_IN NAME { Unexpanded_Parsed_loc_predicate_NEQ (Var_name $1, $5) }
 ;
 
 
