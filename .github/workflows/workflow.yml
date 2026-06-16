@@ -37,11 +37,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.opam
-          key: opam-${{ matrix.os }}-ocaml4.14.2-${{ hashFiles('.github/scripts/build.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh') }}
+          key: opam-${{ matrix.os }}-ocaml4.14.2-${{ hashFiles('.github/scripts/install-deps.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh') }}
           restore-keys: |
             opam-${{ matrix.os }}-ocaml4.14.2-
 
       # install dependencies
+      - name: Install dependencies
+        run: .github/scripts/install-deps.sh
+        shell: bash
+
+      # build IMITATOR
       - name: Run build
         run: .github/scripts/build.sh
         shell: bash
@@ -101,7 +106,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           files: |
             imitator-macos-*/bin/*
             imitator-ubuntu-*/bin/*
@@ -141,5 +146,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=docker-${{ hashFiles('Dockerfile', '.github/scripts/install-deps.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh', '.github/patches/**') }}
+            type=gha
+          cache-to: type=gha,mode=max,scope=docker-${{ hashFiles('Dockerfile', '.github/scripts/install-deps.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh', '.github/patches/**') }}

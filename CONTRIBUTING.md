@@ -259,7 +259,16 @@ You can build, run, and develop IMITATOR using Docker. The Dockerfile has two st
 - `runtime`: the default final image, containing only the compiled `imitator` binary and runtime tools such as Graphviz and Plotutils.
 - `builder`: a development image with the Ubuntu packages, opam switch, OCaml libraries, mlgmp, PPL, and build tools needed to compile IMITATOR.
 
-Docker BuildKit is required for the cache mounts used by the Dockerfile. These mounts reuse apt and opam downloads across builds without copying those caches into the final image.
+Docker BuildKit is required for the cache mount used by the Dockerfile. The Docker build installs dependencies before copying the full source tree, so source-only changes can reuse the expensive Ubuntu/opam/mlgmp/PPL dependency layer. The apt package download cache is kept outside the image layer.
+
+The same split is available outside Docker:
+
+```bash
+.github/scripts/install-deps.sh
+.github/scripts/build.sh
+```
+
+Run `install-deps.sh` when setting up a machine or changing dependency scripts. Run `build.sh` for normal rebuilds once dependencies are installed.
 
 #### Building the Runtime Image
 
@@ -305,7 +314,13 @@ docker run --rm -it \
   imitator-dev
 ```
 
-Inside the interactive shell, the `imitator` opam switch is loaded from `/root/.bashrc`, so you can run OCaml tooling directly:
+Inside the interactive shell, the `imitator` opam switch is loaded from `/root/.bashrc`. Use the project build script for the standard build:
+
+```bash
+.github/scripts/build.sh
+```
+
+You can also run OCaml tooling directly:
 
 ```bash
 dune build
@@ -333,6 +348,7 @@ scripts/format.sh --check
 - The default image is for running IMITATOR, not for compiling it
 - Use `imitator-dev` for development commands such as `dune build`, formatting checks, and tests
 - The builder image also contains a copy of the source tree at `/imitator`; use `/workspace` when you want to work on your mounted checkout
+- The Dockerfile copies and runs `.github/scripts/install-deps.sh` before copying the full source tree; changing dependency scripts or patches invalidates the dependency layer, while ordinary source edits should reuse it
 - For non-interactive dev commands, run through Bash so `/root/.bashrc` is loaded, for example: `docker run --rm -v "$(pwd):/workspace" -w /workspace imitator-dev bash -ic 'dune build'`
 
 ## Questions?

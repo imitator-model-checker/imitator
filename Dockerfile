@@ -6,27 +6,32 @@
 FROM ubuntu:22.04 AS builder
 LABEL maintainer="Jaime Arias <arias@lipn.univ-paris13.fr>"
 
-# DOCKER_RUNNING tells build.sh to init opam with --disable-sandboxing;
+# DOCKER_RUNNING tells install-deps.sh to init opam with --disable-sandboxing;
 # DEBIAN_FRONTEND keeps apt non-interactive.
 ENV DOCKER_RUNNING=true \
   DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /imitator
 
-# Copy the whole repository (see .dockerignore for what is excluded).
+# Copy only the dependency installer inputs first. This keeps the expensive
+# apt/opam/mlgmp/PPL setup cached when ordinary source files change.
+COPY .github/scripts/install-deps.sh .github/scripts/install-deps.sh
+COPY .github/scripts/install-mlgmp.sh .github/scripts/install-mlgmp.sh
+COPY .github/scripts/install-ppl.sh .github/scripts/install-ppl.sh
+COPY .github/patches .github/patches
+
+# Install the system packages, opam switch, OCaml libraries, mlgmp and PPL.
+# The apt cache mount persists package downloads across local builds without
+# copying them into the image layer. The opam switch is kept in this layer so
+# later source-only rebuilds can reuse it reliably from Docker's layer cache.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  bash .github/scripts/install-deps.sh
+
+# Copy the whole repository only after dependency setup (see .dockerignore for
+# what is excluded), then compile IMITATOR and promote the stripped binary.
 COPY . .
 
-# Build IMITATOR. build.sh installs the system packages, opam, the OCaml
-# switch, mlgmp and PPL, then runs `dune build`, which promotes a stripped,
-# statically-linked binary to /imitator/bin/imitator.
-#
-# The cache mounts persist apt downloads and the opam root (switch +
-# mlgmp/PPL bindings) across builds; build.sh already skips reinstalling
-# them when present, so warm rebuilds avoid recompiling PPL from source.
-# They live in the build cache only, never in a layer.
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/root/.opam,sharing=locked \
-  bash .github/scripts/build.sh
+RUN bash .github/scripts/build.sh
 
 # Make the opam switch available by default in interactive dev shells.
 RUN echo 'eval "$(opam env --switch=imitator)"' >> /root/.bashrc
@@ -39,8 +44,10 @@ LABEL maintainer="Jaime Arias <arias@lipn.univ-paris13.fr>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Runtime dependencies:
-RUN apt-get update -qq \
+# Runtime dependencies. The apt cache mount mirrors the builder stage so local
+# rebuilds of this layer reuse previously downloaded packages.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  apt-get update -qq \
   && apt-get install -y --no-install-recommends \
   graphviz \
   plotutils \
