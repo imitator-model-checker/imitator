@@ -18,6 +18,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      # cache the opam root (compiler switch + OCaml libs + mlgmp/PPL bindings)
+      - name: Cache opam
+        uses: actions/cache@v4
+        with:
+          path: ~/.opam
+          key: opam-${{ matrix.os }}-ocaml4.14.2-${{ hashFiles('.github/scripts/build.sh', '.github/scripts/install-mlgmp.sh', '.github/scripts/install-ppl.sh') }}
+          restore-keys: |
+            opam-${{ matrix.os }}-ocaml4.14.2-
+
       # install dependencies
       - name: Run build
         run: .github/scripts/build.sh
