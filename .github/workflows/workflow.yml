@@ -12,7 +12,7 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     env:
-      MAX_ALLOWED_TEST_FAILURES: 4
+      MAX_ALLOWED_TEST_FAILURES: 0
     steps:
       # setup repository
       - name: Checkout
