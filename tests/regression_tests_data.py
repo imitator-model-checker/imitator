@@ -6637,7 +6637,6 @@ Error                                   : invalid model
 		# Test since               : 2026/06/01
 		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4
-        'skip' 		: True, # NOTE: this test is currently failing, but this is not extremely critical, so we skip it for now; see issue #218 for more details
 		'purpose'    : 'Test that a local variable name is treated differently as a function argument and a global variable',
 		'input_files': ['functions/side-effects-samename.imi'],
 		'options'    : '-mode statespace -states-description',
