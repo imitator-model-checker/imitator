@@ -49,7 +49,7 @@ docker run --rm -v "$PWD:/workspace" imitator benchmarks/example.imi
 ## Installation
 
 Detailed and up-to-date installation instructions are available from the [IMITATOR website](https://www.imitator.fr).
-The repository also includes a short [installation note](INSTALL.md).
+In case of installation problems, please contact the developers via GitHub or [imitator.fr](https://www.imitator.fr).
 
 The build helper supports Linux and macOS. It installs system dependencies, initializes an `opam` switch, installs the required OCaml libraries, and builds the executable:
 
@@ -90,7 +90,6 @@ IMITATOR has been used on examples from the literature and industry, including c
 
 The repository contains several documentation entry points:
 
-* [Installation notes](INSTALL.md)
 * [Contribution guidelines](CONTRIBUTING.md)
 * [Documentation overview](doc/README.md)
 * [User and developer manuals](doc/)
