@@ -7,7 +7,7 @@
 [![Software Heritage](https://archive.softwareheritage.org/badge/origin/https://github.com/imitator-model-checker/imitator/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/imitator-model-checker/imitator)
 
 [IMITATOR](https://www.imitator.fr) is an open source command-line model checker for parametric verification and robustness analysis of real-time systems.
-It performs automated parameter synthesis for concurrent timed systems described as networks of IMITATOR parametric timed automata.
+It performs automated parameter synthesis for concurrent timed systems described as networks of parametric timed automata extended with numerous features.
 
 ## Keywords
 
@@ -30,7 +30,13 @@ formal verification, model checking, software verification, parameter synthesis,
 
 ## Quick Start
 
-Build IMITATOR locally and run the bundled example model:
+You can directly download a precompiled image, and run it, for example:
+
+```sh
+bin/imitator benchmarks/example.imi
+```
+
+Alternatively, build IMITATOR locally and run the bundled example model:
 
 ```sh
 git clone https://github.com/imitator-model-checker/imitator.git
@@ -48,7 +54,6 @@ docker run --rm -v "$PWD:/workspace" imitator benchmarks/example.imi
 
 ## Installation
 
-Detailed and up-to-date installation instructions are available from the [IMITATOR website](https://www.imitator.fr).
 In case of installation problems, please contact the developers via GitHub or [imitator.fr](https://www.imitator.fr).
 
 The build helper supports Linux and macOS. It installs system dependencies, initializes an `opam` switch, installs the required OCaml libraries, and builds the executable:
@@ -65,10 +70,10 @@ bin/imitator
 
 ## Usage
 
-IMITATOR takes an `.imi` model file as input:
+For most usages, IMITATOR takes an `.imi` model file and a `.imiprop` property file as inputs:
 
 ```sh
-bin/imitator path/to/model.imi
+bin/imitator path/to/model.imi path/to/property.imiprop
 ```
 
 For available command-line options, run:
@@ -77,14 +82,16 @@ For available command-line options, run:
 bin/imitator -help
 ```
 
-IMITATOR is mainly a command-line tool, but it can also output some results in graphical form when the relevant runtime tools are installed.
+IMITATOR is mainly a command-line tool, but it can also output some results in graphical form when the relevant runtime tools are installed (typically `dot`).
 
 ## Examples and Benchmarks
 
 This repository includes a small example model in [benchmarks/example.imi](benchmarks/example.imi).
 
 Additional case studies and benchmarks are available in the official [IMITATOR benchmarks library](https://www.imitator.fr/library.html) and in related GitHub repositories.
-IMITATOR has been used on examples from the literature and industry, including communication protocols, asynchronous hardware circuits, schedulability problems with uncertain periods, and other real-time systems.
+IMITATOR has been used on examples from the scientific literature and from the industry, including communication protocols, asynchronous hardware circuits, schedulability problems with uncertain periods, and other real-time systems.
+
+For more information, visit [imitator.fr](https://www.imitator.fr).
 
 ## Documentation
 
@@ -93,8 +100,6 @@ The repository contains several documentation entry points:
 * [Contribution guidelines](CONTRIBUTING.md)
 * [Documentation overview](doc/README.md)
 * [User and developer manuals](doc/)
-
-For more information, visit [imitator.fr](https://www.imitator.fr).
 
 ## Build from Source
 
@@ -135,9 +140,9 @@ scripts/format.sh --check
 
 ## Features
 
-IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA).
-NIPTA extend parametric timed automata [[AHV93]](https://www.doi.org/10.1145/167088.167242), a formalism for specifying and verifying systems where timing constants can be replaced with parameters, i.e., unknown constants.
+IMITATOR takes as input a network of parametric timed automata [[AHV93]](https://www.doi.org/10.1145/167088.167242), a formalism for specifying and verifying systems where timing constants can be replaced with parameters, i.e., unknown constants.
 The input formalism can be seen as a subclass of parametric linear hybrid automata with constant clock rates, including stopwatches and multi-rate automata.
+IMITATOR supports many additions to parametric timed automata, including multi-rate clocks, linear constraints, global variables with simple or composite types (arrays, lists…), and user-defined functions.
 
 IMITATOR addresses variants of the following question:
 
@@ -145,7 +150,7 @@ _given a concurrent timed system, what are the values of the timing constants th
 
 Specifically, IMITATOR implements:
 
-* parameter synthesis for a subset of TCTL, including safety, reachability, unavoidability, and their timed counterpart, such as $E \phi U_[p; p+1) \psi$ [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445),
+* parameter synthesis for a subset of TCTL, including safety, reachability, unavoidability, and their timed counterpart, such as $E \phi U_{[p; p+1)} \psi$ [[AHV93]](https://www.doi.org/10.1145/167088.167242) [[JLR15]](https://www.doi.org/10.1109/TSE.2014.2357445),
 * minimal-time and minimal-parameter reachability synthesis [[ABPP19]](https://www.doi.org/10.1007/978-3-030-17465-1_12),
 * parametric deadlock-freeness checking [[Andre16]](https://www.doi.org/10.1007/978-3-319-46750-4_27),
 * cycle-existence synthesis [[NPP18]](https://www.doi.org/10.1109/ICECCS2018.2018.00009) [[AAPP21]](https://www.doi.org/10.1007/978-3-030-72016-2_17),
