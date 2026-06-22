@@ -48,6 +48,13 @@ bin/imitator benchmarks/example.imi
 You can also build and run IMITATOR with Docker:
 
 ```sh
+docker pull imitator/imitator
+docker run --rm -v "$PWD:/workspace" imitator/imitator benchmarks/example.imi
+```
+
+Or build the image locally:
+
+```sh
 docker build -t imitator .
 docker run --rm -v "$PWD:/workspace" imitator benchmarks/example.imi
 ```
