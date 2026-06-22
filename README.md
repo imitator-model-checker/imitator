@@ -30,7 +30,7 @@ formal verification, model checking, software verification, parameter synthesis,
 
 ## Quick Start
 
-You can directly download a precompiled image, and run it, for example:
+You can directly download a precompiled image from the [GitHub releases page](https://github.com/imitator-model-checker/imitator/releases), and run it, for example:
 
 ```sh
 bin/imitator benchmarks/example.imi
