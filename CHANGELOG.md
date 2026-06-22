@@ -1,14 +1,45 @@
 # Releases
 
 *******************************************************
-## future release (202x-xx-xx) Cheese Durian
+## release 3.4 (2026-06-??) Cheese Durian
 
 ### Major features
+* Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
+* New user-defined functions: imperative instructions, function calls, definition of local variables, variable shadowing…
+* New AG ("global invariant") algorithm, implemented as the negation of EF
+* New EU ("Exists … until") algorithm
+* New EW ("exists … weak until") algorithm
+* New AF ("always eventually") algorithm, and variants:
+	- AR ("always … release")
+	- AU ("always … until")
+	- AW ("always … weak until")
+	- EG ("exists globally"), implemented as the negation of AF
+* New timed variants of EF, EU, AF, AR, AU, AW
 * implement the integer hull [JLR15] to ensure termination of IM and EF over bounded parameter domains (work in progress)
 
+### Syntactic additions
+* The Boolean implication (`a => b`) is now allowed both in the model and in the property.
+
+### Syntax changes in the model
+* Assignment can now be written using either `:=` (as before) or `<-` (new).
+* Actions declaration is now defined using the `actions` keyword instead of `synclabs`; backward-compatibility remains ensured
+* Terminate backward-compatibility on updates syntax (former syntax `var' := expr`): updates are now only defined using the `var := expr` or `var <- expr` syntax
+* Terminate backward-compatibility on the permissive `initially: ` declarations in automata (already not taken into account in the semantics)
+* Both `;` and `,` instruction separators accepted
+
+### New option
+* Add a new option `-imi2imiprop` to regenerate the property to a file
+
 ### Internal
-* Better detections of division by 0 in model
+* Source code entirely moved and restructured as a more standard tree
+* Better detection of division by 0 in model
 * Replace ocamlyacc with Menhir
+
+### Using IMITATOR
+* Docker images are now available
+
+### Known issues
+* Some divisions by zero (e.g., explicitly written `0 / 0` in the model) may not be detected; dynamic divisions by zero (`j <- 2 / i`, with `i = 0`) are however in principle detected.
 
 
 *******************************************************
