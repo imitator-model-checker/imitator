@@ -28,6 +28,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/root/.opam,sharing=locked \
   bash .github/scripts/build.sh
 
+# The builder needs .git so gen_build_info.py can record branch/hash. Remove it
+# after compilation; the runtime stage copies only /imitator/bin/imitator.
+RUN rm -rf .git
+
 # Make the opam switch available by default in interactive dev shells.
 RUN echo 'eval "$(opam env --switch=imitator)"' >> /root/.bashrc
 
