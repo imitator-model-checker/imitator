@@ -1,7 +1,7 @@
 # Releases
 
 *******************************************************
-## release 3.4 (2026-06-??) Cheese Durian
+## release 3.4 (2026-06-24) Cheese Durian
 
 ### Major features
 * Updates are now fully sequential in the model, including clock updates; **WARNING**: this might result in backward-incompatibility for elaborate models involving discrete and continuous updates in the same transition.
