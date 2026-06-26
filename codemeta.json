@@ -7,8 +7,8 @@
   "version": "3.4",
   "softwareVersion": "3.4",
   "dateCreated": "2010-05-17",
-  "datePublished": "2021-07-20",
-  "dateModified": "2026-06-16",
+  "datePublished": "2026-06-24",
+  "dateModified": "2026-06-26",
   "license": "https://spdx.org/licenses/GPL-3.0-only",
   "url": "https://www.imitator.fr",
   "sameAs": "https://www.imitator.fr",
@@ -52,10 +52,135 @@
       "@type": "Person",
       "givenName": "Jaime",
       "familyName": "Arias",
+      "email": "arias@lipn.univ-paris13.fr",
       "affiliation": {
         "@type": "Organization",
         "name": "Université Sorbonne Paris Nord, LIPN, CNRS, France"
       }
+    },
+    {
+      "@type": "Person",
+      "name": "Benjamin L."
+    },
+    {
+      "@type": "Person",
+      "givenName": "Laure",
+      "familyName": "Petrucci",
+      "email": "laure.petrucci@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Ulrich",
+      "familyName": "Kühne",
+      "email": "kuehne@lsv.ens-cachan.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Hoang Gia",
+      "familyName": "Nguyen",
+      "email": "hoangia90@yahoo.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Mikael",
+      "familyName": "Bisgaard Dahlsen-Jensen",
+      "email": "mikaelbdj@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Tomaz",
+      "familyName": "Gomes Mascarenhas",
+      "email": "tomgm1502@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Dylan",
+      "familyName": "Marinho",
+      "email": "dylan.marinho@loria.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Romain",
+      "familyName": "Soulat",
+      "email": "romain.soulat@thalesgroup.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Jaco",
+      "familyName": "van de Pol",
+      "email": "jaco@cs.au.dk"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Johan",
+      "familyName": "Arcile",
+      "email": "johan.arcile@loria.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Vincent",
+      "familyName": "Bloemen",
+      "email": "v.bloemen@utwente.nl"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Adrien",
+      "familyName": "Lacroix",
+      "email": "lacroixadrien34@hotmail.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Sami",
+      "familyName": "Evangelista",
+      "email": "Sami.Evangelista@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Camille",
+      "familyName": "Coti",
+      "email": "camille.coti@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Daphne",
+      "familyName": "Dussaud",
+      "email": "andre@lsv.ens-cachan.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Alban",
+      "familyName": "Linard",
+      "email": "alban@linard.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Corentin",
+      "familyName": "Guillevic",
+      "email": "blood.kings@laposte.net"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Youcheng",
+      "familyName": "Sun",
+      "email": "techieyoucheng@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Yousra",
+      "familyName": "Lembachar",
+      "email": "yousra.lembachar@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Stephan",
+      "familyName": "Rosse",
+      "email": "stephan.rosse@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Sarah",
+      "familyName": "Hadbi",
+      "email": "sarahhadbi@gmail.com"
     }
   ],
   "maintainer": [
