@@ -42,13 +42,47 @@ let latex_header = "
 % Tikz
 \\usepackage{tikz}
 \\usetikzlibrary{arrows,automata}
-\\tikzstyle{pta}=[auto, ->, >=stealth']
-\\tikzstyle{every node}=[initial text=]
-\\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
-\\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]
-\\tikzstyle{urgent}=[dotted, draw=red, very thick]
-\\tikzstyle{accepting}=[double]
-\\tikzstyle{uncontrollable}=[dashed]
+\\tikzstyle{pta}            = [auto, ->, >=stealth',initial text=]
+\\tikzstyle{every node}     = [initial text=]
+\\tikzstyle{urgent}         = [dotted, draw=red, very thick]
+\\tikzstyle{accepting}      = [double]
+\\tikzstyle{uncontrollable} = [dashed]
+
+\\tikzset{
+  locationGen/.style={
+    draw=black,
+    rounded corners,
+	align=center,
+    inner sep=2pt,
+    font=\\small
+  }
+}
+
+
+\\tikzset{
+  location/.style={
+	locationGen,
+    rectangle split,
+    rectangle split parts=2,
+    rectangle split horizontal=false,
+	rectangle split part fill={blue!5, blue!15},
+  }
+}
+
+\\newcommand{\\location}[3][]{%
+  \\node[location,#1] {%
+    \\scriptsize $\\ensuremath{$#2$}$
+    \\nodepart{second}
+    #3
+  };
+}
+
+
+\\newcommand{\\locationNoInv}[2][]{%
+  \\node[locationGen,#1] {%
+    #2
+  };
+}
 
 
 \\definecolor{coloract}{rgb}{0.50, 0.70, 0.30}
@@ -83,7 +117,7 @@ let latex_header = "
 
 \\newcommand{\\imitator}{\\textsf{IMITATOR}}
 
-\\title{An IMITATOR model}
+\\title{An " ^ Constants.program_name ^ " model}
 \\author{" ^ Constants.program_name ^ "}
 
 
