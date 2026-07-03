@@ -27834,7 +27834,7 @@ var
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/07/11
-		# Last modified            : 2024/07/11
+		# Last modified            : 2026/07/03
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
 		'tags'       : 'syntax,translation,controllable',
@@ -27843,23 +27843,21 @@ var
 		'expectations' : [
 			# WARNING: one has to manually replace \ with \\
 			{'file': 'include_controllable_actions.tex' , 'content' : """
-		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{a}$\\\\
-		 & $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, ] node[align=center]{
+		 $ \\styleclock{x} = 1$\\\\
+		 \\\\ $\\styleact{a}$\\\\
+		 $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
+		} (l1);
 
-		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{b}$\\\\
-		 & $x\\leftarrow{}1$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, ] node[align=center]{
+		 $ \\styleclock{x} = 1$\\\\
+		 \\\\ $\\styleact{b}$\\\\
+		 $x\\leftarrow{}1$\\\\%
+		} (l1);
 
-		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{c}$\\\\
-		 & $x\\leftarrow{}2$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, uncontrollable] node[align=center]{
+		 $x\\leftarrow{}0$\\\\%
+		} (l1);
 		"""
 			} # end result file
 			,
