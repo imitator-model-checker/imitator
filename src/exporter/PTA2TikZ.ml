@@ -96,12 +96,12 @@ let string_of_header (options : Options.imitator_options) =
 (** Convert a sync into a string *)
 let string_of_sync (model : AbstractModel.abstract_model) action_index =
 	match model.action_types action_index with
-	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
+	| Action_type_sync -> "\n\t\t \\\\ $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
 let string_of_seq_code_bloc (model : AbstractModel.abstract_model) (* seq_code_bloc *) =
 
-    let begin_line = "\n\t\t & $" in
+    let begin_line = "\n\t\t $" in
     let end_line = "$\\\\% \\n" in
 
     let rec string_of_seq_code_bloc seq_code_bloc =
@@ -194,7 +194,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 			$\coulclock{x} := 0$ \\
 			$\coulclock{y} := 0$ \\
 			\\end{tabular}} (Q1);*)
-	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge[" ^ uncontrollable_description ^ "] node{\\begin{tabular}{@{} c @{\\ } c@{} }"
+	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge[bend left, " ^ uncontrollable_description ^ "] node[align=center]{"
 
 	(* GUARD *)
 	^ (if transition.guard <> AbstractModel.True_guard then (
@@ -209,7 +209,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	^ string_of_seq_code_bloc model update_seq_code_bloc
 
 	(* The end *)
-	^ "\n\t\t\\end{tabular}} (" ^ target_location_name ^ ");"
+	^ "\n\t\t} (" ^ target_location_name ^ ");"
 
 
 (* Convert the transitions of a location into a string *)
@@ -289,15 +289,19 @@ let string_of_location (model : AbstractModel.abstract_model) automaton_index lo
 			| false , true -> "Non-1 flows"
 			| _ -> raise (InternalError("Here the model must have invariants or non-1 flows"))
 		in
-		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name
+		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name ^ "\n"
 		(* Begin *)
 		(* ^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }" *)
 		(* Invariant *)
-		^ (if has_invariant then (tikz_string_of_linear_constraint model invariant) ^ "\\\\" else "")
+		^ (if has_invariant then (tikz_string_of_linear_constraint model invariant) ^ "" else "")
 		(* Stopwatches and flows *)
-		^ (if has_non_1rate_clocks then (
+		^ (if has_non_1rate_clocks then (			
 			(* Stopwatches *)
 			let stopwatches = model.stopwatches automaton_index location_index in
+
+			(* Initial new line, if needed *)
+			(if has_invariant then "\\\\" else "")
+			^
 			(if stopwatches <> [] then
 				(" \n stop(" ^ (string_of_list_of_string_with_sep ", " (List.map (variable_names_with_style model) stopwatches)) ^ ")\\\\")
 			else "")
@@ -305,7 +309,7 @@ let string_of_location (model : AbstractModel.abstract_model) automaton_index lo
 			(* Flows *)
 			let flows = model.flow automaton_index location_index in
 			(if flows <> [] then
-				(" \n " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style model clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "\\\\")
+				(" \n " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style model clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "")
 			else "")
 			) else "")
 		(* The end *)

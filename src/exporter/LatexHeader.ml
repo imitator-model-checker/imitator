@@ -88,7 +88,7 @@ let latex_header = "
 \\definecolor{coloract}{rgb}{0.50, 0.70, 0.30}
 \\definecolor{colorclock}{rgb}{0.4, 0.4, 1}
 \\definecolor{colordisc}{rgb}{1, 0, 1}
-\\definecolor{colorloc}{rgb}{0.4, 0.4, 0.65}
+\\definecolor{colorloc}{rgb}{0, 0, 0}
 \\definecolor{colorparam}{rgb}{1, 0.6, 0.0}
 
 % Set of colors
