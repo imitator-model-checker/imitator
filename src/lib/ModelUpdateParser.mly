@@ -33,17 +33,6 @@ open ImitatorUtilities;;
 
 %token EOF
 
-/*%right OP_ASSIGN
-%right OP_EQ*/
-
-/*%left OP_IMPLIES*/           /* lowest precedence */
-/*%left OP_DISJUNCTION*/ /* CT_OR */
-/*%left OP_CONJUNCTION*/       /* medium precedence */
-/*%left DOUBLEDOT      */      /* high precedence */
-/*%nonassoc CT_NOT*/           /* highest precedence */
-
-/*%left OP_PLUS OP_MINUS */    /* lowest precedence */
-/*%left OP_MUL OP_DIV   */     /* highest precedence */
 
 %start main             /* the entry point */
 %type <ParsingStructure.on_the_fly_update> main

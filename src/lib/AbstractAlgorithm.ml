@@ -271,7 +271,7 @@ let property_needed = function
 		-> Second_file_optional
 
 	| Temp_testonthefly
-		-> Second_file_useless
+		-> Second_file_optional
 
 	| Algorithm
 		-> Second_file_required

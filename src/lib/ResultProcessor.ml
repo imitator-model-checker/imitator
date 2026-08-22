@@ -398,6 +398,7 @@ let export_to_file_errorresult error_type file_name =
         | Empty_collection          -> "collection empty"
 		| ModelFileNotFound_error		-> "model file not found"
 		| PropertyFileNotFound_error	-> "property file not found"
+		| UpdateFileNotFound_error	-> "update file not found"
 		| InvalidModel_error			-> "invalid model"
 		| InvalidProperty_error			-> "invalid property"
 		| Lexing_error msg				-> "lexing error (" ^ msg ^ ")"
@@ -1315,6 +1316,10 @@ let process_result_generic (model_option : AbstractModel.abstract_model option) 
 		(* The end *)
 		()
 
+	| OnTheFly_Update_result ->
+			print_message Verbose_standard
+					"On-the-fly update obtain 'result' successfully.";
+			()
 
 (** Process_result can only be called with an actual defined model *)
 let process_result (model : AbstractModel.abstract_model) =

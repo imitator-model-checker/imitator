@@ -19,6 +19,7 @@ open ImitatorUtilities
 open Exceptions
 open Result
 open AlgoGeneric
+open ModelProvider
 
 
 
@@ -27,7 +28,9 @@ open AlgoGeneric
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoOntheflyModification (model : AbstractModel.abstract_model) (options : Options.imitator_options) =
+class algoOntheflyModification (model : AbstractModel.abstract_model) 
+								(provider : model_provider) 
+								(options : Options.imitator_options) =
 	object (self) inherit algoGeneric model options (*as super*)
 	
 	
@@ -40,7 +43,8 @@ class algoOntheflyModification (model : AbstractModel.abstract_model) (options :
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "On-the-fly modification"
 	
-
+	method process_current_model =
+      print_message Verbose_standard "hello"
 	
 	(************************************************************)
 	(* Class methods *)
@@ -51,12 +55,48 @@ class algoOntheflyModification (model : AbstractModel.abstract_model) (options :
 	(** Main method *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run =
-			let _ = ParsingUtility.parsing_structure_of_ontheflycommand options in
-		raise (NotImplemented ("algoOntheflyModification > run"))
+			let parsed_update = ParsingUtility.parsing_structure_of_ontheflycommand options in
+				match parsed_update with
+				| Parsed_new_location location ->
+					print_message Verbose_standard
+						("New location: " ^ location);
+	print_message Verbose_standard
+        "Successfully parsed on-the-fly update.";
+
+	print_message Verbose_standard
+		"ABOUT TO ENTER WAIT LOOP.";
+
+	let finished = ref false in
+
+	while not !finished do
+        (* `model` is the same mutable object.
+           Provider has potentially updated it. *)
+        (* self#process_current_model; *)
+		print_message Verbose_standard
+			"WAITING FOR KEY (u = update, q = quit)...";
+
+		match provider#wait_for_update with
+
+			| Updated ->
+				print_message Verbose_standard
+					"Received u.";
+				self#process_current_model
+
+			| Finished ->
+				print_message Verbose_standard
+					"Received q.";
+				finished := true
+
+      done;
+
+      (* self#build_result *)
+
+    	print_message Verbose_standard
+            "On-the-fly modification terminated.";
+
+    OnTheFly_Update_result
 
 
-(************************************************************)
-(************************************************************)
 end;;
 (************************************************************)
 (************************************************************)

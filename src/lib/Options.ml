@@ -78,7 +78,8 @@ class imitator_options =
 		(* Local input file (i.e., without the path) *)
 		val mutable model_local_file_name 			= "uninitialized model input local file name"
 
-
+		(* On-the-fly update input file *)
+		val mutable update_file_name = "uninitialized on-the-fly update input file name"
 
 		(* OUTPUT OPTIONS *)
 
@@ -365,6 +366,9 @@ class imitator_options =
 
 		method model_file_name						= model_file_name
 		method model_local_file_name				= model_local_file_name
+
+		method update_file_name = update_file_name
+
 		method nb_args								= nb_args
 		method no_acceptfirst						= no_acceptfirst
 		method no_green								= no_green
@@ -433,6 +437,9 @@ class imitator_options =
 		method set_file file_name =
 			model_file_name <- file_name;
 			model_local_file_name <- remove_path_in_file_name file_name
+
+		method set_update_file file_name =
+				update_file_name <- file_name
 
 		method set_files_prefix file_name =
 			files_prefix <- file_name
@@ -1161,6 +1168,10 @@ class imitator_options =
 				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.
 				");
 
+				("-update-file",
+				String (fun file_name -> update_file_name <- file_name),
+				" On-the-fly model update file (.update).");
+				
 				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`.
 				");
 

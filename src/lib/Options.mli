@@ -99,6 +99,9 @@ class imitator_options :
 
         method model_file_name				: string
 		method model_local_file_name		: string
+
+		method update_file_name : string
+
 		method no_acceptfirst				: bool
 		method nb_args						: int
 		method no_green						: bool
@@ -176,6 +179,7 @@ class imitator_options :
 		(*** NOTE: these set methods are only used for the learning-based abstraction construction ***)
 
 		method set_file : string -> unit
+		method set_update_file : string -> unit
 
 		method set_files_prefix : string -> unit
 

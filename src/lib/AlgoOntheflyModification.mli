@@ -20,7 +20,10 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoOntheflyModification : AbstractModel.abstract_model -> Options.imitator_options ->
+class algoOntheflyModification :   
+	AbstractModel.abstract_model ->
+	ModelProvider.model_provider ->
+	Options.imitator_options ->
 	object inherit algoGeneric
 	
 		(************************************************************)
@@ -28,7 +31,7 @@ class algoOntheflyModification : AbstractModel.abstract_model -> Options.imitato
 		(************************************************************)
 		method algorithm_name : string
 
-		
+		method process_current_model : unit
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

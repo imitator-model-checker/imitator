@@ -66,7 +66,7 @@ let parsing_error_of parsed_structure_type error_message = match parsed_structur
 
 let filenotfound_error_of parsed_structure_type = match parsed_structure_type with
 	| Model -> Result.ModelFileNotFound_error
-	| OnTheFlyModification -> Result.ModelFileNotFound_error (*** TODO ***)
+	| OnTheFlyModification -> Result.UpdateFileNotFound_error 
 	| Property -> Result.PropertyFileNotFound_error
 
 
@@ -341,22 +341,29 @@ let parsing_structure_of_ontheflycommand (options : Options.imitator_options) =
 	(* Parsing the model *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(*	(* Statistics *)
-	parsing_counter#start;*)
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
-	let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update = parser_lexer_from_file Model options ModelUpdateParser.main ModelUpdateLexer.token options#model_file_name in
+	(* print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
+	let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update = parser_lexer_from_file Model options ModelUpdateParser.main ModelUpdateLexer.token options#model_file_name in *)
 
-(*	(* Statistics *)
-	parsing_counter#stop;
 
-	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");*)
+    (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    (* Parsing the on-the-fly update file *)
+    (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	(*** USELESS, even increases memory x-( ***)
-	(* Gc.major (); *)
+    print_message Verbose_low
+        ("Parsing on-the-fly update file "
+         ^ options#update_file_name ^ "…");
 
-	(*** TODO / temporary ***)
+    let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update =
+        parser_lexer_from_file
+            OnTheFlyModification
+            options
+            ModelUpdateParser.main
+            ModelUpdateLexer.token
+            options#update_file_name
+    in
+
 	parsed_ontheflyupdate
 
 

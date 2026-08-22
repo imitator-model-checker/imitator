@@ -4,7 +4,10 @@
 PPL_VERSION=1.2
 
 # download PPL
-wget -q --no-check-certificate https://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
+wget -q --no-check-certificate https://support.bugseng.com/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip &>err || {
+    error "Failed to download PPL-${PPL_VERSION}."
+    exit 1
+}
 unzip -qq ppl-${PPL_VERSION}.zip
 
 cd ppl-${PPL_VERSION}

@@ -24,6 +24,7 @@ type error_type =
 
 	| ModelFileNotFound_error
 	| PropertyFileNotFound_error
+	| UpdateFileNotFound_error
 
 	| InvalidModel_error
 	| InvalidProperty_error
@@ -380,4 +381,6 @@ type imitator_result =
 
 	(* Result for runs exhibition *)
 	| Runs_exhibition_result of runs_exhibition_result
+
+	| OnTheFly_Update_result 
 

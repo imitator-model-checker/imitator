@@ -729,7 +729,8 @@ match options#imitator_mode with
 (* 		raise (NotImplemented "IMITATOR.ml > Temp_testonthefly") *)
 
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
-		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoOntheflyModification.algoOntheflyModification model options in
+		let provider = new ModelProvider.model_provider model in
+		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoOntheflyModification.algoOntheflyModification model provider options in
 
 		(*** NOTE: duplicate code with what follows ***)
 
