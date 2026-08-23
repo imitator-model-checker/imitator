@@ -155,7 +155,13 @@ type lu_status =
 type abstract_model = {
 	(* Add a location dynamically *)
 	add_location_onthefly :
-		automaton_index -> location_name -> bool -> location_index;
+		?transitions:(transition_index list array) -> automaton_index -> location_name -> bool ->  location_index;
+	(* set a location invariant dynamically *)
+	set_location_invariant_onthefly :
+	automaton_index ->
+	location_index ->
+	invariant ->
+	unit;
 
 	(* General information **)
 	(* Cardinality *)

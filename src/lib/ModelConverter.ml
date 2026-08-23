@@ -3570,8 +3570,26 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let (actions : action_index list), array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in
-	
+	(* let (actions : action_index list), array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option <> None) in *)
+	let (actions : action_index list),
+    array_of_action_names,
+    action_types,
+    actions_per_automaton,
+    actions_per_location_array,
+    location_acceptance,
+    location_urgency,
+    costs_array,
+    invariants_array,
+    stopwatches_array,
+    has_non_1rate_clocks,
+    flow_array,
+    raw_transitions,
+    observer_nosync_index_option =
+  make_automata
+    useful_parsing_model_information
+    parsed_model.automata
+    (observer_automaton_index_option <> None) in
+
 	let nb_actions = List.length actions in
 	
 	(* Print some information *)
@@ -3614,7 +3632,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
 				nb_transitions_for_locations + (List.length transitions_for_this_location)
 			) nb_transitions_for_automata transitions_for_this_automaton
-		) 0 transitions
+		) 0 raw_transitions
 	in
 	let nb_transitions = nb_transitions_without_observer + nb_transitions_for_observer in
 	
@@ -3623,7 +3641,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside `make_automata` (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info variable_infos dependency_graph user_function_definitions_table transitions in
+	let converted_transitions, transitions_description, automaton_of_transition = convert_transitions options nb_transitions nb_actions declarations_info variable_infos dependency_graph user_function_definitions_table raw_transitions in
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3647,15 +3665,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			(* Update actions per automaton *)
 			actions_per_automaton.(observer_id)	<- observer_actions;
 			(* Update actions per location *)
-			actions_per_location.(observer_id)	<- observer_actions_per_location;
+			actions_per_location_array.(observer_id)	<- observer_actions_per_location;
 			(* Update urgency *)
 			location_urgency.(observer_id)		<- observer_location_urgency;
 			(* Create the array of accepting locations for this automaton (for now: all non accepting) *)
 			location_acceptance.(observer_id)	<- Array.make nb_locations Location_nonaccepting;
 			(* Update invariants *)
-			invariants.(observer_id)			<- observer_invariants;
+			invariants_array.(observer_id)			<- observer_invariants;
 			(* Update costs (no costs in observers) *)
-			costs.(observer_id)					<- Array.make nb_locations None;
+			costs_array.(observer_id)					<- Array.make nb_locations None;
 			(* Update stopwatches (no stopwatches in observers) *)
 			stopwatches_array.(observer_id)		<- Array.make nb_locations [];
 			(* Update stopwatches (no stopwatches in observers) *)
@@ -3698,7 +3716,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			in
 			
 			(* Then update transitions *)
-			transitions.(observer_id) <- observer_transitions;
+			converted_transitions.(observer_id) <- observer_transitions;
 			
 		end;
 	end;
@@ -3764,82 +3782,145 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Create the functional representation for action types *)
 	let action_types = fun action_index ->
-		(* Add a safety mechanism *)
-		try(
+		try
 			action_types.(action_index)
-		) with Invalid_argument msg -> raise (InternalError ("Could not find type of action `" ^ (string_of_int action_index) ^ "` in function `action_types`. Additional details: `" ^ msg ^ "`"))
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Could not find type of action `"
+				^ string_of_int action_index
+				^ "` in function `action_types`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
+
 	(* Create the functional representation for the actions of every automaton *)
 	let actions_per_automaton = fun automaton_index ->
-		(* Add a safety mechanism *)
-		try(
+		try
 			actions_per_automaton.(automaton_index)
-		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` in function `actions_per_automaton`. Additional details: `" ^ msg ^ "`"))
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Could not find list of actions for automaton of index `"
+				^ string_of_int automaton_index
+				^ "` in function `actions_per_automaton`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
-	(* Create the functional representation for the actions of every location of every automaton *)
+
+	(* Create the functional representation for the actions of every
+		location of every automaton *)
 	let actions_per_location = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
-			actions_per_location.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `actions_per_location`. Additional details: `" ^ msg ^ "`"))
+		try
+			actions_per_location_array.(automaton_index).(location_index)
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Could not find list of actions for automaton of index `"
+				^ string_of_int automaton_index
+				^ "` and location of index `"
+				^ string_of_int location_index
+				^ "` in function `actions_per_location`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
+
 	(* Invariants *)
 	let invariants = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
-			invariants.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Could not find invariant for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `invariants`. Additional details: `" ^ msg ^ "`"))
+		try
+			invariants_array.(automaton_index).(location_index)
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Could not find invariant for automaton of index `"
+				^ string_of_int automaton_index
+				^ "` and location of index `"
+				^ string_of_int location_index
+				^ "` in function `invariants`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
+
 	(* Accepting locations *)
 	let is_accepting = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
-			location_acceptance.(automaton_index).(location_index) = Location_accepting
-		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_accepting`. Additional details: `" ^ msg ^ "`"))
+		try
+			location_acceptance.(automaton_index).(location_index)
+			= Location_accepting
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Acceptance of location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `is_accepting`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
+
 	(* Urgency *)
 	let is_urgent = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
-			location_urgency.(automaton_index).(location_index) = Location_urgent
-		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_urgent`. Additional details: `" ^ msg ^ "`"))
+		try
+			location_urgency.(automaton_index).(location_index)
+			= Location_urgent
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Urgency of location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `is_urgent`. Additional details: `"
+				^ msg ^ "`"))
 	in
-	
+
 	(* Costs *)
-	let costs = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
-			costs.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Cost of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `costs`. Additional details: `" ^ msg ^ "`"))
-	in
-	
+	(* let costs = fun automaton_index location_index ->
+		try
+			costs_array.(automaton_index).(location_index)
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Cost of location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `costs`. Additional details: `"
+				^ msg ^ "`"))
+	in *)
+
 	(* Stopwatches *)
-	let stopwatches = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
+	(* let stopwatches = fun automaton_index location_index ->
+		try
 			stopwatches_array.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `stopwatches`. Additional details: `" ^ msg ^ "`"))
-	in
-	
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Clocks stopped at location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `stopwatches`. Additional details: `"
+				^ msg ^ "`"))
+	in *)
+
 	(* Flow *)
-	let flow = fun automaton_index location_index ->
-		(* Add a safety mechanism *)
-		try(
+	(* let flow = fun automaton_index location_index ->
+		try
 			flow_array.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("List of flows at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `flow`. Additional details: `" ^ msg ^ "`"))
-	in
-	
+		with Invalid_argument msg ->
+			raise (InternalError
+				("List of flows at location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `flow`. Additional details: `"
+				^ msg ^ "`"))
+	in *)
+
 	(* Transitions *)
 	let transitions = fun automaton_index location_index action_index ->
-		(* Add a safety mechanism *)
-		try(
-			transitions.(automaton_index).(location_index).(action_index)
-		) with Invalid_argument msg -> raise (InternalError ("Transitions of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` via action of index `" ^ (string_of_int action_index) ^ "` not found in function `transitions`. Additional details: `" ^ msg ^ "`"))
+		try
+			converted_transitions.(automaton_index)
+				.(location_index)
+				.(action_index)
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Transitions of location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` via action of index `"
+				^ string_of_int action_index
+				^ "` not found in function `transitions`. Additional details: `"
+				^ msg ^ "`"))
 	in
 	
 	(* Transition description *)
@@ -4366,51 +4447,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_low ("No silent action detected.")
 	;
 
-
-
-	(* let add_location_onthefly
-			automaton_index
-			new_location_name
-			urgent
-		=
-		let new_location_index =
-			Array.length array_of_location_names.(automaton_index)
-		in
-
-		array_of_location_names.(automaton_index) <-
-			Array.append
-				array_of_location_names.(automaton_index)
-				[| new_location_name |];
-
-		array_of_locations_per_automaton.(automaton_index) <-
-			array_of_locations_per_automaton.(automaton_index)
-			@ [new_location_index];
-
-		Hashtbl.add
-			index_of_locations.(automaton_index)
-			new_location_name
-			new_location_index;
-
-		location_acceptance.(automaton_index) <-
-			Array.append
-				location_acceptance.(automaton_index)
-				[| Location_nonaccepting |];
-
-		location_urgency.(automaton_index) <-
-			Array.append
-				location_urgency.(automaton_index)
-				[|
-					if urgent then
-						Location_urgent
-					else
-						Location_nonurgent
-				|];
-
-		new_location_index
-	in *)
-
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Build the final structure *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4426,54 +4462,113 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_ppl_variables = nb_ppl_variables;
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
-
+	
+		(* Add a location dynamically *)
 	add_location_onthefly =
-    (fun automaton_index new_location_name urgent ->
+		(fun ?(transitions = Array.make nb_actions [])
+				automaton_index
+				new_location_name
+				urgent ->
 
-      let new_location_index =
-        Array.length array_of_location_names.(automaton_index)
-      in
+    let new_location_index =
+      Array.length array_of_location_names.(automaton_index)
+    in
 
-      (* Add location name *)
-      array_of_location_names.(automaton_index) <-
-        Array.append
-          array_of_location_names.(automaton_index)
-          [| new_location_name |];
+    (* Location name *)
+    array_of_location_names.(automaton_index) <-
+      Array.append
+        array_of_location_names.(automaton_index)
+        [| new_location_name |];
 
-      (* Add location index *)
-      array_of_locations_per_automaton.(automaton_index) <-
-        array_of_locations_per_automaton.(automaton_index)
-        @ [new_location_index];
+    (* Location index *)
+    array_of_locations_per_automaton.(automaton_index) <-
+      array_of_locations_per_automaton.(automaton_index)
+      @ [new_location_index];
 
-      (* Update name -> index lookup *)
-      Hashtbl.add
-        index_of_locations.(automaton_index)
-        new_location_name
-        new_location_index;
+    (* Name -> index *)
+    Hashtbl.add
+      index_of_locations.(automaton_index)
+      new_location_name
+      new_location_index;
 
-      (* New locations are always non-accepting *)
-      location_acceptance.(automaton_index) <-
-        Array.append
-          location_acceptance.(automaton_index)
-          [| Location_nonaccepting |];
+    (* Acceptance *)
+    location_acceptance.(automaton_index) <-
+      Array.append
+        location_acceptance.(automaton_index)
+        [| Location_nonaccepting |];
 
-      (* Set urgency *)
-      location_urgency.(automaton_index) <-
-        Array.append
-          location_urgency.(automaton_index)
-          [|
-            if urgent then
-              Location_urgent
-            else
-              Location_nonurgent
-          |];
+    (* Urgency *)
+    location_urgency.(automaton_index) <-
+      Array.append
+        location_urgency.(automaton_index)
+        [|
+          if urgent then
+            Location_urgent
+          else
+            Location_nonurgent
+        |];
 
-      (* Update the model itself *)
-      model.nb_locations <- model.nb_locations + 1;
+    (* Actions *)
+    actions_per_location_array.(automaton_index) <-
+      Array.append
+        actions_per_location_array.(automaton_index)
+        [| [] |];
 
-      (* Return the new local location index *)
-      new_location_index
-    );
+    (* Invariant *)
+    invariants_array.(automaton_index) <-
+      Array.append
+        invariants_array.(automaton_index)
+        [| (* default invariant *) |];
+
+    (* Cost *)
+    costs_array.(automaton_index) <-
+      Array.append
+        costs_array.(automaton_index)
+        [| (* default cost *) |];
+
+    (* Stopwatches *)
+    stopwatches_array.(automaton_index) <-
+      Array.append
+        stopwatches_array.(automaton_index)
+        [| [] |];
+
+    (* Flow *)
+    flow_array.(automaton_index) <-
+      Array.append
+        flow_array.(automaton_index)
+        [| [] |];
+
+    (* Transitions *)
+    converted_transitions.(automaton_index) <-
+      Array.append
+        converted_transitions.(automaton_index)
+        [| transitions |];
+
+    model.nb_locations <- model.nb_locations + 1;
+
+    new_location_index
+  );
+
+	(* set a location invariant dynamically *)
+	set_location_invariant_onthefly =
+		(fun automaton_index location_index new_invariant ->
+
+			(* Safety check *)
+			if location_index < 0 ||
+				location_index >= Array.length invariants_array.(automaton_index)
+			then
+				raise
+					(InternalError
+						("Could not set invariant: location of index `"
+						^ string_of_int location_index
+						^ "` does not exist in automaton `"
+						^ string_of_int automaton_index
+						^ "`."))
+
+			else
+				invariants_array.(automaton_index).(location_index) <-
+					new_invariant
+		);
 
 	(* Is there any invariant in the model? *)
 	has_invariants = has_invariants;
@@ -4571,21 +4666,37 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* The list of automatons for each action *)
 	automata_per_action = automata_per_action;
 	(* The list of actions for each automaton for each location *)
-	actions_per_location = actions_per_location;
+	actions_per_location =
+		(fun automaton_index location_index ->
+			actions_per_location_array.(automaton_index).(location_index));
 	(* Is an action controllable *)
 	is_controllable_action = is_controllable_action;
 
 	(* The cost for each automaton and each location *)
-	costs = costs;
+	costs =
+		(fun automaton_index location_index ->
+			costs_array.(automaton_index).(location_index));
 
 	(* The invariant for each automaton and each location *)
-	invariants = invariants;
+	invariants =
+		(fun automaton_index location_index ->
+			invariants_array.(automaton_index).(location_index));
+
 	(* The transitions for each automaton and each location and each action *)
-	transitions = transitions;
+	transitions =
+		(fun automaton_index location_index action_index ->
+			converted_transitions
+				.(automaton_index)
+				.(location_index)
+				.(action_index));
 	(* The list of clocks stopped for each automaton and each location *)
-	stopwatches = stopwatches;
+	stopwatches =
+		(fun automaton_index location_index ->
+			stopwatches_array.(automaton_index).(location_index));
 	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
-	flow = flow;
+	flow =
+		(fun automaton_index location_index ->
+			flow_array.(automaton_index).(location_index));
 	(* An array transition_index -> transition *)
 	transitions_description = transitions_description;
 	(* An array transition_index -> automaton_index *)

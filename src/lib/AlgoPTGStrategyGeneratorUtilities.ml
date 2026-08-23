@@ -114,10 +114,14 @@ type simple_abstract_model = {
 
 let generate_abstract_model (simple_model : simple_abstract_model) : abstract_model = 
   {
-      add_location_onthefly =
-    (fun _ _ _ ->
-      raise (Failure
-        "add_location_onthefly is not supported for this model"));
+    add_location_onthefly =
+      (fun ?transitions:_ _ _ _ ->
+        raise (Failure
+          "add_location_onthefly is not supported for this model"));
+    set_location_invariant_onthefly =
+      (fun _ _ _ ->
+        raise (Failure
+          "set_location_invariant_onthefly is not supported for this model"));
 
       nb_automata = simple_model.nb_automata;
       nb_actions = simple_model.nb_actions;

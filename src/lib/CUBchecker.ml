@@ -3565,10 +3565,16 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(************************************************************)
 	let transformed_abstract_model =
 	{
-		  add_location_onthefly =
-    (fun _ _ _ ->
-      raise (InternalError
-        "add_location_onthefly is not supported for this model"));
+		add_location_onthefly =
+			(fun ?transitions:_ _ _ _ ->
+				raise (Failure
+					"add_location_onthefly is not supported for this model"));
+
+		set_location_invariant_onthefly =
+      (fun _ _ _ ->
+        raise (Failure
+          "set_location_invariant_onthefly is not supported for this model"));
+
 		(*** General information ***)
 		(* Cardinality *)
 		nb_automata = model.nb_automata;
