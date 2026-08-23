@@ -15,53 +15,17 @@ type update_event =
   | Finished
 
 
-class model_provider (model : AbstractModel.abstract_model) =
-  object  (self)
+class model_provider
+    (model : AbstractModel.abstract_model)
+    (filename : string) =
+  object (self)
 
-    (* val mutex = Mutex.create ()
-    val condition = Condition.create ()
+    val mutable last_modified =
+      (Unix.stat filename).Unix.st_mtime
 
-    val mutable updated = false
-    val mutable finished = false
 
     method get_model =
       model
-
-    method update =
-      Mutex.lock mutex;
-      updated <- true;
-      Condition.signal condition;
-      Mutex.unlock mutex
-
-    method finish =
-      Mutex.lock mutex;
-      finished <- true;
-      Condition.signal condition;
-      Mutex.unlock mutex
-
-    method wait_for_update =
-      Mutex.lock mutex;
-
-      while not updated && not finished do
-        Condition.wait condition mutex
-      done;
-
-      let event =
-        if finished then
-          Finished
-        else
-          Updated
-      in
-
-      updated <- false;
-
-      Mutex.unlock mutex;
-
-      event *)
-
-
-
-    val mutable event = None
 
 
     method private read_key () =
@@ -83,17 +47,52 @@ class model_provider (model : AbstractModel.abstract_model) =
 
       c
 
-    method wait_for_update =
-      let c = self#read_key () in
 
-      match c with
-      | 'u' ->
+    method private file_changed =
+      let current_modified =
+        (Unix.stat filename).Unix.st_mtime
+      in
+
+      if current_modified > last_modified then begin
+        last_modified <- current_modified;
+        true
+      end
+      else
+        false
+
+
+    method wait_for_update =
+
+      let rec loop () =
+
+        (* Check whether the file has changed *)
+        if self#file_changed then
           Updated
 
-      | 'q' ->
-          Finished
+        (* Check whether user pressed a key *)
+        else begin
 
-      | _ ->
-          self#wait_for_update
+          let (ready, _, _) =
+            Unix.select [Unix.stdin] [] [] 0.2
+          in
+
+          match ready with
+          | [] ->
+              loop ()
+
+          | _ ->
+              match self#read_key () with
+
+              | 'q' ->
+                  Finished
+
+              | _ ->
+                  loop ()
+        end
+
+      in
+
+      loop ()
+
   end
 ;;

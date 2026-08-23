@@ -3866,7 +3866,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
 
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4369,10 +4368,53 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+	(* let add_location_onthefly
+			automaton_index
+			new_location_name
+			urgent
+		=
+		let new_location_index =
+			Array.length array_of_location_names.(automaton_index)
+		in
+
+		array_of_location_names.(automaton_index) <-
+			Array.append
+				array_of_location_names.(automaton_index)
+				[| new_location_name |];
+
+		array_of_locations_per_automaton.(automaton_index) <-
+			array_of_locations_per_automaton.(automaton_index)
+			@ [new_location_index];
+
+		Hashtbl.add
+			index_of_locations.(automaton_index)
+			new_location_name
+			new_location_index;
+
+		location_acceptance.(automaton_index) <-
+			Array.append
+				location_acceptance.(automaton_index)
+				[| Location_nonaccepting |];
+
+		location_urgency.(automaton_index) <-
+			Array.append
+				location_urgency.(automaton_index)
+				[|
+					if urgent then
+						Location_urgent
+					else
+						Location_nonurgent
+				|];
+
+		new_location_index
+	in *)
+
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Build the final structure *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	{
+	let rec model : AbstractModel.abstract_model = { 
 	(* Cardinality *)
 	nb_automata    = nb_automata;
 	nb_actions     = nb_actions;
@@ -4384,6 +4426,54 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_ppl_variables = nb_ppl_variables;
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
+
+	add_location_onthefly =
+    (fun automaton_index new_location_name urgent ->
+
+      let new_location_index =
+        Array.length array_of_location_names.(automaton_index)
+      in
+
+      (* Add location name *)
+      array_of_location_names.(automaton_index) <-
+        Array.append
+          array_of_location_names.(automaton_index)
+          [| new_location_name |];
+
+      (* Add location index *)
+      array_of_locations_per_automaton.(automaton_index) <-
+        array_of_locations_per_automaton.(automaton_index)
+        @ [new_location_index];
+
+      (* Update name -> index lookup *)
+      Hashtbl.add
+        index_of_locations.(automaton_index)
+        new_location_name
+        new_location_index;
+
+      (* New locations are always non-accepting *)
+      location_acceptance.(automaton_index) <-
+        Array.append
+          location_acceptance.(automaton_index)
+          [| Location_nonaccepting |];
+
+      (* Set urgency *)
+      location_urgency.(automaton_index) <-
+        Array.append
+          location_urgency.(automaton_index)
+          [|
+            if urgent then
+              Location_urgent
+            else
+              Location_nonurgent
+          |];
+
+      (* Update the model itself *)
+      model.nb_locations <- model.nb_locations + 1;
+
+      (* Return the new local location index *)
+      new_location_index
+    );
 
 	(* Is there any invariant in the model? *)
 	has_invariants = has_invariants;
@@ -4448,12 +4538,23 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	automata_names = automata_names;
 
 	(* The locations for each automaton *)
-	locations_per_automaton = locations_per_automaton;
+  locations_per_automaton =
+    (fun automaton_index ->
+      array_of_locations_per_automaton.(automaton_index));
 	(* The location names for each automaton *)
-	location_names = location_names;
+  location_names =
+    (fun automaton_index location_index ->
+      array_of_location_names.(automaton_index).(location_index));
 	(* The location attributes for each automaton *)
-	is_accepting = is_accepting;
-	is_urgent = is_urgent;
+  is_accepting =
+    (fun automaton_index location_index ->
+      location_acceptance.(automaton_index).(location_index)
+      = Location_accepting);
+
+  is_urgent =
+    (fun automaton_index location_index ->
+      location_urgency.(automaton_index).(location_index)
+      = Location_urgent);
 
 	(* All action indexes *)
 	actions = actions;
@@ -4510,6 +4611,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	}
 
-	,
+	in (model,abstract_property_option )
+
 	
-	abstract_property_option
+	
+
+

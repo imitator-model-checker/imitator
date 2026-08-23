@@ -73,13 +73,13 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
            Provider has potentially updated it. *)
         (* self#process_current_model; *)
 		print_message Verbose_standard
-			"WAITING FOR KEY (u = update, q = quit)...";
+			"WAITING FOR KEY (q = quit)...";
 
 		match provider#wait_for_update with
 
 			| Updated ->
 				print_message Verbose_standard
-					"Received u.";
+					"Received an update.";
 				self#process_current_model
 
 			| Finished ->

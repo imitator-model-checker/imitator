@@ -153,10 +153,14 @@ type lu_status =
 (** The abstract model *)
 (************************************************************)
 type abstract_model = {
+	(* Add a location dynamically *)
+	add_location_onthefly :
+		automaton_index -> location_name -> bool -> location_index;
+
 	(* General information **)
 	(* Cardinality *)
 	nb_automata   : int;
-	nb_actions    : int;
+	mutable nb_actions    : int;
 	nb_clocks     : int;
 	nb_discrete   : int;
 	nb_rationals   : int;
@@ -164,11 +168,11 @@ type abstract_model = {
 	nb_variables  : int;
 	(* Nb of variables used in PPL constraint: clocks + parameters + rationals *)
 	nb_ppl_variables : int;
-	nb_locations  : int;
+	mutable nb_locations  : int;
 	nb_transitions: int;
 
 	(* Is there any invariant in the model? *)
-	has_invariants : bool;
+	mutable has_invariants : bool;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks : bool;
 	(* Is there any clock reset of another form than x := 0? *)
@@ -227,13 +231,13 @@ type abstract_model = {
 	automata_names : automaton_index -> automaton_name;
 
 	(* The locations for each automaton *)
-	mutable locations_per_automaton : automaton_index -> location_index list;
+	locations_per_automaton : automaton_index -> location_index list;
 	(* The location names for each automaton *)
-	mutable location_names : automaton_index -> location_index -> location_name;
+	location_names : automaton_index -> location_index -> location_name;
 	(* The acceptance for each location *)
-	mutable is_accepting : automaton_index -> location_index -> bool;
+	is_accepting : automaton_index -> location_index -> bool;
 	(* The urgency for each location *)
-	mutable is_urgent : automaton_index -> location_index -> bool;
+	is_urgent : automaton_index -> location_index -> bool;
 
 	(* All action indexes *)
 	actions : action_index list;
