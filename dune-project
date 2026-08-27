@@ -1,5 +1,7 @@
 (lang dune 3.8)
 
+(implicit_transitive_deps false)
+
 (using menhir 2.1)
 
 (name IMITATOR)
@@ -15,7 +17,7 @@
 
 (maintainers "Étienne André et al.")
 
-(license "GPL-3.0")
+(license "GPL-3.0-only")
 
 (package
  (name IMITATOR)
@@ -25,10 +27,10 @@
   "IMITATOR is a software tool for parametric verification and robustness analysis of real-time systems with parameters. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features.")
  (depends
   (alcotest :with-test)
+  (fmt :with-test)
   (ocaml
    (>= 4.08))
   dune
-  oasis
   menhir
   mlgmp
   ppl

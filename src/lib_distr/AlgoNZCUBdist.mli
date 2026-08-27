@@ -11,6 +11,11 @@
  *
  ************************************************************)
 
+(** Non-zenoness emptiness check using CUB transformation (synthesizes valuations for which there exists a non-zeno loop in the PTA).
+
+    Distributed version. *)
+
+
 
 (************************************************************)
 (* Modules *)

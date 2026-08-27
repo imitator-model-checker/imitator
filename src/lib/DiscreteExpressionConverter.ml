@@ -284,8 +284,10 @@ let check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc 
 (* Check whether a bloc of sequential code is well formed *)
 let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
 
+    print_message Verbose_total ("Checking sequential code block " ^ code_bloc_name ^ " of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
+
     (* If code bloc is named, we put name of location in messages *)
-    let str_location =  "in `" ^ code_bloc_name ^ "`" in
+    let str_location =  "in " ^ code_bloc_name ^ "" in
 
     (* Check if all variables in function definition are defined *)
     let is_all_variables_defined =
@@ -329,16 +331,40 @@ let check_seq_code_bloc variable_infos code_bloc_name seq_code_bloc =
             "The function `rational_of_int` (used " ^ str_location ^ ") transforms an `int` (with a 32-bit limit) into a `rational` (encoded exactly, i.e., without any approximation nor overflow). Be aware that, if your `int` is subject to an overflow prior to its conversion into a `rational`, then the result may be wrong."
         );
 
-    (* Check whether there is only discrete in following control structures: if / while condition, for, etc. *)
-    let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
-    (* Check that assignments are well-formed following some rules *)
-    let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+    print_message Verbose_total ("Performing checks…");
+
+    (*** NOTE: We need to perform the checks sequentially, otherwise a failing check may lead to an internal error in the next check ***)
+    if(not is_all_functions_defined)then(
+        print_message Verbose_total ("Some functions are not defined " ^ str_location ^ ", skipping other checks.");
+        false
+    ) else if (not is_all_variables_defined) then (
+        print_message Verbose_total ("Some variables are not defined " ^ str_location ^ ", skipping other checks.");
+        false
+    )else (
+        (* Check whether there is only discrete in following control structures: if / while condition, for, etc. *)
+        let only_discrete_in_control_structures = check_inner_expression_of_seq_code_bloc variable_infos code_bloc_name seq_code_bloc in
+        if(not only_discrete_in_control_structures) then (
+            print_message Verbose_total ("Some non-discrete variables are used in control structures " ^ str_location ^ ", skipping other checks.");
+            false
+        )else(
+            (* Check that assignments are well-formed following some rules *)
+            let is_assignments_well_formed = check_seq_code_bloc_assignments variable_infos code_bloc_name seq_code_bloc in
+            if not is_assignments_well_formed then (
+                print_message Verbose_total ("Some assignments are not well-formed " ^ str_location ^ ".");
+                false
+            ) else(
+                print_message Verbose_total ("All checks passed for sequential code block " ^ str_location ^ ".");
+                true
+            )
+        )
+    )
 
     (* Return *)
-    is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined
+    (* is_assignments_well_formed && only_discrete_in_control_structures && is_all_variables_defined && is_all_functions_defined *)
+    (* is_all_functions_defined && is_all_variables_defined && is_assignments_well_formed && only_discrete_in_control_structures *)
 
 (* Check if user function definition is well formed *)
-let check_fun_definition variable_infos (fun_def : parsed_fun_definition) =
+let check_fun_definition variable_infos (fun_def : parsed_fun_definition) : bool =
 
     (* Get code bloc and return expression of the function *)
     let code_bloc, return_expr_opt = fun_def.body in
@@ -597,7 +623,11 @@ let convert_discrete_init variable_infos variable_name expr =
     (* Print *)
 
     (* Convert *)
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
+    try
+        ExpressionConverter.Convert.global_expression_of_typed_boolean_expression variable_infos typed_expr
+    with
+    | NumConst.Cast_to_int_exception msg -> raise (TypeError ("Invalid discrete initialisation for constant `" ^ variable_name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) ^ "`: " ^ msg ^ ". Cannot cast to int."))
+    | NumConst.Max_int_exception msg -> raise (TypeError ("Invalid discrete initialisation for constant `" ^ variable_name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) ^ "`: " ^ msg ^ ". Max size of collection exceeded."))
 
 (* Convert the init expression (parsed boolean expression) to a global expression *)
 let convert_constant_init initialized_constants (name, expr, var_type) =
@@ -619,10 +649,14 @@ let convert_constant_init initialized_constants (name, expr, var_type) =
     (* Get constant init typed expression *)
     let typed_expr = ExpressionConverter.TypeChecker.check_constant_expression dummy_variable_infos (name, expr, var_type) in
     (* Convert *)
-    ExpressionConverter.Convert.global_expression_of_typed_boolean_expression dummy_variable_infos typed_expr
+    try
+        ExpressionConverter.Convert.global_expression_of_typed_boolean_expression dummy_variable_infos typed_expr
+    with
+    | NumConst.Cast_to_int_exception msg -> raise (TypeError ("Invalid constant initializer for constant `" ^ name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression dummy_variable_infos expr) ^ "`: " ^ msg ^ ". Cannot cast to int."))
+    | NumConst.Max_int_exception msg -> raise (TypeError ("Invalid constant initializer for constant `" ^ name ^ "` with declared value `" ^ (ParsingStructureUtilities.string_of_parsed_boolean_expression dummy_variable_infos expr) ^ "`: " ^ msg ^ ". Max size of collection exceeded."))
 
 (** Convert a parsed guard (list of parsed discrete boolean expression) to guard for abstract model *)
-let convert_guard variable_infos guard_convex_predicate =
+let convert_guard variable_infos (guard_convex_predicate : parsed_discrete_boolean_expression list) =
 
     (* Function that split a convex_predicate into two lists *)
     (* One only contain discrete expression to nonlinear_constraint *)
@@ -713,8 +747,21 @@ let convert_guard variable_infos guard_convex_predicate =
             }
 
     (* If some false construct found: false guard *)
-    ) with False_exception -> False_guard
-
+    ) with
+    (* If some false construct found: false guard *)
+    | False_exception -> False_guard
+    (* Also handle type errors *)
+    (*** NOTE: very violent try-catch; it should have been properly checked earlier! ***)
+    | NumConst.Cast_to_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in the guard convex predicate: " ^ (ParsingStructureUtilities.string_of_parsed_discrete_boolean_expressions variable_infos guard_convex_predicate));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ "."))
+        )
+    | NumConst.Max_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_discrete_boolean_expressions variable_infos guard_convex_predicate));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ ". Max size of collection exceeded."))
+        )
 (* Convert a parsed function definition to function definition for abstract model *)
 let convert_fun_definition variable_infos (fun_definition : parsed_fun_definition) =
 
@@ -732,8 +779,12 @@ let convert_fun_definition variable_infos (fun_definition : parsed_fun_definitio
 
 (* Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
 let convert_seq_code_bloc variable_infos user_function_definitions_table seq_code_bloc =
+    print_message Verbose_total ("Checking sequential code block of size " ^ string_of_int (List.length seq_code_bloc) ^ "…");
+
     (* Some checks *)
     let well_formed_user_function = check_seq_code_bloc variable_infos "update" seq_code_bloc in
+
+    print_message Verbose_total ("Sequential code block checked: "  ^ (if well_formed_user_function then "well-formed" else "not well-formed"));
 
     (* Not well formed, raise an error *)
     if not well_formed_user_function then
@@ -745,7 +796,20 @@ let convert_seq_code_bloc variable_infos user_function_definitions_table seq_cod
     (* Type check *)
     let typed_seq_code_bloc = ExpressionConverter.TypeChecker.check_seq_code_bloc variable_infos seq_code_bloc in
 
-    (* Convert clock updates to linear terms *)
-    ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
-    (* Convert sequential code bloc *)
-    ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
+    (*** NOTE: very violent try-catch; it should have been properly checked earlier! ***)
+    try
+        (* Convert clock updates to linear terms *)
+        ExpressionConverter.Convert.clock_update_of_typed_seq_code_bloc variable_infos is_only_resets typed_seq_code_bloc,
+        (* Convert sequential code bloc *)
+        ExpressionConverter.Convert.seq_code_bloc_of_typed_seq_code_bloc variable_infos typed_seq_code_bloc
+        with
+    | NumConst.Cast_to_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_seq_code_bloc variable_infos seq_code_bloc));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ "."))
+        )
+    | NumConst.Max_int_exception msg -> (
+        (* Display the whole faulty sequential code block *)
+        print_error ("Type error found in sequential code block: " ^ (ParsingStructureUtilities.string_of_parsed_seq_code_bloc variable_infos seq_code_bloc));
+        raise (TypeError ("Invalid cast to int in an update: " ^ msg ^ ". Max size of collection exceeded."))
+        )

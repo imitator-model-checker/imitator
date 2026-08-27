@@ -1,7 +1,15 @@
 (executable
  (name IMITATOR)
  (modes byte exe)
- (libraries lib)
+ (libraries algorithms exporter lib parsing entities utils)
+ (flags
+  (:standard -open Utils -open Entities -open Algorithms))
+ (ocamlc_flags
+  (:standard
+   -I
+   %{env:OPAM_SWITCH_PREFIX=}/lib/gmp
+   -I
+   %{env:OPAM_SWITCH_PREFIX=}/lib/ppl))
  (link_flags
   (:include link_flags.%{system})
   (:standard
@@ -16,10 +24,10 @@
    -cclib
    -lgmpxx)))
 
-
 (install
  (section bin)
- (files imitator))
+ (files
+  (IMITATOR.exe as imitator)))
 
 (rule
  (with-stdout-to
@@ -29,16 +37,12 @@
 (rule
  (with-stdout-to
   link_flags.macosx
-  (echo "()")))
+  (echo "(-ccopt -Wl,-no_warn_duplicate_libraries)")))
 
 (env
  (dev
   (flags
-   (:standard -warn-error -A -g)
-   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/gmp/)
-   (-I %{env:OPAM_SWITCH_PREFIX=}/lib/ppl)
-  )))
-
+   (:standard -warn-error -A))))
 
 (rule
  (target imitator)
@@ -48,7 +52,10 @@
    (into ../../bin)))
  (action
   (progn
-   (echo "\nCopying main binary file to bin/imitator \226\128\166")
-   (run chmod u+w %{deps})
-   (run strip %{deps})
-   (copy %{deps} %{target}))))
+   (copy %{dep:IMITATOR.exe} %{target})
+   (run chmod u+w %{target})
+   (run strip %{target}))))
+
+(alias
+ (name default)
+ (deps imitator))

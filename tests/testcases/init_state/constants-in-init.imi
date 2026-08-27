@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2023/08/22
- * Last modified    : 2023/08/22
+ * Last modified    : 2026/06/01
  * Model version    : 0.1
  *
  * IMITATOR version : 3.4-beta
@@ -27,14 +27,8 @@ var
  	x,
 		: clock;
 
-(* Discrete *)
-	i,
-		: int;
-	r,
-		: rational;
-
 (* Constants *)
-	c1,
+	c1 = 2,
 		: constant;
 
 (* Parameters *)
@@ -49,7 +43,7 @@ var
 actions: a;
 
 loc l1: invariant True
-	when x = 1 sync a do {x := p/2, i := i+1, r := r*r} goto l1;
+	when x = 1 sync a do {x <- p/2} goto l1;
 
 end (* pta *)
 
@@ -59,20 +53,17 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init := {
+init <- {
 	
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] := l1,
+		loc[pta] <- l1,
 
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		r := 1/2,
-		i := 0,
-
     ;
 
     continuous =        
@@ -90,8 +81,6 @@ init := {
 		& p = c1
 		(* Check that constants can be at the left-side of the equation *)
 		& c1 = p
-		& c1 <= p
-		& c1 >= p
 	;
 }
 

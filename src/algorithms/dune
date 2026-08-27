@@ -1,0 +1,10 @@
+(library
+ (name algorithms)
+ (libraries data_structures utils entities parsing lib gmp ppl extlib fileutils str unix threads)
+ (flags
+  (:standard -open Utils -open Entities -open Parsing -open Data_structures -open Lib)))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

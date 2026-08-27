@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Global input elements (model, property) *)
+
+
 
 open Options
 

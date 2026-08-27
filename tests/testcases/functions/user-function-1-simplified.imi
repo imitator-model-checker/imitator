@@ -1,0 +1,161 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Test some behaviors on user functions
+ * Description      : Test some behaviors on user functions
+ * Correctness      : No error
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           :
+ * Author           : B.L
+ * Modeling         : B.L
+ * Input by         : B.L
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2022/06/13
+ * Last modified    : 2026/05/28
+ * Model version    : 1.0
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+  i1 : int;
+  r1 : rat;
+  s : int stack;
+  q : int queue;
+  bin : binary(4);
+
+  (* Some global variables *)
+  i_global : int;
+  r_global : rat;
+  a_global : int array(2);
+
+  (* number_stack : int stack; *)
+
+  (* Some result variables *)
+  i_result, i_result_2 : int;
+  r_result, lerp_result : rat;
+  top_stack, top_queue : int;
+
+(* Last index of an array *)
+fn last_idx_fun(array1 : int array(2)) : int
+begin
+  return array_length(array1) - 1
+end
+
+(* Linear interpolation *)
+fn lerp(a1 : rat, b1 : rat, x1 : rat) : rat
+begin
+  return a1 + (b1 - a1) * x1
+end
+
+(* Add global variable i with x *)
+fn int_f(x2 : int) : int
+begin
+  return x2 + i1
+end
+
+(* Add global variable i with x *)
+fn rat_f(r : rat) : rat
+begin
+  return r + r1
+end
+
+(* my own not using not *)
+fn my_not(b : bool) : bool
+begin
+  return not(b)
+end
+
+(* Replace n bit by zeros from left to right *)
+fn zero_left(bin : binary(4), n : int) : binary(4)
+begin
+  var l_bin : binary(4) = shift_left(bin, n);
+  var r_bin : binary(4) = shift_right(l_bin, n);
+  return r_bin
+end
+
+(* Push 0,1,2 to a stack (side effect function) *)
+fn push_on_stack(my_stack : int stack) : int stack
+begin
+  stack_push(0, my_stack);
+  stack_push(1, my_stack);
+  stack_push(2, my_stack);
+  return my_stack
+end
+
+(* Push 0,1,2 to a queue (side effect function) *)
+fn push_on_queue(my_queue : int queue) : int queue
+begin
+  queue_push(0, my_queue);
+  queue_push(1, my_queue);
+  queue_push(2, my_queue);
+  return my_queue
+end
+
+(* Setting value to some global variables (side effect function) *)
+fn set_globals(a : int) : int
+begin
+  (* Modify some global variables *)
+  a_global[last_idx_fun(a_global)] <- 1;
+  i_global <- a * 2;
+  (* Shadow parameter a *)
+  var a : int = 5;
+  r_global <- rational_of_int(i_global + a);
+  (* Shadow local variable a *)
+  var a : int = 1;
+  (* Shadow global variable i1 *)
+  var i1 : int = 2;
+  return a + i1 (* Should give 3 *)
+end
+
+fn flatten_nested_array(a_nested : int array(2) array(2)) : int array(4)
+begin
+    var flatten_arr : int array(4) = [0, 0, 0, 0];
+    var length : int = array_length(a_nested);
+
+    for i from 0 to length - 1 do
+        for j from 0 to array_length(a_nested[i]) - 1 do
+            flatten_arr[j + (i * length)] <- a_nested[j][i];
+        done
+    done
+
+    return flatten_arr;
+end
+
+
+automaton P
+
+  loc l0: invariant True
+  when True do {
+      push_on_stack(s);
+      push_on_queue(q);
+      top_stack <- stack_top(s);
+      top_queue <- queue_top(q);
+      i_result_2 <- set_globals(5);
+      lerp_result <- lerp(4.98, 10.85, 0.5);
+
+      i_result <- int_f(2);
+      r_result <- rat_f(3);
+      bin <- zero_left(bin, 2);
+  }
+  goto lend;
+
+  accepting loc lend : invariant True
+
+end
+
+init <- {
+    discrete =
+      loc[P] <- l0,
+      i1 <- 1,
+      r1 <- 1,
+      s <- stack(),
+      q <- queue(),
+      bin <- 0b1011,
+    ;
+}

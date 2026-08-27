@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Description of a state_index, a symbolic state and sets of states indexes. *)
+
+
 
 (************************************************************)
 (* Modules *)
@@ -133,9 +136,11 @@ val apply_updates_assign_backward : AbstractModel.abstract_model -> LinearConstr
 (** Structure to define sets of state_index *)
 (************************************************************)
 (************************************************************)
-
+type t
 class stateIndexSet :
 	object
+
+		method t : t
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -195,6 +200,8 @@ class stateIndexSet :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method remove_or_do_nothing : state_index -> unit
 		
+
+		method union : stateIndexSet -> unit
 
 (************************************************************)
 (************************************************************)

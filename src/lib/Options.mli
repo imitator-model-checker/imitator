@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Options definitions. *)
+
+
 
 open AbstractAlgorithm
 
@@ -67,6 +70,7 @@ class imitator_options :
 		method extrapolation				: extrapolation
 
 		method files_prefix					: string
+		method graphics_detail				: AbstractAlgorithm.graphics_detail
 		method imitator_mode				: AbstractAlgorithm.imitator_mode
 
 		method ih							: bool
@@ -135,9 +139,6 @@ class imitator_options :
 		(* In game algorithms: set the mode for generation of controller *)
 		method ptg_controller_mode			: ptg_controller_mode
 
-		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		method ptg_notonthefly				: bool
-
 		(* In game algorithms: propagate losing states *)
 		method ptg_propagate_losing_states	: bool
 		
@@ -150,6 +151,13 @@ class imitator_options :
 
 		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
 		method ptg_picking_strategy : AbstractAlgorithm.waitingListStrategy
+
+		method ptg_abstraction : AbstractAlgorithm.ptg_abstraction
+
+		method hull_method                : AbstractAlgorithm.hull_method
+		method hull_simplify_mode         : AbstractAlgorithm.hull_simplify_mode
+		method hull_simplify_period       : int
+		method hull_abstraction_threshold : int
 
 		method pi_compatible				: bool
 		method precomputepi0				: bool

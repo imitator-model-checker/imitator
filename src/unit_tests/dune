@@ -1,8 +1,12 @@
 (tests
  (names imitatorUnitTests)
- (libraries alcotest lib)
- (action (run %{test} -e))
-  (link_flags
+ (libraries alcotest fmt lib parsing entities utils)
+ (flags
+  (:standard -open Utils -open Entities))
+ (action
+  (run %{test} -e))
+ (link_flags
+  (:include link_flags.%{system})
   (:standard
    -cclib
    -lppl
@@ -13,10 +17,19 @@
    -cclib
    -lgmp
    -cclib
-   -lgmpxx))
- 
- )
+   -lgmpxx)))
+
+(rule
+ (with-stdout-to
+  link_flags.linux
+  (echo "()")))
+
+(rule
+ (with-stdout-to
+  link_flags.macosx
+  (echo "(-ccopt -Wl,-no_warn_duplicate_libraries)")))
 
 (env
-  (dev
-    (flags (:standard -warn-error -A))))
+ (dev
+  (flags
+   (:standard -warn-error -A))))

@@ -15,7 +15,7 @@
  * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created          : 2023/03/09
- * Last modified    : 2023/03/13
+ * Last modified    : 2026/06/01
  * Model version    : 0.1
  *
  * IMITATOR version : 3.4-beta
@@ -30,8 +30,6 @@ var
 (* Discrete *)
 	i, j,
 		: int;
-	r,
-		: rational;
 	t : int array(4);
 
 (* Parameters *)
@@ -43,10 +41,9 @@ var
   function test_over(i : int) : void
 (************************************************************)
 begin
-	var i : int = -1;
-	(* This is the LOCAL `i`, the argument `i` isn't modified, neither is the global variable `i` *)
-	i := 1;
-	j := i;
+	var k : int = -1;
+	k <- 1;
+	j <- k;
 end
 
 
@@ -55,7 +52,7 @@ end
 (************************************************************)
 begin
 	for i from 1 to 10 do
-		x := x + p;
+		x <- x + p;
 	done
 end
 
@@ -72,18 +69,16 @@ end
 (************************************************************)
 begin
 	(* Modifying local variable, WITH side effects! *)
-	local_t[0] := 10;
+	local_t[0] <- 10;
 	(* Modifying global variable *)
-	t[1] := 10;
+	t[1] <- 10;
 end
 
 (************************************************************)
   automaton pta
 (************************************************************)
-actions: a;
-
 loc l1: invariant True
-	when j <> -1 & i <> -1 & x = 0 do {i := i; test_over(i)} goto l2;
+	when j <> -1 & i <> -1 & x = 0 do {i <- i; test_over(i)} goto l2;
 
 loc l2: invariant True
 	when x = 0 & no_side_effect(t) do {test_clock_updates(); yes_side_effect(t)} goto l3;
@@ -98,20 +93,20 @@ end (* pta *)
 (* Initial state *)
 (************************************************************)
 
-init := {
+init <- {
 	
     discrete =
 		(*------------------------------------------------------------*)
 		(* Initial location *)
 		(*------------------------------------------------------------*)
-		loc[pta] := l1,
+		loc[pta] <- l1,
 
 		(*------------------------------------------------------------*)
 		(* Initial discrete variables assignments *)
 		(*------------------------------------------------------------*)
-		i := 0,
-		j := 0,
-		t := [1,2,3,4],
+		i <- 0,
+		j <- 0,
+		t <- [1,2,3,4],
 
     ;
 

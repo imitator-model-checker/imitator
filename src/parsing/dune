@@ -1,0 +1,84 @@
+(library
+ (name parsing)
+ (wrapped true)
+ (libraries utils entities gmp extlib fileutils str unix threads)
+ (flags
+  (:standard -open Utils -open Entities))
+ (modules_without_implementation parsingStructure))
+
+(ocamllex
+ (modules ModelLexer PropertyLexer))
+
+(menhir
+ (flags
+  --dump
+  --explain
+  --unused-precedence-levels
+  --unused-token
+  CT_INFINITY
+  --unused-token
+  CT_NOSYNCOBS
+  --unused-token
+  CT_OBSERVER
+  --unused-token
+  CT_OBSERVER_CLOCK
+  --unused-token
+  CT_SPECIAL_RESET_CLOCK_NAME)
+ (modules ModelParser PropertyParser))
+
+(rule
+ (targets ModelParser.conflicts)
+ (deps ModelParser.mly)
+ (action
+  (progn
+   (run
+    menhir
+    --table
+    --dump
+    --explain
+    --unused-precedence-levels
+    --unused-token
+    CT_INFINITY
+    --unused-token
+    CT_NOSYNCOBS
+    --unused-token
+    CT_OBSERVER
+    --unused-token
+    CT_OBSERVER_CLOCK
+    --unused-token
+    CT_SPECIAL_RESET_CLOCK_NAME
+    --base
+    ModelParserConflictReport
+    %{deps})
+   (run cp ModelParserConflictReport.conflicts ModelParser.conflicts))))
+
+(rule
+ (targets PropertyParser.conflicts)
+ (deps PropertyParser.mly)
+ (action
+  (progn
+   (run
+    menhir
+    --table
+    --dump
+    --explain
+    --unused-precedence-levels
+    --unused-token
+    CT_INFINITY
+    --unused-token
+    CT_NOSYNCOBS
+    --unused-token
+    CT_OBSERVER
+    --unused-token
+    CT_OBSERVER_CLOCK
+    --unused-token
+    CT_SPECIAL_RESET_CLOCK_NAME
+    --base
+    PropertyParserConflictReport
+    %{deps})
+   (run cp PropertyParserConflictReport.conflicts PropertyParser.conflicts))))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

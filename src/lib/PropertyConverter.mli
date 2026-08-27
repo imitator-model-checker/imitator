@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module aims to convert a property expression to a abstract property expression. *)
+
+
 open ParsingStructure
 open AbstractProperty
 

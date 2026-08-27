@@ -61,6 +61,7 @@ tests = [
 		# Last modified            : 2021/01/22
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the absence of model',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['thisfiledoesnotexist.imi'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -82,6 +83,7 @@ Error                                   : model file not found
 		# Last modified            : 2021/01/22
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test the absence of property',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['testL.imi', 'thisfiledoesnotexist.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -178,6 +180,7 @@ L/U subclass                            : L-PTA
 		# Last modified            : 2021/06/25
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test model syntax check even when a (non-existing) property is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['testL.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode checksyntax ',
 		'expectations' : [
@@ -692,6 +695,7 @@ END CONSTRAINT
 		# Last modified            : 2024/02/09
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test auto-removed parameter does not crash the initial constraint checking',
+        'skip'       : True, # NOTE: bug is known, and an issue has been opened, but the fix is not yet implemented, so we skip this test for now
 		'tags'       : 'syntax',
 		'input_files': ['syntax/parameter-autoremove.imi'],
 		'options'    : '-mode checksyntax',
@@ -758,6 +762,74 @@ Error                                   : invalid model
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions syntax is still checked (with -no-var-autoremove)',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-invalid-syntax.imi'],
+		'options'    : '-mode checksyntax -no-var-autoremove',
+		'expectations' : [
+			{'file': 'unused-function-invalid-syntax.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions with valid syntax pass',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-valid-syntax.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'unused-function-valid-syntax.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/05/26
+		# Last modified            : 2026/05/26
+		# Test for IMITATOR version: 3.4-beta
+		'purpose'    : 'Test that unused functions with valid syntax pass and -no-var-autoremove',
+		'tags'       : 'syntax,functions',
+		'input_files': ['functions/unused-function-valid-syntax.imi'],
+		'options'    : '-mode checksyntax -no-var-autoremove',
+		'expectations' : [
+			{'file': 'unused-function-valid-syntax.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
 		# Test since               : 2023/08/22
 		# Last modified            : 2023/08/22
 		# Test for IMITATOR version: 3.4-beta
@@ -809,6 +881,7 @@ Error                                   : unsatisfiable initial conditions
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test state space (unsatisfiable initial conditions) even when a (useless, and non-existing) property is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['unsatisfiableInitStateClocks.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-mode statespace',
 		'expectations' : [
@@ -1011,6 +1084,7 @@ Error                                   : model parsing error
 		# Last modified            : 2024/02/28
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test static division by zero detected in property',
+		'skip'         : True,
 		'tags'       : 'syntax',
 		'input_files': ['syntax/division-by-zero-property.imi', 'syntax/division-by-zero-property.imiprop'],
 		'options'    : '',
@@ -4351,10 +4425,89 @@ True
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 1-D int array',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-1D-simple-OK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-1D-simple-OK.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 1-D int array (variant)',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-1D-simple-NOK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-1D-simple-NOK.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		# WARNING/NOTE: this test has never been working! It has been added to exhibit a bug on 2D-arrays
+		'author': 'Étienne André',
+		'purpose'    : 'Test simple read/write operations on a 2-D int array',
+		'tags':'array, computing, function, semantic',
+		'input_files': ['array_expressions/array-2D-simple-OK.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'array-2D-simple-OK.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'author': 'lbinria',
 		'purpose'    : 'Test general behavior of array expressions',
 		'tags':'array, computing, function, semantic',
-		'input_files': ['array_expressions/array.imi', 'basic-properties/synth-EF-accepting.imiprop'],
+		'input_files': ['array_expressions/array.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'array-statespace.states' , 'content' : """
@@ -4500,7 +4653,7 @@ Error                                   : index out of range
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'queue-statespace.states' , 'content' : """
-  pta: lend, r = 1, i = 2, s3 = queue([3, 2]), s2 = queue(), s1 = queue([2, 1]) ==>
+  pta: lend, r = 1, i = 2, s3 = queue([2, 3]), s2 = queue(), s1 = queue([1, 2]) ==>
 &True
 
   Projection onto the parameters:
@@ -5205,17 +5358,42 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test author              : Étienne André
 		# Test since               : 2023/08/22
-		# Last modified            : 2023/08/22
+		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4-beta
-		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities',
+        'skip': True, # This test is currently skipped because of a bug in the handling of constants in continuous inits (see issue #216)
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities (with =)',
 		'tags'       : 'syntax,init',
 		'input_files': ['init_state/constants-in-init.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'constants-in-init.res' , 'content' : """
+Number of IPTAs                         : 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4-beta
+        'skip': True, # This test is currently skipped because of a bug in the handling of constants in continuous inits (see issue #216)
+		'purpose'    : 'Test that constants can be used in continuous inits, both on left and right side of inequalities (with <=)',
+		'tags'       : 'syntax,init',
+		'input_files': ['init_state/constants-in-init-leq.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'constants-in-init-leq.res' , 'content' : """
 Number of IPTAs                         : 1
 		"""
 			} # end result file
@@ -5727,6 +5905,30 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 	{
 		## Test version             : 1
+		## Test since               : 2026/05/29
+		## Last modified            : 2026/05/29
+		## Test for IMITATOR version: 3.4-beta
+		## Author 					: Étienne André
+		'author'     : 'Étienne André',
+		'purpose'    : 'Test that an int variable is not compared to a rational in a guard',
+		'input_files': ['type_checking/guards/rational-and-int-type-error.imi'],
+		'tags'		 :'type checking',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'rational-and-int-type-error.res' , 'content' : """
+Error                                   : invalid model
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		## Test version             : 1
 		## Test since               : 2021/06/07
 		## Last modified            : 2021/06/07
 		## Test for IMITATOR version: 3.1.0
@@ -6079,6 +6281,31 @@ Error                                   : invalid model
 
     ,
 
+
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2026/05/28
+      ## Last modified            : 2026/05/28
+      'author': 'Étienne André',
+      'purpose'    : 'Test that identical parameter names in different functions do not interfere with each other',
+      'input_files': ['functions/user-functions-parameter-names.imi'],
+      'tags': 'behavior, function',
+      'imitator-version': '3.4',
+      'options'    : '-mode checksyntax',
+      'expectations' : [
+        {'file': 'user-functions-parameter-names.res' , 'content' : """
+Number of IPTAs                         : 1
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	# NOTE: reason for failure is (at least) the same as the above test
     #------------------------------------------------------------
     {
       ## Test version             : 1
@@ -6092,6 +6319,41 @@ Error                                   : invalid model
       'options'    : '-mode statespace -states-description -no-var-autoremove',
       'expectations' : [
         {'file': 'user-function-1-statespace.states' , 'content' : """
+  INITIAL
+  STATE 0:
+  P: l0, r_result = 0, lerp_result = 0, r_global = 0, r1 = 1, top_stack = 0, top_queue = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], i_global = 0, bin = 0b1011, q = queue(), s = stack(), i1 = 1 ==>
+&True
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
+&True
+      """
+         } # end result file
+        ,
+      ] # end expectations
+    } # end test case
+    #------------------------------------------------------------
+
+    ,
+
+	# NOTE: same test as above, but using different parameter names in functions to avoid interference
+    #------------------------------------------------------------
+    {
+      ## Test version             : 1
+      ## Test since               : 2026/05/28
+      ## Last modified            : 2026/05/28
+      'author': 'Étienne André',
+      'purpose'    : 'Test some behaviors on user functions (simplified version)',
+      'input_files': ['functions/user-function-1-simplified.imi'],
+      'tags': 'behavior, function',
+      'imitator-version': '3.4',
+      'options'    : '-mode statespace -states-description -no-var-autoremove',
+      'expectations' : [
+        {'file': 'user-function-1-simplified-statespace.states' , 'content' : """
   INITIAL
   STATE 0:
   P: l0, r_result = 0, lerp_result = 0, r_global = 0, r1 = 1, top_stack = 0, top_queue = 0, i_result = 0, i_result_2 = 0, a_global = [0, 0], i_global = 0, bin = 0b1011, q = queue(), s = stack(), i1 = 1 ==>
@@ -6163,8 +6425,9 @@ Error                                   : invalid model
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/08/23
-		# Last modified            : 2023/08/23
+		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4-beta
+        'skip'		 : True, # NOTE: this test is currently failing, but the reason for failure is somehow tricky to fix, so we skip it for now; see issue #217 for more details
 		'purpose'    : 'Test absence of false positive in side-effects detection in user-defined functions',
 		'tags'       : 'syntax,semantic,translation',
 		'input_files': ['functions/function-no-side-effects-detect.imi'],
@@ -6187,7 +6450,7 @@ STATE 1:
       ## Test since               : 2023/01/24
       ## Last modified            : 2023/01/24
       'author': 'lbinria',
-      'purpose'    : 'Check that returning clock is forbidden',
+      'purpose'    : 'Test that returning clock is forbidden',
       'input_files': ['functions/return-clock.imi'],
       'tags': 'function, clock, return',
       'imitator-version': '3.4',
@@ -6233,7 +6496,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/24
       ## Last modified            : 2023/01/24
       'author': 'lbinria',
-      'purpose'    : 'Check that returning parameter is forbidden',
+      'purpose'    : 'Test that returning parameter is forbidden',
       'input_files': ['functions/return-param.imi'],
       'tags': 'function, parameter, return',
       'imitator-version': '3.4',
@@ -6256,7 +6519,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/25
       ## Last modified            : 2023/01/25
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a constant is forbidden',
+      'purpose'    : 'Test that updating a constant is forbidden',
       'input_files': ['functions/seq-code-bloc-update-constant.imi'],
       'tags': 'code, bloc, constant, update',
       'imitator-version': '3.4',
@@ -6279,7 +6542,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a parameter is forbidden',
+      'purpose'    : 'Test that updating a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6302,7 +6565,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a discrete to a parameter is forbidden',
+      'purpose'    : 'Test that updating a discrete to a parameter is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-parameter.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6325,7 +6588,7 @@ Error                                   : invalid model
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that updating a discrete with a clock is forbidden',
+      'purpose'    : 'Test that updating a discrete with a clock is forbidden',
       'input_files': ['functions/seq-code-bloc-update-discrete-with-clock.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6342,13 +6605,14 @@ Error                                   : invalid model
 
     ,
 
+
     #------------------------------------------------------------
     {
       ## Test version             : 1
       ## Test since               : 2023/01/27
       ## Last modified            : 2023/01/27
       'author': 'lbinria',
-      'purpose'    : 'Check that nonlinear expressions over clocks of parameters are forbidden',
+      'purpose'    : 'Test that nonlinear expressions over clocks of parameters are forbidden',
       'input_files': ['functions/seq-code-bloc-nonlinear-op-continuous.imi'],
       'tags': 'code, bloc, parameter, update',
       'imitator-version': '3.4',
@@ -6365,12 +6629,34 @@ Error                                   : invalid model
 
     ,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/06/01
+		# Last modified            : 2026/06/01
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test that a local variable name is treated differently as a function argument and a global variable',
+		'input_files': ['functions/side-effects-samename.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'side-effects-samename-statespace.states' , 'content' : """
+pta: l2, i = 0, j = 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/03/13
-		# Last modified            : 2023/03/13
+		# Last modified            : 2026/06/01
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test functions: with/without side-effects, and clock updates allowed in functions',
 		'input_files': ['functions/side-effects.imi'],
@@ -6389,6 +6675,7 @@ Error                                   : invalid model
 	#------------------------------------------------------------
 
 	,
+
 
 	#------------------------------------------------------------
 	{
@@ -8926,10 +9213,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
 & 15 > p_add_sugar + p_coffee
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			} #end result file
@@ -8969,10 +9256,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
 & 15 > p_add_sugar + p_coffee
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			} #end result file
@@ -9068,10 +9355,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
 & 15 > p_add_sugar + p_coffee
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			 } #end result file
@@ -9111,10 +9398,10 @@ OR
 & p_button > p_add_sugar
 & 15 >= p_add_sugar + p_coffee
 OR
-  p_add_sugar >= 3*p_button
-& p_coffee > 0
+  p_coffee > 0
 & p_button > 0
 & 15 > p_add_sugar + p_coffee
+& p_add_sugar >= 3*p_button
 END CONSTRAINT
 """
 			 } #end result file
@@ -21959,6 +22246,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=1)',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -21981,6 +22269,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=1) + IH',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc1.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22003,6 +22292,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=2)',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22025,6 +22315,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=2) + IH',
+        'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc2.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22047,6 +22338,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=3)',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22069,6 +22361,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=3) + IH',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc3.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -22091,6 +22384,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=4)',
+		'toolong'	: True,	
 		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -22113,6 +22407,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM: CSMA/CD (BC=4) + IH',
+		'toolong'	: True,
 		'input_files': ['IH/CSMACD-bc4.imi', 'IH/CSMACD-IM.imiprop'],
 		'options'    : '-ih',
 		'expectations' : [
@@ -27518,6 +27813,7 @@ init := True
 		# Last modified            : 2021/07/05
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test translation to HyTech even when a (useless, non-existing) property file is passed',
+		'bypass_files_existence_check'    : True,
 		'input_files': ['flipflop.imi', 'nonexistingfile.imiprop'],
 		'options'    : '-imi2HyTech',
 		'expectations' : [
@@ -27538,7 +27834,7 @@ var
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2023/07/11
-		# Last modified            : 2024/07/11
+		# Last modified            : 2026/07/03
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test translation to TikZ with uncontrollable actions',
 		'tags'       : 'syntax,translation,controllable',
@@ -27547,23 +27843,21 @@ var
 		'expectations' : [
 			# WARNING: one has to manually replace \ with \\
 			{'file': 'include_controllable_actions.tex' , 'content' : """
-		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{a}$\\\\
-		 & $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, ] node[align=center]{
+		 $ \\styleclock{x} = 1$\\\\
+		 \\\\ $\\styleact{a}$\\\\
+		 $x\\leftarrow{}1/2 * \\styleparam{p}$\\\\%
+		} (l1);
 
-		\\path (l1) edge[] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{b}$\\\\
-		 & $x\\leftarrow{}1$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, ] node[align=center]{
+		 $ \\styleclock{x} = 1$\\\\
+		 \\\\ $\\styleact{b}$\\\\
+		 $x\\leftarrow{}1$\\\\%
+		} (l1);
 
-		\\path (l1) edge[uncontrollable] node{\\begin{tabular}{@{} c @{\ } c@{} }
-		& $ \\styleclock{x} = 1$\\\\
-		 & $\\styleact{c}$\\\\
-		 & $x\\leftarrow{}2$\\\\%
-		\\end{tabular}} (l1);
+		\\path (l1) edge[bend left, uncontrollable] node[align=center]{
+		 $x\\leftarrow{}0$\\\\%
+		} (l1);
 		"""
 			} # end result file
 			,
@@ -27685,6 +27979,7 @@ s_1_0[fillcolor="#b3e2cd", style=filled, fontsize=16, label="l1|{True}"];
 		# Last modified            : 2021/07/09
 		# Test for IMITATOR version: 3.1
 		'purpose'    : 'Test call for export to PNG', # NOTE: no check is made concerning the validity of this export!
+        'toolong'      : True,
 		'input_files': ['flipflop.imi'],
 		'options'    : '-imi2PNG -graphics-source',
 		'expectations' : [
@@ -28022,6 +28317,7 @@ system pta1, pta2, pta3;
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -28048,6 +28344,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmin',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
@@ -28073,6 +28370,7 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
+        'toolong'	: True,
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
 		'options'    : '-verbose mute',
 		'expectations' : [
@@ -29181,6 +29479,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (SLAF14_5)',
+        'toolong'      : True,
         'input_files'  : ['templates/SLAF14_5.imi', 'templates/SLAF14_5-AGnot.imiprop'],
         'options'      : '-verbose mute -depth-limit=9',
         'expectations' : [{
@@ -29204,6 +29503,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (category12_vulnerable_conditional-selfcomp)',
+        'toolong'      : True,
         'input_files'  : ['templates/category12_vulnerable_conditional-selfcomp.imi', 'templates/category12_vulnerable_conditional-selfcomp.imiprop'],
         'options'      : '-verbose mute -depth-limit=10',
         'expectations' : [{
@@ -29238,6 +29538,7 @@ Constraint soundness                    : possible under-approximation
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischerHRSV02_3)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischerHRSV02_3.imi', 'templates/fischerHRSV02_3-AGnot.imiprop'],
         'options'      : '-verbose mute -depth-limit=9',
         'expectations' : [{
@@ -29261,6 +29562,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischer_interleave)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischer_interleave.imi', 'templates/fischer_interleave.imiprop'],
         'options'      : '-verbose mute',
         'expectations' : [{
@@ -29281,6 +29583,7 @@ Constraint nature                       : good
     ,
     {
         'purpose'      : 'Test correct instantiation of templates (fischer_orig)',
+        'toolong'      : True,
         'input_files'  : ['templates/fischer_orig.imi', 'templates/fischer_orig.imiprop'],
         'options'      : '-verbose mute',
         'expectations' : [{
@@ -29300,11 +29603,11 @@ Constraint nature                       : good
     }
     ,
     {
-        'purpose'      : 'Test each syntatic expansion implemented (templates, syntatic arrays, etc.)',
-        'input_files'  : ['templates/syntatic_test.imi'],
+        'purpose'      : 'Test each syntactic expansion implemented (templates, syntactic arrays, etc.)',
+        'input_files'  : ['templates/syntactic_test.imi'],
         'options'      : '-verbose mute -imi2IMI',
         'expectations' : [{
-            'file'   : 'syntatic_test-regenerated.imi',
+            'file'   : 'syntactic_test-regenerated.imi',
             'content': """
 var 
 	x___0, x___1

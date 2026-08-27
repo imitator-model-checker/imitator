@@ -1,31 +1,12 @@
 (library
  (name lib)
- (libraries gmp ppl extlib fileutils str unix threads)
- (modules_without_implementation
-  abstractModel
-  abstractProperty
-  automaton
-  parsingStructure
-  result))
+ (libraries data_structures utils entities parsing gmp ppl extlib fileutils str unix threads)
+ (flags
+  (:standard -open Utils -open Entities -open Parsing -open Data_structures))
+ (modules_without_implementation result))
 
 (ocamllex
- (modules ModelLexer PropertyLexer ModelUpdateLexer))
-
-(menhir
- (flags --dump --explain)
- (modules ModelParser PropertyParser ModelUpdateParser))
-
-(rule
- (targets ModelParser.conflicts)
- (deps ModelParser.mly)
- (action
-  (run menhir --dump --explain %{deps})))
-
-(rule
- (targets PropertyParser.conflicts)
- (deps PropertyParser.mly)
- (action
-  (run menhir --dump --explain %{deps})))
+ (modules  ModelUpdateLexer))
 
 (rule
  (targets ModelUpdateParser.conflicts)
@@ -37,10 +18,3 @@
  (dev
   (flags
    (:standard -warn-error -A))))
-
-(rule
- (targets BuildInfo.ml BuildInfo.mli)
- (deps
-  (:gen ../../gen_build_info.py))
- (action
-  (run python %{gen})))

@@ -136,6 +136,9 @@ class imitator_options =
 		(*** NOTE: arbitrary initialization ***)
 		val mutable imitator_mode					= Syntax_check
 
+		(* detail when converting a model to graphics *)
+		val mutable graphics_detail = Full
+
 		(* Exploration order *)
 		(*** HACK: hard-coded default value ***)
 		val mutable exploration_order : AbstractAlgorithm.exploration_order option = Some Exploration_layer_BFS
@@ -258,9 +261,6 @@ class imitator_options =
 		(* Options for controller generation in PTG *)
 		val mutable ptg_controller_mode = AbstractAlgorithm.No_Generation
 
-		(* In game algorithms: perform the algorithm on-the-fly rather than first build the state space, and then synthesize *)
-		val mutable ptg_notonthefly					= false
-
 		(* In game algorithms: propagate losing states *)
 		val mutable ptg_propagate_losing_states		= false
 
@@ -274,6 +274,13 @@ class imitator_options =
 
 		(* In game algorithm: What method to select next edge to be processed in the algorithm *)
 		val mutable ptg_picking_strategy = AbstractAlgorithm.SingleQueue
+
+		val mutable ptg_abstraction = AbstractAlgorithm.No_Abstraction
+
+		val mutable hull_method                : AbstractAlgorithm.hull_method       = AbstractAlgorithm.Hull_octagonal_hybrid
+		val mutable hull_simplify_mode         : AbstractAlgorithm.hull_simplify_mode = AbstractAlgorithm.Hull_simplify_constraints
+		val mutable hull_simplify_period       : int = 10
+		val mutable hull_abstraction_threshold : int = 20
 
 		(* process again green states *)
 		val mutable recompute_green					= false
@@ -332,6 +339,7 @@ class imitator_options =
 
 		method extrapolation						= extrapolation
 
+		method graphics_detail 					= graphics_detail
 		method files_prefix							= files_prefix
 		method imitator_mode						= imitator_mode
 
@@ -402,12 +410,17 @@ class imitator_options =
 		method property_file_name					= property_file_name
 
 		method ptg_controller_mode = ptg_controller_mode
-		method ptg_notonthefly						= ptg_notonthefly
-		method ptg_propagate_losing_states			= ptg_propagate_losing_states
+method ptg_propagate_losing_states			= ptg_propagate_losing_states
 		method ptg_no_forced_uncontrollables = ptg_no_forced_uncontrollables
 		method ptg_no_strategy_generation = ptg_no_strategy_generation
 		method ptg_no_strategy_printing = ptg_no_strategy_printing
 		method ptg_picking_strategy = ptg_picking_strategy
+		method ptg_abstraction = ptg_abstraction
+
+		method hull_method                = hull_method
+		method hull_simplify_mode         = hull_simplify_mode
+		method hull_simplify_period       = hull_simplify_period
+		method hull_abstraction_threshold = hull_abstraction_threshold
 
 		method states_limit							= states_limit
 		method statistics							= statistics
@@ -479,8 +492,6 @@ class imitator_options =
 					comparison_operator <- Some AbstractAlgorithm.Including_check
 				else if comparison_operator_string = "doubleinclusion" then
 					comparison_operator <- Some AbstractAlgorithm.Double_inclusion_check
-				else if comparison_operator_string = "strongdoubleinclusion" then
-					comparison_operator <- Some AbstractAlgorithm.Strong_Double_Inclusion_check
 				else(
 					print_error ("The value of `-comparison` `" ^ comparison_operator_string ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
@@ -801,6 +812,45 @@ class imitator_options =
 				exit(1);
 			)
 
+			and set_ptg_abstraction abstraction =
+				if abstraction = "location" then
+					ptg_abstraction <- AbstractAlgorithm.Location
+				else if abstraction = "ch" then
+					ptg_abstraction <- AbstractAlgorithm.Convex_Hull
+				else if abstraction = "none" then
+					ptg_abstraction <- AbstractAlgorithm.No_Abstraction
+				else(
+				print_error ("The value of `-PTG-abstraction` `" ^ abstraction ^ "` is not valid.");
+				Arg.usage speclist usage_msg;
+				abort_program ();
+				exit(1);
+				)
+
+			and set_hull_method s =
+				hull_method <- (match s with
+					| "convex"           -> AbstractAlgorithm.Hull_convex_only
+					| "box"              -> AbstractAlgorithm.Hull_box_only
+					| "octagonal"        -> AbstractAlgorithm.Hull_octagonal_only
+					| "box-hybrid"       -> AbstractAlgorithm.Hull_box_hybrid
+					| "octagonal-hybrid" -> AbstractAlgorithm.Hull_octagonal_hybrid
+					| _ ->
+						print_error ("The value of `-hull-method` `" ^ s ^ "` is not valid.");
+						Arg.usage speclist usage_msg;
+						abort_program ();
+						exit(1))
+
+			and set_hull_simplify s =
+				hull_simplify_mode <- (match s with
+					| "none"        -> AbstractAlgorithm.Hull_simplify_none
+					| "constraints" -> AbstractAlgorithm.Hull_simplify_constraints
+					| "generators"  -> AbstractAlgorithm.Hull_simplify_generators
+					| _ ->
+						print_error ("The value of `-hull-simplify` `" ^ s ^ "` is not valid.");
+						Arg.usage speclist usage_msg;
+						abort_program ();
+						exit(1))
+
+
 			and set_ptg_waiting_list_frontier_param_init init =
 					match ptg_picking_strategy with 
 						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with init}
@@ -815,6 +865,19 @@ class imitator_options =
 					match ptg_picking_strategy with 
 						AbstractAlgorithm.Frontier params -> ptg_picking_strategy <- AbstractAlgorithm.Frontier {params with update}
 					| AbstractAlgorithm.SingleQueue -> ()
+
+			and set_graphics_detail detail_str =
+				if detail_str = "full" then 
+					graphics_detail <- Full
+				else if detail_str = "minimal" then 
+					graphics_detail <- Minimal
+				else(
+					print_error ("The value of `-graphics-detail` `" ^ detail_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
 
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
@@ -973,6 +1036,8 @@ class imitator_options =
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
 
+				("-graphics-detail", String set_graphics_detail, "The level of detail to use when translating to PDF, PNG, DOT, JPG. Possible values are `full` and `minimal`. Default: full");
+
 				("-ih", Unit (fun () -> ih <- true), " Uses the integer hull [JLR15] for termination of selected algorithms. Default: disabled.
 				");
 
@@ -1111,10 +1176,7 @@ class imitator_options =
        	Use value `draw` to also generate a graphical representation of the controller.
 				");
 
-				("-PTG-no-onthefly", Unit (fun _ -> ptg_notonthefly <- true), " In game algorithms: do not perform the algorithm on-the-fly, but rather first build the state space, and then synthesize. Default: false, i.e., algorithm computes on-the-fly.
-				");
-
-				("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
+("-PTG-propagate", Unit (fun () -> ptg_propagate_losing_states <- true), " In game algorithms: propagate losing states. Default: false, i.e., does not propagate.
 				");
 
 				("-PTG-no-forced-uncontrollables", Unit (fun _ -> ptg_no_forced_uncontrollables <- true), "In game algorithms: use classic semantics where the environment cannot be forced to take an action even if not doing so violates an invarant. Default: false, i.e. use new semantics");
@@ -1132,6 +1194,24 @@ class imitator_options =
 					 Int set_ptg_waiting_list_frontier_param_step; 
 					 Int set_ptg_waiting_list_frontier_param_update]),
 					 "In game algorithms: Set the depth parameters for frontier strategy (if enabled). Usage: init step update");
+				
+				("-PTG-abstraction", String(set_ptg_abstraction), "In game algorithms: The abstraction to use when computing the state space.
+				Use value `location` for the coarsest abstraction that identifies any two states with the same location.
+				Use value `ch` for the using the convex hull of reachable zones.
+				Use value `none` for using no abstractions (Default)");
+
+				("-hull-method", String(set_hull_method),
+					"Hull method for PTG convex-hull abstraction: convex|box|octagonal|box-hybrid|octagonal-hybrid. Default: octagonal-hybrid");
+
+				("-hull-simplify", String(set_hull_simplify),
+					"Simplification after hull: none|constraints|generators. Default: constraints");
+
+				("-hull-simplify-period", Int (fun n -> hull_simplify_period <- n),
+					"Apply hull simplification every N convex hull operations per location (default: 10, 0 = disabled)");
+
+				("-hull-abstraction-threshold", Int (fun n -> hull_abstraction_threshold <- n),
+					"Constraint count above which box/octagonal hull is applied in hybrid modes (default: 20)");
+
 
 				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled. [EXPERIMENTAL]
 				");

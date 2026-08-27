@@ -1,0 +1,81 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Check that a local variable name is treated differently as a function argument and a global variable
+ * Description      : Test new user defined functions and types: side-effects, clock updates
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : TBD
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2023/03/09
+ * Last modified    : 2026/06/01
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Discrete *)
+	i, j,
+		: int;
+
+(************************************************************)
+  function test_over(i : int) : void
+(************************************************************)
+begin
+	var i : int = -1;
+	(* This is the LOCAL `i`, the argument `i` isn't modified, neither is the global variable `i` *)
+	i <- 1;
+	j <- i;
+end
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+loc l1: invariant True
+	when j <> -1 & i <> -1 do {i <- i; test_over(i)} goto l2;
+
+loc l2: True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init <- {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] <- l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+		i <- 0,
+		j <- 0,
+
+    ;
+
+    continuous =
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -13,6 +13,9 @@
  *
  ************************************************************)
 
+(** Convert an abstract model to the input syntax of IMITATOR. *)
+
+
 
 open AbstractModel
 open DiscreteExpressions

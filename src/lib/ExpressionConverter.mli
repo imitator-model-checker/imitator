@@ -12,6 +12,14 @@
  *
  ************************************************************)
 
+(** Type-checks parsed expressions and converts them to abstract-model
+    expressions.
+
+    Groups two sub-modules: a type checker that validates parsed expressions,
+    and a converter that turns the resulting typed expressions into
+    abstract-model expressions. *)
+
+
 module rec TypeChecker : sig
 
 open ParsingStructure

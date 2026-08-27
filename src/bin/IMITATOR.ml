@@ -19,6 +19,7 @@
 (* Internal modules *)
 (************************************************************)
 open Lib
+open Exporter
 open Exceptions
 open OCamlUtilities
 
@@ -42,7 +43,22 @@ TAGS USED THROUGHOUT THIS PROJECT
 - (*** WARNING ***)
 **************************************************)
 
+(* Output handling for a synthesised PTG controller. *)
+let export_ptg_controller (options : Options.imitator_options) (controller_model : AbstractModel.abstract_model) : unit =
+	(* Write controller to file *)
+	let imi_file_name = options#files_prefix ^ "-controller.imi" in
+	write_to_file imi_file_name (ModelPrinter.string_of_model controller_model);
+	print_highlighted_message Shell_result Verbose_standard ("Controller model `" ^ imi_file_name ^ "` succesfully created.");
 
+	(* Generate graphical representation of controller *)
+	if options#ptg_controller_mode == AbstractAlgorithm.Draw then begin
+		print_message Verbose_medium ("Translating generated controller model to a graphics…");
+		let translated_model = PTA2dot.string_of_model options controller_model in
+		let dot_created_file_option = Graphics.dot "pdf" (options#files_prefix ^ "-controller") translated_model in
+		match dot_created_file_option with
+		| None -> print_error "Oops…! Something went wrong with dot."
+		| Some created_file -> print_highlighted_message Shell_result Verbose_standard ("Graphical representation of controller `" ^ created_file ^ "` successfully created.")
+	end
 ;;
 
 
@@ -176,9 +192,9 @@ if not options#is_set_output_result then(
 (* Get value depending on the algorithm *)
 begin match property_option, options#imitator_mode with
 	| Some property, _ ->
-		
+
 		(* New merge options as of 3.3 *)
-		
+
 		(* Update if not yet set *)
         if not options#is_set_merge_algorithm then (
 			let merge_needed = AlgorithmOptions.merge_needed property in
@@ -195,7 +211,7 @@ begin match property_option, options#imitator_mode with
 				options#set_merge_algorithm Merge_none;
 			);
         );
-        
+
 		(* Update if not yet set AND if merge is enabled *)
         if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
             (* Print some information *)
@@ -228,14 +244,14 @@ begin match property_option, options#imitator_mode with
 
             options#set_merge_restart(false);
         );
-		
+
 
 
 	| _, State_space_computation
 	| None, _
 		->
 		(* New merge options as of 3.3 *)
-		
+
 		(* Update if not yet set *)
         if not options#is_set_merge_algorithm then (
             (* Print some information *)
@@ -243,7 +259,7 @@ begin match property_option, options#imitator_mode with
 
             options#set_merge_algorithm(Merge_none);
         );
-        
+
 		(* Update if not yet set AND if merge is enabled *)
         if options#merge_algorithm <> Merge_none && not options#is_set_merge_candidates then (
             (* Print some information *)
@@ -603,42 +619,17 @@ match options#imitator_mode with
 	(*------------------------------------------------------------*)
 	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation JaniSpec | Translation DOT ->
 
-		(*** NOTE: not super nice… ***)
-		let printer = match options#imitator_mode with
-			| Translation DOT       -> PTA2dot.string_of_model options
-			| Translation HyTech	-> PTA2HyTech.string_of_model options
-			| Translation IMI		-> ModelPrinter.string_of_model
-			| Translation JaniSpec	-> PTA2JaniSpec.string_of_model options
-			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model options
-			| Translation Uppaal	-> PTA2Uppaal.string_of_model options
-			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+		let target = match options#imitator_mode with
+			| Translation translation -> translation
+			| _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
-		(*** NOTE: not super nice… ***)
-		let suffix = match options#imitator_mode with
-			| Translation DOT       -> ".dot"
-			| Translation HyTech	-> ".hy"
-			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
-			| Translation JaniSpec	-> ".jani"
-			| Translation TikZ		-> ".tex"
-			| Translation Uppaal	-> "-uppaal.xml"
-			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
-		in
-
-		print_message Verbose_standard ("Regenerating the input model to a new model.");
-		let translated_model = printer model in
-		let target_language_file = options#files_prefix ^ suffix in
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-		);
-		(* Write *)
-		write_to_file target_language_file translated_model;
-		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
+		(* Select the exporter, render the model and write the output file.
+		   All of selection/naming/writing now lives in ExportDriver. *)
+		let _target_language_file = ExportDriver.export_and_write options model target in
 
 		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
-			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
-			)) ) None;
+		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
 
 		terminate_program()
 
@@ -1251,17 +1242,10 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric timed game: reachability condition *)
 			| Win state_predicate ->
-				let state_space_ptg = match options#ptg_notonthefly, options#depth_limit, options#ptg_picking_strategy with 
-					(* State space should be fully generated first if a depth limit has been set *)
-					| true, _, _ -> new AlgoPTG.stateSpacePTG_full model options
-					| false, Some _, AbstractAlgorithm.SingleQueue -> 
-							print_warning "Since a depth limit has been set, state space will be generated first! (not OTF)";
-							new AlgoPTG.stateSpacePTG_full model options
-					| _ -> new AlgoPTG.stateSpacePTG_OTF model options
-				in 
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate state_space_ptg in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate None (export_ptg_controller options) in myalgo
 
-
+			| WinAvoid (state_predicate_reach, state_predicate_avoid) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPTG.algoPTG model property options state_predicate_reach (Some state_predicate_avoid) (export_ptg_controller options) in myalgo
 
 			(************************************************************)
 			(* Begin distributed cartography *)

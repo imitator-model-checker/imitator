@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module aims to convert a parsed expression to a abstract typed expression. *)
+
+
 (* Parsing structure modules *)
 open ParsingStructure
 open DiscreteType
@@ -31,6 +34,9 @@ val convert_guard : variable_infos -> ParsingStructure.guard -> AbstractModel.gu
 
 (** Convert a parsed sequential code bloc to sequential code bloc for abstract model *)
 val convert_seq_code_bloc : variable_infos -> parsed_functions_table -> parsed_seq_code_bloc -> potential_clock_updates * seq_code_bloc
+
+(** Check a parsed function definition for well-formedness *)
+val check_fun_definition : variable_infos -> parsed_fun_definition -> bool
 
 (** Convert a parsed function definition to function definition for abstract model *)
 val convert_fun_definition : variable_infos -> parsed_fun_definition -> fun_definition

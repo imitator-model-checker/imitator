@@ -1,0 +1,90 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Toy model to test AF[…]
+ * Description      : Toy model to test AF[…]; no parameter in the model but may include parameter in the property. Potentially negative parameter.
+ * Correctness      :
+ * Scalable         : no
+ * Generated        : no
+ * Categories       :
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2024/03/07
+ * Last modified    : 2024/03/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4-beta
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, global_time,
+		: clock;
+
+(* Parameters *)
+	p : parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant x <= 10
+	when x = 2 sync a goto lF2;
+	when x = 4 sync a goto l2;
+	when x = 10 sync a goto lF1;
+
+loc l2: invariant x <= 10
+	when x = 10 sync a goto lF1;
+
+accepting loc lF1: invariant True
+
+accepting urgent loc lF2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+		& global_time = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+			(*** NOTE: no constraint on p => can be negative ***)
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

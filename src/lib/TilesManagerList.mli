@@ -12,6 +12,9 @@
  *
  ************************************************************)
 
+(** Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a list of Result.good_or_bad_constraint. *)
+
+
 
 (************************************************************)
 (* Modules *)

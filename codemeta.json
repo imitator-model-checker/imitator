@@ -1,0 +1,270 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "identifier": "IMITATOR",
+  "name": "IMITATOR",
+  "description": "IMITATOR is an open source software tool to perform automated parameter synthesis for concurrent timed systems. It relies on the formalism of networks of parametric timed automata, augmented with rational-valued global variables, stopwatches, multi-rate clocks, and some other useful features. IMITATOR addresses several variants of parameter synthesis problems for real-time systems, including reachability, safety, unavoidability, minimal-time reachability, deadlock-freeness checking, cycle-existence synthesis, the inverse method, behavioral cartography, and parametric reachability preservation.",
+  "version": "3.4",
+  "softwareVersion": "3.4",
+  "dateCreated": "2010-05-17",
+  "datePublished": "2026-06-24",
+  "dateModified": "2026-06-26",
+  "license": "https://spdx.org/licenses/GPL-3.0-only",
+  "url": "https://www.imitator.fr",
+  "sameAs": "https://www.imitator.fr",
+  "codeRepository": "https://github.com/imitator-model-checker/imitator",
+  "issueTracker": "https://github.com/imitator-model-checker/imitator/issues",
+  "readme": "https://github.com/imitator-model-checker/imitator/blob/master/README.md",
+  "programmingLanguage": [
+    {
+      "@type": "ComputerLanguage",
+      "name": "OCaml"
+    }
+  ],
+  "runtimePlatform": "OCaml >= 4.08",
+  "operatingSystem": [
+    "Linux",
+    "macOS"
+  ],
+  "applicationCategory": "Formal verification",
+  "developmentStatus": "active",
+  "keywords": [
+    "formal verification",
+    "model checking",
+    "software verification",
+    "parameter synthesis",
+    "parametric timed automata",
+    "real-time systems"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Étienne",
+      "familyName": "André",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Université Sorbonne Paris Nord, LIPN, CNRS, France"
+      }
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "givenName": "Jaime",
+      "familyName": "Arias",
+      "email": "arias@lipn.univ-paris13.fr",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Université Sorbonne Paris Nord, LIPN, CNRS, France"
+      }
+    },
+    {
+      "@type": "Person",
+      "name": "Benjamin L."
+    },
+    {
+      "@type": "Person",
+      "givenName": "Laure",
+      "familyName": "Petrucci",
+      "email": "laure.petrucci@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Ulrich",
+      "familyName": "Kühne",
+      "email": "kuehne@lsv.ens-cachan.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Hoang Gia",
+      "familyName": "Nguyen",
+      "email": "hoangia90@yahoo.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Mikael",
+      "familyName": "Bisgaard Dahlsen-Jensen",
+      "email": "mikaelbdj@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Tomaz",
+      "familyName": "Gomes Mascarenhas",
+      "email": "tomgm1502@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Dylan",
+      "familyName": "Marinho",
+      "email": "dylan.marinho@loria.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Romain",
+      "familyName": "Soulat",
+      "email": "romain.soulat@thalesgroup.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Jaco",
+      "familyName": "van de Pol",
+      "email": "jaco@cs.au.dk"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Johan",
+      "familyName": "Arcile",
+      "email": "johan.arcile@loria.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Vincent",
+      "familyName": "Bloemen",
+      "email": "v.bloemen@utwente.nl"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Adrien",
+      "familyName": "Lacroix",
+      "email": "lacroixadrien34@hotmail.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Sami",
+      "familyName": "Evangelista",
+      "email": "Sami.Evangelista@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Camille",
+      "familyName": "Coti",
+      "email": "camille.coti@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Daphne",
+      "familyName": "Dussaud",
+      "email": "andre@lsv.ens-cachan.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Alban",
+      "familyName": "Linard",
+      "email": "alban@linard.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Corentin",
+      "familyName": "Guillevic",
+      "email": "blood.kings@laposte.net"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Youcheng",
+      "familyName": "Sun",
+      "email": "techieyoucheng@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Yousra",
+      "familyName": "Lembachar",
+      "email": "yousra.lembachar@lipn.univ-paris13.fr"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Stephan",
+      "familyName": "Rosse",
+      "email": "stephan.rosse@gmail.com"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Sarah",
+      "familyName": "Hadbi",
+      "email": "sarahhadbi@gmail.com"
+    }
+  ],
+  "maintainer": [
+    {
+      "@type": "Person",
+      "givenName": "Étienne",
+      "familyName": "André"
+    }
+  ],
+  "softwareRequirements": [
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "ocaml",
+      "name": "OCaml"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "opam",
+      "name": "opam"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "menhir",
+      "name": "menhir"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "mlgmp",
+      "name": "mlgmp"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "ppl",
+      "name": "ppl"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "extlib",
+      "name": "extlib"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "fileutils",
+      "name": "fileutils"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "dune",
+      "name": "dune"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "graphviz",
+      "name": "Graphviz"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "plotutils",
+      "name": "GNU plotutils"
+    }
+  ],
+  "referencePublication": {
+    "@type": "ScholarlyArticle",
+    "name": "IMITATOR 3: Synthesis of Timing Parameters Beyond Decidability",
+    "author": [
+      {
+        "@type": "Person",
+        "givenName": "Étienne",
+        "familyName": "André"
+      }
+    ],
+    "datePublished": "2021",
+    "isPartOf": {
+      "@type": "PublicationVolume",
+      "name": "Proceedings of the 33rd International Conference on Computer Aided Verification (CAV 2021)",
+      "volumeNumber": "12759",
+      "isPartOf": {
+        "@type": "Periodical",
+        "name": "Lecture Notes in Computer Science"
+      }
+    },
+    "pagination": "552-565",
+    "identifier": "10.1007/978-3-030-81685-8_26",
+    "@id": "https://doi.org/10.1007/978-3-030-81685-8_26",
+    "url": "https://doi.org/10.1007/978-3-030-81685-8_26"
+  }
+}

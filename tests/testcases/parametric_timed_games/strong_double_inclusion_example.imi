@@ -1,0 +1,66 @@
+(* Mikael & Baptiste 
+
+	Should return False but returns True with including check (or double inclusion check) without handling it properly
+	Should return False in both cases if handling it properly.
+  *)
+
+uncontrollable actions: u1, u2;
+
+var x,y: clock;
+
+automaton ptg
+
+actions: u1, u2, c1, c2, ctemp1, ctemp2, c3;
+
+loc l0: invariant True
+    when x>=2 do {} sync c1 goto lp;
+    when y>=2 do {} sync c1 goto lp;
+    when True do {} sync u1 goto temp1;
+
+loc lp: invariant True
+    when x>=2 do {} sync c2 goto win;
+    when x<2 && x>=1 do {} sync u2 goto lose;
+
+loc temp1: invariant x <= 10
+    when True do {} sync u1 goto temp2;
+
+
+loc temp2: invariant x <= 10
+    when True do {} sync u1 goto lp;
+
+loc lose: invariant True
+    when True do {} goto lose;
+
+
+accepting loc win: invariant True
+    when True do {} goto win;
+
+end
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[ptg] := l0,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+
+    continuous =        
+		(*------------------------------------------------------------*)
+		(* Initial clock constraints *)
+		(*------------------------------------------------------------*)
+		& x = 0
+
+		(*------------------------------------------------------------*)
+		(* Parameter constraints *)
+		(*------------------------------------------------------------*)
+	;
+}
+
+
+end

@@ -1,0 +1,37 @@
+uncontrollable actions: u1;
+
+automaton ptg
+
+actions: u1, c1, c2, c3;
+
+loc l1: invariant True
+    when True sync u1 goto l2;
+    when True sync c1 goto l3;
+
+accepting loc l2: invariant True
+
+loc l3: invariant True 
+    when True sync c2 goto l4;
+
+loc l4: invariant True
+    when True sync c3 goto l2;
+
+
+end
+init := {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[ptg] := l1,
+
+		(*------------------------------------------------------------*)
+		(* Initial discrete variables assignments *)
+		(*------------------------------------------------------------*)
+
+    ;
+}
+
+
+end

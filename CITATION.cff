@@ -1,0 +1,53 @@
+cff-version: 1.2.0
+message: >-
+  If you use IMITATOR, please cite it using the metadata from this file,
+  and in particular the preferred citation below.
+title: IMITATOR
+abstract: >-
+  IMITATOR is an open source software tool to perform automated parameter
+  synthesis for concurrent timed systems. It relies on the formalism of
+  networks of parametric timed automata, augmented with rational-valued
+  global variables, stopwatches, multi-rate clocks, and other features.
+type: software
+authors:
+  - given-names: Étienne
+    family-names: André
+version: "3.4"
+license: GPL-3.0-only
+repository-code: "https://github.com/imitator-model-checker/imitator"
+url: "https://www.imitator.fr"
+keywords:
+  - formal verification
+  - model checking
+  - software verification
+  - parameter synthesis
+  - parametric timed automata
+  - real-time systems
+  - TCTL
+preferred-citation:
+  type: conference-paper
+  title: "IMITATOR 3: Synthesis of Timing Parameters Beyond Decidability"
+  authors:
+    - given-names: Étienne
+      family-names: André
+  editors:
+    - given-names: Alexandra
+      family-names: Silva
+    - given-names: "K. Rustan M."
+      family-names: Leino
+  collection-title: "Lecture Notes in Computer Science"
+  collection-type: series
+  volume: 12759
+  volume-title: >-
+    Proceedings of the 33rd International Conference on Computer Aided Verification (CAV 2021)
+  publisher:
+    name: Springer
+  year: 2021
+  start: 552
+  end: 565
+  doi: 10.1007/978-3-030-81685-8_26
+  url: "https://doi.org/10.1007/978-3-030-81685-8_26"
+  conference:
+    name: "33rd International Conference on Computer Aided Verification (CAV 2021)"
+    date-start: "2021-07-20"
+    date-end: "2021-07-23"

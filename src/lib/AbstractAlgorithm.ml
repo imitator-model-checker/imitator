@@ -128,6 +128,11 @@ type merge_EFsynthminpq_heuristic =
 	(* Merge_always: merge after every 100th processed state *)
 	| Merge_EFsynthminpq_iter100
 
+(** Level of detail in graphical translations **)
+type graphics_detail = 
+	| Full
+	| Minimal
+
 (** Controller mode for AlgoPTG **)
 type ptg_controller_mode = 
 	| No_Generation
@@ -140,6 +145,22 @@ type waitingListStrategy =
 	| SingleQueue
 	| Frontier of {init: int; step:  int; update: int}
 
+type ptg_abstraction =
+	| Location
+	| Convex_Hull
+	| No_Abstraction
+
+type hull_method =
+	| Hull_convex_only       (* exact convex hull; optional simplify *)
+	| Hull_box_only          (* box hull of both inputs directly; no convex hull step *)
+	| Hull_octagonal_only    (* octagonal hull of both inputs directly; no convex hull step *)
+	| Hull_box_hybrid        (* convex hull first; box-approximate if above threshold *)
+	| Hull_octagonal_hybrid  (* convex hull first; octagonal-approximate if above threshold *)
+
+type hull_simplify_mode =
+	| Hull_simplify_none         (* no simplification step *)
+	| Hull_simplify_constraints  (* rebuild from minimized H-rep (cheap) *)
+	| Hull_simplify_generators   (* rebuild from minimized V-rep (more aggressive, more expensive) *)
 
 (** Undefined value for n1/n2 merge heuristics *)
 let undefined_merge_n = -1
@@ -244,12 +265,6 @@ type state_comparison_operator =
 	| Including_check
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
-
-	(* STRONGER VERSION OF DOUBLE INCLUSION by Mikael *)
-	(* Does not add the new state if it is included in another state, or if other states are included into the current state,
-	   in which case the new state replaces the first old one in the state space as well as removing the rest of the included states.
-	   Might reduce the state space size (side effect) *)
-	| Strong_Double_Inclusion_check
 
 
 (************************************************************)
@@ -357,8 +372,6 @@ let string_of_state_comparison_operator (state_comparison_operator : state_compa
 	| Including_check -> "including check"
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check -> "double inclusion check"
-
-	| Strong_Double_Inclusion_check -> "strong double inclusion check"
 
 let string_of_merge_candidates (merge_candidates : merge_candidates) : string = match merge_candidates with
 	| Merge_candidates_ordered	-> "ordered"

@@ -995,7 +995,21 @@ let check_type_assignment variable_infos variable_name variable_type expr =
     (* Check expression / variable type consistency *)
     let is_consistent = DiscreteType.is_discrete_type_compatibles variable_type expr_var_type_discrete in
 
-    (* Not consistent ? raise a type error with appropriate message *)
+    print_message Verbose_total (
+        "annot - check type assignment - "
+        ^ variable_name
+        ^ " : "
+        ^ DiscreteType.string_of_var_type_discrete variable_type
+        ^ " := "
+        ^ ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr
+        ^ " with declared expression type "
+        ^ DiscreteType.string_of_var_type_discrete expr_var_type_discrete
+        ^ " : is consistent? "
+        ^ string_of_bool is_consistent
+    );
+
+
+    (* Not consistent? raise a type error with appropriate message *)
     if not (is_consistent) then (
         raise (TypeError (ill_typed_variable_message variable_name (DiscreteType.string_of_var_type_discrete variable_type) (ParsingStructureUtilities.string_of_parsed_boolean_expression variable_infos expr) expr_var_type_discrete))
     )
@@ -1046,6 +1060,10 @@ let check_constant_expression variable_infos (name, expr, var_type) =
         ^ name
         ^ " := "
         ^ string_of_typed_boolean_expression variable_infos typed_expr
+        ^ " with type "
+        ^ DiscreteType.string_of_var_type_discrete discrete_type
+        ^ " declared as "
+        ^ DiscreteType.string_of_var_type var_type
     );
     typed_expr
 

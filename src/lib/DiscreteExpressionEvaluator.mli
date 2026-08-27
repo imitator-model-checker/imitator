@@ -11,6 +11,9 @@
  *
  ************************************************************)
 
+(** This module allows to evaluate guards, invariants, user defined functions and update code blocs. *)
+
+
 (* Utils modules *)
 
 (* Abstract model modules *)
@@ -31,7 +34,7 @@ type clock_updates_table = (clock_index, pxd_linear_term) Hashtbl.t
 (* Queue of ordered clock updates *)
 type clock_updates_history = (clock_index * pxd_linear_term) Queue.t
 
-(* Record that contains context (current location, current local variables) for evaluating an expression *)
+(** Record that contains context (current location, current local variables) for evaluating an expression *)
 type eval_context = {
     (* Valuation of global variables at the context (current location) *)
     discrete_valuation : discrete_valuation;
@@ -120,4 +123,3 @@ val eval_stack_top          : string -> AbstractValue.abstract_value list -> Abs
 val eval_stack_clear        : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_stack_is_empty     : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
 val eval_stack_length       : string -> AbstractValue.abstract_value list -> AbstractValue.abstract_value
-

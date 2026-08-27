@@ -1,0 +1,10 @@
+(library
+ (name data_structures)
+ (libraries utils)
+ (flags
+  (:standard -open Utils)))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
