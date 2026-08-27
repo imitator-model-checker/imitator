@@ -40,3 +40,9 @@ val parse_model_from_file : string -> ParsingStructure.unexpanded_parsed_model
     @raise InputFileNotFound if the file cannot be opened
     @raise ParsingFailure in case of lexing/parsing error *)
 val parse_property_from_file : string -> ParsingStructure.unexpanded_parsed_property
+
+
+(** Parse an update and return its (unexpanded) parsing structure.
+    @raise InputFileNotFound if the file cannot be opened
+    @raise ParsingFailure in case of lexing/parsing error *)
+val parse_update_from_file : string -> ParsingStructure.unexpanded_parsed_location list

@@ -25,8 +25,8 @@ val compile_property: Options.imitator_options -> AbstractModel.useful_parsing_m
 (** Parse the model, and property file if needed, and convert them into an abstract representation *)
 val compile_model_and_property: Options.imitator_options -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)
 
-val parsing_structure_of_ontheflycommand: Options.imitator_options -> ParsingStructure.on_the_fly_update
-
+(* val parsing_structure_of_ontheflycommand: Options.imitator_options -> ParsingStructure.on_the_fly_update *)
+ val parsing_structure_of_ontheflycommand: Options.imitator_options -> ParsingStructure.unexpanded_parsed_location list
 
 (*
 (** Parse the pi0 file and convert it into an abstract representation *)

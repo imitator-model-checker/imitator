@@ -175,3 +175,13 @@ let parse_model_from_file (file_name : string) : ParsingStructure.unexpanded_par
 (** Parse a property file and return its (unexpanded) parsing structure *)
 let parse_property_from_file (file_name : string) : ParsingStructure.unexpanded_parsed_property =
 	parser_lexer_from_file PropertyParser.main PropertyLexer.token file_name
+
+let parse_update_from_file (file_name : string) :
+	ParsingStructure.unexpanded_parsed_location list =
+	let channel = open_in file_name in
+	Fun.protect
+			~finally:(fun () -> close_in_noerr channel)
+			(fun () ->
+					let lexbuf = Lexing.from_channel channel in
+					ModelParser.update_locations ModelLexer.token lexbuf
+			)

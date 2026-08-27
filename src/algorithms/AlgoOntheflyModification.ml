@@ -56,10 +56,10 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run =
 			let parsed_update = ParsingUtility.parsing_structure_of_ontheflycommand options in
-				match parsed_update with
+				(* match parsed_update with
 				| Parsed_new_location location ->
 					print_message Verbose_standard
-						("New location: " ^ location);
+						("New location: " ^ location); *)
 	print_message Verbose_standard
         "Successfully parsed on-the-fly update.";
 

@@ -162,9 +162,10 @@ let check_absence_of_division_by_0_or_abort (n1 : NumConst.t) (n2 : NumConst.t) 
 %left OP_PLUS OP_MINUS     /* lowest precedence */
 %left OP_MUL OP_DIV        /* highest precedence */
 
+/* the entry point */
+%start <ParsingStructure.unexpanded_parsed_location list> update_locations
 
-%start main             /* the entry point */
-%type <ParsingStructure.unexpanded_parsed_model> main
+%start <ParsingStructure.unexpanded_parsed_model> main             
 %%
 
 /************************************************************/
@@ -606,6 +607,9 @@ name_or_array_access_nonempty_list:
 ;
 
 /************************************************************/
+update_locations:
+   locations EOF { $1 }
+;
 
 locations:
 	location locations { $1 :: $2}

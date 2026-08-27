@@ -78,17 +78,17 @@ let filenotfound_error_of parsed_structure_type = match parsed_structure_type wi
 (************************************************************)
 
 (* Call a parsing function of the `parsing` library, and abort properly (using the options) in case of error *)
-let parse_or_abort (model_or_property : model_or_property) (options : Options.imitator_options) (parsing_function : string -> 'parsing_structure) (file_name : string) : 'parsing_structure =
+let parse_or_abort (parsed_structure_type : parsed_structure_type) (options : Options.imitator_options) (parsing_function : string -> 'parsing_structure) (file_name : string) : 'parsing_structure =
 	try(
 		parsing_function file_name
 	) with
 		| ParsingDriver.ParsingFailure failure_message ->
 			(* Abort properly *)
-			print_error_and_abort options failure_message (parsing_error_of model_or_property failure_message)
+			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
 		| ParsingDriver.InputFileNotFound failure_message ->
 			(* Abort properly *)
-			print_error_and_abort options failure_message (filenotfound_error_of model_or_property)
+			print_error_and_abort options failure_message (filenotfound_error_of parsed_structure_type)
 
 
 (************************************************************)
@@ -211,11 +211,27 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
 
+(************************************************************)
+(* Parse an on-the-fly modification of the model *)
+(************************************************************)
+
+let parse_on_the_fly_update
+    (options : Options.imitator_options) :
+    ParsingStructure.unexpanded_parsed_location list =
+  parse_or_abort
+    OnTheFlyModification
+    options
+    (fun file_name ->
+      let lexbuf = Lexing.from_channel (open_in file_name) in
+      ModelParser.update_locations ModelLexer.token lexbuf
+    )
+    options#update_file_name
 
 (************************************************************)
 (* Compile an on-the-fly modification of the model *)
 (************************************************************)
-let parsing_structure_of_ontheflycommand (options : Options.imitator_options) =
+let parsing_structure_of_ontheflycommand (options : Options.imitator_options) :
+    ParsingStructure.unexpanded_parsed_location list =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing the model *)
@@ -235,15 +251,12 @@ let parsing_structure_of_ontheflycommand (options : Options.imitator_options) =
         ("Parsing on-the-fly update file "
          ^ options#update_file_name ^ "…");
 
-    let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update =
-        parser_lexer_from_file
-            OnTheFlyModification
-            options
-            ModelUpdateParser.main
-            ModelUpdateLexer.token
-            options#update_file_name
-    in
+    parse_or_abort
+        OnTheFlyModification
+        options
+        ParsingDriver.parse_update_from_file
+        options#update_file_name
 
-	parsed_ontheflyupdate
+
 
 

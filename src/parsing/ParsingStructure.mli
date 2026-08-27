@@ -405,8 +405,8 @@ type unexpanded_parsed_model = {
 (****************************************************************)
 (* On-the-fly modification of the model *)
 (****************************************************************)
-type on_the_fly_update =
-	| Parsed_new_location of location_name
+(* type on_the_fly_update =
+	| Parsed_new_location of location_name *)
 
 
 (****************************************************************)
