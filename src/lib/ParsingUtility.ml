@@ -197,17 +197,43 @@ let parser_lexer_from_file (parsed_structure_type : parsed_structure_type) (opti
 	parser_lexer_gen parsed_structure_type options the_parser the_lexer lexbuf string_of_input file_name
 
 
-(*(* Parse a string and return the abstract structure *)
-let parser_lexer_from_string the_parser the_lexer the_string =
+(*Parse a string and return the abstract structure *)
+(* todo: parse with reduced lexer/parser and return a partial abstract structure (not the full thing) *)
+let parser_lexer_from_string
+    (parsed_structure_type : parsed_structure_type)
+    (options : Options.imitator_options)
+    the_parser
+    the_lexer
+    the_string =
+
 	(* Lexing *)
-	let lexbuf = try (Lexing.from_string the_string) with
-		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1)
-(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1) *)
+	let lexbuf = try
+		Lexing.from_string the_string
+	with
+		| Failure f ->
+			let failure_message =
+				"Lexing error: " ^ f ^ "\nThe string was:\n" ^ the_string
+			in
+			print_error_and_abort
+				options
+				failure_message
+				(parsing_error_of parsed_structure_type failure_message)
 	in
-	(* Function to convert a in_channel to a string (in case of parsing error) *)
-	let string_of_input () = the_string in
-	(* Generic function *)
-	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
+
+	(* Function to retrieve the input as a string in case of parsing error *)
+	let string_of_input () =
+		the_string
+	in
+
+	(* Generic parsing function *)
+	parser_lexer_gen
+		parsed_structure_type
+		options
+		the_parser
+		the_lexer
+		lexbuf
+		string_of_input
+		"<string>"
 
 
 
