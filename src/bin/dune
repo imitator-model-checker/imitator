@@ -14,6 +14,8 @@
   (:include link_flags.%{system})
   (:standard
    -cclib
+   -L%{env:OPAM_SWITCH_PREFIX=}/lib/inotify
+   -cclib
    -lppl
    -cclib
    -lppl_ocaml

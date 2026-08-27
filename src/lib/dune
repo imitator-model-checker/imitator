@@ -1,6 +1,6 @@
 (library
  (name lib)
- (libraries data_structures utils entities parsing gmp ppl extlib fileutils str unix threads)
+ (libraries data_structures utils entities parsing gmp ppl extlib fileutils str unix threads inotify)
  (flags
   (:standard -open Utils -open Entities -open Parsing -open Data_structures))
  (modules_without_implementation result))

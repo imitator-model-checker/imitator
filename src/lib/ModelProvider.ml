@@ -11,7 +11,7 @@
  *
  ************************************************************)
 type update_event =
-  | Updated
+  | Updated of string
   | Finished
 
 
@@ -20,21 +20,207 @@ class model_provider
     (filename : string) =
   object (self)
 
-    val mutable last_modified =
-      (Unix.stat filename).Unix.st_mtime
+    (* val mutable last_modified =
+      (Unix.stat filename).Unix.st_mtime *)
 
     val mutable dynamic_location_counter = 0
 
+    (* Number of bytes already consumed from the file. *)
+    val mutable file_position =
+      let ic = open_in_bin filename in
+      let position = Int64.of_int (in_channel_length ic) in
+      close_in ic;
+      position
+
+    (* inotify watcher *)
+    val inotify_fd =
+      Inotify.create ()
+
+    initializer
+      ignore (
+        Inotify.add_watch
+          inotify_fd
+          filename
+          [Inotify.S_Modify; Inotify.S_Close_write]
+      )
+    (* val mutable watch = None
+
+    initializer
+      watch <- Some (
+        Inotify.add_watch
+          inotify_fd
+          filename
+          [Inotify.S_Modify; Inotify.S_Close_write]
+      ) *)
 
     method get_model =
       model
+        
+    (* method private read_key () =
+      let old_settings = Unix.tcgetattr Unix.stdin in
+
+      let new_settings = {
+        old_settings with
+        Unix.c_icanon = false;
+        Unix.c_echo = false;
+        Unix.c_vmin = 1;
+        Unix.c_vtime = 0;
+      } in
+
+      Unix.tcsetattr Unix.stdin Unix.TCSANOW new_settings;
+
+      let c = input_char stdin in
+
+      Unix.tcsetattr Unix.stdin Unix.TCSANOW old_settings;
+
+      c *)
+    method private read_key () =
+      input_char stdin
+
+    method private read_new_content =
+
+      let ic = open_in_bin filename in
+
+      try
+
+        seek_in ic (Int64.to_int file_position);
+
+        let file_length =
+          Int64.of_int (in_channel_length ic)
+        in
+
+        if file_length <= file_position then begin
+          close_in ic;
+          ""
+        end
+
+        else begin
+
+          let length =
+            Int64.to_int
+              (Int64.sub file_length file_position)
+          in
+
+          let content =
+            really_input_string ic length
+          in
+
+          file_position <- file_length;
+
+          close_in ic;
+
+          content
+        end
+
+      with e ->
+        close_in_noerr ic;
+        raise e
+ 
+    (* method private file_changed =
+
+      let events =
+        Inotify.read inotify_fd
+      in
+
+      List.exists
+        (fun (_, kinds, _, _) ->
+          List.mem Inotify.Modify kinds
+          || List.mem Inotify.Close_write kinds)
+        events *)
 
 
+    method wait_for_update =
+      let old_settings =
+        Unix.tcgetattr Unix.stdin
+      in
+
+      let new_settings = {
+        old_settings with
+        Unix.c_icanon = false;
+        Unix.c_echo = false;
+        Unix.c_vmin = 1;
+        Unix.c_vtime = 0;
+      } in
+
+      Unix.tcsetattr
+        Unix.stdin
+        Unix.TCSANOW
+        new_settings;
+
+      Fun.protect
+        ~finally:(fun () ->
+          Unix.tcsetattr
+            Unix.stdin
+            Unix.TCSANOW
+            old_settings)
+        (fun () ->
+
+      let rec loop () =
+
+        let ready, _, _ =
+          Unix.select
+            [Unix.stdin; inotify_fd]
+            []
+            []
+            (-1.)
+        in
+
+        if List.mem inotify_fd ready then begin
+          (* Consume the inotify events. *)
+          let _events =
+            Inotify.read inotify_fd
+          in
+
+          List.iter
+            (fun event ->
+              Printf.printf
+                "INOTIFY EVENT: %s\n%!"
+                (Inotify.string_of_event event))
+            _events;
+
+          let content =
+            self#read_new_content
+          in
+
+          Printf.printf
+            "CONTENT LENGTH: %d\n%!"
+            (String.length content);
+
+          if content <> "" then (
+            Printf.printf "NEW CONTENT:\n%s\n%!" content;
+            Updated content
+          )
+          else 
+            loop ()
+ 
+        end
+
+        else if List.mem Unix.stdin ready then begin
+
+          match self#read_key () with
+
+          | 'q' ->
+              Finished
+
+          | _ ->
+              loop ()
+
+        end
+
+        else
+          loop ()
+
+      in
+
+      loop ()
+        )
+
+    (* below are just some quick test *)
     (* ---------------------------------------------------------- *)
     (* Test: add a location whenever the file changes            *)
     (* ---------------------------------------------------------- *)
 
-    method private add_test_location =
+    (* method private add_test_location =
       let location_name =
         Printf.sprintf
           "dynamic_location_%d"
@@ -291,78 +477,7 @@ class model_provider
       self#test_closure;
 
       Printf.printf
-        "All dynamic location tests passed.\n%!";
-        
-    method private read_key () =
-      let old_settings = Unix.tcgetattr Unix.stdin in
-
-      let new_settings = {
-        old_settings with
-        Unix.c_icanon = false;
-        Unix.c_echo = false;
-        Unix.c_vmin = 1;
-        Unix.c_vtime = 0;
-      } in
-
-      Unix.tcsetattr Unix.stdin Unix.TCSANOW new_settings;
-
-      let c = input_char stdin in
-
-      Unix.tcsetattr Unix.stdin Unix.TCSANOW old_settings;
-
-      c
-
-
-    method private file_changed =
-      let current_modified =
-        (Unix.stat filename).Unix.st_mtime
-      in
-
-      if current_modified > last_modified then begin
-        last_modified <- current_modified;
-        true
-      end
-      else
-        false
-
-
-    method wait_for_update =
-
-      let rec loop () =
-
-        if self#file_changed then begin
-
-          (* Temporary test *)
-          (* self#add_test_location; *)
-          self#run_location_tests;
-
-          Updated
-        end
-
-        else begin
-
-          let (ready, _, _) =
-            Unix.select [Unix.stdin] [] [] 0.2
-          in
-
-          match ready with
-          | [] ->
-              loop ()
-
-          | _ ->
-              match self#read_key () with
-
-              | 'q' ->
-                  Finished
-
-              | _ ->
-                  loop ()
-        end
-
-      in
-
-      loop ()
-
+        "All dynamic location tests passed.\n%!"; *)
   end
 ;;
 
