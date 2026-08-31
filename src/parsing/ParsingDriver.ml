@@ -20,8 +20,43 @@
 open Exceptions
 open ImitatorUtilities
 
-let set_force_included_file_terminator enabled = ModelLexer.set_force_included_file_terminator enabled
+(* let force_included_file_terminator = ref false
 
+let set_force_included_file_terminator enabled =
+	force_included_file_terminator := enabled
+
+(* redundant again ?? delete all of these 2 methods*)
+let file_needs_terminal_end file_name =
+	if not !force_included_file_terminator then
+		false
+	else
+		try
+			let ic = open_in file_name in
+			let file_contents = really_input_string ic (in_channel_length ic) in
+			close_in ic;
+			let trimmed = String.trim file_contents in
+			if trimmed = "" then
+				true
+			else
+				not (Str.string_match (Str.regexp ".*\\bend\\s*$") trimmed 0)
+		with _ ->
+			false
+
+let model_token_stream_adapter token_fn file_name =
+	let synthetic_end_pending = ref false in
+	fun lexbuf ->
+		if !synthetic_end_pending then (
+			synthetic_end_pending := false;
+			ModelParser.EOF
+		) else
+			match token_fn lexbuf with
+			| ModelParser.EOF when file_needs_terminal_end file_name ->
+				if !force_included_file_terminator then
+					print_message Verbose_low ("extra end is added");
+				synthetic_end_pending := true;
+				ModelParser.CT_END
+			| token ->
+				token *)
 
 (************************************************************)
 (* Exceptions *)
@@ -56,6 +91,11 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 
 		let parsing_structure = the_parser the_lexer lexbuf in
 		print_message Verbose_total ("Parsing structure created");
+
+		(* let debug_string_of_value v =
+			Marshal.to_string v [] in
+		print_message Verbose_total (debug_string_of_value parsing_structure); *)
+
 		parsing_structure
 	) with
 		| ParsingError (symbol_start, symbol_end) ->
@@ -172,7 +212,13 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 
 (** Parse a model file and return its (unexpanded) parsing structure *)
 let parse_model_from_file (file_name : string) : ParsingStructure.unexpanded_parsed_model =
-	parser_lexer_from_file ModelParser.main ModelLexer.token file_name
+	(* let lexer_output =
+		if !force_included_file_terminator then
+			model_token_stream_adapter ModelLexer.token file_name
+		else
+			ModelLexer.token
+	in *)
+	parser_lexer_from_file ModelParser.main ModelLexer.token  file_name
 
 (** Parse a property file and return its (unexpanded) parsing structure *)
 let parse_property_from_file (file_name : string) : ParsingStructure.unexpanded_parsed_property =

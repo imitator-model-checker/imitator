@@ -84,11 +84,11 @@ let parse_or_abort (parsed_structure_type : parsed_structure_type) (options : Op
 		| AbstractAlgorithm.Temp_testonthefly -> true
 		| _ -> false
 	in
-	ParsingDriver.set_force_included_file_terminator force_included_file_terminator;
+	ModelLexer.set_force_included_file_terminator force_included_file_terminator;
 	Fun.protect
-		~finally:(fun () -> ParsingDriver.set_force_included_file_terminator false)
+		~finally:(fun () -> ModelLexer.set_force_included_file_terminator false)
 		(fun () ->
-			try(
+			try (
 				parsing_function file_name
 			) with
 				| ParsingDriver.ParsingFailure failure_message ->
@@ -99,6 +99,7 @@ let parse_or_abort (parsed_structure_type : parsed_structure_type) (options : Op
 					(* Abort properly *)
 					print_error_and_abort options failure_message (filenotfound_error_of parsed_structure_type)
 		)
+
 
 
 (************************************************************)

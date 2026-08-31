@@ -15,65 +15,48 @@
 {
 open Lexing
 open Exceptions
-(* open ImitatorUtilities *)
+open ImitatorUtilities
 open ModelParser
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
 
+let include_depth = ref 0;;
+
 let line=ref 1;;
 
-(* The special EOF behavior is enabled only when both conditions are true:
-   1) the caller selected Temp_testonthefly; and
-   2) the included file does not end with a trailing `end` token.
-   The parser library cannot depend on the lib layer, so the lib sets the mode
-   flag before parsing; the file check is done here to avoid changing normal
-   parsing semantics. *)
-let temp_testonthefly_mode = ref false;;
-let include_terminator_needed = ref false;;
+let force_included_file_terminator = ref false
 
 let set_force_included_file_terminator enabled =
-    temp_testonthefly_mode := enabled;
-    include_terminator_needed := false;
-;;
+	force_included_file_terminator := enabled
 
-let include_needs_terminator (absolute_filename : string) : bool =
-    if not !temp_testonthefly_mode then
-        false
-    else
-        try
-            let ic = open_in absolute_filename in
-            let file_contents =
-                really_input_string ic (in_channel_length ic)
-            in
-            close_in ic;
+let file_needs_terminal_end file_name =
+	try
+		let ic = open_in file_name in
+		let file_contents = really_input_string ic (in_channel_length ic) in
+		close_in ic;
+		let trimmed = String.trim file_contents in
+		if trimmed = "" then
+			true
+		else
+			not (Str.string_match (Str.regexp ".*\\bend\\s*$") trimmed 0)
+	with _ ->
+		false
 
-            let trimmed = String.trim file_contents in
-
-            if trimmed = "" then
-                true
-            else
-                not (
-                    Str.string_match
-                        (Str.regexp ".*\\bend\\s*$")
-                        trimmed
-                        0
-                )
-        with _ ->
-            false
-;;
-
-let eof_token_for_current_file lexbuf =
-    if not !temp_testonthefly_mode then
-        EOF
-    else
-        let absolute_filename = (lexbuf.lex_start_p).pos_fname in
-        if include_needs_terminator absolute_filename then (
-            include_terminator_needed := false;
-            CT_END
-        ) else
-            EOF
-;;
+let with_missing_end_adapter token_fn file_name =
+	let synthetic_end_pending = ref false in
+	fun lexbuf ->
+		if !synthetic_end_pending then (
+			synthetic_end_pending := false;
+			EOF
+		) else
+			match token_fn lexbuf with
+			| EOF when file_needs_terminal_end file_name && !force_included_file_terminator  && !include_depth > 0
+			->  print_message Verbose_low ("extra end is added");
+				synthetic_end_pending := true;
+				CT_END
+			| token ->
+				token
 
 }
 
@@ -86,7 +69,7 @@ rule token = parse
 
 	(* C style include *)
 	| "#include \""   ( [^'"' '\n']* as file_name) '"'
-    {
+    {		incr include_depth;
 			let top_file = lexbuf.lex_start_p.pos_fname in
 			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) file_name in
 
@@ -100,31 +83,20 @@ rule token = parse
 (* 					print_error(e); *)
 					raise (IncludeFileNotFound file_name);
 			in
+			let lb = Lexing.from_channel c in
+			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
-			close_in c;
-			let lb = Lexing.from_channel (open_in absolute_filename) in
-
-			let needs_terminator =
-				include_needs_terminator absolute_filename
+			let include_token =
+				if file_needs_terminal_end absolute_filename then
+					with_missing_end_adapter token absolute_filename
+				else
+					token
 			in
-
-			include_terminator_needed := needs_terminator;
-
-			lb.Lexing.lex_curr_p <-
-				{ lb.Lexing.lex_curr_p with
-				Lexing.pos_fname = absolute_filename };
-
-			lb.Lexing.lex_start_p <-
-				{ lb.Lexing.lex_start_p with
-				Lexing.pos_fname = absolute_filename };
-
 			let p : ParsingStructure.unexpanded_parsed_model =
-				try ModelParser.main included_token lb with
+				try ModelParser.main include_token lb with
 				| Error ->
-					failwith
-						("Parsing error in included file `" ^ file_name ^ "`.")
+					failwith ("Parsing error in included file `" ^ file_name ^ "`.")
 			in
-
 			INCLUDE p
     }
 
@@ -251,20 +223,9 @@ rule token = parse
 (* 	| ".."             { DOUBLEDOT } *)
 	| ';'              { SEMICOLON }
 
-	| eof              { eof_token_for_current_file lexbuf }
+	| eof              { EOF}
 	| _ { failwith("Unexpected symbol '" ^ (Lexing.lexeme lexbuf) ^ "' at line " ^ string_of_int !line)}
 
-and included_token = parse
-	| eof {
-		if !include_terminator_needed then (
-			include_terminator_needed := false;
-			CT_END
-		) else (
-			eof_token_for_current_file lexbuf
-		)
-	}
-
-	| _ { token lexbuf }
 
 (* OCaml style comments *)
 and comment_ocaml = parse
