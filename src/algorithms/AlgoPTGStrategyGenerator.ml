@@ -112,6 +112,7 @@ type location_info = {
   invariant : invariant;
   is_accepting : bool;
   is_urgent : bool;
+  is_waiting : bool;
   location_name : location_name;
 }
 
@@ -128,6 +129,7 @@ class locationManager initial_count original_initial_global_location = object
   val mutable invariants = ref []
   val mutable accepting = ref []
   val mutable urgent = ref []
+  val mutable waiting = ref []
   val mutable location_names = ref []
   val mutable location_counter = ref initial_count
   val location_per_global_location = new locationPerGlobalLocation
@@ -138,6 +140,7 @@ class locationManager initial_count original_initial_global_location = object
       invariants := location_info.invariant::!invariants;
       accepting := location_info.is_accepting::!accepting;
       urgent := location_info.is_urgent::!urgent;
+      waiting := location_info.is_waiting::!waiting;
       location_names := location_info.location_name::!location_names;
       fresh_loc
     in
@@ -156,11 +159,13 @@ class locationManager initial_count original_initial_global_location = object
   val mutable accepting_array = ref None
   val mutable invariants_array = ref None
   val mutable urgent_array = ref None
+  val mutable waiting_array = ref None
   val mutable location_names_array = ref None
   method nb_locations = !location_counter
   method is_accepting = (fun (_ : state_index) -> cached_array_indexing_from_list accepting accepting_array)
   method invariants = (fun (_ : state_index) -> cached_array_indexing_from_list invariants invariants_array)
   method is_urgent =  (fun (_ : state_index) -> cached_array_indexing_from_list urgent urgent_array)
+  method is_waiting = (fun (_ : state_index) -> cached_array_indexing_from_list waiting waiting_array)
   method location_names =  (fun (_ : state_index) -> cached_array_indexing_from_list location_names location_names_array)
   method get_initial_location_index = match !initial_location_index with
   | Some i -> i
@@ -252,6 +257,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
       invariant = True_guard;
       is_urgent = true;
       is_accepting;
+      is_waiting = false;
       location_name;
     }
   in
@@ -411,6 +417,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
           invariant;
           is_urgent;
           is_accepting = false;
+          is_waiting = false;
           location_name = Printf.sprintf "%s_%d" (fresh_loc_name ()) i
         } in
         List.iter (fun k ->
@@ -476,6 +483,7 @@ let controller_synthesis (system_model : AbstractModel.abstract_model) (state_sp
   ~invariants: location_manager#invariants
   ~is_accepting: location_manager#is_accepting
   ~is_urgent: location_manager#is_urgent
+  ~is_waiting: location_manager#is_waiting
   ~location_names: location_manager#location_names
   ~nb_transitions: transition_manager#nb_transitions
   ~transitions: transition_manager#transitions

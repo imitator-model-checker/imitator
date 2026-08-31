@@ -60,6 +60,13 @@ type location_urgency =
 	(* Non-urgent location *)
 	| Location_nonurgent
 
+(** Location waiting *)
+type location_waiting =
+	(* Waiting location *)
+	| Location_waiting
+	(* Non-waiting location *)
+	| Location_nonwaiting
+
 (** Special non-necessary 1 flow (i.e., speed, or rate) for a clock in a location *)
 type flow = (clock_index * NumConst.t)
 
@@ -168,7 +175,11 @@ type lu_status =
 type abstract_model = {
 	(* Add a location dynamically *)
 	add_location_onthefly :
-		?transitions:(transition_index list array) -> automaton_index -> location_name -> bool ->  location_index;
+		?transitions:(transition_index list array) -> automaton_index -> location_name -> bool -> bool -> invariant -> location_index;
+	(* Update an existing location dynamically *)
+	modify_location_onthefly :
+		automaton_index -> location_name -> bool -> bool -> invariant -> ?transitions:(transition_index list array) -> unit;
+
 	(* set a location invariant dynamically *)
 	set_location_invariant_onthefly :
 	automaton_index ->
@@ -257,6 +268,8 @@ type abstract_model = {
 	is_accepting : automaton_index -> location_index -> bool;
 	(* The urgency for each location *)
 	is_urgent : automaton_index -> location_index -> bool;
+	(* The waiting status for each location *)
+	is_waiting : automaton_index -> location_index -> bool;
 
 	(* All action indexes *)
 	actions : action_index list;

@@ -2029,6 +2029,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
 	let new_urgency_array = Array.make (model.nb_automata) (Array.make 0 false) in
+
+	(* Waiting status in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	let new_waiting_array = Array.make (model.nb_automata) (Array.make 0 false) in
 	
 	(* Number of actions: add the epsilon (1 per PTA) *)
 	let new_nb_actions = model.nb_actions + model.nb_automata in
@@ -3053,6 +3056,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> urgent (bool) *)
 	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
 	let urgency_of_location_index = Array.make new_nb_locations true in
+
+	let waiting_of_location_index = Array.make new_nb_locations false in
 	
 	(* Create the structure location_index -> action_index list *)
 	let actions_per_location_array = Array.make new_nb_locations [] in
@@ -3096,6 +3101,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			
 			(* Update the acceptance: same as in the original automaton *)
 			accepting_of_location_index.(!current_location_index) <- (model.is_accepting automaton_index old_loc_index);
+
+			waiting_of_location_index.(!current_location_index) <- (model.is_waiting automaton_index old_loc_index);
 			);
 		
 		(* Add the binding location_index , location_name to the new structure *)
@@ -3130,7 +3137,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	new_urgency_array.(automaton_index) <- urgency_of_location_index;
 
 	(* 3a') Handle acceptance *)
-	new_accepting_array.(automaton_index) <- urgency_of_location_index;
+	new_accepting_array.(automaton_index) <- accepting_of_location_index;
+
+	(* 3a') Handle acceptance *)
+	new_waiting_array.(automaton_index) <- waiting_of_location_index;
 
 	(* 3b) Handle initial location *)
 	(* Update the array of new initial location *)
@@ -3343,6 +3353,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `new_urgency_function`. Additional details: `" ^ msg ^ "`"))
 	in
 	
+	let new_waiting_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_waiting_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Waiting status of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `new_waiting_function`. Additional details: `" ^ msg ^ "`"))
+	in
 
  	let new_initial_location =
 
@@ -3565,10 +3581,15 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(************************************************************)
 	let transformed_abstract_model =
 	{
-		add_location_onthefly =
-			(fun ?transitions:_ _ _ _ ->
-				raise (Failure
-					"add_location_onthefly is not supported for this model"));
+	add_location_onthefly =
+		(fun ?transitions:_ _ _ _ _ _ ->
+			raise (Failure
+				"add_location_onthefly is not supported for this model"));
+
+	modify_location_onthefly =
+		(fun _ _ _ _ _ ?transitions:_ ->
+			raise (Failure
+				"modify_location_onthefly is not supported for this model"));
 
 		set_location_invariant_onthefly =
       (fun _ _ _ ->
@@ -3662,6 +3683,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		is_accepting = new_accepting_function;
 		(* The urgency for each location *)
 		is_urgent = new_urgency_function;
+
+		is_waiting = new_waiting_function;
 		(*** TODO: all new initial locations shall be urgent! ***)
 
 		(* All action indexes *)

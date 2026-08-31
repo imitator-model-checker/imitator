@@ -79,16 +79,26 @@ let filenotfound_error_of parsed_structure_type = match parsed_structure_type wi
 
 (* Call a parsing function of the `parsing` library, and abort properly (using the options) in case of error *)
 let parse_or_abort (parsed_structure_type : parsed_structure_type) (options : Options.imitator_options) (parsing_function : string -> 'parsing_structure) (file_name : string) : 'parsing_structure =
-	try(
-		parsing_function file_name
-	) with
-		| ParsingDriver.ParsingFailure failure_message ->
-			(* Abort properly *)
-			print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
+	let force_included_file_terminator =
+		match options#imitator_mode with
+		| AbstractAlgorithm.Temp_testonthefly -> true
+		| _ -> false
+	in
+	ParsingDriver.set_force_included_file_terminator force_included_file_terminator;
+	Fun.protect
+		~finally:(fun () -> ParsingDriver.set_force_included_file_terminator false)
+		(fun () ->
+			try(
+				parsing_function file_name
+			) with
+				| ParsingDriver.ParsingFailure failure_message ->
+					(* Abort properly *)
+					print_error_and_abort options failure_message (parsing_error_of parsed_structure_type failure_message)
 
-		| ParsingDriver.InputFileNotFound failure_message ->
-			(* Abort properly *)
-			print_error_and_abort options failure_message (filenotfound_error_of parsed_structure_type)
+				| ParsingDriver.InputFileNotFound failure_message ->
+					(* Abort properly *)
+					print_error_and_abort options failure_message (filenotfound_error_of parsed_structure_type)
+		)
 
 
 (************************************************************)

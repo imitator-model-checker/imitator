@@ -20,6 +20,8 @@
 open Exceptions
 open ImitatorUtilities
 
+let set_force_included_file_terminator enabled = ModelLexer.set_force_included_file_terminator enabled
+
 
 (************************************************************)
 (* Exceptions *)

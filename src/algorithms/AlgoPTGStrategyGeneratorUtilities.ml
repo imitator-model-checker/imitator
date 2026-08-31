@@ -4,6 +4,7 @@ open Automaton
 type location_names = automaton_index -> location_index -> location_name
 type is_accepting = automaton_index -> location_index -> bool
 type is_urgent = automaton_index -> location_index -> bool
+type is_waiting = automaton_index -> location_index -> bool
 type invariants = automaton_index -> location_index -> invariant
 type actions_per_location = automaton_index -> location_index -> (action_index list)
 type transitions = automaton_index -> location_index -> action_index -> (transition_index list)
@@ -73,6 +74,8 @@ type simple_abstract_model = {
 	(* The urgency for each location *)
 	is_urgent : automaton_index -> location_index -> bool;
 
+  is_waiting : automaton_index -> location_index -> bool;
+
 	(* All action indexes *)
 	actions : action_index list;
 	(* Only controllable action indexes *)
@@ -114,10 +117,16 @@ type simple_abstract_model = {
 
 let generate_abstract_model (simple_model : simple_abstract_model) : abstract_model = 
   {
-    add_location_onthefly =
-      (fun ?transitions:_ _ _ _ ->
-        raise (Failure
-          "add_location_onthefly is not supported for this model"));
+	add_location_onthefly =
+		(fun ?transitions:_ _ _ _ _ _ ->
+			raise (Failure
+				"add_location_onthefly is not supported for this model"));
+
+  modify_location_onthefly =
+    (fun _ _ _ _ _ ?transitions:_ ->
+      raise (Failure
+        "modify_location_onthefly is not supported for this model"));
+
     set_location_invariant_onthefly =
       (fun _ _ _ ->
         raise (Failure
@@ -164,6 +173,7 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       location_names = simple_model.location_names;
       is_accepting = simple_model.is_accepting;
       is_urgent = simple_model.is_urgent;
+      is_waiting = simple_model.is_waiting;
       actions = simple_model.actions;
       controllable_actions = simple_model.controllable_actions;
       has_controllable_or_uncontrollable_actions = false; (* Final controller does not know of controllable/uncontrollable actions *)
@@ -191,7 +201,7 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
 
 let generate_simple_model (system_model : abstract_model) 
 	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
-	~location_names ~is_accepting ~is_urgent ~invariants
+	~location_names ~is_accepting ~is_urgent ~is_waiting ~invariants
 	~actions_per_location ~transitions ~transitions_description
   ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
   ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
@@ -232,6 +242,7 @@ let generate_simple_model (system_model : abstract_model)
     location_names;
     is_accepting;
     is_urgent;
+    is_waiting;
     actions = actions;
     controllable_actions = [];
     action_names = action_names;
@@ -255,7 +266,7 @@ let generate_simple_model (system_model : abstract_model)
 
 let generate_abstract_controller_model (system_model : abstract_model)
 	~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
-	~location_names ~is_accepting ~is_urgent ~invariants
+	~location_names ~is_accepting ~is_urgent ~is_waiting ~invariants
 	~actions_per_location ~transitions ~transitions_description
   ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
   ~action_types ~action_names ~actions ~actions_per_automaton ~nb_actions
@@ -264,7 +275,7 @@ let generate_abstract_controller_model (system_model : abstract_model)
   ~initial_location_index =
   let simple_model = generate_simple_model system_model
     ~nb_locations ~nb_transitions ~nb_parameters ~nb_variables
-    ~location_names ~is_accepting ~is_urgent ~invariants
+    ~location_names ~is_accepting ~is_urgent ~is_waiting ~invariants
     ~actions_per_location ~transitions ~transitions_description
     ~variable_names ~parameters ~parameters_and_clocks ~parameters_and_discrete 
     ~action_types ~action_names ~nb_actions ~actions ~actions_per_automaton

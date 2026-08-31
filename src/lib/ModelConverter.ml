@@ -449,7 +449,7 @@ let check_flows_2 variable_infos location_name flows =
 (*------------------------------------------------------------*)
 (** Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
-let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata =
+let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata options =
 
 	let index_of_automata		= useful_parsing_model_information.index_of_automata in
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
@@ -457,6 +457,13 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
     let variable_infos = useful_parsing_model_information.variable_infos in
 
 	let well_formed = ref true in
+
+	let add_missing_target_location automaton_name automaton_index target_location_name =
+		if not (in_array target_location_name array_of_location_names.(automaton_index)) then (
+			print_message Verbose_medium ("Adding missing target location `" ^ target_location_name ^ "` in automaton `" ^ automaton_name ^ "` for on-the-fly mode.");
+			array_of_location_names.(automaton_index) <- Array.append array_of_location_names.(automaton_index) [| target_location_name |]
+		)
+	in
 
 	(* Check each automaton *)
 	List.iter (fun (automaton_name, sync_name_list, locations) ->
@@ -511,8 +518,13 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the target location exists for this automaton *)
 				if not (in_array target_location_name array_of_location_names.(index)) then (
-					print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
-					well_formed := false);
+					if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+						add_missing_target_location automaton_name index target_location_name
+					) else (
+						print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
+						well_formed := false
+					)
+				);
 				) location.transitions;
 			) locations;
 		) automata;
@@ -1004,6 +1016,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let location_urgency = Array.make nb_automata (Array.make 0 Location_nonurgent) in
 	(* Create an empty array for the actions of every location of every automaton *)
 	let location_acceptance = Array.make nb_automata (Array.make 0 Location_nonaccepting) in
+	(* Create an empty array for the waiting status of every location of every automaton *)
+	let location_waiting = Array.make nb_automata (Array.make 0 Location_nonwaiting) in
 	(* Create an empty array for the costs *)
 	let costs = Array.make nb_automata (Array.make 0 None) in
 	(* Create an empty array for the transitions *)
@@ -1034,6 +1048,8 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 		location_urgency.(automaton_index) <- Array.make nb_locations Location_nonurgent;
 		(* Create the array of accepting locations for this automaton (default: non-accepting) *)
 		location_acceptance.(automaton_index) <- Array.make nb_locations Location_nonaccepting;
+		(* Create the array of waiting locations for this automaton (default: non-waiting) *)
+		location_waiting.(automaton_index) <- Array.make nb_locations Location_nonwaiting;
 		(* Create the array of costs for this automaton *)
 		costs.(automaton_index) <- Array.make nb_locations None;
 		(* Create the array of list of transitions for this automaton *)
@@ -1116,6 +1132,14 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 				in
 				location_acceptance.(automaton_index).(location_index) <- acceptance;
 
+				(* Update the array of waiting *)
+				(* let waiting =
+				match location.waiting with
+				| Parsed_location_waiting -> Location_waiting
+				| Parsed_location_nonwaiting -> Location_nonwaiting
+				in
+				location_waiting.(automaton_index).(location_index) <- waiting; *)
+
 				(* Update the array of transitions per location *)
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
@@ -1176,8 +1200,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 	let actions = list_of_interval 0 (nb_actions - 1) in
 
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_non_1rate_clocks, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
-
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, location_waiting, costs, invariants, stopwatches_array, !has_non_1rate_clocks, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 (*------------------------------------------------------------*)
@@ -3334,6 +3357,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
 	let (array_of_location_names : location_name array array) = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
+	if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+		List.iter (fun (automaton_name, _, locations) ->
+			let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
+			List.iter (fun (location : parsed_location) ->
+				List.iter (fun (_, _, _, target_location_name) ->
+					if not (in_array target_location_name array_of_location_names.(automaton_index)) then (
+						print_message Verbose_medium ("Dynamically creating waiting location `" ^ target_location_name ^ "` in automaton `" ^ automaton_name ^ "`.");
+						array_of_location_names.(automaton_index) <- Array.append array_of_location_names.(automaton_index) [| target_location_name |]
+					)
+				) location.transitions
+			) locations
+		) parsed_model.automata
+	);
 	(* Add the observer locations *)
 	begin
 	match observer_automaton_index_option with
@@ -3588,7 +3624,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the automata *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking automata…");
-	let well_formed_automata = check_automata useful_parsing_model_information parsed_model.automata in
+	let well_formed_automata = check_automata useful_parsing_model_information parsed_model.automata options in
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3655,6 +3691,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
     actions_per_location_array,
     location_acceptance,
     location_urgency,
+		location_waiting,
     costs_array,
     invariants_array,
     stopwatches_array,
@@ -3937,6 +3974,21 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				^ "` in automaton of index `"
 				^ string_of_int automaton_index
 				^ "` not found in function `is_urgent`. Additional details: `"
+				^ msg ^ "`"))
+	in
+
+	(* Waiting *)
+	let is_waiting = fun automaton_index location_index ->
+		try
+			location_waiting.(automaton_index).(location_index)
+			= Location_waiting
+		with Invalid_argument msg ->
+			raise (InternalError
+				("Waiting status of location of index `"
+				^ string_of_int location_index
+				^ "` in automaton of index `"
+				^ string_of_int automaton_index
+				^ "` not found in function `is_waiting`. Additional details: `"
 				^ msg ^ "`"))
 	in
 
@@ -4527,7 +4579,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Build the final structure *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let rec model : AbstractModel.abstract_model = { 
+	let rec model : AbstractModel.abstract_model = {
 	(* Cardinality *)
 	nb_automata    = nb_automata;
 	nb_actions     = nb_actions;
@@ -4540,91 +4592,65 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 	
-		(* Add a location dynamically *)
+	(* Add a location dynamically *)
 	add_location_onthefly =
 		(fun ?(transitions = Array.make nb_actions [])
-				automaton_index
-				new_location_name
-				urgent ->
+			automaton_index
+			new_location_name
+			urgent
+			is_waiting
+			invariant ->
+			let new_location_index =
+				Array.length array_of_location_names.(automaton_index)
+			in
+			array_of_location_names.(automaton_index) <-
+				Array.append array_of_location_names.(automaton_index) [| new_location_name |];
+			array_of_locations_per_automaton.(automaton_index) <-
+				array_of_locations_per_automaton.(automaton_index) @ [new_location_index];
+			Hashtbl.add index_of_locations.(automaton_index) new_location_name new_location_index;
+			location_acceptance.(automaton_index) <-
+				Array.append location_acceptance.(automaton_index) [| Location_nonaccepting |];
+			location_urgency.(automaton_index) <-
+				Array.append location_urgency.(automaton_index) [|
+					if urgent then Location_urgent else Location_nonurgent
+				|];
+			location_waiting.(automaton_index) <-
+				Array.append location_waiting.(automaton_index) [|
+					if is_waiting then Location_waiting else Location_nonwaiting
+				|];
+			actions_per_location_array.(automaton_index) <-
+				Array.append actions_per_location_array.(automaton_index) [| [] |];
+			invariants_array.(automaton_index) <-
+				Array.append invariants_array.(automaton_index) [| invariant |];
+			costs_array.(automaton_index) <-
+				Array.append costs_array.(automaton_index) [| None |];
+			stopwatches_array.(automaton_index) <-
+				Array.append stopwatches_array.(automaton_index) [| [] |];
+			flow_array.(automaton_index) <-
+				Array.append flow_array.(automaton_index) [| [] |];
+			converted_transitions.(automaton_index) <-
+				Array.append converted_transitions.(automaton_index) [| transitions |];
+			model.nb_locations <- model.nb_locations + 1;
+			new_location_index
+		);
 
-    let new_location_index =
-      Array.length array_of_location_names.(automaton_index)
-    in
-
-    (* Location name *)
-    array_of_location_names.(automaton_index) <-
-      Array.append
-        array_of_location_names.(automaton_index)
-        [| new_location_name |];
-
-    (* Location index *)
-    array_of_locations_per_automaton.(automaton_index) <-
-      array_of_locations_per_automaton.(automaton_index)
-      @ [new_location_index];
-
-    (* Name -> index *)
-    Hashtbl.add
-      index_of_locations.(automaton_index)
-      new_location_name
-      new_location_index;
-
-    (* Acceptance *)
-    location_acceptance.(automaton_index) <-
-      Array.append
-        location_acceptance.(automaton_index)
-        [| Location_nonaccepting |];
-
-    (* Urgency *)
-    location_urgency.(automaton_index) <-
-      Array.append
-        location_urgency.(automaton_index)
-        [|
-          if urgent then
-            Location_urgent
-          else
-            Location_nonurgent
-        |];
-
-    (* Actions *)
-    actions_per_location_array.(automaton_index) <-
-      Array.append
-        actions_per_location_array.(automaton_index)
-        [| [] |];
-
-    (* Invariant *)
-    invariants_array.(automaton_index) <-
-      Array.append
-        invariants_array.(automaton_index)
-        [| (* default invariant *) |];
-
-    (* Cost *)
-    costs_array.(automaton_index) <-
-      Array.append
-        costs_array.(automaton_index)
-        [| (* default cost *) |];
-
-    (* Stopwatches *)
-    stopwatches_array.(automaton_index) <-
-      Array.append
-        stopwatches_array.(automaton_index)
-        [| [] |];
-
-    (* Flow *)
-    flow_array.(automaton_index) <-
-      Array.append
-        flow_array.(automaton_index)
-        [| [] |];
-
-    (* Transitions *)
-    converted_transitions.(automaton_index) <-
-      Array.append
-        converted_transitions.(automaton_index)
-        [| transitions |];
-
-    model.nb_locations <- model.nb_locations + 1;
-
-    new_location_index
-  );
+	(* Update an existing location dynamically *)
+	modify_location_onthefly =
+		(fun automaton_index location_name urgent is_waiting invariant ?(transitions = Array.make nb_actions []) ->
+			let location_index =
+				try Hashtbl.find index_of_locations.(automaton_index) location_name with
+				| Not_found ->
+					raise (InternalError ("Could not modify location `" ^ location_name ^ "`: it does not exist in automaton `" ^ string_of_int automaton_index ^ "`."))
+			in
+			location_urgency.(automaton_index).(location_index) <-
+				(if urgent then Location_urgent else Location_nonurgent);
+			location_waiting.(automaton_index).(location_index) <-
+				(if is_waiting then Location_waiting else Location_nonwaiting);
+			invariants_array.(automaton_index).(location_index) <- invariant;
+			converted_transitions.(automaton_index) <-
+				Array.append converted_transitions.(automaton_index) [| transitions |];
+			()
+		);
 
 	(* set a location invariant dynamically *)
 	set_location_invariant_onthefly =
@@ -4728,6 +4754,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
       location_urgency.(automaton_index).(location_index)
       = Location_urgent);
 
+  is_waiting =
+    (fun automaton_index location_index ->
+      location_waiting.(automaton_index).(location_index)
+      = Location_waiting);
+
 	(* All action indexes *)
 	actions = actions;
 	(* Only controllable action indexes *)
@@ -4771,7 +4802,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(fun automaton_index location_index ->
 			stopwatches_array.(automaton_index).(location_index));
 	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
-	flow =
+	flow = 
 		(fun automaton_index location_index ->
 			flow_array.(automaton_index).(location_index));
 	(* An array transition_index -> transition *)

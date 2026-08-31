@@ -77,9 +77,9 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
 
 		match provider#wait_for_update with
 
-			| Updated  _->
+			| Updated content->
 				print_message Verbose_standard
-					"Received an update.";
+					("Received an update (algo on the fly): " ^ content);
 				self#process_current_model
 
 			| Finished ->

@@ -31,6 +31,9 @@ val parser_lexer_gen : ((Lexing.lexbuf -> 'token) -> Lexing.lexbuf -> 'structure
     @raise ParsingFailure in case of lexing/parsing error *)
 val parser_lexer_from_file : ((Lexing.lexbuf -> 'token) -> Lexing.lexbuf -> 'structure) -> (Lexing.lexbuf -> 'token) -> string -> 'structure
 
+(** Temporarily enable or disable the injected `end` token workaround for included files in the temporary on-the-fly mode. *)
+val set_force_included_file_terminator : bool -> unit
+
 (** Parse a model file and return its (unexpanded) parsing structure.
     @raise InputFileNotFound if the file cannot be opened
     @raise ParsingFailure in case of lexing/parsing error *)

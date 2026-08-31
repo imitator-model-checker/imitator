@@ -32,6 +32,9 @@ class model_provider
       close_in ic;
       position
 
+    (* We assume the file only grows by appending at the end.
+       So we only need to remember how many bytes have already been consumed. *)
+
     (* inotify watcher *)
     val inotify_fd =
       Inotify.create ()
@@ -41,39 +44,14 @@ class model_provider
         Inotify.add_watch
           inotify_fd
           filename
-          [Inotify.S_Modify; Inotify.S_Close_write]
+          [Inotify.S_Modify]
       )
-    (* val mutable watch = None
 
-    initializer
-      watch <- Some (
-        Inotify.add_watch
-          inotify_fd
-          filename
-          [Inotify.S_Modify; Inotify.S_Close_write]
-      ) *)
+
 
     method get_model =
       model
         
-    (* method private read_key () =
-      let old_settings = Unix.tcgetattr Unix.stdin in
-
-      let new_settings = {
-        old_settings with
-        Unix.c_icanon = false;
-        Unix.c_echo = false;
-        Unix.c_vmin = 1;
-        Unix.c_vtime = 0;
-      } in
-
-      Unix.tcsetattr Unix.stdin Unix.TCSANOW new_settings;
-
-      let c = input_char stdin in
-
-      Unix.tcsetattr Unix.stdin Unix.TCSANOW old_settings;
-
-      c *)
     method private read_key () =
       input_char stdin
 
@@ -116,104 +94,72 @@ class model_provider
         close_in_noerr ic;
         raise e
  
-    (* method private file_changed =
 
-      let events =
-        Inotify.read inotify_fd
-      in
+  method wait_for_update =
 
-      List.exists
-        (fun (_, kinds, _, _) ->
-          List.mem Inotify.Modify kinds
-          || List.mem Inotify.Close_write kinds)
-        events *)
+    let old_settings = Unix.tcgetattr Unix.stdin in
 
+    let new_settings = {
+      old_settings with
+      Unix.c_icanon = false;
+      Unix.c_echo = false;
+      Unix.c_vmin = 1;
+      Unix.c_vtime = 0;
+    } in
 
-    method wait_for_update =
-      let old_settings =
-        Unix.tcgetattr Unix.stdin
-      in
+    Unix.tcsetattr Unix.stdin Unix.TCSANOW new_settings;
 
-      let new_settings = {
-        old_settings with
-        Unix.c_icanon = false;
-        Unix.c_echo = false;
-        Unix.c_vmin = 1;
-        Unix.c_vtime = 0;
-      } in
+    Fun.protect
+      ~finally:(fun () ->
+        Unix.tcsetattr
+          Unix.stdin
+          Unix.TCSANOW
+          old_settings)
+      (fun () ->
 
-      Unix.tcsetattr
-        Unix.stdin
-        Unix.TCSANOW
-        new_settings;
+        let rec loop () =
 
-      Fun.protect
-        ~finally:(fun () ->
-          Unix.tcsetattr
-            Unix.stdin
-            Unix.TCSANOW
-            old_settings)
-        (fun () ->
-
-      let rec loop () =
-
-        let ready, _, _ =
-          Unix.select
-            [Unix.stdin; inotify_fd]
-            []
-            []
-            (-1.)
-        in
-
-        if List.mem inotify_fd ready then begin
-          (* Consume the inotify events. *)
-          let _events =
-            Inotify.read inotify_fd
+          let ready, _, _ =
+            Unix.select
+              [Unix.stdin; inotify_fd]
+              []
+              []
+              (-1.)
           in
 
-          List.iter
-            (fun event ->
+          if List.mem inotify_fd ready then begin
+
+            Printf.printf "INOTIFY READY\n%!";
+
+            ignore (Inotify.read inotify_fd);
+
+            let content = self#read_new_content in
+
+            if content <> "" then begin
               Printf.printf
-                "INOTIFY EVENT: %s\n%!"
-                (Inotify.string_of_event event))
-            _events;
+                "NEW CONTENT:\n%s\n%!"
+                content;
 
-          let content =
-            self#read_new_content
-          in
-
-          Printf.printf
-            "CONTENT LENGTH: %d\n%!"
-            (String.length content);
-
-          if content <> "" then (
-            Printf.printf "NEW CONTENT:\n%s\n%!" content;
-            Updated content
-          )
-          else 
-            loop ()
- 
-        end
-
-        else if List.mem Unix.stdin ready then begin
-
-          match self#read_key () with
-
-          | 'q' ->
-              Finished
-
-          | _ ->
+              Updated content
+            end
+            else
               loop ()
 
-        end
+          end
+          else if List.mem Unix.stdin ready then begin
 
-        else
-          loop ()
+            match self#read_key () with
+            | 'q' -> Finished
+            | _ -> loop ()
 
-      in
+          end
+          else
+            loop ()
 
-      loop ()
-        )
+        in
+
+        loop ()
+    )
 
     (* below are just some quick test *)
     (* ---------------------------------------------------------- *)
@@ -262,6 +208,8 @@ class model_provider
           automaton_index
           "TEST_LOCATION"
           false
+          false
+          False_guard
       in
 
       let new_locations =
@@ -308,6 +256,8 @@ class model_provider
           automaton_index
           "TEST_URGENT_LOCATION"
           true
+          false
+          False_guard
       in
 
       assert (
@@ -344,6 +294,8 @@ class model_provider
           automaton_index
           "TEST_ATTRIBUTES"
           false
+          false
+          False_guard
       in
 
       (* Actions *)
@@ -392,6 +344,8 @@ class model_provider
           automaton_index
           "TEST_TRANSITIONS"
           false
+          false
+          False_guard
       in
 
       if model.nb_actions > 0 then begin
@@ -432,6 +386,8 @@ class model_provider
           automaton_index
           "TEST_CLOSURE"
           true
+          false
+          False_guard
       in
 
       let after =

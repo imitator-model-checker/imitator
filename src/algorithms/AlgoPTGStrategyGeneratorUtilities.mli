@@ -68,6 +68,8 @@ type simple_abstract_model = {
 	(* The urgency for each location *)
 	is_urgent : automaton_index -> location_index -> bool;
 
+	is_waiting : automaton_index -> location_index -> bool;
+
 	(* All action indexes *)
 	actions : action_index list;
 	(* Only controllable action indexes *)
@@ -108,6 +110,7 @@ type simple_abstract_model = {
 type location_names = automaton_index -> location_index -> location_name
 type is_accepting = automaton_index -> location_index -> bool
 type is_urgent = automaton_index -> location_index -> bool
+type is_waiting = automaton_index -> location_index -> bool
 type invariants = automaton_index -> location_index -> invariant
 type actions_per_location = automaton_index -> location_index -> (action_index list)
 type transitions = automaton_index -> location_index -> action_index -> (transition_index list)
@@ -115,7 +118,7 @@ type transitions_description = transition_index -> transition
 
 val generate_abstract_controller_model : 
 	abstract_model -> nb_locations:int -> nb_transitions:int -> nb_parameters:int -> nb_variables:int -> 
-	location_names:location_names -> is_accepting:is_accepting -> is_urgent:is_urgent -> 
+	location_names:location_names -> is_accepting:is_accepting -> is_urgent:is_urgent -> is_waiting:is_waiting ->
 	invariants:invariants -> actions_per_location:actions_per_location -> 
 	transitions:transitions -> transitions_description:transitions_description -> 
 	variable_names:(variable_index -> variable_name) -> parameters:variable_index list -> 
