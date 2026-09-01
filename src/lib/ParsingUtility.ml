@@ -59,17 +59,17 @@ let print_error_and_abort (options : Options.imitator_options) (error_message : 
 (* Defining types for errors *)
 type parsed_structure_type =
 	| Model
-	| OnTheFlyModification
+	(* | OnTheFlyModification *)
 	| Property
 
 let parsing_error_of parsed_structure_type error_message = match parsed_structure_type with
 	| Model -> Result.ModelParsing_error error_message
-	| OnTheFlyModification -> Result.ModelParsing_error error_message (*** TODO ***)
+	(* | OnTheFlyModification -> Result.ModelParsing_error error_message *)
 	| Property -> Result.ModelParsing_error error_message
 
 let filenotfound_error_of parsed_structure_type = match parsed_structure_type with
 	| Model -> Result.ModelFileNotFound_error
-	| OnTheFlyModification -> Result.UpdateFileNotFound_error 
+	(* | OnTheFlyModification -> Result.UpdateFileNotFound_error  *)
 	| Property -> Result.PropertyFileNotFound_error
 
 
@@ -222,13 +222,160 @@ let compile_model_and_property (options : Options.imitator_options) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
 
+
+
+let compile_model_and_property_with_context(options : Options.imitator_options) =
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Statistics *)
+	parsing_counter#start;
+
+	(* Parsing the main model *)
+	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
+	let parsed_model : ParsingStructure.unexpanded_parsed_model = parse_or_abort Model options ParsingDriver.parse_model_from_file options#model_file_name in
+
+	let useful_context = Templates. make_expansion_context parsed_model in
+	(* Statistics *)
+	parsing_counter#stop;
+
+	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
+
+	(*** USELESS, even increases memory x-( ***)
+	(* Gc.major (); *)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the property *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
+	let property_parsing =
+		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
+		||
+		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
+	in
+
+	let parsed_property_option =
+	if property_parsing then(
+		(* Statistics *)
+		parsing_counter#start;
+
+		(* Get the file name *)
+		let property_file_name = match options#property_file_name with
+			| Some property_file_name -> property_file_name
+			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
+		in
+
+		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
+
+		(* Parsing the property *)
+		let parsed_property : ParsingStructure.unexpanded_parsed_property = parse_or_abort Property options ParsingDriver.parse_property_from_file property_file_name in
+
+		(* Statistics *)
+		parsing_counter#stop;
+
+		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
+
+		Some parsed_property
+	)else(
+		None
+	)
+	in
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Conversion to abstract structures *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Statistics *)
+	converting_counter#start;
+
+	let model, property_option =
+	try (
+		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
+	) with
+		| InvalidModel ->
+			(* Abort properly *)
+			let failure_message = "The input model contains errors. Please check it again." in
+			print_error_and_abort options failure_message (Result.InvalidModel_error)
+
+		| ModelConverter.InvalidProperty ->
+			(* Abort properly *)
+			let failure_message = "The property contains errors. Please check it again." in
+			print_error_and_abort options failure_message (Result.InvalidModel_error)
+
+        | InvalidExpression message	->
+            (* Abort properly *)
+            let failure_message =  "An expression contains errors. Please check it again.\nDetails : " ^ message in
+            print_error_and_abort options failure_message (Result.InvalidModel_error)
+
+        | TypeError message	->
+            (* Abort properly *)
+            let failure_message =  "Type error: " ^ message in
+            print_error_and_abort options failure_message (Result.InvalidModel_error)
+        | UndefinedFunction function_name ->
+            (* Abort properly *)
+            let failure_message =  "Function `" ^ function_name ^ "` is undefined." in
+            print_error_and_abort options failure_message (Result.InvalidModel_error)
+		| InternalError e ->
+			(print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+		in
+
+	(* Statistics *)
+	converting_counter#stop;
+
+	(* Print some information *)
+	print_message Verbose_experiments ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
+	let gc_stat = Gc.stat () in
+	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+	let nb_ko = nb_words *. 4.0 /. 1024.0 in
+	print_message Verbose_experiments ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
+
+	(* Ugly line break *)
+	print_message Verbose_experiments "";
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* return *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	model, property_option, useful_context
+
+
 (************************************************************)
 (* Parse an on-the-fly modification of the model *)
 (************************************************************)
+	let parse_update_string
+			(content : string) (parsing_data: Templates.useful_parsing_context):
+			ParsingStructure.parsed_location list =
+		let lexbuf = Lexing.from_string content in
+		let unexpanded_parsed_locations =
+			ModelParser.update_locations ModelLexer.token lexbuf
+		in
+		let parsed_locations =
+			List.map
+				(fun loc ->
+					Templates.expand_loc
+						parsing_data.variable_declarations
+						parsing_data.synt_vars
+						loc)
+				unexpanded_parsed_locations in
+		(* Problem: variable_declarations is an attribute of parsing structure. synt_vars is a variable in templates *)
+		Printf.printf
+			"PARSED UPDATE LOCATIONS: %d\n%!"
+			(List.length parsed_locations);
+		parsed_locations
 
-let parse_on_the_fly_update
+
+(* let parse_on_the_fly_update
     (options : Options.imitator_options) :
     ParsingStructure.unexpanded_parsed_location list =
+
+	print_message Verbose_low
+		("Parsing on-the-fly modification from "
+			^ options#update_file_name ^ "…");
+
   parse_or_abort
     OnTheFlyModification
     options
@@ -236,12 +383,10 @@ let parse_on_the_fly_update
       let lexbuf = Lexing.from_channel (open_in file_name) in
       ModelParser.update_locations ModelLexer.token lexbuf
     )
-    options#update_file_name
+    options#update_file_name *)
 
-(************************************************************)
-(* Compile an on-the-fly modification of the model *)
-(************************************************************)
-let parsing_structure_of_ontheflycommand (options : Options.imitator_options) :
+
+(* let parsing_structure_of_ontheflycommand (options : Options.imitator_options) :
     ParsingStructure.unexpanded_parsed_location list =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -258,15 +403,15 @@ let parsing_structure_of_ontheflycommand (options : Options.imitator_options) :
     (* Parsing the on-the-fly update file *)
     (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-    print_message Verbose_low
-        ("Parsing on-the-fly update file "
-         ^ options#update_file_name ^ "…");
+	print_message Verbose_low
+		("Parsing on-the-fly modification from "
+			^ options#update_file_name ^ "…");
 
     parse_or_abort
         OnTheFlyModification
         options
         ParsingDriver.parse_update_from_file
-        options#update_file_name
+        options#update_file_name *)
 
 
 

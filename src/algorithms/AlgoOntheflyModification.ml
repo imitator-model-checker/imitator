@@ -55,13 +55,18 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
 	(** Main method *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run =
-			let parsed_update = ParsingUtility.parsing_structure_of_ontheflycommand options in
+			(* let parsed_update = ParsingUtility.parsing_structure_of_ontheflycommand options in *)
 				(* match parsed_update with
 				| Parsed_new_location location ->
 					print_message Verbose_standard
 						("New location: " ^ location); *)
+
+
 	print_message Verbose_standard
-        "Successfully parsed on-the-fly update.";
+        "Successfully parsed the initial model.";
+
+	(* print_message Verbose_standard
+        "Successfully parsed on-the-fly update."; *)
 
 	print_message Verbose_standard
 		"ABOUT TO ENTER WAIT LOOP.";

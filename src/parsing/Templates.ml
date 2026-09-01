@@ -9,6 +9,11 @@ type synt_vars_data = (variable_name * synt_var_kind * int) list
 
 type var_map = (variable_name, parsed_template_arg) Hashtbl.t
 
+type useful_parsing_context = {
+  variable_declarations : variable_declarations;
+  synt_vars : synt_vars_data;
+}
+
 let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
 
 let rec eval_parsed_boolean_expression g_decls = function
@@ -534,6 +539,66 @@ let expand_init_state_predicate (g_decls: variable_declarations) (pred: unexpand
 
 let expand_init_definition (g_decls: variable_declarations): unexpanded_parsed_init_state_predicate list -> parsed_init_state_predicate list =
   List.concat_map (expand_init_state_predicate g_decls)
+
+let make_expansion_context
+  (model : unexpanded_parsed_model) : useful_parsing_context =
+let g_decls = model.unexpanded_variable_declarations in
+
+let synt_vars =
+  List.concat_map
+    (fun ((len, kind), names) ->
+      List.map
+        (fun name ->
+          ( name,
+            kind,
+            NumConst.to_bounded_int
+              (eval_parsed_arithmetic_expr g_decls len) ))
+        names)
+    model.synt_declarations
+in
+
+{
+  variable_declarations = g_decls;
+  synt_vars;
+}
+
+let expand_model_with_context_internal
+    (model : unexpanded_parsed_model)
+    (context : useful_parsing_context)
+    : parsed_model =
+  let g_decls = context.variable_declarations in
+  let synt_vars = context.synt_vars in
+   let forall_calls =
+    model.forall_template_calls |>
+    List.concat_map (expand_forall_call g_decls)
+  in
+  let all_calls = model.template_calls @ forall_calls in
+  let (templates, automata) = List.partition_map
+    (fun v -> match v with | Template t -> (Left t) | PTA p -> Right p) model.templates_and_ptas in
+  let instantiated_automata = instantiate_automata templates all_calls in
+  let all_automata = automata @ instantiated_automata in
+  (* NOTE: at this point `parsed_action` calls must have an integer as argument, not an arbitrary expression *)
+  let expanded_automata = expand_synt_arrays_automata g_decls synt_vars all_automata in
+  let expanded_decls = expand_synt_decls synt_vars in
+  let expanded_controllable_actions =
+    match model.unexpanded_controllable_actions with
+      | Unexpanded_parsed_controllable_actions actions ->
+          Parsed_controllable_actions (expand_name_or_access_list g_decls actions)
+      | Unexpanded_parsed_uncontrollable_actions actions ->
+          Parsed_uncontrollable_actions (expand_name_or_access_list g_decls actions)
+      | Unexpanded_parsed_no_controllable_actions -> Parsed_no_controllable_actions
+  in
+
+  let expanded_init_definition =
+    expand_init_definition g_decls model.unexpanded_init_definition
+  in
+
+  { controllable_actions  = expanded_controllable_actions;
+    variable_declarations = model.unexpanded_variable_declarations @ expanded_decls;
+    fun_definitions       = model.unexpanded_fun_definitions;
+    automata              = expanded_automata;
+    init_definition       = expanded_init_definition;
+  }
 
 let expand_model (model : unexpanded_parsed_model) : parsed_model =
   let g_decls = model.unexpanded_variable_declarations in

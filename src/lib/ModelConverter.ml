@@ -447,6 +447,96 @@ let check_flows_2 variable_infos location_name flows =
 	!ok*)
 
 (*------------------------------------------------------------*)
+(** Check that the location is well-formed when added in othefly mode *)
+(*------------------------------------------------------------*)
+	(* let check_location_onthefly automaton_name automaton_index sync_name_list (location : parsed_location) =
+		print_message Verbose_total ("        Checking location onthefly " ^ location.name);
+
+		let well_formed = ref true in
+
+		(* Check that the location_name exists (which is obvious) *)
+		if not (in_array location.name array_of_location_names.(automaton_index)) then (
+			print_error
+				("The location `" ^ location.name ^ "` declared in automaton `" ^
+				 automaton_name ^ "` does not exist.");
+			well_formed := false
+		);
+
+		(* Check the cost *)
+		begin
+			match location.cost with
+			| Some cost ->
+				print_message Verbose_total ("          Checking cost");
+				if not
+					(ParsingStructureMeta.all_variables_defined_in_linear_expression
+						variable_infos
+						undeclared_variable_in_linear_constraint_message
+						cost)
+				then well_formed := false
+			| None -> ()
+		end;
+
+		(* Check the stopwatches *)
+		print_message Verbose_total ("          Checking stopwatches");
+		if not (check_stopwatches variable_infos location.name location.stopped) then
+			well_formed := false;
+
+		(* Check the flows *)
+		print_message Verbose_total ("          Checking flows");
+		(* if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables
+		   type_of_variables location.name location.flow) then well_formed := false; *)
+		if not (check_flows_2 variable_infos location.name location.flow) then
+			well_formed := false;
+
+		(* Check the convex predicate *)
+		(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
+
+		print_message Verbose_total ("          Checking convex predicate");
+		if not
+			(ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate
+				variable_infos
+				(Some undeclared_variable_in_boolean_expression_message)
+				location.invariant)
+		then well_formed := false;
+
+		(* Check transitions *)
+		print_message Verbose_total ("          Checking transitions");
+		List.iter
+			(fun (convex_predicate, _, sync, target_location_name) ->
+
+				(* Check the convex predicate *)
+				print_message Verbose_total ("            Checking convex predicate");
+				if not
+					(ParsingStructureMeta.all_variables_defined_in_nonlinear_convex_predicate
+						variable_infos
+						(Some undeclared_variable_in_boolean_expression_message)
+						convex_predicate)
+				then well_formed := false;
+
+				(* Check the sync *)
+				print_message Verbose_total ("            Checking sync name ");
+				if not (check_sync sync_name_list automaton_name sync) then
+					well_formed := false;
+
+				(* Check that the target location exists for this automaton *)
+				if not (in_array target_location_name array_of_location_names.(automaton_index)) then (
+					if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+						add_missing_target_location
+							automaton_name
+							automaton_index
+							target_location_name
+					) else (
+						print_error
+							("The target location `" ^ target_location_name ^
+							 "` used in automaton `" ^ automaton_name ^
+							 "` does not exist.");
+						well_formed := false
+					)
+				)
+			)
+			location.transitions *)
+
+(*------------------------------------------------------------*)
 (** Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
 let check_automata (useful_parsing_model_information : useful_parsing_model_information) automata options =
@@ -3978,7 +4068,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 	(* Waiting *)
-	let is_waiting = fun automaton_index location_index ->
+	(* let is_waiting = fun automaton_index location_index ->
 		try
 			location_waiting.(automaton_index).(location_index)
 			= Location_waiting
@@ -3990,7 +4080,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				^ string_of_int automaton_index
 				^ "` not found in function `is_waiting`. Additional details: `"
 				^ msg ^ "`"))
-	in
+	in *)
 
 	(* Costs *)
 	(* let costs = fun automaton_index location_index ->
@@ -4577,7 +4667,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	;
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Build the final structure *)
+	(* Build the final structure, possibility to modify some value for onthefly mode*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let rec model : AbstractModel.abstract_model = {
 	(* Cardinality *)

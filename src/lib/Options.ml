@@ -79,7 +79,7 @@ class imitator_options =
 		val mutable model_local_file_name 			= "uninitialized model input local file name"
 
 		(* On-the-fly update input file *)
-		val mutable update_file_name = "uninitialized on-the-fly update input file name"
+		val mutable update_file_name = "on-the-fly update input file name"
 
 		(* OUTPUT OPTIONS *)
 

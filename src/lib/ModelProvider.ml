@@ -10,6 +10,8 @@
  * Created           : 2026/08/22
  *
  ************************************************************)
+ open Templates
+
 type update_event =
   | Updated of string
   | Finished
@@ -17,6 +19,7 @@ type update_event =
 
 class model_provider
     (model : AbstractModel.abstract_model)
+    (parsing_data: Templates.useful_parsing_context)
     (filename : string) =
   object (self)
 
@@ -93,7 +96,7 @@ class model_provider
       with e ->
         close_in_noerr ic;
         raise e
- 
+
 
   method wait_for_update =
 
@@ -139,6 +142,12 @@ class model_provider
               Printf.printf
                 "NEW CONTENT:\n%s\n%!"
                 content;
+
+              let parsed_locations =
+                ParsingUtility.parse_update_string content parsing_data
+              in
+
+              ignore parsed_locations;
 
               Updated content
             end

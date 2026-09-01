@@ -25,6 +25,10 @@ let include_depth = ref 0;;
 
 let line=ref 1;;
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(* For onthefly mode, if the declaration of automaton is missing terminal "end", add it in automatically for the initialization of model *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
 let force_included_file_terminator = ref false
 
 let set_force_included_file_terminator enabled =

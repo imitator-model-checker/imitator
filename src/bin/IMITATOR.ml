@@ -145,8 +145,21 @@ parsing_counter#start;
 (*------------------------------------------------------------*)
 (* Parse the model and the property *)
 (*------------------------------------------------------------*)
+let model, property_option, useful_context =
+  match options#imitator_mode with
+  | Temp_testonthefly ->
+      let model, property_option, useful_context =
+        ParsingUtility.compile_model_and_property_with_context options
+      in
+      model, property_option, Some useful_context
 
-let model, property_option = ParsingUtility.compile_model_and_property options in
+  | _ ->
+      let model, property_option =
+        ParsingUtility.compile_model_and_property options
+      in
+      model, property_option , None
+in
+
 
 (*------------------------------------------------------------*)
 (* End of parsing *)
@@ -717,11 +730,15 @@ match options#imitator_mode with
 	(* Temporary algorithm to test on-the-fly model modification *)
 	(************************************************************)
 	| Temp_testonthefly ->
-(* 		raise (NotImplemented "IMITATOR.ml > Temp_testonthefly") *)
+    let context =
+      match useful_context with
+      | Some context -> context
+      | None -> failwith "Expected useful parsing context"
+    in
 
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
-		let file_name = "/home/minh/Documents/imitator/bin/detectResponse4_log2.imi" in
-		let provider = new ModelProvider.model_provider model file_name in
+		let file_name = options#update_file_name	 in
+		let provider = new ModelProvider.model_provider model context file_name in
 		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoOntheflyModification.algoOntheflyModification model provider options in
 
 		(*** NOTE: duplicate code with what follows ***)

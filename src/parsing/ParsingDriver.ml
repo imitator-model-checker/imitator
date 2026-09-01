@@ -20,43 +20,6 @@
 open Exceptions
 open ImitatorUtilities
 
-(* let force_included_file_terminator = ref false
-
-let set_force_included_file_terminator enabled =
-	force_included_file_terminator := enabled
-
-(* redundant again ?? delete all of these 2 methods*)
-let file_needs_terminal_end file_name =
-	if not !force_included_file_terminator then
-		false
-	else
-		try
-			let ic = open_in file_name in
-			let file_contents = really_input_string ic (in_channel_length ic) in
-			close_in ic;
-			let trimmed = String.trim file_contents in
-			if trimmed = "" then
-				true
-			else
-				not (Str.string_match (Str.regexp ".*\\bend\\s*$") trimmed 0)
-		with _ ->
-			false
-
-let model_token_stream_adapter token_fn file_name =
-	let synthetic_end_pending = ref false in
-	fun lexbuf ->
-		if !synthetic_end_pending then (
-			synthetic_end_pending := false;
-			ModelParser.EOF
-		) else
-			match token_fn lexbuf with
-			| ModelParser.EOF when file_needs_terminal_end file_name ->
-				if !force_included_file_terminator then
-					print_message Verbose_low ("extra end is added");
-				synthetic_end_pending := true;
-				ModelParser.CT_END
-			| token ->
-				token *)
 
 (************************************************************)
 (* Exceptions *)
@@ -224,7 +187,7 @@ let parse_model_from_file (file_name : string) : ParsingStructure.unexpanded_par
 let parse_property_from_file (file_name : string) : ParsingStructure.unexpanded_parsed_property =
 	parser_lexer_from_file PropertyParser.main PropertyLexer.token file_name
 
-let parse_update_from_file (file_name : string) :
+(* let parse_update_from_file (file_name : string) :
 	ParsingStructure.unexpanded_parsed_location list =
 	let channel = open_in file_name in
 	Fun.protect
@@ -232,4 +195,11 @@ let parse_update_from_file (file_name : string) :
 			(fun () ->
 					let lexbuf = Lexing.from_channel channel in
 					ModelParser.update_locations ModelLexer.token lexbuf
-			)
+			) *)
+
+let parse_update_from_string (content : string) :
+    ParsingStructure.unexpanded_parsed_location list =
+
+  let lexbuf = Lexing.from_string content in
+
+  ModelParser.update_locations ModelLexer.token lexbuf
