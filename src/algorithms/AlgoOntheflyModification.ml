@@ -64,6 +64,8 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
 
 	print_message Verbose_standard
         "Successfully parsed the initial model.";
+	print_message Verbose_standard
+        (ModelPrinter.string_of_model model);
 
 	(* print_message Verbose_standard
         "Successfully parsed on-the-fly update."; *)
