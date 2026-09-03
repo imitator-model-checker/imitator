@@ -176,6 +176,8 @@ type abstract_model = {
 	(* Add a location dynamically *)
 	add_location_onthefly :
 		?transitions:(transition_index list array) -> automaton_index -> location_name -> bool -> bool -> invariant -> location_index;
+	add_transition_onthefly :
+		automaton_index -> location_index -> transition -> transition_index;
 	(* Update an existing location dynamically *)
 	modify_location_onthefly :
 		automaton_index -> location_name -> bool -> bool -> invariant -> ?transitions:(transition_index list array) -> unit;
@@ -199,7 +201,7 @@ type abstract_model = {
 	(* Nb of variables used in PPL constraint: clocks + parameters + rationals *)
 	nb_ppl_variables : int;
 	mutable nb_locations  : int;
-	nb_transitions: int;
+	mutable nb_transitions: int;
 
 	(* Is there any invariant in the model? *)
 	mutable has_invariants : bool;

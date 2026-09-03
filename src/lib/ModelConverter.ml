@@ -674,7 +674,8 @@ let has_one_loc_per_automaton initial_locations parsed_model observer_automaton_
     at_most_one_loc_per_automaton && at_least_one_loc_per_automaton
 
 
-let check_init_definition parsed_model =
+let check_init_definition
+	(parsed_model : useful_parsing_model_information) =
 
     let variable_infos = parsed_model.variable_infos in
 
@@ -1827,7 +1828,8 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (** Check a state predicate *)
 (*------------------------------------------------------------*)
 
-let check_parsed_state_predicate parsing_infos expr =
+let check_parsed_state_predicate
+	(parsing_infos : useful_parsing_model_information) expr =
     let variable_infos = parsing_infos.variable_infos in
     ParsingStructureMeta.all_variables_defined_in_parsed_state_predicate
         parsing_infos
@@ -2911,7 +2913,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (*------------------------------------------------------------*)
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+let abstract_structures_of_parsing_structures ?useful_context options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 
   (* Instantiate the template calls and expand synctatic variables *)
   let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
@@ -2966,6 +2968,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
+	
+	
+	
 
 
 
@@ -3688,6 +3693,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	}
 	in
 
+	begin
+		match useful_context with
+		| None -> ()
+		| Some context -> context.variable_infos <- Some variable_infos
+	end;
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the user function definitions *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4145,11 +4156,17 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 	
 	(* Transition description *)
+	let next_dynamic_transition_index = ref nb_transitions in
+	let dynamic_transition_descriptions = Hashtbl.create 0 in
+	let dynamic_transition_automata = Hashtbl.create 0 in
+
 	let transitions_description = fun transition_index ->
 		(* Add a safety mechanism *)
 		try(
 			transitions_description.(transition_index)
-		) with Invalid_argument msg -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `transitions_description`. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument _ ->
+			try Hashtbl.find dynamic_transition_descriptions transition_index
+			with Not_found -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `transitions_description`."))
 	in
 	
 	(* Automaton of transition *)
@@ -4157,7 +4174,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			automaton_of_transition.(transition_index)
-		) with Invalid_argument msg -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `automaton_of_transition`. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument _ ->
+			try Hashtbl.find dynamic_transition_automata transition_index
+			with Not_found -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `automaton_of_transition`."))
 	in
 	
 	(* Actions *)
@@ -4174,8 +4193,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
         current_nb + List.length (locations_per_automaton automaton))
       0 automata
   )  in
-
-
 	let add_missing_target_location automaton_name automaton_index array_of_location_names target_location_name =
 		if not (in_array target_location_name array_of_location_names.(automaton_index)) then (
 			print_message Verbose_medium ("Creating waiting target location `" ^ target_location_name ^ "` in automaton `" ^ automaton_name ^ "` for on-the-fly mode.");
@@ -4756,6 +4773,28 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_ppl_variables = nb_ppl_variables;
 	nb_locations   = !nb_locations;
 	nb_transitions = nb_transitions;
+
+	add_transition_onthefly =
+		(fun automaton_index source_location transition ->
+			if source_location < 0 || source_location >= Array.length converted_transitions.(automaton_index) then
+				raise (InternalError "Invalid source location in dynamic transition")
+			else if transition.action < 0 || transition.action >= nb_actions then
+				raise (InternalError "Invalid action index in dynamic transition")
+			else if transition.target < 0 || transition.target >= Array.length array_of_location_names.(automaton_index) then
+				raise (InternalError "Invalid target location in dynamic transition")
+			else
+				let transition_index = !next_dynamic_transition_index in
+				incr next_dynamic_transition_index;
+				Hashtbl.add dynamic_transition_descriptions transition_index transition;
+				Hashtbl.add dynamic_transition_automata transition_index automaton_index;
+				let current = converted_transitions.(automaton_index).(source_location).(transition.action) in
+				converted_transitions.(automaton_index).(source_location).(transition.action) <- transition_index :: current;
+				let actions = actions_per_location_array.(automaton_index).(source_location) in
+				if not (List.mem transition.action actions) then
+					actions_per_location_array.(automaton_index).(source_location) <- transition.action :: actions;
+				model.nb_transitions <- model.nb_transitions + 1;
+				transition_index
+		);
 	
 	(* Add a location dynamically *)
 	add_location_onthefly =
@@ -4812,8 +4851,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			location_waiting.(automaton_index).(location_index) <-
 				(if is_waiting then Location_waiting else Location_nonwaiting);
 			invariants_array.(automaton_index).(location_index) <- invariant;
-			converted_transitions.(automaton_index) <-
-				Array.append converted_transitions.(automaton_index) [| transitions |];
+			converted_transitions.(automaton_index).(location_index) <- transitions;
 			()
 		);
 

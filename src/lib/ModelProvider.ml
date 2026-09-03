@@ -58,6 +58,72 @@ class model_provider
     method private read_key () =
       input_char stdin
 
+    method private abstract_location_attributes
+        (parsed_location : ParsingStructure.parsed_location) =
+      let variable_infos =
+        match parsing_data.variable_infos with
+        | Some variable_infos -> variable_infos
+        | None ->
+            raise (Failure "Variable information is not available for update conversion")
+      in
+      let urgent =
+        parsed_location.urgency = ParsingStructure.Parsed_location_urgent
+      in
+      let invariant =
+        DiscreteExpressionConverter.convert_guard
+          variable_infos
+          parsed_location.invariant
+      in
+      let transitions = Array.make model.nb_actions [] in
+      urgent, invariant, transitions
+
+    method private action_index automaton_index action_name =
+      try
+        List.find
+          (fun action_index -> model.action_names action_index = action_name)
+          (model.actions_per_automaton automaton_index)
+      with Not_found ->
+        raise (Failure ("Action `" ^ action_name ^ "` is not declared in the automaton"))
+
+    method private register_parsed_transition
+        automaton_index source_location
+        (guard, updates, sync, target_location_name) =
+      let variable_infos =
+        match parsing_data.variable_infos with
+        | Some variable_infos -> variable_infos
+        | None ->
+            raise (Failure "Variable information is not available for update conversion")
+      in
+      let action =
+        match sync with
+        | ParsingStructure.Sync action_name ->
+            self#action_index automaton_index action_name
+        | ParsingStructure.NoSync ->
+            raise (Failure "Dynamic transitions must specify a synchronization action")
+      in
+      let target =
+        let target_location =
+          List.find
+            (fun location_index ->
+              model.location_names automaton_index location_index = target_location_name)
+            (model.locations_per_automaton automaton_index)
+        in
+        target_location
+      in
+      let abstract_transition = {
+        AbstractModel.guard =
+          DiscreteExpressionConverter.convert_guard variable_infos guard;
+        action;
+        updates =
+          DiscreteExpressionConverter.convert_seq_code_bloc
+            variable_infos parsing_data.functions updates;
+        target;
+      } in
+      ignore (
+        model.add_transition_onthefly
+          automaton_index source_location abstract_transition
+      )
+
     method private read_new_content =
 
       let ic = open_in_bin filename in
@@ -146,6 +212,41 @@ class model_provider
               let parsed_locations =
                 ParsingUtility.parse_update_string content parsing_data
               in
+
+          let find_location automaton_index location_name (model : AbstractModel.abstract_model) =
+            let result = ref None in
+            List.iter
+              (fun location_index ->
+                if model.location_names automaton_index location_index = location_name then
+                  result := Some location_index)
+              (model.locations_per_automaton automaton_index);
+            !result
+          in 
+
+          (* Default automaton index for the one being modify is 0 *)
+          (*Todo: later make this more sophisticate*)
+          let automaton_index = 0 in
+
+          List.iter
+              (fun parsed_location ->
+                  let urgent, invariant, transitions =
+                    self#abstract_location_attributes parsed_location
+                  in
+                  let source_location =
+                    match find_location automaton_index parsed_location.name model with
+                    | None ->
+                        model.add_location_onthefly
+                          automaton_index parsed_location.name urgent false invariant ~transitions
+                    | Some location_index ->
+                        model.modify_location_onthefly
+                          automaton_index parsed_location.name urgent false invariant ~transitions;
+                        location_index
+                      in
+                      List.iter
+                        (self#register_parsed_transition automaton_index source_location)
+                        parsed_location.transitions
+              )
+              parsed_locations;
 
               ignore parsed_locations;
 

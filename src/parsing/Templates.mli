@@ -11,6 +11,8 @@ type synt_vars_data
 type useful_parsing_context = {
   variable_declarations : variable_declarations;
   synt_vars : synt_vars_data;
+  mutable variable_infos : variable_infos option;
+  functions : parsed_functions_table;
 }
 
 val make_expansion_context :

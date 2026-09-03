@@ -294,7 +294,7 @@ let compile_model_and_property_with_context(options : Options.imitator_options) 
 
 	let model, property_option =
 	try (
-		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
+		ModelConverter.abstract_structures_of_parsing_structures ~useful_context options parsed_model parsed_property_option
 	) with
 		| InvalidModel ->
 			(* Abort properly *)

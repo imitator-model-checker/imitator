@@ -12,6 +12,8 @@ type var_map = (variable_name, parsed_template_arg) Hashtbl.t
 type useful_parsing_context = {
   variable_declarations : variable_declarations;
   synt_vars : synt_vars_data;
+  mutable variable_infos : variable_infos option;
+  functions : parsed_functions_table;
 }
 
 let eval_expr_err_msg = "[eval_boolean_expression]: Trying to evaluate an expression whose value is not known at compile time."
@@ -560,6 +562,11 @@ in
 {
   variable_declarations = g_decls;
   synt_vars;
+  variable_infos = None;
+  functions = OCamlUtilities.hashtbl_of_tuples
+    (List.map
+      (fun (fun_def : parsed_fun_definition) -> fun_def.name, fun_def)
+      model.unexpanded_fun_definitions);
 }
 
 let expand_model_with_context_internal

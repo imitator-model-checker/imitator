@@ -44,7 +44,8 @@ class algoOntheflyModification (model : AbstractModel.abstract_model)
 	method algorithm_name = "On-the-fly modification"
 	
 	method process_current_model =
-      print_message Verbose_standard "hello"
+		print_message Verbose_standard
+					(ModelPrinter.string_of_model model);
 	
 	(************************************************************)
 	(* Class methods *)

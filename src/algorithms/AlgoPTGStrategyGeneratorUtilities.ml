@@ -121,6 +121,10 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
 		(fun ?transitions:_ _ _ _ _ _ ->
 			raise (Failure
 				"add_location_onthefly is not supported for this model"));
+  add_transition_onthefly =
+    (fun _ _ _ ->
+      raise (Failure
+        "add_transition_onthefly is not supported for this model"));
 
   modify_location_onthefly =
     (fun _ _ _ _ _ ?transitions:_ ->
