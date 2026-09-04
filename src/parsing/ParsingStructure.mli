@@ -291,13 +291,13 @@ type forall_index_data = {
   forall_ub         : parsed_discrete_arithmetic_expression;
 }
 
-type parsed_automaton = automaton_name * action_name list * parsed_location list
+type parsed_automaton = automaton_name * bool * action_name list * parsed_location list
 
 type action_declaration =
   | Single_action of name_or_access
   | Multiple_actions of forall_index_data * variable_name * parsed_discrete_arithmetic_expression
 
-type unexpanded_parsed_automaton = automaton_name * action_declaration list * unexpanded_parsed_location list
+type unexpanded_parsed_automaton = automaton_name * bool * action_declaration list * unexpanded_parsed_location list
 
 type parsed_template_definition = {
     template_name       : template_name;

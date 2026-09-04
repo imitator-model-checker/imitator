@@ -28,7 +28,7 @@ val compile_model_and_property: Options.imitator_options -> AbstractModel.abstra
 val compile_model_and_property_with_context: Options.imitator_options -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option) * Templates.useful_parsing_context
 
 (* Parse an on-the-fly modification of the model *)
-val parse_update_string : string ->  Templates.useful_parsing_context -> ParsingStructure.parsed_location list
+val parse_update_string : string -> Templates.useful_parsing_context -> ParsingStructure.parsed_location list * bool
 			
  (* val parsing_structure_of_ontheflycommand: Options.imitator_options -> ParsingStructure.unexpanded_parsed_location list *)
 

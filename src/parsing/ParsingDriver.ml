@@ -198,7 +198,7 @@ let parse_property_from_file (file_name : string) : ParsingStructure.unexpanded_
 			) *)
 
 let parse_update_from_string (content : string) :
-    ParsingStructure.unexpanded_parsed_location list =
+    ParsingStructure.unexpanded_parsed_location list * bool =
 
   let lexbuf = Lexing.from_string content in
 

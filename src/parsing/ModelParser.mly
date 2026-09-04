@@ -125,7 +125,7 @@ let check_absence_of_division_by_0_or_abort (n1 : NumConst.t) (n2 : NumConst.t) 
 %token APOSTROPHE COLON COMMA /*DOUBLEDOT */OP_CONJUNCTION OP_DISJUNCTION OP_IMPLIES SEMICOLON
 
 %token
-	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON
+	CT_ACCEPTING CT_ACTION CT_ACTIONS CT_ARRAY CT_AUTOMATON CT_DYNAMIC
 	CT_BEGIN CT_BINARY_WORD CT_BOOL
 	CT_CLOCK CT_CONSTANT CT_CONTINUOUS CT_CONTROLLABLE
 	CT_DO CT_DONE CT_DOWNTO
@@ -163,7 +163,7 @@ let check_absence_of_division_by_0_or_abort (n1 : NumConst.t) (n2 : NumConst.t) 
 %left OP_MUL OP_DIV        /* highest precedence */
 
 /* the entry point */
-%start <ParsingStructure.unexpanded_parsed_location list> update_locations
+%start <ParsingStructure.unexpanded_parsed_location list * bool> update_locations
 
 %start <ParsingStructure.unexpanded_parsed_model> main             
 %%
@@ -551,7 +551,11 @@ template_args_elem:
 automaton:
 	| CT_AUTOMATON NAME prolog locations CT_END
 	{
-		($2, $3, $4)
+		($2, false, $3, $4)
+	}
+	| CT_AUTOMATON CT_DYNAMIC NAME prolog locations CT_END
+	{
+		($3, true, $4, $5)
 	}
 ;
 
@@ -608,7 +612,8 @@ name_or_array_access_nonempty_list:
 
 /************************************************************/
 update_locations:
-   locations EOF { $1 }
+   locations EOF { $1, false }
+ | locations CT_END EOF { $1, true }
 ;
 
 locations:

@@ -50,10 +50,6 @@ class model_provider
           [Inotify.S_Modify]
       )
 
-
-
-    method get_model =
-      model
         
     method private read_key () =
       input_char stdin
@@ -85,6 +81,18 @@ class model_provider
       with Not_found ->
         raise (Failure ("Action `" ^ action_name ^ "` is not declared in the automaton"))
 
+    method private nosync_action_index automaton_index =
+      try
+        List.find
+          (fun action_index ->
+             model.action_types action_index = AbstractModel.Action_type_nosync)
+          (model.actions_per_automaton automaton_index)
+      with Not_found ->
+        raise (Failure
+                 ("No silent action is available in automaton `"
+                  ^ model.automata_names automaton_index
+                  ^ "` for a dynamic transition"))
+
     method private register_parsed_transition
         automaton_index source_location
         (guard, updates, sync, target_location_name) =
@@ -99,16 +107,25 @@ class model_provider
         | ParsingStructure.Sync action_name ->
             self#action_index automaton_index action_name
         | ParsingStructure.NoSync ->
-            raise (Failure "Dynamic transitions must specify a synchronization action")
+            self#nosync_action_index automaton_index
       in
       let target =
-        let target_location =
+        try
           List.find
             (fun location_index ->
               model.location_names automaton_index location_index = target_location_name)
             (model.locations_per_automaton automaton_index)
-        in
-        target_location
+        with Not_found ->
+          Printf.printf
+            "Creating waiting target location `%s` in automaton `%s` for on-the-fly mode.\n%!"
+            target_location_name
+            (model.automata_names automaton_index);
+          model.add_location_onthefly
+            automaton_index
+            target_location_name
+            false
+            true
+            AbstractModel.False_guard
       in
       let abstract_transition = {
         AbstractModel.guard =
@@ -163,7 +180,6 @@ class model_provider
         close_in_noerr ic;
         raise e
 
-
   method wait_for_update =
 
     let old_settings = Unix.tcgetattr Unix.stdin in
@@ -209,7 +225,7 @@ class model_provider
                 "NEW CONTENT:\n%s\n%!"
                 content;
 
-              let parsed_locations =
+              let parsed_locations, should_finish =
                 ParsingUtility.parse_update_string content parsing_data
               in
 
@@ -223,9 +239,17 @@ class model_provider
             !result
           in 
 
-          (* Default automaton index for the one being modify is 0 *)
-          (*Todo: later make this more sophisticate*)
-          let automaton_index = 0 in
+          let automaton_index =
+            match model.dynamic_automata with
+            | [automaton_index] -> automaton_index
+            | [] ->
+                raise (Failure
+                         "No automaton was declared with the `dynamic` modifier")
+            | _ ->
+                raise (Failure
+                         ("Several automata were declared with the `dynamic` modifier; "
+                          ^ "the update file must identify which one to modify"))
+          in
 
           List.iter
               (fun parsed_location ->
@@ -250,7 +274,7 @@ class model_provider
 
               ignore parsed_locations;
 
-              Updated content
+              if should_finish then Finished else Updated content
             end
             else
               loop ()
@@ -546,4 +570,3 @@ class model_provider
         "All dynamic location tests passed.\n%!"; *)
   end
 ;;
-

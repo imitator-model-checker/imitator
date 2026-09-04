@@ -2015,6 +2015,7 @@ let concrete_run_of_symbolic_run (model : AbstractModel.abstract_model) (state_s
 		automata = original_model.automata;
 		(* The automata names *)
 		automata_names = original_model.automata_names;
+		dynamic_automata = original_model.dynamic_automata;
 
 		(* The locations for each automaton *)
 		locations_per_automaton = original_model.locations_per_automaton;

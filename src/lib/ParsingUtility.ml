@@ -348,9 +348,9 @@ let compile_model_and_property_with_context(options : Options.imitator_options) 
 (************************************************************)
 	let parse_update_string
 			(content : string) (parsing_data: Templates.useful_parsing_context):
-			ParsingStructure.parsed_location list =
+			ParsingStructure.parsed_location list * bool =
 		let lexbuf = Lexing.from_string content in
-		let unexpanded_parsed_locations =
+		let unexpanded_parsed_locations, should_finish =
 			ModelParser.update_locations ModelLexer.token lexbuf
 		in
 		let parsed_locations =
@@ -365,7 +365,7 @@ let compile_model_and_property_with_context(options : Options.imitator_options) 
 		Printf.printf
 			"PARSED UPDATE LOCATIONS: %d\n%!"
 			(List.length parsed_locations);
-		parsed_locations
+		parsed_locations, should_finish
 
 
 (* let parse_on_the_fly_update
@@ -412,7 +412,6 @@ let compile_model_and_property_with_context(options : Options.imitator_options) 
         options
         ParsingDriver.parse_update_from_file
         options#update_file_name *)
-
 
 
 

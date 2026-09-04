@@ -172,6 +172,7 @@ let generate_abstract_model (simple_model : simple_abstract_model) : abstract_mo
       discrete_names_by_type_group = simple_model.discrete_names_by_type_group;
       type_of_variables = simple_model.type_of_variables;
       automata = simple_model.automata;
+      dynamic_automata = [];
       automata_names = simple_model.automata_names;
       locations_per_automaton = simple_model.locations_per_automaton;
       location_names = simple_model.location_names;

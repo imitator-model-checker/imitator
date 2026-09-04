@@ -123,13 +123,13 @@ let get_declared_discrete_variables_by_type variable_declarations =
 (** Get all (possibly identical) names of automata *)
 (*------------------------------------------------------------*)
 let get_declared_automata_names =
-  List.map (fun (automaton_name, _, _) -> automaton_name)
+  List.map (fun (automaton_name, _, _, _) -> automaton_name)
 
 (*------------------------------------------------------------*)
 (** Get all (all different) names of synclabs *)
 (*------------------------------------------------------------*)
 let get_declared_synclabs_names =
-  List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
+  List.fold_left (fun action_names (_, _, synclabs, _) -> list_union action_names synclabs) []
 
 (************************************************************)
 (* Checking the model *)
@@ -224,7 +224,7 @@ let check_declared_automata_names automata_names =
 let all_locations_different =
 	(* Check for every automaton *)
 	List.fold_left
-		(fun all_different (automaton_name, _, locations) ->
+		(fun all_different (automaton_name, _, _, locations) ->
 		(* Get all the location names *)
 		let locations =
 			List.map (fun (location : parsed_location) -> location.name) locations in
@@ -324,7 +324,7 @@ let synclab_used_everywhere automata synclab_name =
 	(* Try to find the synclab in all the automaton where it is declared *)
 	try(
 		(* Check each automaton *)
-		List.iter (fun (automaton_name, sync_name_list, locations) ->
+		List.iter (fun (automaton_name, _, sync_name_list, locations) ->
 			(* Only check if the synclab is declared here *)
 			if List.mem synclab_name sync_name_list then(
 			(* Check that at least one location contains the synclab *)
@@ -550,7 +550,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 
 
 	(* Check each automaton *)
-	List.iter (fun (automaton_name, sync_name_list, locations) ->
+	List.iter (fun (automaton_name, _, sync_name_list, locations) ->
 		print_message Verbose_total ("      Checking automaton `" ^ automaton_name ^ "`");
 		(* Get the index of the automaton *)
 		let index = try (Hashtbl.find index_of_automata automaton_name) with
@@ -1011,7 +1011,7 @@ let make_constants constants =
   (* Create an empty array for every automaton *)
   let actions_per_automaton = Array.make (List.length automata) [] in
   (* Fill it *)
-  List.iter (fun (automaton_name, sync_name_list, _) ->
+  List.iter (fun (automaton_name, _, sync_name_list, _) ->
       (* Get the index of the automaton *)
       let automaton_index = Hashtbl.find index_of_automata automaton_name in
       (* Update the array *)
@@ -1063,7 +1063,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   let locations_per_automaton = Array.make nb_automata (Array.make 0 "") in
   (* For each automaton: *)
   List.iter
-    (fun (automaton_name, _, transitions) ->
+    (fun (automaton_name, _, _, transitions) ->
        (* Get the index of the automaton *)
        let index = try(Hashtbl.find index_of_automata automaton_name)
          with Not_found -> raise (InternalError ("Automaton name `" ^ automaton_name ^ "` not found in function 'make_locations_per_automaton' although this had been checked before."))
@@ -1121,7 +1121,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 
 	(* For each automaton (except the observer, if any): *)
 	List.iter
-		(fun (automaton_name, _, locations) ->
+		(fun (automaton_name, is_dynamic, declared_action_names, locations) ->
 		(* Get the index of the automaton *)
 		print_message Verbose_total ("    - Building automaton " ^ automaton_name);
 		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
@@ -1270,11 +1270,42 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 					);
 
 			) locations;
-		(* Update the array of actions per automaton *)
 		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
 			list_union list_of_all_actions list_of_actions
 			) [] actions_per_location.(automaton_index) in
-		actions_per_automaton.(automaton_index) <- all_actions_for_this_automaton
+		if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then begin
+			(* Keep declared actions even when they are not used by a transition. *)
+			let declared_actions_for_this_automaton =
+				List.fold_left
+					(fun declared_actions action_name ->
+						if List.mem action_name removed_action_names then
+							declared_actions
+						else
+							try
+								(Hashtbl.find index_of_actions action_name) :: declared_actions
+							with Not_found ->
+								raise (InternalError
+									("Impossible to find the index of declared action `"
+									 ^ action_name ^ "`."))
+					)
+					[]
+					declared_action_names
+			in
+			actions_per_automaton.(automaton_index) <-
+				list_union declared_actions_for_this_automaton all_actions_for_this_automaton
+		end else
+			(* Preserve the existing behavior in all other modes. *)
+			actions_per_automaton.(automaton_index) <- all_actions_for_this_automaton;
+
+		(* Dynamic updates may add silent transitions even when the initial
+		   model does not contain one. Reserve one silent action per automaton
+		   so the action table remains fixed after model construction. *)
+		if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then begin
+			let action_index = !no_sync_index in
+			incr no_sync_index;
+			actions_per_automaton.(automaton_index) <-
+				action_index :: actions_per_automaton.(automaton_index)
+		end
 		) parsed_automata;
 
 
@@ -1375,7 +1406,8 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
 
               (* Filter instruction in update code bloc according to option -no-var-autoremove *)
               let filtered_parsed_seq_code_bloc_updates =
-                if options#no_variable_autoremove then
+                if options#no_variable_autoremove
+                   || options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then
                     (* No variable auto remove, keep all instructions in update code bloc *)
                     parsed_seq_code_bloc_update
                 else
@@ -2914,6 +2946,10 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures ?useful_context options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+	let no_variable_autoremove =
+		options#no_variable_autoremove
+		|| options#imitator_mode = AbstractAlgorithm.Temp_testonthefly
+	in
 
   (* Instantiate the template calls and expand synctatic variables *)
   let parsed_property_option = Option.map (expand_property parsed_model.unexpanded_variable_declarations) parsed_property_option in
@@ -2958,7 +2994,11 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let action_names, removed_action_names = if options#sync_auto_detection then action_names, [] else (
+	let action_names, removed_action_names =
+		if options#sync_auto_detection
+		|| options#imitator_mode = AbstractAlgorithm.Temp_testonthefly
+		then action_names, []
+		else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
 		List.partition (synclab_used_everywhere parsed_model.automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_model.automata synclab_name then
 			(* If it is used everywhere: keep *)
@@ -3169,7 +3209,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
     ImitatorUtilities.print_message_lazy Verbose_high (lazy "\n*** Compute dependency graph.\n");
 
     (* Resolve dependency graph of the model *)
-    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:options#no_variable_autoremove declarations_info parsed_model parsed_property_option in
+    let dependency_graph = ParsingStructureGraph.dependency_graph ~no_var_autoremove:no_variable_autoremove declarations_info parsed_model parsed_property_option in
     (* Get dependency graph as dot format *)
     let str_dependency_graph = lazy (ParsingStructureGraph.string_of_dependency_graph dependency_graph) in
     (* Print dependency graph, if verbose mode >= high *)
@@ -3198,7 +3238,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
 	let clock_names, _, parameter_names, discrete_names_by_type, removed_variable_names =
-	if options#no_variable_autoremove then(
+	if no_variable_autoremove then(
 		(* Nothing to do *)
 		single_clock_names, single_discrete_names, single_parameter_names, single_discrete_names_by_type, []
 	)else (
@@ -3374,6 +3414,12 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 			array_of_automata_names.(automaton_index)
 		) with Invalid_argument msg -> raise (InternalError ("Automaton name of index `" ^ (string_of_int automaton_index) ^ "` not found in `automata_names` function. Additional details: `" ^ msg ^ "`"))
 	in
+	let dynamic_automata =
+		List.filter_map
+			(fun (automaton_name, is_dynamic, _, _) ->
+				if is_dynamic then Some (Hashtbl.find index_of_automata automaton_name) else None)
+			parsed_model.automata
+	in
 
 	(* The array of actions ; index -> action name *)
 	let actions : action_name array = Array.of_list action_names in
@@ -3529,7 +3575,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
     in
 
     let used_functions_definitions, unused_functions_definitions =
-        if options#no_variable_autoremove then
+        if no_variable_autoremove then
             (* No variable auto remove, keep all instructions in function *)
             used_function_definitions_before_removed_assignments, unused_functions_definitions_before_removed_assignments
         else
@@ -3740,7 +3786,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking init definition…");
 
-	let init_definition, init_discrete_pairs, well_formed_init = check_init dependency_graph functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option options#no_variable_autoremove in
+	let init_definition, init_discrete_pairs, well_formed_init = check_init dependency_graph functions_table useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option no_variable_autoremove in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the constants inits *)
@@ -4248,7 +4294,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 		in 
 
 	if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
-		List.iter (fun (automaton_name, _, locations) ->
+		List.iter (fun (automaton_name, _, _, locations) ->
 			let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
 			List.iter (fun (location : parsed_location) ->
 				List.iter (fun (_, _, _, target_location_name) ->
@@ -4937,6 +4983,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 	automata = automata;
 	(* The automata names *)
 	automata_names = automata_names;
+	dynamic_automata = dynamic_automata;
 
 	(* The locations for each automaton *)
   locations_per_automaton =
@@ -5037,5 +5084,3 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 
 	
 	
-
-

@@ -3676,6 +3676,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		
 		(* The automata *)
 		automata = model.automata;
+		dynamic_automata = model.dynamic_automata;
 		(* The automata names *)
 		automata_names = model.automata_names;
 		

@@ -289,7 +289,7 @@ let all_components_used_in_automatons declarations_info (parsed_model : ParsingS
 	(*** NOTE: we pass this set by reference ***)
 
 	(* Gather in each automaton *)
-	List.iter (fun (automaton_name, _, locations) ->
+	List.iter (fun (automaton_name, _, _, locations) ->
 		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
         let automaton_component = Automaton_component automaton_name in
         all_relations := RelationSet.add (System_component, automaton_component) !all_relations;

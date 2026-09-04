@@ -302,7 +302,7 @@ let instantiate_automaton (templates : parsed_template_definition list) (parsed_
   let instantiated_actions           = instantiate_action_declarations param_map actions in
   (* Instantiate other parameters *)
   let instantiated_locs              = List.map (instantiate_loc param_map) locs in
-  (automaton_name, instantiated_actions, instantiated_locs)
+  (automaton_name, false, instantiated_actions, instantiated_locs)
 
 let instantiate_automata (templates : parsed_template_definition list) (insts : parsed_template_call list) : unexpanded_parsed_automaton list =
   List.map (instantiate_automaton templates) insts
@@ -487,10 +487,10 @@ let expand_action_declaration (g_decls: variable_declarations) (decl: action_dec
         List.map map_fun forall_idx_values
 
 let expand_synt_arrays_automaton (g_decls : variable_declarations) (synt_vars : synt_vars_data) (automaton : unexpanded_parsed_automaton) : parsed_automaton =
-  let name, unexpanded_actions, unexpanded_locs = automaton in
+  let name, is_dynamic, unexpanded_actions, unexpanded_locs = automaton in
   let expanded_actions = List.concat_map (expand_action_declaration g_decls) unexpanded_actions in
   let expanded_locs = List.map (expand_loc g_decls synt_vars) unexpanded_locs in
-  name, expanded_actions, expanded_locs
+  name, is_dynamic, expanded_actions, expanded_locs
 
 let expand_synt_arrays_automata (g_decls : variable_declarations) (synt_vars : synt_vars_data) : unexpanded_parsed_automaton list -> parsed_automaton list =
   List.map (expand_synt_arrays_automaton g_decls synt_vars)

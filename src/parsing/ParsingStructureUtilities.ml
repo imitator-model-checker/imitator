@@ -1033,7 +1033,7 @@ let link_variables_in_parsed_model parsed_model =
 
     let link_variables_in_automata automata =
         let link_variables_in_automaton automaton =
-            let automaton_name, sync_names, locations = automaton in
+            let automaton_name, is_dynamic, sync_names, locations = automaton in
 
             let link_variables_in_locations locations =
                 let link_variables_in_location location =
@@ -1054,7 +1054,7 @@ let link_variables_in_parsed_model parsed_model =
                 in
                 List.map link_variables_in_location locations
             in
-            automaton_name, sync_names, link_variables_in_locations locations
+            automaton_name, is_dynamic, sync_names, link_variables_in_locations locations
         in
         List.map link_variables_in_automaton automata
     in

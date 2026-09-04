@@ -133,6 +133,7 @@ rule token = parse
 	| "do"             { CT_DO }
 	| "done"           { CT_DONE }
 	| "downto"         { CT_DOWNTO }
+	| "dynamic"         { CT_DYNAMIC }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
 	| "False"          { CT_FALSE }

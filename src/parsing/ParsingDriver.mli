@@ -47,4 +47,4 @@ val parse_property_from_file : string -> ParsingStructure.unexpanded_parsed_prop
     @raise ParsingFailure in case of lexing/parsing error *)
 (* val parse_update_from_file : string -> ParsingStructure.unexpanded_parsed_location list *)
 
-val parse_update_from_string : string -> ParsingStructure.unexpanded_parsed_location list
+val parse_update_from_string : string -> ParsingStructure.unexpanded_parsed_location list * bool

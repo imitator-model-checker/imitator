@@ -261,6 +261,8 @@ type abstract_model = {
 	automata : automaton_index list;
 	(* The automata names *)
 	automata_names : automaton_index -> automaton_name;
+	(* Automata declared with the dynamic modifier *)
+	dynamic_automata : automaton_index list;
 
 	(* The locations for each automaton *)
 	locations_per_automaton : automaton_index -> location_index list;
