@@ -187,8 +187,8 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					LinearConstraint.false_p_nnconvex_constraint ()
 				)
 				else(
-					(* Case 1c: time can elapse for ever in the current location (and it is not accepting) => AU is necessarily false *)
-					if AlgoStateBased.check_whether_time_can_past_forever model symbolic_state.global_location state_px_constraint then (
+					(* Case 1c: time can elapse for ever in the current location (and it is not accepting, and not urgent) => AU is necessarily false *)
+					if not(AbstractModelUtilities.is_global_location_urgent model symbolic_state.global_location) && AlgoStateBased.check_whether_time_can_past_forever model symbolic_state.global_location state_px_constraint then (
 						(* Print some information *)
 						if verbose_mode_greater Verbose_low then(
 							self#print_algo_message Verbose_low ("Time can elapse forever in this state: discard!");
