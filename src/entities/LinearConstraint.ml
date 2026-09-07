@@ -1939,8 +1939,10 @@ let make_polyhedron_time_shift_pta (nb_dimensions : int) (time_direction : time_
 	make_time_polyhedron_from_flows_and_constants nb_dimensions time_direction flows variables_constant
 
 (*** NOTE: must provide an argument so be sure the function is dynamically called; otherwise statically !pxd_dim is 0 ***)
-let pxd_make_polyhedron_time_elapsing_pta v = make_polyhedron_time_shift_pta !pxd_dim Time_forward v
-let pxd_make_polyhedron_time_past_pta     v = make_polyhedron_time_shift_pta !pxd_dim Time_backward v
+let px_make_polyhedron_time_elapsing_pta v1 v2 = make_polyhedron_time_shift_pta !px_dim Time_forward v1 v2
+let px_make_polyhedron_time_past_pta     v1 v2 = make_polyhedron_time_shift_pta !px_dim Time_backward v1 v2
+let pxd_make_polyhedron_time_elapsing_pta v1 v2 = make_polyhedron_time_shift_pta !pxd_dim Time_forward v1 v2
+let pxd_make_polyhedron_time_past_pta     v1 v2 = make_polyhedron_time_shift_pta !pxd_dim Time_backward v1 v2
 
 
 

@@ -83,7 +83,7 @@ val apply_time_past : AbstractModel.abstract_model -> DiscreteState.global_locat
  * - there is certainly more efficient
  * - it is unclear whether this is correct for the largest class of models! (flows, negative clocks, etc.)
 ***)
-val check_whether_time_can_past_forever : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> bool
+val check_whether_time_can_past_forever : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 
 (*------------------------------------------------------------*)

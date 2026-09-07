@@ -640,9 +640,14 @@ let compute_stopwatches (location : DiscreteState.global_location) : (Automaton.
 (*** HACK: should be an object!!! ***)
 (*** WARNING: won't work if NESTED analyses are performed! i.e., a AlgoStateBased calls another AlgoStateBased ***)
 (* Static polyhedron used for time elapsing computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
-let time_elapsing_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+let pxd_time_elapsing_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
 (* Static polyhedron used for time past computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
-let time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+let pxd_time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+
+(* Static polyhedron used for time elapsing computation for px_polyhedra, in AF only, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let px_time_elapsing_polyhedron : LinearConstraint.px_linear_constraint option ref = ref None
+(* Static polyhedron used for time past computation for px_polyhedra, in AF only, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let px_time_past_polyhedron : LinearConstraint.px_linear_constraint option ref = ref None
 
 
 (*** WARNING: bad prog! Almost-duplicate function with 2 different types ***)
@@ -693,21 +698,21 @@ let px_compute_time_polyhedron (direction : LinearConstraint.time_direction) (mo
 	time_polyhedron
 
 
-let apply_time_shift_no_stopwatch (direction : LinearConstraint.time_direction) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
+let pxd_apply_time_shift_no_stopwatch (direction : LinearConstraint.time_direction) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 		let time_polyhedron =
 			(* Choose the right variable depending on time direction *)
 			let appropriate_variable = match direction with
-				| LinearConstraint.Time_forward	-> !time_elapsing_polyhedron
-				| LinearConstraint.Time_backward	-> !time_past_polyhedron
+				| LinearConstraint.Time_forward	-> !pxd_time_elapsing_polyhedron
+				| LinearConstraint.Time_backward	-> !pxd_time_past_polyhedron
 			in
 			match appropriate_variable with
 			| Some polyedron -> polyedron
-			| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift_no_stopwatch`.")
+			| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `pxd_apply_time_shift_no_stopwatch`.")
 		in
 		(* Apply time elapsing *)
 		LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint
 
-let apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
+let pxd_apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : unit =
 	(* If urgent: no time elapsing *)
 	if AbstractModelUtilities.is_global_location_urgent model location then (
 		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
@@ -720,8 +725,8 @@ let apply_time_shift (direction : LinearConstraint.time_direction) (model : Abst
 			let time_polyhedron =
 				(* Choose the right variable depending on time direction *)
 				let appropriate_variable = match direction with
-					| LinearConstraint.Time_forward	-> !time_elapsing_polyhedron
-					| LinearConstraint.Time_backward	-> !time_past_polyhedron
+					| LinearConstraint.Time_forward	-> !pxd_time_elapsing_polyhedron
+					| LinearConstraint.Time_backward	-> !pxd_time_past_polyhedron
 				in
 				match appropriate_variable with
 				| Some polyedron -> polyedron
@@ -751,18 +756,73 @@ let apply_time_shift (direction : LinearConstraint.time_direction) (model : Abst
 		)
 	)
 
+(*------------------------------------------------------------*)
+(*** BEGIN: horrible duplicate *)
+(* We DUPLICATE the whole pxd_apply_time_shift function, just because we need it for px constraints as well, and it would be complicated with the types *)
+(*------------------------------------------------------------*)
+
+let px_apply_time_shift (direction : LinearConstraint.time_direction) (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.px_linear_constraint) : unit =
+	(* If urgent: no time elapsing *)
+	if AbstractModelUtilities.is_global_location_urgent model location then (
+		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
+		()
+	(* If not urgent: apply time elapsing *)
+	)else(
+		(* If normal PTA, i.e., without stopwatches nor flows: directly call using the static polyhedron *)
+		if not model.has_non_1rate_clocks then(
+			(* Get the statically computed time elapsing polyhedron *)
+			let time_polyhedron =
+				(* Choose the right variable depending on time direction *)
+				let appropriate_variable = match direction with
+					| LinearConstraint.Time_forward	-> !px_time_elapsing_polyhedron
+					| LinearConstraint.Time_backward	-> !px_time_past_polyhedron
+				in
+				match appropriate_variable with
+				| Some polyedron -> polyedron
+				| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift`.")
+			in
+
+			(* Apply time elapsing *)
+			LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+
+		)else(
+			(* Otherwise, compute dynamically the list of clocks with their respective flow *)
+
+			(* Create the time polyhedron depending on the clocks *)
+			let time_polyhedron = px_compute_time_polyhedron direction model location in
+
+			(* Perform time elapsing *)
+			print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
+
+			(* Apply time elapsing *)
+			LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names the_constraint);
+			);
+			()
+		)
+	)
+
+let px_apply_time_elapsing = px_apply_time_shift LinearConstraint.Time_forward
+
+(*------------------------------------------------------------*)
+(*** END: horrible duplicate *)
+(*------------------------------------------------------------*)
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing = apply_time_shift LinearConstraint.Time_forward
+let pxd_apply_time_elapsing = pxd_apply_time_shift LinearConstraint.Time_forward
 
 
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_past = apply_time_shift LinearConstraint.Time_backward
-
+let pxd_apply_time_past = pxd_apply_time_shift LinearConstraint.Time_backward
+(* Shortcut *)
+let apply_time_past = pxd_apply_time_past
 
 (*------------------------------------------------------------*)
 (** Can the time elapse for ever for this constraint and location? *)
@@ -771,25 +831,25 @@ let apply_time_past = apply_time_shift LinearConstraint.Time_backward
  * - there is certainly more efficient
  * - it is unclear whether this is correct for the largest class of models! (flows, negative clocks, etc.)
 ***)
-let check_whether_time_can_past_forever (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : bool =
+let check_whether_time_can_past_forever (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.px_linear_constraint) : bool =
 	(* First copy the constraint *)
-	let constraint_after_time_elapsing : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_copy the_constraint in
+	let constraint_after_time_elapsing : LinearConstraint.px_linear_constraint = LinearConstraint.px_copy the_constraint in
 	(* Apply time elapsing *)
-	apply_time_elapsing model location constraint_after_time_elapsing;
+	px_apply_time_elapsing model location constraint_after_time_elapsing;
 	(* Compare equality *)
-	LinearConstraint.pxd_is_equal the_constraint constraint_after_time_elapsing
+	LinearConstraint.px_is_equal the_constraint constraint_after_time_elapsing
 
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_forward
+let apply_time_elapsing_no_stopwatch = pxd_apply_time_shift_no_stopwatch LinearConstraint.Time_forward
 
 
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
 (*------------------------------------------------------------*)
-let apply_time_past_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_backward
+let apply_time_past_no_stopwatch = pxd_apply_time_shift_no_stopwatch LinearConstraint.Time_backward
 
 
 
@@ -1025,7 +1085,7 @@ let compute_new_constraint (options : Options.imitator_options) (model : Abstrac
 			end;
 
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-			apply_time_elapsing model orig_location source_constraint_with_maybe_time_elapsing;
+			pxd_apply_time_elapsing model orig_location source_constraint_with_maybe_time_elapsing;
 
 			(* Compute the invariant in the source location I_l(X) *)
 			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
@@ -1108,7 +1168,7 @@ let compute_new_constraint (options : Options.imitator_options) (model : Abstrac
 		(* Normal IMITATOR semantics for time-elapsing: apply time-elapsing now *)
 		if not options#no_time_elapsing then(
 			print_message Verbose_high ("Applying time elapsing to [C(X) and g(X)]rho and I_l'(X) ]");
-			apply_time_elapsing model target_location current_constraint;
+			pxd_apply_time_elapsing model target_location current_constraint;
 		);
 
 
@@ -1281,23 +1341,37 @@ let compute_transitions (model : AbstractModel.abstract_model) (location : Discr
 (*** NOTE: Only used in AlgoPTGStrategyGenerator to extend dimensions of generated controller model ***)
 let compute_static_time_polyhedrons (model : AbstractModel.abstract_model) = 
 	let variables_elapse		= model.clocks in
-	let variables_constant		= model.parameters_and_discrete in
-	let time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse variables_constant in
-	let time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse variables_constant in
+
+	let pxd_time_el_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_elapsing_pta variables_elapse model.parameters_and_discrete in
+	let pxd_time_pa_polyhedron		= LinearConstraint.pxd_make_polyhedron_time_past_pta     variables_elapse model.parameters_and_discrete in
+
+	let px_time_el_polyhedron		= LinearConstraint.px_make_polyhedron_time_elapsing_pta variables_elapse model.parameters in
+	let px_time_pa_polyhedron		= LinearConstraint.px_make_polyhedron_time_past_pta     variables_elapse model.parameters in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high "Computed the static time elapsing polyhedron:";
-		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+		print_message Verbose_high "Computed the static time elapsing PXD polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_time_el_polyhedron);
 		print_message Verbose_high "";
-		print_message Verbose_high "Computed the static time past polyhedron:";
-		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+		print_message Verbose_high "Computed the static time past PXD polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_time_pa_polyhedron);
+		print_message Verbose_high "";
+		print_message Verbose_high "Computed the static time elapsing PX polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names px_time_el_polyhedron);
+		print_message Verbose_high "";
+		print_message Verbose_high "Computed the static time past PX polyhedron:";
+		print_message Verbose_high (LinearConstraint.string_of_px_linear_constraint model.variable_names px_time_pa_polyhedron);
 		print_message Verbose_high "";
 	);
 
 	(* Save them *)
-	time_elapsing_polyhedron	:= Some time_el_polyhedron;
-	time_past_polyhedron 		:= Some time_pa_polyhedron
+	pxd_time_elapsing_polyhedron	:= Some pxd_time_el_polyhedron
+	;
+	pxd_time_past_polyhedron 		:= Some pxd_time_pa_polyhedron
+	;
+	px_time_elapsing_polyhedron 	:= Some px_time_el_polyhedron
+	;
+	px_time_past_polyhedron 		:= Some px_time_pa_polyhedron
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Compute the initial state with the initial invariants and time elapsing *)
@@ -1373,7 +1447,7 @@ let create_initial_state (options : Options.imitator_options) (model : AbstractM
 		if not options#no_time_elapsing then(
 			(* Perform time elapsing *)
 			print_message Verbose_high ("Applying time elapsing to [ C0(X) and I_l0(X) and D_i = d_i ]");
-			apply_time_elapsing model initial_location current_constraint;
+			pxd_apply_time_elapsing model initial_location current_constraint;
 
 	(*		(* Compute the list of stopwatches *)
 			let stopped_clocks, elapsing_clocks = compute_stopwatches initial_location in
@@ -1632,7 +1706,7 @@ let combined_transitions_and_states_from_one_state_functional (options : Options
 		(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
 		if options#no_time_elapsing then(
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-			apply_time_elapsing model source_location orig_plus_discrete;
+			pxd_apply_time_elapsing model source_location orig_plus_discrete;
 		);
 
 		(* Statistics *)
@@ -1817,6 +1891,8 @@ let continuous_predecessors
 	);
 
 	(* Step 1: Apply time past *)
+
+	(*** NOTE (ÉA, 2026/09/07): why not using a px version of pxd_apply_time_past? ***)
 
 	(* Create the time polyhedron at location n depending on the clocks *)
 	let time_polyhedron : LinearConstraint.px_linear_constraint = px_compute_time_polyhedron LinearConstraint.Time_backward model location_n in
@@ -3249,7 +3325,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
 			if options#no_time_elapsing then(
 				print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-				apply_time_elapsing model source_location orig_plus_discrete;
+				pxd_apply_time_elapsing model source_location orig_plus_discrete;
 			);
 
 			(* Statistics *)
@@ -3884,7 +3960,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			);
 
 			(* Apply time past on the guard, depending on the flows *)
-			apply_time_past model global_location_i pxd_guard_i;
+			pxd_apply_time_past model global_location_i pxd_guard_i;
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
