@@ -26,21 +26,6 @@ open Result
 
 
 (************************************************************)
-(* p_linear_constraint cache definition *)
-(************************************************************)
-
-(*module PNNCLinearConstraintHash = Hashtbl.Make (
-	struct
-		type t		= LinearConstraint.p_nnconvex_constraint
-		let equal	= LinearConstraint.p_nnconvex_constraint_is_equal
-		(* To be on the safe side: convert to string then to int *)
-		let hash	= (fun p_nnconvex_constraint -> Hashtbl.hash (LinearConstraint.string_of_p_nnconvex_constraint (fun v -> "v" ^ (string_of_int v)) p_nnconvex_constraint))
-	end
-)*)
-
-
-
-(************************************************************)
 (************************************************************)
 (* Class definition: AU (virtual) *)
 (************************************************************)
