@@ -19994,7 +19994,7 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
-		# Last modified            : 2024/01/26
+		# Last modified            : 2026/09/07
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
 		'tags'       : 'AF,AU',
@@ -20003,8 +20003,7 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
 BEGIN CONSTRAINT
-  p >= 0
- & 10 >= p
+False
 END CONSTRAINT
 
 		"""
@@ -20021,7 +20020,7 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
-		# Last modified            : 2024/01/19
+		# Last modified            : 2026/09/07
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: no invariant but guard bounded from below',
 		'tags'       : 'AF',
@@ -20030,8 +20029,7 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
 BEGIN CONSTRAINT
-  p >= 0
- & 10 >= p
+False
 END CONSTRAINT
 
 		"""
@@ -20048,7 +20046,7 @@ END CONSTRAINT
 		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
-		# Last modified            : 2024/01/26
+		# Last modified            : 2026/09/07
 		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test AF: no invariant but guard bounded from below (AU syntax)',
 		'tags'       : 'AF,AU',
@@ -20057,8 +20055,7 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'AF-noinvariant-noupperguard.res' , 'content' : """
 BEGIN CONSTRAINT
-  p >= 0
- & 10 >= p
+False
 END CONSTRAINT
 
 		"""
