@@ -119,7 +119,11 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		);
 
 		(* Print some information *)
-		self#print_algo_message Verbose_medium ("Entering au_ref with depth " ^ (string_of_int depth_AU));
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium ("----------");
+			self#print_algo_message Verbose_medium ("⤵️ Entering au_rec with depth " ^ (string_of_int depth_AU));
+			self#print_algo_message Verbose_medium ("----------");
+		);
 
 		(* First check limits, which may raise exceptions *)
 		AlgoStateBased.check_limits options (Some ((List.length passed) + 1)) (Some state_space#nb_states) (Some start_time);
@@ -133,6 +137,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		let symbolic_state : State.state = state_space#get_state state_index in
 
 		(* Useful shortcut *)
+		(*** NOTE (ÉA, 2026/09/07): very doubtful that we have to copy here! ***)
 		let state_px_constraint = LinearConstraint.px_copy (symbolic_state.px_constraint) in
 
 		let af_result =
@@ -204,7 +209,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					if weak then(
 						(* Print some information *)
 						if verbose_mode_greater Verbose_low then(
-							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
+							self#print_algo_message Verbose_low ("State #" ^ (string_of_int state_index) ^ " belongs to passed: found loop!");
 						);
 
 						(* Return the state constraint *)
@@ -214,7 +219,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					)else(
 						(* Print some information *)
 						if verbose_mode_greater Verbose_medium then(
-							self#print_algo_message Verbose_low ("State " ^ (string_of_int state_index) ^ " belongs to passed: skip");
+							self#print_algo_message Verbose_low ("State #" ^ (string_of_int state_index) ^ " belongs to passed: skip");
 						);
 
 						(* Return false *)
@@ -228,16 +233,29 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					(* Compute all successors via all possible outgoing transitions: the list is made of transitions and state index; if the current state was not met before, we compute successors and add them to the state space immediately. Otherwise, we simply get everything from the state space. *)
 					let transitions_and_successors_list : (StateSpace.combined_transition * State.state_index) list =
 						(* Only compute the successors from scratch if the state was not explored before *)
-						if computed_successors#mem state_index then
+						if computed_successors#mem state_index then(
+							(* Print some information *)
+							if verbose_mode_greater Verbose_high then(
+								self#print_algo_message Verbose_high ("State #" ^ (string_of_int state_index) ^ " was met before: we retrieve its successors without recomputing.");
+							);
 							state_space#get_successors_with_combined_transitions state_index
 						(* Else: state never met before, compute its successors for real *)
-						else(
+						)else(
+							(* Print some information *)
+							if verbose_mode_greater Verbose_high then(
+								self#print_algo_message Verbose_high ("State #" ^ (string_of_int state_index) ^ " was NOT met before: we compute its successors.");
+							);
 							let successors =
 							(* Compute all successors for real *)
 							let transitions_and_concrete_successors_list : (StateSpace.combined_transition * State.state) list = AlgoStateBased.combined_transitions_and_states_from_one_state_functional options model symbolic_state in
 							(* Add the successors one by one *)
 							(*** BADPROG: map with side effets ***)
 							List.map (fun ((combined_transition , successor) : (StateSpace.combined_transition * State.state)) ->
+								(* Print some information *)
+								if verbose_mode_greater Verbose_high then(
+									self#print_algo_message Verbose_high ("A successor from state #" ^ (string_of_int state_index) ^ " was computed:");
+									self#print_algo_message Verbose_high (ModelPrinter.string_of_state model successor);
+								);
 								(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
 								state_space#increment_nb_gen_states;
 
@@ -273,11 +291,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 						let successor = state_space#get_state successor_state_index in
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
-							self#print_algo_message_newline Verbose_high ("Considering successor " ^ (string_of_int successor_state_index) ^ " of " ^ (string_of_int state_index) ^ "…");
-						);
-
-						(* Print some information *)
-						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Considering successor #" ^ (string_of_int successor_state_index) ^ " of state #" ^ (string_of_int state_index) ^ "…");
 							self#print_algo_message_newline Verbose_high ("Calling recursively AU(" ^ (string_of_int successor_state_index) ^ ")…");
 						);
 
@@ -290,7 +304,7 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 							self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k_good);
 						);
 
-						(* k_block <- T \ successor|_P *)
+						(* k_block <- True \ successor|_P *)
 						let k_block : LinearConstraint.p_nnconvex_constraint = LinearConstraint.true_p_nnconvex_constraint () in
 						LinearConstraint.p_nnconvex_difference_assign k_block (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint (LinearConstraint.px_hide_nonparameters_and_collapse successor.px_constraint));
 
@@ -318,9 +332,6 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 
 						(* k_live <- k_live U (C ^ g)\past *)
 						let eventually_exiting_valuations : LinearConstraint.px_linear_constraint = LinearConstraint.px_copy ( DeadlockExtra.live_valuations_precondition model state_space state_index combined_transition successor_state_index) in
-
-						(* NOTE: unnecessary intersection as we remove the final valuations from C anyway *)
-	(* 					LinearConstraint.px_intersection_assign eventually_exiting_valuations [state_px_constraint]; *)
 
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
@@ -361,9 +372,9 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 					LinearConstraint.p_nnconvex_p_intersection_assign k parameters_consistent_with_init;
 
 					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message_newline Verbose_medium ("Final constraint in AU(" ^ (string_of_int state_index) ^ ")…");
-						self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message_newline Verbose_high ("Final constraint from state #" ^ (string_of_int state_index) ^ "…");
+						self#print_algo_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names k);
 					);
 
 					(* return k *)
@@ -377,6 +388,14 @@ class virtual algoAUgen (model : AbstractModel.abstract_model) (property : Abstr
 		(*** NOTE (ÉA, 2024/03/14): copy the constraint first, as it might be manipulated in the future ***)
 		if options#cache_in_AF then(
 			Hashtbl.add cache_result_AF state_index (*(LinearConstraint.p_nnconvex_copy*) af_result ;
+		);
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium ("----------");
+			self#print_algo_message_newline Verbose_medium ("AU(" ^ (string_of_int state_index) ^ ") terminates with result:");
+			self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_result);
+			self#print_algo_message Verbose_medium ("⤴️ ---------- end AU(" ^ (string_of_int state_index) ^ ")");
 		);
 
 		(* Return result *)
