@@ -20070,6 +20070,347 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test author              : Mikael Bisgaard Dahlsen-Jensen
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks: no invariant',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariant.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (no invariants, 2 locations)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariant2locs.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariant2locs.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (2 locations, equality)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariant2locsEq.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariant2locsEq.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (2 locations, geq constraint)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariant2locsGeq.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariant2locsGeq.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (no invariant despite guard)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantGuard.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantGuard.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (geq invariant)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantGuards.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantGuards.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without parameters (no invariant, open guard)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantGuardSup.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantGuardSup.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (no invariants BUT urgency)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantUrgent.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantUrgent.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (invariant, leq guard)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/withInvariant.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'withInvariant.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (with invariants, 2 locs)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/withInvariant2locs.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'withInvariant2locs.res' , 'content' : """
+BEGIN CONSTRAINT
+True
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (no invariants, unused parameter)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantParam.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantParam.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (no clock invariants but parameters invariants)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantParam2.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantParam2.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test author              : Étienne André
+		# Test since               : 2026/09/07
+		# Last modified            : 2026/09/07
+		# Test for IMITATOR version: 3.4
+		'purpose'    : 'Test AF without clocks (no clock invariants but punctual parameters invariants)',
+		'tags'       : 'AF',
+		'input_files': ['AF/TestInvariant/noInvariantParam3.imi' , 'basic-properties/synth-AF-accepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'noInvariantParam3.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test author              : Étienne André
 		# Test since               : 2024/01/19
 		# Last modified            : 2024/01/19
