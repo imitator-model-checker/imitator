@@ -765,6 +765,22 @@ let apply_time_past = apply_time_shift LinearConstraint.Time_backward
 
 
 (*------------------------------------------------------------*)
+(** Can the time elapse for ever for this constraint and location? *)
+(*------------------------------------------------------------*)
+(*** NOTE (ÉA, 2026/09/07): this is currently implemented as checking whether C = apply_time_elapsing(C)
+ * - there is certainly more efficient
+ * - it is unclear whether this is correct for the largest class of models! (flows, negative clocks, etc.)
+***)
+let check_whether_time_can_past_forever (model : AbstractModel.abstract_model) (location : DiscreteState.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) : bool =
+	(* First copy the constraint *)
+	let constraint_after_time_elapsing : LinearConstraint.pxd_linear_constraint = LinearConstraint.pxd_copy the_constraint in
+	(* Apply time elapsing *)
+	apply_time_elapsing model location constraint_after_time_elapsing;
+	(* Compare equality *)
+	LinearConstraint.pxd_is_equal the_constraint constraint_after_time_elapsing
+
+
+(*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (Answer will not be correct if PTA has stopwatches) *)
 (*------------------------------------------------------------*)
 let apply_time_elapsing_no_stopwatch = apply_time_shift_no_stopwatch LinearConstraint.Time_forward

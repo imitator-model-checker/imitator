@@ -76,6 +76,15 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (*------------------------------------------------------------*)
 val apply_time_past : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
+(*------------------------------------------------------------*)
+(** Can the time elapse for ever for this constraint and location? *)
+(*------------------------------------------------------------*)
+(*** NOTE (ÉA, 2026/09/07): this is currently implemented as checking whether C = apply_time_elapsing(C)
+ * - there is certainly more efficient
+ * - it is unclear whether this is correct for the largest class of models! (flows, negative clocks, etc.)
+***)
+val check_whether_time_can_past_forever : AbstractModel.abstract_model -> DiscreteState.global_location -> LinearConstraint.pxd_linear_constraint -> bool
+
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (Answer might not be correct if PTA has stopwatches) *)
