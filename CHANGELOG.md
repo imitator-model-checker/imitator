@@ -1,6 +1,12 @@
 # Releases
 
 *******************************************************
+## future release (20xx-xx-xx) Cheese xxx
+
+### Export
+- New keyword ` (ACCEPTING)` for accepting locations in `.states` file
+
+*******************************************************
 ## release 3.4 (2026-06-24) Cheese Durian
 
 ### Major features
