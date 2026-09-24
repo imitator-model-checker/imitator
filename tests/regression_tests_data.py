@@ -2952,7 +2952,7 @@ END CONSTRAINT
 	{
 		# Test version             : 1
 		# Test since               : 2022/05/02
-		# Last modified            : 2022/05/02
+		# Last modified            : 2026/09/26
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test that a linear expression multiplying variable and coef (k*v or v*k) work correctly',
 		'author': 'lbinria',
@@ -2961,7 +2961,7 @@ END CONSTRAINT
 		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'linear_expr_coef_variable-statespace.states' , 'content' : """
-  STATE 1:
+  STATE 1 (ACCEPTING):
   P: lend, i1 = 19, i2 = 7, i3 = 7, i4 = 7, r = 3 ==>
 &True
 
@@ -3797,7 +3797,7 @@ Error                                   : invalid model
     {
         ## Test version             : 1
         ## Test since               : 2021/05/12
-        ## Last modified            : 2021/05/31
+        ## Last modified            : 2026/09/24
         ## Test for IMITATOR version: 3.1.0
         ## Author 					: lbinria
         'purpose'    : 'Test that "not" Boolean operator is effective and correct',
@@ -3807,7 +3807,7 @@ Error                                   : invalid model
         'expectations' : [
             {'file': 'not-operator-statespace.states' , 'content' : """
   /************************************************************/
-  STATE 1:
+  STATE 1 (ACCEPTING):
   pta: lend, b1 = False, b2 = True ==> 
 &True
 
@@ -3828,7 +3828,7 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/05/31
-		## Last modified            : 2021/05/31
+		## Last modified            : 2026/09/24
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
@@ -3847,7 +3847,7 @@ Error                                   : invalid model
   True
 
   /************************************************************/
-  STATE 2:
+  STATE 2 (ACCEPTING):
   pta: lend, b1 = True, b2 = False ==> 
 &True
 
@@ -4521,7 +4521,7 @@ END CONSTRAINT
   True
 
   /************************************************************/
-  STATE 1:
+  STATE 1 (ACCEPTING):
   P: lend, i = 0, my_int_array_to_update = [1, 0], array_of_queue = [queue()], array_of_stack = [stack()], array_of_list = [list([0, 0])], super_nested = [[[1, 2], [3, 0]], [[5, 6], [0, 0]]], nested = [[1, 2], [3, 4]], my_bin_array = [0b1001, 0b0101], my_rat_array = [1, 0, 0], my_bool_array = [False, True] ==>
 &True
 
@@ -4586,7 +4586,7 @@ Error                                   : index out of range
   True
 
   /************************************************************/
-  STATE 1:
+  STATE 1 (ACCEPTING):
   pta: lend, list_of_queue = list([queue()]), list_of_stack = list([stack()]), list_array = [list([1]), list([2])], list_list = list([list([1])]), array_list = list([[1, 2]]), binary_word_list = list([0b1100]), bool_list = list([True]), int_list = list([2, 1]), rational_list = list([1]) ==>
 &True
 
@@ -5307,7 +5307,7 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/03/04
-		## Last modified            : 2021/05/31
+		## Last modified            : 2026/09/24
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
@@ -5317,7 +5317,7 @@ Error                                   : invalid model
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'init-variable-with-constant-statespace.states' , 'content' : """
-  STATE 1:
+  STATE 1 (ACCEPTING):
   pta: lend, b = True ==>
 &True
 
@@ -5532,7 +5532,7 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/05/27
-		## Last modified            : 2021/05/31
+		## Last modified            : 2026/09/24
 		## Test for IMITATOR version: 3.1.0
 		## Author 					: lbinria
 		'author': 'lbinria',
@@ -5542,7 +5542,7 @@ Error                                   : invalid model
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'init-expression-complex-statespace.states' , 'content' : """
-  STATE 1:
+  STATE 1 (ACCEPTING):
   pta: lend, r2 = 7/3, b = True ==>
 & 3*p > 7
 
@@ -6176,7 +6176,7 @@ Error                                   : invalid model
 	{
 		## Test version             : 1
 		## Test since               : 2021/06/07
-		## Last modified            : 2021/06/07
+		## Last modified            : 2026/09/24
 		## Test for IMITATOR version: 3.1.0
 		'author': 'lbinria',
 		'purpose'    : 'Test that behavior of pow function is correct',
@@ -6211,7 +6211,7 @@ Error                                   : invalid model
    p1 >= 0
 
   /************************************************************/
-  STATE 3:
+  STATE 3 (ACCEPTING):
   pta: lend, r1 = 3, r2 = 4, projected_result_1 = 82, projected_result_2 = 65, n = 3, i = 3, j = 4 ==> 
 & p1 = 82
 & p2 = 65
@@ -6232,7 +6232,7 @@ Error                                   : invalid model
 	{
 		## Test version             : 1.1
 		## Test since               : 2022/07/19
-		## Last modified            : 2023/08/22
+		## Last modified            : 2026/09/24
 		'author': 'lbinria',
 		'purpose'    : 'Test all builtin functions',
 		'input_files': ['functions/builtin-functions.imi'],
@@ -6241,7 +6241,7 @@ Error                                   : invalid model
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'builtin-functions-statespace.states' , 'content' : """
-  STATE 1:
+  STATE 1 (ACCEPTING):
   P: lend, r = 5, r_pow = 25, q_copy = queue([11, 1]), queue_length = 2, queue_is_empty = True, queue_pop = 10, queue_top = 11, q = queue(), s_copy = stack([1, 10]), stack_length = 2, stack_is_empty = True, stack_pop = 11, stack_top = 10, s = stack(), list_length = 5, list_mem = True, list_rev = list([5, 4, 3, 2, 1]), list_cons = list([0, 1, 2, 3, 4, 5]), list_tl = list([2, 3, 4, 5]), list_hd = 1, list_is_empty = False, l = list([1, 2, 3, 4, 5]), a_length = 4, array_mem = True, array_b = [1, 2, 3, 4], aa = [1, 2, 3, 4], bfl = 0b101100, bfr = 0b001011, b = 0b1011, bsl = 0b1100, bsr = 0b0010, bla = 0b0011, blo = 0b1111, blxo = 0b1100, bln = 0b0100, i_pow = 25, i_div = 2, modulo = 1 ==>
 &True
 		"""
@@ -6257,7 +6257,7 @@ Error                                   : invalid model
     {
       ## Test version             : 1
       ## Test since               : 2022/03/16
-      ## Last modified            : 2022/03/16
+      ## Last modified            : 2026/09/24
       ## Test for IMITATOR version: 3.3
       'author': 'lbinria',
       'purpose'    : 'Test that evaluation order of function parameters is left to right',
@@ -6266,7 +6266,7 @@ Error                                   : invalid model
       'options'    : '-mode statespace -states-description -no-var-autoremove',
       'expectations' : [
         {'file': 'function_argument_eval_order-statespace.states' , 'content' : """
-    STATE 1:
+    STATE 1 (ACCEPTING):
     pta: lend, result = 9, s = stack() ==>
     &True
 
@@ -6310,7 +6310,7 @@ Number of IPTAs                         : 1
     {
       ## Test version             : 1
       ## Test since               : 2022/03/16
-      ## Last modified            : 2022/03/16
+      ## Last modified            : 2026/09/24
       'author': 'lbinria',
       'purpose'    : 'Test some behaviors on user functions',
       'input_files': ['functions/user-function-1.imi'],
@@ -6328,7 +6328,7 @@ Number of IPTAs                         : 1
   True
 
   /************************************************************/
-  STATE 1:
+  STATE 1 (ACCEPTING):
   P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
 &True
       """
@@ -6345,7 +6345,7 @@ Number of IPTAs                         : 1
     {
       ## Test version             : 1
       ## Test since               : 2026/05/28
-      ## Last modified            : 2026/05/28
+      ## Last modified            : 2026/09/24
       'author': 'Étienne André',
       'purpose'    : 'Test some behaviors on user functions (simplified version)',
       'input_files': ['functions/user-function-1-simplified.imi'],
@@ -6363,7 +6363,7 @@ Number of IPTAs                         : 1
   True
 
   /************************************************************/
-  STATE 1:
+  STATE 1 (ACCEPTING):
   P: lend, r_result = 4, lerp_result = 1583/200, r_global = 15, r1 = 1, top_stack = 2, top_queue = 0, i_result = 3, i_result_2 = 3, a_global = [0, 1], i_global = 10, bin = 0b0011, q = queue([0, 1, 2]), s = stack([2, 1, 0]), i1 = 1 ==>
 &True
       """
