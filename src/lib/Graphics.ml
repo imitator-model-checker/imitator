@@ -1150,7 +1150,9 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 				(* Add the state *)
 				^ "\n\n  /************************************************************/"
 				^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
-				^ "\n  STATE " ^ (string_of_int state_index) ^ ":"
+				^ "\n  STATE " ^ (string_of_int state_index)
+				^ (if DiscreteState.is_accepting model.is_accepting global_location then " (ACCEPTING)" else "")
+				^ ":"
 				^ "\n  " ^ (ModelPrinter.string_of_state model {global_location = global_location ; px_constraint = linear_constraint;})
 				(* Add the projection of the constraint onto the parameters *)
 				^ (
