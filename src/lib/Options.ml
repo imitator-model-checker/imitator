@@ -145,6 +145,9 @@ class imitator_options =
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
 
+		(* Computes the synchronized product of PTAs *)
+		val mutable pta_syncronized_product : pta_syncronized_product = PTA_syncronized_product_none
+
 		(* M-extrapolation *)
 		val mutable extrapolation : extrapolation = No_extrapolation
 
@@ -336,6 +339,7 @@ class imitator_options =
 		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
 
+		method pta_syncronized_product	= pta_syncronized_product
 		method extrapolation						= extrapolation
 
 		method graphics_detail 					= graphics_detail
@@ -563,6 +567,19 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 					exit(1);
 				)
 
+
+			and set_pta_syncronized_product pta_syncronized_product_str =
+				(* Switch input string *)
+				if pta_syncronized_product_str = "none" then
+					pta_syncronized_product <- PTA_syncronized_product_none
+				else if pta_syncronized_product_str = "true" then
+					pta_syncronized_product <- PTA_syncronized_product
+				else(
+					print_error ("The PTA syncronized product value `" ^ pta_syncronized_product_str ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 			and set_extrapolation extrapolation_str =
 				(* Switch input string *)
@@ -1159,6 +1176,10 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
 				");
 
+				("-pta-sync-prod", String set_pta_syncronized_product, " Synchronized Product of PTAs.
+        Use `true`             to compute it.
+        Default: none.
+				");
 
 				("-PTG-generate-controller", String set_ptg_controller, " Generate a valid controller after running the PTG algorithm.
 				Use value `no-draw` to only generate the .imi file.
@@ -1950,6 +1971,12 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 			);
 
 
+			(* PTA Synchronized Product *)
+			begin
+			match pta_syncronized_product with
+				| PTA_syncronized_product_none	-> print_message Verbose_experiments ("No PTA Synchronized Product computation")
+				| PTA_syncronized_product				-> print_message Verbose_standard ("Computing the PTA Synchronized Product")
+			end;
 		;
 
 

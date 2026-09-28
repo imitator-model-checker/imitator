@@ -248,6 +248,14 @@ type nz_method =
 	| NZ_already
 
 
+(** Computes the syncronized product of a PTA **)
+type pta_syncronized_product =
+	(* Do not compute it by default *)
+	| PTA_syncronized_product_none
+
+	(* Compute it *)
+	| PTA_syncronized_product
+
 
 (** Type of extrapolation *)
 type extrapolation =

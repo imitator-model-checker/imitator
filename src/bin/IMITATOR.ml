@@ -572,6 +572,22 @@ if options#dynamic_clock_elimination then (
 	ClocksElimination.prepare_clocks_elimination model
 );
 
+
+(************************************************************)
+(* PTA Syncronized Product *)
+(************************************************************)
+if options#pta_syncronized_product <> PTA_syncronized_product_none then (
+	print_message Verbose_low "Preparing PTA syncronized product computation…";
+	try(
+		let sync_model = AlgoPTA.compute_PTA_syncronized_product model in
+			print_message Verbose_low "PTA syncronized product computation completed…";
+	) with
+	| PTA_syncronized_product_exception ->
+		print_error ("An error was detected during PTA syncronized product computation.");
+		abort_program();
+);
+
+
 (************************************************************)
 (* Extrapolation *)
 (************************************************************)
