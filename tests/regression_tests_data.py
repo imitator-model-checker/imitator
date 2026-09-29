@@ -4062,20 +4062,14 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'bool-exemplifying.res' , 'content' : """
 BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -4400,12 +4394,12 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
+    },
 		"""
 			 } # end result file
 			,
@@ -12889,20 +12883,14 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'testEFexemplify-discrete.res' , 'content' : """
 BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-  
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -12987,16 +12975,15 @@ True
           },
           "flows": {
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
-
 END RESULT
-
 """
 			} # end result file
 			,
