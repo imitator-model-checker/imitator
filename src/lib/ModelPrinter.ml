@@ -1543,12 +1543,12 @@ let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) : JsonFo
     let json_steps = JsonFormatter.Json_array (json_init_state :: json_concrete_steps) in
 
 		JsonFormatter.Json_struct [
-				"run", JsonFormatter.Json_struct [
+				(* "run", JsonFormatter.Json_struct [ *)
 						"nature", JsonFormatter.Json_string "concrete";
 						"valuation", json_of_pval model concrete_run.p_valuation;
 						"steps", json_steps;
 				]
-		]
+		(* ] *)
 
 (** Convert an impossible_concrete_run to a JSON-style string *)
 let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) : JsonFormatter.json_element =
@@ -1572,9 +1572,9 @@ let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.
 	let json_steps = JsonFormatter.Json_array (concrete_steps @ impossible_steps) in
 
 		JsonFormatter.Json_struct [
-	    "run", JsonFormatter.Json_struct [
+	    (* "run", JsonFormatter.Json_struct [ *)
 	        "nature", JsonFormatter.Json_string "negative";
 	        "valuation", json_of_pval model impossible_concrete_run.p_valuation;
 	        "steps", json_steps;
 	    ]
-	]
+	(* ] *)
