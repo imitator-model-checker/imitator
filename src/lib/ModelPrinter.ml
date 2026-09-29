@@ -178,7 +178,7 @@ let string_of_pval model pval =
 	)
 
 (** Convert a parameter valuation (PVal.pval) into a JSON-like string *)
-let json_of_pval model pval =
+let json_of_pval (model : abstract_model) (pval : PVal.pval) : JsonFormatter.json_element =
 	(* Hack for empty model *)
 	if model.nb_parameters = 0 then
 	    JsonFormatter.Json_null
@@ -1535,26 +1535,23 @@ let json_of_arbitrary_concrete_steps model impossible_concrete_steps =
 
 
 (** Convert a concrete run to a JSON-style string *)
-let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+let json_of_concrete_run model (concrete_run : StateSpace.concrete_run) : JsonFormatter.json_element =
 
     (* Convert states and transition to JSON array *)
     let json_init_state = JsonFormatter.Json_struct [json_of_concrete_state model concrete_run.initial_state] in
     let json_concrete_steps = json_of_concrete_steps model concrete_run.steps in
     let json_steps = JsonFormatter.Json_array (json_init_state :: json_concrete_steps) in
 
-    let json_concrete_run =
-        JsonFormatter.Json_struct [
-            "run", JsonFormatter.Json_struct [
-                "nature", JsonFormatter.Json_string "concrete";
-                "valuation", json_of_pval model concrete_run.p_valuation;
-                "steps", json_steps;
-            ]
-        ]
-    in
-    JsonFormatter.to_string ~pretty:true json_concrete_run
+		JsonFormatter.Json_struct [
+				"run", JsonFormatter.Json_struct [
+						"nature", JsonFormatter.Json_string "concrete";
+						"valuation", json_of_pval model concrete_run.p_valuation;
+						"steps", json_steps;
+				]
+		]
 
 (** Convert an impossible_concrete_run to a JSON-style string *)
-let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) : JsonFormatter.json_element =
 
     (* Convert states and transition to JSON array *)
     let json_init_state = JsonFormatter.Json_struct [json_of_concrete_state model impossible_concrete_run.initial_state] in
@@ -1574,13 +1571,10 @@ let json_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.
 
 	let json_steps = JsonFormatter.Json_array (concrete_steps @ impossible_steps) in
 
-	(* First recall the parameter valuation *)
-	let json_run = JsonFormatter.Json_struct [
+		JsonFormatter.Json_struct [
 	    "run", JsonFormatter.Json_struct [
 	        "nature", JsonFormatter.Json_string "negative";
 	        "valuation", json_of_pval model impossible_concrete_run.p_valuation;
 	        "steps", json_steps;
 	    ]
 	]
-	in
-    JsonFormatter.to_string ~pretty:true json_run

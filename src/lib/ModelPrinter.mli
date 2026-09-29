@@ -61,9 +61,10 @@ val customized_string_of_guard : Constants.customized_string -> (Automaton.varia
 
 val debug_string_of_symbolic_run            : AbstractModel.abstract_model -> StateSpace.stateSpace -> StateSpace.symbolic_run -> string
 val debug_string_of_concrete_run            : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
-val json_of_concrete_run                    : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val json_of_concrete_run                    : AbstractModel.abstract_model -> StateSpace.concrete_run -> JsonFormatter.json_element
 val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
-val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val json_of_impossible_concrete_run         : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> JsonFormatter.json_element
+
 
 
 (************************************************************)
@@ -90,6 +91,8 @@ val string_of_seq_code_bloc : abstract_model -> int -> ?sep:string -> seq_code_b
 
 (** Convert a parameter valuation (PVal.pval) into a string *)
 val string_of_pval : AbstractModel.abstract_model -> PVal.pval -> string
+
+val json_of_pval : AbstractModel.abstract_model -> PVal.pval -> JsonFormatter.json_element
 
 (** Convert a px-valuation into a string *)
 val string_of_px_valuation : AbstractModel.abstract_model -> LinearConstraint.px_valuation -> string
