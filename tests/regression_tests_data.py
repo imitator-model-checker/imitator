@@ -12875,8 +12875,8 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with only discrete',
 		'input_files': ['testEFexemplify-discrete.imi', 'testEFexemplify-discrete.imiprop'],
 		'options'    : '-merge none -comparison equality -no-var-autoremove',
@@ -12998,28 +12998,21 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock',
 		'input_files': ['testEFexemplify-1clock.imi', 'testEFexemplify-1clock.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1clock.res' , 'content' : """
-BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-  
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-	"run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
 		"nature": "concrete",
 		"valuation": null,
 		"steps": [
@@ -13107,16 +13100,14 @@ True
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
 }
-(************************************************************)
-
-END RESULT
-
 """
 			} # end result file
 			,
@@ -13131,28 +13122,22 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with only 1 clock (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-1complexclock.imi', 'testEFexemplify-1complexclock.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-1complexclock.res' , 'content' : """
 BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-  
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -13279,14 +13264,14 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
-
 END RESULT
 
 """
@@ -13303,28 +13288,22 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with 2 clocks (+ non-1 flows, non-0 resets)',
 		'input_files': ['testEFexemplify-2complexclocks.imi', 'testEFexemplify-2complexclocks.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFexemplify-2complexclocks.res' , 'content' : """
 BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -13469,14 +13448,14 @@ True
             "y": "1",
             "swap": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
-
 END RESULT
 """
 			} # end result file
@@ -13492,8 +13471,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/04/01
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with 1 clock and 2 bounded signals',
 		'input_files': ['testEFexemplify-2signals.imi', 'testEFexemplify-2signals.imiprop'],
 		'options'    : '-merge none -comparison equality',
@@ -13501,19 +13480,14 @@ END RESULT
 			# WARNING: there is a lot of non-determinism, so a failure on this test does not necessarily mean the algorithm is wrong! It should then be manually inspected
 			# NOTE: only quickly checked it (2022/03/31)
 			{'file': 'testEFexemplify-2signals.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-	"run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
 		"nature": "concrete",
 		"valuation": null,
 		"steps": [
@@ -13698,13 +13672,12 @@ True
 					"s_1": "0", 
 					"s_2": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
+              }
+            }
+          }
+        ]
+      }
+    },
 """
 			} # end result file
 			,
@@ -13718,26 +13691,19 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/02
-		# Last modified            : 2022/03/02
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run',
 		'input_files': ['testEFExemplify1neg.imi', 'testEFExemplify1neg.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg.res' , 'content' : """
-(************************************************************)
- Run #2
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
-{
-  "run": {
+    {
+      "index": 2,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": null,
     "steps": [
@@ -13817,13 +13783,14 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -13837,26 +13804,19 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/02
-		# Last modified            : 2022/03/02
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run (in initial location)',
 		'input_files': ['testEFExemplify1neg-b.imi', 'testEFExemplify1neg.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-b.res' , 'content' : """
-(************************************************************)
- Run #2
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
-{
-  "run": {
+    {
+      "index": 2,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": null,
     "steps": [
@@ -13900,13 +13860,14 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -13920,28 +13881,21 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/02
-		# Last modified            : 2022/03/02
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows',
 		'input_files': ['testEFExemplify1neg-c.imi', 'testEFExemplify1neg.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-c.res' , 'content' : """
-(************************************************************)
- Run #2
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
-{
-  "run": {
-    "nature": "negative",
-    "valuation": null,
+    {
+      "index": 2,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "impossible run",
+      "run": {
+        "nature": "negative",
+        "valuation": null,
     "steps": [
       {
         "state": {
@@ -13991,13 +13945,11 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
 """
 			} # end result file
 			,
@@ -14011,28 +13963,21 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/02
-		# Last modified            : 2022/03/02
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify without parameters: unique negative run + flows + negative variable',
 		'input_files': ['testEFExemplify1neg-d.imi', 'testEFExemplify1neg.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1neg-d.res' , 'content' : """
-(************************************************************)
- Run #2
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
-{
-  "run": {
-    "nature": "negative",
-    "valuation": null,
+    {
+      "index": 2,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "impossible run",
+      "run": {
+        "nature": "negative",
+        "valuation": null,
     "steps": [
       {
         "state": {
@@ -14140,13 +14085,12 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
+    }
 """
 			} # end result file
 			,
@@ -14160,26 +14104,21 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/10
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify without parameters: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyNonDet.imi', 'testEFExemplifyNonDet.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplifyNonDet.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -14376,28 +14315,18 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": null,
     "steps": [
@@ -14541,13 +14470,14 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -14561,26 +14491,21 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/15
-		# Last modified            : 2022/03/15
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify with one parameter: unique negative parameter valuation',
 		'input_files': ['testEFExemplify1Pneg.imi', 'testEFExemplify1Pneg.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplify1Pneg.res' , 'content' : """
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 4
-
- Other valuations with equivalent (discrete) run:
- p = 4
-
- Run nature: impossible run
-
-{
-  "run": {
+    {
+      "index": 2,
+      "valuation": {
+        "p": "4"
+      },
+      "equivalent_valuations": " p = 4",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "4"
@@ -14665,13 +14590,14 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -14685,26 +14611,23 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/15
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify with one parameter: non-determinism + flows + negative variable + 2 PTAs',
 		'input_files': ['testEFExemplifyPNonDet.imi', 'testEFExemplifyPNonDet.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testEFExemplifyPNonDet.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 4
-
- Other valuations with equivalent (discrete) run:
- p = 4
-
- Run nature: valid run
-
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "4"
+      },
+      "equivalent_valuations": " p = 4",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "4"
@@ -14908,29 +14831,21 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- p >= 0
-& 4 > p
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " p >= 0
+& 4 > p",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "0"
@@ -15081,28 +14996,20 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 4
-
- Other valuations with equivalent (discrete) run:
- p = 4
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 3,
+      "valuation": {
+        "p": "4"
+      },
+      "equivalent_valuations": " p = 4",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "4"
@@ -15253,13 +15160,14 @@ True
             "y": "1",
             "z": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -15273,26 +15181,24 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example',
 		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 2*p = 1
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1/2"
+      },
+      "equivalent_valuations": " 2*p = 1",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "1/2"
@@ -15351,31 +15257,24 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- 2*p > 1
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " 2*p > 1
 OR
   p >= 0
-& 1 > 2*p
+& 1 > 2*p",
+      "run_nature": "impossible run",
+      "run": {
 
- Run nature: impossible run
-
-{
-  "run": {
     "nature": "negative",
     "valuation": {
       "p": "0"
@@ -15423,13 +15322,14 @@ OR
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -15444,26 +15344,22 @@ OR
 	{
 		# Test version             : 1
 		# Test since               : 2022/03/31
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (variant without invariant)',
 		'input_files': ['testCounterExSimple-3b.imi', 'testCounterExSimple-3.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3b.res' , 'content' : """
-(************************************************************)
- Run #3
+    {
+      "index": 3,
+      "valuation": {
+        "p": "1/2"
+      },
+      "equivalent_valuations": " 2*p = 1",
+      "run_nature": "impossible run",
+      "run": {
 
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 2*p = 1
-
- Run nature: impossible run
-
-{
-	"run": {
 		"nature": "negative",
 		"valuation": {
 			"p": "1/2"
@@ -15509,13 +15405,12 @@ OR
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
+              }
+            }
+          }
+        ]
+      }
+    }
 """
 			} # end result file
 			,
@@ -15529,29 +15424,25 @@ OR
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
 		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
-(************************************************************)
- Run #1
-
-
- Valuation:
-  p = 4095/2
-
- Other valuations with equivalent (discrete) run:
- 2048 > p
-& p > 2047
-
- Run nature: valid run
-
 {
-	"run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "4095/2"
+      },
+      "equivalent_valuations": " 2048 > p
+& p > 2047",
+      "run_nature": "valid run",
+      "run": {
 		"nature": "concrete",
 		"valuation": {
 			"p": "4095/2"
@@ -15607,31 +15498,23 @@ BEGIN RESULT
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- 2047 >= p
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " 2047 >= p
 & p >= 0
 OR
-  p >= 2048
-
- Run nature: impossible run
-
-{
-	"run": {
+  p >= 2048",
+      "run_nature": "impossible run",
+      "run": {
 		"nature": "negative",
 		"valuation": {
 			"p": "0"
@@ -15677,29 +15560,21 @@ OR
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #3
-
- Valuation:
-  p = 4095/2
-
- Other valuations with equivalent (discrete) run:
- 2048 > p
-& p > 2047
-
- Run nature: impossible run
-
-{
-	"run": {
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 3,
+      "valuation": {
+        "p": "4095/2"
+      },
+      "equivalent_valuations": " 2048 > p
+& p > 2047",
+      "run_nature": "impossible run",
+      "run": {
 		"nature": "negative",
 		"valuation": {
 			"p": "4095/2"
@@ -15745,15 +15620,15 @@ OR
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
 }
-(************************************************************)
 END RESULT
-
 """
 			} # end result file
 			,
@@ -15767,26 +15642,24 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
 		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1"
+      },
+      "equivalent_valuations": " p > 0",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "1"
@@ -15919,28 +15792,20 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- p = 0
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " p = 0",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "0"
@@ -16040,13 +15905,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -16060,26 +15927,24 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
 		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1"
+      },
+      "equivalent_valuations": " p > 0",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "1"
@@ -16212,28 +16077,20 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- p = 0
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " p = 0",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "0"
@@ -16344,13 +16201,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -16364,26 +16223,24 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
 		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p > 0
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1"
+      },
+      "equivalent_valuations": " p > 0",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "1"
@@ -16516,28 +16373,20 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 0
-
- Other valuations with equivalent (discrete) run:
- p = 0
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "0"
+      },
+      "equivalent_valuations": " p = 0",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "0"
@@ -16659,13 +16508,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -16679,27 +16530,25 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
 		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 				# NOTE / TODO: the NEGATIVE run is disabled so far! due to a BUG …
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 2
-
- Other valuations with equivalent (discrete) run:
- p > 1
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "2"
+      },
+      "equivalent_valuations": " p > 1",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "2"
@@ -16832,13 +16681,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -16852,26 +16703,24 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/02/09
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
 		'options'    : '-merge none -comparison equality',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 2
-
- Other valuations with equivalent (discrete) run:
- p > 1
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "2"
+      },
+      "equivalent_valuations": " p > 1",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "2"
@@ -17004,13 +16853,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -17024,29 +16875,27 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
 		'options'    : '-merge none -comparison equality -draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p1 = 1
-& p2 = 1/2
-
- Other valuations with equivalent (discrete) run:
- p1 > p2
-& p2 > 0
-& 6 > p2
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p1": "1",
+        "p2": "1/2"
+      },
+      "equivalent_valuations": " p1 > p2
+& p2 > 0
+& 6 > p2",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p1": "1",
@@ -17184,31 +17033,23 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p1 = 3
-& p2 = 3
-
- Other valuations with equivalent (discrete) run:
- p1 > 0
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p1": "3",
+        "p2": "3"
+      },
+      "equivalent_valuations": " p1 > 0
 & p2 >= p1
-& 6 > p2
-
- Run nature: impossible run
-
-{
-  "run": {
+& 6 > p2",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p1": "3",
@@ -17335,13 +17176,15 @@ END RESULT
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -17359,8 +17202,8 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.2
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
 		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
 		'options'    : '-merge none -comparison equality',
@@ -17368,20 +17211,16 @@ END RESULT
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
 BEGIN RESULT
-
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p >= 0
-
- Run nature: valid run
-
 {
-	"run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1"
+      },
+      "equivalent_valuations": " p >= 0",
+      "run_nature": "valid run",
+      "run": {
 		"nature": "concrete",
 		"valuation": {
 			"p": "1"
@@ -17509,15 +17348,15 @@ BEGIN RESULT
 				"flows": {
 					"x": "1", 
 					"global_time": "1"
-				}
-			}
-			}
-		]
-	}
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
 }
-(************************************************************)
 END RESULT
-
 """
 			} # end result file
 		] # end expectations
@@ -17530,26 +17369,22 @@ END RESULT
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
 		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-
-
- Other valuations with equivalent (discrete) run:
-True
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": null,
+      "equivalent_valuations": "True",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": null,
     "steps": [
@@ -17718,13 +17553,14 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
 """
 			} # end result file
 			,
@@ -17738,27 +17574,25 @@ True
 	{
 		# Test version             : 1
 		# Test since               : 2021/?
-		# Last modified            : 2022/03/31
-		# Test for IMITATOR version: 3.3
+		# Last modified            : 2026/09/30
+		# Test for IMITATOR version: 3.4
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
 		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
 		'options'    : '-merge none -comparison equality -no-var-autoremove',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
-(************************************************************)
- Run #1
-
- Valuation:
-  p = 1/2
-
- Other valuations with equivalent (discrete) run:
- 1 > p
-& p >= 0
-
- Run nature: valid run
-
+BEGIN RESULT
 {
-  "run": {
+  "runs": [
+    {
+      "index": 1,
+      "valuation": {
+        "p": "1/2"
+      },
+      "equivalent_valuations": " 1 > p
+& p >= 0",
+      "run_nature": "valid run",
+      "run": {
     "nature": "concrete",
     "valuation": {
       "p": "1/2"
@@ -17929,28 +17763,20 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
-}
-(************************************************************)
-
-
-(************************************************************)
- Run #2
-
- Valuation:
-  p = 1
-
- Other valuations with equivalent (discrete) run:
- p >= 1
-
- Run nature: impossible run
-
-{
-  "run": {
+    },
+    {
+      "index": 2,
+      "valuation": {
+        "p": "1"
+      },
+      "equivalent_valuations": " p >= 1",
+      "run_nature": "impossible run",
+      "run": {
     "nature": "negative",
     "valuation": {
       "p": "1"
@@ -18099,13 +17925,15 @@ True
           "flows": {
             "x": "1",
             "global_time": "1"
+              }
+            }
           }
-        }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
-(************************************************************)
+END RESULT
 """
 			} # end result file
 			,
