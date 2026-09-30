@@ -171,7 +171,7 @@ class imitator_options :
 		method timed_mode					: bool
 		method graphical_state_space		: graphical_state_space
 		method with_graphics_source			: bool
-		method states_description			: bool
+		method states_description			: AbstractAlgorithm.text_state_space
 
 		method recompute_green				: bool
 		method pending_order				: pending_order

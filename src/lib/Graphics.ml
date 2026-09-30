@@ -1026,6 +1026,24 @@ let draw_concrete_run (model : AbstractModel.abstract_model) (concrete_run : Sta
 (************************************************************)
 (* Dot Functions *)
 (************************************************************)
+(* Local function checking whether a state is a target state *)
+let is_target_state (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state : state) : bool =
+	match property_option with
+	| Some property ->
+		
+		(* Try to get the state predicate*)
+		let state_predicate_list : state_predicate list = AlgorithmOptions.accepting_state_predicates_of_property property in
+
+		(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
+		List.exists (fun state_predicate ->
+			(* Check whether the current state matches ths state predicate *)
+			State.match_state_predicate model state_predicate state
+		) state_predicate_list
+	| None ->
+		(* No property: no target state *)
+		false
+
+
 
 let dot_colors = [
 (* I ordered the first colors *)
@@ -1050,24 +1068,6 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 	
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
-	
-	(* Local function checking whether a state is a target state *)
-	let is_target_state (state : state) : bool =
-		match property_option with
-		| Some property ->
-			
-			(* Try to get the state predicate*)
-			let state_predicate_list : state_predicate list = AlgorithmOptions.accepting_state_predicates_of_property property in
-
-			(* Check if at least one state_predicate in hte list satisfies the current state (*** NOTE: not exactly the semantics of generalized conditions! but still visually interesting ***) *)
-			List.exists (fun state_predicate ->
-				(* Check whether the current state matches ths state predicate *)
-				State.match_state_predicate model state_predicate state
-			) state_predicate_list
-		| None ->
-			(* No property: no target state *)
-			false
-	in
 	
 	(* Coloring function for each location *)
 	let get_location_color = fun location_index is_target ->
@@ -1117,7 +1117,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 	(* Sorting function for pairs (combined_transition, target_index) by increasing target_index *)
 	let sort_by_target = (fun (_, a) (_, b) -> if a = b then 0 else if a < b then -1 else 1) in
 
-	let states_description =	
+	let states_description_for_humans =	
 		(* Give the state indexes in comments *)
 		  "\n"
 		^ "\n  DESCRIPTION OF THE STATES"
@@ -1178,7 +1178,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 	
 	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions…";
 
-	let transitions_description =
+	let transitions_description_for_humans =
 		(* Convert the transitions for humans *)
 		(* We rank by source states indices, and then by target) *)
 		"\n  /************************************************************/\n  DESCRIPTION OF THE TRANSITIONS"
@@ -1291,7 +1291,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 			let location_index = state_space#get_global_location_index state_index in
 			
 			(* Check whether is target *)
-			let is_target = is_target_state state in
+			let is_target = is_target_state model property_option state in
 			
 			(* Find the location color *)
 			let location_color = get_location_color location_index is_target in
@@ -1396,7 +1396,7 @@ Generation time: " ^ (now()) ^ "\"];"
 	(* Dot file *)
 	header ^ dot_file,
 	(* Description of the states (for human) *)
-	header ^ states_description ^ transitions_description
+	header ^ states_description_for_humans ^ transitions_description_for_humans
 
 
 (** Execute the `dot` utility with as argument the image format, the radical, and the source file. Returns `Some file_name` if successful, or None otherwise *)

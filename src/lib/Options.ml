@@ -122,8 +122,8 @@ class imitator_options =
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source			= false
 
-		(* Print logs *)
-		val mutable states_description				= false
+		(* Print the textual description of all states *)
+		val mutable states_description : AbstractAlgorithm.text_state_space				= AbstractAlgorithm.Text_state_space_none
 
 
 		(* ALGORITHIMS *)
@@ -1209,7 +1209,11 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
 				("-romeo", Unit call_romeo, "");
 
-				("-states-description", Unit (fun () -> states_description <- true), " Generate the description of all reachable states in a text file. Default: disabled.
+				(*** WARNING: only one out of these two options should be selected… ***)
+				("-states-description", Unit (fun () -> states_description <- AbstractAlgorithm.Text_state_space_all), " Generate the description of all reachable states in a text file. Default: disabled.
+				");
+
+				("-states-description-accepting", Unit (fun () -> states_description <- AbstractAlgorithm.Text_state_space_accepting), " Generate the description of only accepting reachable states in a text file. Default: disabled.
 				");
 
 				("-states-limit", Int (fun i -> states_limit <- Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.
@@ -1883,10 +1887,12 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				print_message Verbose_medium ("No graphical output for state space(s) (default).")
 			;
 
-			if states_description then
-				print_message Verbose_standard ("Description of states will be output.")
-			else
-				print_message Verbose_medium ("No state description (default).");
+			begin match states_description with
+			| AbstractAlgorithm.Text_state_space_all -> print_message Verbose_standard ("Description of all states will be output to a text file.")
+			| AbstractAlgorithm.Text_state_space_accepting -> print_message Verbose_standard ("Description of only accepting states will be output to a text file.")
+			| AbstractAlgorithm.Text_state_space_none -> print_message Verbose_medium ("No state description (default).");
+			end ;
+				
 
 
 			(************************************************************)
