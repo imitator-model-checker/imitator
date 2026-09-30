@@ -1160,6 +1160,8 @@ let string_of_statespace (model : AbstractModel.abstract_model) (property_option
 			)
 			) state_indexes;
 		!string_states)
+		(*** TODO one day: add an end tag, useful for testing integrity of the state space ***)
+		(* ^ "\n  END DESCRIPTION OF THE STATES" *)
 		^ "\n"
 	in
 	
