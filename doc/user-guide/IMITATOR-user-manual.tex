@@ -2229,7 +2229,7 @@ The options \styleOption{-dynamic-elimination} (not activated by default) and \s
 output the state space in a graphical form (option \styleOption{-draw-statespace}),
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}),
 or
-output the text description of all states (option \styleOption{-states-description}).
+output the text description of all states (options \styleOption{-states-description} and \styleOption{-states-description-accepting}).
 
 
 %------------------------------------------------------------
@@ -3309,6 +3309,7 @@ imitator model.imi -mode statespace -states-description
 The option \styleOption{-states-description} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
 Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters.
 % ; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
+The transitions are also exported.
 
 \imitator{} can also output the state space in a graphical form using option \styleOption{-draw-statespace}.
 % TODO: example
@@ -3394,7 +3395,7 @@ projectresult(param1, ..., paramn);
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
 
-This projection is also added to the states description (see option \styleOption{-states-description}) and to the graphical state space output (see option \styleOption{-draw-statespace full}).
+This projection is also added to the states description (see options \styleOption{-states-description} and \styleOption{-states-description-accepting}) and to the graphical state space output (see option \styleOption{-draw-statespace full}).
 
 
 
@@ -4556,7 +4557,14 @@ green states when encountered on a shorter path.
 \paragraph{\styleOption{-states-description} (default: disabled)}
 %------------------------------------------------------------
 Generates a file \stylePath{<input\_file>.states} describing the reachable states in plain text (value of the location, of the discrete variables, associated constraint, and its projection onto the parameters).
+All transitions are also exported.
 
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-states-description-accepting} (default: disabled)}
+%------------------------------------------------------------
+Generates a file \stylePath{<input\_file>.states} describing only the \emph{accepting} reachable states in plain text (value of the location, of the discrete variables, associated constraint, and its projection onto the parameters).
+No transitions are exported.
 
 
 

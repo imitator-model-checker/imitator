@@ -1026,7 +1026,7 @@ let draw_concrete_run (model : AbstractModel.abstract_model) (concrete_run : Sta
 (************************************************************)
 (* Dot Functions *)
 (************************************************************)
-(* Local function checking whether a state is a target state *)
+(* Local function checking whether a state is a target state according to the property or, if there is none, according to the accepting keyword *)
 let is_target_state (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state : state) : bool =
 	match property_option with
 	| Some property ->
@@ -1040,8 +1040,8 @@ let is_target_state (model : AbstractModel.abstract_model) (property_option : Ab
 			State.match_state_predicate model state_predicate state
 		) state_predicate_list
 	| None ->
-		(* No property: no target state *)
-		false
+		(* No property: check acceptance status *)
+		DiscreteState.is_accepting model.is_accepting state.global_location
 
 	
 	(* File header for dot and textual state space files *)
@@ -1075,15 +1075,19 @@ let dot_colors = [
 "indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
 ]
 
-(** Convert a state space to a textual description of states and transitions *)
-let string_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) : string =
+type states_selection =
+		| All_states
+		| Only_Accepting
+
+(** Convert a state space to a textual description of states and transitions; if only accepting states, only export accepting states and no transitions *)
+let string_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) (states_to_export : states_selection) : string =
 	(* Retrieve info from the graph *)
 	let transitions = state_space#get_transitions_table in
 	let initial_state_index = state_space#get_initial_state_index in
 	
-	print_message Verbose_high "\n[text_of_statespace] Starting to convert states to a textual description.";
+	print_message Verbose_high "\n[string_of_statespace] Starting to convert states to a textual description.";
 
-	print_message Verbose_high "[text_of_statespace] Retrieving states indexes…";
+	print_message Verbose_high "[string_of_statespace] Retrieving states indexes…";
 
 	(* Retrieve the states *)
 	let state_indexes = state_space#all_state_indexes in
@@ -1091,7 +1095,7 @@ let string_of_statespace (model : AbstractModel.abstract_model) (property_option
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Verbose_high "[text_of_statespace] Starting to convert states…";
+	print_message Verbose_high "[string_of_statespace] Starting to convert states…";
 	
 	(* Sorting function for pairs (combined_transition, target_index) by increasing target_index *)
 	let sort_by_target = (fun (_, a) (_, b) -> if a = b then 0 else if a < b then -1 else 1) in
@@ -1108,57 +1112,66 @@ let string_of_statespace (model : AbstractModel.abstract_model) (property_option
 			let state = state_space#get_state state_index in
 			let global_location, linear_constraint = state.global_location, state.px_constraint in
 
-			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
+			(* If only accepting states are asked, filter *)
+			if states_to_export = All_states || (is_target_state model property_option state) then(
 
-			(* Eliminate clocks *)
-			let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
-			
-			(* Construct the string *)
-			string_states := !string_states
-				(* Add the state *)
-				^ "\n\n  /************************************************************/"
-				^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
-				^ "\n  STATE " ^ (string_of_int state_index)
-				^ (if DiscreteState.is_accepting model.is_accepting global_location then " (ACCEPTING)" else "")
-				^ ":"
-				^ "\n  " ^ (ModelPrinter.string_of_state model {global_location = global_location ; px_constraint = linear_constraint;})
-				(* Add the projection of the constraint onto the parameters *)
-				^ (
-					"\n\n  Projection onto the parameters:"
-					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
-				)
-				^
-				(* Add the projection onto selected parameters, if any *)
-				(
-				match property_option with
-				| Some property ->
-					let result =
-					match property.projection with
-					| None -> ""
-					| Some parameter_indices_to_be_projected_onto ->
-						(* Compute variables to eliminate *)
-						(*** TODO: do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameter_indices_to_be_projected_onto in
-						(* Project *)
-						let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
-						(* Print *)
-						"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameter_indices_to_be_projected_onto)) ^ "}:"
-						^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint);
-					in result
-				| None ->
-					(* No property, no projection: empty string *)
-					""
-				)
-				;
+				print_message Verbose_high ("[string_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
+
+				(* Eliminate clocks *)
+				let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
+				
+				(* Construct the string *)
+				string_states := !string_states
+					(* Add the state *)
+					^ "\n\n  /************************************************************/"
+					^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
+					^ "\n  STATE " ^ (string_of_int state_index)
+					^ (if DiscreteState.is_accepting model.is_accepting global_location then " (ACCEPTING)" else "")
+					^ ":"
+					^ "\n  " ^ (ModelPrinter.string_of_state model {global_location = global_location ; px_constraint = linear_constraint;})
+					(* Add the projection of the constraint onto the parameters *)
+					^ (
+						"\n\n  Projection onto the parameters:"
+						^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
+					)
+					^
+					(* Add the projection onto selected parameters, if any *)
+					(
+					match property_option with
+					| Some property ->
+						let result =
+						match property.projection with
+						| None -> ""
+						| Some parameter_indices_to_be_projected_onto ->
+							(* Compute variables to eliminate *)
+							(*** TODO: do only once for all… ***)
+							let all_but_projectparameters = list_diff model.parameters parameter_indices_to_be_projected_onto in
+							(* Project *)
+							let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
+							(* Print *)
+							"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameter_indices_to_be_projected_onto)) ^ "}:"
+							^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint);
+						in result
+					| None ->
+						(* No property, no projection: empty string *)
+						""
+					)
+					;
+			)
 			) state_indexes;
 		!string_states)
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[text_of_statespace] Starting to convert transitions…";
+	print_message Verbose_high "[string_of_statespace] Starting to convert transitions…";
 
+	(* Convert the transitions for humans *)
 	let transitions_description_for_humans =
-		(* Convert the transitions for humans *)
+			(* If only accepting states are asked, we do not return transitions *)
+			match states_to_export with
+			| Only_Accepting -> ""
+			| All_states ->
+
 		(* We rank by source states indices, and then by target) *)
 		"\n  /************************************************************/\n  DESCRIPTION OF THE TRANSITIONS"
 		(* We iterate on the states *)
@@ -1198,7 +1211,7 @@ let string_of_statespace (model : AbstractModel.abstract_model) (property_option
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[text_of_statespace] Done.";
+	print_message Verbose_high "[string_of_statespace] Done.";
 
 	let header = file_header state_space algorithm_name in
 
@@ -1519,12 +1532,15 @@ let draw_statespace_if_requested (model : AbstractModel.abstract_model) (propert
 					print_message Verbose_total ("No export of the states description.");
 
 			| Text_state_space_accepting -> 
-				(*** TODO ***)
-				raise (NotImplemented "Text_state_space_accepting");
+				(* Compute textual description for accepting states only *)
+				let states : string = string_of_statespace model property_option state_space algorithm_name Only_Accepting in
+				let states_file_name : string = (radical ^ "." ^ states_file_extension) in
+				print_message Verbose_standard ("Writing the accepting states description to file `" ^ states_file_name ^ "`…");
+				write_to_file states_file_name states;
 
 			| Text_state_space_all -> 
 				(* Compute textual description *)
-				let states : string = string_of_statespace model property_option state_space algorithm_name in
+				let states : string = string_of_statespace model property_option state_space algorithm_name All_states in
 				let states_file_name : string = (radical ^ "." ^ states_file_extension) in
 				print_message Verbose_standard ("Writing the states description to file `" ^ states_file_name ^ "`…");
 				write_to_file states_file_name states;

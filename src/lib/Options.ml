@@ -1206,13 +1206,12 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				");
 
 				(* Hidden option (April fool 2017) *)
-				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
+				(*** NOTE: options that have an empty doc string will not be included in the list. ***)
 				("-romeo", Unit call_romeo, "");
 
 				(*** WARNING: only one out of these two options should be selected… ***)
 				("-states-description", Unit (fun () -> states_description <- AbstractAlgorithm.Text_state_space_all), " Generate the description of all reachable states in a text file. Default: disabled.
 				");
-
 				("-states-description-accepting", Unit (fun () -> states_description <- AbstractAlgorithm.Text_state_space_accepting), " Generate the description of only accepting reachable states in a text file. Default: disabled.
 				");
 

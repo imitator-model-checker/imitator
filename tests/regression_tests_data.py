@@ -6224,6 +6224,39 @@ Error                                   : invalid model
 
 	#------------------------------------------------------------
 	{
+		## Test version             : 1
+		## Test since               : 2026/09/30
+		## Last modified            : 2026/09/30
+		## Test for IMITATOR version: 3.1.0
+		'author': 'Étienne André',
+		'purpose'    : 'Test that behavior of pow function is correct AND export only accepting locations',
+		'input_files': ['functions/pow.imi'],
+		'tags': 'semantic, behavior, function, export',
+		'options'    : '-mode statespace -states-description-accepting',
+		'expectations' : [
+			{'file': 'pow-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  STATE 3 (ACCEPTING):
+  pta: lend, r1 = 3, r2 = 4, projected_result_1 = 82, projected_result_2 = 65, n = 3, i = 3, j = 4 ==>
+& p1 = 82
+& p2 = 65
+
+  Projection onto the parameters:
+   p1 = 82
+& p2 = 65
+		"""
+			 } # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		## Test version             : 1.1
 		## Test since               : 2022/07/19
 		## Last modified            : 2026/09/24
