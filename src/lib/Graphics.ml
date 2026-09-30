@@ -1043,49 +1043,11 @@ let is_target_state (model : AbstractModel.abstract_model) (property_option : Ab
 		(* No property: no target state *)
 		false
 
-
-
-let dot_colors = [
-(* I ordered the first colors *)
-(*"red" ; "green" ; *)"blue" ; "cyan" ; "magenta" ;
-(* The rest : random ! *)
-"yellowgreen"; "indianred1"; "goldenrod3"; "darkolivegreen4"; "slategray4"; "turquoise4"; "lightpink"; "salmon"; "pink3"; "chocolate4"; "lightslateblue"; "yellow3"; "red4"; "seashell3"; "cyan2"; "darkgoldenrod3"; "gainsboro"; "paleturquoise2"; "peachpuff1"; "oldlace"; "khaki"; "deepskyblue"; "maroon3"; "gold3"; "tan"; "mediumblue"; "lightyellow"; "ivory"; "lightcyan"; "lightsalmon4"; "maroon2"; "maroon4"; "tan3"; "green2"; "ivory2"; "navyblue"; "wheat1"; "navajowhite3"; "darkkhaki"; "whitesmoke"; "goldenrod"; "gold1"; "sandybrown"; "springgreen3"; "magenta2"; "lightskyblue1"; "lightcyan3"; "khaki2"; "khaki3"; "lavender"; "orchid1"; "wheat"; "lavenderblush1"; "firebrick2"; "navajowhite4"; "darkslategray3"; "palegreen2"; "lavenderblush3"; "skyblue3"; "deepskyblue3"; "darkorange"; "magenta1"; "darkorange3"; "violetred1"; "lawngreen"; "deeppink3"; "darkolivegreen1"; "darkorange1"; "darkorchid1"; "limegreen"; "lightslategray"; "deeppink"; "red2"; "goldenrod1"; "mediumorchid4"; "cornsilk1";
-"lemonchiffon3"; "gold"; "orchid"; "yellow2"; "lightpink4"; "violetred2"; "mediumpurple"; "lightslategrey"; "lightsalmon1"; "violetred"; "coral2"; "slategray"; "plum2"; "turquoise3"; "lightyellow3"; "green4"; "mediumorchid1"; "lightcyan1"; "lightsalmon3"; "green3"; "lightseagreen"; "mediumpurple1"; "lightskyblue"; "lightyellow2"; "firebrick"; "honeydew2"; "slateblue3"; "navajowhite"; "seagreen1"; "springgreen4"; "peru"; "springgreen2"; "mediumvioletred"; "ivory4"; "olivedrab3"; "lightyellow1"; "hotpink"; "sienna4"; "lightcyan4"; "chartreuse4"; "lemonchiffon4"; "indianred3"; "hotpink4"; "sienna1"; "slategray3"; "darkseagreen2"; "tomato3"; "honeydew3"; "mistyrose2"; "rosybrown1"; "pink2"; "powderblue"; "cornflowerblue"; "tan1"; "indianred4"; "slateblue2"; "palevioletred3"; "ivory1"; "honeydew4"; "yellow"; (*"white"; *)"wheat3"; "steelblue4"; "purple2"; "deeppink4"; "royalblue4"; "lightgrey"; "forestgreen"; "palegreen"; "darkorange4"; "lightsteelblue2"; "tomato4"; "royalblue1"; "hotpink1"; "hotpink3";
-"palegoldenrod"; "orange3"; "yellow1"; "orange2"; "slateblue"; "lightblue"; "lavenderblush2"; "chartreuse3"; "hotpink2"; "lightblue1"; "coral1"; "orange1"; "gold2"; "lightcoral"; "mediumseagreen"; "darkgreen"; "dodgerblue1"; "khaki1"; "khaki4"; "lightblue4"; "lightyellow4"; "firebrick3"; "crimson"; "olivedrab2"; "mistyrose3"; "lightsteelblue4"; "mediumpurple3"; "maroon"; "purple1"; "mediumorchid3"; "lightblue3"; "snow4"; "pink4"; "lightgray"; "lightsteelblue1"; "mistyrose"; "lightgoldenrodyellow"; "slategray1"; "peachpuff4"; "lightsalmon2"; "lightgoldenrod4"; "linen"; "darkgoldenrod1"; "goldenrod4"; "navy"; "lightcyan2"; "darkgoldenrod"; "mediumorchid2"; "lightsalmon"; "sienna"; "lightgoldenrod"; "plum1"; "orangered4"; "mistyrose1"; "mediumorchid"; "salmon1"; "chocolate3"; "palevioletred"; "purple3"; "turquoise"; "snow"; "paleturquoise"; "darkolivegreen"; "deepskyblue2"; "honeydew1"; "midnightblue"; "steelblue2"; "darkturquoise"; "dimgray"; "mediumpurple4"; "darkorchid"; "seashell2"; "cyan2";
-"olivedrab1"; "royalblue2"; "violet"; "seagreen2"; "thistle3"; "cornsilk3"; "moccasin"; "magenta3"; "mediumslateblue"; "cadetblue3"; "mediumaquamarine"; "magenta4"; "mintcream"; "orangered3"; "mistyrose4"; "darkseagreen4"; "orangered"; "palegreen4"; "mediumspringgreen"; "saddlebrown"; "plum3"; "palegreen3"; "darkviolet"; "violetred3"; "orange"; "seagreen"; "springgreen1"; "deeppink2"; "navajowhite1"; "paleturquoise4"; "tan4"; "slategrey"; "lightsteelblue"; "azure3"; "salmon4"; "olivedrab4"; "darkorchid2"; "rosybrown"; "peachpuff2"; "springgreen"; "thistle2"; "tan2"; "aquamarine2"; "rosybrown4"; "palevioletred2"; "slateblue4"; "cyan4"; "red1"; "slateblue1"; "cornsilk2"; "ivory3"; "lightpink2"; "mediumpurple2"; "sienna2"; "chocolate1"; "lightsteelblue3"; "lightgoldenrod3"; "blueviolet"; "sienna3"; "orangered1"; "lightpink3"; "mediumturquoise"; "darkorange2"; "skyblue1"; "steelblue"; "seashell4"; "salmon2"; "lightpink1"; "skyblue4"; "darkslategray4"; "palevioletred4"; "orchid2"; "blue2"; "orchid3";
-"peachpuff3"; "transparent"; "lavenderblush4"; "darkslategray1"; "lemonchiffon"; "papayawhip"; "maroon1"; "skyblue"; "chocolate"; "snow2"; "pink1"; "peachpuff"; "tomato1"; "blue1"; "dodgerblue2"; "orchid4"; "plum"; "orange4"; "purple"; "royalblue3"; "pink"; "floralwhite"; "palegreen1"; "dodgerblue4"; "chartreuse"; "bisque4"; "plum4"; "darkseagreen3"; "lightskyblue3"; "darkseagreen1"; "lightblue2"; "royalblue"; "red3"; "salmon3"; "palevioletred1"; "purple4"; "burlywood1"; "chocolate2"; "darkolivegreen3"; "goldenrod2"; "seashell1"; "indianred"; "brown2"; "lemonchiffon1"; "steelblue1"; "thistle1"; "yellow4"; "lightskyblue4"; "skyblue2"; "lemonchiffon2"; "thistle4"; "tomato2"; "violetred4"; "green1"; "greenyellow"; "paleturquoise1"; "chartreuse2"; "darkseagreen"; "turquoise2"; "cyan3"; "olivedrab"; "darkslategrey"; "firebrick4"; "lightgoldenrod1"; "seagreen3"; "seagreen4"; "tomato"; "firebrick1"; "steelblue3"; "orangered2"; "lavenderblush"; "cyan1"; "snow1"; "dodgerblue3"; "rosybrown2";
-"indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
-]
-
-(** Convert a graph to a dot file *)
-let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) : (string * string) =
+	
+	(* File header for dot and textual state space files *)
+	let file_header (state_space : StateSpace.stateSpace) (algorithm_name : string) : string=
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	
-	(* Retrieve info from the graph *)
-	let transitions = state_space#get_transitions_table in
-	let initial_state_index = state_space#get_initial_state_index in
-	
-	(* Create the array of dot colors *)
-	let dot_colors = Array.of_list dot_colors in
-	
-	(* Coloring function for each location *)
-	let get_location_color = fun location_index is_target ->
-		try(
-		(* If target location: red *)
-		if is_target then "red"
-		else 
-		(* If normal location: pick color from array *)
-			dot_colors.(location_index)
-		)
-		(* If more colors than our array: white *)
-		with Invalid_argument _ -> "white"
-	in
-	
-	
-	print_message Verbose_high "\n[dot_of_statespace] Starting to convert states to a graphics.";
-	
-	let header =
 		(* Header *)
 	"/************************************************************"
 		^ "\n * File automatically generated by " ^ Constants.program_name ^ ""
@@ -1100,11 +1062,28 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		^ "\n *" 
 		^ "\n * " ^ Constants.program_name ^ " terminated " ^ (after_seconds ())
 		^ "\n************************************************************/"
-	in
-	
-	print_message Verbose_high "[dot_of_statespace] Header completed.";
 
-	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes…";
+let dot_colors = [
+(* I ordered the first colors *)
+(*"red" ; "green" ; *)"blue" ; "cyan" ; "magenta" ;
+(* The rest : random ! *)
+"yellowgreen"; "indianred1"; "goldenrod3"; "darkolivegreen4"; "slategray4"; "turquoise4"; "lightpink"; "salmon"; "pink3"; "chocolate4"; "lightslateblue"; "yellow3"; "red4"; "seashell3"; "cyan2"; "darkgoldenrod3"; "gainsboro"; "paleturquoise2"; "peachpuff1"; "oldlace"; "khaki"; "deepskyblue"; "maroon3"; "gold3"; "tan"; "mediumblue"; "lightyellow"; "ivory"; "lightcyan"; "lightsalmon4"; "maroon2"; "maroon4"; "tan3"; "green2"; "ivory2"; "navyblue"; "wheat1"; "navajowhite3"; "darkkhaki"; "whitesmoke"; "goldenrod"; "gold1"; "sandybrown"; "springgreen3"; "magenta2"; "lightskyblue1"; "lightcyan3"; "khaki2"; "khaki3"; "lavender"; "orchid1"; "wheat"; "lavenderblush1"; "firebrick2"; "navajowhite4"; "darkslategray3"; "palegreen2"; "lavenderblush3"; "skyblue3"; "deepskyblue3"; "darkorange"; "magenta1"; "darkorange3"; "violetred1"; "lawngreen"; "deeppink3"; "darkolivegreen1"; "darkorange1"; "darkorchid1"; "limegreen"; "lightslategray"; "deeppink"; "red2"; "goldenrod1"; "mediumorchid4"; "cornsilk1";
+"lemonchiffon3"; "gold"; "orchid"; "yellow2"; "lightpink4"; "violetred2"; "mediumpurple"; "lightslategrey"; "lightsalmon1"; "violetred"; "coral2"; "slategray"; "plum2"; "turquoise3"; "lightyellow3"; "green4"; "mediumorchid1"; "lightcyan1"; "lightsalmon3"; "green3"; "lightseagreen"; "mediumpurple1"; "lightskyblue"; "lightyellow2"; "firebrick"; "honeydew2"; "slateblue3"; "navajowhite"; "seagreen1"; "springgreen4"; "peru"; "springgreen2"; "mediumvioletred"; "ivory4"; "olivedrab3"; "lightyellow1"; "hotpink"; "sienna4"; "lightcyan4"; "chartreuse4"; "lemonchiffon4"; "indianred3"; "hotpink4"; "sienna1"; "slategray3"; "darkseagreen2"; "tomato3"; "honeydew3"; "mistyrose2"; "rosybrown1"; "pink2"; "powderblue"; "cornflowerblue"; "tan1"; "indianred4"; "slateblue2"; "palevioletred3"; "ivory1"; "honeydew4"; "yellow"; (*"white"; *)"wheat3"; "steelblue4"; "purple2"; "deeppink4"; "royalblue4"; "lightgrey"; "forestgreen"; "palegreen"; "darkorange4"; "lightsteelblue2"; "tomato4"; "royalblue1"; "hotpink1"; "hotpink3";
+"palegoldenrod"; "orange3"; "yellow1"; "orange2"; "slateblue"; "lightblue"; "lavenderblush2"; "chartreuse3"; "hotpink2"; "lightblue1"; "coral1"; "orange1"; "gold2"; "lightcoral"; "mediumseagreen"; "darkgreen"; "dodgerblue1"; "khaki1"; "khaki4"; "lightblue4"; "lightyellow4"; "firebrick3"; "crimson"; "olivedrab2"; "mistyrose3"; "lightsteelblue4"; "mediumpurple3"; "maroon"; "purple1"; "mediumorchid3"; "lightblue3"; "snow4"; "pink4"; "lightgray"; "lightsteelblue1"; "mistyrose"; "lightgoldenrodyellow"; "slategray1"; "peachpuff4"; "lightsalmon2"; "lightgoldenrod4"; "linen"; "darkgoldenrod1"; "goldenrod4"; "navy"; "lightcyan2"; "darkgoldenrod"; "mediumorchid2"; "lightsalmon"; "sienna"; "lightgoldenrod"; "plum1"; "orangered4"; "mistyrose1"; "mediumorchid"; "salmon1"; "chocolate3"; "palevioletred"; "purple3"; "turquoise"; "snow"; "paleturquoise"; "darkolivegreen"; "deepskyblue2"; "honeydew1"; "midnightblue"; "steelblue2"; "darkturquoise"; "dimgray"; "mediumpurple4"; "darkorchid"; "seashell2"; "cyan2";
+"olivedrab1"; "royalblue2"; "violet"; "seagreen2"; "thistle3"; "cornsilk3"; "moccasin"; "magenta3"; "mediumslateblue"; "cadetblue3"; "mediumaquamarine"; "magenta4"; "mintcream"; "orangered3"; "mistyrose4"; "darkseagreen4"; "orangered"; "palegreen4"; "mediumspringgreen"; "saddlebrown"; "plum3"; "palegreen3"; "darkviolet"; "violetred3"; "orange"; "seagreen"; "springgreen1"; "deeppink2"; "navajowhite1"; "paleturquoise4"; "tan4"; "slategrey"; "lightsteelblue"; "azure3"; "salmon4"; "olivedrab4"; "darkorchid2"; "rosybrown"; "peachpuff2"; "springgreen"; "thistle2"; "tan2"; "aquamarine2"; "rosybrown4"; "palevioletred2"; "slateblue4"; "cyan4"; "red1"; "slateblue1"; "cornsilk2"; "ivory3"; "lightpink2"; "mediumpurple2"; "sienna2"; "chocolate1"; "lightsteelblue3"; "lightgoldenrod3"; "blueviolet"; "sienna3"; "orangered1"; "lightpink3"; "mediumturquoise"; "darkorange2"; "skyblue1"; "steelblue"; "seashell4"; "salmon2"; "lightpink1"; "skyblue4"; "darkslategray4"; "palevioletred4"; "orchid2"; "blue2"; "orchid3";
+"peachpuff3"; "transparent"; "lavenderblush4"; "darkslategray1"; "lemonchiffon"; "papayawhip"; "maroon1"; "skyblue"; "chocolate"; "snow2"; "pink1"; "peachpuff"; "tomato1"; "blue1"; "dodgerblue2"; "orchid4"; "plum"; "orange4"; "purple"; "royalblue3"; "pink"; "floralwhite"; "palegreen1"; "dodgerblue4"; "chartreuse"; "bisque4"; "plum4"; "darkseagreen3"; "lightskyblue3"; "darkseagreen1"; "lightblue2"; "royalblue"; "red3"; "salmon3"; "palevioletred1"; "purple4"; "burlywood1"; "chocolate2"; "darkolivegreen3"; "goldenrod2"; "seashell1"; "indianred"; "brown2"; "lemonchiffon1"; "steelblue1"; "thistle1"; "yellow4"; "lightskyblue4"; "skyblue2"; "lemonchiffon2"; "thistle4"; "tomato2"; "violetred4"; "green1"; "greenyellow"; "paleturquoise1"; "chartreuse2"; "darkseagreen"; "turquoise2"; "cyan3"; "olivedrab"; "darkslategrey"; "firebrick4"; "lightgoldenrod1"; "seagreen3"; "seagreen4"; "tomato"; "firebrick1"; "steelblue3"; "orangered2"; "lavenderblush"; "cyan1"; "snow1"; "dodgerblue3"; "rosybrown2";
+"indianred2"; "blanchedalmond"; "gold4"; "paleturquoise3"; "honeydew"; "bisque2"; "bisque3"; "snow3"; "brown"; "deeppink1"; "dimgrey"; "lightgoldenrod2"; "lightskyblue2"; "navajowhite2"; "seashell"; "black"; "cadetblue1"; "cadetblue2"; "darkslategray"; "wheat2"; "burlywood"; "brown1"; "deepskyblue4"; "darkslateblue"; "deepskyblue1"; "slategray2"; "darksalmon"; "burlywood3"; "dodgerblue"; "turquoise1"; "grey"; "ghostwhite"; "thistle"; "blue4"; "cornsilk"; "azure"; "darkgoldenrod2"; "darkslategray2"; "beige"; "burlywood2"; "coral3"; "indigo"; "darkorchid4"; "coral"; "burlywood4"; "brown3"; "cornsilk4"; "wheat4"; "darkgoldenrod4"; "cadetblue4"; "brown4"; "cadetblue"; "azure4"; "darkolivegreen2"; "rosybrown3"; "coral4"; "azure2"; "blue3"; "chartreuse1"; "bisque1"; "aquamarine1"; "azure1"; "bisque"; "aquamarine4"; "antiquewhite3"; "antiquewhite2"; "darkorchid3"; "antiquewhite4"; "aquamarine3"; "aquamarine"; "antiquewhite"; "antiquewhite1"; "aliceblue"
+]
+
+(** Convert a state space to a textual description of states and transitions *)
+let string_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) : string =
+	(* Retrieve info from the graph *)
+	let transitions = state_space#get_transitions_table in
+	let initial_state_index = state_space#get_initial_state_index in
+	
+	print_message Verbose_high "\n[text_of_statespace] Starting to convert states to a textual description.";
+
+	print_message Verbose_high "[text_of_statespace] Retrieving states indexes…";
 
 	(* Retrieve the states *)
 	let state_indexes = state_space#all_state_indexes in
@@ -1112,7 +1091,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Verbose_high "[dot_of_statespace] Starting to convert states…";
+	print_message Verbose_high "[text_of_statespace] Starting to convert states…";
 	
 	(* Sorting function for pairs (combined_transition, target_index) by increasing target_index *)
 	let sort_by_target = (fun (_, a) (_, b) -> if a = b then 0 else if a < b then -1 else 1) in
@@ -1176,7 +1155,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions…";
+	print_message Verbose_high "[text_of_statespace] Starting to convert transitions…";
 
 	let transitions_description_for_humans =
 		(* Convert the transitions for humans *)
@@ -1219,6 +1198,54 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		^ "\n"
 	in
 	
+	print_message Verbose_high "[text_of_statespace] Done.";
+
+	let header = file_header state_space algorithm_name in
+
+	header ^ states_description_for_humans ^ transitions_description_for_humans
+
+
+(** Convert a state space to a dot file *)
+let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) (state_space : StateSpace.stateSpace) (algorithm_name : string) : string =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* Retrieve info from the graph *)
+	let transitions = state_space#get_transitions_table in
+	let initial_state_index = state_space#get_initial_state_index in
+	
+	(* Create the array of dot colors *)
+	let dot_colors = Array.of_list dot_colors in
+	
+	(* Coloring function for each location *)
+	let get_location_color = fun location_index is_target ->
+		try(
+		(* If target location: red *)
+		if is_target then "red"
+		else 
+		(* If normal location: pick color from array *)
+			dot_colors.(location_index)
+		)
+		(* If more colors than our array: white *)
+		with Invalid_argument _ -> "white"
+	in
+	
+	
+	print_message Verbose_high "\n[dot_of_statespace] Starting to convert states to a graphics.";
+
+	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes…";
+
+	(* Retrieve the states *)
+	let state_indexes = state_space#all_state_indexes in
+	
+	(* Sort the list (for better presentation in the file) *)
+	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
+	
+	print_message Verbose_high "[dot_of_statespace] Starting to convert states…";
+	
+	(* Sorting function for pairs (combined_transition, target_index) by increasing target_index *)
+	let sort_by_target = (fun (_, a) (_, b) -> if a = b then 0 else if a < b then -1 else 1) in
+
 	print_message Verbose_high "[dot_of_statespace] Generating dot file…";
 	
 	let dot_file =
@@ -1393,10 +1420,10 @@ Generation time: " ^ (now()) ^ "\"];"
 	in
 	print_message Verbose_high "[dot_of_statespace] Done.";
 
+	let header = file_header state_space algorithm_name in
+
 	(* Dot file *)
-	header ^ dot_file,
-	(* Description of the states (for human) *)
-	header ^ states_description_for_humans ^ transitions_description_for_humans
+	header ^ dot_file
 
 
 (** Execute the `dot` utility with as argument the image format, the radical, and the source file. Returns `Some file_name` if successful, or None otherwise *)
@@ -1485,28 +1512,29 @@ let draw_statespace_if_requested (model : AbstractModel.abstract_model) (propert
 			print_warning "State space is empty: not drawing";
 		)else(
 
-			let dot_model, states = dot_of_statespace model property_option state_space algorithm_name in
-
-			(* Write states file if needed *)
+			(* Write states file(s) if needed *)
 			begin
 			match options#states_description with
 			| Text_state_space_none -> 
-					print_message Verbose_total ("No export of  the states description.");
+					print_message Verbose_total ("No export of the states description.");
 
 			| Text_state_space_accepting -> 
 				(*** TODO ***)
 				raise (NotImplemented "Text_state_space_accepting");
 
 			| Text_state_space_all -> 
-				let states_file_name = (radical ^ "." ^ states_file_extension) in
+				(* Compute textual description *)
+				let states : string = string_of_statespace model property_option state_space algorithm_name in
+				let states_file_name : string = (radical ^ "." ^ states_file_extension) in
 				print_message Verbose_standard ("Writing the states description to file `" ^ states_file_name ^ "`…");
 				write_to_file states_file_name states;
 			end;
 
 			(* Generate graphical state space if needed *)
 			if options#graphical_state_space <> Graphical_state_space_none then(
+				let dot_model : string = dot_of_statespace model property_option state_space algorithm_name in
 				(* Call the dedicated function that returns a string option *)
-				let dot_success = dot state_space_image_format radical dot_model in
+				let dot_success : string option = dot state_space_image_format radical dot_model in
 
 				match dot_success with
 				| None -> print_error "Oops…! Something went wrong with dot when drawing the state space."
