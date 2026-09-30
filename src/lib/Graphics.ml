@@ -1094,17 +1094,6 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 		^ "\n" ^" * Algorithm: " ^ algorithm_name ^ ""
 		^ "\n" ^" * Command  : " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
 		^ "\n" ^" * Generated: " ^ (now()) ^ ""
-(*		^ (
-			match options#imitator_mode with
-				| State_space_exploration -> "\n * State space exploration"
-				| EF_synthesis -> "\n * EF-synthesis"
-				(* Otherwise: IM / BC *)
-				| _ -> 
-					let pi0 = Input.get_pi0 () in
-					"\n *"
-					^ "\n * The following pi0 was considered:"
-					^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
-		)*)
 		^ "\n *"
 		^ "\n * " ^ (string_of_int (state_space#nb_states)) ^ " states and "
 			^ (string_of_int (state_space#nb_transitions)) ^ " transitions"
@@ -1191,16 +1180,7 @@ let dot_of_statespace (model : AbstractModel.abstract_model) (property_option : 
 
 	let transitions_description =
 		(* Convert the transitions for humans *)
-		(*** NOTE: EASY VERSION BUT ORDER IS NON-SPECIFIED ***)
-	(*	"\n  DESCRIPTION OF THE TRANSITIONS"
-		(* We iterate by updating the current string *)
-		^ (Hashtbl.fold (fun source_index successors current_string ->
-			current_string ^ (string_of_list_of_string (
-					…			
-		) transitions ""
-		)
-		^ "\n"*)
-		(*** NOTE: LESS EASY VERSION BUT ORDER IS SPECIFIED (we rank by source states indices, and then by target) ***)
+		(* We rank by source states indices, and then by target) *)
 		"\n  /************************************************************/\n  DESCRIPTION OF THE TRANSITIONS"
 		(* We iterate on the states *)
 		^ (List.fold_left (fun current_string source_index ->
@@ -1499,7 +1479,7 @@ let draw_statespace_if_requested (model : AbstractModel.abstract_model) (propert
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
-	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
+	if options#graphical_state_space <> Graphical_state_space_none || options#states_description <> Text_state_space_none then (
 		(* Preliminary check: the state space shall not be empty *)
 		if (state_space#nb_states) = 0 then (
 			print_warning "State space is empty: not drawing";
@@ -1508,11 +1488,20 @@ let draw_statespace_if_requested (model : AbstractModel.abstract_model) (propert
 			let dot_model, states = dot_of_statespace model property_option state_space algorithm_name in
 
 			(* Write states file if needed *)
-			if options#states_description then (
+			begin
+			match options#states_description with
+			| Text_state_space_none -> 
+					print_message Verbose_total ("No export of  the states description.");
+
+			| Text_state_space_accepting -> 
+				(*** TODO ***)
+				raise (NotImplemented "Text_state_space_accepting");
+
+			| Text_state_space_all -> 
 				let states_file_name = (radical ^ "." ^ states_file_extension) in
 				print_message Verbose_standard ("Writing the states description to file `" ^ states_file_name ^ "`…");
 				write_to_file states_file_name states;
-			);
+			end;
 
 			(* Generate graphical state space if needed *)
 			if options#graphical_state_space <> Graphical_state_space_none then(
