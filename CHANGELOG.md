@@ -5,6 +5,7 @@
 
 ### Export
 - New keyword ` (ACCEPTING)` for accepting locations in `.states` file
+- Run export (in `#exemplify`) is now fully described in JSON
 
 *******************************************************
 ## release 3.4 (2026-06-24) Cheese Durian
