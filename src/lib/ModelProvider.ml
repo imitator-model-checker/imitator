@@ -15,6 +15,7 @@
 type update_event =
   | Updated of string
   | Finished
+  | Stop_requested
 
 
 class model_provider
@@ -180,7 +181,7 @@ class model_provider
         close_in_noerr ic;
         raise e
 
-  method wait_for_update =
+  method wait_for_update should_stop =
 
     let old_settings = Unix.tcgetattr Unix.stdin in
 
@@ -203,16 +204,16 @@ class model_provider
       (fun () ->
 
         let rec loop () =
-
+          if should_stop () then Stop_requested
+          else
           let ready, _, _ =
-            Unix.select
-              [Unix.stdin; inotify_fd]
-              []
-              []
-              (-1.)
+            try Unix.select [Unix.stdin; inotify_fd] [] [] 0.25
+            with Unix.Unix_error (Unix.EINTR, _, _) -> [], [], []
           in
 
-          if List.mem inotify_fd ready then begin
+          if ready = [] then
+            loop ()
+          else if List.mem inotify_fd ready then begin
 
             Printf.printf "INOTIFY READY\n%!";
 

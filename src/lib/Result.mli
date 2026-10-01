@@ -70,6 +70,9 @@ type state_based_algorithm_termination =
 	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 	| Witness_found
 
+	(* Termination requested by the user, e.g. with SIGINT *)
+	| Interrupted of unexplored_successors
+
 
 (** Termination for cartography algorithms *)
 type bc_algorithm_termination =
@@ -385,5 +388,5 @@ type imitator_result =
 	(* Result for runs exhibition *)
 	| Runs_exhibition_result of runs_exhibition_result
 
+	(* Internal marker for deferred on-the-fly packaging; progress remains in the algorithm state. *)
 	| OnTheFly_Update_result 
-

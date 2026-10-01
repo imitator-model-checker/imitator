@@ -93,6 +93,8 @@ let string_of_state_based_algorithm_termination (state_based_algorithm_terminati
 	(* Termination due to a target state found *)
 	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 	| Witness_found -> "terminated after reaching a target state (some states may have been unexplored)"
+	| Interrupted unexplored_successors ->
+		"interrupted by user (" ^ (string_of_unexplored_successors unexplored_successors) ^ ")"
 
 
 let string_of_bc_algorithm_termination = function
@@ -293,6 +295,11 @@ let print_warnings_of_termination_status (termination_status : Result.state_base
 
 		| (Result.Witness_found) -> print_warning (
 			"A target state has been found. The exploration now stops, although there are still some unexplored states."
+		)
+
+		| (Result.Interrupted unexplored_successors) -> print_warning (
+			"Analysis was interrupted by the user. The result is partial, "
+			^ (although_explore_of_unexplored_successors unexplored_successors)
 		)
 
 
@@ -1334,9 +1341,9 @@ let process_result (model : AbstractModel.abstract_model) =
 (************************************************************)
 
 (** Process the result of IMITATOR. The 4th optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate with success *)
-let process_result_and_terminate (model : AbstractModel.abstract_model) (result : Result.imitator_result) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
+let process_result_and_terminate ?(property_option = None) (model : AbstractModel.abstract_model) (result : Result.imitator_result) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
 	(* Process the result and create output file *)
-	process_result_generic (Some model) None result algorithm_name prefix_option;
+	process_result_generic (Some model) property_option result algorithm_name prefix_option;
 
 	(* Stop counter *)
 	global_counter#stop;
@@ -1363,4 +1370,3 @@ let process_result_and_abort (error_type : Result.error_type) (algorithm_name : 
 
 	(* Abort *)
 	abort_program()
-

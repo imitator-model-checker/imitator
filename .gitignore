@@ -94,6 +94,7 @@ doc/*.toc
 .vscode
 *.code-workspace
 *kate-swp
+.github/copilot-instructions.md
 
 # Dune
 IMITATOR.opam

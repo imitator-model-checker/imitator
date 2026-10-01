@@ -34,6 +34,8 @@ class virtual algoEUgen : AbstractModel.abstract_model -> AbstractProperty.abstr
 
 		method virtual algorithm_name : string
 
+		method set_defer_result_packaging : bool -> unit
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

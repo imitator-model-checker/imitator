@@ -520,7 +520,7 @@ let check_flows_2 variable_infos location_name flows =
 
 				(* Check that the target location exists for this automaton *)
 				if not (in_array target_location_name array_of_location_names.(automaton_index)) then (
-					if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+					if options#imitator_mode = AbstractAlgorithm.Onthefly then (
 						add_missing_target_location
 							automaton_name
 							automaton_index
@@ -602,7 +602,7 @@ let check_automata (useful_parsing_model_information : useful_parsing_model_info
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the target location exists for this automaton *)
 				if not (in_array target_location_name array_of_location_names.(index)) then (
-					if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+					if options#imitator_mode = AbstractAlgorithm.Onthefly then (
 						()
 					) else (
 						print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
@@ -1162,7 +1162,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 								Hashtbl.find index_of_locations.(automaton_index) target_location_name
 						with Not_found ->
 							(* temporary create new  index of the target location if use on the fly mode *)
-								if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then
+								if options#imitator_mode = AbstractAlgorithm.Onthefly then
 									nb_locations
 										(* Array.length index_of_locations.(automaton_index) *)
 								else
@@ -1273,7 +1273,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
 			list_union list_of_all_actions list_of_actions
 			) [] actions_per_location.(automaton_index) in
-		if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then begin
+		if options#imitator_mode = AbstractAlgorithm.Onthefly then begin
 			(* Keep declared actions even when they are not used by a transition. *)
 			let declared_actions_for_this_automaton =
 				List.fold_left
@@ -1300,7 +1300,7 @@ let make_automata (useful_parsing_model_information : useful_parsing_model_infor
 		(* Dynamic updates may add silent transitions even when the initial
 		   model does not contain one. Reserve one silent action per automaton
 		   so the action table remains fixed after model construction. *)
-		if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then begin
+		if options#imitator_mode = AbstractAlgorithm.Onthefly then begin
 			let action_index = !no_sync_index in
 			incr no_sync_index;
 			actions_per_automaton.(automaton_index) <-
@@ -1407,7 +1407,7 @@ let convert_transitions options nb_transitions nb_actions declarations_info vari
               (* Filter instruction in update code bloc according to option -no-var-autoremove *)
               let filtered_parsed_seq_code_bloc_updates =
                 if options#no_variable_autoremove
-                   || options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then
+                   || options#imitator_mode = AbstractAlgorithm.Onthefly then
                     (* No variable auto remove, keep all instructions in update code bloc *)
                     parsed_seq_code_bloc_update
                 else
@@ -2948,7 +2948,7 @@ let convert_property_option (useful_parsing_model_information : useful_parsing_m
 let abstract_structures_of_parsing_structures ?useful_context options (parsed_model : ParsingStructure.unexpanded_parsed_model) (parsed_property_option : ParsingStructure.unexpanded_parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 	let no_variable_autoremove =
 		options#no_variable_autoremove
-		|| options#imitator_mode = AbstractAlgorithm.Temp_testonthefly
+		|| options#imitator_mode = AbstractAlgorithm.Onthefly
 	in
 
   (* Instantiate the template calls and expand synctatic variables *)
@@ -2996,7 +2996,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let action_names, removed_action_names =
 		if options#sync_auto_detection
-		|| options#imitator_mode = AbstractAlgorithm.Temp_testonthefly
+		|| options#imitator_mode = AbstractAlgorithm.Onthefly
 		then action_names, []
 		else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
@@ -4293,7 +4293,7 @@ let abstract_structures_of_parsing_structures ?useful_context options (parsed_mo
 		)
 		in 
 
-	if options#imitator_mode = AbstractAlgorithm.Temp_testonthefly then (
+	if options#imitator_mode = AbstractAlgorithm.Onthefly then (
 		List.iter (fun (automaton_name, _, _, locations) ->
 			let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
 			List.iter (fun (location : parsed_location) ->

@@ -50,7 +50,7 @@ type imitator_mode =
 	| State_space_computation
 
 	(* Temporary algorithm to test on-the-fly modfication *)
-	| Temp_testonthefly
+	| Onthefly
 
 	(* Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)

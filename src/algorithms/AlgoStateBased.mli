@@ -313,6 +313,7 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(** Set the PaTATOR termination function *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_patator_termination_function : (unit -> unit) -> unit
+		method set_interruption_check : (unit -> bool) -> unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Compute the p-constraint only if it is not cached using the mini-cache system *)
@@ -416,6 +417,7 @@ class virtual algoStateBased : AbstractModel.abstract_model -> Options.imitator_
 		(** Main method to run the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method run : Result.imitator_result
+		method run_exploration : Result.imitator_result option
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Packaging the result at the end of the exploration (to be defined in subclasses) *)

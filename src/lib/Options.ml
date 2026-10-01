@@ -79,7 +79,7 @@ class imitator_options =
 		val mutable model_local_file_name 			= "uninitialized model input local file name"
 
 		(* On-the-fly update input file *)
-		val mutable update_file_name = "on-the-fly update input file name"
+		val mutable update_file_name = "on-the-fly updated automaton file name"
 
 		(* OUTPUT OPTIONS *)
 
@@ -603,7 +603,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 
 				(* Case: temporary on-the-fly model modification *)
 				else if mode = "onthefly" then
-					imitator_mode <- Temp_testonthefly
+					imitator_mode <- Onthefly
 
 				else(
 					print_error ("The mode `" ^ mode ^ "` is not valid.");
@@ -1114,6 +1114,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
         Use `statespace`  for the generation of the entire parametric state space.
+        Use `onthefly`    to test on-the-fly model modifications.
         ");
 
 				("-new-queue-EF", Unit (fun () -> new_queue_based_EU <- true), "New queue-based BFS version of EF and EU (EXPERIMENTAL).");
@@ -1250,7 +1251,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 
 				("-update-file",
 				String (fun file_name -> update_file_name <- file_name),
-				" On-the-fly model update file (.update).");
+				" On-the-fly automaton file being updated (.imi).");
 				
 				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`.
 				");

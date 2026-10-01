@@ -51,7 +51,7 @@ type imitator_mode =
 	| State_space_computation
 
 	(* Temporary algorithm to test on-the-fly model modification *)
-	| Temp_testonthefly
+	| Onthefly
 
 	(* Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)
@@ -285,7 +285,7 @@ let property_needed = function
 	| Translation _
 		-> Second_file_optional
 
-	| Temp_testonthefly
+	| Onthefly
 		-> Second_file_optional
 
 	| Algorithm
@@ -296,7 +296,7 @@ let cartography_drawing_possible = function
 	| Syntax_check
 	| State_space_computation
 	| Translation _
-	| Temp_testonthefly _
+	| Onthefly _
 		-> false
 	| Algorithm (*of synthesis_algorithm*)
 		-> true
@@ -330,7 +330,7 @@ let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mod
 	| State_space_computation -> "full symbolic state space exploration "
 
 	(* Temporary algorithm to test on-the-fly modification *)
-	| Temp_testonthefly -> "TEMPORARY algorithm to test on-the-fly model modification"
+	| Onthefly -> "TEMPORARY algorithm to test on-the-fly model modification"
 
 	(* Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)

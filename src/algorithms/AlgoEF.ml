@@ -124,6 +124,48 @@ class virtual algoEF_timed_or_untimed (model : AbstractModel.abstract_model) (pr
 			}
 		)
 
+	method resume_exploration =
+		let state_indexes = state_space#all_state_indexes in
+		if state_indexes <> [] then(
+			unexplored_successors <- AlgoStateBased.UnexSucc_undef;
+			let rec explore_existing_states = function
+				| [] -> ()
+				| state_index :: remaining ->
+					termination_status <- None;
+					(begin match options#exploration_order with
+					| AbstractAlgorithm.Exploration_layer_BFS ->
+						self#explore_layer_bfs state_index
+					| AbstractAlgorithm.Exploration_queue_BFS
+					| AbstractAlgorithm.Exploration_queue_BFS_RS
+					| AbstractAlgorithm.Exploration_queue_BFS_PRIOR ->
+						self#explore_queue_bfs state_index
+					end);
+					begin match termination_status with
+					| Some Result.Regular_termination -> explore_existing_states remaining
+					| Some _ -> ()
+					| None ->
+						raise (InternalError "EF exploration did not set termination status")
+					end
+			in
+			explore_existing_states state_indexes
+		)
+
+	method print_progress =
+		self#print_algo_message Verbose_standard
+			("Current state space: "
+			 ^ string_of_int (state_space#nb_states) ^ " states, "
+			 ^ string_of_int (state_space#nb_transitions) ^ " transitions.");
+		self#print_algo_message Verbose_standard
+			("Current reachability constraint:\n"
+			 ^ LinearConstraint.string_of_p_nnconvex_constraint
+				 model.variable_names synthesized_constraint)
+
+	method mark_interrupted =
+		match termination_status with
+		| Some (Result.Interrupted _) -> ()
+		| _ ->
+			termination_status <- Some (Result.Interrupted Result.Unknown_number)
+
 (************************************************************)
 (************************************************************)
 end;;

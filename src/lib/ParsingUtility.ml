@@ -81,7 +81,7 @@ let filenotfound_error_of parsed_structure_type = match parsed_structure_type wi
 let parse_or_abort (parsed_structure_type : parsed_structure_type) (options : Options.imitator_options) (parsing_function : string -> 'parsing_structure) (file_name : string) : 'parsing_structure =
 	let force_included_file_terminator =
 		match options#imitator_mode with
-		| AbstractAlgorithm.Temp_testonthefly -> true
+		| AbstractAlgorithm.Onthefly -> true
 		| _ -> false
 	in
 	ModelLexer.set_force_included_file_terminator force_included_file_terminator;
@@ -367,51 +367,6 @@ let compile_model_and_property_with_context(options : Options.imitator_options) 
 			(List.length parsed_locations);
 		parsed_locations, should_finish
 
-
-(* let parse_on_the_fly_update
-    (options : Options.imitator_options) :
-    ParsingStructure.unexpanded_parsed_location list =
-
-	print_message Verbose_low
-		("Parsing on-the-fly modification from "
-			^ options#update_file_name ^ "…");
-
-  parse_or_abort
-    OnTheFlyModification
-    options
-    (fun file_name ->
-      let lexbuf = Lexing.from_channel (open_in file_name) in
-      ModelParser.update_locations ModelLexer.token lexbuf
-    )
-    options#update_file_name *)
-
-
-(* let parsing_structure_of_ontheflycommand (options : Options.imitator_options) :
-    ParsingStructure.unexpanded_parsed_location list =
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Parsing the model *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-
-	(* Parsing the main model *)
-	(* print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
-	let parsed_ontheflyupdate : ParsingStructure.on_the_fly_update = parser_lexer_from_file Model options ModelUpdateParser.main ModelUpdateLexer.token options#model_file_name in *)
-
-
-    (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-    (* Parsing the on-the-fly update file *)
-    (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	print_message Verbose_low
-		("Parsing on-the-fly modification from "
-			^ options#update_file_name ^ "…");
-
-    parse_or_abort
-        OnTheFlyModification
-        options
-        ParsingDriver.parse_update_from_file
-        options#update_file_name *)
 
 
 

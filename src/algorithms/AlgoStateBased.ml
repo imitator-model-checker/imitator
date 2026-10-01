@@ -2848,6 +2848,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(** Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
 	val mutable algorithm_keep_going = true
 
+	val mutable interruption_check : unit -> bool = fun () -> false
+
 
 	(** Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithms) *)
 	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
@@ -2917,6 +2919,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method set_patator_termination_function (f : unit -> unit) =
 		patator_termination_function <- Some f
+
+	method set_interruption_check check =
+		interruption_check <- check
 
 
 
@@ -4822,7 +4827,10 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 
 
 		(* Explore further until the limit is reached or the queue is empty *)
-		while limit_reached = Keep_going && !queue <> [] && algorithm_keep_going do
+		while limit_reached = Keep_going
+			&& not (interruption_check ())
+			&& !queue <> []
+			&& algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
@@ -4990,7 +4998,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		);
 
 		(* Update termination condition *)
-		begin
+		if interruption_check () then
+			termination_status <- Some (Result.Interrupted (Number nb_unexplored_successors))
+		else begin
 		match limit_reached with
 			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
 			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
@@ -5009,8 +5019,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
 			| Witness_found -> termination_status <- Some (Result.Regular_termination)
-		end
-		;
+			end
+			;
 
 		(* Print some information *)
 		(*** NOTE: must be done after setting the limit (above) ***)
@@ -5073,7 +5083,10 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		let post_n = ref [init_state_index] in
 
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
-		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
+		while limit_reached = Keep_going
+			&& not (interruption_check ())
+			&& !post_n <> []
+			&& algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -5216,7 +5229,9 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		);
 
 		(* Update termination condition *)
-		begin
+		if interruption_check () then
+			termination_status <- Some (Result.Interrupted (Number nb_unexplored_successors))
+		else begin
 		match limit_reached with
 			(* No limit: regular termination *)
 			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
@@ -5236,8 +5251,8 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 			(* Termination because a witness has been found *)
 			(*** NOTE/TODO: add a new result termination type? ***)
 			| Witness_found -> termination_status <- Some (Result.Regular_termination)
-		end
-		;
+			end
+			;
 
 		(* Print some information *)
 		(*** NOTE: must be done after setting the limit (above) ***)
@@ -5271,7 +5286,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run =
+	method run_exploration =
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
 		let nb_ppl_variables = model.nb_ppl_variables in
@@ -5324,8 +5339,7 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 		| Some imitator_result ->
 			(* Output a warning because this situation is still a little strange *)
 			print_warning "The initial state is not kept. Analysis will now terminate.";
-
-			imitator_result
+			Some imitator_result
 
 		(* No initial termination: continue *)
 		| None ->
@@ -5348,12 +5362,15 @@ class virtual algoStateBased (model : AbstractModel.abstract_model) (options : O
 				| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 				| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
 			end;
+			None
 
-			(* Return the algorithm-dependent result *)
-			self#compute_result
-
-			(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
 		(* match initial state *)
+
+	method run =
+		match self#run_exploration with
+		| Some result -> result
+		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
+		| None -> self#compute_result
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

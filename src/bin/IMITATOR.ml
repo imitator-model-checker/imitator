@@ -147,7 +147,7 @@ parsing_counter#start;
 (*------------------------------------------------------------*)
 let model, property_option, useful_context =
   match options#imitator_mode with
-  | Temp_testonthefly ->
+  | Onthefly ->
       let model, property_option, useful_context =
         ParsingUtility.compile_model_and_property_with_context options
       in
@@ -184,7 +184,7 @@ if not options#is_set_output_result then(
 		| Algorithm | Syntax_check | State_space_computation
 			-> true
 
-		| Translation _ | Temp_testonthefly
+		| Translation _ | Onthefly
 			-> false
 	in
 
@@ -368,7 +368,7 @@ begin match property_option, options#imitator_mode with
 		);
 
 	| _, State_space_computation
-	| _, Temp_testonthefly
+	| _, Onthefly
 	| None, _ ->
 		(* Nothing to do *)
 		()
@@ -424,7 +424,7 @@ begin match property_option, options#imitator_mode with
 			options#set_comparison_operator Equality_check;
 		);
 
-	| _, Temp_testonthefly
+	| _, Onthefly
 	| None, _ -> ()
 
 end;
@@ -454,7 +454,7 @@ begin match property_option, options#imitator_mode with
 
 	(* Otherwise: leave unchanged *)
 	| _, State_space_computation
-	| _, Temp_testonthefly
+	| _, Onthefly
 	| None, _ -> ()
 end;
 
@@ -483,7 +483,7 @@ begin match property_option, options#imitator_mode with
 
 	(* Otherwise: leave unchanged *)
 	| _, State_space_computation
-	| _, Temp_testonthefly
+	| _, Onthefly
 	| None, _ -> ()
 end;
 
@@ -514,7 +514,7 @@ begin match property_option, options#imitator_mode with
 		);
 
 	| _, State_space_computation
-	| _, Temp_testonthefly
+	| _, Onthefly
 	| None, _ ->
 		(* Nothing to do *)
 		()
@@ -729,7 +729,7 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Temporary algorithm to test on-the-fly model modification *)
 	(************************************************************)
-	| Temp_testonthefly ->
+	| Onthefly ->
     let context =
       match useful_context with
       | Some context -> context
@@ -738,8 +738,33 @@ match options#imitator_mode with
 
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let file_name = options#update_file_name	 in
+		let property =
+			match property_option with
+			| Some property -> property
+			| None ->
+				print_error "On-the-fly EF mode requires an EF property.";
+				abort_program ();
+				exit 1
+		in
+		let state_predicate =
+			match property.property with
+			| EF state_predicate
+			| EF_timed (_, state_predicate) -> state_predicate
+			| _ ->
+				print_error "On-the-fly mode currently supports only EF and timed EF properties.";
+				abort_program ();
+				exit 1
+		in
 		let provider = new ModelProvider.model_provider model context file_name in
-		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoOntheflyModification.algoOntheflyModification model provider options in
+		let concrete_algorithm :> AlgoGeneric.algoGeneric =
+			match property.property with
+			| EF _ ->
+				new AlgoEFOnthefly.algoEFOnthefly model provider property options state_predicate
+			| EF_timed (timed_interval, _) ->
+				new AlgoEFOnthefly.algoEFtimedonthefly model provider property options state_predicate timed_interval
+			| _ ->
+				raise (InternalError "Expected EF or timed EF property in on-the-fly mode")
+		in
 
 		(*** NOTE: duplicate code with what follows ***)
 
@@ -750,7 +775,7 @@ match options#imitator_mode with
 		counter_main_algorithm#stop;
 
 		(* Process and terminate *)
-		ResultProcessor.process_result_and_terminate model result concrete_algorithm#algorithm_name None global_counter
+		ResultProcessor.process_result_and_terminate ~property_option model result concrete_algorithm#algorithm_name None global_counter
 
 
 	(************************************************************)

@@ -43,6 +43,10 @@ class algoEF : AbstractModel.abstract_model -> AbstractProperty.abstract_propert
 		(* Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_result : Result.imitator_result
+		method run_exploration : Result.imitator_result option
+		method resume_exploration : unit
+		method print_progress : unit
+		method mark_interrupted : unit
 
 end
 
@@ -68,5 +72,9 @@ class algoEFtimed : AbstractModel.abstract_model -> AbstractProperty.abstract_pr
 		(* Method packaging the result output by the algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_result : Result.imitator_result
+		method run_exploration : Result.imitator_result option
+		method resume_exploration : unit
+		method print_progress : unit
+		method mark_interrupted : unit
 
 end

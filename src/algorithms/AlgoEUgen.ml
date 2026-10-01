@@ -69,6 +69,8 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
+	val mutable defer_result_packaging = false
+
 
 
 	
@@ -216,10 +218,14 @@ class virtual algoEUgen (model : AbstractModel.abstract_model) (property : Abstr
 			(* Set termination status *)
 			termination_status <- Some (Result.Regular_termination);
 
-			(* Terminate *)
-			Some (self#compute_result)
+			Some (
+				if defer_result_packaging then Result.OnTheFly_Update_result
+				else self#compute_result
+			)
 		)
 
+	method set_defer_result_packaging defer =
+		defer_result_packaging <- defer
 
 
 	
