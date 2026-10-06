@@ -77,237 +77,471 @@ let rec string_of_linear_term = function
 
 
 let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : AbstractModel.abstract_model =
+  let sync_prod = {
+    nb_actions                                      = model.nb_actions;
+    nb_clocks                                       = model.nb_clocks;
+    nb_discrete                                     = model.nb_discrete;
+    nb_rationals                                    = model.nb_rationals;
+    nb_parameters                                   = model.nb_parameters;
+    nb_variables                                    = model.nb_variables;
+    nb_ppl_variables                                = model.nb_ppl_variables;
+    nb_transitions                                  = model.nb_transitions;
+    has_invariants                                  = model.has_invariants;
+    has_non_1rate_clocks                            = model.has_non_1rate_clocks;
+    has_complex_updates                             = model.has_complex_updates;
+    lu_status                                       = model.lu_status;
+    strongly_deterministic                          = model.strongly_deterministic;
+    has_silent_actions                              = model.has_silent_actions;
+
+    bounded_parameters                              = model.bounded_parameters;
+    parameters_bounds                               = model.parameters_bounds;
+
+    observer_pta                                    = model.observer_pta;
+    is_observer                                     = model.is_observer;
+
+    clocks                                          = model.clocks;
+    is_clock                                        = model.is_clock;
+    special_reset_clock                             = model.special_reset_clock;
+    global_time_clock                               = model.global_time_clock;
+    clocks_without_special_reset_clock              = model.clocks_without_special_reset_clock;
+
+    discrete                                        = model.discrete;
+    discrete_rationals                              = model.discrete_rationals;
+    is_discrete                                     = model.is_discrete;
+
+    parameters                                      = model.parameters;
+    clocks_and_discrete                             = model.clocks_and_discrete;
+    parameters_and_discrete                         = model.parameters_and_discrete;
+    parameters_and_clocks                           = model.parameters_and_clocks;
+
+    variable_names                                  = model.variable_names;
+    discrete_names_by_type_group                    = model.discrete_names_by_type_group;
+    type_of_variables                               = model.type_of_variables;
+
+    is_accepting                                    = model.is_accepting;
+    is_urgent                                       = model.is_urgent;
+
+    actions                                         = model.actions;
+    controllable_actions                            = model.controllable_actions;
+    has_controllable_or_uncontrollable_actions      = model.has_controllable_or_uncontrollable_actions;
+    action_names                                    = model.action_names;
+    action_types                                    = model.action_types;
+    is_controllable_action                          = model.is_controllable_action;
+
+    costs                                           = model.costs;
+    invariants                                      = model.invariants;
+    stopwatches                                     = model.stopwatches;
+    flow                                            = model.flow;
+
+    functions_table                                 = model.functions_table;
+    local_variables_table                           = model.local_variables_table;
+
+    px_clocks_non_negative                          = model.px_clocks_non_negative;
+
+    nb_automata                                     = 1; (* model.nb_automata; *)
+    nb_locations                                    = List.fold_left (fun acc i -> acc * List.length (model.locations_per_automaton i)) 1 (List.init model.nb_automata (fun i -> i)); (* model.nb_locations; *)
+    automata                                        = OCamlUtilities.list_of_interval 0 0; (* model.automata; *)
+    automata_names                                  = (fun _ -> String.concat "," (List.init model.nb_automata model.automata_names)); (* model.automata_names; *)
+    locations_per_automaton                         = (fun i -> if i = 0 then List.init (List.fold_left (fun acc i -> acc * List.length (model.locations_per_automaton i)) 1 (List.init model.nb_automata (fun i -> i))) (fun j -> j) else []); (* model.locations_per_automaton; *)
+    location_names                                  = (fun _ location_index -> let s = String.split_on_char ',' (model.automata_names 0)
+                                                      |> List.map (fun name -> String.make 1 name.[0])
+                                                      |> String.concat ""
+                                                      in s ^ string_of_int location_index); (* model.location_names; *)
+    actions_per_automaton                           = model.actions_per_automaton; (* *)
+    automata_per_action                             = model.automata_per_action; (* *)
+    actions_per_location                            = model.actions_per_location; (* *)
+    transitions                                     = model.transitions; (* *)
+    transitions_description                         = model.transitions_description; (* *)
+    automaton_of_transition                         = model.automaton_of_transition; (* *)
+    initial_location                                = model.initial_location; (* *)
+    initial_constraint                              = model.initial_constraint; (* *)
+    initial_p_constraint                            = model.initial_p_constraint; (* *)
+    px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint; (* *)
+	} in
+(*
+  let variables = List.map model.variable_names variables in
+
+	let title = "name[shape=none, style=bold, fontsize=24, label=\"" ^ options#model_local_file_name ^ "\"];" in
+	let info_boxes = 
+	"general_info[shape=record, style=filled, fillcolor=\"#f1e2cc\", label=\"" (*Model|{*)
+	^ "{" ^ (string_of_int (List.length model.clocks_without_special_reset_clock)) ^ " clock" ^ (s_of_int (List.length model.clocks_without_special_reset_clock)) ^ "|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
+		^ "|{" ^ (string_of_int (List.length model.parameters)) ^ " parameter" ^ (s_of_int (List.length model.parameters)) ^ "|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
+	^ (if model.discrete <> [] then
+		"|{" ^ (string_of_int (List.length model.discrete)) ^ " discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
+		else "")
+	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"
+	^ "\"];"
+
+		(* Version and generation time infos *)
+		^ "\ngeneration[rotation=90.0, style=filled, fillcolor=\"#f1e2cc\", shape=rectangle, fontsize=10, label=\"Generated by " ^ (OCamlUtilities.escape_string_for_dot (ImitatorUtilities.program_name_and_version_and_nickname)) ^ "
+Build: " ^ ImitatorUtilities.git_branch_and_hash ^ "
+Generation time: " ^ (now()) ^ "\"];" 
+		(* To ensure the vertical ordering *)
+	^ "\n name -> generation [color=white];"
+	^ "\n generation -> general_info [color=white];" in
+
+  (
+			List.map (fun automaton_index -> string_of_automaton model automaton_index
+		) model.automata)
+
+	let inital_global_location  = model.initial_location in
+	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
+	let t2 = "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";" in
+	let t3 = "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */" in
+
+  (fun location_index ->
+(* 		print_message Verbose_high "Entering string_of_locations…2.1"; *)
+		print_message Verbose_high ("automaton_index: " ^ string_of_int automaton_index ^ " location_index: " ^ string_of_int location_index);
+		string_of_location model automaton_index location_index;
+		(* print_message Verbose_high "Entering string_of_locations…2.2"; *)
+	)
+	let is_accepting = model.is_accepting automaton_index location_index in
+	let is_urgent = model.is_urgent automaton_index location_index in
+	^ (id_of_location automaton_index location_index) ^ "["
+	(* Color *)
+	^ "fillcolor=" ^ location_color (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	(* LP: shape MRecord inhibits the peripheries display *)
+	^ (if is_accepting then ", peripheries=2" else "")
+	(* Label: start *)
+	^ ", label=\""
+	(* Label: accepting *)
+	^ (if is_accepting then "acc |" else "")
+	(* Label: urgency *)
+	^ (if is_urgent then "U |" else "")
+	(* Label: name *)
+	^ (model.location_names automaton_index location_index)
+	^ "|{" ^ (escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index)))
+	(* Label: stopwatches *)
+	^ (if model.has_non_1rate_clocks then (
+		let stopwatches = model.stopwatches automaton_index location_index in
+		""
+		^ (if stopwatches <> [] then "| stop " ^ string_of_list_of_variables model.variable_names stopwatches ^ "" else "")
+		(*** TODO: better delimiter? ***)
+		^ ""
+		^ (if (model.flow automaton_index location_index) <> [] then "|" ^ (string_of_flow model automaton_index location_index) else "")
+	)
+
+List.map (fun action_index ->
+		(* Get the list of transitions *)
+		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
+		(* Convert to string *)
+		string_of_list_of_string (
+			(* For each transition *)
+			List.map (string_of_transition model automaton_index location_index) transitions
+			)
+		) (model.actions_per_location automaton_index location_index)
+
+	)
+(if List.length (model.automata_per_action transition.action) > 1 then
+			let color = color_of_action transition.action in
+			"penwidth=3, color=" ^ color ^ ", "
+		(* Check if this is a Action_type_nosync action: in which case dotted *)
+		else
+			match model.action_types transition.action with
+			(* "Synchronized" action but with only 1 PTA involved: rather a non-synchronized named action *)
+			| Action_type_sync -> ""
+			(* Real silent action (no name, no synchronization) *)
+			| Action_type_nosync -> "style=dotted, color=gray40, "
+		)
+
+
+		if transition.guard <> AbstractModel.True_guard then
+			(*** HACK: also check that the result is not "True" ***)
+			let guard_string = ModelPrinter.string_of_guard model.variable_names transition.guard in
+			if guard_string = LinearConstraint.string_of_true then "" else
+			(escape_string_for_dot guard_string) ^ "\\n"
+		else ""
+
+	^ (string_of_action_index model transition.action)
+	(* Updates *)
+	^ ModelPrinter.string_of_seq_code_bloc model 1 update_seq_code_bloc
+*)
+
   print_endline "nb_automata";
-  print_int model.nb_automata;
-  print_newline ();
-  
-  print_endline "nb_actions";
-  print_int model.nb_actions;
-  print_newline ();
-
-  print_endline "nb_clocks";
-  print_int model.nb_clocks;
-  print_newline ();
-
-  print_endline "nb_discrete";
-  print_int model.nb_discrete;
-  print_newline ();
-
-  print_endline "nb_rationals";
-  print_int model.nb_rationals;
-  print_newline ();
-
-  print_endline "nb_parameters";
-  print_int model.nb_parameters;
-  print_newline ();
-
-  print_endline "nb_variables";
-  print_int model.nb_variables;
-  print_newline ();
-
-  print_endline "nb_ppl_variables";
-  print_int model.nb_ppl_variables;
+  print_int sync_prod.nb_automata;
   print_newline ();
 
   print_endline "nb_locations";
-  print_int model.nb_locations;
+  print_int sync_prod.nb_locations;
   print_newline ();
-
-  print_endline "nb_transitions";
-  print_int model.nb_transitions;
-  print_newline ();
-
-  print_endline "has_invariants";
-  Printf.printf "%b\n" model.has_invariants;
-	
-  print_endline "has_non_1rate_clocks";
-  Printf.printf "%b\n" model.has_non_1rate_clocks;
-
-  print_endline "has_complex_updates";
-  Printf.printf "%b\n" model.has_complex_updates;
-
-  print_endline "lu_status";
-  print_endline (string_of_lu_status model.lu_status);
-
-  print_endline "strongly_deterministic";
-  Printf.printf "%b\n" model.strongly_deterministic;
-
-  print_endline "has_silent_actions";
-  Printf.printf "%b\n" model.has_silent_actions;
-	
-  print_endline "bounded_parameters";
-  Printf.printf "%b\n" model.bounded_parameters;
-
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "parameters_bounds %d = %s\n" i (string_of_p_bounds (model.parameters_bounds i))
-    done
-  in
-
-  print_endline "observer_pta";
-  print_endline (string_of_option model.observer_pta);
-
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "is_observer %d = %b\n" i (model.is_observer i);
-    done
-  in
-
-  print_endline "clocks";
-  List.iter (fun x -> print_endline (string_of_int x)) model.clocks;
-
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "is_clock %d = %b\n" i (model.is_clock i);
-    done
-  in
-
-  print_endline "special_reset_clock";
-  print_endline (string_of_option model.special_reset_clock);
-
-  print_endline "clocks_without_special_reset_clock";
-  List.iter (fun x -> print_endline (string_of_int x)) model.clocks_without_special_reset_clock;
-
-  print_endline "global_time_clock";
-  print_endline (string_of_option model.global_time_clock);
-
-  print_endline "discrete";
-  List.iter (fun x -> print_endline (string_of_int x)) model.discrete;
-
-  print_endline "discrete_rationals";
-  List.iter (fun x -> print_endline (string_of_int x)) model.discrete_rationals;
-
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "is_discrete %d = %b\n" i (model.is_discrete i);
-    done
-  in
-
-  print_endline "parameters";
-  List.iter (fun x -> print_endline (string_of_int x)) model.parameters;
-
-  print_endline "clocks_and_discrete";
-  List.iter (fun x -> print_endline (string_of_int x)) model.clocks_and_discrete;
-
-  print_endline "parameters_and_discrete";
-  List.iter (fun x -> print_endline (string_of_int x)) model.parameters_and_discrete;
-
-  print_endline "parameters_and_clocks";
-  List.iter (fun x -> print_endline (string_of_int x)) model.parameters_and_clocks;
-
-  print_endline "variable_names";
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "variable_names %d = %s\n" i (model.variable_names i);
-    done
-  in
-
-  print_endline "discrete_names_by_type_group";
-  List.iter (fun group -> print_endline ("  " ^ string_of_var_type_group group)) model.discrete_names_by_type_group;
-
-  print_endline "type_of_variables";
-  let () =
-    for i = 0 to model.nb_parameters - 1 do
-      Printf.printf "type_of_variables %d = %s\n" i (string_of_var_type (model.type_of_variables i));
-    done
-  in
 
   print_endline "automata";
-  List.iter (fun x -> print_endline (string_of_int x)) model.automata;
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.automata;
 
   print_endline "automata_names";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      Printf.printf "automata_names %d = %s\n" i (model.automata_names i);
+    for i = 0 to sync_prod.nb_automata - 1 do
+      Printf.printf "automata_names %d = %s\n" i (sync_prod.automata_names i);
     done
   in
 
   print_endline "locations_per_automaton";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
         Printf.printf "locations_per_automaton %d = [%s]\n" i (String.concat "; " (List.map string_of_int locs))
     done
   in
 
   print_endline "locations_names";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" i l (model.location_names i l)) locs
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" i l (sync_prod.location_names i l)) locs
     done
   in
-
-  print_endline "is_accepting";
-  let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %b\n" i l (model.is_accepting i l)) locs
-    done
-  in
-
-  print_endline "is_urgent";
-  let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %b\n" i l (model.is_urgent i l)) locs
-    done
-  in
-
-  print_endline "actions";
-  List.iter (fun x -> print_endline (string_of_int x)) model.actions;
-
-  print_endline "controllable_actions";
-  List.iter (fun x -> print_endline (string_of_int x)) model.controllable_actions;
-
-  print_endline "has_controllable_or_uncontrollable_actions";
-  Printf.printf "%b\n" model.has_controllable_or_uncontrollable_actions;
-
-  print_endline "action_names";
-  List.iter (fun x -> print_endline (model.action_names x)) model.actions;
-
-  print_endline "action_types";
-  List.iter (fun x -> print_endline (string_of_action_type (model.action_types x))) model.actions;
 
   print_endline "actions_per_automaton";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      List.iter (fun x -> Printf.printf "%d\n" x) (model.actions_per_automaton i);
+    for i = 0 to sync_prod.nb_automata - 1 do
+      List.iter (fun x -> Printf.printf "%d\n" x) (sync_prod.actions_per_automaton i);
     done
   in
 
   print_endline "automata_per_action";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      List.iter (fun x -> Printf.printf "%d\n" x) (model.automata_per_action i);
+    for i = 0 to sync_prod.nb_automata - 1 do
+      List.iter (fun x -> Printf.printf "%d\n" x) (sync_prod.automata_per_action i);
     done
   in
 
   print_endline "actions_per_location";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (sync_prod.actions_per_location i l)))) locs
     done
   in
 
+  print_endline "transitions";
+  let () =
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        List.iter (fun l ->
+          let actions = sync_prod.actions_per_location i l in
+            List.iter (fun a ->
+              let trans = sync_prod.transitions i l a in
+                Printf.printf "  automaton %d, location %d, action %d = [%s]\n" i l a (String.concat "; " (List.map string_of_int trans))
+            ) actions
+        ) locs
+    done
+  in
+
+  print_endline "transitions_description";
+(*
+	sync_prod.transitions_description : transition_index -> transition;
+*)
+
+  print_endline "automaton_of_transition";
+  let () =
+    for t = 0 to sync_prod.nb_transitions - 1 do
+      Printf.printf "  transition %d = automaton %d\n" t (sync_prod.automaton_of_transition t)
+    done
+  in
+
+  print_endline "initial_location";
+(*
+	sync_prod.initial_location : DiscreteState.global_location;
+*)
+
+  print_endline "initial_constraint";
+(*
+	sync_prod.initial_constraint : LinearConstraint.px_linear_constraint;
+*)
+
+  print_endline "initial_p_constraint";
+(*
+	sync_prod.initial_p_constraint : LinearConstraint.p_linear_constraint;
+*)
+
+  print_endline "px_clocks_non_negative_and_initial_p_constraint";
+(*
+	sync_prod.px_clocks_non_negative_and_initial_p_constraint: LinearConstraint.px_linear_constraint;
+*)
+(*
+  print_endline "nb_actions";
+  print_int sync_prod.nb_actions;
+  print_newline ();
+
+  print_endline "nb_clocks";
+  print_int sync_prod.nb_clocks;
+  print_newline ();
+
+  print_endline "nb_discrete";
+  print_int sync_prod.nb_discrete;
+  print_newline ();
+
+  print_endline "nb_rationals";
+  print_int sync_prod.nb_rationals;
+  print_newline ();
+
+  print_endline "nb_parameters";
+  print_int sync_prod.nb_parameters;
+  print_newline ();
+
+  print_endline "nb_variables";
+  print_int sync_prod.nb_variables;
+  print_newline ();
+
+  print_endline "nb_ppl_variables";
+  print_int sync_prod.nb_ppl_variables;
+  print_newline ();
+
+  print_endline "nb_transitions";
+  print_int sync_prod.nb_transitions;
+  print_newline ();
+
+  print_endline "has_invariants";
+  Printf.printf "%b\n" sync_prod.has_invariants;
+	
+  print_endline "has_non_1rate_clocks";
+  Printf.printf "%b\n" sync_prod.has_non_1rate_clocks;
+
+  print_endline "has_complex_updates";
+  Printf.printf "%b\n" sync_prod.has_complex_updates;
+
+  print_endline "lu_status";
+  print_endline (string_of_lu_status sync_prod.lu_status);
+
+  print_endline "strongly_deterministic";
+  Printf.printf "%b\n" sync_prod.strongly_deterministic;
+
+  print_endline "has_silent_actions";
+  Printf.printf "%b\n" sync_prod.has_silent_actions;
+	
+  print_endline "bounded_parameters";
+  Printf.printf "%b\n" sync_prod.bounded_parameters;
+
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "parameters_bounds %d = %s\n" i (string_of_p_bounds (sync_prod.parameters_bounds i))
+    done
+  in
+
+  print_endline "observer_pta";
+  print_endline (string_of_option sync_prod.observer_pta);
+
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "is_observer %d = %b\n" i (sync_prod.is_observer i);
+    done
+  in
+
+  print_endline "clocks";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.clocks;
+
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "is_clock %d = %b\n" i (sync_prod.is_clock i);
+    done
+  in
+
+  print_endline "special_reset_clock";
+  print_endline (string_of_option sync_prod.special_reset_clock);
+
+  print_endline "clocks_without_special_reset_clock";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.clocks_without_special_reset_clock;
+
+  print_endline "global_time_clock";
+  print_endline (string_of_option sync_prod.global_time_clock);
+
+  print_endline "discrete";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.discrete;
+
+  print_endline "discrete_rationals";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.discrete_rationals;
+
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "is_discrete %d = %b\n" i (sync_prod.is_discrete i);
+    done
+  in
+
+  print_endline "parameters";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.parameters;
+
+  print_endline "clocks_and_discrete";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.clocks_and_discrete;
+
+  print_endline "parameters_and_discrete";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.parameters_and_discrete;
+
+  print_endline "parameters_and_clocks";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.parameters_and_clocks;
+
+  print_endline "variable_names";
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "variable_names %d = %s\n" i (sync_prod.variable_names i);
+    done
+  in
+
+  print_endline "discrete_names_by_type_group";
+  List.iter (fun group -> print_endline ("  " ^ string_of_var_type_group group)) sync_prod.discrete_names_by_type_group;
+
+  print_endline "type_of_variables";
+  let () =
+    for i = 0 to sync_prod.nb_parameters - 1 do
+      Printf.printf "type_of_variables %d = %s\n" i (string_of_var_type (sync_prod.type_of_variables i));
+    done
+  in
+
+  print_endline "locations_per_automaton";
+  let () =
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        Printf.printf "locations_per_automaton %d = [%s]\n" i (String.concat "; " (List.map string_of_int locs))
+    done
+  in
+
+  print_endline "is_accepting";
+  let () =
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %b\n" i l (sync_prod.is_accepting i l)) locs
+    done
+  in
+
+  print_endline "is_urgent";
+  let () =
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
+        List.iter (fun l -> Printf.printf "  automaton %d, location %d = %b\n" i l (sync_prod.is_urgent i l)) locs
+    done
+  in
+
+  print_endline "actions";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.actions;
+
+  print_endline "controllable_actions";
+  List.iter (fun x -> print_endline (string_of_int x)) sync_prod.controllable_actions;
+
+  print_endline "has_controllable_or_uncontrollable_actions";
+  Printf.printf "%b\n" sync_prod.has_controllable_or_uncontrollable_actions;
+
+  print_endline "action_names";
+  List.iter (fun x -> print_endline (sync_prod.action_names x)) sync_prod.actions;
+
+  print_endline "action_types";
+  List.iter (fun x -> print_endline (string_of_action_type (sync_prod.action_types x))) sync_prod.actions;
+
   print_endline "is_controllable_action";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
       List.iter (fun l ->
-        let actions = model.actions_per_location i l in
-          List.iter (fun a -> Printf.printf "  automaton %d, location %d, action %d = %b\n" i l a (model.is_controllable_action a)) actions
+        let actions = sync_prod.actions_per_location i l in
+          List.iter (fun a -> Printf.printf "  automaton %d, location %d, action %d = %b\n" i l a (sync_prod.is_controllable_action a)) actions
       ) locs
     done
   in
 
 	print_endline "costs";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
       List.iter (fun l ->
-        match model.costs i l with
+        match sync_prod.costs i l with
         | None -> Printf.printf "  automaton %d, location %d = None\n" i l
         | Some t -> Printf.printf "  automaton %d, location %d = %s\n" i l (string_of_linear_term t)
       ) locs
@@ -315,87 +549,43 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
   in
 
 (*
-	model.invariants : automaton_index -> location_index -> invariant;
+	sync_prod.invariants : automaton_index -> location_index -> invariant;
 *)
-
-  print_endline "transitions";
-  let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l ->
-          let actions = model.actions_per_location i l in
-            List.iter (fun a ->
-              let trans = model.transitions i l a in
-                Printf.printf "  automaton %d, location %d, action %d = [%s]\n" i l a (String.concat "; " (List.map string_of_int trans))
-            ) actions
-        ) locs
-    done
-  in
 
   print_endline "stopwatches";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
       List.iter (fun l ->
-        Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.stopwatches i l)))
+        Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (sync_prod.stopwatches i l)))
       ) locs
     done
   in
 
   print_endline "flow";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
+    for i = 0 to sync_prod.nb_automata - 1 do
+      let locs = sync_prod.locations_per_automaton i in
       List.iter (fun l ->
-        Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map (fun (c, v) -> Printf.sprintf "(%d, %s)" c (Gmp.Q.to_string v)) (model.flow i l)))
+        Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map (fun (c, v) -> Printf.sprintf "(%d, %s)" c (Gmp.Q.to_string v)) (sync_prod.flow i l)))
       ) locs
-    done
-  in
-
-(*
-	model.transitions_description : transition_index -> transition;
-*)
-
-  print_endline "automaton_of_transition";
-  let () =
-    for t = 0 to model.nb_transitions - 1 do
-      Printf.printf "  transition %d = automaton %d\n" t (model.automaton_of_transition t)
     done
   in
 
   print_endline "functions_table";
 (*
-  model.functions_table : (variable_name, fun_definition) Hashtbl.t;
+  sync_prod.functions_table : (variable_name, fun_definition) Hashtbl.t;
 *)
 
   print_endline "local_variables_table";
 (*
-  model.local_variables_table : (variable_ref, AbstractValue.abstract_value) Hashtbl.t;
+  sync_prod.local_variables_table : (variable_ref, AbstractValue.abstract_value) Hashtbl.t;
 *)
 
   print_endline "px_clocks_non_negative";
 (*
-	model.px_clocks_non_negative: LinearConstraint.px_linear_constraint;
+	sync_prod.px_clocks_non_negative: LinearConstraint.px_linear_constraint;
 *)
-
-  print_endline "initial_location";
-(*
-	model.initial_location : DiscreteState.global_location;
 *)
-
-  print_endline "initial_constraint";
-(*
-	model.initial_constraint : LinearConstraint.px_linear_constraint;
-*)
-
-  print_endline "initial_p_constraint";
-(*
-	model.initial_p_constraint : LinearConstraint.p_linear_constraint;
-*)
-
-  print_endline "px_clocks_non_negative_and_initial_p_constraint";
-(*
-	model.px_clocks_non_negative_and_initial_p_constraint: LinearConstraint.px_linear_constraint;
-*)
-  model
+  sync_prod
 ;;

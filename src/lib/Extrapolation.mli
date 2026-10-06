@@ -11,9 +11,20 @@
  *
  ************************************************************)
 
+open AbstractModel
+
 (** clocks extrapolation. *)
 
- 
+type numconst_or_infinity =
+	(* Regular NumConst *)
+	| Finite of NumConst.t
+	(* Infinity *)
+	| Infinity
+	(* Minus-infinity *)
+	| Minus_infinity
+
+val get_p_bounds : bounds -> numconst_or_infinity * numconst_or_infinity
+
  
 (*------------------------------------------------------------*)
 (** Function for preparing data structures for extrapolation *)

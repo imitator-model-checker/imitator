@@ -91,7 +91,7 @@ type d_valuation   = (variable -> coef)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (* Linear term over parameters (abstract type). *)
-type p_linear_term
+type p_linear_term = internal_linear_term
 (* Linear term over parameters and clocks (abstract type). *)
 type px_linear_term
 (* Linear term over parameters, clocks and discrete variables. *)
