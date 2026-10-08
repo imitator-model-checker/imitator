@@ -123,3 +123,6 @@ val string_of_abstract_property : AbstractModel.abstract_model -> AbstractProper
 
 val compute_flows_list : AbstractModel.abstract_model -> DiscreteState.global_location -> ((Automaton.clock_index * NumConst.t) list)
 val compute_flows_fun  : AbstractModel.abstract_model -> DiscreteState.global_location -> (Automaton.clock_index -> NumConst.t)
+
+val string_of_transitions : AbstractModel.abstract_model -> Automaton.automaton_index -> Automaton.location_index -> string
+val string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> transition -> string

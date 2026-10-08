@@ -4,7 +4,7 @@
  * 
  * Université Sorbonne Paris Nord, LIPN, CNRS, France
  * 
- * Module description: Syncronized Product of Parametric Timed Automatas
+ * Module description: Parametric Timed Automatas Syncronized Product
  *
  * File contributors : Daniel Torres
  * Created           : 2026/09/15
@@ -16,9 +16,7 @@ open DiscreteType
 open Extrapolation
 open LinearConstraint
 open ModelConverter
-
-module Ppl = Ppl_ocaml
-open Ppl
+open ModelPrinter
 
 let string_of_lu_status = function
   | PTA_notLU -> "PTA_notLU"
@@ -75,6 +73,89 @@ let rec string_of_linear_term = function
   | IR_Minus (a, b) -> "(" ^ string_of_linear_term a ^ " - " ^ string_of_linear_term b ^ ")"
   | IR_Times (c, a) -> Gmp.Q.to_string c ^ " * " ^ string_of_linear_term a
 
+let pta_sync_prod_locations_number = ref 0
+let pta_sync_prod_automata_name = ref (Array.make 0 "")
+let pta_sync_prod_location_names = ref (Array.make 0 "")
+let pta_sync_prod_locations_per_automaton = ref (List.init 0 (fun i -> i))
+let pta_sync_prod_actions_per_automaton = ref (List.init 0 (fun i -> i))
+
+(*
+  Function to compute the PTA syncronized product locations number
+  The resulting automata has:
+    length(A_{0}) * length(A_{1}) * ... * length(A_{n-2})  * length(A_{n-1})
+  total locations
+*)
+let get_pta_sync_prod_locations_number (model : AbstractModel.abstract_model) : int =
+  if !pta_sync_prod_locations_number = 0 then
+    pta_sync_prod_locations_number :=
+      List.fold_left (
+        fun sum i -> sum * List.length (model.locations_per_automaton i)
+      ) 1 (
+        List.init model.nb_automata (fun i -> i)
+      );
+  !pta_sync_prod_locations_number
+
+(*
+  Function to initialize/get the PTA syncronized product automata name array
+  To form name, it takes the name's first letter in each automata and concatenates them to form the name:
+    "[lock, P1, P2] -> lPP"
+  As the result is only one automata, the array is length 1
+*)
+let get_pta_sync_prod_automata_name (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_automata_name = 0 then
+    pta_sync_prod_automata_name :=
+      Array.make 1 (
+        String.concat "" (
+          List.map (fun name ->
+            if name = "" then ""
+            else String.make 1 name.[0]
+          ) (List.init model.nb_automata model.automata_names)
+        )
+      );
+  !pta_sync_prod_automata_name
+
+(*
+  Function to initialize/get the PTA syncronized product location names array
+  The resulting array has:
+    get_pta_sync_prod_locations_number model
+  indices
+*)
+let get_pta_sync_prod_location_names (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_location_names = 0 then
+    pta_sync_prod_location_names :=
+      Array.make (get_pta_sync_prod_locations_number model) "";
+  !pta_sync_prod_location_names
+
+(*
+  Function to initialize/get the PTA syncronized product locations_per_automaton array
+*)
+let get_pta_sync_prod_locations_per_automaton (model : AbstractModel.abstract_model) =
+  if List.length !pta_sync_prod_locations_per_automaton = 0 then
+    pta_sync_prod_locations_per_automaton :=
+      List.init (get_pta_sync_prod_locations_number model) (fun j -> j);
+  !pta_sync_prod_locations_per_automaton
+
+(*
+  Function to initialize/get the PTA syncronized product action per automata array
+*)
+let get_pta_sync_prod_actions_per_automaton (model : AbstractModel.abstract_model) =
+  if List.length !pta_sync_prod_actions_per_automaton = 0 then
+    begin
+      pta_sync_prod_actions_per_automaton := List.concat (List.init model.nb_automata model.actions_per_automaton)
+      |> List.sort_uniq compare
+    end;
+  !pta_sync_prod_actions_per_automaton
+
+(*
+  Function to compute the digits to concatenate after the location name: [000, 001, 002, ..., 243, 244]
+*)
+let rec digits base number =
+  match base with
+  | [] -> []
+  | [last] -> [number mod last]
+  | _ :: rest ->
+    let tr = List.fold_left ( * ) 1 rest in
+      (number / tr) :: digits rest (number mod tr)
 
 let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : AbstractModel.abstract_model =
   let sync_prod = {
@@ -140,81 +221,68 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
 
     (* PTA Sync Product has only 1 automata *)
     nb_automata                                     = 1; (* model.nb_automata; *)
-    
-    (* The result automata has: length(A_{0}) * length(A_{1}) * ... * length(A_{n-2})  * length(A_{n-1}) total locations *)
-    nb_locations                                    = List.fold_left (
-                                                        fun acc i -> acc * List.length (model.locations_per_automaton i)
-                                                      ) 1 (
-                                                        List.init model.nb_automata (fun i -> i)
-                                                      ); (* model.nb_locations; *)
+
+    (* The resulting automata has: length(A_{0}) * length(A_{1}) * ... * length(A_{n-2})  * length(A_{n-1}) total locations *)
+    nb_locations                                    = get_pta_sync_prod_locations_number model; (* model.nb_locations; *)
     
     (* The only automata *)
     automata                                        = OCamlUtilities.list_of_interval 0 0; (* model.automata; *)
     
     (* Takes the name's first letter in each automata and concatenates them to form the name: "[lock, P1, P2] -> lPP" *)
-    automata_names                                  = (fun _ -> String.concat "" (
-                                                        List.map (fun name ->
-                                                          if name = "" then ""
-                                                          else String.make 1 name.[0]
-                                                        ) (List.init model.nb_automata model.automata_names)
-                                                      )); (* model.automata_names; *)
-    
+    automata_names                                  = (fun _ -> (get_pta_sync_prod_automata_name model).(0)); (* model.automata_names; *)
+
     (* Computes the number of locations and saves them as a list: [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; ...] *)
-    locations_per_automaton                         = (fun i ->
-                                                        if i = 0 then
-                                                          List.init (
-                                                            List.fold_left (
-                                                              fun acc i -> acc * List.length (model.locations_per_automaton i)
-                                                            ) 1 (
-                                                              List.init model.nb_automata (fun i -> i)
-                                                            )
-                                                          ) (fun j -> j)
-                                                        else []
-                                                      ); (* model.locations_per_automaton; *)
+    locations_per_automaton                         = (fun _ -> get_pta_sync_prod_locations_per_automaton model); (* model.locations_per_automaton; *)
     
     (* Assigns a name to each location depending on the number of locations in each automata: [lock(3), P1(5), P2(5)] -> [lPP000, lPP001, lPP002, ..., lPP243, lPP244] *)
     location_names                                  = (fun _ li ->
-                                                        let locs_per_a = List.init model.nb_automata (fun i -> List.length (model.locations_per_automaton i)) in
-                                                        let _ = List.fold_left ( * ) 1 (List.tl locs_per_a) in
+                                                        let _ = get_pta_sync_prod_location_names model in
+                                                          if (!pta_sync_prod_location_names).(li) = "" then
+                                                            (!pta_sync_prod_location_names).(li) <- (
+                                                              let locs_per_a = List.init model.nb_automata (fun i -> List.length (model.locations_per_automaton i)) in
 
-                                                        (* Computes the digits to concatenate after the location name: [000, 001, 002, ..., 243, 244] *)
-                                                        let rec digits base number =
-                                                          match base with
-                                                          | [] -> []
-                                                          | [last] -> [number mod last]
-                                                          | _ :: rest -> let tr = List.fold_left ( * ) 1 rest in (number / tr) :: digits rest (number mod tr)
-                                                        in
+                                                              (* Get digits and convert them into a string: ["000", "001", "002", ..., "243", "244"] *)
+                                                              let name_digits = digits locs_per_a li in
+                                                              let name = (get_pta_sync_prod_automata_name model).(0) in
+                                                              let s_name_digits = String.concat "" (List.map string_of_int name_digits) in
 
-                                                        (* Get digits and convert them into a string: ["000", "001", "002", ..., "243", "244"] *)
-                                                        let ds = digits locs_per_a li in
-                                                        let s = String.concat "" (
-                                                          List.map (fun name ->
-                                                            if name = "" then ""
-                                                            else String.make 1 name.[0]
-                                                          ) (List.init model.nb_automata model.automata_names)
-                                                        ) in
-                                                        let s_ds = String.concat "" (List.map string_of_int ds) in
-
-                                                        (* Concatenate automata name with its digits: ["lPP000", "lPP001", "lPP002", ..., "lPP243", "lPP244"] *)
-                                                        let width = List.length locs_per_a in
-                                                        s ^ (
-                                                          if String.length s_ds >= width then s_ds
-                                                          else String.make (width - String.length s_ds) '0' ^ s_ds
-                                                        )
+                                                              (* Concatenate automata name with its digits: ["lPP000", "lPP001", "lPP002", ..., "lPP243", "lPP244"] *)
+                                                              let width = List.length locs_per_a in
+                                                              name ^ (
+                                                                if String.length s_name_digits >= width then s_name_digits
+                                                                else String.make (width - String.length s_name_digits) '0' ^ s_name_digits
+                                                              )
+                                                            );
+                                                          (!pta_sync_prod_location_names).(li)
                                                       ); (* model.location_names; *)
-    
+
     (* Get all unique actions and assign them to automata 0 *)
-    actions_per_automaton                           = (fun i ->
-                                                        if i = 0 then List.concat (List.init model.nb_automata model.actions_per_automaton)
-                                                          |> List.sort_uniq compare
-                                                        else model.actions_per_automaton i); (* model.actions_per_automaton; *)
+    actions_per_automaton                           = (fun _ -> get_pta_sync_prod_actions_per_automaton model); (* model.actions_per_automaton; *)
     
     (* Automata 0 has all actions *)
     automata_per_action                             = (fun i -> if i >= 0 && i < model.nb_actions then [0] else []); (* model.automata_per_action; *)
 
     
     actions_per_location                            = model.actions_per_location; (* *)
-    transitions                                     = model.transitions; (* *)
+    transitions                                     = model.transitions; (*
+  let indices_with_digit_at (counts : int list) (k : int) (d : int) : int list =
+  let arr = Array.of_list counts in
+  let n = Array.length arr in
+  (* Producto de counts a la derecha de k (posiciones k+1..n-1) *)
+  let right = ref 1 in
+  for i = k + 1 to n - 1 do right := !right * arr.(i) done;
+  (* Producto de counts a la izquierda de k (posiciones 0..k-1) *)
+  let left = ref 1 in
+  for i = 0 to k - 1 do left := !left * arr.(i) done;
+  (* Generar todas las combinaciones *)
+  let result = ref [] in
+  for l = 0 to !left - 1 do
+    for r = 0 to !right - 1 do
+      result := (l * arr.(k) * !right + d * !right + r) :: !result
+    done
+  done;
+  List.rev !result
+  *)
     transitions_description                         = model.transitions_description; (* *)
     automaton_of_transition                         = model.automaton_of_transition; (* *)
     initial_location                                = model.initial_location; (* *)
@@ -368,25 +436,35 @@ List.map (fun action_index ->
   in
 
   print_endline "actions_per_location";
-(*
+
   let () =
-    for i = 0 to sync_prod.nb_automata - 1 do
-      let locs = sync_prod.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (sync_prod.actions_per_location i l)))) locs
+    for i = 0 to model.nb_automata - 1 do
+      let locs = model.locations_per_automaton i in
+        List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs
     done
   in
-*)
+
   print_endline "transitions";
   let () =
-    for i = 0 to sync_prod.nb_automata - 1 do
-      let locs = sync_prod.locations_per_automaton i in
+    for i = 0 to model.nb_automata - 1 do
+      let locs = model.locations_per_automaton i in
         List.iter (fun l ->
-          let actions = sync_prod.actions_per_location i l in
+          let actions = model.actions_per_location i l in
             List.iter (fun a ->
-              let trans = sync_prod.transitions i l a in
+              let trans = model.transitions i l a in
                 Printf.printf "  automaton %d, location %d, action %d = [%s]\n" i l a (String.concat "; " (List.map string_of_int trans))
             ) actions
         ) locs
+    done
+  in
+
+  let () =
+    for i = 0 to model.nb_automata - 1 do
+      let locs = model.locations_per_automaton i in
+      for j = 0 to (List.length locs) - 1 do
+        let s_t = ModelPrinter.string_of_transitions model i j in
+          Printf.printf "  automaton %d, location %d = [%s]\n" i j s_t
+      done
     done
   in
 
