@@ -157,6 +157,24 @@ let rec digits base number =
     let tr = List.fold_left ( * ) 1 rest in
       (number / tr) :: digits rest (number mod tr)
 
+(*
+  Function to compute all location name indices having a digit "dig" at position "pos" in the name:
+  indices_with_digit_at 1 0 -> [0; 1; 2; 3; 4; 25; 26; 27; 28; 29; 50; 51; 52; 53; 54]
+*)
+let indices_with_digit_at (model : AbstractModel.abstract_model) (pos : int) (dig : int) =
+  let automata_name = (get_pta_sync_prod_automata_name model).(0) in
+  let loc_names = Array.to_list (get_pta_sync_prod_location_names model) in
+  List.filter (fun li ->
+    let loc_name = List.nth loc_names li in
+    let l_loc_name = String.length loc_name in
+    let l_automata_name = String.length automata_name in
+    let actual_pos = l_automata_name + pos in
+    if actual_pos >= l_loc_name then false
+    else
+      let c = loc_name.[actual_pos] in
+      c = Char.chr (Char.code '0' + dig)
+  ) (get_pta_sync_prod_locations_per_automaton model)
+
 let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : AbstractModel.abstract_model =
   let sync_prod = {
     nb_actions                                      = model.nb_actions;
@@ -264,25 +282,9 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
 
     
     actions_per_location                            = model.actions_per_location; (* *)
-    transitions                                     = model.transitions; (*
-  let indices_with_digit_at (counts : int list) (k : int) (d : int) : int list =
-  let arr = Array.of_list counts in
-  let n = Array.length arr in
-  (* Producto de counts a la derecha de k (posiciones k+1..n-1) *)
-  let right = ref 1 in
-  for i = k + 1 to n - 1 do right := !right * arr.(i) done;
-  (* Producto de counts a la izquierda de k (posiciones 0..k-1) *)
-  let left = ref 1 in
-  for i = 0 to k - 1 do left := !left * arr.(i) done;
-  (* Generar todas las combinaciones *)
-  let result = ref [] in
-  for l = 0 to !left - 1 do
-    for r = 0 to !right - 1 do
-      result := (l * arr.(k) * !right + d * !right + r) :: !result
-    done
-  done;
-  List.rev !result
-  *)
+
+    (* Automata 0 has all transitions *)
+    transitions                                     = model.transitions; (* model.transitions; *)
     transitions_description                         = model.transitions_description; (* *)
     automaton_of_transition                         = model.automaton_of_transition; (* *)
     initial_location                                = model.initial_location; (* *)
@@ -466,6 +468,13 @@ List.map (fun action_index ->
           Printf.printf "  automaton %d, location %d = [%s]\n" i j s_t
       done
     done
+  in
+
+  let () =
+    let indices = indices_with_digit_at sync_prod 2 3 in
+      List.iter (fun i ->
+        Printf.printf "i[%d] = %s\n" i (sync_prod.location_names 0 i)
+      ) indices
   in
 
   print_endline "transitions_description";
