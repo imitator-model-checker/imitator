@@ -73,11 +73,13 @@ let rec string_of_linear_term = function
   | IR_Minus (a, b) -> "(" ^ string_of_linear_term a ^ " - " ^ string_of_linear_term b ^ ")"
   | IR_Times (c, a) -> Gmp.Q.to_string c ^ " * " ^ string_of_linear_term a
 
-let pta_sync_prod_locations_number = ref 0
-let pta_sync_prod_automata_name = ref (Array.make 0 "")
-let pta_sync_prod_location_names = ref (Array.make 0 "")
+let pta_sync_prod_locations_number        = ref 0
+let pta_sync_prod_automata_name           = ref (Array.make 0 "")
+let pta_sync_prod_location_names          = ref (Array.make 0 "")
 let pta_sync_prod_locations_per_automaton = ref (List.init 0 (fun i -> i))
-let pta_sync_prod_actions_per_automaton = ref (List.init 0 (fun i -> i))
+let pta_sync_prod_actions_per_automaton   = ref (List.init 0 (fun i -> i))
+let pta_sync_prod_actions_per_location    = ref (Array.make 0 (Array.make 0 []))
+let pta_sync_prod_transitions             = ref (Array.make 0 (Array.make 0 []))
 
 (*
   Function to compute the PTA syncronized product locations number
@@ -147,6 +149,26 @@ let get_pta_sync_prod_actions_per_automaton (model : AbstractModel.abstract_mode
   !pta_sync_prod_actions_per_automaton
 
 (*
+  Function to initialize/get the PTA syncronized product action per location array
+*)
+let get_pta_sync_prod_actions_per_location (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_actions_per_location = 0 then
+    begin
+      pta_sync_prod_actions_per_location := Array.init (get_pta_sync_prod_locations_number model) (fun _ -> Array.make 0 [])
+    end;
+  !pta_sync_prod_actions_per_location
+
+(*
+  Function to initialize/get the PTA syncronized product transitions array
+*)
+let get_pta_sync_prod_transitions (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_transitions = 0 then
+    begin
+      pta_sync_prod_transitions := Array.init (get_pta_sync_prod_locations_number model) (fun _ -> Array.make 0 [])
+    end;
+  !pta_sync_prod_transitions
+
+(*
   Function to compute the digits to concatenate after the location name: [000, 001, 002, ..., 243, 244]
 *)
 let rec digits base number =
@@ -175,6 +197,9 @@ let indices_with_digit_at (model : AbstractModel.abstract_model) (pos : int) (di
       c = Char.chr (Char.code '0' + dig)
   ) (get_pta_sync_prod_locations_per_automaton model)
 
+(*
+  Function to build the PTA product model structure
+*)
 let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : AbstractModel.abstract_model =
   let sync_prod = {
     nb_actions                                      = model.nb_actions;
@@ -254,6 +279,7 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
     
     (* Assigns a name to each location depending on the number of locations in each automata: [lock(3), P1(5), P2(5)] -> [lPP000, lPP001, lPP002, ..., lPP243, lPP244] *)
     location_names                                  = (fun _ li ->
+                                                        (* Initialize the array *)
                                                         let _ = get_pta_sync_prod_location_names model in
                                                           if (!pta_sync_prod_location_names).(li) = "" then
                                                             (!pta_sync_prod_location_names).(li) <- (
@@ -280,116 +306,90 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
     (* Automata 0 has all actions *)
     automata_per_action                             = (fun i -> if i >= 0 && i < model.nb_actions then [0] else []); (* model.automata_per_action; *)
 
-    
-    actions_per_location                            = model.actions_per_location; (* *)
+    (* Assigns actions to locations *)
+    actions_per_location                            = (fun _ l ->
+                                                        (* Initialize the array *)
+                                                        let _ = get_pta_sync_prod_actions_per_location model in
+                                                        if Array.length (!pta_sync_prod_actions_per_location).(l) = 0 then
+                                                          (* Each array index has only 1 array containing all actions belonging to that location *)
+                                                          (!pta_sync_prod_actions_per_location).(l) <- Array.make 1 [];
+
+                                                        (* Check location name numbers *)
+                                                        let loc_name = (get_pta_sync_prod_location_names model).(l) in
+                                                        let l_loc_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+                                                        (* For each automata number ia *)
+                                                        for ia = 0 to model.nb_automata - 1 do
+
+                                                          (* Get location number il at automata ia to concat the actions per location array at location position l *)
+                                                          let il = (int_of_char loc_name.[l_loc_name + ia]) - (Char.code '0') in
+
+                                                          if il < List.length (model.locations_per_automaton ia)then
+                                                            begin
+                                                              (* Get the actions per location array in original model *)
+                                                              let a_per_loc = model.actions_per_location ia il in
+(*                                                                Printf.printf "a_per_loc - automaton %d, location %d = [%s]\n" ia il (String.concat "; " (List.map string_of_int a_per_loc)); *)
+
+                                                              (* Concat the actions per location array from automata ia and location il to new array *)
+                                                              (!pta_sync_prod_actions_per_location).(l).(0) <- (!pta_sync_prod_actions_per_location).(l).(0) @ a_per_loc;
+(*                                                                Printf.printf "pta_sync_prod_actions_per_location - automaton %d, location %d = [%s]\n" 0 l (String.concat "; " (List.map string_of_int (!pta_sync_prod_actions_per_location).(l).(0))); *)
+                                                            end;
+                                                        done;
+
+                                                        (* Returns actions per location array sorted and without repetitions *)
+                                                        List.sort_uniq compare (!pta_sync_prod_actions_per_location).(l).(0)
+                                                      ); (* model.actions_per_location; *)
 
     (* Automata 0 has all transitions *)
-    transitions                                     = model.transitions; (* model.transitions; *)
+    transitions                                     = (fun _ il al ->
+(*                                                        let total = Array.fold_left (fun acc li_arr -> acc + List.length li_arr.(0)) 0 !pta_sync_prod_actions_per_location in
+                                                          Printf.printf "total de acciones: %d\n" total;
+*)
+                                                        (* Initialize the array *)
+                                                        let _ = get_pta_sync_prod_transitions model in
+
+                                                        (* Count transactions *)
+                                                        let counter = ref 0 in
+
+                                                        for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+                                                          if Array.length (!pta_sync_prod_transitions).(l) = 0 then
+                                                            (* Each array index has only 1 array containing all transitions belonging to that location *)
+                                                          (!pta_sync_prod_transitions).(l) <- Array.make 1 [];
+
+                                                          List.iter (fun _a ->
+                                                            (!pta_sync_prod_transitions).(l).(0) <- (!pta_sync_prod_transitions).(l).(0) @ [!counter];
+                                                            incr counter
+                                                          ) (!pta_sync_prod_actions_per_location).(l).(0)
+                                                        done;
+
+(*                                                          if il < List.length (model.locations_per_automaton ia) then *)
+
+(*
+                                                          (* Get all location indices where to add the actions per location array *)
+                                                          let indices = indices_with_digit_at model ia il in
+                                                          (* Get all locations in automata ia *)
+                                                          let locs_per_a = model.locations_per_automaton ia in
+                                                          (* For each location il in automata ia *)
+                                                          for il = 0 to (List.length locs_per_a) - 1 do
+                                                              Printf.printf "locations_per_automaton %d = [%s]\n" ia (String.concat "; " (List.map string_of_int locs_per_a));
+                                                              Printf.printf "indices - automaton %d, location %d = [%s]\n" ia il (String.concat "; " (List.map string_of_int indices));
+                                                          done;
+*)
+                                                          (!pta_sync_prod_transitions).(il).(al)
+                                                      ); (* model.transitions; *)
+
     transitions_description                         = model.transitions_description; (* *)
+
     automaton_of_transition                         = model.automaton_of_transition; (* *)
+
     initial_location                                = model.initial_location; (* *)
+
     initial_constraint                              = model.initial_constraint; (* *)
+
     initial_p_constraint                            = model.initial_p_constraint; (* *)
+
     px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint; (* *)
 	} in
-(*
-  let variables = List.map model.variable_names variables in
-
-	let title = "name[shape=none, style=bold, fontsize=24, label=\"" ^ options#model_local_file_name ^ "\"];" in
-	let info_boxes = 
-	"general_info[shape=record, style=filled, fillcolor=\"#f1e2cc\", label=\"" (*Model|{*)
-	^ "{" ^ (string_of_int (List.length model.clocks_without_special_reset_clock)) ^ " clock" ^ (s_of_int (List.length model.clocks_without_special_reset_clock)) ^ "|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
-		^ "|{" ^ (string_of_int (List.length model.parameters)) ^ " parameter" ^ (s_of_int (List.length model.parameters)) ^ "|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
-	^ (if model.discrete <> [] then
-		"|{" ^ (string_of_int (List.length model.discrete)) ^ " discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
-		else "")
-	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"
-	^ "\"];"
-
-		(* Version and generation time infos *)
-		^ "\ngeneration[rotation=90.0, style=filled, fillcolor=\"#f1e2cc\", shape=rectangle, fontsize=10, label=\"Generated by " ^ (OCamlUtilities.escape_string_for_dot (ImitatorUtilities.program_name_and_version_and_nickname)) ^ "
-Build: " ^ ImitatorUtilities.git_branch_and_hash ^ "
-Generation time: " ^ (now()) ^ "\"];" 
-		(* To ensure the vertical ordering *)
-	^ "\n name -> generation [color=white];"
-	^ "\n generation -> general_info [color=white];" in
-
-  (
-			List.map (fun automaton_index -> string_of_automaton model automaton_index
-		) model.automata)
-
-	let inital_global_location  = model.initial_location in
-	let initial_location = DiscreteState.get_location inital_global_location automaton_index in
-	let t2 = "\n init" ^ (string_of_int automaton_index) ^ " -> " ^ (id_of_location automaton_index initial_location) ^ ";" in
-	let t3 = "\n/* automaton " ^ (model.automata_names automaton_index) ^ " */" in
-
-  (fun location_index ->
-(* 		print_message Verbose_high "Entering string_of_locations…2.1"; *)
-		print_message Verbose_high ("automaton_index: " ^ string_of_int automaton_index ^ " location_index: " ^ string_of_int location_index);
-		string_of_location model automaton_index location_index;
-		(* print_message Verbose_high "Entering string_of_locations…2.2"; *)
-	)
-	let is_accepting = model.is_accepting automaton_index location_index in
-	let is_urgent = model.is_urgent automaton_index location_index in
-	^ (id_of_location automaton_index location_index) ^ "["
-	(* Color *)
-	^ "fillcolor=" ^ location_color (*(color location_index)*) ^ ", style=filled, fontsize=16"
-	(* LP: shape MRecord inhibits the peripheries display *)
-	^ (if is_accepting then ", peripheries=2" else "")
-	(* Label: start *)
-	^ ", label=\""
-	(* Label: accepting *)
-	^ (if is_accepting then "acc |" else "")
-	(* Label: urgency *)
-	^ (if is_urgent then "U |" else "")
-	(* Label: name *)
-	^ (model.location_names automaton_index location_index)
-	^ "|{" ^ (escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index)))
-	(* Label: stopwatches *)
-	^ (if model.has_non_1rate_clocks then (
-		let stopwatches = model.stopwatches automaton_index location_index in
-		""
-		^ (if stopwatches <> [] then "| stop " ^ string_of_list_of_variables model.variable_names stopwatches ^ "" else "")
-		(*** TODO: better delimiter? ***)
-		^ ""
-		^ (if (model.flow automaton_index location_index) <> [] then "|" ^ (string_of_flow model automaton_index location_index) else "")
-	)
-
-List.map (fun action_index ->
-		(* Get the list of transitions *)
-		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
-		(* Convert to string *)
-		string_of_list_of_string (
-			(* For each transition *)
-			List.map (string_of_transition model automaton_index location_index) transitions
-			)
-		) (model.actions_per_location automaton_index location_index)
-
-	)
-(if List.length (model.automata_per_action transition.action) > 1 then
-			let color = color_of_action transition.action in
-			"penwidth=3, color=" ^ color ^ ", "
-		(* Check if this is a Action_type_nosync action: in which case dotted *)
-		else
-			match model.action_types transition.action with
-			(* "Synchronized" action but with only 1 PTA involved: rather a non-synchronized named action *)
-			| Action_type_sync -> ""
-			(* Real silent action (no name, no synchronization) *)
-			| Action_type_nosync -> "style=dotted, color=gray40, "
-		)
-
-
-		if transition.guard <> AbstractModel.True_guard then
-			(*** HACK: also check that the result is not "True" ***)
-			let guard_string = ModelPrinter.string_of_guard model.variable_names transition.guard in
-			if guard_string = LinearConstraint.string_of_true then "" else
-			(escape_string_for_dot guard_string) ^ "\\n"
-		else ""
-
-	^ (string_of_action_index model transition.action)
-	(* Updates *)
-	^ ModelPrinter.string_of_seq_code_bloc model 1 update_seq_code_bloc
-*)
 
   print_endline "nb_automata";
   print_int sync_prod.nb_automata;
@@ -438,25 +438,16 @@ List.map (fun action_index ->
   in
 
   print_endline "actions_per_location";
-
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs
-    done
+    let locs = sync_prod.locations_per_automaton 0 in
+      List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" 0 l (String.concat "; " (List.map string_of_int (sync_prod.actions_per_location 0 l)))) locs
   in
 
   print_endline "transitions";
   let () =
-    for i = 0 to model.nb_automata - 1 do
-      let locs = model.locations_per_automaton i in
-        List.iter (fun l ->
-          let actions = model.actions_per_location i l in
-            List.iter (fun a ->
-              let trans = model.transitions i l a in
-                Printf.printf "  automaton %d, location %d, action %d = [%s]\n" i l a (String.concat "; " (List.map string_of_int trans))
-            ) actions
-        ) locs
+    let _ = sync_prod.transitions 0 0 0 in
+    for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+      List.iter2 (fun a t -> Printf.printf "  automaton 0, location %d, action %d = [%d]\n" l a t) (!pta_sync_prod_actions_per_location).(l).(0) (!pta_sync_prod_transitions).(l).(0)
     done
   in
 
@@ -470,13 +461,14 @@ List.map (fun action_index ->
     done
   in
 
+(*
   let () =
     let indices = indices_with_digit_at sync_prod 2 3 in
       List.iter (fun i ->
         Printf.printf "i[%d] = %s\n" i (sync_prod.location_names 0 i)
       ) indices
   in
-
+*)
   print_endline "transitions_description";
 (*
 	sync_prod.transitions_description : transition_index -> transition;
