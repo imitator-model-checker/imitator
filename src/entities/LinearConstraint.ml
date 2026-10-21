@@ -198,6 +198,9 @@ let cHECK_ASSERT_DIMENSIONS = true
 
 
 (* Other counters *)
+	let dcounter_p_hide = create_discrete_counter_and_register "p_hide" PPL_counter Verbose_low
+	let dcounter_px_hide = create_discrete_counter_and_register "px_hide" PPL_counter Verbose_low
+	let dcounter_pxd_hide = create_discrete_counter_and_register "pxd_hide" PPL_counter Verbose_low
 	let tcounter_pi0_compatibility = create_hybrid_counter_and_register "pi0-compatibility" States_counter Verbose_low
 
 
@@ -1936,8 +1939,10 @@ let make_polyhedron_time_shift_pta (nb_dimensions : int) (time_direction : time_
 	make_time_polyhedron_from_flows_and_constants nb_dimensions time_direction flows variables_constant
 
 (*** NOTE: must provide an argument so be sure the function is dynamically called; otherwise statically !pxd_dim is 0 ***)
-let pxd_make_polyhedron_time_elapsing_pta v = make_polyhedron_time_shift_pta !pxd_dim Time_forward v
-let pxd_make_polyhedron_time_past_pta     v = make_polyhedron_time_shift_pta !pxd_dim Time_backward v
+let px_make_polyhedron_time_elapsing_pta v1 v2 = make_polyhedron_time_shift_pta !px_dim Time_forward v1 v2
+let px_make_polyhedron_time_past_pta     v1 v2 = make_polyhedron_time_shift_pta !px_dim Time_backward v1 v2
+let pxd_make_polyhedron_time_elapsing_pta v1 v2 = make_polyhedron_time_shift_pta !pxd_dim Time_forward v1 v2
+let pxd_make_polyhedron_time_past_pta     v1 v2 = make_polyhedron_time_shift_pta !pxd_dim Time_backward v1 v2
 
 
 
@@ -2491,9 +2496,9 @@ let hide_assign nb_dimensions variables linear_constraint =
 
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_hide_assign   v l = hide_assign !p_dim v l
-let px_hide_assign  v l = hide_assign !px_dim v l
-let pxd_hide_assign v l = hide_assign !pxd_dim v l
+let p_hide_assign   v l = dcounter_p_hide#increment;   hide_assign !p_dim v l
+let px_hide_assign  v l = dcounter_px_hide#increment;  hide_assign !px_dim v l
+let pxd_hide_assign v l = dcounter_pxd_hide#increment; hide_assign !pxd_dim v l
 
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
@@ -2505,9 +2510,9 @@ let hide nb_dimensions variables linear_constraint =
 	poly
 
 (*** NOTE: must provide the argument so be sure the function is dynamically called; otherwise statically !p_dim is 0 ***)
-let p_hide   v l = hide !p_dim v l
-let px_hide  v l = hide !px_dim v l
-let pxd_hide v l = hide !pxd_dim v l
+let p_hide   v l = dcounter_p_hide#increment;   hide !p_dim v l
+let px_hide  v l = dcounter_px_hide#increment;  hide !px_dim v l
+let pxd_hide v l = dcounter_pxd_hide#increment; hide !pxd_dim v l
 
 
 

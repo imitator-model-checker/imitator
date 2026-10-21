@@ -60,8 +60,8 @@ let variable_names_with_style (model : AbstractModel.abstract_model) variable_in
 let tikz_string_of_lc_gen lc_fun (model : AbstractModel.abstract_model) lc =
 	let lc_string = lc_fun (variable_names_with_style model) lc in
 	(* Do some replacements *)
-	"& $" ^ Str.global_replace (Str.regexp ">=") ("\\geq")
-		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\\land$ & $")
+	" $" ^ Str.global_replace (Str.regexp ">=") ("\\geq")
+		(Str.global_replace (Str.regexp "&") ("$\\\\\\\\\n\t\t$\\land$ $")
 			(Str.global_replace (Str.regexp "a") ("a") lc_string)
 		)
 	^ "$"
@@ -96,12 +96,12 @@ let string_of_header (options : Options.imitator_options) =
 (** Convert a sync into a string *)
 let string_of_sync (model : AbstractModel.abstract_model) action_index =
 	match model.action_types action_index with
-	| Action_type_sync -> "\n\t\t & $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
+	| Action_type_sync -> "\n\t\t \\\\ $\\styleact{" ^ (escape_latex (model.action_names action_index)) ^ "}$\\\\"
 	| Action_type_nosync -> ""
 
 let string_of_seq_code_bloc (model : AbstractModel.abstract_model) (* seq_code_bloc *) =
 
-    let begin_line = "\n\t\t & $" in
+    let begin_line = "\n\t\t $" in
     let end_line = "$\\\\% \\n" in
 
     let rec string_of_seq_code_bloc seq_code_bloc =
@@ -194,7 +194,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 			$\coulclock{x} := 0$ \\
 			$\coulclock{y} := 0$ \\
 			\\end{tabular}} (Q1);*)
-	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge[" ^ uncontrollable_description ^ "] node{\\begin{tabular}{@{} c @{\\ } c@{} }"
+	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge[bend left, " ^ uncontrollable_description ^ "] node[align=center]{"
 
 	(* GUARD *)
 	^ (if transition.guard <> AbstractModel.True_guard then (
@@ -209,7 +209,7 @@ let string_of_transition (model : AbstractModel.abstract_model) automaton_index 
 	^ string_of_seq_code_bloc model update_seq_code_bloc
 
 	(* The end *)
-	^ "\n\t\t\\end{tabular}} (" ^ target_location_name ^ ");"
+	^ "\n\t\t} (" ^ target_location_name ^ ");"
 
 
 (* Convert the transitions of a location into a string *)
@@ -276,11 +276,57 @@ let string_of_location (model : AbstractModel.abstract_model) automaton_index lo
 	
 	(*** TODO: if accepting, change the style ***)
 	
-	"\n\t\t\\node[location, "
+		(* \location[private, name=s2, at={(1.5, 0)}]{$\styleclock{\clock} \leq 1$}{$\locpriv$} *)
+
+		(*** TODO: manage particular case for flows using ad-hoc TikZ macro ***)
+	(* Handle invariant / flows *)
+	let invariant_string : string = (if has_invariant || has_non_1rate_clocks then (
+		(* Comment *)
+		let nature_for_comment =
+			match has_invariant, has_non_1rate_clocks with
+			| true , true -> "Invariant and non-1 flows"
+			| true , false -> "Invariant"
+			| false , true -> "Non-1 flows"
+			| _ -> raise (InternalError("Here the model must have invariants or non-1 flows"))
+		in
+		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name ^ "\n"
+		(* Begin *)
+		(* ^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }" *)
+		(* Invariant *)
+		^ (if has_invariant then (tikz_string_of_linear_constraint model invariant) ^ "" else "")
+		(* Stopwatches and flows *)
+		^ (if has_non_1rate_clocks then (			
+			(* Stopwatches *)
+			let stopwatches = model.stopwatches automaton_index location_index in
+
+			(* Initial new line, if needed *)
+			(if has_invariant then "\\\\" else "")
+			^
+			(if stopwatches <> [] then
+				(" \n stop(" ^ (string_of_list_of_string_with_sep ", " (List.map (variable_names_with_style model) stopwatches)) ^ ")\\\\")
+			else "")
+			^
+			(* Flows *)
+			let flows = model.flow automaton_index location_index in
+			(if flows <> [] then
+				(" \n " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style model clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "")
+			else "")
+			) else "")
+		(* The end *)
+		(* ^ "\\end{tabular}};" *)
+	) else "")
+		in
+
+	"\n\t\t" ^ (if invariant_string = "" then "\\locationNoInv" else "\\location") ^ "["
 	^ initial_str
 	^ accepting_str
 	^ urgent_str
-	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "") ^ (escape_latex location_name) ^ "}};"
+	^ "fill=loccolor" ^ (string_of_int color_id) ^ ",
+	name=" ^ location_name ^ ",
+	at={(" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ")}]"
+	^ (if invariant_string = "" then "" else "{" ^ invariant_string ^ "}")
+	^ " {\\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "")
+	^ (escape_latex location_name) ^ "}};"
 
 	(* INVARIANT AND STOPWATCHES *)
 (*			% Invariant of location Q1
@@ -290,38 +336,6 @@ let string_of_location (model : AbstractModel.abstract_model) automaton_index lo
 				$\\land$ & $\coulclock{x} \geq 5 \couldisc{i}$\\
 			\\end{tabular}
 		};*)
-
-	^ (if has_invariant || has_non_1rate_clocks then (
-		(* Comment *)
-		let nature_for_comment =
-			match has_invariant, has_non_1rate_clocks with
-			| true , true -> "Invariant and non-1 flows"
-			| true , false -> "Invariant"
-			| false , true -> "Non-1 flows"
-			| _ -> raise (InternalError("Here the model must have invariants or non-1 flows"))
-		in
-		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name
-		(* Begin *)
-		^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }"
-		(* Invariant *)
-		^ (if has_invariant then (tikz_string_of_linear_constraint model invariant) ^ "\\\\" else "")
-		(* Stopwatches and flows *)
-		^ (if has_non_1rate_clocks then (
-			(* Stopwatches *)
-			let stopwatches = model.stopwatches automaton_index location_index in
-			(if stopwatches <> [] then
-				(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map (variable_names_with_style model) stopwatches)) ^ ")\\\\")
-			else "")
-			^
-			(* Flows *)
-			let flows = model.flow automaton_index location_index in
-			(if flows <> [] then
-				(" & " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style model clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "\\\\")
-			else "")
-			) else "")
-		(* The end *)
-		^ "\\end{tabular}};"
-	) else "")
 
 
 (* Convert the locations of an automaton into a string *)

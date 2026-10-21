@@ -344,8 +344,11 @@ val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constr
 (*------------------------------------------------------------*)
 (* Make a polyhedron for computing the time elapsing for (parametric) timed automata with only standard clocks, i.e., without stopwatches nor flows. That is, generates inequalities `x=1` for elapsing variables (or `x=-1` for time past), and `x=0` for others *)
 (*------------------------------------------------------------*)
-val pxd_make_polyhedron_time_past_pta     : variable list -> variable list -> pxd_linear_constraint
+val px_make_polyhedron_time_elapsing_pta : variable list -> variable list -> px_linear_constraint
+val px_make_polyhedron_time_past_pta     : variable list -> variable list -> px_linear_constraint
+
 val pxd_make_polyhedron_time_elapsing_pta : variable list -> variable list -> pxd_linear_constraint
+val pxd_make_polyhedron_time_past_pta     : variable list -> variable list -> pxd_linear_constraint
 
 
 (*------------------------------------------------------------*)

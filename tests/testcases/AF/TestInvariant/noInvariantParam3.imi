@@ -1,0 +1,69 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Very simple example to test the absence of invariants in AF
+ * Description      : Very simple example to test the absence of invariants in AF
+ * Correctness      : AF accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           :
+ * Author           : Étienne André
+ * Modeling         : N/A
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2026/02
+ * Last modified    : 2026/09/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+	p : parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l0: invariant p = 2
+	when p = 2 sync a goto l1;
+
+loc l1: invariant p = 2
+	when p = 2 sync a goto l2;
+
+accepting loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init = {
+
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] <- l0,
+
+    ;
+
+    continuous =
+		p >= 0
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

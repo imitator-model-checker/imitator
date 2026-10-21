@@ -1,6 +1,19 @@
 # Releases
 
 *******************************************************
+## future release (20xx-xx-xx) Cheese xxx
+
+*******************************************************
+## release 3.4.1 (2026-10-21) Cheese Durian
+
+### New option
+* Add a new option `-states-description-accepting` to export only accepting states to a file
+
+### Export
+- New keyword ` (ACCEPTING)` for accepting locations in `.states` file
+- Run export (in `#exemplify`) is now fully described in JSON
+
+*******************************************************
 ## release 3.4 (2026-06-24) Cheese Durian
 
 ### Major features

@@ -1,0 +1,66 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Extremely simple example exhibiting a bug in AF in IMITATOR 3.4
+ * Description      : Extremely simple example exhibiting a bug in AF in IMITATOR 3.4
+ * Correctness      : AF accepting
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : N/A
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Mikael Bisgaard Dahlsen-Jensen
+ * Modeling         : N/A
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2026/02
+ * Last modified    : 2026/09/07
+ * Model version    : 0.1
+ *
+ * IMITATOR version : 3.4
+ ************************************************************)
+
+var
+
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+actions: a;
+
+loc l1: invariant True
+	when True sync a goto l2;
+
+accepting loc l2: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init = {
+	
+    discrete =
+		(*------------------------------------------------------------*)
+		(* Initial location *)
+		(*------------------------------------------------------------*)
+		loc[pta] <- l1,
+
+    ;
+
+    continuous =        
+		True
+	;
+}
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

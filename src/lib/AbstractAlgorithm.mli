@@ -208,6 +208,15 @@ type merge_update =
     | Merge_update_candidates
     (*| Merge_update_level*)
 
+(** Style of textual state space to export *)
+type text_state_space =
+	(* No textual state space *)
+	| Text_state_space_none
+	(* All states *)
+	| Text_state_space_all
+	(* Only accepting states *)
+	| Text_state_space_accepting
+
 (** Style of graphical state space to output *)
 type graphical_state_space =
 	(* No graphical state space *)

@@ -807,37 +807,32 @@ let export_to_file_runs_exhibition_result (model : AbstractModel.abstract_model)
 	counter#start;
 
 	(* Convert the valuation_and_concrete_run's to string *)
-	let runs_str = string_of_list_of_string_with_sep "\n" (
-		List.mapi (fun index (valuation_and_concrete_run : Result.valuation_and_concrete_run) ->
-		
-			(* Get the run (shortcut) *)
-			let run = valuation_and_concrete_run.concrete_run in
-			
-			(* mapi starts counting from 0, but we like starting counting from 1 *)
-			let index_from_one = index + 1 in
-			"\n(************************************************************)"
-			^ "\n Run #" ^ (string_of_int index_from_one)
-			(* 1) Valuation for this run *)
-			^ "\n\n Valuation:"
-			^ "\n" ^ (ModelPrinter.string_of_pval model valuation_and_concrete_run.valuation)
+	let runs_json : JsonFormatter.json_element =
+		JsonFormatter.Json_struct [
+				"runs", JsonFormatter.Json_array (
 
-			(* 2) Valuations for which an equivalent DISCRETE run exists *)
-			^ "\n\n Other valuations with equivalent (discrete) run:"
-			^ "\n" ^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names valuation_and_concrete_run.valuations)
-
-			(* 3) Run *)
-			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
-(* 			^ "\n\n Run:" *)
-			^ "\n" ^ (let str = match run with
-				| Concrete_run concrete_run -> ModelPrinter.json_of_concrete_run model concrete_run
-				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.json_of_impossible_concrete_run model impossible_concrete_run
-				in str
-			)
-			^ "\n(************************************************************)\n"
-		) result.runs
-	)
+				List.mapi (fun index (valuation_and_concrete_run : Result.valuation_and_concrete_run) ->
+				
+					(* Get the run (shortcut) *)
+					let run = valuation_and_concrete_run.concrete_run in
+					let index_from_one = index + 1 in
+					
+					(* mapi starts counting from 0, but we like starting counting from 1 *)
+							JsonFormatter.Json_struct [
+							"index", JsonFormatter.Json_int index_from_one;
+							"valuation", ModelPrinter.json_of_pval model valuation_and_concrete_run.valuation;
+							"equivalent_valuations", JsonFormatter.Json_string (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names valuation_and_concrete_run.valuations);
+							"run_nature", JsonFormatter.Json_string (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run");
+							"run", match run with
+								| Concrete_run concrete_run -> ModelPrinter.json_of_concrete_run model concrete_run
+								| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.json_of_impossible_concrete_run model impossible_concrete_run;
+					]
+			)	result.runs
+		)
+		]
 	in
-	
+
+	let runs_str : string = JsonFormatter.to_string ~pretty:true runs_json in
 
 	(* Prepare the string to write *)
 	let file_content =
