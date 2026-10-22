@@ -240,6 +240,14 @@ let trailing_number (s : string) : int =
   else int_of_string (String.sub s start (l_s - start))
 
 (*
+  Function to find a given location name and get its index
+*)
+let rec find_location_name_index (s : string) (i : int) =
+  if i >= Array.length (!pta_sync_prod_location_names) then None
+  else if (!pta_sync_prod_location_names).(i) = s then Some i
+  else find_location_name_index s (i + 1)
+
+(*
   Function to build the PTA product model structure
 *)
 let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : AbstractModel.abstract_model =
@@ -439,66 +447,62 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                         (* Initialize the array *)
                                                         let _ = get_pta_sync_prod_transitions_description () in
 
-                                                        for new_location_index = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+                                                        (* If transitions list has nos been computed yet *)
+                                                        if (!pta_sync_prod_transitions_description).(transition_index) = dummy_transition then
+                                                          begin
+                                                            (* Check location name numbers *)
+                                                            let location_name = (get_pta_sync_prod_location_names model).(transition_index) in
+                                                            let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
 
-                                                          (* Check location name numbers *)
-                                                          let location_name = (get_pta_sync_prod_location_names model).(new_location_index) in
-                                                          let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+                                                            (* For each automata number automata_index *)
+                                                            for automata_index = 0 to model.nb_automata - 1 do
 
-                                                          (* For each automata number automata_index *)
-                                                          for automata_index = 0 to model.nb_automata - 1 do
+                                                              (* Get location number location_index_curr at automata automata_index *)
+                                                              let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
 
-                                                            (* Get location number location_index_curr at automata automata_index *)
-                                                            let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
-                                                              Printf.printf "automata_index: [%d] - location_index_curr: [%d] - location_name: [%s]\n" automata_index location_index_curr location_name;
-(*
-                                                            automata_index: [0] - location_index_curr: [1] - location_name: [lPP120]
-                                                            automata_index: [1] - location_index_curr: [2] - location_name: [lPP120]
-                                                            automata_index: [2] - location_index_curr: [0] - location_name: [lPP120]
-*)
-                                                            (* Get location name to find in automata automata_index *)
-                                                            let find_location_name = (model.location_names automata_index location_index_curr) in
-                                                              Printf.printf "\nfind_location_name: [%s]\n" find_location_name;
-(*
-                                                            find_location_name: [lock1]
-                                                            find_location_name: [P1_2]
-                                                            find_location_name: [P2_0]
-*)
-                                                            (* Look for transitions in automata automata_index and location_index_curr *)
-                                                            let transitions = List.concat (
-                                                              List.map (
-                                                                fun action_index -> model.transitions automata_index location_index_curr action_index
-                                                              ) (model.actions_per_location automata_index location_index_curr)
-                                                            ) in
+                                                              (* Look for transitions in automata automata_index and location_index_curr *)
+                                                              let transitions = List.concat (
+                                                                List.map (
+                                                                  fun action_index -> model.transitions automata_index location_index_curr action_index
+                                                                ) (model.actions_per_location automata_index location_index_curr)
+                                                              ) in
 
-                                                            (* find_location_name in original locations model to attach its transitions to new location in PTA sync product *)
-                                                            for transition_index_curr = 0 to (List.length transitions) - 1 do
-                                                              Printf.printf "transition_index_curr: [%d]\n" transition_index_curr;
-                                                              let transition = model.transitions_description (List.nth transitions transition_index_curr) in
-                                                                ImitatorUtilities.print_message Verbose_standard (
-                                                                  "Found Transition " ^ (string_of_int (List.nth transitions transition_index_curr)) ^ ": in automaton `" ^ (model.automata_names automata_index) ^
-                                                                  "` via action `" ^ (model.action_names (transition.action)) ^
-                                                                  "` to location `" ^ (model.location_names automata_index (transition.target)) ^ "` to be attached to [" ^ location_name ^ "]"
-                                                                );
+                                                              (* Attach transition descriptions list to new location in PTA sync product *)
+                                                              for transition_index_curr = 0 to (List.length transitions) - 1 do
+
+                                                                (* Get original transition *)
+                                                                let transition = model.transitions_description (List.nth transitions transition_index_curr) in
+
+                                                                (* Compute new target name according to original target name *)
+                                                                let new_target_name = (
+                                                                  let location_name_bytes = Bytes.of_string location_name in
+                                                                    Bytes.set location_name_bytes (len_automata_name + automata_index) (
+                                                                      char_of_int (
+                                                                        trailing_number (model.location_names automata_index (transition.target)) + (Char.code '0')
+                                                                      )
+                                                                    );
+                                                                    Bytes.to_string location_name_bytes
+                                                                ) in
+
+                                                                (* Find new target index according to new target name *)
+                                                                let new_target = Option.get (find_location_name_index new_target_name 0) in
+
+                                                                (* Guard, action and updates remain the same *)
+                                                                (!pta_sync_prod_transitions_description).(transition_index) <- {
+                                                                  guard   = transition.guard;
+                                                                  action  = transition.action;
+                                                                  updates = transition.updates;
+                                                                  target  = new_target;
+                                                                };
+                                                              done;
                                                             done;
-(*
-                                                            let locations_per_automaton = model.locations_per_automaton automata_index in
-
-                                                            for locations_per_automaton_index = 0 to (List.length locations_per_automaton) - 1 do
-                                                              Printf.printf "Comparing [%s] vs [%s]\n" (model.location_names automata_index locations_per_automaton_index) find_location_name;
-                                                              if (model.location_names automata_index locations_per_automaton_index) = find_location_name then
-                                                                begin
-                                                                end;
-                                                            done;
-*)
-                                                          done;
-                                                        done;
+                                                          end;
 
                                                         (* Return the requested transition *)
                                                         (!pta_sync_prod_transitions_description).(transition_index)
                                                       ); (* model.transitions_description *)
 
-    automaton_of_transition                         = model.automaton_of_transition; (* *)
+    automaton_of_transition                         = (fun i -> if i >= 0 && i < get_pta_sync_prod_transitions_number () then 0 else -1); (* model.automaton_of_transition *)
 
     initial_location                                = model.initial_location; (* *)
 
@@ -574,22 +578,22 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
   in
 
   print_endline "transitions_description";
+  Printf.printf "get_pta_sync_prod_transitions_number: [%d]\n" (get_pta_sync_prod_transitions_number ());
   let () =
 		for j = 0 to get_pta_sync_prod_transitions_number () - 1 do
-			let ai = sync_prod.automaton_of_transition j in
 			let trans = sync_prod.transitions_description j in
 
 			ImitatorUtilities.print_message Verbose_standard ("*****Transition " ^ (string_of_int j) ^
-                                                        ": in automaton `" ^ (model.automata_names ai) ^
-                                                        "` via action `" ^ (model.action_names (trans.action)) ^
-                                                        "` to location `" ^ (model.location_names ai (trans.target)) ^ "`")
+                                                        ": in automaton `" ^ (sync_prod.automata_names 0) ^
+                                                        "` via action `" ^ (sync_prod.action_names (trans.action)) ^
+                                                        "` to location `" ^ (sync_prod.location_names 0 (trans.target)) ^ "`")
 
 		done
   in
 
   print_endline "automaton_of_transition";
   let () =
-    for t = 0 to sync_prod.nb_transitions - 1 do
+    for t = 0 to get_pta_sync_prod_transitions_number () - 1 do
       Printf.printf "  transition %d = automaton %d\n" t (sync_prod.automaton_of_transition t)
     done
   in
