@@ -32,8 +32,11 @@ open Automaton
 (** Unique identifier for each different global location *)
 type global_location_index = int
 
+type locations = location_index array
+type discrete = AbstractValue.abstract_value array
+
 (** Global location: location for each automaton + value of the discrete *)
-type global_location
+type global_location = locations * discrete
 
 (* Extended global location: location for each automaton + value of the discrete and local variables *)
 (*** NOTE (ÉA, 2013/04/14): might be one day deleted with the local variables table made independent ***)

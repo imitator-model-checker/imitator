@@ -80,6 +80,34 @@ let dummy_transition = {
   target  = -1;
 }
 
+(*
+  Function to compute the digits to concatenate after the location name: [000, 001, 002, ..., 243, 244]
+*)
+let rec digits base number =
+  match base with
+  | [] -> []
+  | [last] -> [number mod last]
+  | _ :: rest ->
+    let tr = List.fold_left ( * ) 1 rest in
+      (number / tr) :: digits rest (number mod tr)
+
+(*
+  Function to get the last numbers in a string name:
+  trailing_number "lock2" -> 2
+  trailing_number "P1_0" -> 0
+  trailing_number "P2_1" -> 1
+  trailing_number "P2_10" -> 10
+*)
+let trailing_number (s : string) : int =
+  let l_s = String.length s in
+  let i = ref (l_s - 1) in
+    while !i >= 0 && s.[!i] >= '0' && s.[!i] <= '9' do
+      decr i
+    done;
+  let start = !i + 1 in
+  if start >= l_s then 0
+  else int_of_string (String.sub s start (l_s - start))
+
 let pta_sync_prod_locations_number        = ref 0
 let pta_sync_prod_transitions_number      = ref 0
 let pta_sync_prod_automata_name           = ref (Array.make 0 "")
@@ -150,6 +178,25 @@ let get_pta_sync_prod_automata_name (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_location_names (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_location_names = 0 then
     pta_sync_prod_location_names := Array.make (get_pta_sync_prod_locations_number model) "";
+
+  for location_index = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+    if (!pta_sync_prod_location_names).(location_index) = "" then
+      (!pta_sync_prod_location_names).(location_index) <- (
+        let len_locations_per_automaton = List.init model.nb_automata (fun i -> List.length (model.locations_per_automaton i)) in
+
+        (* Get digits and convert them into a string: ["000", "001", "002", ..., "243", "244"] *)
+        let name_digits = digits len_locations_per_automaton location_index in
+        let name = (get_pta_sync_prod_automata_name model).(0) in
+        let s_name_digits = String.concat "" (List.map string_of_int name_digits) in
+
+        (* Concatenate automata name with its digits: ["lPP000", "lPP001", "lPP002", ..., "lPP243", "lPP244"] *)
+        let width = List.length len_locations_per_automaton in
+        name ^ (
+          if String.length s_name_digits >= width then s_name_digits
+          else String.make (width - String.length s_name_digits) '0' ^ s_name_digits
+        )
+      );
+  done;
   !pta_sync_prod_location_names
 
 (*
@@ -194,17 +241,6 @@ let get_pta_sync_prod_transitions_description () =
   !pta_sync_prod_transitions_description
 
 (*
-  Function to compute the digits to concatenate after the location name: [000, 001, 002, ..., 243, 244]
-*)
-let rec digits base number =
-  match base with
-  | [] -> []
-  | [last] -> [number mod last]
-  | _ :: rest ->
-    let tr = List.fold_left ( * ) 1 rest in
-      (number / tr) :: digits rest (number mod tr)
-
-(*
   Function to compute all location name indices having a digit "dig" at position "pos" in the name:
   indices_with_digit_at 1 0 -> [0; 1; 2; 3; 4; 25; 26; 27; 28; 29; 50; 51; 52; 53; 54]
 *)
@@ -223,29 +259,26 @@ let indices_with_digit_at (model : AbstractModel.abstract_model) (pos : int) (di
   ) (get_pta_sync_prod_locations_per_automaton model)
 
 (*
-  Function to get the last numbers in a string name:
-  trailing_number "lock2" -> 2
-  trailing_number "P1_0" -> 0
-  trailing_number "P2_1" -> 1
-  trailing_number "P2_10" -> 10
-*)
-let trailing_number (s : string) : int =
-  let l_s = String.length s in
-  let i = ref (l_s - 1) in
-    while !i >= 0 && s.[!i] >= '0' && s.[!i] <= '9' do
-      decr i
-    done;
-  let start = !i + 1 in
-  if start >= l_s then 0
-  else int_of_string (String.sub s start (l_s - start))
-
-(*
   Function to find a given location name and get its index
 *)
 let rec find_location_name_index (s : string) (i : int) =
   if i >= Array.length (!pta_sync_prod_location_names) then None
   else if (!pta_sync_prod_location_names).(i) = s then Some i
   else find_location_name_index s (i + 1)
+
+let pta_sync_prod_make_location new_initial_location : DiscreteState.global_location =
+  let locations_per_automaton = List.init 1 (fun _ -> 0, new_initial_location) in
+  let discrete_values = List.init 1 (fun discrete_index -> discrete_index, AbstractValue.rational_zero) in
+	(* Create an array for locations *)
+  let locations = Array.make 1 0 in
+	(* Create an array for discrete *)
+  let discrete = Array.make 1 AbstractValue.rational_zero in
+	(* Iterate on locations *)
+  List.iter (fun (automaton_index, location_index) -> locations.(automaton_index) <- location_index) locations_per_automaton;
+	(* Iterate on discrete *)
+  List.iter (fun (discrete_index, value) -> discrete.(discrete_index) <- value) discrete_values;
+	(* Return the new location *)
+	(locations, discrete)
 
 (*
   Function to build the PTA product model structure
@@ -346,27 +379,7 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
 (****************************************************************************************************************************)
     (* Assigns a name to each location depending on the number of locations in each automata: [lock(3), P1(5), P2(5)] -> [lPP000, lPP001, lPP002, ..., lPP243, lPP244] *)
 (****************************************************************************************************************************)
-    location_names                                  = (fun _ location_index ->
-                                                        (* Initialize the array *)
-                                                        let _ = get_pta_sync_prod_location_names model in
-                                                          if (!pta_sync_prod_location_names).(location_index) = "" then
-                                                            (!pta_sync_prod_location_names).(location_index) <- (
-                                                              let len_locations_per_automaton = List.init model.nb_automata (fun i -> List.length (model.locations_per_automaton i)) in
-
-                                                              (* Get digits and convert them into a string: ["000", "001", "002", ..., "243", "244"] *)
-                                                              let name_digits = digits len_locations_per_automaton location_index in
-                                                              let name = (get_pta_sync_prod_automata_name model).(0) in
-                                                              let s_name_digits = String.concat "" (List.map string_of_int name_digits) in
-
-                                                              (* Concatenate automata name with its digits: ["lPP000", "lPP001", "lPP002", ..., "lPP243", "lPP244"] *)
-                                                              let width = List.length len_locations_per_automaton in
-                                                              name ^ (
-                                                                if String.length s_name_digits >= width then s_name_digits
-                                                                else String.make (width - String.length s_name_digits) '0' ^ s_name_digits
-                                                              )
-                                                            );
-                                                          (!pta_sync_prod_location_names).(location_index)
-                                                      ); (* model.location_names; *)
+    location_names                                  = (fun _ location_index -> (get_pta_sync_prod_location_names model).(location_index)); (* model.location_names; *)
 
 (****************************************************************************************************************************)
     (* Get all unique actions and assign them to automata 0 *)
@@ -450,9 +463,22 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                         (* If transitions list has nos been computed yet *)
                                                         if (!pta_sync_prod_transitions_description).(transition_index) = dummy_transition then
                                                           begin
+                                                            (* Count transitions and locations *)
+                                                            let counter = ref 0 in
+                                                            let location_index = ref 0 in
+
+                                                            (* Get location number of transition index *)
+                                                            while !counter + (List.length (!pta_sync_prod_actions_per_location).(!location_index).(0)) <= transition_index do
+                                                              counter := !counter + (List.length (!pta_sync_prod_actions_per_location).(!location_index).(0));
+                                                              incr location_index;
+                                                            done;
+(*
+                                                            Printf.printf "counter: [%d] - location_index: [%d]\n" !counter !location_index;
+*)
                                                             (* Check location name numbers *)
-                                                            let location_name = (get_pta_sync_prod_location_names model).(transition_index) in
+                                                            let location_name = (get_pta_sync_prod_location_names model).(!location_index) in
                                                             let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+                                                            let transition_index_counter = ref 0 in
 
                                                             (* For each automata number automata_index *)
                                                             for automata_index = 0 to model.nb_automata - 1 do
@@ -466,7 +492,9 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                                   fun action_index -> model.transitions automata_index location_index_curr action_index
                                                                 ) (model.actions_per_location automata_index location_index_curr)
                                                               ) in
-
+(*
+                                                              Printf.printf "transitions: [%s]\n" (String.concat "; " (List.map string_of_int transitions));
+*)
                                                               (* Attach transition descriptions list to new location in PTA sync product *)
                                                               for transition_index_curr = 0 to (List.length transitions) - 1 do
 
@@ -488,12 +516,19 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                                 let new_target = Option.get (find_location_name_index new_target_name 0) in
 
                                                                 (* Guard, action and updates remain the same *)
-                                                                (!pta_sync_prod_transitions_description).(transition_index) <- {
+                                                                (!pta_sync_prod_transitions_description).(transition_index + !transition_index_counter) <- {
                                                                   guard   = transition.guard;
                                                                   action  = transition.action;
                                                                   updates = transition.updates;
                                                                   target  = new_target;
                                                                 };
+                                                                incr transition_index_counter;
+(*
+                                                                ImitatorUtilities.print_message Verbose_standard ("Transition " ^ (string_of_int (List.nth transitions transition_index_curr)) ^
+                                                                                                                  ": in automaton `" ^ (model.automata_names automata_index) ^
+                                                                                                                  "` via action `" ^ (model.action_names (transition.action)) ^
+                                                                                                                  "` to location `" ^ (model.location_names automata_index (transition.target)) ^ "`")
+*)
                                                               done;
                                                             done;
                                                           end;
@@ -504,13 +539,29 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
 
     automaton_of_transition                         = (fun i -> if i >= 0 && i < get_pta_sync_prod_transitions_number () then 0 else -1); (* model.automaton_of_transition *)
 
-    initial_location                                = model.initial_location; (* *)
+    initial_location                                = (
+                                                        (* Initialize location names array *)
+                                                        let _ = get_pta_sync_prod_location_names model in
 
-    initial_constraint                              = model.initial_constraint; (* *)
+                                                        (* Form new initial location name with original automata initial location names *)
+                                                        let new_initial_location_string = (get_pta_sync_prod_automata_name model).(0) ^ String.concat "" (
+                                                          List.init model.nb_automata (fun automata_index ->
+                                                            string_of_int (DiscreteState.get_location model.initial_location automata_index)
+                                                          )
+                                                        ) in
 
-    initial_p_constraint                            = model.initial_p_constraint; (* *)
+                                                        (* Find new initial location name index *)
+                                                        let new_initial_location = Option.get (find_location_name_index new_initial_location_string 0) in
 
-    px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint; (* *)
+                                                        (* Return the new location *)
+                                                        pta_sync_prod_make_location new_initial_location
+                                                      ); (* model.initial_location; *)
+
+    initial_constraint                              = model.initial_constraint; (* initial_constraint; *)
+
+    initial_p_constraint                            = model.initial_p_constraint; (* initial_p_constraint; *)
+
+    px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint; (* model.px_clocks_non_negative_and_initial_p_constraint; *)
 	} in
 
   print_endline "nb_automata";
@@ -578,11 +629,9 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
   in
 
   print_endline "transitions_description";
-  Printf.printf "get_pta_sync_prod_transitions_number: [%d]\n" (get_pta_sync_prod_transitions_number ());
   let () =
 		for j = 0 to get_pta_sync_prod_transitions_number () - 1 do
 			let trans = sync_prod.transitions_description j in
-
 			ImitatorUtilities.print_message Verbose_standard ("*****Transition " ^ (string_of_int j) ^
                                                         ": in automaton `" ^ (sync_prod.automata_names 0) ^
                                                         "` via action `" ^ (sync_prod.action_names (trans.action)) ^
@@ -599,6 +648,10 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
   in
 
   print_endline "initial_location";
+  let () =
+    let initial_location = DiscreteState.get_location sync_prod.initial_location 0 in
+    Printf.printf "initial_location %s\n" (get_pta_sync_prod_location_names model).(initial_location);
+  in
 (*
 	sync_prod.initial_location : DiscreteState.global_location;
 *)
