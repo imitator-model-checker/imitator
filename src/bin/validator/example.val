@@ -1,0 +1,35 @@
+# Example validator specification.
+# Run from the repository root: ./bin/validator src/bin/validator/example.val
+#
+# Compare mode: every generated model is run through IMITATOR once per config,
+# and a counter-example is reported when the results differ.
+# Here: PTG synthesis with and without the convex hull abstraction.
+[mode]
+kind = compare
+configs = [
+    tests/testcases/basic-properties/synth-parametric-win-strat-accepting.imiprop
+    -PTG-no-strategy-generation;
+
+    tests/testcases/basic-properties/synth-parametric-win-strat-accepting.imiprop
+    -PTG-no-strategy-generation
+    -PTG-abstraction ch
+]
+
+# Shape of the generated models; ranges are written lo..hi
+[model]
+nb_automata = 1
+nb_clocks = 1..2
+nb_parameters = 1..2
+nb_locations = 3..8
+
+cycles = true
+
+transitions_per_location = 1..2
+
+guard_probability = 0.5
+invariant_probability = 0.5
+reset_probability = 0.1
+
+controllability_ratio = 0.5
+
+max_constant = 10
