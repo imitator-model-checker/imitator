@@ -673,6 +673,18 @@ match options#imitator_mode with
 			let locs = !sync_model.locations_per_automaton 0 in
 			List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" 0 l (String.concat "; " (List.map string_of_int (!sync_model.actions_per_location 0 l)))) locs;
 
+			Printf.printf "!sync_model.is_accepting: \n";
+			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+				let ia = !sync_model.is_accepting 0 l in
+				Printf.printf "!sync_model.is_accepting: automaton 0, location %d: [%b]\n" l ia;
+			done;
+
+			Printf.printf "!sync_model.is_urgent: \n";
+			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
+				let iu = !sync_model.is_urgent 0 l in
+				Printf.printf "!sync_model.is_urgent: automaton 0, location %d: [%b]\n" l iu;
+			done;
+
 			Printf.printf "!sync_model.transitions:\n";
 			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
 				List.iter (fun a ->
@@ -758,6 +770,33 @@ match options#imitator_mode with
 			for i = 0 to model.nb_automata - 1 do
 				let locs = model.locations_per_automaton i in
 				List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs;
+			done;
+
+			Printf.printf "model.is_accepting: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let ia = model.is_accepting i l in
+					Printf.printf "model.is_accepting: automaton %d, location %d: [%b]\n" i l ia;
+				done;
+			done;
+
+			Printf.printf "model.is_urgent: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let iu = model.is_urgent i l in
+					Printf.printf "model.is_urgent: automaton %d, location %d: [%b]\n" i l iu;
+				done;
+			done;
+
+			Printf.printf "model.invariants: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let invariant = model.invariants i l in
+					Printf.printf "model.invariants: automaton %d, location %d: [%s]\n" i l (ModelPrinter.string_of_guard model.variable_names (invariant));
+				done;
 			done;
 
 			Printf.printf "model.transitions: \n";

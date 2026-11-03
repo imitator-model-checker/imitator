@@ -55,9 +55,11 @@ let pta_sync_prod_location_names                                    = ref (Array
 let pta_sync_prod_locations_per_automaton                           = ref (List.init 0 (fun i -> i))
 let pta_sync_prod_actions_per_automaton                             = ref (List.init 0 (fun i -> i))
 let pta_sync_prod_actions_per_location                              = ref (Array.make 0 (Array.make 0 []))
-(* let pta_sync_prod_transitions                                    = ref (Array.make 0 (Array.make 0 (Array.make 0 []))) *)
 let pta_sync_prod_transitions : (int, int list) Hashtbl.t array ref = ref [||]
 let pta_sync_prod_transitions_description                           = ref (Array.make 0 dummy_transition)
+let pta_sync_prod_is_accepting                                      = ref (Array.make 0 (Array.make 0 Location_nonaccepting))
+let pta_sync_prod_is_urgent                                         = ref (Array.make 0 (Array.make 0 Location_nonurgent))
+let pta_sync_prod_invariants                                        = ref (Array.make 0 (Array.make 0 (False_guard)))
 
 (*
   Function to compute the PTA syncronized product locations number
@@ -182,6 +184,30 @@ let get_pta_sync_prod_transitions_description () =
   !pta_sync_prod_transitions_description
 
 (*
+  Function to initialize/get the PTA syncronized product is accepting array
+*)
+let get_pta_sync_prod_is_accepting (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_is_accepting = 0 then
+    pta_sync_prod_is_accepting := Array.init (get_pta_sync_prod_locations_number model) (fun _ -> Array.make 0 Location_nonaccepting);
+  !pta_sync_prod_actions_per_location
+
+(*
+  Function to initialize/get the PTA syncronized product is urgent array
+*)
+let get_pta_sync_prod_is_urgent (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_is_urgent = 0 then
+    pta_sync_prod_is_urgent := Array.init (get_pta_sync_prod_locations_number model) (fun _ -> Array.make 0 Location_nonurgent);
+  !pta_sync_prod_is_urgent
+
+(*
+  Function to initialize/get the PTA syncronized product invariants array
+*)
+let get_pta_sync_prod_invariants (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_invariants = 0 then
+    pta_sync_prod_invariants := Array.init (get_pta_sync_prod_locations_number model) (fun _ -> Array.make 0 False_guard);
+  !pta_sync_prod_invariants
+
+(*
   Function to compute all location name indices having a digit "dig" at position "pos" in the name:
   indices_with_digit_at 1 0 -> [0; 1; 2; 3; 4; 25; 26; 27; 28; 29; 50; 51; 52; 53; 54]
 *)
@@ -293,9 +319,6 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
     discrete_names_by_type_group                    = model.discrete_names_by_type_group;
     type_of_variables                               = model.type_of_variables;
 
-    is_accepting                                    = model.is_accepting;
-    is_urgent                                       = model.is_urgent;
-
     actions                                         = model.actions;
     controllable_actions                            = model.controllable_actions;
     has_controllable_or_uncontrollable_actions      = model.has_controllable_or_uncontrollable_actions;
@@ -304,7 +327,6 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
     is_controllable_action                          = model.is_controllable_action;
 
     costs                                           = model.costs;
-    invariants                                      = model.invariants;
     stopwatches                                     = model.stopwatches;
     flow                                            = model.flow;
 
@@ -384,32 +406,14 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                                 begin
                                                                   (* Get the actions per location array in original model *)
                                                                   let actions_per_location = model.actions_per_location automata_index location_index_curr in
-    (*                                                             Printf.printf "pta_sync_prod_actions_per_location - actions_per_location [%s]\n" (String.concat "; " (List.map string_of_int actions_per_location)); *)
     
                                                                   (* Concat the actions per location array from automata automata_index and location location_index to new array *)
                                                                   (!pta_sync_prod_actions_per_location).(location_index).(0) <- (!pta_sync_prod_actions_per_location).(location_index).(0) @ actions_per_location;
-    (*                                                              Printf.printf "pta_sync_prod_actions_per_location - len (!pta_sync_prod_actions_per_location).(%d).(0): [%d]\n" location_index (List.length (!pta_sync_prod_actions_per_location).(location_index).(0)); *)
                                                                 end;
                                                             done;
 
-                                                        (* Filter repetead actions per location *)
-(*
-                                                        (!pta_sync_prod_actions_per_location).(location_index).(0) <- (
-                                                          let actions_per_location_table = Hashtbl.create (List.length (!pta_sync_prod_actions_per_location).(location_index).(0)) in
-                                                          List.filter (fun action_index ->
-                                                            if Hashtbl.mem actions_per_location_table action_index then false
-                                                            else
-                                                              begin
-                                                                Hashtbl.add actions_per_location_table action_index ();
-                                                                true
-                                                              end
-                                                          ) (!pta_sync_prod_actions_per_location).(location_index).(0)
-                                                          );
-*)
-
                                                             (* Update transitions number *)
                                                             let _ = set_pta_sync_prod_transitions_number (!pta_sync_prod_transitions_number + List.length (!pta_sync_prod_actions_per_location).(location_index).(0)) in
-(*                                                            Printf.printf "pta_sync_prod_actions_per_location - pta_sync_prod_transitions_number: [%d]\n" (get_pta_sync_prod_transitions_number ()); *)
 
                                                             (* Return actions per location array sorted and without repetitions *)
                                                             (!pta_sync_prod_actions_per_location).(location_index).(0);
@@ -418,6 +422,117 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                           (* Return actions per location array sorted and without repetitions *)
                                                           (!pta_sync_prod_actions_per_location).(location_index).(0);
                                                       ); (* model.actions_per_location; *)
+
+(****************************************************************************************************************************)
+    (* Assigns is_accepting boolean value to true if one location involved in the product is true *)
+(****************************************************************************************************************************)
+    is_accepting                                    = (fun _ location_index ->
+                                                        (* Initialize the array *)
+                                                        let _ = get_pta_sync_prod_is_accepting model in
+
+                                                        if Array.length (!pta_sync_prod_is_accepting).(location_index) = 0 then
+                                                          begin
+                                                            (!pta_sync_prod_is_accepting).(location_index) <- Array.make 1 Location_nonaccepting;
+
+                                                            (* Check location name numbers *)
+                                                            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+                                                            let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+                                                            (* For each automata number automata_index *)
+                                                            for automata_index = 0 to model.nb_automata - 1 do
+                                                              (* Get location number location_index_curr at automata automata_index to check is acceptance value at location position location_index *)
+                                                              let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
+
+                                                              if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                                                                (* Check if it is not true yet *)
+                                                                if (!pta_sync_prod_is_accepting).(location_index).(0) = Location_nonaccepting then
+                                                                  (* Assign is_accepting to PTA syncronized product new model *)
+                                                                  (!pta_sync_prod_is_accepting).(location_index).(0) <- (
+                                                                    match (model.is_accepting automata_index location_index_curr) with
+                                                                    | false -> Location_nonaccepting
+                                                                    | true -> Location_accepting
+                                                                  );
+                                                            done;
+                                                          end;
+
+                                                        (* Return true or false depending on location value *)
+                                                        if (!pta_sync_prod_is_accepting).(location_index).(0) = Location_accepting then true
+                                                        else false
+                                                      ); (* model.is_accepting; *)
+
+(****************************************************************************************************************************)
+    (* Assigns is_urgent boolean value to true if one location involved in the product is true *)
+(****************************************************************************************************************************)
+    is_urgent                                       = (fun _ location_index ->
+                                                        (* Initialize the array *)
+                                                        let _ = get_pta_sync_prod_is_urgent model in
+
+                                                        if Array.length (!pta_sync_prod_is_urgent).(location_index) = 0 then
+                                                          begin
+                                                            (!pta_sync_prod_is_urgent).(location_index) <- Array.make 1 Location_nonurgent;
+
+                                                            (* Check location name numbers *)
+                                                            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+                                                            let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+                                                            (* For each automata number automata_index *)
+                                                            for automata_index = 0 to model.nb_automata - 1 do
+                                                              (* Get location number location_index_curr at automata automata_index to check is urgent value at location position location_index *)
+                                                              let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
+
+                                                              if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                                                                (* Check if it is not true yet *)
+                                                                if (!pta_sync_prod_is_urgent).(location_index).(0) = Location_nonurgent then
+                                                                  (* Assign is_urgent to PTA syncronized product new model *)
+                                                                  (!pta_sync_prod_is_urgent).(location_index).(0) <- (
+                                                                    match (model.is_urgent automata_index location_index_curr) with
+                                                                    | false -> Location_nonurgent
+                                                                    | true -> Location_urgent
+                                                                  );
+                                                            done;
+                                                          end;
+
+                                                        (* Return true or false depending on location value *)
+                                                        if (!pta_sync_prod_is_urgent).(location_index).(0) = Location_urgent then true
+                                                        else false
+                                                      ); (* model.is_urgent; *)
+
+(****************************************************************************************************************************)
+    (* Assigns invariants to the product *)
+(****************************************************************************************************************************)
+    invariants                                      = (fun _ location_index ->
+                                                        (* Initialize the array *)
+                                                        let _ = get_pta_sync_prod_invariants model in
+
+                                                        if Array.length (!pta_sync_prod_invariants).(location_index) = 0 then
+                                                          begin
+                                                            (!pta_sync_prod_invariants).(location_index) <- Array.make 1 False_guard;
+
+                                                            (* Check location name numbers *)
+                                                            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+                                                            let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+                                                            (* For each automata number automata_index *)
+                                                            for automata_index = 0 to model.nb_automata - 1 do
+                                                              (* Get location number location_index_curr at automata automata_index to check its invariant at location position location_index *)
+                                                              let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
+
+                                                              if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                                                                (* Check if it is not true yet *)
+                                                                if (!pta_sync_prod_invariants).(location_index).(0) = Location_nonurgent then
+                                                                  (* Assign is_urgent to PTA syncronized product new model *)
+                                                                  (!pta_sync_prod_invariants).(location_index).(0) <- (
+                                                                    match (model.invariants automata_index location_index_curr) with
+                                                                    | false -> Location_nonurgent
+                                                                    | true -> Location_urgent
+                                                                  );
+
+                                                            done;
+                                                          end;
+
+                                                        (* Return invariant location value *)
+                                                        (!pta_sync_prod_invariants).(location_index).(0)
+                                                      );(* model.invariants; *)
 
 (****************************************************************************************************************************)
     (* Automata 0 has all transitions *)
