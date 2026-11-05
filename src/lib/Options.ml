@@ -1969,8 +1969,8 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 			(* PTA Synchronized Product *)
 			begin
 			match pta_syncronized_product with
-				| PTA_syncronized_product_none	-> print_message Verbose_experiments ("No PTA Synchronized Product computation")
-				| PTA_syncronized_product				-> print_message Verbose_standard ("Computing the PTA Synchronized Product")
+				| PTA_syncronized_product_none	-> print_message Verbose_experiments ("Not computing the PTA Synchronized Product: " ^ AbstractAlgorithm.string_of_pta_syncronized_product pta_syncronized_product)
+				| PTA_syncronized_product				-> print_message Verbose_standard ("Computing the PTA Synchronized Product: " ^ AbstractAlgorithm.string_of_pta_syncronized_product pta_syncronized_product)
 			end;
 		;
 
