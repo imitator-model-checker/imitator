@@ -252,7 +252,6 @@ type nz_method =
 type pta_syncronized_product =
 	(* Do not compute it by default *)
 	| PTA_syncronized_product_none
-
 	(* Compute it *)
 	| PTA_syncronized_product
 
@@ -343,7 +342,10 @@ let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mod
 	(* Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
 
-
+let string_of_pta_syncronized_product (pta_syncronized_product : pta_syncronized_product) : string =
+	match pta_syncronized_product with
+	| PTA_syncronized_product_none -> "PTA_syncronized_product_none"
+	| PTA_syncronized_product			 -> "PTA_syncronized_product"
 
 let string_of_exploration_order (exploration_order : exploration_order) : string = match exploration_order with
 	(* Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)

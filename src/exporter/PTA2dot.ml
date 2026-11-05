@@ -139,7 +139,7 @@ let string_of_flow model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
- 	print_message Verbose_standard "\n Entering string_of_location…";
+(* 	print_message Verbose_high "\n Entering string_of_location…"; *)
 	
 	let is_accepting = model.is_accepting automaton_index location_index in
 	let is_urgent = model.is_urgent automaton_index location_index in
@@ -155,8 +155,6 @@ let string_of_location model automaton_index location_index =
 		(* Normal: standard *)
 		| false, false -> "\"#b3e2cd\""
 	in
-
- 	print_message Verbose_standard "\n Before gathering result…";
 
 	let result =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
@@ -204,7 +202,7 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_transitions model automaton_index location_index)*)
 
 	in
-	print_message Verbose_standard "Exiting string_of_location…";
+	print_message Verbose_high "Exiting string_of_location…";
 	result
 
 

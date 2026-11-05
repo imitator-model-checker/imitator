@@ -145,7 +145,7 @@ class imitator_options =
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
 
-		(* Computes the synchronized product of PTAs *)
+		(* Computes the PTA synchronized product *)
 		val mutable pta_syncronized_product : pta_syncronized_product = PTA_syncronized_product_none
 
 		(* M-extrapolation *)
@@ -568,14 +568,11 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				)
 
 
-			and set_pta_syncronized_product pta_syncronized_product_str =
-				(* Switch input string *)
-				if pta_syncronized_product_str = "none" then
-					pta_syncronized_product <- PTA_syncronized_product_none
-				else if pta_syncronized_product_str = "true" then
+			and set_pta_syncronized_product (compute_it : bool) =
+				if compute_it then
 					pta_syncronized_product <- PTA_syncronized_product
 				else(
-					print_error ("The PTA syncronized product value `" ^ pta_syncronized_product_str ^ "` is not valid.");
+					print_error ("The PTA syncronized product option produced an error.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -1176,9 +1173,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
 				");
 
-				("-pta-sync-prod", String set_pta_syncronized_product, " Synchronized Product of PTAs.
-        Use `true`             to compute it.
-        Default: none.
+				("-pta-sync-prod", Unit (fun () -> set_pta_syncronized_product true), " Specify that the PTA Syncronized Product (Cartesian Product) will be computed with the original model as a base. Default: disabled.
 				");
 
 				("-PTG-generate-controller", String set_ptg_controller, " Generate a valid controller after running the PTG algorithm.

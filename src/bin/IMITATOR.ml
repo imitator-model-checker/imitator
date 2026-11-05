@@ -61,6 +61,125 @@ let export_ptg_controller (options : Options.imitator_options) (controller_model
 	end
 ;;
 
+(*
+Function just to print a model on terminal and see its attributes values.
+*)
+let print_model_for_debug (model : AbstractModel.abstract_model) : unit =
+			Printf.printf "model.nb_automata: [%d]\n" model.nb_automata;
+			Printf.printf "model.nb_locations: [%d]\n" model.nb_locations;
+			Printf.printf "model.nb_transitions: [%d]\n" model.nb_transitions;
+
+			Printf.printf "model.automata: \n";
+			List.iter (fun x -> print_endline (string_of_int x)) model.automata;
+
+			Printf.printf "model.automata_names: \n";
+			for i = 0 to model.nb_automata - 1 do
+				Printf.printf "automata_names %d = %s\n" i (model.automata_names i)
+			done;
+
+			Printf.printf "model.locations_per_automaton: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+					Printf.printf "locations_per_automaton %d = [%s]\n" i (String.concat "; " (List.map string_of_int locs))
+			done;
+
+			Printf.printf "model.locations_names: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton 0 in
+				List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" i l (model.location_names i l)) locs;
+			done;
+
+			Printf.printf "model.actions_per_automaton: \n";
+			for i = 0 to model.nb_automata - 1 do
+				List.iter (fun x -> Printf.printf "%d\n" x) (model.actions_per_automaton i)
+			done;
+
+			Printf.printf "model.automata_per_action: \n";
+			for i = 0 to model.nb_automata - 1 do
+				List.iter (fun x -> Printf.printf "%d\n" x) (model.automata_per_action i)
+			done;
+
+			Printf.printf "model.actions_per_location: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs;
+			done;
+
+			Printf.printf "model.is_accepting: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let ia = model.is_accepting i l in
+					Printf.printf "model.is_accepting: automaton %d, location %d: [%b]\n" i l ia;
+				done;
+			done;
+
+			Printf.printf "model.is_urgent: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let iu = model.is_urgent i l in
+					Printf.printf "model.is_urgent: automaton %d, location %d: [%b]\n" i l iu;
+				done;
+			done;
+
+			Printf.printf "model.invariants: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton i in
+				for l = 0 to (List.length locs) - 1 do
+					let invariant = model.invariants i l in
+					Printf.printf "model.invariants: automaton %d, location %d: [%s]\n" i l (ModelPrinter.string_of_guard model.variable_names (invariant));
+				done;
+			done;
+
+			Printf.printf "model.transitions: \n";
+			for ai = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton ai in
+				List.iter (fun li ->
+					let actions = model.actions_per_location ai li in
+					List.iter (fun a ->
+						let trans = model.transitions ai li a in
+						if trans <> [] then
+							Printf.printf "  automaton %d, location %d, action %d = [%s]\n"
+								ai li a
+								(String.concat "; " (List.map string_of_int trans))
+					) actions
+				) locs
+			done;
+
+			Printf.printf "model.transitions_description: \n";
+			for j = 0 to model.nb_transitions - 1 do
+				let i = model.automaton_of_transition j in
+				let trans = model.transitions_description j in
+				ImitatorUtilities.print_message Verbose_standard ("Transition " ^ (string_of_int j) ^
+																  ": in automaton `" ^ (model.automata_names i) ^
+																  "` via action `" ^ (model.action_names (trans.action)) ^
+																  "` to location `" ^ (model.location_names i (trans.target)) ^ "`")
+			done;
+
+			Printf.printf "model.automaton_of_transition: \n";
+			for t = 0 to model.nb_transitions - 1 do
+				Printf.printf "  transition %d = automaton %d\n" t (model.automaton_of_transition t)
+			done;
+
+			Printf.printf "model.initial_location: \n";
+			for i = 0 to model.nb_automata - 1 do
+				let initial_location = DiscreteState.get_location model.initial_location i in
+				Printf.printf "initial_location [%d] = %s\n" i (get_pta_sync_prod_location_names model).(initial_location);
+			done;
+
+			Printf.printf "model.initial_constraint: \n";
+			let initial_constraint = LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint in
+			Printf.printf "initial_constraint %s\n" initial_constraint;
+  
+			Printf.printf "model.initial_p_constraint: \n";
+			let initial_p_constraint = LinearConstraint.string_of_p_linear_constraint model.variable_names model.initial_p_constraint in
+			Printf.printf "initial_p_constraint %s\n" initial_p_constraint;
+
+			Printf.printf "model.px_clocks_non_negative_and_initial_p_constraint: \n";
+			let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.string_of_px_linear_constraint model.variable_names model.px_clocks_non_negative_and_initial_p_constraint in
+			Printf.printf "px_clocks_non_negative_and_initial_p_constraint %s\n" px_clocks_non_negative_and_initial_p_constraint;
+;;
 
 (************************************************************)
 (************************************************************)
@@ -637,93 +756,7 @@ match options#imitator_mode with
 		in
 
 		if options#pta_syncronized_product <> PTA_syncronized_product_none then (
-			Printf.printf "!sync_model.nb_automata: [%d]\n" !sync_model.nb_automata;
-			Printf.printf "!sync_model.nb_locations: [%d]\n" !sync_model.nb_locations;
-			Printf.printf "!sync_model.nb_transitions: [%d]\n" !sync_model.nb_transitions;
-
-			Printf.printf "!sync_model.automata: \n";
-			List.iter (fun x -> print_endline (string_of_int x)) !sync_model.automata;
-
-			Printf.printf "!sync_model.automata_names: \n";
-			for i = 0 to !sync_model.nb_automata - 1 do
-				Printf.printf "automata_names %d = %s\n" i (!sync_model.automata_names i)
-			done;
-
-			Printf.printf "!sync_model.locations_per_automaton: \n";
-			for i = 0 to !sync_model.nb_automata - 1 do
-				let locs = !sync_model.locations_per_automaton i in
-					Printf.printf "locations_per_automaton %d = [%s]\n" i (String.concat "; " (List.map string_of_int locs))
-			done;
-
-			Printf.printf "!sync_model.locations_names: \n";
-			let locs = !sync_model.locations_per_automaton 0 in
-			List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" 0 l (!sync_model.location_names 0 l)) locs;
-
-			Printf.printf "!sync_model.actions_per_automaton: \n";
-			for i = 0 to !sync_model.nb_automata - 1 do
-				List.iter (fun x -> Printf.printf "%d\n" x) (!sync_model.actions_per_automaton i)
-			done;
-
-			Printf.printf "!sync_model.automata_per_action: \n";
-			for i = 0 to !sync_model.nb_automata - 1 do
-				List.iter (fun x -> Printf.printf "%d\n" x) (!sync_model.automata_per_action i)
-			done;
-
-			Printf.printf "!sync_model.actions_per_location: \n";
-			let locs = !sync_model.locations_per_automaton 0 in
-			List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" 0 l (String.concat "; " (List.map string_of_int (!sync_model.actions_per_location 0 l)))) locs;
-
-			Printf.printf "!sync_model.is_accepting: \n";
-			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
-				let ia = !sync_model.is_accepting 0 l in
-				Printf.printf "!sync_model.is_accepting: automaton 0, location %d: [%b]\n" l ia;
-			done;
-
-			Printf.printf "!sync_model.is_urgent: \n";
-			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
-				let iu = !sync_model.is_urgent 0 l in
-				Printf.printf "!sync_model.is_urgent: automaton 0, location %d: [%b]\n" l iu;
-			done;
-
-			Printf.printf "!sync_model.transitions:\n";
-			for l = 0 to (get_pta_sync_prod_locations_number model) - 1 do
-				List.iter (fun a ->
-					let trans = !sync_model.transitions 0 l a in
-					Printf.printf "  automaton 0, location %d, action %d = [%s]\n" l a (String.concat "; " (List.map string_of_int trans))
-				) (!pta_sync_prod_actions_per_location).(l).(0)
-			done;
-
-			Printf.printf "!sync_model.transitions_description: \n";
-			for j = 0 to get_pta_sync_prod_transitions_number () - 1 do
-				let trans = !sync_model.transitions_description j in
-				ImitatorUtilities.print_message Verbose_standard ("*****Transition " ^ (string_of_int j) ^
-																  ": in automaton `" ^ (!sync_model.automata_names 0) ^
-																  "` via action `" ^ (!sync_model.action_names (trans.action)) ^
-																  "` to location `" ^ (!sync_model.location_names 0 (trans.target)) ^ "`");
-(*				Unix.sleep 10; *)
-			done;
-
-			Printf.printf "!sync_model.automaton_of_transition: \n";
-			for t = 0 to get_pta_sync_prod_transitions_number () - 1 do
-				Printf.printf "  transition %d = automaton %d\n" t (!sync_model.automaton_of_transition t)
-			done;
-
-			Printf.printf "!sync_model.initial_location: \n";
-			let initial_location = DiscreteState.get_location !sync_model.initial_location 0 in
-			Printf.printf "initial_location %s\n" (get_pta_sync_prod_location_names model).(initial_location);
-
-			Printf.printf "!sync_model.initial_constraint: \n";
-			let initial_constraint = LinearConstraint.string_of_px_linear_constraint !sync_model.variable_names !sync_model.initial_constraint in
-			Printf.printf "initial_constraint %s\n" initial_constraint;
-  
-			Printf.printf "!sync_model.initial_p_constraint: \n";
-			let initial_p_constraint = LinearConstraint.string_of_p_linear_constraint !sync_model.variable_names !sync_model.initial_p_constraint in
-			Printf.printf "initial_p_constraint %s\n" initial_p_constraint;
-
-			Printf.printf "!sync_model.px_clocks_non_negative_and_initial_p_constraint: \n";
-			let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.string_of_px_linear_constraint !sync_model.variable_names !sync_model.px_clocks_non_negative_and_initial_p_constraint in
-			Printf.printf "px_clocks_non_negative_and_initial_p_constraint %s\n" px_clocks_non_negative_and_initial_p_constraint;
-
+			print_model_for_debug !sync_model;
 
 			(* Select the exporter, render the model and write the output file.
 				 All of selection/naming/writing now lives in ExportDriver. *)
@@ -732,121 +765,7 @@ match options#imitator_mode with
 			ResultProcessor.process_result !sync_model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
 		)
 		else(
-			Printf.printf "model.nb_automata: [%d]\n" model.nb_automata;
-			Printf.printf "model.nb_locations: [%d]\n" model.nb_locations;
-			Printf.printf "model.nb_transitions: [%d]\n" model.nb_transitions;
-
-			Printf.printf "model.automata: \n";
-			List.iter (fun x -> print_endline (string_of_int x)) model.automata;
-
-			Printf.printf "model.automata_names: \n";
-			for i = 0 to model.nb_automata - 1 do
-				Printf.printf "automata_names %d = %s\n" i (model.automata_names i)
-			done;
-
-			Printf.printf "model.locations_per_automaton: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton i in
-					Printf.printf "locations_per_automaton %d = [%s]\n" i (String.concat "; " (List.map string_of_int locs))
-			done;
-
-			Printf.printf "model.locations_names: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton 0 in
-				List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" i l (model.location_names i l)) locs;
-			done;
-
-			Printf.printf "model.actions_per_automaton: \n";
-			for i = 0 to model.nb_automata - 1 do
-				List.iter (fun x -> Printf.printf "%d\n" x) (model.actions_per_automaton i)
-			done;
-
-			Printf.printf "model.automata_per_action: \n";
-			for i = 0 to model.nb_automata - 1 do
-				List.iter (fun x -> Printf.printf "%d\n" x) (model.automata_per_action i)
-			done;
-
-			Printf.printf "model.actions_per_location: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton i in
-				List.iter (fun l -> Printf.printf "  automaton %d, location %d = [%s]\n" i l (String.concat "; " (List.map string_of_int (model.actions_per_location i l)))) locs;
-			done;
-
-			Printf.printf "model.is_accepting: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton i in
-				for l = 0 to (List.length locs) - 1 do
-					let ia = model.is_accepting i l in
-					Printf.printf "model.is_accepting: automaton %d, location %d: [%b]\n" i l ia;
-				done;
-			done;
-
-			Printf.printf "model.is_urgent: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton i in
-				for l = 0 to (List.length locs) - 1 do
-					let iu = model.is_urgent i l in
-					Printf.printf "model.is_urgent: automaton %d, location %d: [%b]\n" i l iu;
-				done;
-			done;
-
-			Printf.printf "model.invariants: \n";
-			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton i in
-				for l = 0 to (List.length locs) - 1 do
-					let invariant = model.invariants i l in
-					Printf.printf "model.invariants: automaton %d, location %d: [%s]\n" i l (ModelPrinter.string_of_guard model.variable_names (invariant));
-				done;
-			done;
-
-			Printf.printf "model.transitions: \n";
-			for ai = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton ai in
-				List.iter (fun li ->
-					let actions = model.actions_per_location ai li in
-					List.iter (fun a ->
-						let trans = model.transitions ai li a in
-						if trans <> [] then
-							Printf.printf "  automaton %d, location %d, action %d = [%s]\n"
-								ai li a
-								(String.concat "; " (List.map string_of_int trans))
-					) actions
-				) locs
-			done;
-
-			Printf.printf "model.transitions_description: \n";
-			for j = 0 to model.nb_transitions - 1 do
-				let i = model.automaton_of_transition j in
-				let trans = model.transitions_description j in
-				ImitatorUtilities.print_message Verbose_standard ("Transition " ^ (string_of_int j) ^
-																  ": in automaton `" ^ (model.automata_names i) ^
-																  "` via action `" ^ (model.action_names (trans.action)) ^
-																  "` to location `" ^ (model.location_names i (trans.target)) ^ "`")
-			done;
-
-			Printf.printf "model.automaton_of_transition: \n";
-			for t = 0 to model.nb_transitions - 1 do
-				Printf.printf "  transition %d = automaton %d\n" t (model.automaton_of_transition t)
-			done;
-
-			Printf.printf "model.initial_location: \n";
-(*			for i = 0 to model.nb_automata - 1 do
-				let initial_location = DiscreteState.get_location model.initial_location i in
-				Printf.printf "initial_location [%d] = %s\n" i (get_pta_sync_prod_location_names model).(initial_location);
-			done;
-*)
-			Printf.printf "model.initial_constraint: \n";
-			let initial_constraint = LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint in
-			Printf.printf "initial_constraint %s\n" initial_constraint;
-  
-			Printf.printf "model.initial_p_constraint: \n";
-			let initial_p_constraint = LinearConstraint.string_of_p_linear_constraint model.variable_names model.initial_p_constraint in
-			Printf.printf "initial_p_constraint %s\n" initial_p_constraint;
-
-			Printf.printf "model.px_clocks_non_negative_and_initial_p_constraint: \n";
-			let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.string_of_px_linear_constraint model.variable_names model.px_clocks_non_negative_and_initial_p_constraint in
-			Printf.printf "px_clocks_non_negative_and_initial_p_constraint %s\n" px_clocks_non_negative_and_initial_p_constraint;
-
+			print_model_for_debug model;
 			(* Select the exporter, render the model and write the output file.
 				 All of selection/naming/writing now lives in ExportDriver. *)
 			let _target_language_file = ExportDriver.export_and_write options model target in

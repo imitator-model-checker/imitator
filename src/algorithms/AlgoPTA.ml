@@ -506,7 +506,7 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
 
                                                         if Array.length (!pta_sync_prod_invariants).(location_index) = 0 then
                                                           begin
-                                                            (!pta_sync_prod_invariants).(location_index) <- Array.make 1 False_guard;
+                                                            (!pta_sync_prod_invariants).(location_index) <- Array.make 1 True_guard;
 
                                                             (* Check location name numbers *)
                                                             let location_name = (get_pta_sync_prod_location_names model).(location_index) in
@@ -518,15 +518,26 @@ let compute_PTA_syncronized_product (model : AbstractModel.abstract_model) : Abs
                                                               let location_index_curr = (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0') in
 
                                                               if location_index_curr < List.length (model.locations_per_automaton automata_index) then
-                                                                (* Check if it is not true yet *)
-                                                                if (!pta_sync_prod_invariants).(location_index).(0) = Location_nonurgent then
-                                                                  (* Assign is_urgent to PTA syncronized product new model *)
-                                                                  (!pta_sync_prod_invariants).(location_index).(0) <- (
-                                                                    match (model.invariants automata_index location_index_curr) with
-                                                                    | false -> Location_nonurgent
-                                                                    | true -> Location_urgent
-                                                                  );
-
+                                                                (* Assign invariant to PTA syncronized product new model *)
+                                                                (!pta_sync_prod_invariants).(location_index).(0) <- (
+                                                                  match (!pta_sync_prod_invariants).(location_index).(0), (model.invariants automata_index location_index_curr) with
+                                                                  | False_guard, _ | _, False_guard -> False_guard
+                                                                  | True_guard, g | g, True_guard -> g
+                                                                  | Discrete_guard _, _ | _, Discrete_guard _
+                                                                  | Continuous_guard _, _ | _, Continuous_guard _
+                                                                  | Discrete_continuous_guard _, _ -> True_guard
+(*
+                                                                  | Discrete_guard d1, Discrete_guard d2 -> Discrete_guard (d1 && d2)
+                                                                  | Continuous_guard c1, Continuous_guard c2 -> Continuous_guard (c1 && c2)
+                                                                  | Discrete_guard d, Continuous_guard c -> Discrete_continuous_guard (d && c)
+                                                                  | Continuous_guard c, Discrete_guard d -> Discrete_continuous_guard (c && d)
+                                                                  | Discrete_continuous_guard dc, Discrete_guard d -> Discrete_continuous_guard (dc && d)
+                                                                  | Discrete_guard d, Discrete_continuous_guard dc -> Discrete_continuous_guard (d && dc)
+                                                                  | Discrete_continuous_guard dc, Continuous_guard c -> Discrete_continuous_guard (dc && c)
+                                                                  | Continuous_guard c, Discrete_continuous_guard dc -> Discrete_continuous_guard (c && dc)
+                                                                  | Discrete_continuous_guard dc1, Discrete_continuous_guard dc2 -> Discrete_continuous_guard (dc1 && dc2)
+*)
+                                                                );
                                                             done;
                                                           end;
 
