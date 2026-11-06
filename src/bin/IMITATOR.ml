@@ -634,6 +634,26 @@ let is_cartography = match property_option with
 in
 options#set_options_for_cartography is_cartography;
 
+(************************************************************)
+(* PTA Syncronized Product *)
+(************************************************************)
+let sync_model = ref model in
+
+(* If computed, do it here before computations are performed over the original model *)
+if options#pta_syncronized_product <> PTA_syncronized_product_none then (
+	print_message Verbose_low "Preparing PTA syncronized product computation…";
+	try(
+		sync_model := AlgoPTA.compute_PTA_syncronized_product model;
+		print_message Verbose_low "PTA syncronized product computation completed…";
+	) with
+	| PTA_syncronized_product_exception ->
+		print_error ("An error was detected during PTA syncronized product computation.");
+		abort_program();
+);
+
+(* Reassign variable "model" *)
+let model = !sync_model in
+print_model_for_debug model;
 
 (************************************************************)
 (* Recall options and print some warnings if needed *)
@@ -693,22 +713,6 @@ if options#dynamic_clock_elimination then (
 
 
 (************************************************************)
-(* PTA Syncronized Product *)
-(************************************************************)
-let sync_model = ref model in
-if options#pta_syncronized_product <> PTA_syncronized_product_none then (
-	print_message Verbose_low "Preparing PTA syncronized product computation…";
-	try(
-		sync_model := AlgoPTA.compute_PTA_syncronized_product model;
-		print_message Verbose_low "PTA syncronized product computation completed…";
-	) with
-	| PTA_syncronized_product_exception ->
-		print_error ("An error was detected during PTA syncronized product computation.");
-		abort_program();
-);
-
-
-(************************************************************)
 (* Extrapolation *)
 (************************************************************)
 if options#extrapolation <> No_extrapolation then (
@@ -755,24 +759,11 @@ match options#imitator_mode with
 			| _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
-		if options#pta_syncronized_product <> PTA_syncronized_product_none then (
-			print_model_for_debug !sync_model;
-
-			(* Select the exporter, render the model and write the output file.
-				 All of selection/naming/writing now lives in ExportDriver. *)
-			let _target_language_file = ExportDriver.export_and_write options !sync_model target in
-			(* Create a file with some statistics on the original model if requested *)
-			ResultProcessor.process_result !sync_model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
-		)
-		else(
-			print_model_for_debug model;
-			(* Select the exporter, render the model and write the output file.
-				 All of selection/naming/writing now lives in ExportDriver. *)
-			let _target_language_file = ExportDriver.export_and_write options model target in
-			(* Create a file with some statistics on the original model if requested *)
-			ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
-		);
-
+		(* Select the exporter, render the model and write the output file.
+				All of selection/naming/writing now lives in ExportDriver. *)
+		let _target_language_file = ExportDriver.export_and_write options model target in
+		(* Create a file with some statistics on the original model if requested *)
+		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
 
 		terminate_program()
 
