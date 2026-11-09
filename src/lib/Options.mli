@@ -196,12 +196,10 @@ class imitator_options :
 		(* Other methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		(** Parse the command-line options.
-		    By default, parses [Sys.argv].
-		    @param argv parse this array instead, as if it were [Sys.argv] (element 0 is the program name); can be called several times in the same process
-		    @param skip_model do not expect a model file name: the first anonymous argument is then the property file name
-		    @raise Arg.Bad if [argv] is given and contains an invalid option
-		    @raise Arg.Help if [argv] is given and contains [-help] *)
+		(** Parse the command-line options (by default [Sys.argv]); to be called once per object
+		    @param argv parse this array instead (element 0 is the program name)
+		    @param skip_model do not expect a model file; the first argument is then the property file
+		    @raise Arg.Bad or Arg.Help if [argv] is given and is invalid or contains [-help] *)
 		method parse : ?skip_model:bool -> ?argv:string array -> unit -> unit
 
 		(* Recall options, print info, and check compatibility with the actual algorithm *)

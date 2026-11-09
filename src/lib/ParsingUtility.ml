@@ -125,7 +125,7 @@ let compile_unexpanded_parsed_property (options : Options.imitator_options) : Pa
 		(* Get the file name *)
 		let property_file_name = match options#property_file_name with
 			| Some property_file_name -> property_file_name
-			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
+			| None -> raise (InternalError "No property file name found in `compile_unexpanded_parsed_property` although it was expected.")
 		in
 
 		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
@@ -142,25 +142,6 @@ let compile_unexpanded_parsed_property (options : Options.imitator_options) : Pa
 	)else(
 		None
 	)
-
-
-(************************************************************)
-(** Parse a property given as a string into an unexpanded parsed property *)
-(************************************************************)
-let compile_unexpanded_parsed_property_from_string (options : Options.imitator_options) (the_string : string) : ParsingStructure.unexpanded_parsed_property =
-	(* Statistics *)
-	parsing_counter#start;
-
-	print_message Verbose_low ("Parsing property from string…");
-
-	let parsed_property : ParsingStructure.unexpanded_parsed_property = parse_or_abort Property options ParsingDriver.parse_property_from_string the_string in
-
-	(* Statistics *)
-	parsing_counter#stop;
-
-	print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
-
-	parsed_property
 
 
 (************************************************************)
