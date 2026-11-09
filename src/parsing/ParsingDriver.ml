@@ -151,17 +151,14 @@ let parser_lexer_from_file the_parser the_lexer file_name =
 	parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name
 
 
-(*(* Parse a string and return the abstract structure *)
+(* Parse a string and return the abstract structure *)
 let parser_lexer_from_string the_parser the_lexer the_string =
 	(* Lexing *)
-	let lexbuf = try (Lexing.from_string the_string) with
-		| Failure f -> print_error ("Lexing error: " ^ f ^ "\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1)
-(* 		| Parsing.Parse_error -> print_error ("Parsing error\n The string was: \n" ^ the_string ^ ""); abort_program (); exit(1) *)
-	in
-	(* Function to convert a in_channel to a string (in case of parsing error) *)
+	let lexbuf = Lexing.from_string the_string in
+	(* Function returning the input (in case of parsing error) *)
 	let string_of_input () = the_string in
 	(* Generic function *)
-	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
+	parser_lexer_gen the_parser the_lexer lexbuf string_of_input "input string"
 
 
 (************************************************************)
@@ -175,3 +172,7 @@ let parse_model_from_file (file_name : string) : ParsingStructure.unexpanded_par
 (** Parse a property file and return its (unexpanded) parsing structure *)
 let parse_property_from_file (file_name : string) : ParsingStructure.unexpanded_parsed_property =
 	parser_lexer_from_file PropertyParser.main PropertyLexer.token file_name
+
+(** Parse a property given as a string and return its (unexpanded) parsing structure *)
+let parse_property_from_string (the_string : string) : ParsingStructure.unexpanded_parsed_property =
+	parser_lexer_from_string PropertyParser.main PropertyLexer.token the_string

@@ -40,3 +40,7 @@ val parse_model_from_file : string -> ParsingStructure.unexpanded_parsed_model
     @raise InputFileNotFound if the file cannot be opened
     @raise ParsingFailure in case of lexing/parsing error *)
 val parse_property_from_file : string -> ParsingStructure.unexpanded_parsed_property
+
+(** Parse a property given as a string and return its (unexpanded) parsing structure.
+    @raise ParsingFailure in case of lexing/parsing error *)
+val parse_property_from_string : string -> ParsingStructure.unexpanded_parsed_property
