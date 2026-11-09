@@ -167,7 +167,7 @@ class imitator_options :
 		method set_subsumption				: bool -> unit
 
 		method sync_auto_detection			: bool
-		method time_limit					: int option
+		method time_limit					: float option
 		method timed_mode					: bool
 		method graphical_state_space		: graphical_state_space
 		method with_graphics_source			: bool
@@ -196,7 +196,13 @@ class imitator_options :
 		(* Other methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		method parse : unit
+		(** Parse the command-line options.
+		    By default, parses [Sys.argv].
+		    @param argv parse this array instead, as if it were [Sys.argv] (element 0 is the program name); can be called several times in the same process
+		    @param skip_model do not expect a model file name: the first anonymous argument is then the property file name
+		    @raise Arg.Bad if [argv] is given and contains an invalid option
+		    @raise Arg.Help if [argv] is given and contains [-help] *)
+		method parse : ?skip_model:bool -> ?argv:string array -> unit -> unit
 
 		(* Recall options, print info, and check compatibility with the actual algorithm *)
 		method recall_and_warn : AbstractModel.abstract_model -> AbstractProperty.abstract_property option -> unit
