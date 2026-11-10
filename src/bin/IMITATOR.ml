@@ -148,7 +148,7 @@ let print_model_for_debug (model : AbstractModel.abstract_model) : unit =
 			done;
 
 			Printf.printf "model.transitions_description: \n";
-			for j = 0 to model.nb_transitions - 1 do
+			for j = 0 to get_pta_sync_prod_transitions_number () - 1 do(* model.nb_transitions - 1 do *)
 				let i = model.automaton_of_transition j in
 				let trans = model.transitions_description j in
 				ImitatorUtilities.print_message Verbose_standard ("Transition " ^ (string_of_int j) ^
@@ -643,7 +643,12 @@ let sync_model = ref model in
 if options#pta_syncronized_product <> PTA_syncronized_product_none then (
 	print_message Verbose_low "Preparing PTA syncronized product computation…";
 	try(
-		sync_model := AlgoPTA.compute_PTA_syncronized_product model;
+		sync_model := AlgoPTA.get_PTA_syncronized_product_struct model;
+		let _ = AlgoPTA.init_PTA_syncronized_product_struct !sync_model in
+		(* Rebuild to get the right transitions number *)
+		sync_model := {
+			!sync_model with nb_transitions = AlgoPTA.get_pta_sync_prod_transitions_number ()
+		};
 		print_message Verbose_low "PTA syncronized product computation completed…";
 	) with
 	| PTA_syncronized_product_exception ->
@@ -653,7 +658,7 @@ if options#pta_syncronized_product <> PTA_syncronized_product_none then (
 
 (* Reassign variable "model" *)
 let model = !sync_model in
-print_model_for_debug model;
+(* print_model_for_debug model; *)
 
 (************************************************************)
 (* Recall options and print some warnings if needed *)
