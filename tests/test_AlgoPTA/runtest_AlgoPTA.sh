@@ -189,4 +189,7 @@ do
 	echo "Running test: [$CMD]"
 	eval $CMD &> $OUTPUT
 	echo "Output written to file [$OUTPUT]"
+
+#	RENAME .res FILE
+	mv $NAME.res ${OUT_DIR}${NAME}_${OPT}.res
 done
