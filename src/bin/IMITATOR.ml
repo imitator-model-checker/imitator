@@ -85,7 +85,7 @@ let print_model_for_debug (model : AbstractModel.abstract_model) : unit =
 
 			Printf.printf "model.locations_names: \n";
 			for i = 0 to model.nb_automata - 1 do
-				let locs = model.locations_per_automaton 0 in
+				let locs = model.locations_per_automaton i in
 				List.iter (fun l -> Printf.printf "  automaton %d, location %d = %s\n" i l (model.location_names i l)) locs;
 			done;
 
@@ -143,18 +143,63 @@ let print_model_for_debug (model : AbstractModel.abstract_model) : unit =
 							Printf.printf "  automaton %d, location %d, action %d = [%s]\n"
 								ai li a
 								(String.concat "; " (List.map string_of_int trans))
+						else
+							Printf.printf "  automaton %d, location %d, action %d = [None]\n"
+								ai li a
 					) actions
 				) locs
 			done;
 
 			Printf.printf "model.transitions_description: \n";
-			for j = 0 to get_pta_sync_prod_transitions_number () - 1 do(* model.nb_transitions - 1 do *)
+			for j = 0 to model.nb_transitions - 1 do
 				let i = model.automaton_of_transition j in
 				let trans = model.transitions_description j in
 				ImitatorUtilities.print_message Verbose_standard ("Transition " ^ (string_of_int j) ^
 																  ": in automaton `" ^ (model.automata_names i) ^
 																  "` via action `" ^ (model.action_names (trans.action)) ^
 																  "` to location `" ^ (model.location_names i (trans.target)) ^ "`")
+			done;
+
+			Printf.printf "model.flow: \n";
+			for ai = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton ai in
+				List.iter (fun li ->
+					let flow = model.flow ai li in
+					if flow <> [] then
+						Printf.printf "  automaton %d, location %d = [%s]\n"
+							ai li
+							(string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow))
+					else
+						Printf.printf "  automaton %d, location %d = [NO_FLOW]\n" ai li;
+				) locs
+			done;
+
+			Printf.printf "model.stopwatches: \n";
+			for ai = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton ai in
+				List.iter (fun li ->
+					let stopped = model.stopwatches ai li in
+					if stopped = [] then
+						Printf.printf "  automaton %d, location %d = [NO_STOPWATCH]\n" ai li
+					else
+						Printf.printf "  automaton %d, location %d = [%s]\n"
+							ai li
+							(string_of_list_of_string_with_sep ", " ((List.map model.variable_names stopped)))
+				) locs
+			done;
+
+			Printf.printf "model.costs: \n";
+			for ai = 0 to model.nb_automata - 1 do
+				let locs = model.locations_per_automaton ai in
+				List.iter (fun li ->
+					let cost = model.costs ai li in
+					if cost = None then
+						Printf.printf "  automaton %d, location %d = [NO_COST]\n" ai li
+					else
+						Printf.printf "  automaton %d, location %d = [%s]\n"
+							ai li
+							(LinearConstraint.string_of_p_linear_term model.variable_names (Option.get cost))
+				) locs
 			done;
 
 			Printf.printf "model.automaton_of_transition: \n";

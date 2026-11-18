@@ -53,6 +53,16 @@ let trailing_number (s : string) : int =
   if start >= l_s then 0
   else int_of_string (String.sub s start (l_s - start))
 
+(*
+  Function to combine costs in two different locations.
+*)
+let combine_costs c1 c2 =
+  match c1, c2 with
+  | None, None -> None
+  | Some a, None -> Some a
+  | None, Some b -> Some b
+  | Some a, Some b -> Some (LinearConstraint.IR_Plus (a, b))
+
 let pta_sync_prod_locations_number                                  = ref 0
 let pta_sync_prod_transitions_number                                = ref 0
 let pta_sync_prod_automata_name                                     = ref (Array.make 0 "")
@@ -65,6 +75,9 @@ let pta_sync_prod_transitions_description                           = ref (Array
 let pta_sync_prod_is_accepting                                      = ref (Array.make 0 (Array.make 0 Location_nonaccepting))
 let pta_sync_prod_is_urgent                                         = ref (Array.make 0 (Array.make 0 Location_nonurgent))
 let pta_sync_prod_invariants                                        = ref (Array.make 0 (Array.make 0 (False_guard)))
+let pta_sync_prod_flow                                              = ref (Array.make 0 (Array.make 0 []))
+let pta_sync_prod_stopwatches                                       = ref (Array.make 0 (Array.make 0 []))
+let pta_sync_prod_costs                                             = ref (Array.make 0 (Array.make 0 None))
 
 (*
   Function to compute the PTA syncronized product locations number
@@ -292,7 +305,7 @@ let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_mo
                     in
 
                     (* Get transition descriptions list with updated targets *)
-                    List.map (
+                    List.filter_map (
                       fun transition_index_curr ->
                         (* Get original transition *)
                         let transition = model.transitions_description transition_index_curr in
@@ -309,14 +322,16 @@ let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_mo
                         in
 
                         (* Find new target index according to new target name *)
-                        let new_target = Option.get (find_location_name_index model new_target_name 0) in
-                        (* Guard, action and updates remain the same *)
-                        {
-                          guard = transition.guard;
-                          action = transition.action;
-                          updates = transition.updates;
-                          target = new_target;
-                        }
+                        match find_location_name_index model new_target_name 0 with
+                        | Some new_target -> Some
+                          (* Guard, action and updates remain the same *)
+                          {
+                            guard = transition.guard;
+                            action = transition.action;
+                            updates = transition.updates;
+                            target = new_target
+                          }
+                        | None -> None
                     ) transitions
                 )
               )
@@ -453,6 +468,120 @@ let get_pta_sync_prod_invariants (model : AbstractModel.abstract_model) =
   !pta_sync_prod_invariants
 
 (*
+  Function to initialize/get the PTA syncronized product flows array
+*)
+let get_pta_sync_prod_flow (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_flow = 0 then
+    begin
+      (* Get automata name length in the new model *)
+      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+      pta_sync_prod_flow :=
+        (* Initialize the array *)
+        Array.init (get_pta_sync_prod_locations_number model) (
+          fun location_index ->
+            (* Get location name at index location_index *)
+            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+
+            (* Get flows array *)
+            let flows = List.concat_map (
+              (* For each automata number automata_index *)
+              fun automata_index ->
+                (* Get location number location_index_curr at automata automata_index to concat the flows array at location position location_index *)
+                let location_index_curr = 
+                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
+                in
+
+                (* Get the flows array in original model *)
+                if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                  model.flow automata_index location_index_curr
+                else []
+            ) (List.init model.nb_automata (fun i -> i))
+            in
+
+            (* Each array index has only 1 array containing all flows belonging to that location *)
+            [| flows |]
+        )
+    end;
+  !pta_sync_prod_flow
+
+(*
+  Function to initialize/get the PTA syncronized product stopwatches array
+*)
+let get_pta_sync_prod_stopwatches (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_stopwatches = 0 then
+    begin
+      (* Get automata name length in the new model *)
+      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+      pta_sync_prod_stopwatches :=
+        (* Initialize the array *)
+        Array.init (get_pta_sync_prod_locations_number model) (
+          fun location_index ->
+            (* Get location name at index location_index *)
+            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+
+            (* Get clocks array *)
+            let clocks = List.concat_map (
+              (* For each automata number automata_index *)
+              fun automata_index ->
+                (* Get location number location_index_curr at automata automata_index to concat the clocks array at location position location_index *)
+                let location_index_curr =
+                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
+                in
+
+                (* Get the clocks array in original model *)
+                if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                  model.stopwatches automata_index location_index_curr
+                else []
+            ) (List.init model.nb_automata (fun i -> i))
+            in
+
+            (* Each array index has only 1 array containing all clocks belonging to that location *)
+            [| clocks |]
+        )
+    end;
+  !pta_sync_prod_stopwatches
+
+(*
+  Function to initialize/get the PTA syncronized product costs array
+*)
+let get_pta_sync_prod_costs (model : AbstractModel.abstract_model) =
+  if Array.length !pta_sync_prod_costs = 0 then
+    begin
+      (* Get automata name length in the new model *)
+      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
+
+      pta_sync_prod_costs :=
+        (* Initialize the array *)
+        Array.init (get_pta_sync_prod_locations_number model) (
+          fun location_index ->
+            (* Get location name at index location_index *)
+            let location_name = (get_pta_sync_prod_location_names model).(location_index) in
+
+            (* Get costs array *)
+            let costs = List.map (
+              (* For each automata number automata_index *)
+              fun automata_index ->
+                (* Get location number location_index_curr at automata automata_index to concat the costs array at location position location_index *)
+                let location_index_curr =
+                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
+                in
+
+                (* Get the costs array in original model *)
+                if location_index_curr < List.length (model.locations_per_automaton automata_index) then
+                  model.costs automata_index location_index_curr
+                else None
+              ) (List.init model.nb_automata (fun i -> i))
+            in
+
+            (* Each array index has only 1 array containing all costs belonging to that location *)
+            [| List.fold_left combine_costs None costs |]
+        )
+    end;
+  !pta_sync_prod_costs
+
+(*
   Function to compute all location name indices having a digit "dig" at position "pos" in the name:
   indices_with_digit_at 1 0 -> [0; 1; 2; 3; 4; 25; 26; 27; 28; 29; 50; 51; 52; 53; 54]
 *)
@@ -563,10 +692,6 @@ let get_PTA_syncronized_product_struct (model : AbstractModel.abstract_model) : 
     action_types                                    = model.action_types;
     is_controllable_action                          = model.is_controllable_action;
 
-    costs                                           = model.costs;
-    stopwatches                                     = model.stopwatches;
-    flow                                            = model.flow;
-
     functions_table                                 = model.functions_table;
     local_variables_table                           = model.local_variables_table;
 
@@ -653,7 +778,26 @@ let get_PTA_syncronized_product_struct (model : AbstractModel.abstract_model) : 
 (****************************************************************************************************************************)
     (* Automata 0 has all transitions *)
 (****************************************************************************************************************************)
-    transitions                                     = (fun _ location_index action_index -> Option.get (Hashtbl.find_opt (get_pta_sync_prod_transitions model).(location_index) action_index)); (* model.transitions; *)
+    transitions                                     = (fun _ location_index action_index ->
+                                                        match (Hashtbl.find_opt (get_pta_sync_prod_transitions model).(location_index) action_index) with
+                                                        | None -> []
+                                                        | Some x -> x
+                                                      ); (* model.transitions; *)
+
+(****************************************************************************************************************************)
+    (* Assigns clocks to the product *)
+(****************************************************************************************************************************)
+    stopwatches                                     = (fun _ location_index -> (get_pta_sync_prod_stopwatches model).(location_index).(0)); (* model.stopwatches; *)
+
+(****************************************************************************************************************************)
+    (* Assigns flows to the product *)
+(****************************************************************************************************************************)
+    flow                                            = (fun _ location_index -> (get_pta_sync_prod_flow model).(location_index).(0)); (* model.flow; *)
+
+(****************************************************************************************************************************)
+    (* Assigns costs to the product *)
+(****************************************************************************************************************************)
+    costs                                           = (fun _ location_index -> (get_pta_sync_prod_costs model).(location_index).(0)); (* model.costs; *)
 
 (****************************************************************************************************************************)
     (* Automata 0 takes all transition "descriptions" from original model *)
@@ -741,9 +885,9 @@ let init_PTA_syncronized_product_struct (model : AbstractModel.abstract_model) :
   let _ = model.action_types in
   let _ = model.is_controllable_action in
 
-  let _ = model.costs in
-  let _ = model.stopwatches in
-  let _ = model.flow in
+  let _ = model.costs 0 0 in
+  let _ = model.stopwatches 0 0 in
+  let _ = model.flow 0 0 in
 
   let _ = model.functions_table in
   let _ = model.local_variables_table in
