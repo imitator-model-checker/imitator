@@ -54,6 +54,31 @@ let trailing_number (s : string) : int =
   else int_of_string (String.sub s start (l_s - start))
 
 (*
+  Function to get the location numbers in location names:
+  get_location_indices "lock,P1,P2_(0,0,0)" -> [0; 0; 0]
+  get_location_indices "lock,P1,P2_(0,0,1)" -> [0; 0; 1]
+  get_location_indices "lock,P1,P2_(2,3,3)" -> [2; 3; 3]
+  get_location_indices "lock,P1,P2_(2,3,4)" -> [2; 3; 4]
+  get_location_indices "lock,P1,P2_(20,31,42)" -> [20; 31; 42]
+*)
+let get_location_indices (location_name : string) : int list =
+  let start =
+    match String.rindex_opt location_name '(' with
+    | Some i -> i + 1
+    | None -> failwith (Printf.sprintf "location_name: [%s] is not well formed. Missing '('" location_name)
+  in
+
+  let stop =
+    match String.index_from_opt location_name start ')' with
+    | Some i -> i
+    | None -> failwith (Printf.sprintf "location_name: [%s] is not well formed. Missing ')'" location_name)
+  in
+
+  let inner = String.sub location_name start (stop - start) in
+  String.split_on_char ',' inner
+  |> List.map (fun s -> int_of_string (String.trim s))
+
+(*
   Function to combine costs in two different locations.
 *)
 let combine_costs c1 c2 =
@@ -112,19 +137,16 @@ let set_pta_sync_prod_transitions_number (n_trans : int) : unit =
 
 (*
   Function to initialize/get the PTA syncronized product automata name array
-  To form name, it takes the name's first letter in each automata and concatenates them to form the name:
-    "[lock, P1, P2] -> lPP"
+  To form name, it takes the automata's name in each automata and concatenates them to form the name:
+    "[lock, P1, P2] -> lock,P1,P2"
   As the result is only one automata, the array is length 1
 *)
 let get_pta_sync_prod_automata_name (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_automata_name = 0 then
     pta_sync_prod_automata_name :=
       Array.make 1 (
-        String.concat "" (
-          List.map (fun name ->
-            if name = "" then ""
-            else String.make 1 name.[0]
-          ) (List.init model.nb_automata model.automata_names)
+        String.concat "," (
+          List.map (fun name -> name) (List.init model.nb_automata model.automata_names)
         )
       );
   !pta_sync_prod_automata_name
@@ -150,14 +172,14 @@ let get_pta_sync_prod_location_names (model : AbstractModel.abstract_model) =
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
           fun location_index ->
-            (* Get digits and convert them into a string: ["000", "001", "002", ..., "243", "244"] *)
+            (* Get digits and convert them into a string: ["(0,0,0)", "(0,0,1)", "(0,0,2)", ..., "(2,4,3)", "(2,4,4)"] *)
             let name_digits = digits len_locations_per_automaton location_index in
-            let s_name_digits = String.concat "" (List.map string_of_int name_digits) in
+            let s_name_digits = String.concat "," (List.map string_of_int name_digits) in
 
-            (* Concatenate automata name with its digits: ["lPP000", "lPP001", "lPP002", ..., "lPP243", "lPP244"] *)
-            name ^ (
-              if String.length s_name_digits >= model.nb_automata then s_name_digits
-              else String.make (model.nb_automata - String.length s_name_digits) '0' ^ s_name_digits
+            (* Concatenate automata name with its digits: ["lock,P1,P2_(0,0,0)", "lock,P1,P2_(0,0,1)", "lock,P1,P2_(0,0,2)", ..., "lock,P1,P2_(2,4,3)", "lock,P1,P2_(2,4,4)"] *)
+            name ^ "_" ^ (
+              if String.length s_name_digits >= model.nb_automata then ("(" ^ s_name_digits ^ ")")
+              else String.make (model.nb_automata - String.length s_name_digits) '0' ^ "(" ^ s_name_digits ^ ")"
             )
         )
     end;
@@ -195,9 +217,6 @@ let get_pta_sync_prod_actions_per_automaton (model : AbstractModel.abstract_mode
 let get_pta_sync_prod_actions_per_location (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_actions_per_location = 0 then
     begin
-      (* Get automata name length in the new model *)
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_actions_per_location :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -211,9 +230,7 @@ let get_pta_sync_prod_actions_per_location (model : AbstractModel.abstract_model
               fun automata_index ->
 
                 (* Get location number location_index_curr at automata automata_index to concat the actions per location array at location position location_index *)
-                let location_index_curr =
-                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                in
+                let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                 (* Get the actions per location array in original model *)
                 if location_index_curr < List.length (model.locations_per_automaton automata_index) then
@@ -276,8 +293,6 @@ let get_pta_sync_prod_transitions (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_transitions_description = 0 then
     begin
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_transitions_description := Array.of_list (
         List.concat (
           (* Initialize the array *)
@@ -292,9 +307,7 @@ let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_mo
                   (* For each automata number automata_index *)
                   fun automata_index ->
                     (* Get location number location_index_curr at automata automata_index *)
-                    let location_index_curr =
-                      (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                    in
+                    let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                     (* Look for transitions in automata automata_index and location_index_curr *)
                     let transitions =
@@ -312,13 +325,23 @@ let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_mo
 
                         (* Compute new target name according to original target name *)
                         let new_target_name =
-                          let location_name_bytes = Bytes.of_string location_name in
-                          Bytes.set location_name_bytes (len_automata_name + automata_index) (
-                            char_of_int (
-                              trailing_number (model.location_names automata_index transition.target) + Char.code '0'
-                            )
-                          );
-                          Bytes.to_string location_name_bytes
+                          (* Get location indices from location name : "lock,P1,P2_(2,3,4)" -> [2; 3; 4] *)
+                          let location_indices = get_location_indices location_name in
+
+                          (* Get new target index *)
+                          let new_target = trailing_number (model.location_names automata_index transition.target) in
+
+                          (* Replace index number by new target *)
+                          let new_numbers = List.mapi (
+                            fun index number ->
+                              if index = automata_index then new_target
+                              else number
+                          ) location_indices in
+
+                          (* Form new numbers string *)
+                          let s_new_numbers = String.concat "," (List.map string_of_int new_numbers) in
+
+                          (get_pta_sync_prod_automata_name model).(0) ^ "_(" ^ s_new_numbers ^ ")"
                         in
 
                         (* Find new target index according to new target name *)
@@ -347,8 +370,6 @@ let get_pta_sync_prod_transitions_description (model : AbstractModel.abstract_mo
 let get_pta_sync_prod_is_accepting (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_is_accepting = 0 then
     begin
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_is_accepting :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -361,9 +382,8 @@ let get_pta_sync_prod_is_accepting (model : AbstractModel.abstract_model) =
                 (* For each automata number automata_index *)
                 fun automata_index ->
                   (* Get location number location_index_curr at automata automata_index to check is acceptance value *)
-                  let location_index_curr =
-                    (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                  in
+                  let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
+
                   location_index_curr < List.length (model.locations_per_automaton automata_index) &&
                   model.is_accepting automata_index location_index_curr
             ) (List.init model.nb_automata (fun i -> i))
@@ -381,8 +401,6 @@ let get_pta_sync_prod_is_accepting (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_is_urgent (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_is_urgent = 0 then
     begin
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_is_urgent :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -395,9 +413,8 @@ let get_pta_sync_prod_is_urgent (model : AbstractModel.abstract_model) =
                 (* For each automata number automata_index *)
                 fun automata_index ->
                   (* Get location number location_index_curr at automata automata_index to check is urgent value *)
-                  let location_index_curr =
-                    (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                  in
+                  let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
+
                   location_index_curr < List.length (model.locations_per_automaton automata_index) &&
                   model.is_urgent automata_index location_index_curr
             ) (List.init model.nb_automata (fun i -> i))
@@ -415,8 +432,6 @@ let get_pta_sync_prod_is_urgent (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_invariants (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_invariants = 0 then
     begin
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       (* Guards combination (still missing more options) *)
       let combine_guards g1 g2 =
         match g1, g2 with
@@ -449,9 +464,7 @@ let get_pta_sync_prod_invariants (model : AbstractModel.abstract_model) =
               (* For each automata number automata_index *)
               fun guard_curr automata_index ->
                 (* Get location number location_index_curr at automata automata_index to check its invariant *)
-                let location_index_curr =
-                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                in
+                let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                 (* Combine guards (starting with a True_guard) *)
                 if location_index_curr < List.length (model.locations_per_automaton automata_index) then
@@ -473,9 +486,6 @@ let get_pta_sync_prod_invariants (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_flow (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_flow = 0 then
     begin
-      (* Get automata name length in the new model *)
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_flow :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -488,9 +498,7 @@ let get_pta_sync_prod_flow (model : AbstractModel.abstract_model) =
               (* For each automata number automata_index *)
               fun automata_index ->
                 (* Get location number location_index_curr at automata automata_index to concat the flows array at location position location_index *)
-                let location_index_curr = 
-                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                in
+                let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                 (* Get the flows array in original model *)
                 if location_index_curr < List.length (model.locations_per_automaton automata_index) then
@@ -511,9 +519,6 @@ let get_pta_sync_prod_flow (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_stopwatches (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_stopwatches = 0 then
     begin
-      (* Get automata name length in the new model *)
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_stopwatches :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -526,9 +531,7 @@ let get_pta_sync_prod_stopwatches (model : AbstractModel.abstract_model) =
               (* For each automata number automata_index *)
               fun automata_index ->
                 (* Get location number location_index_curr at automata automata_index to concat the clocks array at location position location_index *)
-                let location_index_curr =
-                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                in
+                let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                 (* Get the clocks array in original model *)
                 if location_index_curr < List.length (model.locations_per_automaton automata_index) then
@@ -549,9 +552,6 @@ let get_pta_sync_prod_stopwatches (model : AbstractModel.abstract_model) =
 let get_pta_sync_prod_costs (model : AbstractModel.abstract_model) =
   if Array.length !pta_sync_prod_costs = 0 then
     begin
-      (* Get automata name length in the new model *)
-      let len_automata_name = String.length (get_pta_sync_prod_automata_name model).(0) in
-
       pta_sync_prod_costs :=
         (* Initialize the array *)
         Array.init (get_pta_sync_prod_locations_number model) (
@@ -564,9 +564,7 @@ let get_pta_sync_prod_costs (model : AbstractModel.abstract_model) =
               (* For each automata number automata_index *)
               fun automata_index ->
                 (* Get location number location_index_curr at automata automata_index to concat the costs array at location position location_index *)
-                let location_index_curr =
-                  (int_of_char location_name.[len_automata_name + automata_index]) - (Char.code '0')
-                in
+                let location_index_curr = (Array.of_list (get_location_indices location_name)).(automata_index) in
 
                 (* Get the costs array in original model *)
                 if location_index_curr < List.length (model.locations_per_automaton automata_index) then
@@ -581,48 +579,6 @@ let get_pta_sync_prod_costs (model : AbstractModel.abstract_model) =
     end;
   !pta_sync_prod_costs
 
-(*
-  Function to compute all location name indices having a digit "dig" at position "pos" in the name:
-  indices_with_digit_at 1 0 -> [0; 1; 2; 3; 4; 25; 26; 27; 28; 29; 50; 51; 52; 53; 54]
-*)
-(*
-let indices_with_digit_at (model : AbstractModel.abstract_model) (pos : int) (dig : int) =
-  let automata_name = (get_pta_sync_prod_automata_name model).(0) in
-  let loc_names = Array.to_list (get_pta_sync_prod_location_names model) in
-  List.filter (fun li ->
-    let loc_name = List.nth loc_names li in
-    let l_loc_name = String.length loc_name in
-    let l_automata_name = String.length automata_name in
-    let actual_pos = l_automata_name + pos in
-    if actual_pos >= l_loc_name then false
-    else
-      let c = loc_name.[actual_pos] in
-      c = Char.chr (Char.code '0' + dig)
-  ) (get_pta_sync_prod_locations_per_automaton model)
-*)
-
-(*
-  Function to find a given integer and get its index
-*)
-(*
-let find_index (target : int) (l : int list) : int option =
-  let rec find_index_i i = function
-    | [] -> None
-    | x :: rest ->
-      if x = target then Some i
-      else find_index_i (i + 1) rest
-  in
-  find_index_i 0 l
-*)
-(*
-  Function to find the max value in actions per location array
-*)
-(*
-let max_action_per_location =
-  Array.fold_left (fun max_curr1 actions ->
-    List.fold_left (fun max_curr2 curr -> max max_curr2 curr) max_curr1 actions.(0)
-  ) 0 (!pta_sync_prod_actions_per_location)
-*)
 (*
   Function to make PTA syncronized product initial location.
   Adapted from the original function in DiscreteState.ml
@@ -817,11 +773,11 @@ let get_PTA_syncronized_product_struct (model : AbstractModel.abstract_model) : 
                                                         let _ = get_pta_sync_prod_location_names model in
 
                                                         (* Form new initial location name with original automata initial location names *)
-                                                        let new_initial_location_string = (get_pta_sync_prod_automata_name model).(0) ^ String.concat "" (
+                                                        let new_initial_location_string = (get_pta_sync_prod_automata_name model).(0) ^ "_(" ^ String.concat "," (
                                                           List.init model.nb_automata (fun automata_index ->
                                                             string_of_int (DiscreteState.get_location model.initial_location automata_index)
                                                           )
-                                                        ) in
+                                                        ) ^ ")" in
 
                                                         (* Find new initial location name index *)
                                                         let new_initial_location = Option.get (find_location_name_index model new_initial_location_string 0) in

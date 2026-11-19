@@ -161,6 +161,23 @@ declare -a OPTIONS=(
 )
   
 ##################################################
+#                Compile IMITATOR                #
+##################################################
+echo "#######################################################"
+echo "Compiling IMITATOR..."
+echo "#######################################################"
+
+if ! eval .github/scripts/build.sh &> compile_output.txt; then
+	echo "Compilation process failed" >&2
+	cat compile_output.txt
+	exit 1
+fi
+
+echo "Compilation process completed..."
+echo ""
+rm -rf compile_output.txt
+
+##################################################
 #                 STARTING TESTS                 #
 ##################################################
 echo "#######################################################"
@@ -168,28 +185,34 @@ echo "Running tests for PTA Synchronized Cartesian Product..."
 echo "#######################################################"
 echo ""
 
-#	ITERATE OVER ALL OPTIONS
+# GET ONLY THE FILE NAME (WITHOUT PATH AND EXTENSION)
+NAME=$(basename -- "$FILENAME")
+NAME="${NAME%.*}"
+
+# CREATE TEST FILE RESULTS DIR
+mkdir -p "${OUT_DIR}${NAME}/"
+
+# ITERATE OVER ALL OPTIONS
 for option in "${OPTIONS[@]}"
 do
 #	CREATE COMMAND TO RUN
 	CMD="$IMI_BIN $FILENAME $PTA_OPT $option"
-
-#	GET ONLY THE FILE NAME (WITHOUT PATH AND EXTENSION)
-	NAME=$(basename -- "$FILENAME")
-	NAME="${NAME%.*}"
 
 #	ERASE THE FIRST "-" AND REPLACE SPACES BY "_"
 	OPT=${option#*-}
 	OPT=${OPT/ /_}
 
 #	CREATE THE OUTPUT FILENAME
-	OUTPUT="${OUT_DIR}${NAME}_${OPT}.txt"
+	OUTPUT="${OUT_DIR}${NAME}/${NAME}_${OPT}.txt"
 
 #	RUN AND WRITE
 	echo "Running test: [$CMD]"
 	eval $CMD &> $OUTPUT
 	echo "Output written to file [$OUTPUT]"
 
-#	RENAME .res FILE
-	mv $NAME.res ${OUT_DIR}${NAME}_${OPT}.res
+#	RENAME AND MOVE .res FILE
+	mv $NAME.res ${OUT_DIR}${NAME}/${NAME}_${OPT}.res
 done
+
+# MOVE OTHER RESULT FILES
+mv $NAME* ${OUT_DIR}${NAME}/
