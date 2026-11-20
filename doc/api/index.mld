@@ -38,3 +38,4 @@ its top-level wrapped module:
 - {{:../lib@75a864dae907/Lib/index.html}lib} — shared model-checking infrastructure
 - {{:../algorithms@75a864dae907/Algorithms/index.html}algorithms} — the synthesis and verification algorithms
 - {{:../exporter@75a864dae907/Exporter/index.html}exporter} — output and export back-ends
+- {{:../driver@75a864dae907/Driver/index.html}driver} — option defaults and algorithm selection
