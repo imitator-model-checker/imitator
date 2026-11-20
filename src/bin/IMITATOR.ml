@@ -30,7 +30,6 @@ open AbstractProperty
 open Result
 open Options
 open Statistics
-open AlgoPTA
 
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT
