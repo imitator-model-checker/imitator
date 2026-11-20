@@ -31,7 +31,6 @@ open Result
 open Options
 open Statistics
 
-
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT
 - (*** BADPROG ***)
@@ -60,7 +59,6 @@ let export_ptg_controller (options : Options.imitator_options) (controller_model
 		| Some created_file -> print_highlighted_message Shell_result Verbose_standard ("Graphical representation of controller `" ^ created_file ^ "` successfully created.")
 	end
 ;;
-
 
 (************************************************************)
 (************************************************************)
@@ -515,6 +513,30 @@ let is_cartography = match property_option with
 in
 options#set_options_for_cartography is_cartography;
 
+(************************************************************)
+(* PTA Syncronized Product *)
+(************************************************************)
+let sync_model = ref model in
+
+(* If computed, do it here before computations are performed over the original model *)
+if options#pta_syncronized_product <> PTA_syncronized_product_none then (
+	print_message Verbose_low "Preparing PTA syncronized product computation…";
+	try(
+		sync_model := AlgoPTA.get_PTA_syncronized_product_struct model;
+		let _ = AlgoPTA.init_PTA_syncronized_product_struct !sync_model in
+		(* Rebuild to get the right transitions number *)
+		sync_model := {
+			!sync_model with nb_transitions = AlgoPTA.get_pta_sync_prod_transitions_number ()
+		};
+		print_message Verbose_low "PTA syncronized product computation completed…";
+	) with
+	| PTA_syncronized_product_exception ->
+		print_error ("An error was detected during PTA syncronized product computation.");
+		abort_program();
+);
+
+(* Reassign variable "model" *)
+let model = !sync_model in
 
 (************************************************************)
 (* Recall options and print some warnings if needed *)
@@ -572,6 +594,7 @@ if options#dynamic_clock_elimination then (
 	ClocksElimination.prepare_clocks_elimination model
 );
 
+
 (************************************************************)
 (* Extrapolation *)
 (************************************************************)
@@ -620,9 +643,8 @@ match options#imitator_mode with
 		in
 
 		(* Select the exporter, render the model and write the output file.
-		   All of selection/naming/writing now lives in ExportDriver. *)
+				All of selection/naming/writing now lives in ExportDriver. *)
 		let _target_language_file = ExportDriver.export_and_write options model target in
-
 		(* Create a file with some statistics on the original model if requested *)
 		ResultProcessor.process_result model None Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation target)) None;
 

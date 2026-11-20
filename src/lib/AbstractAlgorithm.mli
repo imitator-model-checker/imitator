@@ -248,6 +248,14 @@ type nz_method =
 	| NZ_already
 
 
+(** Computes the syncronized product of a PTA **)
+type pta_syncronized_product =
+	(* Do not compute it by default *)
+	| PTA_syncronized_product_none
+
+	(* Compute it *)
+	| PTA_syncronized_product
+
 
 (** Type of extrapolation *)
 type extrapolation =
@@ -295,6 +303,7 @@ val cartography_drawing_possible : imitator_mode -> bool
 
 val string_of_mode						: imitator_mode						-> string
 val string_of_translation				: translation						-> string
+val string_of_pta_syncronized_product	: pta_syncronized_product			-> string
 val string_of_exploration_order			: exploration_order					-> string
 val string_of_cycle_algorithm			: cycle_algorithm					-> string
 val string_of_state_comparison_operator	: state_comparison_operator			-> string

@@ -67,6 +67,9 @@ class imitator_options :
 		method is_set_exploration_order		: bool
 		method set_exploration_order		: AbstractAlgorithm.exploration_order -> unit
 
+		(* Computes the synchronized product of PTAs *)
+		method pta_syncronized_product		: AbstractAlgorithm.pta_syncronized_product
+
 		method extrapolation				: extrapolation
 
 		method files_prefix					: string

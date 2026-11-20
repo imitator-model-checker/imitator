@@ -45,6 +45,8 @@ exception InvalidModel
 
 exception InternalError of string
 
+exception PTA_syncronized_product_exception
+
 (** When the model syntax is too large to apply extrapolation *)
 exception Model_not_compatible_for_extrapolation
 
