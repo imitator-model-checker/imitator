@@ -460,7 +460,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 
-		method parse =
+		method parse ?(skip_model=false) ?(argv : string array option) () =
 			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [property" ^ Constants.property_extension ^ "] [options]" in
 
 			(* Get the verbose mode *)
@@ -1234,7 +1234,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				("-time-elapsing-after", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: disabled.
 				");
 
-				("-time-limit", Int (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.
+				("-time-limit", Float (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Supports decimal values. Default: no limit.
 				");
 
 				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.
@@ -1272,11 +1272,17 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 				)
 			) in
 
+			(* If no model file is expected, the first anonymous argument is the property file *)
+			if skip_model then nb_args <- 1;
 			(* Actual parsing *)
-			Arg.parse speclist anon_fun usage_msg;
+			(match argv with
+			| None -> Arg.parse speclist anon_fun usage_msg
+			(* Use a fresh position so that several option objects can be parsed in the same process *)
+			| Some argv -> Arg.parse_argv ~current:(ref 0) argv speclist anon_fun usage_msg);
+
 
 			(* Case no file *)
-			if nb_args < 1 then(
+			if nb_args < 1 && not skip_model then(
 				print_error ("Please give a file name for the model.");
 				print_message Verbose_standard usage_msg;
 				print_message Verbose_standard ("Run " ^ (Sys.argv.(0)) ^ " -help for help.");
@@ -1916,7 +1922,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 			begin
 			match time_limit with
 				| None -> print_message Verbose_medium "Considering no time limit (default)."
-				| Some limit -> print_warning (Constants.program_name ^ " will try to stop after " ^ (string_of_int limit) ^ " seconds.")
+				| Some limit -> print_warning (Constants.program_name ^ " will try to stop after " ^ (Printf.sprintf "%g" limit) ^ " seconds.")
 			end;
 
 			(* Cartography: Tiles limit *)
@@ -1968,7 +1974,7 @@ method ptg_propagate_losing_states			= ptg_propagate_losing_states
 					| None -> raise (InternalError ("Impossible situation in options, `-cart-time-limit` should be set at that point"))
 					| Some limit -> limit
 				in
-				time_limit <- Some limit;
+				time_limit <- Some (float_of_int limit);
 			);
 
 

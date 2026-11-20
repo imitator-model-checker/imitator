@@ -41,6 +41,11 @@ let set_dimensions nb_dimensions =
 	end;
 	()
 
+(** Unset the number of dimensions, so that `set_dimensions` can be called again; only meant for tools handling several models in the same process *)
+let reset_dimensions () =
+	nb_dim := None;
+	all_dimensions := None
+
 let get_dim () =
 	begin
 	match !nb_dim with
