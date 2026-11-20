@@ -1,0 +1,82 @@
+
+open Spec
+
+exception Parse_error of string
+
+let parse_dist (s : string) : dist =
+  let s = String.trim s in
+  let invalid () = raise (Parse_error ("invalid number or range (expected N or LO..HI): " ^ s)) in
+  let parse_int s = match int_of_string_opt (String.trim s) with Some n -> n | None -> invalid () in
+  match String.split_on_char '.' s with
+  | [a; ""; b] ->
+      let lo = parse_int a in
+      let hi = parse_int b in
+      if lo > hi then invalid ();
+      Range (lo, hi)
+  | [_] ->
+      Exact (parse_int s)
+  | _ ->
+      invalid ()
+
+let parse_string_list_semicolon (s : string) : string list =
+  let s = String.trim s in
+  let len = String.length s in
+  if len < 2 || s.[0] <> '[' || s.[len - 1] <> ']' then
+    raise (Parse_error ("invalid config list (expected [...]): " ^ s));
+
+  let inner = String.sub s 1 (len - 2) |> String.trim in
+  if inner = "" then
+    []
+  else
+    inner
+    |> String.split_on_char ';'
+    |> List.map String.trim
+    |> List.filter (fun x -> x <> "")
+
+let parse_float s =
+  try float_of_string (String.trim s)
+  with Failure _ -> raise (Parse_error ("invalid float: " ^ s))
+
+let parse_bool s =
+  match String.trim s with
+  | "true"  -> true
+  | "false" -> false
+  | _ -> raise (Parse_error ("invalid bool: " ^ s))
+
+let parse_int s =
+  try int_of_string (String.trim s)
+  with Failure _ -> raise (Parse_error ("invalid int: " ^ s))
+
+let split_on_first (c : char) (s : string) : (string * string) option =
+  match String.index_opt s c with
+  | None -> None
+  | Some i ->
+      let left = String.sub s 0 i in
+      let right = String.sub s (i + 1) (String.length s - i - 1) in
+      Some (left, right)
+
+let require name = function
+  | Some v -> v
+  | None -> raise (Parse_error (Printf.sprintf "required field `%s` not provided" name))
+
+let optional ~default = Option.value ~default
+
+
+let argv_of_string (s : string) : string array =
+  s
+  |> String.map (fun c -> if c = '\n' || c = '\t' then ' ' else c)
+  |> String.trim
+  |> String.split_on_char ' '
+  |> List.filter (fun x -> x <> "")
+  |> Array.of_list
+
+let argv_list_of_configs (configs : string list) : string array list =
+  List.map argv_of_string configs
+
+let count_char s ch =
+  let n = ref 0 in
+  String.iter (fun c -> if c = ch then incr n) s;
+  !n
+
+let brackets_balanced s =
+  count_char s '[' = count_char s ']'

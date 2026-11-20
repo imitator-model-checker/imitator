@@ -1,0 +1,7 @@
+; `dune build` builds IMITATOR and its tests, but not the developer tools
+; outside of src/ (VALIDATOR, which needs qcheck-core).
+; `dune build @all` builds everything, VALIDATOR included.
+(alias
+ (name default)
+ (deps
+  (alias_rec src/all)))
