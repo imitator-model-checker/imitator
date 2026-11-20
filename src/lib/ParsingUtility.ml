@@ -89,14 +89,9 @@ let parse_or_abort (model_or_property : model_or_property) (options : Options.im
 
 
 (************************************************************)
-(** Compile the concrete model and convert it into an abstract model *)
+(** Parse the model file into an unexpanded parsed model *)
 (************************************************************)
-let compile_model_and_property (options : Options.imitator_options) =
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Parsing the model *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
+let compile_unexpanded_parsed_model (options : Options.imitator_options) : ParsingStructure.unexpanded_parsed_model =
 	(* Statistics *)
 	parsing_counter#start;
 
@@ -109,14 +104,13 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
 
-	(*** USELESS, even increases memory x-( ***)
-	(* Gc.major (); *)
+	parsed_model
 
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Parsing the property *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
+(************************************************************)
+(** Parse the property file (if needed) into an unexpanded parsed property *)
+(************************************************************)
+let compile_unexpanded_parsed_property (options : Options.imitator_options) : ParsingStructure.unexpanded_parsed_property option =
 	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
 	let property_parsing =
 		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
@@ -124,7 +118,6 @@ let compile_model_and_property (options : Options.imitator_options) =
 		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
 	in
 
-	let parsed_property_option =
 	if property_parsing then(
 		(* Statistics *)
 		parsing_counter#start;
@@ -132,7 +125,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 		(* Get the file name *)
 		let property_file_name = match options#property_file_name with
 			| Some property_file_name -> property_file_name
-			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
+			| None -> raise (InternalError "No property file name found in `compile_unexpanded_parsed_property` although it was expected.")
 		in
 
 		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
@@ -149,7 +142,28 @@ let compile_model_and_property (options : Options.imitator_options) =
 	)else(
 		None
 	)
-	in
+
+
+(************************************************************)
+(** Compile the concrete model and convert it into an abstract model *)
+(************************************************************)
+let compile_model_and_property (options : Options.imitator_options) =
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	let parsed_model = compile_unexpanded_parsed_model options in
+
+	(*** USELESS, even increases memory x-( ***)
+	(* Gc.major (); *)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the property *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	let parsed_property_option = compile_unexpanded_parsed_property options in
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Conversion to abstract structures *)
@@ -160,7 +174,7 @@ let compile_model_and_property (options : Options.imitator_options) =
 
 	let model, property_option =
 	try (
-		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
+		ModelConverter.abstract_structures_of_unexpanded_parsing_structures options parsed_model parsed_property_option
 	) with
 		| InvalidModel ->
 			(* Abort properly *)

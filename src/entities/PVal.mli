@@ -18,6 +18,9 @@
  (** Global function: set the number of dimensions for ALL parameter valuations; must be called (once and only once) before creating any object *)
 val set_dimensions : int -> unit
 
+(** Global function: unset the number of dimensions so that [set_dimensions] can be called again; only for tools handling several models in the same process *)
+val reset_dimensions : unit -> unit
+
 (** Global function: get the number of dimensions for ALL parameter valuations *)
 val get_dimensions : unit -> int
 

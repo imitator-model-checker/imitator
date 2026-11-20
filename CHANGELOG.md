@@ -3,6 +3,9 @@
 *******************************************************
 ## future release (20xx-xx-xx) Cheese xxx
 
+### Options
+* `-time-limit` now accepts decimal values (e.g., `-time-limit 0.5`)
+
 *******************************************************
 ## release 3.4.1 (2026-10-21) Cheese Durian
 
