@@ -11,6 +11,8 @@
 
 \input{commons.tex}
 
+\newcommand{\validator}{\textsf{VALIDATOR}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,6 +186,177 @@ python tests/test.py --filter="tags=mydesiredtag"
 \noindent{}where ``\texttt{mydesiredtag}'' represents the tag the tests should match to be called.
 
 The non-regression tests are defined in the file \texttt{tests/regression\_tests\_data.py}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Random testing with \validator{}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\validator{} is a tool for developers that looks for bugs in \imitator{} using random models.
+It generates random parametric timed automata, runs \imitator{} on each of them with several configurations (without starting a new process), and reports a model on which the results differ.
+The model is then reduced to a small one that still shows the difference, and saved as an \texttt{.imi} file.
+\validator{} is not part of the \imitator{} releases; its sources are in the folder \texttt{validator/}.
+
+%------------------------------------------------------------
+\subsection{Building}
+%------------------------------------------------------------
+
+\validator{} needs the library \texttt{qcheck-core}, which is not needed to build \imitator{}; for this reason it is not built by \texttt{dune build}.
+
+%------------------------------------------------------------
+\begin{terminal}
+opam install qcheck-core
+dune build @validator
+\end{terminal}
+%------------------------------------------------------------
+
+\noindent{}The binary is \texttt{bin/validator}.
+
+%------------------------------------------------------------
+\subsection{Running}
+%------------------------------------------------------------
+
+\validator{} takes a specification file (see below) and some options:
+
+%------------------------------------------------------------
+\begin{terminal}
+./bin/validator validator/example.val -r 200 -time-limit 2
+\end{terminal}
+%------------------------------------------------------------
+
+\begin{description}
+	\item[\texttt{-output DIR}] folder in which the models are saved (default: \texttt{validator-output}).
+	\item[\texttt{-r N}] maximum number of models to generate and test (default: 1000).
+	\item[\texttt{-time-limit S}] time limit in seconds for each run of \imitator{} (decimals are allowed). A model on which a run reaches the time limit is skipped; so is a model on which a run is stopped by a depth or states limit given in a configuration.
+	\item[\texttt{-seed N}] seed of the random generator. The same seed and specification give the same models, which makes it possible to reproduce a run. Without this option, a seed is chosen at random and printed.
+	\item[\texttt{-results-file FILE}] write a summary of the search in JSON.
+\end{description}
+
+Paths in the specification file are relative to the folder from which \validator{} is called: the example has to be run from the root of the repository.
+
+%------------------------------------------------------------
+\subsection{Specification file}
+%------------------------------------------------------------
+
+A specification file has two sections: \texttt{[mode]} says what to do, and \texttt{[model]} describes the models to generate.
+Each line is of the form \texttt{key = value}; lines starting with \texttt{\#} are comments.
+For example (see also \texttt{validator/example.val}):
+
+\begin{verbatim}
+[mode]
+kind = compare
+configs = [
+    tests/testcases/basic-properties/synth-parametric-win-strat-accepting.imiprop
+    -PTG-no-strategy-generation;
+
+    tests/testcases/basic-properties/synth-parametric-win-strat-accepting.imiprop
+    -PTG-no-strategy-generation
+    -PTG-abstraction ch
+]
+
+[model]
+nb_automata = 1
+nb_clocks = 1..2
+nb_parameters = 1..2
+nb_locations = 3..8
+transitions_per_location = 1..2
+controllability_ratio = 0.5
+\end{verbatim}
+
+\paragraph{Section \texttt{[model]}}
+A number is either an integer, or a range \texttt{lo..hi} (both bounds included) in which a value is chosen for each model.
+The keys \texttt{nb\_locations}, \texttt{nb\_clocks} and \texttt{nb\_parameters} are mandatory, except in the mode \texttt{reduce}.
+There must be at least one automaton, location, clock and transition per location.
+
+\begin{description}
+	\item[\texttt{nb\_automata}] number of automata (default: 1).
+	\item[\texttt{nb\_locations}] number of locations of each automaton.
+	\item[\texttt{nb\_clocks}, \texttt{nb\_parameters}] number of clocks and of parameters.
+	\item[\texttt{transitions\_per\_location}] number of outgoing transitions of each location (default: 1).
+	\item[\texttt{all\_reachable}] if \texttt{true}, every location is reachable from the initial location in the graph of the automaton (default: \texttt{true}).
+	\item[\texttt{cycles}] if \texttt{false}, the graph of the automaton has no cycle (default: \texttt{true}).
+	\item[\texttt{guard\_probability}, \texttt{invariant\_probability}] probability that a transition has a guard, and that a location has an invariant (default: 0.5).
+	\item[\texttt{reset\_probability}] probability that a transition resets clocks (default: 0.2).
+	\item[\texttt{controllability\_ratio}] probability that a transition is controllable, for parametric timed games (default: 0).
+	\item[\texttt{max\_constant}] largest constant used in guards and invariants (default: 10).
+\end{description}
+
+The automata are named \texttt{automaton\_0}, \texttt{automaton\_1}, etc., and their locations \texttt{l0}, \texttt{l1}, etc.; \texttt{l0} is the initial location.
+The clocks are named \texttt{x}, \texttt{y}, \texttt{z}, \texttt{clk\_3}, etc., and the parameters \texttt{p}, \texttt{q}, \texttt{r}, \texttt{p\_3}, etc.
+These names can be used in the property files of the configurations.
+A property must only refer to locations that exist in all generated models: with \texttt{nb\_locations = 3..8}, a property can refer to \texttt{l0}, \texttt{l1} and \texttt{l2}.
+
+\paragraph{Section \texttt{[mode]}}
+The key \texttt{kind} selects one of the following modes (default: \texttt{sample}).
+
+\begin{description}
+	\item[\texttt{compare}]
+		Run \imitator{} on each model once per configuration, and stop at the first model on which the resulting constraints differ.
+		The key \texttt{configs} is a list of at least two configurations between brackets, separated by semicolons.
+		A configuration is the command line of \imitator{} without the model: a property file followed by options.
+		The model and its reduced version are saved in the subfolder \texttt{counter\_examples}, as \texttt{counter\_example\_<id>.imi} and \texttt{counter\_example\_<id>\_reduced.imi}.
+
+	\item[\texttt{reduce}]
+		Reduce an existing model on which the configurations of \texttt{configs} give different results.
+		The key \texttt{model} is the path of the model; the section \texttt{[model]} is not needed.
+		The reduced model is saved in the subfolder \texttt{reducer}, as \texttt{<model>\_reduced.imi}.
+
+	\item[\texttt{sample}]
+		Only generate models, to look at what a \texttt{[model]} section produces.
+		The key \texttt{samples} is the number of models (default: 1); with \texttt{pdf = true}, each model is also drawn using \texttt{dot}.
+		The models are saved in the subfolder \texttt{samples}, as \texttt{sampled\_model\_1.imi}, etc.
+\end{description}
+
+%------------------------------------------------------------
+\subsection{Reading the results}
+%------------------------------------------------------------
+
+In the mode \texttt{compare}, \validator{} prints the number of the current model, and the number of models skipped because of a time limit (\texttt{TO}).
+When a model is found, it is saved, then reduced: transitions are removed, guards and invariants are replaced with \texttt{True}, and locations are merged, as long as the difference between the configurations remains.
+The reduced model is saved next to the full one, with the suffix \texttt{\_reduced}.
+Running \imitator{} on the reduced model with each configuration shows the difference.
+If no model is found after the number of models given by \texttt{-r}, nothing is saved: this does not mean that the configurations are equivalent.
+
+A difference is not always a bug: two configurations may legitimately give different results (for example two different properties, or an option that makes the result an over-approximation).
+\validator{} compares the constraints of the results only, not their soundness.
+
+If \imitator{} raises an exception, returns an error or aborts on a generated model, or if the results cannot be compared, \validator{} stops and saves this model in the subfolder \texttt{crashes}, as \texttt{crash\_<id>.imi}.
+During the reduction, a model on which this happens is only discarded.
+
+The exit code is 0 when the search ends, whether a model is found or not.
+It is 1 in case of an error: an invalid specification file or configuration, a failure on a model, or nothing to reduce in the mode \texttt{reduce}.
+
+The comparison of the results is defined in \texttt{validator/comparison/Comparison.ml}; only the results made of a single constraint, or of a good and a bad constraint, are supported so far.
+
+%------------------------------------------------------------
+\subsection{Maintaining \validator{}}
+%------------------------------------------------------------
+
+\validator{} is not built by the continuous integration: a change in \imitator{} can break its compilation without anyone noticing.
+It was last tested with \texttt{qcheck-core} 0.91.
+
+The sources are organized as follows:
+
+\begin{description}
+	\item[\texttt{VALIDATOR.ml}] the entry point, with one case per mode. The other files at the root of the folder are the command line (\texttt{ValidatorOptions}), the loading of the configurations (\texttt{ConfigLoader}), the search (\texttt{CounterExampleFinder}), the saving of models (\texttt{ModelOutput}) and the statistics on the generated guards (\texttt{CoverageAnalyzer}).
+	\item[\texttt{config/}] the parser of the specification files.
+	\item[\texttt{gen/}] the generators: graphs of the automata (\texttt{Adjacency}), guards and invariants (\texttt{PZone}, \texttt{PZoneGen}), models (\texttt{SimpleModelGen}), and their translation into the parsing structures of \imitator{} (\texttt{Convert}).
+	\item[\texttt{runner/}] the run of \imitator{} on a generated model (\texttt{ModelRunner}).
+	\item[\texttt{comparison/}] the comparison of two results.
+	\item[\texttt{reducer/}] the reduction; \texttt{ModelReducer} applies the steps one after the other.
+	\item[\texttt{printer/}] the messages printed in the terminal.
+\end{description}
+
+\texttt{ModelRunner} converts a generated model and runs the algorithm selected by \texttt{AlgorithmDriver}, as \texttt{IMITATOR.ml} does, but many times in the same process.
+\imitator{} keeps some global data between two runs, which \texttt{ModelRunner} has to reset: the dimensions of the constraints (\texttt{PVal}, \texttt{HyperRectangle}, \texttt{LinearConstraint}) and the cache of invariants (\texttt{State}).
+If a run seems to depend on the runs before it, look for such data first.
+
+To compare a new type of result, add a case to \texttt{eq\_result} in \texttt{Comparison.ml}.
+To add a mode, add a constructor to \texttt{config/Mode.ml}, parse it in \texttt{config/Parser.ml}, and add a case to \texttt{VALIDATOR.ml}.
+
+To check the generator itself after changing it, there is one more mode, \texttt{kind = coverage}: it generates guards only (their number is given by \texttt{-r}, and their shape by \texttt{nb\_clocks}, \texttt{nb\_parameters} and \texttt{max\_constant}) and prints statistics on the kinds of constraints obtained, to see whether they are varied enough.
+With \texttt{-results-file}, the statistics are also written in JSON.
+The mode \texttt{sample} is the other way to look at what is generated.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

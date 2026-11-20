@@ -1,0 +1,25 @@
+type dist =
+  | Exact of int
+  | Range of int * int (* Range (min, max): values are in [min, max] *)
+
+type t = {
+  nb_automata : dist;
+  nb_locations : dist;
+  nb_clocks : dist;
+  nb_parameters : dist;
+
+  all_reachable : bool;
+  transitions_per_location : dist;
+
+  guard_probability : float;
+  invariant_probability : float;
+  reset_probability : float;
+
+  cycles : bool;
+
+  controllability_ratio : float;
+
+  initial_constraint_satisfiable : bool;
+
+  max_constant : int;
+}

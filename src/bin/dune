@@ -1,7 +1,7 @@
 (executable
  (name IMITATOR)
  (modes byte exe)
- (libraries algorithms exporter lib parsing entities utils)
+ (libraries driver algorithms exporter lib parsing entities utils)
  (flags
   (:standard -open Utils -open Entities -open Algorithms))
  (ocamlc_flags

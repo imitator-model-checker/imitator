@@ -1,0 +1,10 @@
+(library
+ (name driver)
+ (libraries utils entities parsing data_structures lib algorithms exporter)
+ (flags
+  (:standard -open Utils -open Entities -open Parsing -open Data_structures -open Lib -open Algorithms -open Exporter)))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

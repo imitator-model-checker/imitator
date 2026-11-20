@@ -35,6 +35,7 @@ entities_dir=$(library_dir entities)
 lib_dir=$(library_dir lib)
 algorithms_dir=$(library_dir algorithms)
 exporter_dir=$(library_dir exporter)
+driver_dir=$(library_dir driver)
 
 if [ -f "$theme_css" ]; then
   tmp_css=$(mktemp "$odoc_css.XXXXXX")
@@ -149,6 +150,11 @@ doc/scripts/build-api-reference.sh</code>
               <h3>exporter</h3>
               <p>Output and export back-ends for generated artifacts and translated representations.</p>
             </a>
+            <a class="api-library-card" href="$driver_dir/Driver/index.html">
+              <span>Orchestration</span>
+              <h3>driver</h3>
+              <p>Option defaults and selection of the algorithm to run for a property.</p>
+            </a>
           </div>
         </section>
       </main>
@@ -176,7 +182,7 @@ find "$bundle_dir" -name '*.html' -exec perl -0pi -e '
   s{<a href="[^"]+">Up</a>[^<]*}{}g;
   s{(>)([A-Za-z_][A-Za-z0-9_]*)@[0-9a-f]+(<)}{$1$2$3}g;
   s{(\()([A-Za-z_][A-Za-z0-9_]*)@[0-9a-f]+\.}{$1$2.}g;
-  s{<a href="[^"]+">(utils|data_structures|parsing|entities|lib|algorithms|exporter)</a>\s*&#x00BB;\s*}{}g;
+  s{<a href="[^"]+">(utils|data_structures|parsing|entities|lib|algorithms|exporter|driver)</a>\s*&#x00BB;\s*}{}g;
 ' {} +
 
 echo "Bundled API reference in $bundle_dir"
